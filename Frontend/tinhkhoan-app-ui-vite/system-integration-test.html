@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TinhKhoanApp - System Integration Test</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        .header p {
+            margin: 10px 0 0;
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        .content {
+            padding: 30px;
+        }
+        .test-section {
+            margin-bottom: 40px;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .test-header {
+            background: #f8fafc;
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .test-header h3 {
+            margin: 0;
+            color: #374151;
+            font-size: 1.25rem;
+        }
+        .status {
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+        .status.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .status.success {
+            background: #dcfce7;
+            color: #166534;
+        }
+        .status.error {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        .test-body {
+            padding: 20px;
+        }
+        .btn {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 1rem;
+            transition: all 0.2s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .btn:hover {
+            background: #4338ca;
+            transform: translateY(-1px);
+        }
+        .btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .result {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .metric-card {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #4f46e5;
+            margin-bottom: 5px;
+        }
+        .metric-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e5e7eb;
+            border-top: 2px solid #4f46e5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4f46e5, #7c3aed);
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 TinhKhoanApp</h1>
+            <p>System Integration & Performance Test Suite</p>
+        </div>
+        
+        <div class="content">
+            <!-- Health Check -->
+            <div class="test-section">
+                <div class="test-header">
+                    <h3>🏥 Health Check</h3>
+                    <span id="health-status" class="status pending">Pending</span>
+                </div>
+                <div class="test-body">
+                    <button class="btn" onclick="testHealthCheck()">Run Health Check</button>
+                    <div id="health-result" class="result" style="display:none;"></div>
+                </div>
+            </div>
+
+            <!-- Performance Metrics -->
+            <div class="test-section">
+                <div class="test-header">
+                    <h3>📊 Performance Metrics</h3>
+                    <span id="performance-status" class="status pending">Pending</span>
+                </div>
+                <div class="test-body">
+                    <button class="btn" onclick="testPerformance()">Run Performance Test</button>
+                    <div id="performance-metrics" class="metrics" style="display:none;"></div>
+                    <div id="performance-result" class="result" style="display:none;"></div>
+                </div>
+            </div>
+
+            <!-- API Endpoints -->
+            <div class="test-section">
+                <div class="test-header">
+                    <h3>🔌 API Endpoints</h3>
+                    <span id="api-status" class="status pending">Pending</span>
+                </div>
+                <div class="test-body">
+                    <button class="btn" onclick="testAPIs()">Test All APIs</button>
+                    <div class="progress-bar" id="api-progress" style="display:none;">
+                        <div class="progress-fill" style="width: 0%;"></div>
+                    </div>
+                    <div id="api-result" class="result" style="display:none;"></div>
+                </div>
+            </div>
+
+            <!-- Virtual Scrolling -->
+            <div class="test-section">
+                <div class="test-header">
+                    <h3>📜 Virtual Scrolling</h3>
+                    <span id="virtual-status" class="status pending">Pending</span>
+                </div>
+                <div class="test-body">
+                    <button class="btn" onclick="testVirtualScrolling()">Test Virtual Scrolling</button>
+                    <div id="virtual-result" class="result" style="display:none;"></div>
+                </div>
+            </div>
+
+            <!-- Caching -->
+            <div class="test-section">
+                <div class="test-header">
+                    <h3>💾 Caching Performance</h3>
+                    <span id="cache-status" class="status pending">Pending</span>
+                </div>
+                <div class="test-body">
+                    <button class="btn" onclick="testCaching()">Test Caching</button>
+                    <div id="cache-result" class="result" style="display:none;"></div>
+                </div>
+            </div>
+
+            <!-- Full System Test -->
+            <div class="test-section">
+                <div class="test-header">
+                    <h3>🎯 Full System Test</h3>
+                    <span id="system-status" class="status pending">Pending</span>
+                </div>
+                <div class="test-body">
+                    <button class="btn" onclick="runFullSystemTest()">Run All Tests</button>
+                    <div id="system-result" class="result" style="display:none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5055/api';
+        
+        function log(message, isError = false) {
+            console.log(message);
+            return `${new Date().toLocaleTimeString()}: ${message}${isError ? ' ❌' : ' ✅'}\n`;
+        }
+
+        function updateStatus(id, status, className = '') {
+            const element = document.getElementById(id);
+            element.textContent = status;
+            element.className = `status ${className}`;
+        }
+
+        function showResult(id, content) {
+            const element = document.getElementById(id);
+            element.style.display = 'block';
+            element.textContent = content;
+        }
+
+        function addResult(id, content) {
+            const element = document.getElementById(id);
+            element.style.display = 'block';
+            element.textContent += content;
+        }
+
+        async function testHealthCheck() {
+            updateStatus('health-status', 'Testing...', 'pending');
+            let output = '';
+            
+            try {
+                const response = await fetch(`${API_BASE.replace('/api', '')}/health`);
+                const data = await response.json();
+                
+                output += log(`Health check status: ${data.status}`);
+                output += log(`Total duration: ${data.totalDuration}ms`);
+                
+                data.checks.forEach(check => {
+                    output += log(`${check.name}: ${check.status} (${check.duration}ms)`);
+                });
+                
+                if (data.status === 'Healthy') {
+                    updateStatus('health-status', 'Healthy', 'success');
+                } else {
+                    updateStatus('health-status', 'Unhealthy', 'error');
+                }
+                
+                showResult('health-result', output);
+            } catch (error) {
+                output += log(`Health check failed: ${error.message}`, true);
+                updateStatus('health-status', 'Error', 'error');
+                showResult('health-result', output);
+            }
+        }
+
+        async function testPerformance() {
+            updateStatus('performance-status', 'Testing...', 'pending');
+            let output = '';
+            
+            try {
+                const startTime = performance.now();
+                const response = await fetch(`${API_BASE}/RawData/dashboard/stats`);
+                const endTime = performance.now();
+                const data = await response.json();
+                
+                const responseTime = Math.round(endTime - startTime);
+                
+                output += log(`Dashboard stats loaded in ${responseTime}ms`);
+                output += log(`Total imports: ${data.totalImports}`);
+                output += log(`Total records: ${data.totalRecords}`);
+                output += log(`Success rate: ${data.successRate}%`);
+                
+                // Show metrics
+                const metricsHtml = `
+                    <div class="metric-card">
+                        <div class="metric-value">${responseTime}ms</div>
+                        <div class="metric-label">Response Time</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${data.totalImports}</div>
+                        <div class="metric-label">Total Imports</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${data.totalRecords.toLocaleString()}</div>
+                        <div class="metric-label">Total Records</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${Math.round(data.avgRecordsPerImport)}</div>
+                        <div class="metric-label">Avg Records/Import</div>
+                    </div>
+                `;
+                
+                document.getElementById('performance-metrics').style.display = 'grid';
+                document.getElementById('performance-metrics').innerHTML = metricsHtml;
+                
+                updateStatus('performance-status', `${responseTime}ms`, responseTime < 500 ? 'success' : 'error');
+                showResult('performance-result', output);
+            } catch (error) {
+                output += log(`Performance test failed: ${error.message}`, true);
+                updateStatus('performance-status', 'Error', 'error');
+                showResult('performance-result', output);
+            }
+        }
+
+        async function testAPIs() {
+            updateStatus('api-status', 'Testing...', 'pending');
+            document.getElementById('api-progress').style.display = 'block';
+            let output = '';
+            let testsCompleted = 0;
+            const totalTests = 4;
+            
+            const updateProgress = () => {
+                const progress = (testsCompleted / totalTests) * 100;
+                document.querySelector('.progress-fill').style.width = `${progress}%`;
+            };
+            
+            const endpoints = [
+                {
+                    name: 'Optimized Imports',
+                    url: `${API_BASE}/RawData/optimized/imports?pageNumber=1&pageSize=5`
+                },
+                {
+                    name: 'Virtual Scroll Records',
+                    url: `${API_BASE}/RawData/optimized/records/24?startIndex=0&viewportSize=10`
+                },
+                {
+                    name: 'Dashboard Stats',
+                    url: `${API_BASE}/RawData/dashboard/stats`
+                },
+                {
+                    name: 'SCD Optimized',
+                    url: `${API_BASE}/RawData/scd/optimized?pageNumber=1&pageSize=5`
+                }
+            ];
+            
+            showResult('api-result', '');
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const startTime = performance.now();
+                    const response = await fetch(endpoint.url);
+                    const endTime = performance.now();
+                    const responseTime = Math.round(endTime - startTime);
+                    
+                    if (response.ok) {
+                        output += log(`${endpoint.name}: ${responseTime}ms`);
+                    } else {
+                        output += log(`${endpoint.name}: Failed (${response.status})`, true);
+                    }
+                } catch (error) {
+                    output += log(`${endpoint.name}: Error - ${error.message}`, true);
+                }
+                
+                testsCompleted++;
+                updateProgress();
+                addResult('api-result', output);
+                output = '';
+                
+                // Small delay between requests
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+            
+            updateStatus('api-status', 'Complete', 'success');
+        }
+
+        async function testVirtualScrolling() {
+            updateStatus('virtual-status', 'Testing...', 'pending');
+            let output = '';
+            
+            try {
+                // Test different viewport sizes and positions
+                const tests = [
+                    { startIndex: 0, viewportSize: 10 },
+                    { startIndex: 50, viewportSize: 20 },
+                    { startIndex: 100, viewportSize: 50 }
+                ];
+                
+                for (const test of tests) {
+                    const startTime = performance.now();
+                    const response = await fetch(
+                        `${API_BASE}/RawData/optimized/records/24?startIndex=${test.startIndex}&viewportSize=${test.viewportSize}`
+                    );
+                    const endTime = performance.now();
+                    const data = await response.json();
+                    
+                    output += log(`Viewport ${test.startIndex}-${test.startIndex + test.viewportSize}: ${Math.round(endTime - startTime)}ms`);
+                    output += log(`  Records returned: ${data.data.$values.length}`);
+                    output += log(`  Total available: ${data.totalCount}`);
+                }
+                
+                updateStatus('virtual-status', 'Success', 'success');
+                showResult('virtual-result', output);
+            } catch (error) {
+                output += log(`Virtual scrolling test failed: ${error.message}`, true);
+                updateStatus('virtual-status', 'Error', 'error');
+                showResult('virtual-result', output);
+            }
+        }
+
+        async function testCaching() {
+            updateStatus('cache-status', 'Testing...', 'pending');
+            let output = '';
+            
+            try {
+                const url = `${API_BASE}/RawData/optimized/imports?pageNumber=1&pageSize=5`;
+                
+                // First request (should be slow)
+                const start1 = performance.now();
+                await fetch(url);
+                const time1 = Math.round(performance.now() - start1);
+                
+                // Second request (should be cached)
+                const start2 = performance.now();
+                await fetch(url);
+                const time2 = Math.round(performance.now() - start2);
+                
+                output += log(`First request: ${time1}ms`);
+                output += log(`Second request (cached): ${time2}ms`);
+                
+                const improvement = Math.round(((time1 - time2) / time1) * 100);
+                output += log(`Cache improvement: ${improvement}%`);
+                
+                if (time2 < time1) {
+                    updateStatus('cache-status', `${improvement}% faster`, 'success');
+                } else {
+                    updateStatus('cache-status', 'No improvement', 'error');
+                }
+                
+                showResult('cache-result', output);
+            } catch (error) {
+                output += log(`Caching test failed: ${error.message}`, true);
+                updateStatus('cache-status', 'Error', 'error');
+                showResult('cache-result', output);
+            }
+        }
+
+        async function runFullSystemTest() {
+            updateStatus('system-status', 'Running...', 'pending');
+            let output = '';
+            
+            output += log('Starting full system test...');
+            showResult('system-result', output);
+            
+            // Run all tests in sequence
+            await testHealthCheck();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testPerformance();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testAPIs();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testVirtualScrolling();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testCaching();
+            
+            output += log('Full system test completed!');
+            addResult('system-result', output);
+            updateStatus('system-status', 'Complete', 'success');
+        }
+
+        // Auto-run health check on page load
+        window.addEventListener('load', () => {
+            setTimeout(testHealthCheck, 1000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modal Positioning Debug Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: #333;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            z-index: 20000;
+        }
+        
+        .content {
+            height: 200vh; /* Tạo content dài để có scroll */
+            background: linear-gradient(to bottom, #f0f0f0, #e0e0e0);
+            padding: 20px;
+        }
+        
+        .form-section {
+            margin-top: 100vh; /* Form ở cuối trang */
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .edit-btn {
+            background: #8B1538;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .edit-btn:hover {
+            background: #A91B47;
+        }
+        
+        /* Modal styles giống y như trong Vue app */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            backdrop-filter: blur(2px);
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .modal-overlay.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.4),
+                0 8px 30px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .scroll-btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-info" id="debugInfo">
+        Scroll Y: <span id="scrollY">0</span>px<br>
+        Viewport Height: <span id="viewportHeight">0</span>px<br>
+        Modal Top: <span id="modalTop">0</span>px
+    </div>
+    
+    <div class="content">
+        <h1>🧪 Modal Positioning Debug Test</h1>
+        <p>Trang này test modal positioning giống như trong ứng dụng KPI Definitions.</p>
+        
+        <button class="scroll-btn" onclick="scrollToForm()">📍 Scroll to Form (như click nút "Sửa")</button>
+        <button class="scroll-btn" onclick="scrollToTop()">⬆️ Scroll to Top</button>
+        
+        <p>Scroll xuống để thấy form ở cuối trang...</p>
+        <p>📏 Content dài để test scroll behavior...</p>
+        <p>🎯 Form sẽ ở cuối trang, modal phải xuất hiện tại đó!</p>
+        
+        <div class="form-section" id="formSection">
+            <h2>📝 Form Chỉnh Sửa KPI (Ở cuối trang)</h2>
+            <p>Đây là form chỉnh sửa KPI ở cuối trang. Khi click nút Edit, modal phải xuất hiện <strong>NGAY TẠI ĐÂY</strong>, không phải ở đầu trang!</p>
+            
+            <button class="edit-btn" onclick="openModal()">✏️ Edit KPI (Test Modal)</button>
+            
+            <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 5px;">
+                <h4>📊 Expected Behavior:</h4>
+                <ul>
+                    <li>✅ Modal xuất hiện tại viewport hiện tại (cuối trang)</li>
+                    <li>✅ Không cần scroll lên để thấy modal</li>
+                    <li>✅ Modal positioning responsive</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="close-btn" onclick="closeModal()">✕</button>
+            <h3>🎯 Test Modal - Position Check</h3>
+            <p>Modal này phải xuất hiện tại vị trí form (cuối trang), không phải ở đầu trang!</p>
+            
+            <div style="background: #e8f5e8; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                <strong>✅ Success!</strong> Nếu bạn thấy modal này mà không cần scroll, nghĩa là positioning đã work!
+            </div>
+            
+            <div>
+                <label>Test Input:</label><br>
+                <input type="text" placeholder="Nhập tên chỉ tiêu..." style="width: 100%; padding: 8px; margin: 5px 0;">
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <button onclick="closeModal()" style="background: #6c757d; color: white; padding: 8px 16px; border: none; border-radius: 4px; margin-right: 10px;">Hủy</button>
+                <button onclick="closeModal()" style="background: #8B1538; color: white; padding: 8px 16px; border: none; border-radius: 4px;">Lưu</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Update debug info
+        function updateDebugInfo() {
+            const scrollY = window.scrollY;
+            const viewportHeight = window.innerHeight;
+            
+            document.getElementById('scrollY').textContent = Math.round(scrollY);
+            document.getElementById('viewportHeight').textContent = viewportHeight;
+        }
+        
+        // Scroll to form (giống như click nút "Sửa")
+        function scrollToForm() {
+            const formSection = document.getElementById('formSection');
+            formSection.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'start' 
+            });
+            
+            // Highlight form tạm thời
+            formSection.style.backgroundColor = '#fff3cd';
+            setTimeout(() => {
+                formSection.style.backgroundColor = 'white';
+            }, 1000);
+        }
+        
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // Open modal with viewport positioning (giống code trong Vue)
+        function openModal() {
+            const modalOverlay = document.getElementById('modalOverlay');
+            modalOverlay.classList.add('show');
+            
+            // Positioning logic giống y như trong Vue app
+            setTimeout(() => {
+                const currentScrollY = window.scrollY;
+                const viewportHeight = window.innerHeight;
+                
+                // Modal xuất hiện tại viewport hiện tại (20% từ top)
+                const modalTop = currentScrollY + (viewportHeight * 0.2);
+                
+                // Set position trực tiếp
+                modalOverlay.style.position = 'absolute';
+                modalOverlay.style.top = modalTop + 'px';
+                modalOverlay.style.left = '0';
+                modalOverlay.style.right = '0';
+                modalOverlay.style.height = '100vh';
+                modalOverlay.style.alignItems = 'flex-start';
+                modalOverlay.style.paddingTop = '0';
+                
+                // Update debug info
+                document.getElementById('modalTop').textContent = Math.round(modalTop);
+                
+                console.log('🎯 Modal positioned at:', modalTop, 'Current scroll:', currentScrollY);
+            }, 100);
+        }
+        
+        function closeModal() {
+            const modalOverlay = document.getElementById('modalOverlay');
+            modalOverlay.classList.remove('show');
+            
+            // Reset styles
+            setTimeout(() => {
+                modalOverlay.style.position = '';
+                modalOverlay.style.top = '';
+                modalOverlay.style.left = '';
+                modalOverlay.style.right = '';
+                modalOverlay.style.height = '';
+                modalOverlay.style.alignItems = '';
+                modalOverlay.style.paddingTop = '';
+            }, 100);
+        }
+        
+        // Update debug info on scroll
+        window.addEventListener('scroll', updateDebugInfo);
+        window.addEventListener('resize', updateDebugInfo);
+        
+        // Initial update
+        updateDebugInfo();
+        
+        // Keyboard shortcut
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+            if (e.key === 'F') {
+                scrollToForm();
+            }
+            if (e.key === 'M') {
+                openModal();
+            }
+        });
+        
+        console.log('🧪 Debug test loaded! Shortcuts: F=scroll to form, M=open modal, Esc=close modal');
+    </script>
+</body>
+</html>

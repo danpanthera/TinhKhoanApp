@@ -1,0 +1,49 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Test and debug files
+test-*.html
+test-*.js
+debug-*.html
+*-debug.html
+final-verification.html
+units-debug.html
+api-test.html
+
+# Backup files
+*.bak
+*.backup
+*.tmp
+*_backup.*
+*.corrupted
+
+# Documentation temp files
+EMPLOYEE_FIX_VERIFICATION.md
+README_TOASTIFICATION.md
+
+# Build artifacts
+obj/
+bin/Debug/
+bin/Release/

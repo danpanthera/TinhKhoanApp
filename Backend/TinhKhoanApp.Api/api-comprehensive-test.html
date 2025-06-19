@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiểm tra toàn diện APIs - TinhKhoanApp</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            border: 1px solid #ddd;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        .pending {
+            background-color: #fff3cd;
+            border-color: #ffeaa7;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .stats {
+            background-color: #e9ecef;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Kiểm tra toàn diện APIs - TinhKhoanApp</h1>
+    
+    <div class="stats" id="stats">
+        <h3>Thống kê kiểm tra</h3>
+        <p>Tổng số API: <span id="total-apis">0</span></p>
+        <p>Thành công: <span id="success-count">0</span></p>
+        <p>Lỗi: <span id="error-count">0</span></p>
+        <p>Chờ xử lý: <span id="pending-count">0</span></p>
+    </div>
+
+    <button onclick="testAllAPIs()">Kiểm tra tất cả APIs</button>
+    <button onclick="clearResults()">Xóa kết quả</button>
+
+    <div id="results"></div>
+
+    <script>
+        const BASE_URL = 'http://localhost:5055/api';
+        
+        const APIs = [
+            { name: 'Units - Danh sách đơn vị', endpoint: '/Units' },
+            { name: 'Roles - Danh sách vai trò', endpoint: '/Roles' },
+            { name: 'Positions - Danh sách chức vụ', endpoint: '/Positions' },
+            { name: 'Employees - Danh sách nhân viên', endpoint: '/Employees' },
+            { name: 'KhoanPeriods - Danh sách kỳ khoán', endpoint: '/KhoanPeriods' },
+            { name: 'KPIDefinitions - Định nghĩa KPI', endpoint: '/KPIDefinitions' },
+            { name: 'EmployeeKpiAssignment - Giao khoán KPI cho cán bộ', endpoint: '/EmployeeKpiAssignment' },
+            { name: 'UnitKpiScoring - Giao khoán KPI cho chi nhánh', endpoint: '/UnitKpiScoring' }
+        ];
+
+        let testResults = {};
+
+        function updateStats() {
+            const total = APIs.length;
+            const successCount = Object.values(testResults).filter(r => r.status === 'success').length;
+            const errorCount = Object.values(testResults).filter(r => r.status === 'error').length;
+            const pendingCount = total - successCount - errorCount;
+
+            document.getElementById('total-apis').textContent = total;
+            document.getElementById('success-count').textContent = successCount;
+            document.getElementById('error-count').textContent = errorCount;
+            document.getElementById('pending-count').textContent = pendingCount;
+        }
+
+        async function testAPI(api) {
+            const resultDiv = document.getElementById(`result-${api.endpoint.replace(/[\/]/g, '-')}`);
+            
+            try {
+                resultDiv.className = 'test-section pending';
+                resultDiv.innerHTML = `
+                    <h3>${api.name}</h3>
+                    <p><strong>Endpoint:</strong> ${BASE_URL}${api.endpoint}</p>
+                    <p>🔄 Đang kiểm tra...</p>
+                `;
+
+                const response = await fetch(`${BASE_URL}${api.endpoint}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    testResults[api.endpoint] = { status: 'success', data };
+                    resultDiv.className = 'test-section success';
+                    
+                    let summary = '';
+                    if (data.$values && Array.isArray(data.$values)) {
+                        summary = `✅ Thành công - Trả về ${data.$values.length} bản ghi`;
+                        
+                        // Kiểm tra các trường quan trọng
+                        if (data.$values.length > 0) {
+                            const firstItem = data.$values[0];
+                            const importantFields = [];
+                            
+                            if (api.endpoint === '/EmployeeKpiAssignment') {
+                                if (firstItem.khoanPeriodId) importantFields.push('✓ Có trường khoanPeriodId');
+                                if (firstItem.khoanPeriodName) importantFields.push('✓ Có trường khoanPeriodName');
+                            }
+                            
+                            if (api.endpoint === '/UnitKpiScoring') {
+                                if (firstItem.khoanPeriodId) importantFields.push('✓ Có trường khoanPeriodId');
+                                if (firstItem.khoanPeriodName) importantFields.push('✓ Có trường khoanPeriodName');
+                            }
+                            
+                            if (importantFields.length > 0) {
+                                summary += '<br>' + importantFields.join('<br>');
+                            }
+                        }
+                    } else {
+                        summary = '✅ Thành công - Trả về dữ liệu';
+                    }
+
+                    resultDiv.innerHTML = `
+                        <h3>${api.name}</h3>
+                        <p><strong>Endpoint:</strong> ${BASE_URL}${api.endpoint}</p>
+                        <p>${summary}</p>
+                        <details>
+                            <summary>Xem dữ liệu chi tiết</summary>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </details>
+                    `;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                testResults[api.endpoint] = { status: 'error', error: error.message };
+                resultDiv.className = 'test-section error';
+                resultDiv.innerHTML = `
+                    <h3>${api.name}</h3>
+                    <p><strong>Endpoint:</strong> ${BASE_URL}${api.endpoint}</p>
+                    <p>❌ Lỗi: ${error.message}</p>
+                `;
+            }
+
+            updateStats();
+        }
+
+        async function testAllAPIs() {
+            const resultsDiv = document.getElementById('results');
+            
+            // Tạo div cho mỗi API
+            APIs.forEach(api => {
+                const resultDiv = document.createElement('div');
+                resultDiv.id = `result-${api.endpoint.replace(/[\/]/g, '-')}`;
+                resultDiv.className = 'test-section pending';
+                resultDiv.innerHTML = `
+                    <h3>${api.name}</h3>
+                    <p><strong>Endpoint:</strong> ${BASE_URL}${api.endpoint}</p>
+                    <p>⏳ Chờ kiểm tra...</p>
+                `;
+                resultsDiv.appendChild(resultDiv);
+            });
+
+            // Reset test results
+            testResults = {};
+            updateStats();
+
+            // Test từng API
+            for (const api of APIs) {
+                await testAPI(api);
+                // Đợi 500ms giữa các request
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            testResults = {};
+            updateStats();
+        }
+
+        // Khởi tạo stats
+        updateStats();
+    </script>
+</body>
+</html>

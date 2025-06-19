@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎯 Simple Modal Position Test</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            min-height: 300vh; /* Long page để test scroll */
+        }
+        
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            z-index: 5000;
+            min-width: 250px;
+        }
+        
+        .content {
+            padding: 50px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .section {
+            background: white;
+            margin: 100px 0;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .form-section {
+            background: #e3f2fd;
+            margin: 200px 0;
+            padding: 50px;
+            border-radius: 15px;
+            border: 3px solid #1976d2;
+            text-align: center;
+        }
+        
+        .test-btn {
+            background: #8B1538;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            font-weight: bold;
+        }
+        
+        .test-btn:hover {
+            background: #A91B47;
+            transform: translateY(-2px);
+        }
+        
+        /* Simple modal - NO complex CSS */
+        .simple-modal {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            z-index: 10000;
+        }
+        
+        .simple-modal.show {
+            display: flex;
+        }
+        
+        .modal-box {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            margin: 100px auto 0;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <!-- Debug Info -->
+    <div class="debug-info" id="debugInfo">
+        <div><strong>🔍 DEBUG INFO:</strong></div>
+        <div>Page Height: <span id="pageHeight">0</span>px</div>
+        <div>Current Scroll: <span id="currentScroll">0</span>px</div>
+        <div>Viewport Height: <span id="viewportHeight">0</span>px</div>
+        <div>Form Position: <span id="formPosition">0</span>px</div>
+        <div>Modal Top: <span id="modalTop">0</span>px</div>
+        <div><strong>Status:</strong> <span id="status">Ready</span></div>
+    </div>
+    
+    <div class="content">
+        <div class="section">
+            <h1>🧪 Simple Modal Position Test</h1>
+            <p>Test để hiểu chính xác vấn đề modal positioning.</p>
+            <button class="test-btn" onclick="scrollToForm()">📍 Scroll to Form (Bottom)</button>
+            <button class="test-btn" onclick="scrollToTop()">⬆️ Scroll to Top</button>
+        </div>
+        
+        <div class="section">
+            <h2>📄 Section 1</h2>
+            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit...</p>
+        </div>
+        
+        <div class="section">
+            <h2>📊 Section 2</h2>
+            <p>Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua...</p>
+        </div>
+        
+        <div class="section">
+            <h2>📈 Section 3</h2>
+            <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco...</p>
+        </div>
+        
+        <!-- FORM SECTION - Target position for modal -->
+        <div class="form-section" id="formSection">
+            <h2>🎯 FORM SECTION (TARGET POSITION)</h2>
+            <p><strong>Đây là nơi modal phải xuất hiện!</strong></p>
+            <p>Modal phải positioned ngay tại section này khi click test button.</p>
+            
+            <button class="test-btn" onclick="testModalPositioning()">
+                🧪 TEST MODAL POSITIONING
+            </button>
+            
+            <div style="margin-top: 30px; padding: 20px; background: rgba(139, 21, 56, 0.1); border-radius: 8px;">
+                <h4>✅ Expected Result:</h4>
+                <ul style="text-align: left; max-width: 400px; margin: 0 auto;">
+                    <li>✅ Modal xuất hiện TẠI ĐÂY (không phải đầu trang)</li>
+                    <li>✅ Không cần scroll để thấy modal</li>
+                    <li>✅ Background overlay đen tràn full page</li>
+                    <li>✅ Modal box white xuất hiện 100px phía trên form</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>📝 End Section</h2>
+            <p>Đây là cuối trang. Modal phải ở form section phía trên, KHÔNG phải ở đây.</p>
+        </div>
+    </div>
+    
+    <!-- Simple Modal -->
+    <div class="simple-modal" id="simpleModal" onclick="closeModal()">
+        <div class="modal-box" onclick="event.stopPropagation()">
+            <button class="close-btn" onclick="closeModal()">✕</button>
+            <h3>🎯 Modal Position Test</h3>
+            <p><strong>SUCCESS!</strong> Nếu anh thấy modal này mà không cần scroll, nghĩa là positioning đã work!</p>
+            <p>Modal này được positioned chính xác tại form section.</p>
+            
+            <div style="background: #e8f5e8; padding: 15px; border-radius: 5px; margin: 15px 0;">
+                <strong>✅ Test passed!</strong> Modal xuất hiện tại đúng vị trí!
+            </div>
+            
+            <button onclick="closeModal()" style="background: #8B1538; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">OK</button>
+        </div>
+    </div>
+    
+    <script>
+        function updateDebugInfo() {
+            const pageHeight = document.documentElement.scrollHeight;
+            const currentScroll = window.scrollY;
+            const viewportHeight = window.innerHeight;
+            
+            const formSection = document.getElementById('formSection');
+            const formRect = formSection.getBoundingClientRect();
+            const formPosition = formRect.top + currentScroll;
+            
+            document.getElementById('pageHeight').textContent = pageHeight;
+            document.getElementById('currentScroll').textContent = Math.round(currentScroll);
+            document.getElementById('viewportHeight').textContent = viewportHeight;
+            document.getElementById('formPosition').textContent = Math.round(formPosition);
+        }
+        
+        function scrollToForm() {
+            document.getElementById('formSection').scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+            document.getElementById('status').textContent = 'Scrolled to form';
+        }
+        
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            document.getElementById('status').textContent = 'Scrolled to top';
+        }
+        
+        function testModalPositioning() {
+            const modal = document.getElementById('simpleModal');
+            const formSection = document.getElementById('formSection');
+            
+            // Tính toán vị trí form section
+            const formRect = formSection.getBoundingClientRect();
+            const formTop = formRect.top + window.scrollY;
+            const modalTop = formTop - 100; // 100px phía trên form
+            
+            console.log('🎯 Form top:', formTop, 'Modal will be at:', modalTop);
+            
+            // Set modal position - EXACT same approach như Vue app
+            modal.style.position = 'absolute';
+            modal.style.top = modalTop + 'px';
+            modal.style.left = '0';
+            modal.style.right = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100vh';
+            modal.style.justifyContent = 'center';
+            modal.style.alignItems = 'flex-start';
+            
+            modal.classList.add('show');
+            
+            // Update debug info
+            document.getElementById('modalTop').textContent = Math.round(modalTop);
+            document.getElementById('status').textContent = 'Modal opened at Y: ' + Math.round(modalTop);
+            
+            console.log('✅ Modal positioned at:', modalTop);
+        }
+        
+        function closeModal() {
+            const modal = document.getElementById('simpleModal');
+            modal.classList.remove('show');
+            modal.style.cssText = ''; // Reset styles
+            document.getElementById('status').textContent = 'Modal closed';
+        }
+        
+        // Event listeners
+        window.addEventListener('scroll', updateDebugInfo);
+        window.addEventListener('resize', updateDebugInfo);
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+            if (e.key === 'f' || e.key === 'F') scrollToForm();
+            if (e.key === 't' || e.key === 'T') testModalPositioning();
+        });
+        
+        // Initial update
+        updateDebugInfo();
+        
+        console.log('🧪 Simple test page loaded!');
+        console.log('Shortcuts: F=scroll to form, T=test modal, Esc=close modal');
+    </script>
+</body>
+</html>

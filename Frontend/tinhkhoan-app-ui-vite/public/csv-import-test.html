@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Import Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h2 {
+            color: #34495e;
+            margin-top: 0;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button.success {
+            background-color: #27ae60;
+        }
+        button.error {
+            background-color: #e74c3c;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .result.success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .result.info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        input[type="file"] {
+            margin-bottom: 10px;
+        }
+        .status {
+            display: inline-block;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        .status.success {
+            color: #27ae60;
+        }
+        .status.error {
+            color: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗄️ CSV Import Connection Test</h1>
+        
+        <div class="test-section">
+            <h2>1. Backend API Connection Test</h2>
+            <p>Test kết nối đến backend API và kiểm tra endpoint RawData</p>
+            <button onclick="testBackendConnection()">Test Backend Connection</button>
+            <span id="backendStatus" class="status"></span>
+            <div id="backendResult" class="result info" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>2. Authentication Test</h2>
+            <p>Test đăng nhập và lấy JWT token</p>
+            <button onclick="testAuthentication()">Test Login</button>
+            <span id="authStatus" class="status"></span>
+            <div id="authResult" class="result info" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>3. CSV Import Test</h2>
+            <p>Test import file CSV với authentication</p>
+            <input type="file" id="csvFile" accept=".csv" />
+            <button onclick="testCsvImport()">Test CSV Import</button>
+            <span id="importStatus" class="status"></span>
+            <div id="importResult" class="result info" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>4. Get Import Data Test</h2>
+            <p>Test lấy danh sách dữ liệu đã import</p>
+            <button onclick="testGetImports()">Get Import List</button>
+            <span id="listStatus" class="status"></span>
+            <div id="listResult" class="result info" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let authToken = null;
+        const API_BASE_URL = 'http://localhost:5055/api';
+
+        // Helper functions
+        function showResult(elementId, content, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = content;
+            element.className = `result ${type}`;
+            element.style.display = 'block';
+        }
+
+        function showStatus(elementId, text, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = text;
+            element.className = `status ${type}`;
+        }
+
+        // 1. Test Backend Connection
+        async function testBackendConnection() {
+            showStatus('backendStatus', 'Testing...', 'info');
+            try {
+                const response = await fetch(`${API_BASE_URL}/RawData`);
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult('backendResult', `✅ Backend connection successful!\nStatus: ${response.status}\nData: ${JSON.stringify(data, null, 2)}`, 'success');
+                    showStatus('backendStatus', '✅ Connected', 'success');
+                } else {
+                    showResult('backendResult', `❌ Backend responded with error: ${response.status} ${response.statusText}`, 'error');
+                    showStatus('backendStatus', '❌ Failed', 'error');
+                }
+            } catch (error) {
+                showResult('backendResult', `❌ Connection failed: ${error.message}`, 'error');
+                showStatus('backendStatus', '❌ Failed', 'error');
+            }
+        }
+
+        // 2. Test Authentication
+        async function testAuthentication() {
+            showStatus('authStatus', 'Testing...', 'info');
+            try {
+                const response = await fetch(`${API_BASE_URL}/Auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.token;
+                    showResult('authResult', `✅ Authentication successful!\nToken: ${data.token.substring(0, 50)}...\nUser: ${JSON.stringify(data.user, null, 2)}`, 'success');
+                    showStatus('authStatus', '✅ Authenticated', 'success');
+                } else {
+                    showResult('authResult', `❌ Authentication failed: ${response.status} ${response.statusText}`, 'error');
+                    showStatus('authStatus', '❌ Failed', 'error');
+                }
+            } catch (error) {
+                showResult('authResult', `❌ Authentication error: ${error.message}`, 'error');
+                showStatus('authStatus', '❌ Failed', 'error');
+            }
+        }
+
+        // 3. Test CSV Import
+        async function testCsvImport() {
+            const fileInput = document.getElementById('csvFile');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showResult('importResult', '❌ Please select a CSV file first', 'error');
+                showStatus('importStatus', '❌ No file', 'error');
+                return;
+            }
+
+            if (!authToken) {
+                showResult('importResult', '❌ Please authenticate first', 'error');
+                showStatus('importStatus', '❌ No auth', 'error');
+                return;
+            }
+
+            // Determine data type from filename
+            const fileName = file.name.toUpperCase();
+            let dataType = 'GL01'; // default
+            if (fileName.includes('LN01')) dataType = 'LN01';
+            else if (fileName.includes('DP01')) dataType = 'DP01';
+            else if (fileName.includes('GL01')) dataType = 'GL01';
+
+            showStatus('importStatus', 'Importing...', 'info');
+            
+            try {
+                const formData = new FormData();
+                formData.append('Files', file);
+                formData.append('Notes', 'Test import from browser');
+
+                const response = await fetch(`${API_BASE_URL}/RawData/import/${dataType}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult('importResult', `✅ Import successful!\nData Type: ${dataType}\nResponse: ${JSON.stringify(data, null, 2)}`, 'success');
+                    showStatus('importStatus', '✅ Imported', 'success');
+                } else {
+                    const errorText = await response.text();
+                    showResult('importResult', `❌ Import failed: ${response.status} ${response.statusText}\n${errorText}`, 'error');
+                    showStatus('importStatus', '❌ Failed', 'error');
+                }
+            } catch (error) {
+                showResult('importResult', `❌ Import error: ${error.message}`, 'error');
+                showStatus('importStatus', '❌ Failed', 'error');
+            }
+        }
+
+        // 4. Test Get Imports
+        async function testGetImports() {
+            if (!authToken) {
+                showResult('listResult', '❌ Please authenticate first', 'error');
+                showStatus('listStatus', '❌ No auth', 'error');
+                return;
+            }
+
+            showStatus('listStatus', 'Loading...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/RawData`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showResult('listResult', `✅ Import list retrieved!\nCount: ${data.length || 0}\nData: ${JSON.stringify(data, null, 2)}`, 'success');
+                    showStatus('listStatus', '✅ Loaded', 'success');
+                } else {
+                    const errorText = await response.text();
+                    showResult('listResult', `❌ Failed to get imports: ${response.status} ${response.statusText}\n${errorText}`, 'error');
+                    showStatus('listStatus', '❌ Failed', 'error');
+                }
+            } catch (error) {
+                showResult('listResult', `❌ Get imports error: ${error.message}`, 'error');
+                showStatus('listStatus', '❌ Failed', 'error');
+            }
+        }
+    </script>
+</body>
+</html>

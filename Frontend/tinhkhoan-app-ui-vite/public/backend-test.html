@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #b6d4d8;
+            color: #0c5460;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Backend API Connection Test</h1>
+    
+    <div class="info">
+        <strong>Environment Info:</strong><br>
+        Frontend URL: <span id="frontend-url"></span><br>
+        Backend API (expected): http://localhost:5055/api<br>
+        Current Time: <span id="current-time"></span>
+    </div>
+
+    <div>
+        <button onclick="testConnection()">Test Basic Connection</button>
+        <button onclick="testEmployeesAPI()">Test Employees API</button>
+        <button onclick="testUnitsAPI()">Test Units API</button>
+        <button onclick="clearResults()">Clear Results</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        // Show environment info
+        document.getElementById('frontend-url').textContent = window.location.origin;
+        document.getElementById('current-time').textContent = new Date().toLocaleString();
+
+        // Helper function to show results
+        function showResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `status ${type}`;
+            resultDiv.innerHTML = message;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+
+        // Test basic connection
+        async function testConnection() {
+            showResult('🔄 Testing basic connection to backend...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:5055/api/units', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Origin': window.location.origin
+                    }
+                });
+
+                if (response.ok) {
+                    showResult('✅ Backend connection successful!', 'success');
+                    showResult(`📊 Response status: ${response.status}`, 'info');
+                    showResult(`📝 Content-Type: ${response.headers.get('content-type')}`, 'info');
+                } else {
+                    showResult(`❌ Backend responded with error: ${response.status} ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Connection failed: ${error.message}`, 'error');
+                console.error('Connection error:', error);
+            }
+        }
+
+        // Test employees API specifically
+        async function testEmployeesAPI() {
+            showResult('🔄 Testing Employees API...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:5055/api/Employees', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Origin': window.location.origin
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const employeeCount = data.$values ? data.$values.length : (Array.isArray(data) ? data.length : 'unknown');
+                    showResult(`✅ Employees API successful! Found ${employeeCount} employees`, 'success');
+                    
+                    if (data.$values && data.$values.length > 0) {
+                        const firstEmployee = data.$values[0];
+                        showResult(`👤 Sample employee: ${firstEmployee.fullName} (${firstEmployee.employeeCode})`, 'info');
+                    }
+                } else {
+                    showResult(`❌ Employees API error: ${response.status} ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Employees API failed: ${error.message}`, 'error');
+                console.error('Employees API error:', error);
+            }
+        }
+
+        // Test units API
+        async function testUnitsAPI() {
+            showResult('🔄 Testing Units API...', 'info');
+            
+            try {
+                const response = await fetch('http://localhost:5055/api/Units', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Origin': window.location.origin
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const unitCount = data.$values ? data.$values.length : (Array.isArray(data) ? data.length : 'unknown');
+                    showResult(`✅ Units API successful! Found ${unitCount} units`, 'success');
+                } else {
+                    showResult(`❌ Units API error: ${response.status} ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Units API failed: ${error.message}`, 'error');
+                console.error('Units API error:', error);
+            }
+        }
+
+        // Auto-run connection test on load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                showResult('🚀 Page loaded, running automatic tests...', 'info');
+                testConnection();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

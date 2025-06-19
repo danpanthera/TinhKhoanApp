@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Import Test - TinhKhoan App</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e3e3e3;
+            border-radius: 8px;
+        }
+        .section-title {
+            color: #34495e;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button.success {
+            background-color: #27ae60;
+        }
+        button.error {
+            background-color: #e74c3c;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+        }
+        .result.success {
+            background-color: #d5f4e6;
+            border: 1px solid #27ae60;
+            color: #1e7e34;
+        }
+        .result.error {
+            background-color: #f8d7da;
+            border: 1px solid #e74c3c;
+            color: #721c24;
+        }
+        .info {
+            background-color: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .file-info {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .imports-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .import-item {
+            background: white;
+            margin-bottom: 10px;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #e3e3e3;
+        }
+        .import-item h4 {
+            margin: 0 0 10px 0;
+            color: #2c3e50;
+        }
+        .import-meta {
+            color: #666;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Final Import Test - TinhKhoan App</h1>
+        
+        <div class="info">
+            <strong>✅ Import Fix Complete!</strong><br>
+            Cả CSV và ZIP import đều hoạt động thành công. Test UI để đảm bảo frontend hoạt động đúng.
+        </div>
+
+        <!-- Test 1: CSV Import -->
+        <div class="test-section">
+            <div class="section-title">📄 Test 1: Import CSV File</div>
+            
+            <div class="form-group">
+                <label>Chọn file CSV:</label>
+                <input type="file" id="csvFile" accept=".csv" />
+                <div class="file-info" id="csvFileInfo"></div>
+            </div>
+            
+            <div class="form-group">
+                <label>Data Type:</label>
+                <select id="csvDataType">
+                    <option value="LN01">LN01 - Dữ liệu LOAN</option>
+                    <option value="LN03">LN03 - Dữ liệu Nợ XLRR</option>
+                    <option value="DP01">DP01 - Dữ liệu Tiền gửi</option>
+                    <option value="EI01">EI01 - Dữ liệu mobile banking</option>
+                    <option value="GL01">GL01 - Dữ liệu bút toán GDV</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Ghi chú:</label>
+                <textarea id="csvNotes" rows="2" placeholder="Ghi chú cho import này..."></textarea>
+            </div>
+            
+            <button onclick="importCSV()">📤 Import CSV File</button>
+            <div id="csvResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Test 2: ZIP Import -->
+        <div class="test-section">
+            <div class="section-title">🗜️ Test 2: Import ZIP/Archive File</div>
+            
+            <div class="form-group">
+                <label>Chọn file nén (ZIP, 7Z, RAR):</label>
+                <input type="file" id="archiveFile" accept=".zip,.7z,.rar" />
+                <div class="file-info" id="archiveFileInfo"></div>
+            </div>
+            
+            <div class="form-group">
+                <label>Data Type:</label>
+                <select id="archiveDataType">
+                    <option value="LN01">LN01 - Dữ liệu LOAN</option>
+                    <option value="LN03">LN03 - Dữ liệu Nợ XLRR</option>
+                    <option value="DP01">DP01 - Dữ liệu Tiền gửi</option>
+                    <option value="EI01">EI01 - Dữ liệu mobile banking</option>
+                    <option value="GL01">GL01 - Dữ liệu bút toán GDV</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Mật khẩu (nếu có):</label>
+                <input type="password" id="archivePassword" placeholder="Để trống nếu file không có mật khẩu" />
+            </div>
+            
+            <div class="form-group">
+                <label>Ghi chú:</label>
+                <textarea id="archiveNotes" rows="2" placeholder="Ghi chú cho import này..."></textarea>
+            </div>
+            
+            <button onclick="importArchive()">📤 Import Archive File</button>
+            <div id="archiveResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- Test 3: List Imports -->
+        <div class="test-section">
+            <div class="section-title">📋 Test 3: Danh sách Imports</div>
+            <button onclick="loadImports()">🔄 Tải danh sách Imports</button>
+            <div id="importsList" class="imports-list" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5055/api';
+
+        // File input change handlers
+        document.getElementById('csvFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('csvFileInfo').innerHTML = `
+                    <strong>File:</strong> ${file.name}<br>
+                    <strong>Size:</strong> ${(file.size / 1024).toFixed(2)} KB<br>
+                    <strong>Type:</strong> ${file.type || 'text/csv'}
+                `;
+            }
+        });
+
+        document.getElementById('archiveFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('archiveFileInfo').innerHTML = `
+                    <strong>File:</strong> ${file.name}<br>
+                    <strong>Size:</strong> ${(file.size / 1024).toFixed(2)} KB<br>
+                    <strong>Type:</strong> ${file.type}
+                `;
+            }
+        });
+
+        // Import CSV file
+        async function importCSV() {
+            const fileInput = document.getElementById('csvFile');
+            const dataType = document.getElementById('csvDataType').value;
+            const notes = document.getElementById('csvNotes').value;
+            const resultDiv = document.getElementById('csvResult');
+
+            if (!fileInput.files[0]) {
+                showResult(resultDiv, 'error', 'Vui lòng chọn file CSV');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('Files', fileInput.files[0]);
+                formData.append('Notes', notes);
+
+                showResult(resultDiv, 'info', 'Đang upload và xử lý file...');
+
+                const response = await fetch(`${API_BASE_URL}/RawData/import/${dataType}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showResult(resultDiv, 'success', `✅ ${result.message}\n\nChi tiết:\n${JSON.stringify(result.results, null, 2)}`);
+                } else {
+                    showResult(resultDiv, 'error', `❌ Lỗi: ${result.message || result.error}`);
+                }
+            } catch (error) {
+                showResult(resultDiv, 'error', `❌ Lỗi kết nối: ${error.message}`);
+            }
+        }
+
+        // Import Archive file
+        async function importArchive() {
+            const fileInput = document.getElementById('archiveFile');
+            const dataType = document.getElementById('archiveDataType').value;
+            const password = document.getElementById('archivePassword').value;
+            const notes = document.getElementById('archiveNotes').value;
+            const resultDiv = document.getElementById('archiveResult');
+
+            if (!fileInput.files[0]) {
+                showResult(resultDiv, 'error', 'Vui lòng chọn file nén');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('Files', fileInput.files[0]);
+                formData.append('ArchivePassword', password);
+                formData.append('Notes', notes);
+
+                showResult(resultDiv, 'info', 'Đang upload và giải nén file...');
+
+                const response = await fetch(`${API_BASE_URL}/RawData/import/${dataType}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showResult(resultDiv, 'success', `✅ ${result.message}\n\nChi tiết:\n${JSON.stringify(result.results, null, 2)}`);
+                } else {
+                    showResult(resultDiv, 'error', `❌ Lỗi: ${result.message || result.error}`);
+                }
+            } catch (error) {
+                showResult(resultDiv, 'error', `❌ Lỗi kết nối: ${error.message}`);
+            }
+        }
+
+        // Load imports list
+        async function loadImports() {
+            const listDiv = document.getElementById('importsList');
+
+            try {
+                listDiv.innerHTML = 'Đang tải...';
+                listDiv.style.display = 'block';
+
+                const response = await fetch(`${API_BASE_URL}/RawData`);
+                const result = await response.json();
+
+                if (response.ok && result.$values) {
+                    let html = '';
+                    result.$values.forEach(imp => {
+                        html += `
+                            <div class="import-item">
+                                <h4>${imp.fileName} (${imp.dataType})</h4>
+                                <div><strong>Status:</strong> ${imp.status}</div>
+                                <div><strong>Records:</strong> ${imp.recordsCount}</div>
+                                <div><strong>Archive:</strong> ${imp.isArchiveFile ? 'Yes (' + (imp.archiveType || 'Unknown') + ')' : 'No'}</div>
+                                <div class="import-meta">
+                                    <span>Import: ${new Date(imp.importDate).toLocaleString('vi-VN')}</span>
+                                    <span>Statement: ${new Date(imp.statementDate).toLocaleDateString('vi-VN')}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    if (html) {
+                        listDiv.innerHTML = html;
+                    } else {
+                        listDiv.innerHTML = '<div class="import-item">Chưa có import nào</div>';
+                    }
+                } else {
+                    listDiv.innerHTML = `<div class="import-item">❌ Lỗi: ${result.message || result.error}</div>`;
+                }
+            } catch (error) {
+                listDiv.innerHTML = `<div class="import-item">❌ Lỗi kết nối: ${error.message}</div>`;
+            }
+        }
+
+        // Show result
+        function showResult(element, type, message) {
+            element.className = `result ${type}`;
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+
+        // Auto-load imports on page load
+        document.addEventListener('DOMContentLoaded', loadImports);
+    </script>
+</body>
+</html>

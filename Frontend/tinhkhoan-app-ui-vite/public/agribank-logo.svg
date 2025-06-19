@@ -1,0 +1,32 @@
+<svg width="140" height="45" viewBox="0 0 140 45" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a5f2e"/>
+      <stop offset="100%" stop-color="#134420"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background with gradient -->
+  <rect width="140" height="45" rx="10" fill="url(#bg)"/>
+  
+  <!-- Agribank Tree Icon -->
+  <g transform="translate(10, 10)">
+    <!-- Tree trunk -->
+    <rect x="10" y="20" width="5" height="8" fill="#8B4513"/>
+    <!-- Tree leaves with realistic green colors -->
+    <circle cx="8" cy="14" r="7" fill="#228B22"/>
+    <circle cx="17" cy="14" r="7" fill="#32CD32"/>
+    <circle cx="12.5" cy="8" r="7" fill="#00AA00"/>
+    <!-- Small leaves overlay for depth -->
+    <circle cx="10" cy="11" r="4" fill="#90EE90" opacity="0.8"/>
+    <circle cx="15" cy="11" r="4" fill="#98FB98" opacity="0.8"/>
+  </g>
+  
+  <!-- Text "Agribank Lai Châu" -->
+  <text x="35" y="18" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="white">Agribank Lai Châu</text>
+  <!-- Text "Center" positioned centered below -->
+  <text x="65" y="30" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#90EE90" text-anchor="middle">Center</text>
+  
+  <!-- Small accent border -->
+  <rect x="3" y="3" width="134" height="39" rx="7" fill="none" stroke="#90EE90" stroke-width="1" opacity="0.5"/>
+</svg>

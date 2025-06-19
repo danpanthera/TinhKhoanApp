@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test KPI Assignment APIs - Agribank Theme</title>
+    <style>
+        /* Import Agribank theme */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        :root {
+            --agribank-primary: #8B1538;
+            --agribank-primary-light: #A91B47;
+            --agribank-secondary: #2C5530;
+            --agribank-accent: #C8AA6E;
+            --success-color: #28a745;
+            --info-color: #17a2b8;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --bg-primary: #ffffff;
+            --bg-secondary: #f8f9fa;
+            --text-primary: #2c3e50;
+            --text-secondary: #6c757d;
+            --border-color: #e1e8ed;
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.15);
+            --radius-lg: 12px;
+        }
+        
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: var(--agribank-primary);
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 30px;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(139, 21, 56, 0.1);
+        }
+        
+        .card {
+            background: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--agribank-primary) 0%, var(--agribank-primary-light) 100%);
+            color: white;
+            padding: 20px;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+        
+        .card-body {
+            padding: 25px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--agribank-primary), var(--agribank-primary-light));
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(139, 21, 56, 0.3);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-color), #20c997);
+            color: white;
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, var(--info-color), #20c997);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning-color), #fd7e14);
+            color: var(--text-primary);
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border-left: 4px solid var(--info-color);
+            white-space: pre-wrap;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .success {
+            border-left-color: var(--success-color);
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .error {
+            border-left-color: var(--danger-color);
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .endpoint-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-success { background: var(--success-color); }
+        .status-error { background: var(--danger-color); }
+        .status-loading { 
+            background: var(--warning-color);
+            animation: pulse 1.5s ease-in-out infinite alternate;
+        }
+        
+        @keyframes pulse {
+            from { opacity: 1; }
+            to { opacity: 0.4; }
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        th {
+            background: linear-gradient(135deg, var(--agribank-primary), var(--agribank-primary-light));
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 0.85rem;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .badge-primary { background: var(--agribank-primary); color: white; }
+        .badge-success { background: var(--success-color); color: white; }
+        .badge-info { background: var(--info-color); color: white; }
+        .badge-secondary { background: #6c757d; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Test KPI Assignment APIs - Agribank</h1>
+        
+        <!-- KPI Tables Tests -->
+        <div class="card">
+            <div class="card-header">
+                📊 KPI Assignment Tables API Tests
+            </div>
+            <div class="card-body">
+                <div class="endpoint-group">
+                    <button class="btn btn-primary" onclick="testGetKpiTables()">
+                        <span id="tables-status" class="status-indicator"></span>
+                        Lấy danh sách bảng KPI
+                    </button>
+                    <button class="btn btn-success" onclick="testGetKpiTableDetails(1)">
+                        <span id="table-details-status" class="status-indicator"></span>
+                        Chi tiết bảng KPI (ID: 1)
+                    </button>
+                    <button class="btn btn-info" onclick="testGetKpiTableDetails(24)">
+                        <span id="table-details-24-status" class="status-indicator"></span>
+                        Chi tiết bảng Hội sở (ID: 24)
+                    </button>
+                    <button class="btn btn-warning" onclick="testGetKpiTablesGrouped()">
+                        <span id="tables-grouped-status" class="status-indicator"></span>
+                        Bảng KPI theo nhóm
+                    </button>
+                </div>
+                <div id="kpi-tables-result" class="result"></div>
+            </div>
+        </div>
+        
+        <!-- Employees & Units Tests -->
+        <div class="card">
+            <div class="card-header">
+                👥 Employees & Units API Tests
+            </div>
+            <div class="card-body">
+                <div class="endpoint-group">
+                    <button class="btn btn-primary" onclick="testGetEmployees()">
+                        <span id="employees-status" class="status-indicator"></span>
+                        Lấy danh sách nhân viên
+                    </button>
+                    <button class="btn btn-success" onclick="testGetUnits()">
+                        <span id="units-status" class="status-indicator"></span>
+                        Lấy danh sách đơn vị
+                    </button>
+                    <button class="btn btn-info" onclick="testGetKhoanPeriods()">
+                        <span id="periods-status" class="status-indicator"></span>
+                        Lấy kỳ khoán
+                    </button>
+                </div>
+                <div id="employees-units-result" class="result"></div>
+            </div>
+        </div>
+        
+        <!-- KPI Assignment Test -->
+        <div class="card">
+            <div class="card-header">
+                📋 KPI Assignment Test
+            </div>
+            <div class="card-body">
+                <div class="endpoint-group">
+                    <button class="btn btn-primary" onclick="testAssignKPI()">
+                        <span id="assign-status" class="status-indicator"></span>
+                        Test giao khoán KPI (mẫu)
+                    </button>
+                </div>
+                <div id="assignment-result" class="result"></div>
+            </div>
+        </div>
+        
+        <!-- Analysis Results -->
+        <div class="card">
+            <div class="card-header">
+                📈 Phân tích kết quả
+            </div>
+            <div class="card-body">
+                <div id="analysis-result">
+                    <p>📊 <strong>Tổng quan hệ thống:</strong></p>
+                    <ul>
+                        <li>✅ Backend API đang chạy trên port 5055</li>
+                        <li>✅ Frontend đang chạy trên port 3000</li>
+                        <li>✅ Sử dụng font Agribank (Inter) và màu sắc nhận diện thương hiệu</li>
+                        <li>📋 Hỗ trợ cả giao khoán KPI cho cán bộ và chi nhánh</li>
+                        <li>🎨 Giao diện hiện đại, CSS đẹp, dễ nhìn</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5055/api';
+        
+        function updateStatus(elementId, status) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.className = `status-indicator status-${status}`;
+            }
+        }
+        
+        function displayResult(containerId, result, isError = false) {
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.textContent = typeof result === 'object' ? JSON.stringify(result, null, 2) : result;
+                container.className = `result ${isError ? 'error' : 'success'}`;
+            }
+        }
+        
+        async function apiCall(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                return { success: true, data };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+        
+        async function testGetKpiTables() {
+            updateStatus('tables-status', 'loading');
+            
+            const result = await apiCall(`${API_BASE_URL}/KpiAssignment/tables`);
+            
+            if (result.success) {
+                updateStatus('tables-status', 'success');
+                displayResult('kpi-tables-result', {
+                    message: '✅ Lấy danh sách bảng KPI thành công',
+                    totalTables: result.data.length,
+                    sampleTables: result.data.slice(0, 5).map(t => ({
+                        id: t.id,
+                        tableName: t.tableName,
+                        category: t.category,
+                        indicatorCount: t.indicatorCount
+                    }))
+                });
+            } else {
+                updateStatus('tables-status', 'error');
+                displayResult('kpi-tables-result', `❌ Lỗi: ${result.error}`, true);
+            }
+        }
+        
+        async function testGetKpiTableDetails(tableId) {
+            const statusId = tableId === 1 ? 'table-details-status' : 'table-details-24-status';
+            updateStatus(statusId, 'loading');
+            
+            const result = await apiCall(`${API_BASE_URL}/KpiAssignment/tables/${tableId}`);
+            
+            if (result.success) {
+                updateStatus(statusId, 'success');
+                displayResult('kpi-tables-result', {
+                    message: `✅ Lấy chi tiết bảng KPI ID ${tableId} thành công`,
+                    tableInfo: {
+                        id: result.data.id,
+                        tableName: result.data.tableName,
+                        description: result.data.description,
+                        totalIndicators: result.data.indicators?.length || 0
+                    },
+                    sampleIndicators: result.data.indicators?.slice(0, 3).map(i => ({
+                        id: i.id,
+                        indicatorName: i.indicatorName,
+                        maxScore: i.maxScore,
+                        unit: i.unit
+                    })) || []
+                });
+            } else {
+                updateStatus(statusId, 'error');
+                displayResult('kpi-tables-result', `❌ Lỗi: ${result.error}`, true);
+            }
+        }
+        
+        async function testGetKpiTablesGrouped() {
+            updateStatus('tables-grouped-status', 'loading');
+            
+            const result = await apiCall(`${API_BASE_URL}/KpiAssignment/tables/grouped`);
+            
+            if (result.success) {
+                updateStatus('tables-grouped-status', 'success');
+                const categories = Object.keys(result.data);
+                displayResult('kpi-tables-result', {
+                    message: '✅ Lấy bảng KPI theo nhóm thành công',
+                    categories: categories,
+                    summary: categories.map(cat => ({
+                        category: cat,
+                        count: result.data[cat].length
+                    }))
+                });
+            } else {
+                updateStatus('tables-grouped-status', 'error');
+                displayResult('kpi-tables-result', `❌ Lỗi: ${result.error}`, true);
+            }
+        }
+        
+        async function testGetEmployees() {
+            updateStatus('employees-status', 'loading');
+            
+            const result = await apiCall(`${API_BASE_URL}/employees`);
+            
+            if (result.success) {
+                updateStatus('employees-status', 'success');
+                displayResult('employees-units-result', {
+                    message: '✅ Lấy danh sách nhân viên thành công',
+                    totalEmployees: result.data.length,
+                    sampleEmployees: result.data.slice(0, 5).map(e => ({
+                        id: e.id,
+                        fullName: e.fullName,
+                        employeeCode: e.employeeCode,
+                        positionName: e.positionName
+                    }))
+                });
+            } else {
+                updateStatus('employees-status', 'error');
+                displayResult('employees-units-result', `❌ Lỗi: ${result.error}`, true);
+            }
+        }
+        
+        async function testGetUnits() {
+            updateStatus('units-status', 'loading');
+            
+            const result = await apiCall(`${API_BASE_URL}/units`);
+            
+            if (result.success) {
+                updateStatus('units-status', 'success');
+                displayResult('employees-units-result', {
+                    message: '✅ Lấy danh sách đơn vị thành công',
+                    totalUnits: result.data.length,
+                    sampleUnits: result.data.slice(0, 5).map(u => ({
+                        id: u.id,
+                        name: u.name,
+                        code: u.code,
+                        type: u.type
+                    }))
+                });
+            } else {
+                updateStatus('units-status', 'error');
+                displayResult('employees-units-result', `❌ Lỗi: ${result.error}`, true);
+            }
+        }
+        
+        async function testGetKhoanPeriods() {
+            updateStatus('periods-status', 'loading');
+            
+            const result = await apiCall(`${API_BASE_URL}/KhoanPeriods`);
+            
+            if (result.success) {
+                updateStatus('periods-status', 'success');
+                displayResult('employees-units-result', {
+                    message: '✅ Lấy kỳ khoán thành công',
+                    totalPeriods: result.data.length,
+                    samplePeriods: result.data.slice(0, 3).map(p => ({
+                        id: p.id,
+                        name: p.name,
+                        startDate: p.startDate,
+                        endDate: p.endDate
+                    }))
+                });
+            } else {
+                updateStatus('periods-status', 'error');
+                displayResult('employees-units-result', `❌ Lỗi: ${result.error}`, true);
+            }
+        }
+        
+        async function testAssignKPI() {
+            updateStatus('assign-status', 'loading');
+            
+            // Sample assignment data
+            const assignmentData = {
+                employeeId: 1,
+                khoanPeriodId: 1,
+                targets: [
+                    {
+                        indicatorId: 1,
+                        targetValue: 100.5,
+                        notes: "Test assignment"
+                    }
+                ]
+            };
+            
+            const result = await apiCall(`${API_BASE_URL}/KpiAssignment/assign`, {
+                method: 'POST',
+                body: JSON.stringify(assignmentData)
+            });
+            
+            if (result.success) {
+                updateStatus('assign-status', 'success');
+                displayResult('assignment-result', {
+                    message: '✅ Test giao khoán KPI thành công',
+                    assignmentData: assignmentData,
+                    response: result.data
+                });
+            } else {
+                updateStatus('assign-status', 'error');
+                displayResult('assignment-result', `❌ Lỗi: ${result.error}`, true);
+            }
+        }
+        
+        // Auto test on page load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                testGetKpiTables();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

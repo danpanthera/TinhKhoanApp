@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .nav-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .nav-link {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            margin: 10px;
+            transition: background-color 0.3s;
+        }
+        .nav-link:hover {
+            background: #0056b3;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧭 Navigation Test for KPI Actual Values</h1>
+    
+    <div class="nav-section">
+        <h2>📍 Quick Navigation</h2>
+        <p>Click on the links below to test navigation:</p>
+        
+        <a href="/" class="nav-link">🏠 Home</a>
+        <a href="/about" class="nav-link">ℹ️ About</a>
+        <a href="/employees" class="nav-link">👥 Employees</a>
+        <a href="/units" class="nav-link">🏢 Units</a>
+        <a href="/khoan-periods" class="nav-link">📅 Khoan Periods</a>
+        <a href="/kpi-actual-values" class="nav-link">🎯 KPI Actual Values</a>
+        <a href="/kpi-scoring" class="nav-link">📊 KPI Scoring</a>
+    </div>
+
+    <div class="nav-section">
+        <h2>🔍 Debug Information</h2>
+        <div id="debug-info">
+            <p>Loading debug information...</p>
+        </div>
+    </div>
+
+    <div class="nav-section">
+        <h2>📊 Page Status</h2>
+        <div id="status-info" class="status info">
+            Initializing...
+        </div>
+    </div>
+
+    <script>
+        // Collect debug information
+        function collectDebugInfo() {
+            const debugInfo = {
+                currentUrl: window.location.href,
+                userAgent: navigator.userAgent,
+                language: navigator.language,
+                cookiesEnabled: navigator.cookieEnabled,
+                onlineStatus: navigator.onLine,
+                localStorage: {
+                    available: typeof(Storage) !== "undefined",
+                    tokenExists: localStorage.getItem('token') !== null,
+                    tokenValue: localStorage.getItem('token') ? 'Present' : 'Not found'
+                },
+                timestamp: new Date().toLocaleString('vi-VN')
+            };
+
+            return debugInfo;
+        }
+
+        // Display debug information
+        function displayDebugInfo() {
+            const debugInfo = collectDebugInfo();
+            const debugDiv = document.getElementById('debug-info');
+            
+            debugDiv.innerHTML = `
+                <h3>🔧 System Information</h3>
+                <ul>
+                    <li><strong>Current URL:</strong> ${debugInfo.currentUrl}</li>
+                    <li><strong>Browser:</strong> ${debugInfo.userAgent.split(' ').pop()}</li>
+                    <li><strong>Language:</strong> ${debugInfo.language}</li>
+                    <li><strong>Online Status:</strong> ${debugInfo.onlineStatus ? '✅ Online' : '❌ Offline'}</li>
+                    <li><strong>Cookies Enabled:</strong> ${debugInfo.cookiesEnabled ? '✅ Yes' : '❌ No'}</li>
+                    <li><strong>LocalStorage:</strong> ${debugInfo.localStorage.available ? '✅ Available' : '❌ Not available'}</li>
+                    <li><strong>Auth Token:</strong> ${debugInfo.localStorage.tokenExists ? '✅ Present' : '❌ Missing'}</li>
+                    <li><strong>Timestamp:</strong> ${debugInfo.timestamp}</li>
+                </ul>
+            `;
+        }
+
+        // Test KPI page directly
+        async function testKpiPage() {
+            const statusDiv = document.getElementById('status-info');
+            statusDiv.className = 'status info';
+            statusDiv.innerHTML = '🔄 Testing KPI Actual Values page...';
+
+            try {
+                // Test if the page exists
+                const response = await fetch('/kpi-actual-values', {
+                    method: 'HEAD'
+                });
+
+                if (response.ok) {
+                    statusDiv.className = 'status success';
+                    statusDiv.innerHTML = '✅ KPI Actual Values page is accessible!<br>' +
+                                        '<em>If clicking the link doesn\'t work, there might be a JavaScript error in the Vue component.</em>';
+                } else {
+                    statusDiv.className = 'status error';
+                    statusDiv.innerHTML = `❌ KPI Actual Values page returned ${response.status}`;
+                }
+            } catch (error) {
+                statusDiv.className = 'status error';
+                statusDiv.innerHTML = `❌ Error testing KPI page: ${error.message}`;
+            }
+        }
+
+        // Initialize page
+        window.addEventListener('load', () => {
+            displayDebugInfo();
+            testKpiPage();
+            
+            console.log('🧭 Navigation test page loaded');
+            console.log('Debug info:', collectDebugInfo());
+        });
+
+        // Add click handlers to track navigation attempts
+        document.addEventListener('click', (event) => {
+            if (event.target.classList.contains('nav-link')) {
+                const href = event.target.getAttribute('href');
+                console.log(`🔗 Navigation attempt to: ${href}`);
+                
+                // Special handling for KPI actual values
+                if (href === '/kpi-actual-values') {
+                    console.log('🎯 Attempting to navigate to KPI Actual Values page...');
+                    console.log('🔍 This will help us see if there are any JavaScript errors');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

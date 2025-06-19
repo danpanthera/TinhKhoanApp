@@ -1,0 +1,354 @@
+-- =====================================================
+-- SCD Type 2 Tables Creation Script
+-- Tạo các bảng lịch sử với SCD Type 2 cho Raw Data
+-- =====================================================
+
+-- 1. Tạo bảng lịch sử cho LN01
+CREATE TABLE IF NOT EXISTS LN01_History (
+    HistoryID INTEGER PRIMARY KEY AUTOINCREMENT,
+    SourceID TEXT NOT NULL, -- ID gốc từ bảng nguồn
+    
+    -- Các cột dữ liệu từ LN01
+    MANDT TEXT,
+    BUKRS TEXT,
+    LAND1 TEXT,
+    WAERS TEXT,
+    SPRAS TEXT,
+    KTOPL TEXT,
+    WAABW TEXT,
+    PERIV TEXT,
+    KOKFI TEXT,
+    RCOMP TEXT,
+    ADRNR TEXT,
+    STCEG TEXT,
+    FIKRS TEXT,
+    XFMCO TEXT,
+    XFMCB TEXT,
+    XFMCA TEXT,
+    TXJCD TEXT,
+    
+    -- Metadata SCD Type 2
+    ValidFrom DATETIME NOT NULL,
+    ValidTo DATETIME NOT NULL DEFAULT '9999-12-31 23:59:59',
+    IsCurrent INTEGER NOT NULL DEFAULT 1,
+    VersionNumber INTEGER NOT NULL DEFAULT 1,
+    RecordHash TEXT, -- Hash để so sánh thay đổi
+    CreatedDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ModifiedDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. Tạo bảng lịch sử cho GL01
+CREATE TABLE IF NOT EXISTS GL01_History (
+    HistoryID INTEGER PRIMARY KEY AUTOINCREMENT,
+    SourceID TEXT NOT NULL,
+    
+    -- Các cột dữ liệu từ GL01
+    MANDT TEXT,
+    BUKRS TEXT,
+    GJAHR TEXT,
+    BELNR TEXT,
+    BUZEI TEXT,
+    AUGDT TEXT,
+    AUGCP TEXT,
+    AUGBL TEXT,
+    BSCHL TEXT,
+    KOART TEXT,
+    UMSKZ TEXT,
+    UMSKS TEXT,
+    ZUMSK TEXT,
+    SHKZG TEXT,
+    GSBER TEXT,
+    PARGB TEXT,
+    MWSKZ TEXT,
+    QSSKZ TEXT,
+    DMBTR REAL,
+    WRBTR REAL,
+    KZBTR REAL,
+    PSWBT REAL,
+    PSWSL TEXT,
+    TXBHW REAL,
+    TXBFW REAL,
+    MWSTS REAL,
+    MWSTV REAL,
+    HWBAS REAL,
+    FWBAS REAL,
+    HWSTE REAL,
+    FWSTE REAL,
+    STBLG TEXT,
+    STGRD TEXT,
+    VALUT TEXT,
+    ZUONR TEXT,
+    SGTXT TEXT,
+    ZINKZ TEXT,
+    VBUND TEXT,
+    BEWAR TEXT,
+    ALTKT TEXT,
+    VORGN TEXT,
+    FDLEV TEXT,
+    FDGRP TEXT,
+    HKONT TEXT,
+    KUNNR TEXT,
+    LIFNR TEXT,
+    FILKD TEXT,
+    XBILK TEXT,
+    GVTYP TEXT,
+    HZUON TEXT,
+    ZFBDT TEXT,
+    ZTERM TEXT,
+    ZBD1T INTEGER,
+    ZBD2T INTEGER,
+    ZBD3T INTEGER,
+    ZBD1P REAL,
+    ZBD2P REAL,
+    SKFBT REAL,
+    SKNTO REAL,
+    WSKTO REAL,
+    ZLSCH TEXT,
+    ZLSPR TEXT,
+    ZBFIX TEXT,
+    HBKID TEXT,
+    BVTYP TEXT,
+    NEBTR REAL,
+    MWART TEXT,
+    DMBE2 REAL,
+    DMBE3 REAL,
+    PPRCT TEXT,
+    XREF1 TEXT,
+    XREF2 TEXT,
+    KOST1 TEXT,
+    KOST2 TEXT,
+    VBEL2 TEXT,
+    POSN2 TEXT,
+    KKBER TEXT,
+    EMPFB TEXT,
+    
+    -- Metadata SCD Type 2
+    ValidFrom DATETIME NOT NULL,
+    ValidTo DATETIME NOT NULL DEFAULT '9999-12-31 23:59:59',
+    IsCurrent INTEGER NOT NULL DEFAULT 1,
+    VersionNumber INTEGER NOT NULL DEFAULT 1,
+    RecordHash TEXT,
+    CreatedDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ModifiedDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 3. Tạo bảng lịch sử cho DP01
+CREATE TABLE IF NOT EXISTS DP01_History (
+    HistoryID INTEGER PRIMARY KEY AUTOINCREMENT,
+    SourceID TEXT NOT NULL,
+    
+    -- Các cột dữ liệu từ DP01
+    MANDT TEXT,
+    KUNNR TEXT,
+    LAND1 TEXT,
+    NAME1 TEXT,
+    NAME2 TEXT,
+    NAME3 TEXT,
+    NAME4 TEXT,
+    ORT01 TEXT,
+    ORT02 TEXT,
+    PFACH TEXT,
+    PSTL2 TEXT,
+    PSTLZ TEXT,
+    REGIO TEXT,
+    SORTL TEXT,
+    STRAS TEXT,
+    ADRNR TEXT,
+    MCOD1 TEXT,
+    MCOD2 TEXT,
+    MCOD3 TEXT,
+    ANRED TEXT,
+    AUFSD TEXT,
+    BAHNE TEXT,
+    BAHNS TEXT,
+    BBBNR TEXT,
+    BBSNR TEXT,
+    BEGRU TEXT,
+    BRSCH TEXT,
+    BUBKZ TEXT,
+    DATLT TEXT,
+    ERDAT TEXT,
+    ERNAM TEXT,
+    EXABL TEXT,
+    FAKSD TEXT,
+    FISKN TEXT,
+    KNAZK TEXT,
+    KNRZA TEXT,
+    KONZS TEXT,
+    KTOKD TEXT,
+    KUKLA TEXT,
+    LIFNR TEXT,
+    LIFSD TEXT,
+    LOCCO TEXT,
+    LOEVM TEXT,
+    NAME1_GP TEXT,
+    NIELS TEXT,
+    NNSNR TEXT,
+    PARAU TEXT,
+    REVDB TEXT,
+    RPMKR TEXT,
+    SORTL2 TEXT,
+    SPERR TEXT,
+    SPRAS TEXT,
+    STCD1 TEXT,
+    STCD2 TEXT,
+    STCD3 TEXT,
+    STCD4 TEXT,
+    STCD5 TEXT,
+    STCEG TEXT,
+    STKZA TEXT,
+    STKZU TEXT,
+    TELBX TEXT,
+    TELF1 TEXT,
+    TELF2 TEXT,
+    TELFX TEXT,
+    TELTX TEXT,
+    TELX1 TEXT,
+    XCPDK TEXT,
+    XZEMP TEXT,
+    VBUND TEXT,
+    FISKN_GP TEXT,
+    DEAR1 TEXT,
+    DEAR2 TEXT,
+    DEAR3 TEXT,
+    DEAR4 TEXT,
+    DEAR5 TEXT,
+    GFORM TEXT,
+    BRAN1 TEXT,
+    BRAN2 TEXT,
+    BRAN3 TEXT,
+    BRAN4 TEXT,
+    BRAN5 TEXT,
+    EKONT TEXT,
+    UMSAT TEXT,
+    UMJAH TEXT,
+    UWAER TEXT,
+    JMZAH TEXT,
+    JMJAH TEXT,
+    KATR1 TEXT,
+    KATR2 TEXT,
+    KATR3 TEXT,
+    KATR4 TEXT,
+    KATR5 TEXT,
+    KATR6 TEXT,
+    KATR7 TEXT,
+    KATR8 TEXT,
+    KATR9 TEXT,
+    KATR10 TEXT,
+    STKZN TEXT,
+    UMSA1 TEXT,
+    TXJCD TEXT,
+    PERIV TEXT,
+    ABRVW TEXT,
+    INSPBYDEBI TEXT,
+    INSPATDEBI TEXT,
+    KTOCD TEXT,
+    PFORT TEXT,
+    WERKS TEXT,
+    DTAMS TEXT,
+    DTAWS TEXT,
+    DUEFL TEXT,
+    HZUOR TEXT,
+    SPERZ TEXT,
+    ETIKG TEXT,
+    
+    -- Metadata SCD Type 2
+    ValidFrom DATETIME NOT NULL,
+    ValidTo DATETIME NOT NULL DEFAULT '9999-12-31 23:59:59',
+    IsCurrent INTEGER NOT NULL DEFAULT 1,
+    VersionNumber INTEGER NOT NULL DEFAULT 1,
+    RecordHash TEXT,
+    CreatedDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ModifiedDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 4. Tạo bảng staging cho import
+CREATE TABLE IF NOT EXISTS LN01_Staging (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    SourceID TEXT NOT NULL,
+    MANDT TEXT,
+    BUKRS TEXT,
+    LAND1 TEXT,
+    WAERS TEXT,
+    SPRAS TEXT,
+    KTOPL TEXT,
+    WAABW TEXT,
+    PERIV TEXT,
+    KOKFI TEXT,
+    RCOMP TEXT,
+    ADRNR TEXT,
+    STCEG TEXT,
+    FIKRS TEXT,
+    XFMCO TEXT,
+    XFMCB TEXT,
+    XFMCA TEXT,
+    TXJCD TEXT,
+    ImportBatchId TEXT,
+    CreatedDate DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS GL01_Staging (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    SourceID TEXT NOT NULL,
+    MANDT TEXT,
+    BUKRS TEXT,
+    GJAHR TEXT,
+    BELNR TEXT,
+    BUZEI TEXT,
+    -- Include all GL01 columns similar to history table
+    ImportBatchId TEXT,
+    CreatedDate DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS DP01_Staging (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    SourceID TEXT NOT NULL,
+    MANDT TEXT,
+    KUNNR TEXT,
+    -- Include all DP01 columns similar to history table
+    ImportBatchId TEXT,
+    CreatedDate DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 5. Tạo bảng Import Log
+CREATE TABLE IF NOT EXISTS ImportLog (
+    LogID INTEGER PRIMARY KEY AUTOINCREMENT,
+    BatchId TEXT NOT NULL,
+    TableName TEXT NOT NULL,
+    ImportDate DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    Status TEXT NOT NULL DEFAULT 'PENDING', -- PENDING, PROCESSING, SUCCESS, FAILED
+    TotalRecords INTEGER DEFAULT 0,
+    ProcessedRecords INTEGER DEFAULT 0,
+    NewRecords INTEGER DEFAULT 0,
+    UpdatedRecords INTEGER DEFAULT 0,
+    DeletedRecords INTEGER DEFAULT 0,
+    ErrorMessage TEXT,
+    StartTime DATETIME,
+    EndTime DATETIME,
+    Duration INTEGER, -- seconds
+    CreatedBy TEXT DEFAULT 'SYSTEM'
+);
+
+-- 6. Tạo indexes cho performance
+-- LN01_History indexes
+CREATE INDEX IF NOT EXISTS IX_LN01_History_Current ON LN01_History (IsCurrent, SourceID) WHERE IsCurrent = 1;
+CREATE INDEX IF NOT EXISTS IX_LN01_History_ValidDates ON LN01_History (ValidFrom, ValidTo);
+CREATE INDEX IF NOT EXISTS IX_LN01_History_SourceID ON LN01_History (SourceID, ValidFrom, ValidTo);
+CREATE INDEX IF NOT EXISTS IX_LN01_History_Hash ON LN01_History (RecordHash);
+
+-- GL01_History indexes
+CREATE INDEX IF NOT EXISTS IX_GL01_History_Current ON GL01_History (IsCurrent, SourceID) WHERE IsCurrent = 1;
+CREATE INDEX IF NOT EXISTS IX_GL01_History_ValidDates ON GL01_History (ValidFrom, ValidTo);
+CREATE INDEX IF NOT EXISTS IX_GL01_History_SourceID ON GL01_History (SourceID, ValidFrom, ValidTo);
+CREATE INDEX IF NOT EXISTS IX_GL01_History_Hash ON GL01_History (RecordHash);
+
+-- DP01_History indexes
+CREATE INDEX IF NOT EXISTS IX_DP01_History_Current ON DP01_History (IsCurrent, SourceID) WHERE IsCurrent = 1;
+CREATE INDEX IF NOT EXISTS IX_DP01_History_ValidDates ON DP01_History (ValidFrom, ValidTo);
+CREATE INDEX IF NOT EXISTS IX_DP01_History_SourceID ON DP01_History (SourceID, ValidFrom, ValidTo);
+CREATE INDEX IF NOT EXISTS IX_DP01_History_Hash ON DP01_History (RecordHash);
+
+-- ImportLog indexes
+CREATE INDEX IF NOT EXISTS IX_ImportLog_BatchId ON ImportLog (BatchId);
+CREATE INDEX IF NOT EXISTS IX_ImportLog_TableName_Date ON ImportLog (TableName, ImportDate);
+CREATE INDEX IF NOT EXISTS IX_ImportLog_Status ON ImportLog (Status);

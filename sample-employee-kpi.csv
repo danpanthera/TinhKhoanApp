@@ -1,0 +1,16 @@
+Employee ID,Employee Name,Department,KPI Indicator,Target Value,Actual Value,Score,Period,Notes
+EMP001,Nguyen Van A,Corporate Banking,Loan Portfolio Growth (%),15.0,18.5,120,Q4 2024,Exceeded target
+EMP001,Nguyen Van A,Corporate Banking,Customer Acquisition (Count),50,45,90,Q4 2024,Below target
+EMP001,Nguyen Van A,Corporate Banking,Revenue Generation (Million VND),500.0,580.2,116,Q4 2024,Strong performance
+EMP002,Tran Thi B,Retail Banking,Deposit Growth (%),12.0,14.8,123,Q4 2024,Outstanding result
+EMP002,Tran Thi B,Retail Banking,Card Sales (Count),200,185,93,Q4 2024,Slightly below target
+EMP002,Tran Thi B,Retail Banking,Cross-selling Rate (%),25.0,28.5,114,Q4 2024,Good cross-selling
+EMP003,Le Van C,Digital Banking,Digital Adoption Rate (%),60.0,68.5,114,Q4 2024,Digital transformation success
+EMP003,Le Van C,Digital Banking,Mobile App Downloads (Count),1000,1250,125,Q4 2024,Marketing campaign success
+EMP003,Le Van C,Digital Banking,Online Transaction Volume (Million VND),800.0,920.3,115,Q4 2024,Growing online usage
+EMP004,Pham Thi D,Risk Management,NPL Ratio (%),2.5,1.8,139,Q4 2024,Excellent risk control (lower is better)
+EMP004,Pham Thi D,Risk Management,Risk Assessment Reviews (Count),100,105,105,Q4 2024,Met target
+EMP004,Pham Thi D,Risk Management,Compliance Score (%),95.0,97.5,103,Q4 2024,High compliance
+EMP005,Nguyen Van E,Branch Operations,Customer Service Score (%),90.0,92.8,103,Q4 2024,Improved service quality
+EMP005,Nguyen Van E,Branch Operations,Transaction Processing Time (Minutes),5.0,4.2,119,Q4 2024,Efficiency improvement (lower is better)
+EMP005,Nguyen Van E,Branch Operations,Queue Wait Time (Minutes),10.0,8.5,118,Q4 2024,Better customer experience

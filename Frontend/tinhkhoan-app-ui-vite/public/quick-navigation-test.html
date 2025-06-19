@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Navigation Test - TinhKhoan App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .button.primary { background-color: #007bff; color: white; }
+        .button.success { background-color: #28a745; color: white; }
+        .button.danger { background-color: #dc3545; color: white; }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        .status.success { background-color: #d4edda; color: #155724; }
+        .status.error { background-color: #f8d7da; color: #721c24; }
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .menu-item {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+            background: white;
+            text-decoration: none;
+            color: #333;
+            transition: background-color 0.2s;
+        }
+        .menu-item:hover {
+            background-color: #f8f9fa;
+        }
+        .info {
+            background-color: #e7f3ff;
+            border: 1px solid #b8daff;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Quick Navigation Test</h1>
+        <p>Test nhanh navigation và tự động login</p>
+
+        <!-- Auto Login Section -->
+        <div class="section">
+            <h3>🔐 Auto Login & Token Status</h3>
+            <div id="token-status">Đang kiểm tra...</div>
+            <div>
+                <button class="button success" onclick="autoLogin()">🚀 Auto Login Admin</button>
+                <button class="button primary" onclick="checkToken()">🔄 Check Token</button>
+                <button class="button danger" onclick="clearToken()">🗑️ Clear Token</button>
+            </div>
+            <div class="info" id="token-info"></div>
+        </div>
+
+        <!-- Navigation Links -->
+        <div class="section">
+            <h3>🧭 Navigation Links</h3>
+            <p>Click vào các link dưới đây để test navigation:</p>
+            <div class="menu-grid">
+                <a href="/" class="menu-item">🏠 Trang chủ</a>
+                <a href="/units" class="menu-item">🏢 Đơn vị</a>
+                <a href="/employees" class="menu-item">👥 Nhân viên</a>
+                <a href="/roles" class="menu-item">🎭 Vai trò</a>
+                <a href="/positions" class="menu-item">💼 Chức vụ</a>
+                <a href="/khoan-periods" class="menu-item">📅 Kỳ khoán</a>
+                <a href="/kpi-definitions" class="menu-item">📊 Cấu hình KPI</a>
+                <a href="/employee-kpi-assignment" class="menu-item">👤 Phân công KPI NV</a>
+                <a href="/unit-kpi-assignment" class="menu-item">🏢 Phân công KPI ĐV</a>
+                <a href="/kpi-actual-values" class="menu-item">💯 Giá trị thực tế KPI</a>
+                <a href="/kpi-scoring" class="menu-item">🏆 Chấm điểm KPI</a>
+                <a href="/unit-kpi-scoring" class="menu-item">🏆 Chấm điểm KPI ĐV</a>
+                <a href="/data-import" class="menu-item">📥 Nhập dữ liệu</a>
+                <a href="/payroll-report" class="menu-item">💰 Báo cáo lương</a>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="section">
+            <h3>📋 Instructions</h3>
+            <ol>
+                <li>Nhấn "Auto Login Admin" để tự động đăng nhập và set token</li>
+                <li>Sau khi đăng nhập thành công, nhấn vào các menu để test navigation</li>
+                <li>Nếu bị redirect về login, có thể token đã hết hạn hoặc có lỗi authentication</li>
+                <li>Có thể mở Developer Tools (F12) để xem console log</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const BACKEND_URL = 'http://localhost:5055/api';
+
+        // Utility functions
+        function getToken() {
+            return localStorage.getItem('token');
+        }
+
+        function setToken(token) {
+            localStorage.setItem('token', token);
+        }
+
+        function clearTokenFn() {
+            localStorage.removeItem('token');
+        }
+
+        function updateStatus(elementId, status, message) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = `<span class="status ${status}">${status.toUpperCase()}</span> ${message}`;
+            }
+        }
+
+        // Auto login function
+        async function autoLogin() {
+            try {
+                updateStatus('token-status', 'primary', 'Đang đăng nhập...');
+                
+                const response = await fetch(`${BACKEND_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin123'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.token) {
+                        setToken(data.token);
+                        updateStatus('token-status', 'success', 'Đăng nhập thành công! Token đã được lưu.');
+                        
+                        // Decode token info
+                        const tokenInfo = decodeToken(data.token);
+                        document.getElementById('token-info').innerHTML = `
+                            <strong>User:</strong> ${data.user?.fullName || 'N/A'}<br>
+                            <strong>Username:</strong> ${data.user?.username || 'N/A'}<br>
+                            <strong>Employee Code:</strong> ${data.user?.employeeCode || 'N/A'}<br>
+                            <strong>Token Expires:</strong> ${tokenInfo.exp || 'N/A'}<br>
+                            <strong>Token Length:</strong> ${data.token.length} chars
+                        `;
+                        
+                        console.log('Login successful:', data);
+                    } else {
+                        updateStatus('token-status', 'error', 'Không nhận được token từ server');
+                    }
+                } else {
+                    const error = await response.text();
+                    updateStatus('token-status', 'error', 'Đăng nhập thất bại: ' + error);
+                }
+            } catch (error) {
+                updateStatus('token-status', 'error', 'Lỗi kết nối: ' + error.message);
+                console.error('Login error:', error);
+            }
+        }
+
+        // Check token function
+        function checkToken() {
+            const token = getToken();
+            if (!token) {
+                updateStatus('token-status', 'error', 'Không có token');
+                document.getElementById('token-info').innerHTML = 'Chưa có token. Vui lòng đăng nhập.';
+                return;
+            }
+
+            const tokenInfo = decodeToken(token);
+            if (tokenInfo) {
+                const now = new Date();
+                const exp = tokenInfo.exp ? new Date(tokenInfo.exp * 1000) : null;
+                const isValid = exp ? exp > now : true;
+                
+                updateStatus('token-status', isValid ? 'success' : 'error', 
+                            isValid ? 'Token hợp lệ' : 'Token đã hết hạn');
+                
+                document.getElementById('token-info').innerHTML = `
+                    <strong>Valid:</strong> ${isValid ? 'YES' : 'NO (EXPIRED)'}<br>
+                    <strong>Username:</strong> ${tokenInfo.sub || 'N/A'}<br>
+                    <strong>Name:</strong> ${tokenInfo.name || 'N/A'}<br>
+                    <strong>Code:</strong> ${tokenInfo.code || 'N/A'}<br>
+                    <strong>Issued:</strong> ${tokenInfo.iat ? new Date(tokenInfo.iat * 1000).toLocaleString() : 'N/A'}<br>
+                    <strong>Expires:</strong> ${exp ? exp.toLocaleString() : 'N/A'}<br>
+                    <strong>Token Length:</strong> ${token.length} chars
+                `;
+            } else {
+                updateStatus('token-status', 'error', 'Token không hợp lệ');
+                document.getElementById('token-info').innerHTML = 'Token không đúng format JWT';
+            }
+        }
+
+        // Clear token function
+        function clearToken() {
+            clearTokenFn();
+            updateStatus('token-status', 'primary', 'Token đã được xóa');
+            document.getElementById('token-info').innerHTML = 'Token đã được xóa khỏi localStorage';
+        }
+
+        // Decode JWT token
+        function decodeToken(token) {
+            try {
+                const parts = token.split('.');
+                if (parts.length !== 3) return null;
+                
+                const payload = JSON.parse(atob(parts[1]));
+                return payload;
+            } catch (error) {
+                console.error('Error decoding token:', error);
+                return null;
+            }
+        }
+
+        // Initialize
+        window.onload = function() {
+            checkToken();
+            
+            // Log when clicked on menu items
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    console.log('Navigating to:', this.href);
+                    console.log('Current token:', getToken() ? 'exists' : 'missing');
+                });
+            });
+        };
+    </script>
+</body>
+</html>

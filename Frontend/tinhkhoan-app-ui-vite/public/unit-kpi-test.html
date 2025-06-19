@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test - Unit KPI Assignment</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .result {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        .success {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+        button {
+            background-color: #8B0000;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #6d0000;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 API Test - Unit KPI Assignment Data Loading</h1>
+    
+    <div class="test-section">
+        <h2>📅 1. Test KhoanPeriods API</h2>
+        <button onclick="testKhoanPeriods()">Test KhoanPeriods</button>
+        <div id="periods-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🏢 2. Test Units API</h2>
+        <button onclick="testUnits()">Test All Units</button>
+        <button onclick="testCNL1Units()">Test CNL1 Units</button>
+        <button onclick="testCNL2Units()">Test CNL2 Units</button>
+        <div id="units-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 3. Test Unit KPI Assignments API</h2>
+        <button onclick="testUnitAssignments()">Test Unit Assignments</button>
+        <div id="assignments-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 4. Test KPI Tables API</h2>
+        <button onclick="testKpiTables()">Test KPI Tables</button>
+        <div id="tables-result" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5055/api';
+
+        function showResult(elementId, data, isError = false) {
+            const element = document.getElementById(elementId);
+            element.textContent = JSON.stringify(data, null, 2);
+            element.className = `result ${isError ? 'error' : 'success'}`;
+        }
+
+        async function apiCall(url) {
+            try {
+                const response = await fetch(`${API_BASE}${url}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        async function testKhoanPeriods() {
+            try {
+                showResult('periods-result', 'Loading...', false);
+                const data = await apiCall('/KhoanPeriods');
+                
+                // Handle .NET $values format
+                const periods = data.$values || data;
+                
+                showResult('periods-result', {
+                    message: `✅ Success! Found ${periods.length} periods`,
+                    rawData: data,
+                    processedData: periods
+                });
+            } catch (error) {
+                showResult('periods-result', {
+                    message: '❌ Error loading periods',
+                    error: error.message,
+                    stack: error.stack
+                }, true);
+            }
+        }
+
+        async function testUnits() {
+            try {
+                showResult('units-result', 'Loading...', false);
+                const data = await apiCall('/Units');
+                
+                // Handle .NET $values format
+                const units = data.$values || data;
+                
+                const cnl1Units = units.filter(unit => unit.type === 'CNL1');
+                const cnl2Units = units.filter(unit => unit.type === 'CNL2');
+                
+                showResult('units-result', {
+                    message: `✅ Success! Found ${units.length} total units`,
+                    cnl1Count: cnl1Units.length,
+                    cnl2Count: cnl2Units.length,
+                    cnl1Units: cnl1Units,
+                    cnl2Units: cnl2Units,
+                    rawData: data
+                });
+            } catch (error) {
+                showResult('units-result', {
+                    message: '❌ Error loading units',
+                    error: error.message,
+                    stack: error.stack
+                }, true);
+            }
+        }
+
+        async function testCNL1Units() {
+            try {
+                showResult('units-result', 'Loading CNL1 units...', false);
+                const data = await apiCall('/Units');
+                
+                // Handle .NET $values format
+                const units = data.$values || data;
+                const cnl1Units = units.filter(unit => unit.type === 'CNL1');
+                
+                showResult('units-result', {
+                    message: `✅ CNL1 Units: Found ${cnl1Units.length} units`,
+                    units: cnl1Units
+                });
+            } catch (error) {
+                showResult('units-result', {
+                    message: '❌ Error loading CNL1 units',
+                    error: error.message
+                }, true);
+            }
+        }
+
+        async function testCNL2Units() {
+            try {
+                showResult('units-result', 'Loading CNL2 units...', false);
+                const data = await apiCall('/Units');
+                
+                // Handle .NET $values format
+                const units = data.$values || data;
+                const cnl2Units = units.filter(unit => unit.type === 'CNL2');
+                
+                showResult('units-result', {
+                    message: `✅ CNL2 Units: Found ${cnl2Units.length} units`,
+                    units: cnl2Units
+                });
+            } catch (error) {
+                showResult('units-result', {
+                    message: '❌ Error loading CNL2 units',
+                    error: error.message
+                }, true);
+            }
+        }
+
+        async function testUnitAssignments() {
+            try {
+                showResult('assignments-result', 'Loading...', false);
+                const data = await apiCall('/UnitKhoanAssignments');
+                
+                // Handle .NET $values format
+                const assignments = data.$values || data;
+                
+                showResult('assignments-result', {
+                    message: `✅ Success! Found ${assignments.length} assignments`,
+                    assignments: assignments,
+                    rawData: data
+                });
+            } catch (error) {
+                showResult('assignments-result', {
+                    message: '❌ Error loading unit assignments',
+                    error: error.message,
+                    stack: error.stack
+                }, true);
+            }
+        }
+
+        async function testKpiTables() {
+            try {
+                showResult('tables-result', 'Loading...', false);
+                const data = await apiCall('/KpiAssignment/tables');
+                
+                // Handle .NET $values format
+                const tables = data.$values || data;
+                
+                showResult('tables-result', {
+                    message: `✅ Success! Found ${tables.length} KPI tables`,
+                    tables: tables,
+                    rawData: data
+                });
+            } catch (error) {
+                showResult('tables-result', {
+                    message: '❌ Error loading KPI tables',
+                    error: error.message,
+                    stack: error.stack
+                }, true);
+            }
+        }
+
+        // Auto-run tests when page loads
+        window.addEventListener('load', () => {
+            console.log('🧪 API Test page loaded. Running initial tests...');
+            testKhoanPeriods();
+            testUnits();
+        });
+    </script>
+</body>
+</html>

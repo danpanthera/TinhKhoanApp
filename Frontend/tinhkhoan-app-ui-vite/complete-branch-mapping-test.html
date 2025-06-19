@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Branch Mapping Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2196F3;
+            margin-top: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fafafa;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .branch-mapping {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .branch-item {
+            padding: 8px;
+            background-color: #e3f2fd;
+            border-radius: 4px;
+            border-left: 4px solid #2196F3;
+        }
+        .branch-code {
+            font-weight: bold;
+            color: #1976D2;
+        }
+        .branch-name {
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏢 Complete Branch Mapping Test</h1>
+        
+        <div class="test-section">
+            <h2>📊 Current Import Statistics</h2>
+            <button onclick="getImportStats()">Get Import Statistics</button>
+            <div id="stats-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📥 Import Test Files</h2>
+            <button onclick="testImportFile('7800_GL01_20250531.csv')">Test 7800 (CnLaiChau)</button>
+            <button onclick="testImportFile('7801_LN01_20250531.csv')">Test 7801 (CnTamDuong)</button>
+            <button onclick="testImportFile('7802_DP01_20250531.csv')">Test 7802 (CnPhongTho)</button>
+            <button onclick="testImportFile('7803_GL01_20250531.csv')">Test 7803 (CnSinHo)</button>
+            <button onclick="testImportFile('7808_GL01_20250531.csv')">Test 7808 (CnNamNhun)</button>
+            <div id="import-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>🗂️ Complete Branch Code Mapping</h2>
+            <p>All 53 branches now supported:</p>
+            <div class="branch-mapping">
+                <div class="branch-item">
+                    <div class="branch-code">7800</div>
+                    <div class="branch-name">CnLaiChau</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7801</div>
+                    <div class="branch-name">CnTamDuong</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7802</div>
+                    <div class="branch-name">CnPhongTho</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7803</div>
+                    <div class="branch-name">CnSinHo</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7804</div>
+                    <div class="branch-name">CnMuongTe</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7805</div>
+                    <div class="branch-name">CnThanUyen</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7806</div>
+                    <div class="branch-name">CnThanhPho</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7807</div>
+                    <div class="branch-name">CnTanUyen</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7808</div>
+                    <div class="branch-name">CnNamNhun</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7809</div>
+                    <div class="branch-name">PgdDienBienPhu</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7810</div>
+                    <div class="branch-name">PgdMuongLay</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7811</div>
+                    <div class="branch-name">PgdTuaChau</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7812</div>
+                    <div class="branch-name">PgdMuongNhe</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7813</div>
+                    <div class="branch-name">PgdNongTruong</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7814</div>
+                    <div class="branch-name">PgdBanHon</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7815</div>
+                    <div class="branch-name">PgdNamPo</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7816</div>
+                    <div class="branch-name">PgdPaVeSu</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7817</div>
+                    <div class="branch-name">PgdCopang</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7818</div>
+                    <div class="branch-name">PgdMuongBu</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7819</div>
+                    <div class="branch-name">PgdBinhLu</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7820</div>
+                    <div class="branch-name">PgdTamDuong</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7821</div>
+                    <div class="branch-name">PgdBanBo</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7822</div>
+                    <div class="branch-name">PgdHoangLienSon</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7823</div>
+                    <div class="branch-name">PgdBanMen</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7824</div>
+                    <div class="branch-name">PgdBanBat</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7825</div>
+                    <div class="branch-name">PgdGiangMa</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7826</div>
+                    <div class="branch-name">PgdCanHo</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7827</div>
+                    <div class="branch-name">PgdMuongSo</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7828</div>
+                    <div class="branch-name">PgdNongTruongCheDo</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7829</div>
+                    <div class="branch-name">PgdPhuongDo</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7830</div>
+                    <div class="branch-name">PgdThanUyen</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7831</div>
+                    <div class="branch-name">PgdCanTy</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7832</div>
+                    <div class="branch-name">PgdHuoiLen</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7833</div>
+                    <div class="branch-name">PgdNuaSang</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7834</div>
+                    <div class="branch-name">PgdPuSamCap</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7835</div>
+                    <div class="branch-name">PgdVangMa</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7836</div>
+                    <div class="branch-name">PgdBanLam</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7837</div>
+                    <div class="branch-name">PgdMuongMo</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7838</div>
+                    <div class="branch-name">PgdNamTham</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7839</div>
+                    <div class="branch-name">PgdBanMuong</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7840</div>
+                    <div class="branch-name">PgdSapVat</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7841</div>
+                    <div class="branch-name">PgdTanUyen</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7842</div>
+                    <div class="branch-name">PgdNamCan</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7843</div>
+                    <div class="branch-name">PgdKhoangLang</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7844</div>
+                    <div class="branch-name">PgdNoongHet</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7845</div>
+                    <div class="branch-name">PgdNamHang</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7846</div>
+                    <div class="branch-name">PgdBanThinh</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7847</div>
+                    <div class="branch-name">PgdVuongLo</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7848</div>
+                    <div class="branch-name">PgdBanGiang</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7849</div>
+                    <div class="branch-name">PgdSiMa</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7850</div>
+                    <div class="branch-name">PgdNamNhun</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7851</div>
+                    <div class="branch-name">PgdLamSuoi</div>
+                </div>
+                <div class="branch-item">
+                    <div class="branch-code">7852</div>
+                    <div class="branch-name">PgdHuoiTum</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔄 Test All Imported Data</h2>
+            <button onclick="getAllImportedData()">Get All Imported Data</button>
+            <div id="data-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5055/api';
+
+        async function getImportStats() {
+            const resultDiv = document.getElementById('stats-result');
+            resultDiv.innerHTML = '<div class="info">Loading import statistics...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/DataImport/statistics`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const stats = await response.json();
+                let html = '<div class="success">✅ Import Statistics Retrieved Successfully</div>';
+                html += `<div class="info">Total Imports: ${stats.totalImports}</div>`;
+                html += `<div class="info">Total Records: ${stats.totalRecords}</div>`;
+                html += `<div class="info">Total Files: ${stats.totalFiles}</div>`;
+                
+                if (stats.branchStats && stats.branchStats.length > 0) {
+                    html += '<h3>📊 Branch Statistics:</h3>';
+                    stats.branchStats.forEach(branch => {
+                        html += `<div class="info">🏢 ${branch.branchName}: ${branch.importCount} imports, ${branch.recordCount} records</div>`;
+                    });
+                }
+                
+                if (stats.reportTypeStats && stats.reportTypeStats.length > 0) {
+                    html += '<h3>📋 Report Type Statistics:</h3>';
+                    stats.reportTypeStats.forEach(report => {
+                        html += `<div class="info">📄 ${report.reportType}: ${report.importCount} imports, ${report.recordCount} records</div>`;
+                    });
+                }
+                
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testImportFile(fileName) {
+            const resultDiv = document.getElementById('import-result');
+            resultDiv.innerHTML = `<div class="info">Testing import for ${fileName}...</div>`;
+            
+            try {
+                // Create a mock file for testing
+                const mockData = `Column1,Column2,Column3
+Value1,Value2,Value3
+Data1,Data2,Data3`;
+                
+                const blob = new Blob([mockData], { type: 'text/csv' });
+                const formData = new FormData();
+                formData.append('files', blob, fileName);
+                
+                const response = await fetch(`${API_BASE}/DataImport/advanced`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                let html = `<div class="success">✅ Import Test for ${fileName} Successful</div>`;
+                
+                if (result.results && result.results.length > 0) {
+                    result.results.forEach(r => {
+                        html += `<div class="info">📁 File: ${r.fileName}</div>`;
+                        html += `<div class="info">🏷️ Category: ${r.category}</div>`;
+                        html += `<div class="info">📊 Records: ${r.recordsProcessed}</div>`;
+                        html += `<div class="info">📅 Import Date: ${r.importDate}</div>`;
+                    });
+                }
+                
+                if (result.summary) {
+                    html += `<div class="info">📋 Summary: ${result.summary.totalFiles} files, ${result.summary.totalRecords} records</div>`;
+                }
+                
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error testing ${fileName}: ${error.message}</div>`;
+            }
+        }
+
+        async function getAllImportedData() {
+            const resultDiv = document.getElementById('data-result');
+            resultDiv.innerHTML = '<div class="info">Loading all imported data...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/DataImport`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                let html = `<div class="success">✅ Retrieved ${data.length} import records</div>`;
+                
+                if (data.length > 0) {
+                    data.slice(0, 10).forEach((record, index) => {
+                        html += `<div class="info">📋 Import ${index + 1}:</div>`;
+                        html += `<div class="info">  🏷️ Category: ${record.category}</div>`;
+                        html += `<div class="info">  📅 Date: ${record.importDate}</div>`;
+                        html += `<div class="info">  📊 Items: ${record.importedDataItems ? record.importedDataItems.length : 0}</div>`;
+                    });
+                    
+                    if (data.length > 10) {
+                        html += `<div class="info">... and ${data.length - 10} more records</div>`;
+                    }
+                }
+                
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        // Auto-load statistics on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            getImportStats();
+        });
+    </script>
+</body>
+</html>

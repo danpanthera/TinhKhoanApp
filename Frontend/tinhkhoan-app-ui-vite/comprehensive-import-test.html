@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Import Dữ liệu - File nén & File thông thường</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+        }
+        .test-item {
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        .test-item:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        .test-item.success {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+        .test-item.error {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+        .test-item.loading {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+            margin: 5px;
+        }
+        .btn:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+        .btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .btn-success { background: #10b981; }
+        .btn-success:hover { background: #059669; }
+        .btn-danger { background: #ef4444; }
+        .btn-danger:hover { background: #dc2626; }
+        .form-group {
+            margin: 15px 0;
+        }
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .form-group select, .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .file-info {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+        .result-box {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: monospace;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-success { background: #10b981; }
+        .status-error { background: #ef4444; }
+        .status-loading { background: #f59e0b; animation: pulse 2s infinite; }
+        .status-idle { background: #6b7280; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: #f8fafc;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🗂️ Test Import Dữ liệu TinhKhoan</h1>
+        <p>Kiểm tra Import File nén (ZIP, 7Z, RAR) và File thông thường (CSV, XLS, XLSX)</p>
+    </div>
+
+    <!-- Backend Status -->
+    <div class="test-section">
+        <h2>🏥 Trạng thái Backend</h2>
+        <div id="backend-status" class="test-item">
+            <span class="status-indicator status-idle"></span>
+            <span>Chưa kiểm tra</span>
+        </div>
+        <button onclick="checkBackend()" class="btn">Kiểm tra Backend</button>
+    </div>
+
+    <!-- File Upload Tests -->
+    <div class="test-section">
+        <h2>📤 Test Import Dữ liệu</h2>
+        
+        <div class="form-group">
+            <label>Loại dữ liệu:</label>
+            <select id="dataType">
+                <option value="LN01">LN01 - Dữ liệu LOAN</option>
+                <option value="LN03">LN03 - Dữ liệu Nợ XLRR</option>
+                <option value="DP01">DP01 - Dữ liệu Tiền gửi</option>
+                <option value="EI01">EI01 - Dữ liệu mobile banking</option>
+                <option value="GL01">GL01 - Dữ liệu bút toán GDV</option>
+                <option value="DPDA">DPDA - Dữ liệu sao kê phát hành thẻ</option>
+                <option value="DB01">DB01 - Sao kê TSDB và Không TSDB</option>
+                <option value="KH03">KH03 - Sao kê Khách hàng pháp nhân</option>
+                <option value="BC57">BC57 - Sao kê Lãi dự thu</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>File để import:</label>
+            <input type="file" id="fileInput" multiple accept=".csv,.xlsx,.xls,.zip,.7z,.rar">
+        </div>
+
+        <div class="form-group">
+            <label>Mật khẩu file nén (nếu có):</label>
+            <input type="password" id="archivePassword" placeholder="Để trống nếu không có mật khẩu">
+        </div>
+
+        <div class="form-group">
+            <label>Ghi chú:</label>
+            <input type="text" id="notes" placeholder="Ghi chú về file import...">
+        </div>
+
+        <button onclick="performImport()" class="btn btn-success" id="importBtn">📤 Thực hiện Import</button>
+        <button onclick="clearResults()" class="btn btn-danger">🗑️ Xóa kết quả</button>
+    </div>
+
+    <!-- Test Results -->
+    <div class="test-section">
+        <h2>📊 Kết quả Test</h2>
+        <div id="test-results" class="result-box">
+Chưa có kết quả test nào...
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="test-section">
+        <h2>📈 Thống kê</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="total-tests">0</div>
+                <div>Tổng số test</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="successful-tests">0</div>
+                <div>Thành công</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="failed-tests">0</div>
+                <div>Thất bại</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="total-records">0</div>
+                <div>Tổng records</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pre-built Test Buttons -->
+    <div class="test-section">
+        <h2>🧪 Test Cases có sẵn</h2>
+        <p>Các test case được tạo sẵn để kiểm tra nhanh:</p>
+        
+        <div class="test-item">
+            <h4>📋 Test CSV đơn giản</h4>
+            <p>Test import file CSV thông thường với dữ liệu LN01</p>
+            <button onclick="testSimpleCSV()" class="btn">Test CSV đơn giản</button>
+        </div>
+
+        <div class="test-item">
+            <h4>🗜️ Test Archive ZIP</h4>
+            <p>Test import file ZIP chứa nhiều file CSV</p>
+            <button onclick="testArchiveZIP()" class="btn">Test Archive ZIP</button>
+        </div>
+
+        <div class="test-item">
+            <h4>❌ Test File không hợp lệ</h4>
+            <p>Test validation với file không đúng định dạng</p>
+            <button onclick="testInvalidFile()" class="btn">Test File không hợp lệ</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5055/api';
+        let testStats = {
+            total: 0,
+            successful: 0,
+            failed: 0,
+            totalRecords: 0
+        };
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const resultBox = document.getElementById('test-results');
+            const typeIcon = {
+                'info': 'ℹ️',
+                'success': '✅', 
+                'error': '❌',
+                'loading': '⏳'
+            };
+            
+            resultBox.textContent += `[${timestamp}] ${typeIcon[type]} ${message}\n`;
+            resultBox.scrollTop = resultBox.scrollHeight;
+        }
+
+        function clearResults() {
+            document.getElementById('test-results').textContent = 'Đã xóa kết quả...\n';
+            testStats = { total: 0, successful: 0, failed: 0, totalRecords: 0 };
+            updateStats();
+        }
+
+        function updateStats() {
+            document.getElementById('total-tests').textContent = testStats.total;
+            document.getElementById('successful-tests').textContent = testStats.successful;
+            document.getElementById('failed-tests').textContent = testStats.failed;
+            document.getElementById('total-records').textContent = testStats.totalRecords;
+        }
+
+        async function checkBackend() {
+            const statusDiv = document.getElementById('backend-status');
+            const indicator = statusDiv.querySelector('.status-indicator');
+            const text = statusDiv.querySelector('span:last-child');
+            
+            indicator.className = 'status-indicator status-loading';
+            text.textContent = 'Đang kiểm tra...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/RawData`);
+                if (response.ok) {
+                    indicator.className = 'status-indicator status-success';
+                    text.textContent = `Backend sẵn sàng (${response.status})`;
+                    log('Backend API đang hoạt động bình thường', 'success');
+                } else {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+            } catch (error) {
+                indicator.className = 'status-indicator status-error';
+                text.textContent = `Backend lỗi: ${error.message}`;
+                log(`Lỗi kết nối backend: ${error.message}`, 'error');
+            }
+        }
+
+        async function performImport() {
+            const dataType = document.getElementById('dataType').value;
+            const fileInput = document.getElementById('fileInput');
+            const archivePassword = document.getElementById('archivePassword').value;
+            const notes = document.getElementById('notes').value;
+            const importBtn = document.getElementById('importBtn');
+            
+            if (!fileInput.files.length) {
+                log('Vui lòng chọn file để import', 'error');
+                return;
+            }
+
+            importBtn.disabled = true;
+            importBtn.textContent = '⏳ Đang import...';
+            testStats.total++;
+
+            try {
+                log(`Bắt đầu import ${fileInput.files.length} file(s) cho loại dữ liệu: ${dataType}`, 'loading');
+                
+                const formData = new FormData();
+                
+                // Thêm files
+                for (let file of fileInput.files) {
+                    formData.append('Files', file);
+                    log(`- File: ${file.name} (${(file.size/1024).toFixed(1)}KB)`, 'info');
+                }
+                
+                // Thêm options
+                if (archivePassword) {
+                    formData.append('ArchivePassword', archivePassword);
+                }
+                if (notes) {
+                    formData.append('Notes', notes);
+                }
+
+                const response = await fetch(`${API_BASE_URL}/RawData/import/${dataType}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    log(`Import thành công: ${result.message}`, 'success');
+                    if (result.results) {
+                        result.results.forEach(r => {
+                            const status = r.success ? 'success' : 'error';
+                            log(`  └─ ${r.fileName}: ${r.message}`, status);
+                            if (r.success && r.recordsProcessed) {
+                                testStats.totalRecords += r.recordsProcessed;
+                            }
+                        });
+                    }
+                    testStats.successful++;
+                } else {
+                    log(`Import thất bại: ${result.message || 'Lỗi không xác định'}`, 'error');
+                    testStats.failed++;
+                }
+                
+            } catch (error) {
+                log(`Lỗi import: ${error.message}`, 'error');
+                testStats.failed++;
+            } finally {
+                importBtn.disabled = false;
+                importBtn.textContent = '📤 Thực hiện Import';
+                updateStats();
+            }
+        }
+
+        async function testSimpleCSV() {
+            log('=== TEST SIMPLE CSV ===', 'info');
+            
+            // Tạo CSV data
+            const csvContent = `Ma_Khach_Hang,Ten_Khach_Hang,So_Tai_Khoan,So_Tien,Ngay_Giao_Dich,Loai_Giao_Dich
+KH001,Nguyen Van A,123456789,1000000,2024-01-15,VAY_VON
+KH002,Tran Thi B,987654321,2000000,2024-01-15,VAY_VON`;
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const file = new File([blob], 'LN01_20240115_simple_test.csv', { type: 'text/csv' });
+            
+            // Set form values
+            document.getElementById('dataType').value = 'LN01';
+            document.getElementById('notes').value = 'Test CSV đơn giản tự động';
+            
+            // Tạo file input giả
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            document.getElementById('fileInput').files = dataTransfer.files;
+            
+            await performImport();
+        }
+
+        async function testArchiveZIP() {
+            log('=== TEST ARCHIVE ZIP ===', 'info');
+            log('Đang sử dụng file ZIP đã tạo sẵn...', 'info');
+            
+            // Giả lập test với file ZIP có sẵn
+            document.getElementById('dataType').value = 'LN01';
+            document.getElementById('notes').value = 'Test Archive ZIP tự động';
+            
+            log('⚠️ Vui lòng chọn file test_archive_LN01_20240115.zip để test', 'info');
+        }
+
+        async function testInvalidFile() {
+            log('=== TEST INVALID FILE ===', 'info');
+            
+            // Tạo file không hợp lệ
+            const invalidContent = 'This is not a valid data file';
+            const blob = new Blob([invalidContent], { type: 'text/plain' });
+            const file = new File([blob], 'invalid_file.txt', { type: 'text/plain' });
+            
+            // Set form values
+            document.getElementById('dataType').value = 'LN01';
+            document.getElementById('notes').value = 'Test file không hợp lệ';
+            
+            // Tạo file input giả
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            document.getElementById('fileInput').files = dataTransfer.files;
+            
+            await performImport();
+        }
+
+        // Auto check backend on load
+        window.onload = function() {
+            log('Trang test đã sẵn sàng', 'success');
+            log('Đang kiểm tra backend...', 'loading');
+            checkBackend();
+        };
+    </script>
+</body>
+</html>

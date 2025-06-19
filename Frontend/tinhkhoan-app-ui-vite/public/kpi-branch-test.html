@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KPI Chi nhánh - Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .result {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        button {
+            background-color: #8B0000;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #6d0000;
+        }
+        .kpi-card {
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #f9f9f9;
+        }
+        .kpi-name {
+            font-weight: bold;
+            color: #333;
+        }
+        .kpi-score {
+            background-color: #8B0000;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test KPI Chi nhánh - Định nghĩa và Giao khoán</h1>
+    
+    <div class="test-section">
+        <h2>📊 Bước 1: Test Backend API - KPI Tables cho Chi nhánh</h2>
+        <button onclick="testBranchKpiTables()">Test KPI Tables cho Chi nhánh</button>
+        <div id="tables-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 Bước 2: Test KPI Indicators cho CNL2</h2>
+        <button onclick="testCNL2Indicators()">Test Indicators cho CNL2</button>
+        <div id="cnl2-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🏢 Bước 3: Test Workflow hoàn chỉnh</h2>
+        <button onclick="testCompleteWorkflow()">Test Workflow: Chọn Chi nhánh → Hiển thị KPI</button>
+        <div id="workflow-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🌐 Bước 4: Kiểm tra trang thực tế</h2>
+        <p>Các link để test trên ứng dụng thực:</p>
+        <button onclick="window.open('/kpi-definitions', '_blank')">Mở trang Định nghĩa KPI</button>
+        <button onclick="window.open('/unit-kpi-assignment', '_blank')">Mở trang Giao khoán KPI Chi nhánh</button>
+    </div>
+
+    <script>
+        // Test 1: Branch KPI Tables
+        async function testBranchKpiTables() {
+            const resultDiv = document.getElementById('tables-result');
+            resultDiv.className = 'result';
+            resultDiv.textContent = 'Đang test KPI Tables cho chi nhánh...';
+
+            try {
+                const response = await fetch('http://localhost:5055/api/KpiAssignment/tables');
+                const data = await response.json();
+                
+                // Convert .NET format
+                let tables = data;
+                if (data && data.$values) {
+                    tables = data.$values;
+                }
+
+                // Filter branch tables
+                const branchTables = tables.filter(table => 
+                    table.tableType.includes('Cnl') || 
+                    table.tableType.includes('CNL') ||
+                    table.tableName.includes('CNL')
+                );
+
+                let result = `✅ KPI Tables cho Chi nhánh (${branchTables.length} bảng):\n\n`;
+                branchTables.forEach(table => {
+                    result += `📋 ${table.tableName}\n`;
+                    result += `   - ID: ${table.id}\n`;
+                    result += `   - Type: ${table.tableType}\n`;
+                    result += `   - Số chỉ tiêu: ${table.indicatorCount}\n\n`;
+                });
+
+                resultDiv.textContent = result;
+                resultDiv.className = 'result success';
+
+            } catch (error) {
+                resultDiv.textContent = `❌ Lỗi: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // Test 2: CNL2 Indicators
+        async function testCNL2Indicators() {
+            const resultDiv = document.getElementById('cnl2-result');
+            resultDiv.className = 'result';
+            resultDiv.textContent = 'Đang test indicators cho CNL2...';
+
+            try {
+                // Get CNL2 table (Giám đốc CNL2)
+                const tableId = 1018; // ID của bảng "Giám đốc CNL2"
+                
+                const response = await fetch(`http://localhost:5055/api/KpiAssignment/tables/${tableId}`);
+                const data = await response.json();
+                
+                // Handle indicators format
+                let indicators = data.indicators;
+                if (indicators && indicators.$values) {
+                    indicators = indicators.$values;
+                }
+
+                let result = `✅ KPI Indicators cho "Giám đốc CNL2" (${indicators.length} chỉ tiêu):\n\n`;
+                
+                let totalScore = 0;
+                indicators.forEach((indicator, index) => {
+                    result += `${index + 1}. ${indicator.indicatorName}\n`;
+                    result += `   - Điểm tối đa: ${indicator.maxScore}\n`;
+                    result += `   - Đơn vị: ${indicator.unit || 'N/A'}\n`;
+                    result += `   - Loại: ${indicator.valueType}\n\n`;
+                    totalScore += indicator.maxScore;
+                });
+
+                result += `📊 Tổng điểm tối đa: ${totalScore} điểm`;
+
+                resultDiv.textContent = result;
+                resultDiv.className = 'result success';
+
+            } catch (error) {
+                resultDiv.textContent = `❌ Lỗi: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // Test 3: Complete Workflow
+        async function testCompleteWorkflow() {
+            const resultDiv = document.getElementById('workflow-result');
+            resultDiv.className = 'result';
+            resultDiv.textContent = 'Đang test workflow hoàn chỉnh...';
+
+            try {
+                let result = '🔄 Testing Workflow: Chọn Chi nhánh CNL2 → Hiển thị KPI\n\n';
+
+                // Step 1: Get CNL2 units
+                result += '1️⃣ Lấy danh sách Chi nhánh CNL2...\n';
+                const unitsResponse = await fetch('http://localhost:5055/api/Units');
+                const unitsData = await unitsResponse.json();
+                
+                let units = unitsData;
+                if (units && units.$values) {
+                    units = units.$values;
+                }
+
+                const cnl2Units = units.filter(unit => unit.type === 'CNL2');
+                result += `✅ Tìm thấy ${cnl2Units.length} chi nhánh CNL2\n\n`;
+
+                // Step 2: Get KPI tables for CNL2
+                result += '2️⃣ Lấy bảng KPI cho CNL2...\n';
+                const tablesResponse = await fetch('http://localhost:5055/api/KpiAssignment/tables');
+                const tablesData = await tablesResponse.json();
+                
+                let tables = tablesData;
+                if (tables && tables.$values) {
+                    tables = tables.$values;
+                }
+
+                const cnl2Tables = tables.filter(table => 
+                    table.tableType.includes('Cnl2') || table.tableName.includes('CNL2')
+                );
+                result += `✅ Tìm thấy ${cnl2Tables.length} bảng KPI cho CNL2\n\n`;
+
+                // Step 3: Get indicators for the first CNL2 table
+                if (cnl2Tables.length > 0) {
+                    result += '3️⃣ Lấy chỉ tiêu KPI...\n';
+                    const firstTable = cnl2Tables[0];
+                    const indicatorsResponse = await fetch(`http://localhost:5055/api/KpiAssignment/tables/${firstTable.id}`);
+                    const indicatorsData = await indicatorsResponse.json();
+                    
+                    let indicators = indicatorsData.indicators;
+                    if (indicators && indicators.$values) {
+                        indicators = indicators.$values;
+                    }
+
+                    result += `✅ Bảng "${firstTable.tableName}" có ${indicators.length} chỉ tiêu\n\n`;
+
+                    // Show workflow summary
+                    result += '📋 Workflow Summary:\n';
+                    result += `- Chi nhánh được chọn: ${cnl2Units[0]?.name || 'CNL2 Unit'}\n`;
+                    result += `- Bảng KPI áp dụng: ${firstTable.tableName}\n`;
+                    result += `- Số chỉ tiêu có sẵn: ${indicators.length}\n`;
+                    result += `- Tổng điểm tối đa: ${indicators.reduce((sum, ind) => sum + ind.maxScore, 0)} điểm\n\n`;
+
+                    result += '✅ WORKFLOW HOẠT ĐỘNG CHÍNH XÁC!\n';
+                    result += 'Người dùng có thể chọn chi nhánh và xem các chỉ tiêu KPI có sẵn.';
+                }
+
+                resultDiv.textContent = result;
+                resultDiv.className = 'result success';
+
+            } catch (error) {
+                resultDiv.textContent = `❌ Lỗi workflow: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // Auto run first test
+        window.addEventListener('load', () => {
+            console.log('🧪 KPI Chi nhánh Test Page loaded');
+        });
+    </script>
+</body>
+</html>

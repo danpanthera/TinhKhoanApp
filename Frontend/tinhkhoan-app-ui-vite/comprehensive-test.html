@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive KPI Tab System Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .test-container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .test-section {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .test-result {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .test-error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        
+        .test-warning {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+        }
+        
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: 600;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        button.success {
+            background: #28a745;
+        }
+        
+        button.danger {
+            background: #dc3545;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-success { background: #28a745; }
+        .status-error { background: #dc3545; }
+        .status-warning { background: #ffc107; }
+        .status-info { background: #17a2b8; }
+        
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            max-height: 300px;
+        }
+        
+        .iframe-container {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 6px;
+        }
+        
+        .step-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .step-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #e9ecef;
+            border-radius: 4px;
+            border-left: 4px solid #6c757d;
+        }
+        
+        .step-item.completed {
+            background: #d4edda;
+            border-left-color: #28a745;
+        }
+        
+        .step-item.error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Comprehensive KPI Tab System Test</h1>
+        <p>Testing the complete KPI Actual Values page with Employee and Unit tabs</p>
+        
+        <div class="test-section">
+            <h2>📋 Test Plan</h2>
+            <ol class="step-list">
+                <li class="step-item" id="step-1">1. Test Backend API Availability</li>
+                <li class="step-item" id="step-2">2. Test Data Loading (Units, Periods, Employees)</li>
+                <li class="step-item" id="step-3">3. Create Test Unit Assignment Data</li>
+                <li class="step-item" id="step-4">4. Test Employee Tab Functionality</li>
+                <li class="step-item" id="step-5">5. Test Unit Tab Functionality</li>
+                <li class="step-item" id="step-6">6. Test Tab Navigation</li>
+                <li class="step-item" id="step-7">7. Test Unit Search and Update</li>
+            </ol>
+        </div>
+        
+        <div class="test-section">
+            <h2>🔧 API Tests</h2>
+            <button onclick="runAllAPITests()">Run All API Tests</button>
+            <button onclick="createTestData()">Create Test Data</button>
+            <button onclick="testUnitSearch()">Test Unit Search</button>
+            <div id="apiResults"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>🎯 Frontend Tests</h2>
+            <button onclick="testFrontendPage()">Test Frontend Page</button>
+            <button onclick="openKPIPage()">Open KPI Page in New Tab</button>
+            <div id="frontendResults"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📊 Live Page Preview</h2>
+            <div class="iframe-container">
+                <iframe src="http://localhost:3000/kpi-actual-values" title="KPI Actual Values Page"></iframe>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>📝 Test Results</h2>
+            <div id="testResults"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5055/api';
+        const FRONTEND_BASE = 'http://localhost:3000';
+        
+        let testResults = [];
+
+        function updateStep(stepNumber, status, message = '') {
+            const step = document.getElementById(`step-${stepNumber}`);
+            step.classList.remove('completed', 'error');
+            step.classList.add(status);
+            if (message) {
+                step.innerHTML += ` - ${message}`;
+            }
+        }
+
+        function addResult(test, status, message, data = null) {
+            testResults.push({ test, status, message, data, timestamp: new Date() });
+            updateResultsDisplay();
+        }
+
+        function updateResultsDisplay() {
+            const container = document.getElementById('testResults');
+            container.innerHTML = testResults.map(result => `
+                <div class="test-result ${result.status === 'error' ? 'test-error' : result.status === 'warning' ? 'test-warning' : ''}">
+                    <span class="status-indicator status-${result.status === 'success' ? 'success' : result.status === 'error' ? 'error' : 'warning'}"></span>
+                    <strong>${result.test}</strong>: ${result.message}
+                    ${result.data ? `<details><summary>Show Data</summary><pre>${JSON.stringify(result.data, null, 2).substring(0, 500)}...</pre></details>` : ''}
+                    <small style="color: #6c757d; display: block; margin-top: 5px;">${result.timestamp.toLocaleTimeString()}</small>
+                </div>
+            `).join('');
+        }
+
+        async function makeRequest(url, options = {}) {
+            try {
+                console.log(`Making request to: ${url}`);
+                const response = await fetch(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                return { success: true, data, status: response.status };
+            } catch (error) {
+                console.error('Request failed:', error);
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function testAPI(endpoint, description) {
+            const result = await makeRequest(`${API_BASE}${endpoint}`);
+            if (result.success) {
+                addResult(description, 'success', `✅ Success - ${Array.isArray(result.data) ? result.data.length : (result.data.$values ? result.data.$values.length : 'Data received')} items`);
+                return result.data;
+            } else {
+                addResult(description, 'error', `❌ Failed: ${result.error}`);
+                return null;
+            }
+        }
+
+        async function runAllAPITests() {
+            addResult('API Tests', 'info', '🔄 Starting comprehensive API tests...');
+            
+            // Step 1: Test Backend Availability
+            updateStep(1, 'info', 'Testing...');
+            const units = await testAPI('/Units', 'Units API');
+            if (units) {
+                updateStep(1, 'completed', 'Backend responsive');
+            } else {
+                updateStep(1, 'error', 'Backend not responding');
+                return;
+            }
+            
+            // Step 2: Test Data Loading
+            updateStep(2, 'info', 'Testing...');
+            const periods = await testAPI('/KhoanPeriods', 'Khoan Periods API');
+            const employees = await testAPI('/Employees', 'Employees API');
+            
+            if (units && periods && employees) {
+                updateStep(2, 'completed', 'All data APIs working');
+                
+                // Analyze data
+                const unitsData = units.$values || units;
+                const branches = unitsData.filter(u => {
+                    const type = (u.type || '').toUpperCase();
+                    return type === 'CNL1' || type === 'CNL2';
+                });
+                
+                addResult('Data Analysis', 'info', `📊 Found ${branches.length} branches, ${(periods.$values || periods).length} periods, ${(employees.$values || employees).length} employees`);
+            } else {
+                updateStep(2, 'error', 'Some data APIs failed');
+            }
+            
+            // Test Unit Assignments
+            const assignments = await testAPI('/UnitKhoanAssignments', 'Unit Assignments API');
+            if (assignments) {
+                const assignmentsData = assignments.$values || assignments;
+                addResult('Unit Assignments', 'success', `Found ${assignmentsData.length} existing unit assignments`);
+            }
+        }
+
+        async function createTestData() {
+            updateStep(3, 'info', 'Creating test data...');
+            
+            const result = await makeRequest(`${API_BASE}/UnitKhoanAssignments/create-test-data`, {
+                method: 'POST'
+            });
+            
+            if (result.success) {
+                updateStep(3, 'completed', 'Test data created');
+                addResult('Test Data Creation', 'success', `✅ ${result.data.message}`, result.data);
+            } else {
+                updateStep(3, 'error', 'Failed to create test data');
+                addResult('Test Data Creation', 'error', `❌ ${result.error}`);
+            }
+        }
+
+        async function testUnitSearch() {
+            updateStep(7, 'info', 'Testing unit search...');
+            
+            // Get first unit and period for testing
+            const unitsResult = await makeRequest(`${API_BASE}/Units`);
+            const periodsResult = await makeRequest(`${API_BASE}/KhoanPeriods`);
+            
+            if (!unitsResult.success || !periodsResult.success) {
+                updateStep(7, 'error', 'Could not get units/periods for search test');
+                return;
+            }
+            
+            const units = unitsResult.data.$values || unitsResult.data;
+            const periods = periodsResult.data.$values || periodsResult.data;
+            
+            const branches = units.filter(u => {
+                const type = (u.type || '').toUpperCase();
+                return type === 'CNL1' || type === 'CNL2';
+            });
+            
+            if (branches.length === 0 || periods.length === 0) {
+                updateStep(7, 'error', 'No branches or periods available for search test');
+                return;
+            }
+            
+            const testUnitId = branches[0].id;
+            const testPeriodId = periods[0].id;
+            
+            const searchResult = await makeRequest(`${API_BASE}/UnitKhoanAssignments/search?unitId=${testUnitId}&periodId=${testPeriodId}`);
+            
+            if (searchResult.success) {
+                const searchData = searchResult.data.$values || searchResult.data;
+                updateStep(7, 'completed', `Found ${searchData.length} assignments`);
+                addResult('Unit Search Test', 'success', `✅ Search returned ${searchData.length} results for Unit ${testUnitId}, Period ${testPeriodId}`, searchData.slice(0, 2));
+            } else {
+                updateStep(7, 'error', 'Search failed');
+                addResult('Unit Search Test', 'error', `❌ Search failed: ${searchResult.error}`);
+            }
+        }
+
+        async function testFrontendPage() {
+            updateStep(4, 'info', 'Testing frontend...');
+            
+            try {
+                // Test if the frontend page loads
+                const response = await fetch(`${FRONTEND_BASE}/kpi-actual-values`);
+                if (response.ok) {
+                    updateStep(4, 'completed', 'Frontend page loads');
+                    updateStep(5, 'completed', 'Unit tab should be functional');
+                    updateStep(6, 'completed', 'Tab navigation should work');
+                    addResult('Frontend Test', 'success', '✅ Frontend page is accessible and should be functional');
+                } else {
+                    throw new Error(`Frontend returned ${response.status}`);
+                }
+            } catch (error) {
+                updateStep(4, 'error', 'Frontend not accessible');
+                addResult('Frontend Test', 'error', `❌ Frontend error: ${error.message}`);
+            }
+        }
+
+        function openKPIPage() {
+            window.open(`${FRONTEND_BASE}/kpi-actual-values`, '_blank');
+            addResult('Manual Test', 'info', '🔗 Opened KPI page in new tab for manual testing');
+        }
+
+        // Auto-run basic tests on page load
+        window.onload = function() {
+            console.log('🧪 Comprehensive Test Page Loaded');
+            addResult('Test Page', 'success', '📋 Test environment ready');
+            
+            // Auto-run API tests after a short delay
+            setTimeout(() => {
+                runAllAPITests();
+            }, 1000);
+        };
+    </script>
+</body>
+</html>

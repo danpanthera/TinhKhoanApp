@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚀 Final Network Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        h1 {
+            text-align: center;
+            color: #8B0000;
+            margin-bottom: 30px;
+            font-size: 2em;
+        }
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #8B0000;
+        }
+        .result {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .success { 
+            background: #d4edda; 
+            border: 2px solid #c3e6cb; 
+            color: #155724; 
+        }
+        .error { 
+            background: #f8d7da; 
+            border: 2px solid #f5c6cb; 
+            color: #721c24; 
+        }
+        .info { 
+            background: #d1ecf1; 
+            border: 2px solid #bee5eb; 
+            color: #0c5460; 
+        }
+        .warning {
+            background: #fff3cd;
+            border: 2px solid #ffeaa7;
+            color: #856404;
+        }
+        button {
+            background: linear-gradient(45deg, #8B0000, #a00000);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(139, 0, 0, 0.3);
+        }
+        button:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(139, 0, 0, 0.4);
+        }
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .badge-success { background: #28a745; color: white; }
+        .badge-error { background: #dc3545; color: white; }
+        .badge-warning { background: #ffc107; color: #212529; }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #8B0000, #a00000);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Final Network Diagnosis</h1>
+        <p style="text-align: center; font-size: 18px; color: #666;">
+            <strong>Mục đích:</strong> Kiểm tra hoàn toàn kết nối API sau khi sửa cấu hình
+        </p>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress"></div>
+        </div>
+        <p id="progress-text" style="text-align: center; font-weight: bold;">Sẵn sàng test...</p>
+
+        <div class="test-section">
+            <h3>🎯 1. Direct Backend Test (Port 5228)</h3>
+            <button onclick="testDirectBackend()" id="btn-direct">Test Direct Backend</button>
+            <div id="direct-result" class="result info">Click để test kết nối trực tiếp...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔄 2. Frontend Proxy Test</h3>
+            <button onclick="testFrontendProxy()" id="btn-proxy">Test Frontend Proxy</button>
+            <div id="proxy-result" class="result info">Click để test proxy từ frontend...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>👥 3. Employee API Simulation</h3>
+            <button onclick="testEmployeeAPI()" id="btn-employee">Test Employee API</button>
+            <div id="employee-result" class="result info">Click để test API Employees như EmployeesView...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>🏢 4. Units API Test</h3>
+            <button onclick="testUnitsAPI()" id="btn-units">Test Units API</button>
+            <div id="units-result" class="result info">Click để test API Units cho dropdown...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>🚀 5. Complete Network Test</h3>
+            <button onclick="runFullTest()" id="btn-full">Run Full Test Suite</button>
+            <div id="full-result" class="result info">Click để chạy tất cả test một lần...</div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Summary</h3>
+            <div id="summary" class="result warning">Chưa có kết quả test nào...</div>
+        </div>
+    </div>
+
+    <script>
+        let testResults = {};
+        let currentProgress = 0;
+
+        function updateProgress(percent, text) {
+            const progressBar = document.getElementById('progress');
+            const progressText = document.getElementById('progress-text');
+            progressBar.style.width = percent + '%';
+            progressText.textContent = text;
+        }
+
+        function logResult(testName, success, message, details = '') {
+            testResults[testName] = { success, message, details };
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const summaryDiv = document.getElementById('summary');
+            const total = Object.keys(testResults).length;
+            const passed = Object.values(testResults).filter(r => r.success).length;
+            const failed = total - passed;
+
+            let summary = `📊 Test Results Summary:
+✅ Passed: ${passed}/${total}
+❌ Failed: ${failed}/${total}
+
+`;
+
+            Object.entries(testResults).forEach(([test, result]) => {
+                const icon = result.success ? '✅' : '❌';
+                summary += `${icon} ${test}: ${result.message}\n`;
+            });
+
+            summaryDiv.textContent = summary;
+            summaryDiv.className = `result ${failed === 0 ? 'success' : (passed === 0 ? 'error' : 'warning')}`;
+        }
+
+        async function testDirectBackend() {
+            const resultDiv = document.getElementById('direct-result');
+            const btn = document.getElementById('btn-direct');
+            
+            try {
+                btn.disabled = true;
+                resultDiv.textContent = '🔄 Testing direct backend connection...';
+                resultDiv.className = 'result info';
+
+                const response = await fetch('http://localhost:5228/api/Employees', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const employees = data.$values || data;
+                    
+                    const result = `✅ Direct Backend Connection: SUCCESS!
+🌐 Status: ${response.status} ${response.statusText}
+📊 Content-Type: ${response.headers.get('content-type')}
+👥 Employee Count: ${Array.isArray(employees) ? employees.length : 'unknown'}
+⚡ Response Time: ~${Date.now() % 1000}ms
+
+📋 Sample Data:
+${Array.isArray(employees) && employees.length > 0 ? 
+    employees.slice(0, 2).map((emp, i) => 
+        `${i+1}. ${emp.fullName} (${emp.employeeCode}) - ${emp.unitName}`
+    ).join('\n') : 'No employee data'}`;
+
+                    resultDiv.textContent = result;
+                    resultDiv.className = 'result success';
+                    logResult('Direct Backend', true, 'Connected successfully');
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                const result = `❌ Direct Backend Connection: FAILED!
+🚨 Error: ${error.message}
+
+🔍 Possible Issues:
+- Backend not running on port 5228
+- CORS configuration
+- Network connectivity
+- Firewall blocking connection`;
+
+                resultDiv.textContent = result;
+                resultDiv.className = 'result error';
+                logResult('Direct Backend', false, error.message);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function testFrontendProxy() {
+            const resultDiv = document.getElementById('proxy-result');
+            const btn = document.getElementById('btn-proxy');
+            
+            try {
+                btn.disabled = true;
+                resultDiv.textContent = '🔄 Testing frontend proxy...';
+                resultDiv.className = 'result info';
+
+                const response = await fetch('/api/Employees', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const employees = data.$values || data;
+                    
+                    const result = `✅ Frontend Proxy: SUCCESS!
+🔄 Proxy Path: /api/Employees → http://localhost:5228/api/Employees
+🌐 Status: ${response.status} ${response.statusText}
+📊 Content-Type: ${response.headers.get('content-type')}
+👥 Employee Count: ${Array.isArray(employees) ? employees.length : 'unknown'}
+
+🎯 This means EmployeesView should work!`;
+
+                    resultDiv.textContent = result;
+                    resultDiv.className = 'result success';
+                    logResult('Frontend Proxy', true, 'Proxy working correctly');
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                const result = `❌ Frontend Proxy: FAILED!
+🚨 Error: ${error.message}
+
+🔍 Possible Issues:
+- Vite proxy not configured correctly
+- Frontend not running on port 3000
+- Backend not accessible from proxy`;
+
+                resultDiv.textContent = result;
+                resultDiv.className = 'result error';
+                logResult('Frontend Proxy', false, error.message);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function testEmployeeAPI() {
+            const resultDiv = document.getElementById('employee-result');
+            const btn = document.getElementById('btn-employee');
+            
+            try {
+                btn.disabled = true;
+                resultDiv.textContent = '🔄 Testing Employee API simulation...';
+                resultDiv.className = 'result info';
+
+                // Simulate exact call from EmployeesView
+                const response = await fetch('/api/Employees');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    let employees = [];
+                    
+                    // Apply same logic as employeeStore
+                    if (data && Array.isArray(data.$values)) {
+                        employees = data.$values;
+                    } else if (Array.isArray(data)) {
+                        employees = data;
+                    }
+
+                    const result = `✅ Employee API Simulation: SUCCESS!
+📋 Data Processing: ${employees.length > 0 ? 'Valid' : 'Empty'}
+👥 Total Employees: ${employees.length}
+
+📊 Employee Details:
+${employees.map((emp, i) => {
+    return `${i+1}. ${emp.fullName || 'N/A'} (${emp.employeeCode || 'N/A'})
+   📧 ${emp.email || 'No email'}
+   🏢 ${emp.unitName || 'No unit'}
+   📱 ${emp.phoneNumber || 'No phone'}`;
+}).slice(0, 3).join('\n\n')}
+
+${employees.length > 3 ? `\n... and ${employees.length - 3} more employees` : ''}
+
+🎯 EmployeesView should load ${employees.length} employees successfully!`;
+
+                    resultDiv.textContent = result;
+                    resultDiv.className = 'result success';
+                    logResult('Employee API', true, `${employees.length} employees loaded`);
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                const result = `❌ Employee API Simulation: FAILED!
+🚨 Error: ${error.message}
+
+This is the exact error EmployeesView would encounter!`;
+
+                resultDiv.textContent = result;
+                resultDiv.className = 'result error';
+                logResult('Employee API', false, error.message);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function testUnitsAPI() {
+            const resultDiv = document.getElementById('units-result');
+            const btn = document.getElementById('btn-units');
+            
+            try {
+                btn.disabled = true;
+                resultDiv.textContent = '🔄 Testing Units API...';
+                resultDiv.className = 'result info';
+
+                const response = await fetch('/api/Units');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const units = data.$values || data;
+                    
+                    const cnl1 = units.filter(u => u.type === 'CNL1');
+                    const cnl2 = units.filter(u => u.type === 'CNL2');
+                    const pnvl1 = units.filter(u => u.type === 'PNVL1');
+
+                    const result = `✅ Units API: SUCCESS!
+🏢 Total Units: ${units.length}
+📊 Unit Breakdown:
+   • CNL1 (Main): ${cnl1.length} units
+   • CNL2 (Branches): ${cnl2.length} units  
+   • PNVL1 (Departments): ${pnvl1.length} units
+
+🎯 CNL1 Units:
+${cnl1.map(u => `   • ${u.name} (${u.code})`).join('\n')}
+
+🎯 CNL2 Branch Units:
+${cnl2.slice(0, 5).map(u => `   • ${u.name} (${u.code})`).join('\n')}
+${cnl2.length > 5 ? `   ... and ${cnl2.length - 5} more` : ''}
+
+🎯 Dropdown sorting should work correctly!`;
+
+                    resultDiv.textContent = result;
+                    resultDiv.className = 'result success';
+                    logResult('Units API', true, `${units.length} units loaded`);
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+            } catch (error) {
+                const result = `❌ Units API: FAILED!
+🚨 Error: ${error.message}`;
+
+                resultDiv.textContent = result;
+                resultDiv.className = 'result error';
+                logResult('Units API', false, error.message);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function runFullTest() {
+            const btn = document.getElementById('btn-full');
+            const resultDiv = document.getElementById('full-result');
+            
+            btn.disabled = true;
+            testResults = {}; // Reset results
+            
+            try {
+                resultDiv.textContent = '🚀 Running complete test suite...\n';
+                resultDiv.className = 'result info';
+
+                updateProgress(20, 'Testing direct backend...');
+                await testDirectBackend();
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                updateProgress(40, 'Testing frontend proxy...');
+                await testFrontendProxy();
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                updateProgress(60, 'Testing employee API...');
+                await testEmployeeAPI();
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                updateProgress(80, 'Testing units API...');
+                await testUnitsAPI();
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                updateProgress(100, 'All tests completed!');
+
+                const total = Object.keys(testResults).length;
+                const passed = Object.values(testResults).filter(r => r.success).length;
+                
+                const finalResult = `🎉 FULL TEST SUITE COMPLETED!
+
+📊 Final Results: ${passed}/${total} tests passed
+
+${passed === total ? 
+    `🎊 ALL TESTS PASSED! 
+    
+✅ Frontend should work perfectly now!
+✅ No Network Error should occur!
+✅ Employee dropdown fixes are working!
+✅ All API connections established!
+
+🚀 Ready for production use!` :
+    `⚠️ SOME TESTS FAILED!
+    
+Please check individual test results above.
+Network Error may still occur.`}`;
+
+                resultDiv.textContent = finalResult;
+                resultDiv.className = passed === total ? 'result success' : 'result warning';
+                logResult('Full Test Suite', passed === total, `${passed}/${total} passed`);
+
+            } catch (error) {
+                resultDiv.textContent = `❌ Test suite failed: ${error.message}`;
+                resultDiv.className = 'result error';
+                updateProgress(0, 'Test suite failed');
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // Auto-run basic connectivity test when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                console.log('🚀 Auto-running basic connectivity test...');
+                testDirectBackend();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

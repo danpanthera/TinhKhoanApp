@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extended Raw Data Import API Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-header {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .button-group {
+            margin: 15px 0;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button.success {
+            background-color: #28a745;
+        }
+        button.error {
+            background-color: #dc3545;
+        }
+        .result {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .error {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        .table-selector {
+            margin: 10px 0;
+        }
+        select {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .test-data-input {
+            width: 100%;
+            min-height: 100px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Extended Raw Data Import API Test</h1>
+        <p>Test các API endpoint mới cho SCD Type 2 import của các bảng: LN03, EI01, DPDA, DB01, KH03, BC57</p>
+
+        <!-- Table Selection -->
+        <div class="test-section">
+            <h2 class="test-header">Chọn Bảng Dữ Liệu</h2>
+            <div class="table-selector">
+                <label for="tableSelect">Chọn bảng:</label>
+                <select id="tableSelect">
+                    <option value="LN03">LN03 - Dữ liệu khoản 3</option>
+                    <option value="EI01">EI01 - Dữ liệu thu nhập</option>
+                    <option value="DPDA">DPDA - Dữ liệu đánh giá</option>
+                    <option value="DB01">DB01 - Dữ liệu cơ sở</option>
+                    <option value="KH03">KH03 - Dữ liệu khách hàng</option>
+                    <option value="BC57">BC57 - Dữ liệu báo cáo</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Test Data Setup -->
+        <div class="test-section">
+            <h2 class="test-header">Tạo Dữ Liệu Test</h2>
+            <div class="button-group">
+                <button onclick="generateTestData()">Tạo Dữ Liệu Test</button>
+                <button onclick="clearTestData()">Xóa Dữ Liệu</button>
+            </div>
+            <div>
+                <label for="testDataInput">Dữ liệu JSON để import:</label>
+                <textarea id="testDataInput" class="test-data-input" placeholder="Dữ liệu JSON sẽ được tạo tự động..."></textarea>
+            </div>
+        </div>
+
+        <!-- API Testing -->
+        <div class="test-section">
+            <h2 class="test-header">Test API Endpoints</h2>
+            <div class="button-group">
+                <button onclick="testValidateData()">Test Validate Data</button>
+                <button onclick="testImportData()">Test Import Data</button>
+                <button onclick="testGetStats()">Test Get Statistics</button>
+                <button onclick="testGetHistory()">Test Get History</button>
+                <button onclick="testGetCurrent()">Test Get Current Data</button>
+            </div>
+            <div id="apiResults" class="result"></div>
+        </div>
+
+        <!-- Statistics Dashboard -->
+        <div class="test-section">
+            <h2 class="test-header">Thống Kê Dữ Liệu</h2>
+            <div class="button-group">
+                <button onclick="refreshStats()">Refresh Statistics</button>
+            </div>
+            <div id="statsDisplay" class="stats-grid"></div>
+        </div>
+
+        <!-- History View -->
+        <div class="test-section">
+            <h2 class="test-header">Lịch Sử Dữ Liệu</h2>
+            <div class="button-group">
+                <button onclick="refreshHistory()">Refresh History</button>
+            </div>
+            <div id="historyDisplay" class="result"></div>
+        </div>
+
+        <!-- Import Results -->
+        <div class="test-section">
+            <h2 class="test-header">Kết Quả Import</h2>
+            <div id="importResults" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5055/api';
+        
+        // Sample data structures for each table type
+        const sampleDataTemplates = {
+            LN03: {
+                businessKey: 'LN03_001',
+                effectiveDate: new Date().toISOString(),
+                statementDate: new Date().toISOString(),
+                importId: 'IMPORT_001',
+                dataHash: 'hash001',
+                maKhachHang: 'KH001',
+                tenKhachHang: 'Nguyễn Văn A',
+                maHopDong: 'HD001',
+                loaiHopDong: 'Vay tiêu dùng',
+                soTienGoc: 100000000,
+                soTienLai: 5000000,
+                tongNo: 105000000,
+                ngayDaoHan: new Date().toISOString(),
+                tinhTrangNo: 'Bình thường',
+                nhomNo: 1,
+                maChiNhanh: 'CN001',
+                tenChiNhanh: 'Chi nhánh Hà Nội'
+            },
+            EI01: {
+                businessKey: 'EI01_001',
+                effectiveDate: new Date().toISOString(),
+                statementDate: new Date().toISOString(),
+                importId: 'IMPORT_001',
+                dataHash: 'hash001',
+                maKhachHang: 'KH001',
+                tenKhachHang: 'Nguyễn Văn A',
+                soTaiKhoan: '123456789',
+                loaiGiaoDich: 'Chuyển khoản',
+                maGiaoDich: 'TXN001',
+                soTien: 1000000,
+                ngayGiaoDich: new Date().toISOString(),
+                thoiGianGiaoDich: new Date().toISOString()
+            },
+            DPDA: {
+                businessKey: 'DPDA_001',
+                effectiveDate: new Date().toISOString(),
+                statementDate: new Date().toISOString(),
+                importId: 'IMPORT_001',
+                dataHash: 'hash001',
+                maKhachHang: 'KH001',
+                tenKhachHang: 'Nguyễn Văn A',
+                soThe: '1234567890123456',
+                loaiThe: 'VISA',
+                tinhTrangThe: 'Hoạt động',
+                hanSuDung: new Date().toISOString(),
+                gioiHanTinDung: 50000000
+            },
+            DB01: {
+                businessKey: 'DB01_001',
+                effectiveDate: new Date().toISOString(),
+                statementDate: new Date().toISOString(),
+                importId: 'IMPORT_001',
+                dataHash: 'hash001',
+                maKhachHang: 'KH001',
+                tenKhachHang: 'Nguyễn Văn A',
+                loaiDuLieu: 'TSDB',
+                duLieu: 'Thông tin tài sản đảm bảo',
+                giaTriTaiSan: 1000000000,
+                ngayDinhGia: new Date().toISOString()
+            },
+            KH03: {
+                businessKey: 'KH03_001',
+                effectiveDate: new Date().toISOString(),
+                statementDate: new Date().toISOString(),
+                importId: 'IMPORT_001',
+                dataHash: 'hash001',
+                maKhachHang: 'KH001',
+                tenKhachHang: 'Công ty ABC',
+                loaiKhachHang: 'Pháp nhân',
+                maSoThue: '0123456789',
+                diaChi: 'Hà Nội',
+                soDienThoai: '0123456789',
+                email: 'contact@abc.com'
+            },
+            BC57: {
+                businessKey: 'BC57_001',
+                effectiveDate: new Date().toISOString(),
+                statementDate: new Date().toISOString(),
+                importId: 'IMPORT_001',
+                dataHash: 'hash001',
+                loaiBaoCao: 'Báo cáo lãi dự thu',
+                kyBaoCao: '2025-06',
+                soTienLaiDuThu: 15000000,
+                soTienLaiQuaHan: 2000000,
+                ngayTaoBaoCao: new Date().toISOString()
+            }
+        };
+
+        function getSelectedTable() {
+            return document.getElementById('tableSelect').value;
+        }
+
+        function generateTestData() {
+            const table = getSelectedTable();
+            const template = sampleDataTemplates[table];
+            const testData = [];
+            
+            // Generate 3 sample records
+            for (let i = 1; i <= 3; i++) {
+                const record = { ...template };
+                record.businessKey = `${table}_00${i}`;
+                record.importId = `IMPORT_00${i}`;
+                record.dataHash = `hash00${i}`;
+                if (record.maKhachHang) record.maKhachHang = `KH00${i}`;
+                if (record.tenKhachHang) record.tenKhachHang = `Khách hàng ${i}`;
+                testData.push(record);
+            }
+            
+            const importRequest = {
+                batchId: `BATCH_${table}_${Date.now()}`,
+                importDate: new Date().toISOString(),
+                data: testData
+            };
+            
+            document.getElementById('testDataInput').value = JSON.stringify(importRequest, null, 2);
+            logResult('✅ Đã tạo dữ liệu test cho bảng ' + table, 'success');
+        }
+
+        function clearTestData() {
+            document.getElementById('testDataInput').value = '';
+            logResult('🗑️ Đã xóa dữ liệu test', 'success');
+        }
+
+        async function testValidateData() {
+            const table = getSelectedTable();
+            const testData = document.getElementById('testDataInput').value;
+            
+            if (!testData.trim()) {
+                logResult('❌ Vui lòng tạo dữ liệu test trước', 'error');
+                return;
+            }
+
+            try {
+                const data = JSON.parse(testData);
+                const response = await fetch(`${API_BASE}/ExtendedRawDataImport/${table}/validate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    logResult(`✅ Validate ${table} thành công:\n${JSON.stringify(result, null, 2)}`, 'success');
+                } else {
+                    logResult(`❌ Validate ${table} thất bại:\n${JSON.stringify(result, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                logResult(`❌ Lỗi validate ${table}: ${error.message}`, 'error');
+            }
+        }
+
+        async function testImportData() {
+            const table = getSelectedTable();
+            const testData = document.getElementById('testDataInput').value;
+            
+            if (!testData.trim()) {
+                logResult('❌ Vui lòng tạo dữ liệu test trước', 'error');
+                return;
+            }
+
+            try {
+                const importRequest = JSON.parse(testData);
+                const response = await fetch(`${API_BASE}/ExtendedRawDataImport/import/${table.toLowerCase()}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(importRequest)
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    logResult(`✅ Import ${table} thành công:\n${JSON.stringify(result, null, 2)}`, 'success');
+                    document.getElementById('importResults').innerHTML = `
+                        <div class="success">
+                            <h4>Import ${table} thành công!</h4>
+                            <p>Batch ID: ${result.batchId}</p>
+                            <p>Thời gian: ${new Date().toLocaleString()}</p>
+                            <pre>${JSON.stringify(result, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    logResult(`❌ Import ${table} thất bại:\n${JSON.stringify(result, null, 2)}`, 'error');
+                    document.getElementById('importResults').innerHTML = `
+                        <div class="error">
+                            <h4>Import ${table} thất bại!</h4>
+                            <pre>${JSON.stringify(result, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                logResult(`❌ Lỗi import ${table}: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGetStats() {
+            const table = getSelectedTable();
+
+            try {
+                const response = await fetch(`${API_BASE}/ExtendedRawDataImport/${table}/statistics`);
+                const result = await response.json();
+                
+                if (response.ok) {
+                    logResult(`✅ Get Statistics ${table} thành công:\n${JSON.stringify(result, null, 2)}`, 'success');
+                    displayStats(result);
+                } else {
+                    logResult(`❌ Get Statistics ${table} thất bại:\n${JSON.stringify(result, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                logResult(`❌ Lỗi get statistics ${table}: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGetHistory() {
+            const table = getSelectedTable();
+
+            try {
+                const response = await fetch(`${API_BASE}/ExtendedRawDataImport/${table}/history?page=1&pageSize=10`);
+                const result = await response.json();
+                
+                if (response.ok) {
+                    logResult(`✅ Get History ${table} thành công:\n${JSON.stringify(result, null, 2)}`, 'success');
+                    displayHistory(result);
+                } else {
+                    logResult(`❌ Get History ${table} thất bại:\n${JSON.stringify(result, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                logResult(`❌ Lỗi get history ${table}: ${error.message}`, 'error');
+            }
+        }
+
+        async function testGetCurrent() {
+            const table = getSelectedTable();
+
+            try {
+                const response = await fetch(`${API_BASE}/ExtendedRawDataImport/${table}/current?page=1&pageSize=10`);
+                const result = await response.json();
+                
+                if (response.ok) {
+                    logResult(`✅ Get Current ${table} thành công:\n${JSON.stringify(result, null, 2)}`, 'success');
+                } else {
+                    logResult(`❌ Get Current ${table} thất bại:\n${JSON.stringify(result, null, 2)}`, 'error');
+                }
+            } catch (error) {
+                logResult(`❌ Lỗi get current ${table}: ${error.message}`, 'error');
+            }
+        }
+
+        async function refreshStats() {
+            await testGetStats();
+        }
+
+        async function refreshHistory() {
+            await testGetHistory();
+        }
+
+        function displayStats(stats) {
+            const statsDisplay = document.getElementById('statsDisplay');
+            statsDisplay.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${stats.totalRecords || 0}</div>
+                    <div class="stat-label">Tổng số bản ghi</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.activeRecords || 0}</div>
+                    <div class="stat-label">Bản ghi hiện tại</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.historicalRecords || 0}</div>
+                    <div class="stat-label">Bản ghi lịch sử</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.lastImportDate || 'N/A'}</div>
+                    <div class="stat-label">Import lần cuối</div>
+                </div>
+            `;
+        }
+
+        function displayHistory(history) {
+            const historyDisplay = document.getElementById('historyDisplay');
+            if (history.data && history.data.length > 0) {
+                historyDisplay.innerHTML = `
+                    <h4>Lịch sử dữ liệu (${history.totalCount || history.data.length} bản ghi)</h4>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background-color: #f8f9fa;">
+                                <th style="border: 1px solid #ddd; padding: 8px;">ID</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Valid From</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Valid To</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Is Current</th>
+                                <th style="border: 1px solid #ddd; padding: 8px;">Hash</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${history.data.map(item => `
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${item.id || item.sourceId || 'N/A'}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${item.validFrom || 'N/A'}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${item.validTo || 'Current'}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px;">${item.isCurrent ? '✅' : '❌'}</td>
+                                    <td style="border: 1px solid #ddd; padding: 8px; font-family: monospace; font-size: 10px;">${item.rowHash || 'N/A'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } else {
+                historyDisplay.innerHTML = '<p>Chưa có dữ liệu lịch sử</p>';
+            }
+        }
+
+        function logResult(message, type = 'info') {
+            const resultsDiv = document.getElementById('apiResults');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `
+                <div class="${type}">
+                    <strong>[${timestamp}]</strong> ${message}
+                </div>
+            `;
+            resultsDiv.innerHTML = logEntry + resultsDiv.innerHTML;
+        }
+
+        // Initialize with test data for LN03
+        document.addEventListener('DOMContentLoaded', function() {
+            generateTestData();
+        });
+    </script>
+</body>
+</html>

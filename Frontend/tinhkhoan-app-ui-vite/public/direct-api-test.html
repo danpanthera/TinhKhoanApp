@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direct API Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #007bff;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .warning { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        
+        button {
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+        }
+        
+        .auto-test-btn {
+            background: linear-gradient(45deg, #28a745, #20c997);
+        }
+        
+        .clear-btn {
+            background: linear-gradient(45deg, #6c757d, #5a6268);
+        }
+        
+        pre {
+            background: #f1f3f4;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid #e9ecef;
+            font-size: 12px;
+        }
+        
+        .endpoint-info {
+            background: linear-gradient(45deg, #17a2b8, #138496);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Direct API Connection Test</h1>
+        
+        <div class="endpoint-info">
+            <strong>🎯 Testing Endpoint:</strong> http://localhost:5055/api<br>
+            <strong>🌐 Frontend URL:</strong> <span id="frontend-url"></span><br>
+            <strong>⏰ Time:</strong> <span id="current-time"></span>
+        </div>
+
+        <div class="test-section">
+            <h3>🔌 Connection Status</h3>
+            <div id="connection-status" class="status info">🔄 Checking connection...</div>
+            <button onclick="testConnection()" class="auto-test-btn">🔄 Test Connection</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Individual API Tests</h3>
+            <div class="grid">
+                <button onclick="testAPI('employees', 'Employees')">👥 Employees</button>
+                <button onclick="testAPI('units', 'Units')">🏢 Units</button>
+                <button onclick="testAPI('positions', 'Positions')">💼 Positions</button>
+                <button onclick="testAPI('roles', 'Roles')">🎭 Roles</button>
+                <button onclick="testAPI('KpiAssignment/tables', 'KPI Tables')">📋 KPI Tables</button>
+                <button onclick="testAPI('KPIDefinitions', 'KPI Definitions')">📊 KPI Definitions</button>
+            </div>
+            <div id="individual-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 Complete API Test Suite</h3>
+            <button onclick="runCompleteTest()" class="auto-test-btn">🚀 Run All Tests</button>
+            <button onclick="clearResults()" class="clear-btn">🗑️ Clear Results</button>
+            <div id="complete-results"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📋 Detailed Logs</h3>
+            <pre id="detailed-logs"></pre>
+        </div>
+
+        <div class="test-section">
+            <h3>🌐 Browser Console Commands</h3>
+            <p>Copy and paste these commands in your browser console:</p>
+            <pre id="console-commands"></pre>
+        </div>
+    </div>
+
+    <script>
+        // Initialize page
+        document.getElementById('frontend-url').textContent = window.location.origin;
+        document.getElementById('current-time').textContent = new Date().toLocaleString();
+        
+        const API_BASE = 'http://localhost:5055/api';
+        let logBuffer = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}`;
+            logBuffer.push(logEntry);
+            
+            const logsEl = document.getElementById('detailed-logs');
+            logsEl.textContent = logBuffer.slice(-20).join('\\n'); // Keep last 20 logs
+            logsEl.scrollTop = logsEl.scrollHeight;
+            
+            console.log(`%c${logEntry}`, `color: ${type === 'error' ? 'red' : type === 'success' ? 'green' : 'blue'}`);
+        }
+
+        function setStatus(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.className = `status ${type}`;
+            element.innerHTML = message;
+        }
+
+        async function testConnection() {
+            log('🔍 Testing basic connection to backend...', 'info');
+            setStatus('connection-status', '🔄 Testing connection...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/units`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log(`Connection test response: ${response.status} ${response.statusText}`, 'info');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const count = data.$values ? data.$values.length : data.length || 'unknown';
+                    setStatus('connection-status', `✅ Connection successful! Found ${count} units`, 'success');
+                    log(`✅ Connection successful! Backend is responsive`, 'success');
+                    return true;
+                } else {
+                    setStatus('connection-status', `❌ Connection failed: HTTP ${response.status}`, 'error');
+                    log(`❌ Connection failed: HTTP ${response.status} ${response.statusText}`, 'error');
+                    return false;
+                }
+            } catch (error) {
+                setStatus('connection-status', `❌ Network error: ${error.message}`, 'error');
+                log(`❌ Connection error: ${error.message}`, 'error');
+                return false;
+            }
+        }
+
+        async function testAPI(endpoint, name) {
+            log(`🔍 Testing ${name} API...`, 'info');
+            const resultsEl = document.getElementById('individual-results');
+            resultsEl.innerHTML = `<div class="status info">🔄 Testing ${name}...</div>`;
+            
+            try {
+                const response = await fetch(`${API_BASE}/${endpoint}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                log(`${name} API response: ${response.status} ${response.statusText}`, 'info');
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const count = data.$values ? data.$values.length : data.length || 'unknown';
+                    resultsEl.innerHTML = `<div class="status success">✅ ${name}: ${count} items found</div>`;
+                    log(`✅ ${name} API success: ${count} items`, 'success');
+                    
+                    // Show sample data
+                    if (data.$values && data.$values.length > 0) {
+                        const sample = data.$values[0];
+                        log(`Sample ${name} data: ${JSON.stringify(sample).substring(0, 100)}...`, 'info');
+                    }
+                } else {
+                    resultsEl.innerHTML = `<div class="status error">❌ ${name}: HTTP ${response.status}</div>`;
+                    log(`❌ ${name} API error: HTTP ${response.status}`, 'error');
+                }
+            } catch (error) {
+                resultsEl.innerHTML = `<div class="status error">❌ ${name}: ${error.message}</div>`;
+                log(`❌ ${name} API error: ${error.message}`, 'error');
+            }
+        }
+
+        async function runCompleteTest() {
+            log('🚀 Starting complete API test suite...', 'info');
+            const resultsEl = document.getElementById('complete-results');
+            resultsEl.innerHTML = '<div class="status info">🔄 Running complete test suite...</div>';
+            
+            const tests = [
+                { endpoint: 'units', name: 'Units' },
+                { endpoint: 'employees', name: 'Employees' },
+                { endpoint: 'positions', name: 'Positions' },
+                { endpoint: 'roles', name: 'Roles' },
+                { endpoint: 'KpiAssignment/tables', name: 'KPI Assignment Tables' },
+                { endpoint: 'KPIDefinitions', name: 'KPI Definitions' },
+                { endpoint: 'KhoanPeriods', name: 'Khoan Periods' }
+            ];
+
+            let results = [];
+            let passedCount = 0;
+            let totalCount = tests.length;
+
+            for (const test of tests) {
+                try {
+                    log(`Testing ${test.name}...`, 'info');
+                    const response = await fetch(`${API_BASE}/${test.endpoint}`, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        const count = data.$values ? data.$values.length : data.length || 'unknown';
+                        results.push(`<div class="status success">✅ ${test.name}: ${count} items</div>`);
+                        log(`✅ ${test.name}: ${count} items`, 'success');
+                        passedCount++;
+                    } else {
+                        results.push(`<div class="status error">❌ ${test.name}: HTTP ${response.status}</div>`);
+                        log(`❌ ${test.name}: HTTP ${response.status}`, 'error');
+                    }
+                } catch (error) {
+                    results.push(`<div class="status error">❌ ${test.name}: ${error.message}</div>`);
+                    log(`❌ ${test.name}: ${error.message}`, 'error');
+                }
+            }
+
+            const successRate = ((passedCount / totalCount) * 100).toFixed(1);
+            const summary = passedCount === totalCount 
+                ? `<div class="status success">🎉 All tests passed! (${passedCount}/${totalCount} - ${successRate}%)</div>`
+                : `<div class="status warning">⚠️ ${passedCount}/${totalCount} tests passed (${successRate}%)</div>`;
+
+            resultsEl.innerHTML = summary + results.join('');
+            log(`Complete test finished: ${passedCount}/${totalCount} passed`, passedCount === totalCount ? 'success' : 'error');
+        }
+
+        function clearResults() {
+            document.getElementById('individual-results').innerHTML = '';
+            document.getElementById('complete-results').innerHTML = '';
+            document.getElementById('detailed-logs').textContent = '';
+            logBuffer = [];
+            log('Results cleared', 'info');
+        }
+
+        // Set up console commands
+        document.getElementById('console-commands').textContent = `
+// Test basic connection
+fetch('${API_BASE}/units').then(r => r.json()).then(d => console.log('Units:', d));
+
+// Test employees API
+fetch('${API_BASE}/employees').then(r => r.json()).then(d => console.log('Employees:', d));
+
+// Test with error handling
+fetch('${API_BASE}/employees')
+  .then(response => {
+    console.log('Response status:', response.status);
+    console.log('Response headers:', [...response.headers.entries()]);
+    return response.json();
+  })
+  .then(data => console.log('Employee data:', data))
+  .catch(error => console.error('Error:', error));
+        `;
+
+        // Auto-run connection test on load
+        window.addEventListener('load', () => {
+            setTimeout(testConnection, 1000);
+        });
+    </script>
+</body>
+</html>

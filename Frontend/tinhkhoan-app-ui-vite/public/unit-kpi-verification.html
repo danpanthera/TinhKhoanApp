@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit KPI Assignment - Data Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .result {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+        }
+        .error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        button {
+            background-color: #8B0000;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #6d0000;
+        }
+        .dropdown-test {
+            margin: 10px 0;
+        }
+        select {
+            padding: 8px;
+            margin: 5px;
+            min-width: 200px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Unit KPI Assignment - Data Verification</h1>
+    <p>This page verifies that the KPI Assignment dropdowns are working correctly after our fixes.</p>
+
+    <div class="test-section">
+        <h2>📊 Step 1: Test Backend APIs Directly</h2>
+        <button onclick="testBackendAPIs()">Test Backend APIs</button>
+        <div id="backend-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 Step 2: Test Frontend Service Layer</h2>
+        <button onclick="testFrontendServices()">Test Frontend Services</button>
+        <div id="frontend-result" class="result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 Step 3: Simulate Dropdown Population</h2>
+        <button onclick="simulateDropdowns()">Populate Dropdowns</button>
+        
+        <div class="dropdown-test">
+            <label for="period-select">Kỳ giao khoán:</label>
+            <select id="period-select">
+                <option value="">-- Chọn kỳ giao khoán --</option>
+            </select>
+        </div>
+        
+        <div class="dropdown-test">
+            <label for="branch-select">Chi nhánh:</label>
+            <select id="branch-select">
+                <option value="">-- Chọn chi nhánh --</option>
+            </select>
+        </div>
+        
+        <div id="dropdown-status" class="status"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>🌐 Step 4: Navigate to Real Page</h2>
+        <p>Click below to go to the actual Unit KPI Assignment page and verify dropdowns are working:</p>
+        <button onclick="window.open('/unit-kpi-assignment', '_blank')">Open Unit KPI Assignment Page</button>
+    </div>
+
+    <script>
+        // Test backend APIs directly
+        async function testBackendAPIs() {
+            const resultDiv = document.getElementById('backend-result');
+            resultDiv.className = 'result';
+            resultDiv.textContent = 'Testing backend APIs...';
+
+            try {
+                console.log('🔧 Testing backend APIs...');
+                
+                // Test KhoanPeriods
+                const periodsResponse = await fetch('http://localhost:5055/api/KhoanPeriods');
+                const periodsData = await periodsResponse.json();
+                console.log('Raw periods response:', periodsData);
+                
+                // Test Units
+                const unitsResponse = await fetch('http://localhost:5055/api/Units');
+                const unitsData = await unitsResponse.json();
+                console.log('Raw units response structure:', {
+                    hasValues: !!unitsData.$values,
+                    valuesLength: unitsData.$values ? unitsData.$values.length : 0
+                });
+
+                // Apply our conversion logic
+                let periods = periodsData;
+                if (periods && periods.$values && Array.isArray(periods.$values)) {
+                    periods = periods.$values;
+                }
+
+                let units = unitsData;
+                if (units && units.$values && Array.isArray(units.$values)) {
+                    units = units.$values;
+                }
+
+                const cnl1Units = units.filter(unit => unit.type === 'CNL1');
+                const cnl2Units = units.filter(unit => unit.type === 'CNL2');
+
+                const result = `✅ Backend APIs Working:
+📅 Periods found: ${periods.length}
+${periods.map(p => `  - ${p.name} (${p.status})`).join('\n')}
+
+🏢 Units found: ${units.length}
+  - CNL1 units: ${cnl1Units.length}
+${cnl1Units.map(u => `    * ${u.name} (${u.code})`).join('\n')}
+  - CNL2 units: ${cnl2Units.length}
+${cnl2Units.slice(0, 3).map(u => `    * ${u.name} (${u.code})`).join('\n')}${cnl2Units.length > 3 ? `\n    ... and ${cnl2Units.length - 3} more` : ''}`;
+
+                resultDiv.textContent = result;
+                resultDiv.className = 'result success';
+
+            } catch (error) {
+                console.error('❌ Backend API test failed:', error);
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // Test frontend services (simulating Vue.js service calls)
+        async function testFrontendServices() {
+            const resultDiv = document.getElementById('frontend-result');
+            resultDiv.className = 'result';
+            resultDiv.textContent = 'Testing frontend service layer...';
+
+            try {
+                console.log('🔧 Testing frontend service layer...');
+                
+                // Simulate the service calls with axios-like behavior
+                const testApiClient = {
+                    async get(url) {
+                        const response = await fetch(`http://localhost:5055${url}`);
+                        let data = await response.json();
+                        
+                        // Apply our interceptor logic
+                        if (data && data.$values && Array.isArray(data.$values)) {
+                            console.log('🔧 API: Converting .NET $values format to array');
+                            data = data.$values;
+                        }
+                        
+                        return { data };
+                    }
+                };
+
+                // Test getKhoanPeriods
+                const periodsResult = await testApiClient.get('/api/KhoanPeriods');
+                const periods = periodsResult.data;
+
+                // Test getUnitsByType
+                const unitsResult = await testApiClient.get('/api/Units');
+                const allUnits = unitsResult.data;
+                const cnl1Units = allUnits.filter(unit => unit.type === 'CNL1');
+                const cnl2Units = allUnits.filter(unit => unit.type === 'CNL2');
+
+                const result = `✅ Frontend Services Working:
+📅 getKhoanPeriods(): ${periods.length} periods
+${periods.map(p => `  - ${p.name}`).join('\n')}
+
+🏢 getCNL1Units(): ${cnl1Units.length} units
+${cnl1Units.map(u => `  - ${u.name} (${u.code})`).join('\n')}
+
+🏢 getCNL2Units(): ${cnl2Units.length} units
+${cnl2Units.slice(0, 3).map(u => `  - ${u.name} (${u.code})`).join('\n')}${cnl2Units.length > 3 ? `\n  ... and ${cnl2Units.length - 3} more` : ''}
+
+✅ Data conversion working correctly!`;
+
+                resultDiv.textContent = result;
+                resultDiv.className = 'result success';
+
+            } catch (error) {
+                console.error('❌ Frontend service test failed:', error);
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // Simulate dropdown population
+        async function simulateDropdowns() {
+            const statusDiv = document.getElementById('dropdown-status');
+            statusDiv.textContent = 'Populating dropdowns...';
+            statusDiv.className = 'status';
+
+            try {
+                // Get data using the same logic as our service
+                const testApiClient = {
+                    async get(url) {
+                        const response = await fetch(`http://localhost:5055${url}`);
+                        let data = await response.json();
+                        
+                        if (data && data.$values && Array.isArray(data.$values)) {
+                            console.log('🔧 Converting $values format for dropdown');
+                            data = data.$values;
+                        }
+                        
+                        return { data };
+                    }
+                };
+
+                // Populate periods dropdown
+                const periodsResult = await testApiClient.get('/api/KhoanPeriods');
+                const periods = periodsResult.data;
+                
+                const periodSelect = document.getElementById('period-select');
+                periodSelect.innerHTML = '<option value="">-- Chọn kỳ giao khoán --</option>';
+                periods.forEach(period => {
+                    const option = document.createElement('option');
+                    option.value = period.id;
+                    option.textContent = period.name;
+                    periodSelect.appendChild(option);
+                });
+
+                // Populate branch dropdown
+                const unitsResult = await testApiClient.get('/api/Units');
+                const allUnits = unitsResult.data;
+                const cnl1Units = allUnits.filter(unit => unit.type === 'CNL1');
+                const cnl2Units = allUnits.filter(unit => unit.type === 'CNL2');
+                
+                const branchSelect = document.getElementById('branch-select');
+                branchSelect.innerHTML = '<option value="">-- Chọn chi nhánh --</option>';
+                
+                // Add CNL1 optgroup
+                if (cnl1Units.length > 0) {
+                    const cnl1Group = document.createElement('optgroup');
+                    cnl1Group.label = 'Chi nhánh CNL1';
+                    cnl1Units.forEach(unit => {
+                        const option = document.createElement('option');
+                        option.value = unit.id;
+                        option.textContent = `${unit.name} (${unit.code})`;
+                        cnl1Group.appendChild(option);
+                    });
+                    branchSelect.appendChild(cnl1Group);
+                }
+                
+                // Add CNL2 optgroup
+                if (cnl2Units.length > 0) {
+                    const cnl2Group = document.createElement('optgroup');
+                    cnl2Group.label = 'Chi nhánh CNL2';
+                    cnl2Units.forEach(unit => {
+                        const option = document.createElement('option');
+                        option.value = unit.id;
+                        option.textContent = `${unit.name} (${unit.code})`;
+                        cnl2Group.appendChild(option);
+                    });
+                    branchSelect.appendChild(cnl2Group);
+                }
+
+                statusDiv.textContent = `✅ Dropdowns populated successfully! Periods: ${periods.length}, CNL1: ${cnl1Units.length}, CNL2: ${cnl2Units.length}`;
+                statusDiv.className = 'status success';
+
+            } catch (error) {
+                console.error('❌ Dropdown simulation failed:', error);
+                statusDiv.textContent = `❌ Error: ${error.message}`;
+                statusDiv.className = 'status error';
+            }
+        }
+
+        // Auto-run the first test
+        window.addEventListener('load', () => {
+            console.log('🔧 Unit KPI Assignment Verification Page Loaded');
+        });
+    </script>
+</body>
+</html>
