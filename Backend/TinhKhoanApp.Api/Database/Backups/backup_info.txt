@@ -1,0 +1,46 @@
+SQL SERVER DATABASE BACKUP INFORMATION
+=====================================
+
+Backup Date: 2025-06-19 18:52:13
+Database: TinhKhoanDB
+Container: sql_server_tinhkhoan
+SA Password: YourStrong@Password123
+
+Files created:
+- TinhKhoanDB_20250619_185213.bak (Full database backup - 2.5MB)
+
+Database contains 27 tables:
+- __EFMigrationsHistory
+- EmployeeKhoanAssignmentDetails
+- EmployeeKhoanAssignments
+- EmployeeKpiAssignments
+- EmployeeKpiTargets
+- EmployeeRoles
+- Employees
+- FinalPayouts
+- ImportedDataItems
+- ImportedDataRecords
+- KhoanPeriods
+- KpiAssignmentTables
+- KPIDefinitions
+- KpiIndicators
+- KpiScoringRules
+- Positions
+- RawDataImports
+- RawDataRecords
+- Roles
+- SalaryParameters
+- TransactionAdjustmentFactors
+- UnitKhoanAssignmentDetails
+- UnitKhoanAssignments
+- UnitKpiScoringCriterias
+- UnitKpiScoringDetails
+- UnitKpiScorings
+- Units
+
+Next steps for PostgreSQL migration:
+1. ✅ Backup completed
+2. Setup PostgreSQL container
+3. Create schema conversion scripts
+4. Export data in CSV format
+5. Import to PostgreSQL with Delta Logging
