@@ -5,10 +5,10 @@
         <h1 class="hero-title">
           <img src="/src/assets/Logo-Agribank-2.png" alt="Agribank Logo" class="hero-logo" />
           <br>
-          AGRIBANK LAI CHÂU CENTER
+          AGRIBANK LAI CHAU CENTER
         </h1>
         <p class="hero-subtitle">
-          HỆ THỐNG QUẢN LÝ TÍNH KHOÁN | HỆ THỐNG BÁO CÁO
+          HỆ THỐNG QUẢN LÝ TÍNH KHOÁN VÀ LƯƠNG | HỆ THỐNG BÁO CÁO
         </p>
       </div>
     </div>
@@ -50,7 +50,7 @@ onMounted(() => {
 }
 
 .hero-title {
-  font-size: 4.5rem; /* Tăng từ 3.5rem lên 4.5rem (tăng 2 cỡ) */
+  font-size: 4.5rem; /* Tăng từ 3.5rem lên 4.5rem (+2 cỡ) */
   font-weight: 700;
   color: #8B1538;
   margin-bottom: 20px;
@@ -82,7 +82,7 @@ onMounted(() => {
 }
 
 .hero-subtitle {
-  font-size: 2.0rem; /* Tăng từ 1.5rem lên 2.0rem (tăng 2 cỡ) */
+  font-size: 1.9rem; /* Tăng từ 1.5rem lên 1.9rem (+2 cỡ) */
   color: #A91B47;
   margin-bottom: 50px;
   font-weight: 500;
@@ -94,7 +94,7 @@ onMounted(() => {
 /* Responsive Design */
 @media (max-width: 768px) {
   .hero-title {
-    font-size: 2.5rem;
+    font-size: 3.2rem; /* Tăng từ 2.5rem lên 3.2rem (+2 cỡ) */
   }
   
   .hero-logo {
@@ -102,7 +102,7 @@ onMounted(() => {
   }
   
   .hero-subtitle {
-    font-size: 1.2rem;
+    font-size: 1.6rem; /* Tăng từ 1.2rem lên 1.6rem (+2 cỡ) */
   }
   
   .welcome-hero {
@@ -112,11 +112,15 @@ onMounted(() => {
 
 @media (max-width: 480px) {
   .hero-title {
-    font-size: 2rem;
+    font-size: 2.4rem; /* Tăng từ 2rem lên 2.4rem (+2 cỡ) */
   }
   
   .hero-logo {
     height: 40px;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.4rem; /* Thêm responsive cho subtitle mobile */
   }
   
   .nature-icon {

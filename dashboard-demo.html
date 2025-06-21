@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Demo - Agribank Lai Châu KPI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            text-align: center;
+            color: white;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .demo-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .demo-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .feature-description {
+            font-size: 0.95rem;
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        .kpi-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .kpi-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), transparent);
+            border-radius: 0 0 0 100%;
+        }
+
+        .kpi-card.huy-dong { border-left-color: #4CAF50; }
+        .kpi-card.du-no { border-left-color: #2196F3; }
+        .kpi-card.no-xau { border-left-color: #F44336; }
+        .kpi-card.thu-hoi { border-left-color: #FF9800; }
+        .kpi-card.dich-vu { border-left-color: #9C27B0; }
+        .kpi-card.loi-nhuan { border-left-color: #00BCD4; }
+
+        .kpi-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .kpi-icon {
+            font-size: 2.5rem;
+            margin-right: 15px;
+            opacity: 0.8;
+        }
+
+        .kpi-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .kpi-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .kpi-target {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .kpi-progress {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .kpi-progress-bar {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .kpi-footer {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .growth.positive { color: #4CAF50; }
+        .growth.negative { color: #F44336; }
+
+        .action-buttons {
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 40px;
+            margin: 0 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 10px 30px rgba(245, 87, 108, 0.4);
+        }
+
+        .btn.secondary:hover {
+            box-shadow: 0 15px 40px rgba(245, 87, 108, 0.6);
+        }
+
+        .tech-stack {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+
+        .tech-stack h3 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .tech-logos {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .tech-logo {
+            padding: 10px 20px;
+            background: white;
+            border-radius: 10px;
+            font-weight: 600;
+            color: #666;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2rem; }
+            .demo-card { padding: 20px; }
+            .feature-grid { grid-template-columns: 1fr; }
+            .kpi-preview { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>🏦 Dashboard KPI Agribank Lai Châu</h1>
+        <p>Hệ thống báo cáo chỉ tiêu kế hoạch kinh doanh hiện đại & trực quan</p>
+    </div>
+
+    <!-- Main Demo Container -->
+    <div class="demo-container">
+        <!-- Introduction Card -->
+        <div class="demo-card">
+            <h2 style="text-align: center; margin-bottom: 20px; color: #333;">
+                ✨ Dashboard Báo Cáo Kế Hoạch Kinh Doanh
+            </h2>
+            <p style="text-align: center; font-size: 1.1rem; color: #666; line-height: 1.6;">
+                Giải pháp Dashboard hiện đại giúp theo dõi và phân tích 6 chỉ tiêu kinh doanh chính của Agribank Lai Châu. 
+                Tích hợp dữ liệu thời gian thực, giao diện trực quan với khả năng drill-down chi tiết theo từng đơn vị.
+            </p>
+
+            <!-- KPI Cards Preview -->
+            <div class="kpi-preview">
+                <div class="kpi-card huy-dong">
+                    <div class="kpi-header">
+                        <div class="kpi-icon" style="color: #4CAF50;">💰</div>
+                        <div class="kpi-title">Nguồn vốn huy động</div>
+                    </div>
+                    <div class="kpi-value">4,850</div>
+                    <div class="kpi-target">Mục tiêu: 5,000 tỷ đồng</div>
+                    <div class="kpi-progress">
+                        <div class="kpi-progress-bar" style="width: 97%; background: #4CAF50;"></div>
+                    </div>
+                    <div class="kpi-footer">
+                        <span>Tiến độ: 97%</span>
+                        <span class="growth positive">+12.5%</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card du-no">
+                    <div class="kpi-header">
+                        <div class="kpi-icon" style="color: #2196F3;">💳</div>
+                        <div class="kpi-title">Dư nợ cho vay</div>
+                    </div>
+                    <div class="kpi-value">4,320</div>
+                    <div class="kpi-target">Mục tiêu: 4,500 tỷ đồng</div>
+                    <div class="kpi-progress">
+                        <div class="kpi-progress-bar" style="width: 96%; background: #2196F3;"></div>
+                    </div>
+                    <div class="kpi-footer">
+                        <span>Tiến độ: 96%</span>
+                        <span class="growth positive">+15.2%</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card no-xau">
+                    <div class="kpi-header">
+                        <div class="kpi-icon" style="color: #F44336;">⚠️</div>
+                        <div class="kpi-title">Tỷ lệ nợ xấu</div>
+                    </div>
+                    <div class="kpi-value">1.85%</div>
+                    <div class="kpi-target">Mục tiêu: < 2.0%</div>
+                    <div class="kpi-progress">
+                        <div class="kpi-progress-bar" style="width: 92.5%; background: #4CAF50;"></div>
+                    </div>
+                    <div class="kpi-footer">
+                        <span>Đạt yêu cầu</span>
+                        <span class="growth negative">-0.3%</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card thu-hoi">
+                    <div class="kpi-header">
+                        <div class="kpi-icon" style="color: #FF9800;">🔄</div>
+                        <div class="kpi-title">Thu hồi nợ XLRR</div>
+                    </div>
+                    <div class="kpi-value">38.2</div>
+                    <div class="kpi-target">Mục tiêu: 50 tỷ đồng</div>
+                    <div class="kpi-progress">
+                        <div class="kpi-progress-bar" style="width: 76.4%; background: #E6A23C;"></div>
+                    </div>
+                    <div class="kpi-footer">
+                        <span>Tiến độ: 76%</span>
+                        <span class="growth positive">+18.7%</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card dich-vu">
+                    <div class="kpi-header">
+                        <div class="kpi-icon" style="color: #9C27B0;">🛎️</div>
+                        <div class="kpi-title">Thu nhập dịch vụ</div>
+                    </div>
+                    <div class="kpi-value">78.5</div>
+                    <div class="kpi-target">Mục tiêu: 100 tỷ đồng</div>
+                    <div class="kpi-progress">
+                        <div class="kpi-progress-bar" style="width: 78.5%; background: #E6A23C;"></div>
+                    </div>
+                    <div class="kpi-footer">
+                        <span>Tiến độ: 78%</span>
+                        <span class="growth positive">+22.1%</span>
+                    </div>
+                </div>
+
+                <div class="kpi-card loi-nhuan">
+                    <div class="kpi-header">
+                        <div class="kpi-icon" style="color: #00BCD4;">📈</div>
+                        <div class="kpi-title">Lợi nhuận</div>
+                    </div>
+                    <div class="kpi-value">168.9</div>
+                    <div class="kpi-target">Mục tiêu: 200 tỷ đồng</div>
+                    <div class="kpi-progress">
+                        <div class="kpi-progress-bar" style="width: 84.5%; background: #E6A23C;"></div>
+                    </div>
+                    <div class="kpi-footer">
+                        <span>Tiến độ: 84%</span>
+                        <span class="growth positive">+18.6%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Features Grid -->
+        <div class="demo-card">
+            <h2 style="text-align: center; margin-bottom: 30px; color: #333;">
+                🚀 Tính Năng Nổi Bật
+            </h2>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-title">Dashboard Trực Quan</div>
+                    <div class="feature-description">
+                        Hiển thị 6 chỉ tiêu KPI quan trọng với giao diện hiện đại, 
+                        gradient đẹp mắt và responsive trên mọi thiết bị.
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <div class="feature-title">Drill-down Chi Tiết</div>
+                    <div class="feature-description">
+                        Khả năng xem chi tiết theo từng đơn vị (Tỉnh → Chi nhánh → PGD), 
+                        phân tích sâu nguyên nhân và xu hướng.
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <div class="feature-title">Biểu Đồ Tương Tác</div>
+                    <div class="feature-description">
+                        Biểu đồ xu hướng, so sánh đơn vị với ECharts, 
+                        hỗ trợ xuất báo cáo Excel và fullscreen.
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-title">Tính Toán Tự Động</div>
+                    <div class="feature-description">
+                        Tự động tính toán từ dữ liệu gốc DP01, LN01, GLCB41 
+                        với công thức chính xác theo quy định.
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <div class="feature-title">Quản Lý Kế Hoạch</div>
+                    <div class="feature-description">
+                        Giao chỉ tiêu kế hoạch theo tháng/quý/năm, 
+                        phân bổ từ cấp trên xuống cấp dưới linh hoạt.
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🔐</div>
+                    <div class="feature-title">Phân Quyền Bảo Mật</div>
+                    <div class="feature-description">
+                        Hệ thống phân quyền theo vai trò, bảo mật dữ liệu 
+                        và kiểm soát truy cập theo từng cấp độ.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <a href="http://localhost:3002" class="btn" target="_blank">
+                🚀 Xem Demo Dashboard
+            </a>
+            <a href="http://localhost:3002/login" class="btn secondary" target="_blank">
+                🔑 Đăng Nhập Hệ Thống
+            </a>
+        </div>
+
+        <!-- Technology Stack -->
+        <div class="demo-card">
+            <div class="tech-stack">
+                <h3>🛠️ Công Nghệ Sử Dụng</h3>
+                <div class="tech-logos">
+                    <div class="tech-logo">Vue 3</div>
+                    <div class="tech-logo">Vite</div>
+                    <div class="tech-logo">Element Plus</div>
+                    <div class="tech-logo">ECharts</div>
+                    <div class="tech-logo">ASP.NET Core</div>
+                    <div class="tech-logo">SQL Server</div>
+                    <div class="tech-logo">Entity Framework</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add some interactive effects
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate KPI progress bars
+            const progressBars = document.querySelectorAll('.kpi-progress-bar');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.width = entry.target.style.width;
+                    }
+                });
+            });
+
+            progressBars.forEach(bar => {
+                observer.observe(bar);
+            });
+
+            // Add hover effects to feature cards
+            const featureCards = document.querySelectorAll('.feature-card');
+            featureCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-10px) scale(1.02)';
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(-10px) scale(1)';
+                });
+            });
+
+            // Add click tracking
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    console.log('Button clicked:', this.textContent.trim());
+                    
+                    // Add ripple effect
+                    const ripple = document.createElement('span');
+                    ripple.style.cssText = `
+                        position: absolute;
+                        border-radius: 50%;
+                        background: rgba(255,255,255,0.6);
+                        transform: scale(0);
+                        animation: ripple 0.6s linear;
+                        pointer-events: none;
+                    `;
+                    
+                    this.style.position = 'relative';
+                    this.style.overflow = 'hidden';
+                    this.appendChild(ripple);
+                    
+                    setTimeout(() => ripple.remove(), 600);
+                });
+            });
+        });
+
+        // Add CSS animation for ripple effect
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes ripple {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Models; // Đảm bảo namespace này đúng với nơi Sếp đặt các Model
 using TinhKhoanApp.Api.Models.RawData; // Thêm namespace cho Raw Data models
 using TinhKhoanApp.Api.Models.Temporal; // Thêm namespace cho Temporal models
+using TinhKhoanApp.Api.Models.Dashboard; // Thêm namespace cho Dashboard models
 
 namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
 {
@@ -65,6 +66,11 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<DB01History> DB01History { get; set; }
         public DbSet<KH03History> KH03History { get; set; }
         public DbSet<BC57History> BC57History { get; set; }
+
+        // 📊 DbSets cho hệ thống Dashboard Kế hoạch Kinh doanh
+        public DbSet<DashboardIndicator> DashboardIndicators { get; set; }
+        public DbSet<BusinessPlanTarget> BusinessPlanTargets { get; set; }
+        public DbSet<DashboardCalculation> DashboardCalculations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -185,6 +191,65 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
             // Ngăn Entity Framework tự động tạo quan hệ giữa KPIDefinition và KpiIndicator
             modelBuilder.Entity<KPIDefinition>()
                 .Ignore(k => k.KpiIndicators);
+
+            // === DASHBOARD CONFIGURATION ===
+            
+            // Cấu hình DashboardIndicator
+            modelBuilder.Entity<DashboardIndicator>(entity =>
+            {
+                entity.HasIndex(d => d.Code).IsUnique();
+                entity.Property(d => d.CreatedDate).HasDefaultValueSql("GETDATE()");
+            });
+            
+            // Cấu hình BusinessPlanTarget
+            modelBuilder.Entity<BusinessPlanTarget>(entity =>
+            {
+                // Unique constraint: một đơn vị chỉ có một kế hoạch cho một chỉ tiêu trong một kỳ
+                entity.HasIndex(b => new { b.DashboardIndicatorId, b.UnitId, b.Year, b.Quarter, b.Month })
+                      .IsUnique()
+                      .HasDatabaseName("IX_BusinessPlanTarget_Unique");
+                      
+                entity.Property(b => b.TargetValue).HasPrecision(18, 2);
+                entity.Property(b => b.CreatedDate).HasDefaultValueSql("GETDATE()");
+                entity.Property(b => b.Status).HasDefaultValue("Draft");
+                
+                // Quan hệ với DashboardIndicator
+                entity.HasOne(b => b.DashboardIndicator)
+                      .WithMany()
+                      .HasForeignKey(b => b.DashboardIndicatorId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                      
+                // Quan hệ với Unit
+                entity.HasOne(b => b.Unit)
+                      .WithMany()
+                      .HasForeignKey(b => b.UnitId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+            
+            // Cấu hình DashboardCalculation
+            modelBuilder.Entity<DashboardCalculation>(entity =>
+            {
+                // Unique constraint: một đơn vị chỉ có một kết quả tính toán cho một chỉ tiêu trong một ngày
+                entity.HasIndex(d => new { d.DashboardIndicatorId, d.UnitId, d.CalculationDate })
+                      .IsUnique()
+                      .HasDatabaseName("IX_DashboardCalculation_Unique");
+                      
+                entity.Property(d => d.ActualValue).HasPrecision(18, 2);
+                entity.Property(d => d.CreatedDate).HasDefaultValueSql("GETDATE()");
+                entity.Property(d => d.Status).HasDefaultValue("Success");
+                
+                // Quan hệ với DashboardIndicator
+                entity.HasOne(d => d.DashboardIndicator)
+                      .WithMany()
+                      .HasForeignKey(d => d.DashboardIndicatorId)
+                      .OnDelete(DeleteBehavior.Cascade);
+                      
+                // Quan hệ với Unit
+                entity.HasOne(d => d.Unit)
+                      .WithMany()
+                      .HasForeignKey(d => d.UnitId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
         }
     }
 }

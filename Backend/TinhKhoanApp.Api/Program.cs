@@ -50,6 +50,7 @@ internal class Program
         builder.Services.AddScoped<UnitKpiScoringService>();
         builder.Services.AddScoped<ICompressionService, CompressionService>();
         builder.Services.AddScoped<IStatementDateService, StatementDateService>();
+        builder.Services.AddScoped<DashboardCalculationService>();
 
         // 4. Đăng ký các dịch vụ cho Swagger/OpenAPI (để tạo tài liệu API tự động)
         builder.Services.AddEndpointsApiExplorer();
@@ -524,6 +525,11 @@ internal class Program
             Console.WriteLine("Đang seed dữ liệu nhân viên...");
             await EmployeeSeeder.SeedEmployees(db);
             Console.WriteLine("Hoàn thành seeding dữ liệu nhân viên!");
+
+            // Cập nhật terminology chuẩn hóa cuối cùng
+            Console.WriteLine("Đang cập nhật terminology chuẩn hóa...");
+            TerminologyUpdater.UpdateTerminology(db);
+            Console.WriteLine("Hoàn thành cập nhật terminology!");
         }
     }
 }

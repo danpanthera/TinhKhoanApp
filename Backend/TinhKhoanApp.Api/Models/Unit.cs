@@ -26,6 +26,12 @@ namespace TinhKhoanApp.Api.Models
 
         public int? ParentUnitId { get; set; }
 
+        // Add alias for ParentId property expected by controllers
+        public int? ParentId => ParentUnitId;
+
+        // Add IsDeleted property for soft delete pattern
+        public bool IsDeleted { get; set; } = false;
+
         // [Column("SortOrder")]
         // public int? SortOrder { get; set; } // Thứ tự hiển thị cho chi nhánh
 

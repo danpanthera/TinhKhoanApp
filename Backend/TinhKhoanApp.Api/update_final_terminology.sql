@@ -1,9 +1,9 @@
 -- ======================================================
--- Script cập nhật terminology cuối cùng trong database
+-- Script chuẩn hóa terminology: KTNV->KTNQ, Kinh tế Nội vụ->Kế toán & Ngân quỹ
 -- ======================================================
 USE TinhKhoanApp;
 
--- 1. Thay thế "Kinh tế Nội vụ" → "Kế toán & Ngân quỹ"
+-- 1. Thay thế "Kinh tế Nội vụ" → "Kế toán & Ngân quỹ" (chuẩn hóa)
 UPDATE KpiAssignmentTables 
 SET TableName = REPLACE(TableName, 'Kinh tế Nội vụ', 'Kế toán & Ngân quỹ'),
     Description = REPLACE(Description, 'Kinh tế Nội vụ', 'Kế toán & Ngân quỹ')
@@ -21,18 +21,19 @@ SET TableName = REPLACE(TableName, 'phụ trách Kinh tế', 'Phụ trách Kế 
     Description = REPLACE(Description, 'phụ trách Kinh tế', 'Phụ trách Kế toán')
 WHERE TableName LIKE '%phụ trách Kinh tế%' OR Description LIKE '%phụ trách Kinh tế%';
 
--- 4. Thay thế "KTNV" → "KTNQ" (nếu còn sót lại)
+-- 4. Thay thế "KTNV" → "KTNQ" (chuẩn hóa mã phòng ban)
 UPDATE KpiAssignmentTables 
 SET TableName = REPLACE(TableName, 'KTNV', 'KTNQ'),
     Description = REPLACE(Description, 'KTNV', 'KTNQ')
 WHERE TableName LIKE '%KTNV%' OR Description LIKE '%KTNV%';
 
--- 5. Thay thế các cụm từ trong KPI Indicators
+-- 5. Chuẩn hóa terminology trong KPI Indicators
 UPDATE KpiIndicators
 SET IndicatorName = REPLACE(IndicatorName, 'Hạch kiểm', 'Hậu kiểm'),
     Description = REPLACE(Description, 'Hạch kiểm', 'Hậu kiểm')
 WHERE IndicatorName LIKE '%Hạch kiểm%' OR Description LIKE '%Hạch kiểm%';
 
+-- Chuẩn hóa "Kinh tế Nội vụ" -> "Kế toán & Ngân quỹ" trong KPI Indicators
 UPDATE KpiIndicators
 SET IndicatorName = REPLACE(IndicatorName, 'Kinh tế Nội vụ', 'Kế toán & Ngân quỹ'),
     Description = REPLACE(Description, 'Kinh tế Nội vụ', 'Kế toán & Ngân quỹ')

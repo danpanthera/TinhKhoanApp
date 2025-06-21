@@ -564,7 +564,7 @@ const loadDashboardData = async () => {
         actualValue: Math.round(1200000 * unitMultiplier),
         planValue: Math.round(1500000 * unitMultiplier),
         unit: 'triệu VNĐ',
-        icon: 'mdi-hand-heart', // Icon bàn tay ngửa đựng trái tim (tiền)
+        icon: 'mdi-hand-coin',
         color: '#8B1538',
         dataDate: new Date(),
         yoyGrowth: 12.5 * unitMultiplier,
@@ -576,7 +576,7 @@ const loadDashboardData = async () => {
         actualValue: Math.round(2800000 * unitMultiplier),
         planValue: Math.round(3000000 * unitMultiplier),
         unit: 'triệu VNĐ',
-        icon: 'mdi-credit-card-outline', // Icon thẻ tín dụng cho dư nợ
+        icon: 'mdi-credit-card-multiple-outline',
         color: '#A6195C',
         dataDate: new Date(),
         yoyGrowth: 8.3 * unitMultiplier,
@@ -588,7 +588,7 @@ const loadDashboardData = async () => {
         actualValue: Math.round((1.2 + (1-unitMultiplier) * 0.8) * 100) / 100,
         planValue: 2.0,
         unit: '%',
-        icon: 'mdi-shield-alert', // Icon khiên cảnh báo cho rủi ro nợ xấu
+        icon: 'mdi-shield-alert-outline',
         color: '#B91D47',
         dataDate: new Date(),
         yoyGrowth: -0.5 * unitMultiplier,
@@ -600,7 +600,7 @@ const loadDashboardData = async () => {
         actualValue: Math.round(45000 * unitMultiplier),
         planValue: Math.round(50000 * unitMultiplier),
         unit: 'triệu VNĐ',
-        icon: 'mdi-backup-restore', // Icon khôi phục cho thu nợ đã XLRR
+        icon: 'mdi-cash-refund',
         color: '#E91E63',
         dataDate: new Date(),
         yoyGrowth: 15.2 * unitMultiplier,
@@ -612,7 +612,7 @@ const loadDashboardData = async () => {
         actualValue: Math.round(18500 * unitMultiplier),
         planValue: Math.round(20000 * unitMultiplier),
         unit: 'triệu VNĐ',
-        icon: 'mdi-cog-outline', // Icon bánh răng cho dịch vụ
+        icon: 'mdi-account-cash-outline',
         color: '#FF5722',
         dataDate: new Date(),
         yoyGrowth: 22.1 * unitMultiplier,
@@ -624,7 +624,7 @@ const loadDashboardData = async () => {
         actualValue: Math.round(12500 * unitMultiplier),
         planValue: Math.round(15000 * unitMultiplier),
         unit: 'triệu VNĐ',
-        icon: 'mdi-trophy-variant', // Icon cúp chiến thắng cho lợi nhuận
+        icon: 'mdi-finance',
         color: '#9C27B0',
         dataDate: new Date(),
         yoyGrowth: 18.7 * unitMultiplier,
