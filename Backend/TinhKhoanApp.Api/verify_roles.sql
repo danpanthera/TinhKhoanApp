@@ -22,7 +22,7 @@ WITH RequiredRoles AS (
     UNION ALL SELECT 16, 'PhogiamdocPgdCbtd', 'Phó giám đốc Phòng giao dịch kiêm CBTD'
     UNION ALL SELECT 17, 'GiamdocCnl2', 'Giám đốc CNL2'
     UNION ALL SELECT 18, 'PhogiamdocCnl2Td', 'Phó giám đốc CNL2 phụ trách Tín dụng'
-    UNION ALL SELECT 19, 'PhogiamdocCnl2Kt', 'Phó giám đốc CNL2 phụ trách Kinh tế'
+    UNION ALL SELECT 19, 'PhogiamdocCnl2Kt', 'Phó giám đốc CNL2 Phụ trách Kế toán'
     UNION ALL SELECT 20, 'TruongphongKhCnl2', 'Trưởng phòng KH CNL2'
     UNION ALL SELECT 21, 'PhophongKhCnl2', 'Phó phòng KH CNL2'
     UNION ALL SELECT 22, 'TruongphongKtnqCnl2', 'Trưởng phòng KTNQ CNL2'

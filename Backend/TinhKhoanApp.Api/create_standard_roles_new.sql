@@ -27,7 +27,7 @@ INSERT INTO Roles (name, description) VALUES
 ('PhogiamdocPgdCbtd', 'Phó giám đốc Phòng giao dịch kiêm Cán bộ Tín dụng'),
 ('GiamdocCnl2', 'Giám đốc Chi nhánh loại 2'),
 ('PhogiamdocCnl2Td', 'Phó giám đốc Chi nhánh loại 2 phụ trách Tín dụng'),
-('PhogiamdocCnl2Kt', 'Phó giám đốc Chi nhánh loại 2 phụ trách Kế toán'),
+('PhogiamdocCnl2Kt', 'Phó giám đốc Chi nhánh loại 2 Phụ trách Kế toán'),
 ('TruongphongKhCnl2', 'Trưởng phòng Khách hàng Chi nhánh loại 2'),
 ('PhophongKhCnl2', 'Phó phòng Khách hàng Chi nhánh loại 2'),
 ('TruongphongKtnqCnl2', 'Trưởng phòng Kế toán và Ngân quỹ Chi nhánh loại 2'),

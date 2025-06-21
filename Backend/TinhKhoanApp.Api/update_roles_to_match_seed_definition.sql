@@ -13,7 +13,7 @@ UPDATE Roles SET Name = 'TQ/Hậu kiểm/Kế toán nội bộ' WHERE Id = 11;
 -- Update role 12: Trưởng phòng IT/TH/KTGS -> Trưởng phó phòng IT/TH/KTGS
 UPDATE Roles SET Name = 'Trưởng phó phòng IT/TH/KTGS' WHERE Id = 12;
 
--- Update role 19: Phó giám đốc CNL2 phụ trách Kinh tế -> Phó giám đốc CNL2 phụ trách Kế toán
+-- Update role 19: Phó giám đốc CNL2 Phụ trách Kế toán -> Phó giám đốc CNL2 Phụ trách Kế toán
 UPDATE Roles SET Name = 'Phó giám đốc CNL2 phụ trách Kế toán' WHERE Id = 19;
 
 -- Verify changes

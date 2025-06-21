@@ -74,7 +74,7 @@ namespace TinhKhoanApp.Api.Data
                     "PhogiamdocPgdCbtd" => "Phó giám đốc PGD kiêm CBTD",
                     "GiamdocCnl2" => "Giám đốc CNL2",
                     "PhogiamdocCnl2Td" => "Phó giám đốc CNL2 phụ trách Tín dụng",
-                    "PhogiamdocCnl2Kt" => "Phó giám đốc CNL2 phụ trách Kế toán",
+                    "PhogiamdocCnl2Kt" => "Phó giám đốc CNL2 Phụ trách Kế toán",
                     "TruongphongKhCnl2" => "Trưởng phòng KH CNL2",
                     "PhophongKhCnl2" => "Phó phòng KH CNL2",
                     "TruongphongKtnqCnl2" => "Trưởng phòng KTNQ CNL2",

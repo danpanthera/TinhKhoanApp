@@ -33,7 +33,7 @@ WHERE Name NOT IN (
     'Phó giám đốc PGD kiêm CBTD',
     'Giám đốc CNL2',
     'Phó giám đốc CNL2 phụ trách Tín dụng',
-    'Phó giám đốc CNL2 phụ trách Kế toán',
+    'Phó giám đốc CNL2 Phụ trách Kế toán',
     'Trưởng phòng KH CNL2',
     'Phó phòng KH CNL2',
     'Trưởng phòng KTNQ CNL2',

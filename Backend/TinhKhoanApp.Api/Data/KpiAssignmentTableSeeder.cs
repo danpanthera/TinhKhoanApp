@@ -71,7 +71,7 @@ namespace TinhKhoanApp.Api.Data
             { KpiTableType.PhogiamdocPgdCbtd, "Phó giám đốc PGD kiêm CBTD" },
             { KpiTableType.GiamdocCnl2, "Giám đốc CNL2" },
             { KpiTableType.PhogiamdocCnl2Td, "Phó giám đốc CNL2 phụ trách Tín dụng" },
-            { KpiTableType.PhogiamdocCnl2Kt, "Phó giám đốc CNL2 phụ trách Kinh tế" },
+            { KpiTableType.PhogiamdocCnl2Kt, "Phó giám đốc CNL2 Phụ trách Kế toán" },
             { KpiTableType.TruongphongKhCnl2, "Trưởng phòng KH CNL2" },
             { KpiTableType.PhophongKhCnl2, "Phó phòng KH CNL2" },
             { KpiTableType.TruongphongKtnqCnl2, "Trưởng phòng Kế toán & Ngân quỹ CNL2" },

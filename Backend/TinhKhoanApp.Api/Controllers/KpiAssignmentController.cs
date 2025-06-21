@@ -480,21 +480,21 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
-        // API endpoint để update "Kinh tế Nội vụ" thành "Kế toán & Ngân quỹ"
+        // API endpoint để update "Kế toán & Ngân quỹ" thành "Kế toán & Ngân quỹ"
         [HttpPost("update-description-kinh-te-noi-vu-to-ke-toan-ngan-quy")]
         public async Task<IActionResult> UpdateDescriptionKinhTeNoiVuToKeToanNganQuy()
         {
             try
             {
                 var tablesToUpdate = await _context.KpiAssignmentTables
-                    .Where(t => (t.Description != null && t.Description.Contains("Kinh tế Nội vụ")) || 
-                               t.TableName.Contains("Kinh tế Nội vụ"))
+                    .Where(t => (t.Description != null && t.Description.Contains("Kế toán & Ngân quỹ")) || 
+                               t.TableName.Contains("Kế toán & Ngân quỹ"))
                     .ToListAsync();
 
                 if (!tablesToUpdate.Any())
                 {
                     return Ok(new { 
-                        message = "Không tìm thấy bản ghi nào có chứa 'Kinh tế Nội vụ'",
+                        message = "Không tìm thấy bản ghi nào có chứa 'Kế toán & Ngân quỹ'",
                         updatedCount = 0 
                     });
                 }
@@ -503,19 +503,19 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     if (table.Description != null)
                     {
-                        table.Description = table.Description.Replace("Kinh tế Nội vụ", "Kế toán & Ngân quỹ");
+                        table.Description = table.Description.Replace("Kế toán & Ngân quỹ", "Kế toán & Ngân quỹ");
                     }
                     
                     if (table.TableName != null)
                     {
-                        table.TableName = table.TableName.Replace("Kinh tế Nội vụ", "Kế toán & Ngân quỹ");
+                        table.TableName = table.TableName.Replace("Kế toán & Ngân quỹ", "Kế toán & Ngân quỹ");
                     }
                 }
 
                 await _context.SaveChangesAsync();
 
                 return Ok(new { 
-                    message = $"Đã cập nhật thành công {tablesToUpdate.Count} bản ghi từ 'Kinh tế Nội vụ' thành 'Kế toán & Ngân quỹ'",
+                    message = $"Đã cập nhật thành công {tablesToUpdate.Count} bản ghi từ 'Kế toán & Ngân quỹ' thành 'Kế toán & Ngân quỹ'",
                     updatedCount = tablesToUpdate.Count,
                     updatedTables = tablesToUpdate.Select(t => new { 
                         t.Id, 
@@ -527,27 +527,27 @@ namespace TinhKhoanApp.Api.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { 
-                    message = "Lỗi khi cập nhật mô tả Kinh tế Nội vụ", 
+                    message = "Lỗi khi cập nhật mô tả Kế toán & Ngân quỹ", 
                     error = ex.Message 
                 });
             }
         }
 
-        // API endpoint để update "Thủ quỹ/Hạch kiểm Kinh tế Nội bộ" thành "Thủ quỹ/Hậu kiểm/Kế toán nội bộ"
+        // API endpoint để update "Thủ quỹ/Hậu kiểm Kế toán Nội bộ" thành "Thủ quỹ/Hậu kiểm/Kế toán nội bộ"
         [HttpPost("update-description-thu-quy-hach-kiem")]
         public async Task<IActionResult> UpdateDescriptionThuQuyHachKiem()
         {
             try
             {
                 var tablesToUpdate = await _context.KpiAssignmentTables
-                    .Where(t => (t.Description != null && t.Description.Contains("Thủ quỹ/Hạch kiểm Kinh tế Nội bộ")) || 
+                    .Where(t => (t.Description != null && t.Description.Contains("Thủ quỹ/Hậu kiểm Kế toán Nội bộ")) || 
                                t.TableName.Contains("TQ/HK KTNB"))
                     .ToListAsync();
 
                 if (!tablesToUpdate.Any())
                 {
                     return Ok(new { 
-                        message = "Không tìm thấy bản ghi nào có chứa 'Thủ quỹ/Hạch kiểm Kinh tế Nội bộ'",
+                        message = "Không tìm thấy bản ghi nào có chứa 'Thủ quỹ/Hậu kiểm Kế toán Nội bộ'",
                         updatedCount = 0 
                     });
                 }
@@ -556,7 +556,8 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     if (table.Description != null)
                     {
-                        table.Description = table.Description.Replace("Thủ quỹ/Hạch kiểm Kinh tế Nội bộ", "Thủ quỹ/Hậu kiểm/Kế toán nội bộ");
+                        table.Description = table.Description.Replace("Thủ quỹ/Hạch kiểm Kế toán Nội bộ", "Thủ quỹ/Hậu kiểm/Kế toán nội bộ")
+                                                        .Replace("Hạch kiểm", "Hậu kiểm");
                     }
                     
                     if (table.TableName != null)
@@ -580,27 +581,27 @@ namespace TinhKhoanApp.Api.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { 
-                    message = "Lỗi khi cập nhật mô tả Thủ quỹ/Hạch kiểm", 
+                    message = "Lỗi khi cập nhật mô tả Thủ quỹ/Hậu kiểm", 
                     error = ex.Message 
                 });
             }
         }
 
-        // API endpoint để update "Công nghệ thông tin/Tổng hợp/Kinh tế Giám sát"
+        // API endpoint để update "Công nghệ thông tin/Tổng hợp/Kế toán Giám sát"
         [HttpPost("update-description-cong-nghe-thong-tin")]
         public async Task<IActionResult> UpdateDescriptionCongNgheThongTin()
         {
             try
             {
                 var tablesToUpdate = await _context.KpiAssignmentTables
-                    .Where(t => (t.Description != null && t.Description.Contains("Công nghệ thông tin/Tổng hợp/Kinh tế Giám sát")) || 
+                    .Where(t => (t.Description != null && t.Description.Contains("Công nghệ thông tin/Tổng hợp/Kế toán Giám sát")) || 
                                t.TableName.Contains("Trưởng phòng IT/TH/KTGS"))
                     .ToListAsync();
 
                 if (!tablesToUpdate.Any())
                 {
                     return Ok(new { 
-                        message = "Không tìm thấy bản ghi nào có chứa 'Công nghệ thông tin/Tổng hợp/Kinh tế Giám sát'",
+                        message = "Không tìm thấy bản ghi nào có chứa 'Công nghệ thông tin/Tổng hợp/Kế toán Giám sát'",
                         updatedCount = 0 
                     });
                 }
@@ -609,7 +610,7 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     if (table.Description != null)
                     {
-                        table.Description = table.Description.Replace("Trưởng phòng Công nghệ thông tin/Tổng hợp/Kinh tế Giám sát", "Trưởng/Phó các phòng: IT, Tổng hợp, Kiểm tra Giám sát");
+                        table.Description = table.Description.Replace("Trưởng phòng Công nghệ thông tin/Tổng hợp/Kế toán Giám sát", "Trưởng/Phó các phòng: IT, Tổng hợp, Kiểm tra Giám sát");
                     }
                     
                     if (table.TableName != null)
@@ -692,20 +693,20 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
-        // API endpoint để update "Phó giám đốc Chi nhánh loại 2 Kinh tế"
+        // API endpoint để update "Phó giám đốc Chi nhánh loại 2 Kế toán"
         [HttpPost("update-description-pho-giam-doc-cn-loai-2")]
         public async Task<IActionResult> UpdateDescriptionPhoGiamDocCNLoai2()
         {
             try
             {
                 var tablesToUpdate = await _context.KpiAssignmentTables
-                    .Where(t => (t.Description != null && t.Description.Contains("Phó giám đốc Chi nhánh loại 2 Kinh tế")))
+                    .Where(t => (t.Description != null && t.Description.Contains("Phó giám đốc Chi nhánh loại 2 Kế toán")))
                     .ToListAsync();
 
                 if (!tablesToUpdate.Any())
                 {
                     return Ok(new { 
-                        message = "Không tìm thấy bản ghi nào có chứa 'Phó giám đốc Chi nhánh loại 2 Kinh tế'",
+                        message = "Không tìm thấy bản ghi nào có chứa 'Phó giám đốc Chi nhánh loại 2 Kế toán'",
                         updatedCount = 0 
                     });
                 }
@@ -714,7 +715,7 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     if (table.Description != null)
                     {
-                        table.Description = table.Description.Replace("Phó giám đốc Chi nhánh loại 2 Kinh tế", "Phó giám đốc Chi nhánh loại 2 Kế toán");
+                        table.Description = table.Description.Replace("Phó giám đốc Chi nhánh loại 2 Kế toán", "Phó giám đốc Chi nhánh loại 2 Kế toán");
                     }
                 }
 

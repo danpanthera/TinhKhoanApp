@@ -46,7 +46,7 @@ namespace TinhKhoanApp.Api.Data
                 SeedPhogiamdocPgdCbtd(context);    // 16. Phó giám đốc PGD kiêm CBTD
                 SeedGiamdocCnl2(context);          // 17. Giám đốc CNL2
                 SeedPhogiamdocCnl2Td(context);     // 18. Phó giám đốc CNL2 phụ trách Tín dụng
-                SeedPhogiamdocCnl2Kt(context);     // 19. Phó giám đốc CNL2 phụ trách Kinh tế
+                SeedPhogiamdocCnl2Kt(context);     // 19. Phó giám đốc CNL2 Phụ trách Kế toán
                 SeedTruongphongKhCnl2(context);    // 20. Trưởng phòng KH CNL2
                 SeedPhophongKhCnl2(context);       // 21. Phó phòng KH CNL2
                 SeedTruongphongKtnqCnl2(context);  // 22. Trưởng phòng KTNQ CNL2
@@ -482,12 +482,12 @@ namespace TinhKhoanApp.Api.Data
         }
 
         /// <summary>
-        /// VAI TRÒ 19: Phó giám đốc CNL2 phụ trách Kế toán
+        /// VAI TRÒ 19: Phó giám đốc CNL2 Phụ trách Kế toán
         /// </summary>
         private static void SeedPhogiamdocCnl2Kt(ApplicationDbContext context)
         {
             var roleCode = "PhogiamdocCnl2Kt";
-            var roleDescription = "Phó giám đốc CNL2 phụ trách Kế toán";
+            var roleDescription = "Phó giám đốc CNL2 Phụ trách Kế toán";
 
             var kpiDefinitions = new List<KPIDefinition>
             {

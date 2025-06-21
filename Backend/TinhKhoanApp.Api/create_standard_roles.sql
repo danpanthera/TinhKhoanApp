@@ -63,7 +63,7 @@ INSERT INTO Roles (Name, Description, IsActive, CreatedDate) VALUES
 ('Phó giám đốc CNL2 phụ trách Tín dụng', 'Phó giám đốc Chi nhánh loại 2 phụ trách Tín dụng', 1, datetime('now')),
 
 -- ID 19: PhogiamdocCnl2Kt
-('Phó giám đốc CNL2 phụ trách Kế toán', 'Phó giám đốc Chi nhánh loại 2 phụ trách Kế toán', 1, datetime('now')),
+('Phó giám đốc CNL2 Phụ trách Kế toán', 'Phó giám đốc Chi nhánh loại 2 Phụ trách Kế toán', 1, datetime('now')),
 
 -- ID 20: TruongphongKhCnl2
 ('Trưởng phòng Khách hàng CNL2', 'Trưởng phòng Khách hàng Chi nhánh loại 2', 1, datetime('now')),

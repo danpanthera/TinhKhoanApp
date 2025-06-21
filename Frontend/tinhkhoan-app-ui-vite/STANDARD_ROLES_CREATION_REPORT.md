@@ -28,7 +28,7 @@
 | 16 | PhogiamdocPgdCbtd | Phó giám đốc Phòng giao dịch kiêm CBTD | ✅ |
 | 17 | GiamdocCnl2 | Giám đốc CNL2 | ✅ |
 | 18 | PhogiamdocCnl2Td | Phó giám đốc CNL2 phụ trách Tín dụng | ✅ |
-| 19 | PhogiamdocCnl2Kt | Phó giám đốc CNL2 phụ trách Kế toán | ✅ |
+| 19 | PhogiamdocCnl2Kt | Phó giám đốc CNL2 Phụ trách Kế toán | ✅ |
 | 20 | TruongphongKhCnl2 | Trưởng phòng Khách hàng CNL2 | ✅ |
 | 21 | PhophongKhCnl2 | Phó phòng Khách hàng CNL2 | ✅ |
 | 22 | TruongphongKtnqCnl2 | Trưởng phòng KTNQ CNL2 | ✅ |

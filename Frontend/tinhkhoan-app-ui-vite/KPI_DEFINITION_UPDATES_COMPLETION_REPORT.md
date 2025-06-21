@@ -15,7 +15,7 @@ Successfully completed the remaining KPI definition updates as outlined in the c
 
 ### **1. KPI Table Name Standardization**
 
-#### **KTNQ (Kinh tế Nội vụ) Corrections:**
+#### **KTNQ (Kế toán & Ngân quỹ) Corrections:**
 ```diff
 - "Trưởng phòng KTNQ CNL1" → "Trưởng phòng KTNQ CNL1"
 - "Phó phòng KTNQ CNL1" → "Phó phòng KTNQ CNL1"  
@@ -27,7 +27,7 @@ Successfully completed the remaining KPI definition updates as outlined in the c
 ```diff
 - "Phó giám đốc PGD/CBTD" → "Phó giám đốc PGD kiêm CBTD"
 - "Phó giám đốc CNL2 TD" → "Phó giám đốc CNL2 phụ trách Tín dụng"
-- "Phó giám đốc CNL2 KT" → "Phó giám đốc CNL2 phụ trách Kinh tế"
+- "Phó giám đốc CNL2 KT" → "Phó giám đốc CNL2 Phụ trách Kế toán"
 ```
 
 #### **Other Table Name Improvements:**
@@ -50,9 +50,9 @@ Updated `ConvertCbTypeToDisplayName()` method with:
 
 **TQ/HK/KTNB Indicator Enhancement:**
 ```diff
-- Original: "Thực hiện các nhiệm vụ nghiệp vụ được giao theo chức năng, nhiệm vụ của từng vị trí Thủ quỹ/Hạch kiểm/KTNB"
+- Original: "Thực hiện các nhiệm vụ nghiệp vụ được giao theo chức năng, nhiệm vụ của từng vị trí Thủ quỹ/Hậu kiểm/KTNB"
 
-+ Enhanced: "Thực hiện các nhiệm vụ nghiệp vụ được giao theo chức năng, nhiệm vụ của từng vị trí: Thủ quỹ (quản lý tiền mặt, thanh toán), Hạch kiểm (kiểm soát nội bộ, đối chiếu sổ sách), KTNB (kế toán nội bộ, báo cáo tài chính)"
++ Enhanced: "Thực hiện các nhiệm vụ nghiệp vụ được giao theo chức năng, nhiệm vụ của từng vị trí: Thủ quỹ (quản lý tiền mặt, thanh toán), Hậu kiểm (kiểm soát nội bộ, đối chiếu sổ sách), KTNB (kế toán nội bộ, báo cáo tài chính)"
 ```
 
 ---
