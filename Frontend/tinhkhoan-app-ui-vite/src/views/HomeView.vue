@@ -5,7 +5,7 @@
         <h1 class="hero-title">
           <img src="/Logo-Agribank-2.png" alt="Agribank Logo" class="hero-logo" />
           <br>
-          Agribank Lai Châu (7800) Center
+          Agribank Lai Châu Center
         </h1>
         <p class="hero-subtitle">
           Hệ thống quản lý tính khoán và lương | Hệ thống Báo cáo

@@ -37,7 +37,7 @@ namespace TinhKhoanApp.Api.Services
             if (indicator.ValueType == KpiValueType.PERCENTAGE)
             {
                 // 📊 Kiểm tra xem có phải là tỷ lệ tính toán không
-                var calculatedRatioKpis = new[] { "TYLENOXAU", "TYLETHUCTHULAI" };
+                var calculatedRatioKpis = new[] { "TYLENOXAU", "PHATTRIENKHACHHANG" };
                 var indicatorCode = GetKpiCodeByName(indicator.IndicatorName);
                 
                 if (calculatedRatioKpis.Contains(indicatorCode))
@@ -59,7 +59,7 @@ namespace TinhKhoanApp.Api.Services
             var ratioKeywords = new Dictionary<string, string>
             {
                 { "Tỷ lệ nợ xấu", "TYLENOXAU" },
-                { "Tỷ lệ thực thu lãi", "TYLETHUCTHULAI" }
+                { "Phát triển khách hàng mới", "PHATTRIENKHACHHANG" }
             };
 
             foreach (var keyword in ratioKeywords)

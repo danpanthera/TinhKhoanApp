@@ -8,6 +8,5 @@ namespace TinhKhoanApp.Api.Models // Hoặc TinhKhoanApp.Api.Models.Dtos nếu S
         public string? Type { get; set; }
         public int? ParentUnitId { get; set; }
         public string? ParentUnitName { get; set; } // Chỉ lấy tên của đơn vị cha
-        public int? SortOrder { get; set; } // Add SortOrder for consistent ordering
     }
 }

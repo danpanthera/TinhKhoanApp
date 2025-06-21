@@ -169,7 +169,7 @@ curl -s http://localhost:5055/api/KpiAssignment/tables/24 | jq '.indicators."$va
 2. Tổng dư nợ BQ trong kỳ (10 điểm)
 3. Tỷ lệ nợ xấu nội bảng (10 điểm)
 4. Thu nợ đã XLRR (5 điểm)
-5. Tỷ lệ thực thu lãi (10 điểm)
+5. Phát triển khách hàng mới (10 điểm)
 6. Lợi nhuận khoán tài chính (20 điểm)
 7. Thu dịch vụ (10 điểm)
 8. Chấp hành quy chế, quy trình nghiệp vụ (10 điểm)

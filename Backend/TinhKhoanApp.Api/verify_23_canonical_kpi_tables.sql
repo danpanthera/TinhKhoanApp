@@ -22,20 +22,21 @@
 -- 21. PhophongKhCnl2
 -- 22. TruongphongKtnqCnl2
 -- 23. PhophongKtnqCnl2
+-- SQL Server compatible version
 
 -- Kiểm tra xem các bảng KPI assignment có khớp với 23 roleCode chuẩn không
 SELECT 
     'Checking KPI Assignment Tables' as Check_Type,
     COUNT(*) as Total_Tables
-FROM sqlite_master 
-WHERE type='table' AND name LIKE '%_KPI_Assignment';
+FROM sys.tables 
+WHERE name LIKE '%_KPI_Assignment';
 
 -- Liệt kê tất cả các bảng KPI assignment hiện có
 SELECT 
     'Current KPI Assignment Tables' as List_Type,
     name as Table_Name
-FROM sqlite_master 
-WHERE type='table' AND name LIKE '%_KPI_Assignment'
+FROM sys.tables 
+WHERE name LIKE '%_KPI_Assignment'
 ORDER BY name;
 
 -- Kiểm tra xem có thiếu bảng KPI nào không bằng cách so với danh sách 23 roleCode chuẩn
@@ -66,29 +67,50 @@ WITH canonical_roles AS (
 ),
 existing_tables AS (
     SELECT name as table_name
-    FROM sqlite_master 
-    WHERE type='table' AND name LIKE '%_KPI_Assignment'
+    FROM sys.tables 
+    WHERE name LIKE '%_KPI_Assignment'
 )
 SELECT 
     'Missing Tables' as Status,
-    cr.expected_table as Table_Name
+    cr.expected_table as Missing_Table
 FROM canonical_roles cr
 LEFT JOIN existing_tables et ON cr.expected_table = et.table_name
-WHERE et.table_name IS NULL
+WHERE et.table_name IS NULL;
 
-UNION ALL
-
+-- Kiểm tra cấu trúc của các bảng KPI assignment
 SELECT 
-    'Extra Tables' as Status,
-    et.table_name as Table_Name
-FROM existing_tables et
-LEFT JOIN canonical_roles cr ON et.table_name = cr.expected_table
-WHERE cr.expected_table IS NULL
+    'Table Structure Check' as Status,
+    t.name AS TableName,
+    c.name AS ColumnName,
+    ty.name AS DataType,
+    c.max_length,
+    c.is_nullable
+FROM sys.tables t
+INNER JOIN sys.columns c ON t.object_id = c.object_id
+INNER JOIN sys.types ty ON c.system_type_id = ty.system_type_id
+WHERE t.name LIKE '%_KPI_Assignment'
+ORDER BY t.name, c.column_id;
 
-UNION ALL
+-- Đếm số lượng records trong mỗi bảng KPI assignment
+DECLARE @sql NVARCHAR(MAX) = '';
+SELECT @sql = @sql + 'SELECT ''' + name + ''' as TableName, COUNT(*) as RecordCount FROM [' + name + '] UNION ALL '
+FROM sys.tables
+WHERE name LIKE '%_KPI_Assignment';
 
+-- Remove the last UNION ALL
+IF LEN(@sql) > 0
+    SET @sql = LEFT(@sql, LEN(@sql) - 11);
+
+IF LEN(@sql) > 0
+    EXEC sp_executesql @sql;
+
+-- Tóm tắt kiểm tra
 SELECT 
-    'Matching Tables' as Status,
-    COUNT(*) || ' tables match canonical list' as Table_Name
-FROM canonical_roles cr
-JOIN existing_tables et ON cr.expected_table = et.table_name;
+    'Summary' as Status,
+    (SELECT COUNT(*) FROM sys.tables WHERE name LIKE '%_KPI_Assignment') as Total_KPI_Tables,
+    23 as Expected_Tables,
+    CASE 
+        WHEN (SELECT COUNT(*) FROM sys.tables WHERE name LIKE '%_KPI_Assignment') = 23 
+        THEN 'COMPLETE' 
+        ELSE 'MISSING TABLES' 
+    END as Status_Check;

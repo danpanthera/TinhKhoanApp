@@ -8,6 +8,7 @@ using System.Text;
 using TinhKhoanApp.Api.Models.RawData;
 using TinhKhoanApp.Api.Data;
 using Microsoft.Extensions.Logging;
+using TemporalImportLog = TinhKhoanApp.Api.Models.Temporal.ImportLog;
 
 namespace TinhKhoanApp.Api.Services
 {
@@ -23,7 +24,7 @@ namespace TinhKhoanApp.Api.Services
         Task<ImportResponseDto> ImportLN01DataAsync(ImportRequestDto request, List<LN01History> data);
         Task<ImportResponseDto> ImportGL01DataAsync(ImportRequestDto request, List<GL01History> data);
         Task<ImportStatisticsDto> GetImportStatisticsAsync(string tableName);
-        Task<List<ImportLog>> GetRecentImportsAsync(int limit = 20);
+        Task<List<TemporalImportLog>> GetRecentImportsAsync(int limit = 20);
         Task<List<LN01History>> GetLN01HistoryAsync(string sourceId);
         Task<List<GL01History>> GetGL01HistoryAsync(string sourceId);
         Task<List<LN01History>> GetLN01SnapshotAsync(DateTime snapshotDate);
@@ -67,7 +68,7 @@ namespace TinhKhoanApp.Api.Services
             var startTime = DateTime.Now;
 
             // Tạo import log
-            var importLog = new ImportLog
+            var importLog = new TemporalImportLog
             {
                 BatchId = response.BatchId,
                 TableName = request.TableName,
@@ -218,7 +219,7 @@ namespace TinhKhoanApp.Api.Services
             return stats;
         }
 
-        public async Task<List<ImportLog>> GetRecentImportsAsync(int limit = 20)
+        public async Task<List<TemporalImportLog>> GetRecentImportsAsync(int limit = 20)
         {
             return await _context.ImportLogs
                 .OrderByDescending(x => x.ImportDate)

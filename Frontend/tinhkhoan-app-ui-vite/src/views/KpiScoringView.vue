@@ -455,7 +455,7 @@ const loadEmployeeKPIs = async () => {
       // Tạm thời phân loại dựa trên tên KPI
       let inputType = 'QUALITATIVE' // Mặc định là định tính
       
-      if (kpi.kpiName.includes('Tỷ lệ nợ xấu') || kpi.kpiName.includes('Tỷ lệ thực thu lãi')) {
+      if (kpi.kpiName.includes('Tỷ lệ nợ xấu') || kpi.kpiName.includes('Phát triển khách hàng mới')) {
         inputType = 'QUANTITATIVE_RATIO' // Tỷ lệ cần tính toán
       } else if (kpi.kpiName.includes('Lợi nhuận') || kpi.kpiName.includes('Doanh số')) {
         inputType = 'QUANTITATIVE_ABSOLUTE' // Định lượng tuyệt đối

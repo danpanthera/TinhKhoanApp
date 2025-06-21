@@ -115,7 +115,7 @@ namespace TinhKhoanApp.Api.Data
                     // Các chỉ tiêu thu nhập
                     new KpiScoringRule
                     {
-                        KpiIndicatorName = "Tỷ lệ thực thu lãi",
+                        KpiIndicatorName = "Phát triển khách hàng mới",
                         KpiIndicatorCode = "TLTL",
                         ScoringMethod = "LINEAR",
                         PercentageStep = 5m,

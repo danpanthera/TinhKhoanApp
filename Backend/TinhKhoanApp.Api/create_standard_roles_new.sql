@@ -1,9 +1,11 @@
--- Tạo 23 vai trò chuẩn theo yêu cầu
+-- Tạo 23 vai trò chuẩn theo yêu cầu - SQL SERVER VERSION
 -- Date: 2025-06-18
 
--- Xóa hết vai trò hiện có
+-- Xóa hết vai trò hiện có (IDENTITY column will reset automatically)
 DELETE FROM Roles;
-DELETE FROM sqlite_sequence WHERE name='Roles';
+
+-- Reset identity seed for SQL Server
+DBCC CHECKIDENT ('Roles', RESEED, 0);
 
 -- Tạo 23 vai trò theo thứ tự yêu cầu
 INSERT INTO Roles (name, description) VALUES

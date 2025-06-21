@@ -48,27 +48,6 @@ namespace TinhKhoanApp.Api.Models
         public string? Search { get; set; }
     }
 
-    /// <summary>
-    /// Request model cho SCD optimized queries
-    /// </summary>
-    public class SCDOptimizedQueryRequest
-    {
-        [Range(1, int.MaxValue)]
-        public int Page { get; set; } = 1;
-
-        [Range(1, 1000)]
-        public int PageSize { get; set; } = 50;
-
-        public string? DataType { get; set; }
-        public string? BranchCode { get; set; }
-        public DateTime? AsOfDate { get; set; }
-        public bool IncludeHistory { get; set; } = false;
-        public DateTime? StatementDateFrom { get; set; }
-        public DateTime? StatementDateTo { get; set; }
-        public string? SourceId { get; set; }
-        public int? VersionNumber { get; set; }
-    }
-
     // =====================================================
     // RESPONSE MODELS
     // =====================================================
@@ -139,32 +118,12 @@ namespace TinhKhoanApp.Api.Models
     }
 
     /// <summary>
-    /// Lightweight summary model cho SCD records
-    /// </summary>
-    public class SCDRecordSummary
-    {
-        public long HistoryID { get; set; }
-        public string SourceId { get; set; } = string.Empty;
-        public string DataType { get; set; } = string.Empty;
-        public string BranchCode { get; set; } = string.Empty;
-        public DateTime StatementDate { get; set; }
-        public DateTime ValidFrom { get; set; }
-        public DateTime? ValidTo { get; set; }
-        public bool IsCurrent { get; set; }
-        public int VersionNumber { get; set; }
-        public DateTime ModifiedDate { get; set; }
-        public bool HasJsonData { get; set; }
-        public int JsonDataSize { get; set; }
-    }
-
-    /// <summary>
     /// Dashboard statistics model
     /// </summary>
     public class DashboardStats
     {
         public int TotalImports { get; set; }
         public int TotalRecords { get; set; }
-        public int CurrentSCDRecords { get; set; }
         public int TotalRecordsProcessed { get; set; }
         public Dictionary<string, int> ImportsByDataType { get; set; } = new();
         public int ImportsLast30Days { get; set; }

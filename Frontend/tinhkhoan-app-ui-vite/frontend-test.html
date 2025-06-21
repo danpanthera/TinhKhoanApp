@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KPI Assignment Frontend Test</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            margin: 20px 0;
+        }
+        select, button {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+        }
+        .kpi-table {
+            border: 1px solid #ddd;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .employee-table {
+            border-left: 4px solid #28a745;
+        }
+        .branch-table {
+            border-left: 4px solid #007bff;
+        }
+        .count-info {
+            background-color: #d1ecf1;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .pass { background-color: #d4edda; color: #155724; }
+        .fail { background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>KPI Assignment Feature Test</h1>
+        
+        <div class="container">
+            <h2>1. Unit Type Dropdown Test</h2>
+            <div>Unit Type: 
+                <select v-model="selectedUnitType">
+                    <option value="">Select Unit Type</option>
+                    <option v-for="option in unitTypeOptions" :key="option.value" :value="option.value">
+                        {{ option.text }}
+                    </option>
+                </select>
+            </div>
+            <div class="test-result" :class="unitTypeTestResult.class">
+                {{ unitTypeTestResult.message }}
+            </div>
+        </div>
+
+        <div class="container">
+            <h2>2. Employee KPI Tables (Should show 23 tables)</h2>
+            <button @click="loadEmployeeKpiTables">Load Employee KPI Tables</button>
+            <div class="count-info">
+                Total Employee KPI Tables: {{ employeeKpiTables.length }} / 23 expected
+            </div>
+            <div class="test-result" :class="employeeTableTestResult.class">
+                {{ employeeTableTestResult.message }}
+            </div>
+            <div v-for="table in employeeKpiTables" :key="table.id" class="kpi-table employee-table">
+                <strong>{{ table.displayCode || table.tableType }}</strong> - {{ table.tableName }}
+                <br><small>Category: {{ table.category }}</small>
+            </div>
+        </div>
+
+        <div class="container">
+            <h2>3. Branch KPI Tables with Custom Sorting</h2>
+            <button @click="loadBranchKpiTables">Load Branch KPI Tables</button>
+            <div class="count-info">
+                Branch sorting test: Expected order: CnLaiChau, CnTamDuong, CnPhongTho, CnSinHo, CnMuongTe, CnThanUyen, CnThanhPho, CnTanUyen, CnNamNhun
+            </div>
+            <div class="test-result" :class="branchSortTestResult.class">
+                {{ branchSortTestResult.message }}
+            </div>
+            <div v-for="(table, index) in branchKpiTables" :key="table.id" class="kpi-table branch-table">
+                <strong>#{{ index + 1 }} {{ table.displayCode || table.tableType }}</strong> - {{ table.tableName }}
+                <br><small>Category: {{ table.category }}</small>
+            </div>
+        </div>
+
+        <div class="container">
+            <h2>4. Table Type Safety Test (.toLowerCase error fix)</h2>
+            <button @click="testTableTypeSafety">Test Table Type Safety</button>
+            <div class="test-result" :class="safetyTestResult.class">
+                {{ safetyTestResult.message }}
+            </div>
+            <div v-if="safetyTestLog">
+                <pre style="font-size: 12px; background: #f8f9fa; padding: 10px; border-radius: 5px;">{{ safetyTestLog }}</pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        createApp({
+            data() {
+                return {
+                    selectedUnitType: '',
+                    unitTypeOptions: [
+                        { value: 'PNVL1', text: 'PNVL1 - Phòng nghiệp vụ cấp 1' },
+                        { value: 'PGDL2', text: 'PGDL2 - Phòng giao dịch cấp 2' },
+                        { value: 'PNVL2', text: 'PNVL2 - Phòng nghiệp vụ cấp 2' },
+                        { value: 'CN', text: 'CN - Chi nhánh' },
+                        { value: 'PGD', text: 'PGD - Phòng giao dịch' }
+                    ],
+                    employeeKpiTables: [],
+                    branchKpiTables: [],
+                    safetyTestLog: '',
+                    unitTypeTestResult: { message: '', class: '' },
+                    employeeTableTestResult: { message: '', class: '' },
+                    branchSortTestResult: { message: '', class: '' },
+                    safetyTestResult: { message: '', class: '' }
+                };
+            },
+            mounted() {
+                this.checkUnitTypeOptions();
+            },
+            methods: {
+                checkUnitTypeOptions() {
+                    const hasPGDL2 = this.unitTypeOptions.some(opt => opt.value === 'PGDL2');
+                    if (hasPGDL2) {
+                        this.unitTypeTestResult = {
+                            message: 'PASS: PGDL2 option is present in unit type dropdown',
+                            class: 'pass'
+                        };
+                    } else {
+                        this.unitTypeTestResult = {
+                            message: 'FAIL: PGDL2 option is missing from unit type dropdown',
+                            class: 'fail'
+                        };
+                    }
+                },
+
+                categorizeKpiTable(table) {
+                    // Replicate the logic from our fixed kpiAssignmentService.js
+                    const tableType = table.tableType || '';
+                    const tableTypeLC = typeof tableType === 'string' ? tableType.toLowerCase() : '';
+                    
+                    // Employee tables: type 'employee' or index 0-22
+                    if (tableTypeLC === 'employee' || 
+                        tableTypeLC.includes('role') || 
+                        tableTypeLC.includes('canbo') ||
+                        (typeof table.tableIndex === 'number' && table.tableIndex >= 0 && table.tableIndex <= 22) ||
+                        (typeof table.tableType === 'string' && /^\d+$/.test(table.tableType) && parseInt(table.tableType) >= 0 && parseInt(table.tableType) <= 22)) {
+                        table.category = 'Vai trò cán bộ';
+                        return 'employee';
+                    }
+                    
+                    // Branch tables
+                    if (tableTypeLC === 'branch' || 
+                        tableTypeLC.includes('cn') ||
+                        tableTypeLC.includes('chinhanh') ||
+                        (typeof table.tableIndex === 'number' && table.tableIndex >= 23)) {
+                        table.category = 'Chi nhánh';
+                        return 'branch';
+                    }
+                    
+                    table.category = 'Khác';
+                    return 'unknown';
+                },
+
+                sortBranches(branches) {
+                    const branchOrder = [
+                        'CnLaiChau', 'CnTamDuong', 'CnPhongTho', 'CnSinHo', 
+                        'CnMuongTe', 'CnThanUyen', 'CnThanhPho', 'CnTanUyen', 'CnNamNhun'
+                    ];
+                    
+                    return branches.sort((a, b) => {
+                        const aType = String(a.tableType || a.displayCode || '');
+                        const bType = String(b.tableType || b.displayCode || '');
+                        
+                        const aOrder = branchOrder.indexOf(aType);
+                        const bOrder = branchOrder.indexOf(bType);
+                        
+                        if (aOrder !== -1 && bOrder !== -1) {
+                            return aOrder - bOrder;
+                        }
+                        if (aOrder !== -1) return -1;
+                        if (bOrder !== -1) return 1;
+                        return aType.localeCompare(bType);
+                    });
+                },
+
+                loadEmployeeKpiTables() {
+                    // Mock 30 KPI tables (0-29) to simulate real data
+                    const mockTables = Array.from({ length: 30 }, (_, i) => ({
+                        id: i,
+                        tableName: `KPI Table ${i} - ${i < 23 ? 'Employee Role' : 'Branch Table'}`,
+                        tableType: i < 23 ? 'employee' : 'branch',
+                        tableIndex: i,
+                        displayCode: i < 23 ? `EMP${i}` : `BR${i-23}`
+                    }));
+
+                    // Apply our categorization logic
+                    mockTables.forEach(table => {
+                        this.categorizeKpiTable(table);
+                    });
+
+                    // Filter for employee tables only
+                    this.employeeKpiTables = mockTables.filter(table => 
+                        this.categorizeKpiTable(table) === 'employee'
+                    );
+
+                    // Test result
+                    if (this.employeeKpiTables.length === 23) {
+                        this.employeeTableTestResult = {
+                            message: 'PASS: Exactly 23 employee KPI tables are shown',
+                            class: 'pass'
+                        };
+                    } else {
+                        this.employeeTableTestResult = {
+                            message: `FAIL: ${this.employeeKpiTables.length} employee tables shown, expected 23`,
+                            class: 'fail'
+                        };
+                    }
+                },
+
+                loadBranchKpiTables() {
+                    // Mock branch data with the branches in random order
+                    const mockBranches = [
+                        { id: 1, tableName: 'Chi nhánh Nam Nhùn', tableType: 'CnNamNhun', displayCode: 'CnNamNhun' },
+                        { id: 2, tableName: 'Chi nhánh Lai Châu', tableType: 'CnLaiChau', displayCode: 'CnLaiChau' },
+                        { id: 3, tableName: 'Chi nhánh Thành phố', tableType: 'CnThanhPho', displayCode: 'CnThanhPho' },
+                        { id: 4, tableName: 'Chi nhánh Tam Đường', tableType: 'CnTamDuong', displayCode: 'CnTamDuong' },
+                        { id: 5, tableName: 'Chi nhánh Mường Tè', tableType: 'CnMuongTe', displayCode: 'CnMuongTe' },
+                        { id: 6, tableName: 'Chi nhánh Than Uyên', tableType: 'CnThanUyen', displayCode: 'CnThanUyen' },
+                        { id: 7, tableName: 'Chi nhánh Phong Thổ', tableType: 'CnPhongTho', displayCode: 'CnPhongTho' },
+                        { id: 8, tableName: 'Chi nhánh Sin Hồ', tableType: 'CnSinHo', displayCode: 'CnSinHo' },
+                        { id: 9, tableName: 'Chi nhánh Tân Uyên', tableType: 'CnTanUyen', displayCode: 'CnTanUyen' }
+                    ];
+
+                    // Apply categorization
+                    mockBranches.forEach(table => {
+                        this.categorizeKpiTable(table);
+                    });
+
+                    // Sort branches using our custom sorting
+                    this.branchKpiTables = this.sortBranches([...mockBranches]);
+
+                    // Check if sorting is correct
+                    const expectedOrder = ['CnLaiChau', 'CnTamDuong', 'CnPhongTho', 'CnSinHo', 'CnMuongTe', 'CnThanUyen', 'CnThanhPho', 'CnTanUyen', 'CnNamNhun'];
+                    const actualOrder = this.branchKpiTables.map(b => b.displayCode);
+                    const isCorrectOrder = JSON.stringify(actualOrder) === JSON.stringify(expectedOrder);
+
+                    if (isCorrectOrder) {
+                        this.branchSortTestResult = {
+                            message: 'PASS: Branch sorting is correct according to specified order',
+                            class: 'pass'
+                        };
+                    } else {
+                        this.branchSortTestResult = {
+                            message: `FAIL: Branch sorting is incorrect. Expected: ${expectedOrder.join(', ')}. Got: ${actualOrder.join(', ')}`,
+                            class: 'fail'
+                        };
+                    }
+                },
+
+                testTableTypeSafety() {
+                    // Test cases that previously caused the .toLowerCase error
+                    const problemCases = [
+                        { tableType: null, tableIndex: 5 },
+                        { tableType: undefined, tableIndex: 10 },
+                        { tableType: 123, tableIndex: 15 },
+                        { tableType: [], tableIndex: 20 },
+                        { tableType: {}, tableIndex: 2 },
+                        { tableType: 'EMPLOYEE', tableIndex: 8 },
+                        { tableType: 'branch', tableIndex: 25 }
+                    ];
+
+                    let log = 'Testing problematic table type values:\n\n';
+                    let allPassed = true;
+
+                    problemCases.forEach((testCase, index) => {
+                        try {
+                            const result = this.categorizeKpiTable({...testCase});
+                            log += `Test ${index + 1}: ✓ PASS - tableType: ${JSON.stringify(testCase.tableType)} → ${result}\n`;
+                        } catch (error) {
+                            log += `Test ${index + 1}: ✗ FAIL - tableType: ${JSON.stringify(testCase.tableType)} → ERROR: ${error.message}\n`;
+                            allPassed = false;
+                        }
+                    });
+
+                    this.safetyTestLog = log;
+
+                    if (allPassed) {
+                        this.safetyTestResult = {
+                            message: 'PASS: All problematic table type cases handled safely (no .toLowerCase errors)',
+                            class: 'pass'
+                        };
+                    } else {
+                        this.safetyTestResult = {
+                            message: 'FAIL: Some table type cases still cause errors',
+                            class: 'fail'
+                        };
+                    }
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

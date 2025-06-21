@@ -437,26 +437,42 @@ const displayError = computed(() => {
   );
 });
 
-// Updated branchOptions: Use SortOrder from backend instead of hardcoded sorting
+// Updated branchOptions: Custom ordering to match EmployeeKpiAssignmentView
 const branchOptions = computed(() => {
-  const units = unitStore.allUnits.filter(u => {
-    const type = (u.type || '').toUpperCase();
-    return type === 'CNL1' || type === 'CNL2';
-  });
-  
-  // Sort by SortOrder (from backend), then by Name as fallback
-  return units.sort((a, b) => {
-    // Primary sort: SortOrder (nulls last)
-    const sortOrderA = a.sortOrder ?? Number.MAX_SAFE_INTEGER;
-    const sortOrderB = b.sortOrder ?? Number.MAX_SAFE_INTEGER;
-    
-    if (sortOrderA !== sortOrderB) {
-      return sortOrderA - sortOrderB;
-    }
-    
-    // Secondary sort: Name
-    return (a.name || '').localeCompare(b.name || '');
-  });
+  // Định nghĩa thứ tự theo yêu cầu: CnLaiChau, CnTamDuong, CnPhongTho, CnSinHo, CnMuongTe, CnThanUyen, CnThanhPho, CnTanUyen, CnNamNhun
+  const customOrder = [
+    'CnLaiChau',     // Chi nhánh tỉnh Lai Châu
+    'CnTamDuong',    // Chi nhánh Tam Đường
+    'CnPhongTho',    // Chi nhánh Phong Thổ  
+    'CnSinHo',       // Chi nhánh Sìn Hồ
+    'CnMuongTe',     // Chi nhánh Mường Tè
+    'CnThanUyen',    // Chi nhánh Than Uyên
+    'CnThanhPho',    // Chi nhánh Thành Phố
+    'CnTanUyen',     // Chi nhánh Tân Uyên
+    'CnNamNhun'      // Chi nhánh Nậm Nhùn
+  ];
+
+  return unitStore.allUnits
+    .filter(u => {
+      const type = (u.type || '').toUpperCase();
+      return type === 'CNL1' || type === 'CNL2';
+    })
+    .sort((a, b) => {
+      const indexA = customOrder.indexOf(a.code);
+      const indexB = customOrder.indexOf(b.code);
+      
+      // Nếu cả hai đều có trong custom order, sắp xếp theo thứ tự đó
+      if (indexA !== -1 && indexB !== -1) {
+        return indexA - indexB;
+      }
+      
+      // Nếu chỉ có một trong hai có trong custom order, ưu tiên cái đó
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      
+      // Nếu cả hai đều không có trong custom order, sắp xếp theo tên
+      return (a.name || '').localeCompare(b.name || '');
+    });
 });
 
 // Sửa departmentOptions: lọc phòng nghiệp vụ theo loại chi nhánh đã chọn
@@ -471,15 +487,16 @@ const departmentOptions = computed(() => {
   
   // --- LỌC PHÒNG NGHIỆP VỤ CHO CNL1 ---
   if (branchType === 'CNL1') {
-    // Lấy tất cả các phòng nghiệp vụ PNVL1 trực thuộc CNL1 (ID: 10)
-    // Danh sách code thực tế từ database: PhongKhdn, PhongKhcn, PhongKtnq, PhongKtgs, PhongTh, PhongKhqlrr
+    // Lấy tất cả các phòng nghiệp vụ PNVL1 trực thuộc CNL1
+    // Danh sách code thực tế từ cơ cấu tổ chức mới (45 đơn vị cố định)
     const allowedCodes = [
-      'PHONGKHDN',    // Phòng Khách hàng Doanh nghiệp
-      'PHONGKHCN',    // Phòng Khách hàng Cá nhân  
-      'PHONGKTNQ',    // Phòng Kế toán & Ngân quỹ
-      'PHONGKTGS',    // Phòng Kiểm tra giám sát
-      'PHONGTH',      // Phòng Tổng hợp
-      'PHONGKHQLRR'   // Phòng Kế hoạch & QLRR
+      'CNLAICHAUBGD',     // Ban Giám đốc
+      'CNLAICHAUKHDN',    // Phòng Khách hàng Doanh nghiệp
+      'CNLAICHAUKHCN',    // Phòng Khách hàng Cá nhân  
+      'CNLAICHAUKTNQ',    // Phòng Kế toán & Ngân quỹ
+      'CNLAICHAUTONGHOP', // Phòng Tổng hợp
+      'CNLAICHAUKHQLRR',  // Phòng Kế hoạch & Quản lý rủi ro
+      'CNLAICHAUKTGS'     // Phòng Kiểm tra giám sát
     ];
     return children.filter(u => {
       const unitType = (u.type || '').toUpperCase();

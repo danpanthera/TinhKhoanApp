@@ -25,8 +25,7 @@ namespace TinhKhoanApp.Api.Controllers
         public async Task<ActionResult<IEnumerable<UnitListItemDto>>> GetUnits() // Thay đổi kiểu trả về
         {
             return await _context.Units
-                                 .OrderBy(u => u.SortOrder ?? int.MaxValue) // Use SortOrder first, then fall back to MaxValue for nulls
-                                 .ThenBy(u => u.Name) // Secondary sort by Name
+                                 .OrderBy(u => u.Name) // Sort by Name since SortOrder is removed
                                  .Select(u => new UnitListItemDto // Sử dụng Select để map sang DTO
                                  {
                                      Id = u.Id,
@@ -34,7 +33,6 @@ namespace TinhKhoanApp.Api.Controllers
                                      Name = u.Name,
                                      Type = u.Type,
                                      ParentUnitId = u.ParentUnitId,
-                                     SortOrder = u.SortOrder,
                                      // Sử dụng LEFT JOIN thông qua DefaultIfEmpty()
                                      ParentUnitName = u.ParentUnit != null ? u.ParentUnit.Name : null
                                  })

@@ -9,7 +9,7 @@
         <div class="card-icon">🏛️</div>
         <h2>Thông tin sản phẩm</h2>
         <p class="copyright-text">
-          Đây là sản phẩm của <strong>Bộ phận IT - Phòng KTNQ Agribank CN T. Lai Châu (7800)</strong>
+          Đây là sản phẩm của <strong>Bộ phận IT - Phòng KTNQ Chi nhánh Lai Châu</strong>
         </p>
         
         <div class="contact-info">
@@ -29,7 +29,7 @@
       <div class="agribank-info">
         <div class="bank-logo">🏦</div>
         <h3>Ngân hàng Nông nghiệp và Phát triển Nông thôn Việt Nam</h3>
-        <p>Chi nhánh Tỉnh Lai Châu</p>
+        <p>Chi nhánh Lai Châu</p>
       </div>
     </div>
   </div>

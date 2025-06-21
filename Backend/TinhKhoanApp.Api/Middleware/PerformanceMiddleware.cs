@@ -93,15 +93,15 @@ namespace TinhKhoanApp.Api.Middleware
             {
                 var path = context.Request.Path.Value?.ToLower();
                 
-                if (path?.Contains("/optimized/dashboard-stats") == true)
+                if (path?.Contains("/temporal/stats") == true)
                 {
                     context.Response.Headers["Cache-Control"] = "public, max-age=300"; // 5 minutes
                 }
-                else if (path?.Contains("/optimized/imports") == true)
+                else if (path?.Contains("/temporal/query") == true)
                 {
                     context.Response.Headers["Cache-Control"] = "public, max-age=180"; // 3 minutes
                 }
-                else if (path?.Contains("/optimized/performance-stats") == true)
+                else if (path?.Contains("/temporal/") == true)
                 {
                     context.Response.Headers["Cache-Control"] = "public, max-age=900"; // 15 minutes
                 }

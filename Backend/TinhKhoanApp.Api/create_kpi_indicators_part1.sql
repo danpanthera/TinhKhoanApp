@@ -13,7 +13,7 @@ INSERT INTO KpiIndicators (TableId, IndicatorName, MaxScore, Unit, OrderIndex) V
 (1, 'Tỷ lệ nợ xấu KHDN', 10, '%', 2),
 (1, 'Thu nợ đã XLRR KHDN', 10, 'Tỷ VND', 3),
 (1, 'Lợi nhuận khoán tài chính', 10, 'Tỷ VND', 4),
-(1, 'Tỷ lệ thực thu lãi KHDN', 10, '%', 5),
+(1, 'Phát triển khách hàng mới', 10, 'Khách hàng', 5),
 (1, 'Điều hành theo chương trình công tác', 20, '%', 6),
 (1, 'Chấp hành quy chế, quy trình nghiệp vụ', 10, '%', 7),
 (1, 'BQ kết quả thực hiện CB trong phòng mình phụ trách', 10, '%', 8);
@@ -24,7 +24,7 @@ INSERT INTO KpiIndicators (TableId, IndicatorName, MaxScore, Unit, OrderIndex) V
 (2, 'Tỷ lệ nợ xấu KHCN', 10, '%', 2),
 (2, 'Thu nợ đã XLRR KHCN', 10, 'Tỷ VND', 3),
 (2, 'Lợi nhuận khoán tài chính', 10, 'Tỷ VND', 4),
-(2, 'Tỷ lệ thực thu lãi KHCN', 10, '%', 5),
+(2, 'Phát triển khách hàng mới', 10, 'Khách hàng', 5),
 (2, 'Điều hành theo chương trình công tác', 20, '%', 6),
 (2, 'Chấp hành quy chế, quy trình nghiệp vụ', 10, '%', 7),
 (2, 'BQ kết quả thực hiện CB trong phòng mình phụ trách', 10, '%', 8);
@@ -35,7 +35,7 @@ INSERT INTO KpiIndicators (TableId, IndicatorName, MaxScore, Unit, OrderIndex) V
 (3, 'Tỷ lệ nợ xấu KHDN', 10, '%', 2),
 (3, 'Thu nợ đã XLRR KHDN', 10, 'Tỷ VND', 3),
 (3, 'Lợi nhuận khoán tài chính', 10, 'Tỷ VND', 4),
-(3, 'Tỷ lệ thực thu lãi KHDN', 10, '%', 5),
+(3, 'Phát triển khách hàng mới', 10, 'Khách hàng', 5),
 (3, 'Điều hành theo chương trình công tác', 20, '%', 6),
 (3, 'Chấp hành quy chế, quy trình nghiệp vụ', 10, '%', 7),
 (3, 'BQ kết quả thực hiện CB trong phòng mình phụ trách', 10, '%', 8);
@@ -46,7 +46,7 @@ INSERT INTO KpiIndicators (TableId, IndicatorName, MaxScore, Unit, OrderIndex) V
 (4, 'Tỷ lệ nợ xấu KHCN', 10, '%', 2),
 (4, 'Thu nợ đã XLRR KHCN', 10, 'Tỷ VND', 3),
 (4, 'Lợi nhuận khoán tài chính', 10, 'Tỷ VND', 4),
-(4, 'Tỷ lệ thực thu lãi KHCN', 10, '%', 5),
+(4, 'Phát triển khách hàng mới', 10, 'Khách hàng', 5),
 (4, 'Điều hành theo chương trình công tác', 20, '%', 6),
 (4, 'Chấp hành quy chế, quy trình nghiệp vụ', 10, '%', 7),
 (4, 'BQ kết quả thực hiện CB trong phòng mình phụ trách', 10, '%', 8);
@@ -73,7 +73,7 @@ INSERT INTO KpiIndicators (TableId, IndicatorName, MaxScore, Unit, OrderIndex) V
 INSERT INTO KpiIndicators (TableId, IndicatorName, MaxScore, Unit, OrderIndex) VALUES
 (7, 'Tổng dư nợ BQ', 30, 'Tỷ VND', 1),
 (7, 'Tỷ lệ nợ xấu', 15, '%', 2),
-(7, 'Tỷ lệ thực thu lãi', 10, '%', 3),
+(7, 'Phát triển khách hàng mới', 10, 'Khách hàng', 3),
 (7, 'Thu nợ đã XLRR (nếu không có nợ XLRR thì cộng vào chỉ tiêu Dư nợ)', 10, 'Tỷ VND', 4),
 (7, 'Thực hiện nhiệm vụ theo chương trình công tác', 10, '%', 5),
 (7, 'Chấp hành quy chế, quy trình nghiệp vụ, văn hóa Agribank', 10, '%', 6),

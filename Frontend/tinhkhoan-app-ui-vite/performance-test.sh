@@ -74,31 +74,31 @@ echo -e "\n${BLUE}⚡ Testing Optimized APIs${NC}"
 echo "========================="
 
 # Test optimized APIs
-measure_request "$BASE_URL/rawdata/optimized/imports?page=1&pageSize=50" "Get Optimized Imports (Paginated)"
-measure_request "$BASE_URL/rawdata/optimized/imports?page=1&pageSize=100" "Get Optimized Imports (Larger Page)"
-measure_request "$BASE_URL/rawdata/optimized/records/all?offset=0&limit=50" "Get Optimized Records (Virtual Scroll)"
-measure_request "$BASE_URL/rawdata/optimized/scd?tableName=LN01_History&page=1&pageSize=50" "Get Optimized SCD Records"
-measure_request "$BASE_URL/rawdata/optimized/dashboard-stats" "Get Dashboard Stats (Cached)"
+measure_request "$BASE_URL/temporal/query/RawDataImport?page=1&pageSize=50" "Get Temporal Imports (Paginated)"
+measure_request "$BASE_URL/temporal/query/RawDataImport?page=1&pageSize=100" "Get Temporal Imports (Larger Page)"
+measure_request "$BASE_URL/temporal/query/RawData?page=1&pageSize=50" "Get Temporal Records (Query)"
+measure_request "$BASE_URL/temporal/history/1?page=1&pageSize=50" "Get Temporal History Records"
+measure_request "$BASE_URL/temporal/stats/RawData" "Get Dashboard Stats (Temporal)"
 
 echo -e "\n${BLUE}🔍 Testing Search and Filtering${NC}"
 echo "================================"
 
 # Test search and filtering
-measure_request "$BASE_URL/rawdata/optimized/search?searchTerm=LN01&page=1&pageSize=50" "Advanced Search (LN01)"
-measure_request "$BASE_URL/rawdata/optimized/imports?searchTerm=test&sortBy=ImportDate&sortOrder=desc" "Filtered Imports Search"
+measure_request "$BASE_URL/temporal/query/RawData?searchTerm=LN01&page=1&pageSize=50" "Advanced Search (LN01)"
+measure_request "$BASE_URL/temporal/query/RawDataImport?searchTerm=test&sortBy=ImportDate&sortOrder=desc" "Filtered Imports Search"
 
 echo -e "\n${BLUE}📈 Testing Performance Stats${NC}"
 echo "============================="
 
 # Test performance monitoring
-measure_request "$BASE_URL/rawdata/optimized/performance-stats?timeRange=24h" "Get Performance Stats (24h)"
-measure_request "$BASE_URL/rawdata/optimized/performance-stats?timeRange=7d" "Get Performance Stats (7d)"
+measure_request "$BASE_URL/temporal/stats/RawData?timeRange=24h" "Get Performance Stats (24h)"
+measure_request "$BASE_URL/temporal/stats/RawData?timeRange=7d" "Get Performance Stats (7d)"
 
 echo -e "\n${BLUE}💾 Testing Cache Operations${NC}"
 echo "============================"
 
 # Test cache refresh
-measure_request "$BASE_URL/rawdata/optimized/refresh-cache" "Refresh Cache" "POST" '{"cacheKey":"dashboard-stats"}'
+measure_request "$BASE_URL/temporal/index/RawData" "Refresh Temporal Index" "POST" '{"tableName":"RawData"}'
 
 echo -e "\n${BLUE}🧪 Load Testing (Multiple Requests)${NC}"
 echo "===================================="
@@ -108,7 +108,7 @@ echo "Running 10 concurrent requests to optimized imports..."
 start_time=$(date +%s.%N)
 
 for i in {1..10}; do
-    curl -s -o /dev/null "$BASE_URL/rawdata/optimized/imports?page=$i&pageSize=25" &
+    curl -s -o /dev/null "$BASE_URL/temporal/query/RawDataImport?page=$i&pageSize=25" &
 done
 wait
 

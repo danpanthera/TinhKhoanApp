@@ -65,7 +65,7 @@ const mockKpiTargets = [
     employeeId: 2,
     employeeName: 'Trần Thị B',
     kpiDefinitionId: 4,
-    kpiName: 'Tỷ lệ thực thu lãi',
+    kpiName: 'Phát triển khách hàng mới',
     kpiType: 'QUANTITATIVE_RATIO',
     valueType: 'PERCENTAGE',
     unit: '%',

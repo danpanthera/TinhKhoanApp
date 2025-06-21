@@ -257,31 +257,31 @@
             <div class="demo-card">
                 <div class="card-header">
                     <div class="card-icon">📋</div>
-                    <div class="card-title">Optimized Imports API</div>
+                    <div class="card-title">Temporal Imports API</div>
                 </div>
                 <div class="card-description">
-                    Test API lấy danh sách imports với pagination và caching. 
-                    So sánh hiệu suất với API gốc.
+                    Test API lấy danh sách imports từ Temporal Tables với pagination. 
+                    Thay thế cho SCD Type 2 optimized API.
                 </div>
                 <button class="demo-button" onclick="testOptimizedImports()">
-                    <span id="btn-imports">Test Optimized Imports</span>
+                    <span id="btn-imports">Test Temporal Imports</span>
                 </button>
-                <div class="api-url">GET /api/rawdata/optimized/imports</div>
+                <div class="api-url">GET /api/temporal/query/RawDataImport</div>
             </div>
 
             <div class="demo-card">
                 <div class="card-header">
                     <div class="card-icon">📊</div>
-                    <div class="card-title">Virtual Scrolling API</div>
+                    <div class="card-title">Temporal Query API</div>
                 </div>
                 <div class="card-description">
-                    Test API hỗ trợ virtual scrolling với offset/limit. 
-                    Tối ưu cho việc hiển thị dữ liệu lớn.
+                    Test API hỗ trợ temporal queries với pagination. 
+                    Tối ưu cho việc hiển thị dữ liệu historical.
                 </div>
                 <button class="demo-button" onclick="testVirtualScrolling()">
                     <span id="btn-virtual">Test Virtual Scrolling</span>
                 </button>
-                <div class="api-url">GET /api/rawdata/optimized/records</div>
+                <div class="api-url">GET /api/temporal/query/RawData</div>
             </div>
 
             <div class="demo-card">
@@ -296,7 +296,7 @@
                 <button class="demo-button" onclick="testDashboardStats()">
                     <span id="btn-dashboard">Test Dashboard Stats</span>
                 </button>
-                <div class="api-url">GET /api/rawdata/optimized/dashboard-stats</div>
+                <div class="api-url">GET /api/temporal/stats/RawData</div>
             </div>
 
             <div class="demo-card">
@@ -311,22 +311,22 @@
                 <button class="demo-button" onclick="testAdvancedSearch()">
                     <span id="btn-search">Test Advanced Search</span>
                 </button>
-                <div class="api-url">GET /api/rawdata/optimized/search</div>
+                <div class="api-url">GET /api/temporal/query/RawData</div>
             </div>
 
             <div class="demo-card">
                 <div class="card-header">
                     <div class="card-icon">🎯</div>
-                    <div class="card-title">SCD Records API</div>
+                    <div class="card-title">Temporal History API</div>
                 </div>
                 <div class="card-description">
-                    Test API truy xuất SCD Type 2 records với 
+                    Test API truy xuất Temporal Table history với 
                     index optimization và smart caching.
                 </div>
                 <button class="demo-button" onclick="testSCDRecords()">
-                    <span id="btn-scd">Test SCD Records</span>
+                    <span id="btn-scd">Test Temporal History</span>
                 </button>
-                <div class="api-url">GET /api/rawdata/optimized/scd</div>
+                <div class="api-url">GET /api/temporal/history/{entityId}</div>
             </div>
 
             <div class="demo-card">
@@ -341,7 +341,7 @@
                 <button class="demo-button" onclick="testPerformanceStats()">
                     <span id="btn-perf">Test Performance Stats</span>
                 </button>
-                <div class="api-url">GET /api/rawdata/optimized/performance-stats</div>
+                <div class="api-url">GET /api/temporal/stats/RawData</div>
             </div>
         </div>
 
@@ -455,7 +455,7 @@
         // Test functions
         async function testOptimizedImports() {
             await makeRequest(
-                `${API_BASE}/rawdata/optimized/imports?page=1&pageSize=50&sortBy=ImportDate&sortOrder=desc`,
+                `${API_BASE}/temporal/query/RawDataImport?page=1&pageSize=50&sortBy=ImportDate&sortOrder=desc`,
                 'Optimized Imports (Paginated)',
                 'btn-imports'
             );
@@ -463,7 +463,7 @@
 
         async function testVirtualScrolling() {
             await makeRequest(
-                `${API_BASE}/rawdata/optimized/records/all?offset=0&limit=50`,
+                `${API_BASE}/temporal/query/RawData?page=1&pageSize=50`,
                 'Virtual Scrolling Records',
                 'btn-virtual'
             );
@@ -471,7 +471,7 @@
 
         async function testDashboardStats() {
             await makeRequest(
-                `${API_BASE}/rawdata/optimized/dashboard-stats`,
+                `${API_BASE}/temporal/stats/RawData`,
                 'Dashboard Statistics (Cached)',
                 'btn-dashboard'
             );
@@ -479,7 +479,7 @@
 
         async function testAdvancedSearch() {
             await makeRequest(
-                `${API_BASE}/rawdata/optimized/search?searchTerm=LN01&page=1&pageSize=25`,
+                `${API_BASE}/temporal/query/RawData?searchTerm=LN01&page=1&pageSize=25`,
                 'Advanced Search (LN01)',
                 'btn-search'
             );
@@ -487,15 +487,15 @@
 
         async function testSCDRecords() {
             await makeRequest(
-                `${API_BASE}/rawdata/optimized/scd?tableName=LN01_History&page=1&pageSize=50`,
-                'SCD Type 2 Records',
+                `${API_BASE}/temporal/history/1?page=1&pageSize=50`,
+                'Temporal History Records',
                 'btn-scd'
             );
         }
 
         async function testPerformanceStats() {
             await makeRequest(
-                `${API_BASE}/rawdata/optimized/performance-stats?timeRange=24h`,
+                `${API_BASE}/temporal/stats/RawData?timeRange=24h`,
                 'Performance Statistics',
                 'btn-perf'
             );
@@ -536,7 +536,7 @@
                 const loadTestPromises = [];
                 for (let i = 1; i <= 5; i++) {
                     loadTestPromises.push(
-                        fetch(`${API_BASE}/rawdata/optimized/imports?page=${i}&pageSize=20`)
+                        fetch(`${API_BASE}/temporal/query/RawDataImport?page=${i}&pageSize=20`)
                     );
                 }
                 await Promise.all(loadTestPromises);

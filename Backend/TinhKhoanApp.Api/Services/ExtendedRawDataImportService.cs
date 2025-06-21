@@ -9,6 +9,7 @@ using System.Text.Json;
 using TinhKhoanApp.Api.Models.RawData;
 using TinhKhoanApp.Api.Data;
 using Microsoft.Extensions.Logging;
+using TemporalImportLog = TinhKhoanApp.Api.Models.Temporal.ImportLog;
 
 namespace TinhKhoanApp.Api.Services
 {
@@ -91,7 +92,7 @@ namespace TinhKhoanApp.Api.Services
             var startTime = DateTime.UtcNow;
 
             // Tạo import log
-            var importLog = new ImportLog
+            var importLog = new TemporalImportLog
             {
                 BatchId = response.BatchId,
                 TableName = tableName,

@@ -33,7 +33,7 @@ namespace TinhKhoanApp.Api.Controllers
                     t.CreatedDate,
                     IndicatorCount = t.Indicators.Count(i => i.IsActive)
                 })
-                .Where(t => t.IsActive)
+                .Where(t => t.IsActive && t.TableName != "Chi nhánh tỉnh Lai Châu") // Exclude "Chi nhánh tỉnh Lai Châu" as per requirement
                 .ToListAsync();
 
             // Sắp xếp với logic đặc biệt cho chi nhánh (theo mã 7800-7808)
@@ -79,7 +79,7 @@ namespace TinhKhoanApp.Api.Controllers
                     t.CreatedDate,
                     IndicatorCount = t.Indicators.Count(i => i.IsActive)
                 })
-                .Where(t => t.IsActive)
+                .Where(t => t.IsActive && t.TableName != "Chi nhánh tỉnh Lai Châu") // Exclude "Chi nhánh tỉnh Lai Châu" as per requirement
                 .OrderBy(t => t.TableType)
                 .ToListAsync();
 
@@ -433,7 +433,7 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 // Tìm các bảng có chứa "Kiểm soát và Quản lý rủi ro"
                 var tablesToUpdate = await _context.KpiAssignmentTables
-                    .Where(t => t.Description.Contains("Kiểm soát và Quản lý rủi ro") || 
+                    .Where(t => (t.Description != null && t.Description.Contains("Kiểm soát và Quản lý rủi ro")) || 
                                t.TableName.Contains("Kiểm soát và Quản lý rủi ro"))
                     .ToListAsync();
 
@@ -487,7 +487,7 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 var tablesToUpdate = await _context.KpiAssignmentTables
-                    .Where(t => t.Description.Contains("Kinh tế Nội vụ") || 
+                    .Where(t => (t.Description != null && t.Description.Contains("Kinh tế Nội vụ")) || 
                                t.TableName.Contains("Kinh tế Nội vụ"))
                     .ToListAsync();
 
@@ -540,7 +540,7 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 var tablesToUpdate = await _context.KpiAssignmentTables
-                    .Where(t => t.Description.Contains("Thủ quỹ/Hạch kiểm Kinh tế Nội bộ") || 
+                    .Where(t => (t.Description != null && t.Description.Contains("Thủ quỹ/Hạch kiểm Kinh tế Nội bộ")) || 
                                t.TableName.Contains("TQ/HK KTNB"))
                     .ToListAsync();
 
@@ -593,7 +593,7 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 var tablesToUpdate = await _context.KpiAssignmentTables
-                    .Where(t => t.Description.Contains("Công nghệ thông tin/Tổng hợp/Kinh tế Giám sát") || 
+                    .Where(t => (t.Description != null && t.Description.Contains("Công nghệ thông tin/Tổng hợp/Kinh tế Giám sát")) || 
                                t.TableName.Contains("Trưởng phòng IT/TH/KTGS"))
                     .ToListAsync();
 
@@ -646,7 +646,7 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 var tablesToUpdate = await _context.KpiAssignmentTables
-                    .Where(t => t.Description.Contains("Phó giám đốc PGD/Cán bộ Tín dụng") || 
+                    .Where(t => (t.Description != null && t.Description.Contains("Phó giám đốc PGD/Cán bộ Tín dụng")) || 
                                t.TableName.Contains("Phó giám đốc PGD/CBTD"))
                     .ToListAsync();
 
@@ -699,7 +699,7 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 var tablesToUpdate = await _context.KpiAssignmentTables
-                    .Where(t => t.Description.Contains("Phó giám đốc Chi nhánh loại 2 Kinh tế"))
+                    .Where(t => (t.Description != null && t.Description.Contains("Phó giám đốc Chi nhánh loại 2 Kinh tế")))
                     .ToListAsync();
 
                 if (!tablesToUpdate.Any())

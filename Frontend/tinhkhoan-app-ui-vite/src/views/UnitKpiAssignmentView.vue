@@ -268,23 +268,41 @@ const cnl1Units = computed(() => {
   })
 })
 
-// Updated cnl2Units: Use SortOrder from backend instead of hardcoded sorting
+// Updated cnl2Units: Custom sort order for CNL2 branches as requested
 const cnl2Units = computed(() => {
-  return units.value.filter(unit => {
-    const type = (unit.type || '').toUpperCase()
-    return type === 'CNL2'
-  }).sort((a, b) => {
-    // Primary sort: SortOrder (nulls last)
-    const sortOrderA = a.sortOrder ?? Number.MAX_SAFE_INTEGER;
-    const sortOrderB = b.sortOrder ?? Number.MAX_SAFE_INTEGER;
-    
-    if (sortOrderA !== sortOrderB) {
-      return sortOrderA - sortOrderB;
-    }
-    
-    // Secondary sort: Name
-    return (a.name || '').localeCompare(b.name || '');
-  })
+  // Định nghĩa thứ tự theo yêu cầu: TamDuong, PhongTho, SinHo, MuongTe, ThanUyen, ThanhPho, TanUyen, NamNhun
+  const customOrder = [
+    'CnTamDuong',    // Chi nhánh Tam Đường
+    'CnPhongTho',    // Chi nhánh Phong Thổ  
+    'CnSinHo',       // Chi nhánh Sìn Hồ
+    'CnMuongTe',     // Chi nhánh Mường Tè
+    'CnThanUyen',    // Chi nhánh Than Uyên
+    'CnThanhPho',    // Chi nhánh Thành Phố
+    'CnTanUyen',     // Chi nhánh Tân Uyên
+    'CnNamNhun'      // Chi nhánh Nậm Nhùn
+  ];
+  
+  return units.value
+    .filter(unit => {
+      const type = (unit.type || '').toUpperCase()
+      return type === 'CNL2'
+    })
+    .sort((a, b) => {
+      const indexA = customOrder.indexOf(a.code);
+      const indexB = customOrder.indexOf(b.code);
+      
+      // Nếu cả hai đều có trong custom order, sắp xếp theo thứ tự đó
+      if (indexA !== -1 && indexB !== -1) {
+        return indexA - indexB;
+      }
+      
+      // Nếu chỉ có một trong hai có trong custom order, ưu tiên cái đó
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      
+      // Nếu cả hai đều không có trong custom order, sắp xếp theo tên
+      return (a.name || '').localeCompare(b.name || '');
+    })
 })
 
 const selectedBranch = computed(() => {
@@ -408,7 +426,7 @@ async function onBranchChange() {
       kpiTable = branchTables.find(t => 
         t.tableName?.toLowerCase().includes('chi nhánh') ||
         t.tableName?.toLowerCase().includes('cnl') ||
-        t.tableType?.toLowerCase().includes('cnl')
+        (t.tableType && t.tableType.toLowerCase().includes('cnl'))
       )
       console.log('🎯 Fallback search found:', kpiTable?.tableName || 'None')
     }

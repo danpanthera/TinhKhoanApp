@@ -2,7 +2,7 @@
   <div class="user-guide">
     <div class="guide-header">
       <h1>📖 Hướng dẫn sử dụng phần mềm</h1>
-      <p class="guide-subtitle">Tài liệu hướng dẫn chi tiết về cách sử dụng hệ thống KPI Agribank Lai Châu (7800)</p>
+      <p class="guide-subtitle">Tài liệu hướng dẫn chi tiết về cách sử dụng hệ thống KPI Agribank Lai Châu Center</p>
     </div>
     
     <div class="guide-content">

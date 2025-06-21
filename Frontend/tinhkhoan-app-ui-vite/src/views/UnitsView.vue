@@ -1,6 +1,65 @@
 <template>
   <div class="units-view">
     <h1>Danh sách Đơn vị</h1>
+    
+    <!-- Section quản lý đơn vị được chọn -->
+    <div class="selection-management" style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e9ecef;">
+      <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 16px;">
+        <button
+          @click="toggleSelectionMode"
+          class="action-button"
+          :style="{ 
+            backgroundColor: isSelectionMode ? '#e74c3c' : '#2ecc71',
+            borderColor: isSelectionMode ? '#c0392b' : '#27ae60'
+          }"
+        >
+          {{ isSelectionMode ? '✕ Thoát chế độ chọn' : '☑ Chọn Đơn vị' }}
+        </button>
+        
+        <button
+          v-if="isSelectionMode && selectedUnits.size > 0"
+          @click="selectAllVisible"
+          class="action-button"
+          style="background-color: #3498db; border-color: #2980b9;"
+        >
+          Chọn tất cả hiển thị
+        </button>
+        
+        <button
+          v-if="isSelectionMode && selectedUnits.size > 0"
+          @click="clearSelection"
+          class="action-button"
+          style="background-color: #95a5a6; border-color: #7f8c8d;"
+        >
+          Bỏ chọn tất cả
+        </button>
+        
+        <button
+          v-if="selectedUnits.size > 0"
+          @click="confirmDeleteSelected"
+          class="delete-btn"
+          style="background-color: #e74c3c; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;"
+        >
+          🗑 Xóa đã chọn ({{ selectedUnits.size }})
+        </button>
+      </div>
+      
+      <!-- Hiển thị danh sách đơn vị đã chọn -->
+      <div v-if="selectedUnits.size > 0" class="selected-units-display">
+        <h4 style="margin: 0 0 12px 0; color: #2c3e50;">Đơn vị đã chọn ({{ selectedUnits.size }}):</h4>
+        <div style="max-height: 120px; overflow-y: auto; background: white; padding: 12px; border-radius: 4px; border: 1px solid #ddd;">
+          <div v-for="unitId in Array.from(selectedUnits)" :key="unitId" 
+               style="display: inline-block; background: #3498db; color: white; padding: 4px 8px; margin: 2px; border-radius: 4px; font-size: 0.85em;">
+            {{ getUnitDisplayName(unitId) }}
+            <button @click="removeFromSelection(unitId)" 
+                    style="background: none; border: none; color: white; margin-left: 6px; cursor: pointer; font-weight: bold;">
+              ×
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <button
       @click="openUnitModal"
       class="action-button"
@@ -43,6 +102,14 @@
             <!-- Hàng thông tin chính -->
             <div class="branch-main-info" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
               <div class="unit-info" style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                <!-- Checkbox cho chế độ chọn -->
+                <input 
+                  v-if="isSelectionMode"
+                  type="checkbox"
+                  :checked="selectedUnits.has(branch.id)"
+                  @change="toggleUnitSelection(branch.id)"
+                  style="margin-right: 8px; transform: scale(1.2);"
+                />
                 <button 
                   v-if="hasChildrenForBranch(branch.id)"
                   @click="toggleNode(branch.id)"
@@ -53,7 +120,7 @@
                 >
                   {{ expandedNodes.has(branch.id) ? '−' : '+' }}
                 </button>
-                <span v-else style="margin-right: 34px;"></span>
+                <span v-else :style="{ marginRight: isSelectionMode ? '6px' : '34px' }"></span>
                 <span style="font-size: 1.1em;">🏢</span>
                 <strong style="font-size: 1.1em; color: #2c3e50;">{{ branch.name }}</strong>
               </div>
@@ -79,8 +146,13 @@
               :parentId="branch.id" 
               :allUnits="unitStore.allUnits" 
               :level="0"
-              @editUnit="startEditUnitWithModal" 
-              @deleteUnit="confirmDeleteUnit" 
+              :isSelectionMode="isSelectionMode"
+              :selectedUnits="selectedUnits"
+              :expandedNodes="expandedNodes"
+              @editUnit="startEditUnitWithModal"
+              @deleteUnit="confirmDeleteUnit"
+              @toggleSelection="toggleUnitSelection"
+              @toggleNode="toggleNode"
             />
           </li>
         </template>
@@ -96,6 +168,14 @@
       <table style="width: 100%; border-collapse: collapse; background: #fafdff; border-radius: 6px; overflow: hidden;">
         <thead>
           <tr style="background: #eaf6ff;">
+            <th v-if="isSelectionMode" style="padding: 10px; border-bottom: 1px solid #e0e0e0; width: 50px;">
+              <input 
+                type="checkbox"
+                :checked="isAllVisibleSelected"
+                @change="toggleSelectAllVisible"
+                style="transform: scale(1.2);"
+              />
+            </th>
             <th style="padding: 10px; border-bottom: 1px solid #e0e0e0;">ID</th>
             <th style="padding: 10px; border-bottom: 1px solid #e0e0e0;">Mã Đơn vị</th>
             <th style="padding: 10px; border-bottom: 1px solid #e0e0e0;">Tên Đơn vị</th>
@@ -106,6 +186,14 @@
         </thead>
         <tbody>
           <tr v-for="unit in sortedAllUnits" :key="unit.id">
+            <td v-if="isSelectionMode" style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0; text-align: center;">
+              <input 
+                type="checkbox"
+                :checked="selectedUnits.has(unit.id)"
+                @change="toggleUnitSelection(unit.id)"
+                style="transform: scale(1.2);"
+              />
+            </td>
             <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0;">{{ unit.id }}</td>
             <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0;">{{ unit.code }}</td>
             <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0;">{{ unit.name }}</td>
@@ -259,6 +347,10 @@ const parentUnitIdInput = ref("");
 const parentCNL2IdInput = ref("");
 const pgdNameInput = ref("");
 
+// Biến cho chức năng chọn đơn vị
+const isSelectionMode = ref(false);
+const selectedUnits = ref(new Set());
+
 // Computed property để lấy danh sách CNL1 có sẵn
 const availableCNL1Units = computed(() => {
   return unitStore.allUnits.filter(u => {
@@ -271,6 +363,126 @@ const availableCNL1Units = computed(() => {
 const canCreateCNL2 = computed(() => {
   return availableCNL1Units.value.length > 0;
 });
+
+// Computed properties cho chức năng chọn đơn vị
+const isAllVisibleSelected = computed(() => {
+  if (viewMode.value === 'grid') {
+    return sortedAllUnits.value.length > 0 && 
+           sortedAllUnits.value.every(unit => selectedUnits.value.has(unit.id));
+  } else {
+    return branches.value.length > 0 && 
+           branches.value.every(branch => selectedUnits.value.has(branch.id));
+  }
+});
+
+// Methods for unit selection functionality
+const toggleSelectionMode = () => {
+  isSelectionMode.value = !isSelectionMode.value;
+  if (!isSelectionMode.value) {
+    // Clear selection when exiting selection mode
+    clearSelection();
+  }
+};
+
+const toggleUnitSelection = (unitId) => {
+  if (selectedUnits.value.has(unitId)) {
+    selectedUnits.value.delete(unitId);
+  } else {
+    selectedUnits.value.add(unitId);
+  }
+  // Trigger reactivity
+  selectedUnits.value = new Set(selectedUnits.value);
+};
+
+const selectAllVisible = () => {
+  if (viewMode.value === 'grid') {
+    sortedAllUnits.value.forEach(unit => {
+      selectedUnits.value.add(unit.id);
+    });
+  } else {
+    // In tree view, select all branches and their children
+    branches.value.forEach(branch => {
+      selectedUnits.value.add(branch.id);
+      // Also select all children recursively
+      const addChildrenRecursively = (parentId) => {
+        unitStore.allUnits.filter(u => u.parentUnitId === parentId).forEach(child => {
+          selectedUnits.value.add(child.id);
+          addChildrenRecursively(child.id);
+        });
+      };
+      addChildrenRecursively(branch.id);
+    });
+  }
+  // Trigger reactivity
+  selectedUnits.value = new Set(selectedUnits.value);
+};
+
+const clearSelection = () => {
+  selectedUnits.value.clear();
+  selectedUnits.value = new Set();
+};
+
+const removeFromSelection = (unitId) => {
+  selectedUnits.value.delete(unitId);
+  selectedUnits.value = new Set(selectedUnits.value);
+};
+
+const getUnitDisplayName = (unitId) => {
+  const unit = unitStore.allUnits.find(u => u.id === unitId);
+  return unit ? `${unit.name} (${unit.code})` : `ID: ${unitId}`;
+};
+
+const confirmDeleteSelected = () => {
+  if (selectedUnits.value.size === 0) {
+    alert('Không có đơn vị nào được chọn để xóa!');
+    return;
+  }
+  
+  const unitNames = Array.from(selectedUnits.value).map(id => getUnitDisplayName(id));
+  const confirmMessage = `Bạn có chắc chắn muốn xóa ${selectedUnits.value.size} đơn vị sau không?\n\n${unitNames.join('\n')}`;
+  
+  if (confirm(confirmMessage)) {
+    deleteSelectedUnits();
+  }
+};
+
+const deleteSelectedUnits = async () => {
+  const unitsToDelete = Array.from(selectedUnits.value);
+  let successCount = 0;
+  let failCount = 0;
+  const errors = [];
+  
+  for (const unitId of unitsToDelete) {
+    try {
+      await unitStore.deleteUnit(unitId);
+      successCount++;
+    } catch (error) {
+      failCount++;
+      errors.push(`ID ${unitId}: ${error.message || 'Lỗi không xác định'}`);
+      console.error(`Error deleting unit ${unitId}:`, error);
+    }
+  }
+  
+  // Clear selection after deletion attempt
+  clearSelection();
+  
+  // Show results
+  if (successCount > 0 && failCount === 0) {
+    alert(`Xóa thành công ${successCount} đơn vị!`);
+  } else if (successCount > 0 && failCount > 0) {
+    alert(`Xóa thành công ${successCount} đơn vị, thất bại ${failCount} đơn vị.\n\nLỗi:\n${errors.join('\n')}`);
+  } else {
+    alert(`Xóa thất bại tất cả ${failCount} đơn vị.\n\nLỗi:\n${errors.join('\n')}`);
+  }
+};
+
+const toggleSelectAllVisible = () => {
+  if (isAllVisibleSelected.value) {
+    clearSelection();
+  } else {
+    selectAllVisible();
+  }
+};
 
 // Function để kiểm tra xem một branch có children không
 const hasChildrenForBranch = (branchId) => {
@@ -543,6 +755,7 @@ const confirmDeleteUnit = async (unitId) => {
   }
 };
 
+// Computed property cho các nhánh gốc (CNL1)
 const branches = computed(() => {
   // Chỉ lấy các đơn vị CNL1 (parentUnitId null hoặc 0) làm root và sort theo ID
   return unitStore.allUnits.filter(u => {
@@ -550,6 +763,8 @@ const branches = computed(() => {
     return type === 'CNL1' && (!u.parentUnitId || u.parentUnitId === 0);
   }).sort((a, b) => (a.id || 0) - (b.id || 0));
 });
+
+// Computed property cho các phòng ban theo từng nhánh
 const departmentsByBranch = computed(() => {
   const map = {};
   unitStore.allUnits.forEach((u) => {
@@ -564,10 +779,12 @@ const departmentsByBranch = computed(() => {
   });
   return map;
 });
+
+// Function xử lý khi thay đổi loại chi nhánh cha
 function onCNLTypeChange(type) {
   parentType.value = type;
   if (type === 'CNL1') {
-    // Tự động chọn chi nhánh cha là Agribank CN T. Lai Châu (7800) (giả sử code là 'CNL1' hoặc tên tương ứng)
+    // Tự động chọn chi nhánh cha là Chi nhánh Lai Châu (giả sử code là 'CNL1' hoặc tên tương ứng)
     const cnl1 = unitStore.allUnits.find(u => (u.type || '').toUpperCase().includes('CNL1'));
     currentUnit.value.parentUnitId = cnl1 ? cnl1.id : null;
   } else if (type === 'CNL2') {
@@ -583,8 +800,9 @@ function onCNLTypeChange(type) {
   currentUnit.value.type = '';
 }
 
+// Computed property để xác định cấp độ của đơn vị (CNL1, CNL2, PGD, ...)
 const unitLevel = computed(() => {
-  // Nếu là CNL1 (Agribank CN tỉnh Lai Châu (7800))
+  // Nếu là CNL1 (Chi nhánh Lai Châu)
   if (!currentUnit.value.parentUnitId && (currentUnit.value.type === '' || (currentUnit.value.type || '').toUpperCase() === 'CNL1')) {
     return 1;
   }
@@ -601,6 +819,7 @@ const unitLevel = computed(() => {
   return 0;
 });
 
+// Computed property để lấy danh sách các tùy chọn chi nhánh cha
 const parentBranchOptions = computed(() => {
   if (unitLevel.value === 1) {
     // CNL1 không có cha
@@ -617,6 +836,7 @@ const parentBranchOptions = computed(() => {
   return [];
 });
 
+// Computed property để lấy danh sách các phòng nghiệp vụ theo loại đơn vị
 const departmentOptions = computed(() => {
   if (!currentUnit.value.parentUnitId) return [];
   const parent = unitStore.allUnits.find(u => u.id === Number(currentUnit.value.parentUnitId));
@@ -642,18 +862,23 @@ const departmentOptions = computed(() => {
   }
   return [];
 });
+
+// Theo dõi sự thay đổi của checkbox "Có phải là CNL2?"
 watch(isCNL2Checked, (val) => {
   if (val) {
     // Nếu chọn là CNL2 thì reset trường phòng nghiệp vụ
     currentUnit.value.type = '';
   }
 });
+
+// Computed property để xác định xem trường phòng nghiệp vụ có bắt buộc hay không
 const isDepartmentRequired = computed(() => {
   // Nếu chọn là CNL2 thì không required phòng nghiệp vụ
   if (isCNL2Checked.value) return false;
   // Nếu không chọn là CNL2 thì required phòng nghiệp vụ
   return true;
 });
+
 // State để quản lý expand/collapse cho toàn bộ tree
 const expandedNodes = ref(new Set());
 
@@ -674,9 +899,12 @@ const TreeDepartments = defineComponent({
   props: {
     parentId: { type: Number, required: true },
     allUnits: { type: Array, required: true, default: () => [] },
-    level: { type: Number, default: 0 }
+    level: { type: Number, default: 0 },
+    isSelectionMode: { type: Boolean, default: false },
+    selectedUnits: { type: Set, default: () => new Set() },
+    expandedNodes: { type: Set, default: () => new Set() }
   },
-  emits: ['editUnit', 'deleteUnit'],
+  emits: ['editUnit', 'deleteUnit', 'toggleSelection', 'toggleNode'],
   setup(props, { emit }) {
     // Bảo vệ nếu props không hợp lệ
     const safeParentId = computed(() => typeof props.parentId === 'number' ? props.parentId : 0);
@@ -694,7 +922,7 @@ const TreeDepartments = defineComponent({
 
     // Check if a node is expanded
     const isExpanded = (unitId) => {
-      return expandedNodes.value.has(unitId);
+      return props.expandedNodes.has(unitId);
     };
 
     return () => {
@@ -722,6 +950,13 @@ const TreeDepartments = defineComponent({
                 class: 'unit-info', 
                 style: 'display: flex; align-items: center; gap: 6px; flex: 1;' 
               }, [
+                // Checkbox cho chế độ chọn
+                props.isSelectionMode ? h('input', {
+                  type: 'checkbox',
+                  checked: props.selectedUnits.has(dept.id),
+                  onChange: () => emit('toggleSelection', dept.id),
+                  style: 'margin-right: 6px; transform: scale(1.1);'
+                }) : null,
                 // Toggle button for nodes with children
                 hasChildNodes ? h('button', {
                   class: 'toggle-button-enhanced',
@@ -744,7 +979,7 @@ const TreeDepartments = defineComponent({
                     justify-content: center;
                     box-shadow: 0 2px 4px rgba(39, 174, 96, 0.3);
                   `,
-                  onClick: () => toggleNode(dept.id),
+                  onClick: () => emit('toggleNode', dept.id),
                   onMouseover: (e) => {
                     e.target.style.backgroundColor = '#229954';
                     e.target.style.transform = 'scale(1.05)';
@@ -787,8 +1022,13 @@ const TreeDepartments = defineComponent({
               parentId: dept.id,
               allUnits: safeAllUnits.value,
               level: props.level + 1,
+              isSelectionMode: props.isSelectionMode,
+              selectedUnits: props.selectedUnits,
+              expandedNodes: props.expandedNodes,
               onEditUnit: unit => emit('editUnit', unit),
-              onDeleteUnit: id => emit('deleteUnit', id)
+              onDeleteUnit: id => emit('deleteUnit', id),
+              onToggleSelection: id => emit('toggleSelection', id),
+              onToggleNode: id => emit('toggleNode', id)
             }) : null
           ])
         })
@@ -1007,30 +1247,44 @@ button.action-button:hover:not(:disabled) {
   padding-left: 0 !important;
 }
 .department-list {
-  margin: 4px 0 0 40px;
+  margin: 0 0 0 32px;
   padding: 0;
   border-left: 2px solid #7ed6df;
   border-top: none;
   position: relative;
+  transition: all 0.3s ease;
+  overflow: hidden;
 }
-.department-item {
-  background-color: #f8fafd;
-  border-left: none;
-  border-top: 3px solid #7ed6df;
-  margin-left: 0;
-  padding: 8px 12px;
-  margin-top: 3px;
-  display: block;
-  border-radius: 0 4px 4px 0;
-  transition: all 0.2s ease;
+
+/* Animation for expanding/collapsing */
+.department-list.expanding {
+  animation: expandList 0.3s ease-out;
 }
-.department-item:hover {
-  background-color: #e8f4fd;
-  border-top-color: #52c4d9;
+
+.department-list.collapsing {
+  animation: collapseList 0.3s ease-out;
 }
-.department-item > .unit-info {
-  margin-left: 0;
-  flex: 1;
+
+@keyframes expandList {
+  from {
+    max-height: 0;
+    opacity: 0.5;
+  }
+  to {
+    max-height: 1000px;
+    opacity: 1;
+  }
+}
+
+@keyframes collapseList {
+  from {
+    max-height: 1000px;
+    opacity: 1;
+  }
+  to {
+    max-height: 0;
+    opacity: 0.5;
+  }
 }
 
 /* CSS cho modal */
@@ -1164,46 +1418,5 @@ button.action-button:hover:not(:disabled) {
 
 .department-item .toggle-button-enhanced:active {
   box-shadow: 0 1px 2px rgba(39, 174, 96, 0.3) !important;
-}
-
-.department-list {
-  margin: 0 0 0 32px;
-  padding: 0;
-  border-left: 2px solid #7ed6df;
-  border-top: none;
-  position: relative;
-  transition: all 0.3s ease;
-  overflow: hidden;
-}
-
-/* Animation for expanding/collapsing */
-.department-list.expanding {
-  animation: expandList 0.3s ease-out;
-}
-
-.department-list.collapsing {
-  animation: collapseList 0.3s ease-out;
-}
-
-@keyframes expandList {
-  from {
-    max-height: 0;
-    opacity: 0.5;
-  }
-  to {
-    max-height: 1000px;
-    opacity: 1;
-  }
-}
-
-@keyframes collapseList {
-  from {
-    max-height: 1000px;
-    opacity: 1;
-  }
-  to {
-    max-height: 0;
-    opacity: 0.5;
-  }
 }
 </style>

@@ -521,9 +521,9 @@ class RawDataService {
     return stats;
   }
 
-  // ⚡ Performance Optimized APIs
+  // ⚡ Temporal Table APIs (Migrated from SCD Type 2)
   
-  // 📋 Lấy danh sách imports với pagination và caching
+  // 📋 Lấy danh sách imports với temporal data
   async getOptimizedImports(page = 1, pageSize = 50, searchTerm = '', sortBy = 'ImportDate', sortOrder = 'desc') {
     try {
       const params = new URLSearchParams({
@@ -534,13 +534,13 @@ class RawDataService {
         sortOrder: sortOrder || 'desc'
       });
 
-      const response = await api.get(`${this.baseURL}/optimized/imports?${params.toString()}`);
+      const response = await api.get(`${this.baseURL}/temporal/query/RawDataImport?${params.toString()}`);
       return {
         success: true,
         data: response.data
       };
     } catch (error) {
-      console.error('❌ Lỗi lấy danh sách imports tối ưu:', error);
+      console.error('❌ Lỗi lấy danh sách imports từ temporal table:', error);
       return {
         success: false,
         error: error.response?.data?.message || 'Lỗi kết nối server'
@@ -548,22 +548,23 @@ class RawDataService {
     }
   }
 
-  // 📊 Lấy records với virtual scrolling
+  // 📊 Lấy records với temporal queries
   async getOptimizedRecords(importId, offset = 0, limit = 100, searchTerm = '') {
     try {
       const params = new URLSearchParams({
-        offset: offset.toString(),
-        limit: limit.toString(),
-        searchTerm: searchTerm || ''
+        page: Math.floor(offset / limit) + 1,
+        pageSize: limit.toString(),
+        searchTerm: searchTerm || '',
+        importId: importId.toString()
       });
 
-      const response = await api.get(`${this.baseURL}/optimized/records/${importId}?${params.toString()}`);
+      const response = await api.get(`${this.baseURL}/temporal/query/RawData?${params.toString()}`);
       return {
         success: true,
         data: response.data
       };
     } catch (error) {
-      console.error('❌ Lỗi lấy records tối ưu:', error);
+      console.error('❌ Lỗi lấy records từ temporal table:', error);
       return {
         success: false,
         error: error.response?.data?.message || 'Lỗi kết nối server'
@@ -571,43 +572,18 @@ class RawDataService {
     }
   }
 
-  // 🔄 Lấy SCD records với tối ưu hóa
-  async getOptimizedSCDRecords(tableName, page = 1, pageSize = 50, entityId = null, fromDate = null, toDate = null) {
-    try {
-      const params = new URLSearchParams({
-        tableName: tableName,
-        page: page.toString(),
-        pageSize: pageSize.toString()
-      });
+  // 🔄 Thêm các phương thức mới cho Temporal Tables (Migrated from SCD Type 2)
 
-      if (entityId) params.append('entityId', entityId);
-      if (fromDate) params.append('fromDate', fromDate);
-      if (toDate) params.append('toDate', toDate);
-
-      const response = await api.get(`${this.baseURL}/optimized/scd?${params.toString()}`);
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      console.error('❌ Lỗi lấy SCD records tối ưu:', error);
-      return {
-        success: false,
-        error: error.response?.data?.message || 'Lỗi kết nối server'
-      };
-    }
-  }
-
-  // 📈 Lấy dashboard statistics với caching
+  // 📈 Lấy dashboard statistics từ temporal data
   async getDashboardStats() {
     try {
-      const response = await api.get(`${this.baseURL}/optimized/dashboard-stats`);
+      const response = await api.get(`${this.baseURL}/temporal/stats/RawData`);
       return {
         success: true,
         data: response.data
       };
     } catch (error) {
-      console.error('❌ Lỗi lấy dashboard stats:', error);
+      console.error('❌ Lỗi lấy dashboard stats từ temporal table:', error);
       return {
         success: false,
         error: error.response?.data?.message || 'Lỗi kết nối server'
@@ -615,7 +591,7 @@ class RawDataService {
     }
   }
 
-  // 🎯 Tìm kiếm nâng cao với full-text search
+  // 🎯 Tìm kiếm nâng cao với temporal data
   async advancedSearch(searchTerm, dataTypes = [], dateFrom = null, dateTo = null, page = 1, pageSize = 50) {
     try {
       const params = new URLSearchParams({
@@ -627,16 +603,16 @@ class RawDataService {
       if (dataTypes.length > 0) {
         dataTypes.forEach(type => params.append('dataTypes', type));
       }
-      if (dateFrom) params.append('dateFrom', dateFrom);
-      if (dateTo) params.append('dateTo', dateTo);
+      if (dateFrom) params.append('startDate', dateFrom);
+      if (dateTo) params.append('endDate', dateTo);
 
-      const response = await api.get(`${this.baseURL}/optimized/search?${params.toString()}`);
+      const response = await api.get(`${this.baseURL}/temporal/query/RawData?${params.toString()}`);
       return {
         success: true,
         data: response.data
       };
     } catch (error) {
-      console.error('❌ Lỗi tìm kiếm nâng cao:', error);
+      console.error('❌ Lỗi tìm kiếm nâng cao trong temporal table:', error);
       return {
         success: false,
         error: error.response?.data?.message || 'Lỗi kết nối server'
@@ -644,16 +620,16 @@ class RawDataService {
     }
   }
 
-  // 📊 Lấy thống kê hiệu suất theo thời gian
+  // 📊 Lấy thống kê hiệu suất từ temporal table
   async getPerformanceStats(timeRange = '24h') {
     try {
-      const response = await api.get(`${this.baseURL}/optimized/performance-stats?timeRange=${timeRange}`);
+      const response = await api.get(`${this.baseURL}/temporal/stats/RawData?timeRange=${timeRange}`);
       return {
         success: true,
         data: response.data
       };
     } catch (error) {
-      console.error('❌ Lỗi lấy thống kê hiệu suất:', error);
+      console.error('❌ Lỗi lấy thống kê hiệu suất từ temporal table:', error);
       return {
         success: false,
         error: error.response?.data?.message || 'Lỗi kết nối server'
@@ -661,16 +637,21 @@ class RawDataService {
     }
   }
 
-  // 🔄 Refresh cache cho một endpoint cụ thể
+  // 🔄 Refresh temporal table statistics and indexes
   async refreshCache(cacheKey) {
     try {
-      const response = await api.post(`${this.baseURL}/optimized/refresh-cache`, { cacheKey });
+      // For temporal tables, we refresh statistics instead of cache
+      const response = await api.post(`${this.baseURL}/temporal/index/RawData`);
       return {
         success: true,
-        data: response.data
+        data: {
+          message: 'Temporal table statistics and indexes refreshed successfully',
+          timestamp: new Date().toISOString(),
+          cacheKey: cacheKey
+        }
       };
     } catch (error) {
-      console.error('❌ Lỗi refresh cache:', error);
+      console.error('❌ Lỗi refresh temporal table statistics:', error);
       return {
         success: false,
         error: error.response?.data?.message || 'Lỗi kết nối server'

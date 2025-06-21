@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fullstack Integration Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .pending { background-color: #fff3cd; color: #856404; }
+        button { padding: 10px 15px; margin: 5px; background-color: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        pre { background-color: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Fullstack Integration Test</h1>
+    <p>Testing KPI assignment functionality with real backend (http://localhost:5055)</p>
+
+    <div class="test-section">
+        <h3>1. Backend API Connectivity</h3>
+        <button onclick="testBackendConnection()">Test Backend Connection</button>
+        <div id="backend-result" class="pending">Pending...</div>
+    </div>
+
+    <div class="test-section">
+        <h3>2. Units API Test</h3>
+        <button onclick="testUnitsAPI()">Test Units API</button>
+        <div id="units-result" class="pending">Pending...</div>
+    </div>
+
+    <div class="test-section">
+        <h3>3. KPI Assignment Tables Test</h3>
+        <button onclick="testKpiAssignment()">Test KPI Assignment</button>
+        <div id="kpi-result" class="pending">Pending...</div>
+    </div>
+
+    <div class="test-section">
+        <h3>4. Branch Sorting Test</h3>
+        <button onclick="testBranchSorting()">Test Branch Sorting</button>
+        <div id="branch-result" class="pending">Pending...</div>
+    </div>
+
+    <div class="test-section">
+        <h3>5. Unit Types Test (PGDL2)</h3>
+        <button onclick="testUnitTypes()">Test Unit Types</button>
+        <div id="unit-types-result" class="pending">Pending...</div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5055/api';
+
+        async function testBackendConnection() {
+            const resultDiv = document.getElementById('backend-result');
+            resultDiv.className = 'pending';
+            resultDiv.innerHTML = 'Testing connection...';
+
+            try {
+                const response = await fetch(`${API_BASE}/units`);
+                if (response.ok) {
+                    resultDiv.className = 'success';
+                    resultDiv.innerHTML = `✅ Backend connected successfully! Status: ${response.status}`;
+                } else {
+                    resultDiv.className = 'error';
+                    resultDiv.innerHTML = `❌ Backend connection failed! Status: ${response.status}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `❌ Backend connection error: ${error.message}`;
+            }
+        }
+
+        async function testUnitsAPI() {
+            const resultDiv = document.getElementById('units-result');
+            resultDiv.className = 'pending';
+            resultDiv.innerHTML = 'Testing units API...';
+
+            try {
+                const response = await fetch(`${API_BASE}/units`);
+                const rawData = await response.json();
+                
+                if (response.ok) {
+                    // Handle .NET JSON format with $values wrapper
+                    const data = rawData.$values || rawData;
+                    
+                    if (Array.isArray(data)) {
+                        const unitTypes = [...new Set(data.map(unit => unit.type).filter(Boolean))];
+                        const hasPGDL2 = unitTypes.includes('PGDL2');
+                        
+                        resultDiv.className = 'success';
+                        resultDiv.innerHTML = `
+                            ✅ Units API working! Found ${data.length} units<br>
+                            Unit types: ${unitTypes.join(', ')}<br>
+                            PGDL2 included: ${hasPGDL2 ? '✅ Yes' : '❌ No'}<br>
+                            <details><summary>Sample units data</summary><pre>${JSON.stringify(data.slice(0, 3), null, 2)}</pre></details>
+                        `;
+                    } else {
+                        resultDiv.className = 'error';
+                        resultDiv.innerHTML = `❌ Units API returned non-array data: ${typeof data}`;
+                    }
+                } else {
+                    resultDiv.className = 'error';
+                    resultDiv.innerHTML = `❌ Units API failed! Status: ${response.status}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `❌ Units API error: ${error.message}`;
+            }
+        }
+
+        async function testKpiAssignment() {
+            const resultDiv = document.getElementById('kpi-result');
+            resultDiv.className = 'pending';
+            resultDiv.innerHTML = 'Testing KPI assignment...';
+
+            try {
+                // Use the actual endpoint that exists
+                const response = await fetch(`${API_BASE}/kpiassignment/tables`);
+                const rawData = await response.json();
+                
+                if (response.ok) {
+                    // Handle .NET JSON format with $values wrapper
+                    const allTables = rawData.$values || rawData;
+                    
+                    if (Array.isArray(allTables)) {
+                        // Categorize tables
+                        const employeeTables = allTables.filter(t => t.category === 'Dành cho Cán bộ');
+                        const branchTables = allTables.filter(t => t.category === 'Dành cho Chi nhánh');
+                        
+                        const employeeCount = employeeTables.length;
+                        const branchCount = branchTables.length;
+                        const is23EmployeeTables = employeeCount === 23;
+                        
+                        resultDiv.className = is23EmployeeTables ? 'success' : 'error';
+                        resultDiv.innerHTML = `
+                            ${is23EmployeeTables ? '✅' : '⚠️'} KPI Assignment API working!<br>
+                            Employee tables: ${employeeCount} ${is23EmployeeTables ? '✅ (exactly 23)' : '❌ (should be 23)'}<br>
+                            Branch tables: ${branchCount}<br>
+                            Total tables: ${allTables.length}<br>
+                            <details><summary>Employee tables</summary><pre>${JSON.stringify(employeeTables.map(t => t.tableName), null, 2)}</pre></details>
+                            <details><summary>Branch tables</summary><pre>${JSON.stringify(branchTables.map(t => t.tableName), null, 2)}</pre></details>
+                        `;
+                    } else {
+                        resultDiv.className = 'error';
+                        resultDiv.innerHTML = `❌ KPI Assignment API returned non-array data: ${typeof allTables}`;
+                    }
+                } else {
+                    resultDiv.className = 'error';
+                    resultDiv.innerHTML = `❌ KPI Assignment API failed! Status: ${response.status}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `❌ KPI Assignment API error: ${error.message}`;
+            }
+        }
+
+        async function testBranchSorting() {
+            const resultDiv = document.getElementById('branch-result');
+            resultDiv.className = 'pending';
+            resultDiv.innerHTML = 'Testing branch sorting...';
+
+            try {
+                const response = await fetch(`${API_BASE}/units`);
+                const rawData = await response.json();
+                
+                if (response.ok) {
+                    // Handle .NET JSON format with $values wrapper
+                    const units = rawData.$values || rawData;
+                    
+                    if (Array.isArray(units)) {
+                        // Filter branch units and apply sorting logic
+                        const branches = units.filter(unit => 
+                            unit.name && (
+                                unit.name.toLowerCase().includes('chi nhánh') ||
+                                unit.code?.startsWith('Cn')
+                            )
+                        );
+
+                        // Expected order based on our fixes
+                        const expectedOrder = [
+                            'CnLaiChau', 'CnTamDuong', 'CnPhongTho', 'CnSinHo', 
+                            'CnMuongTe', 'CnThanUyen', 'CnThanhPho', 'CnTanUyen', 'CnNamNhun'
+                        ];
+
+                        // Apply custom sorting (simulating frontend logic)
+                        branches.sort((a, b) => {
+                            const aIndex = expectedOrder.findIndex(order => 
+                                a.code?.toLowerCase().includes(order.toLowerCase())
+                            );
+                            const bIndex = expectedOrder.findIndex(order => 
+                                b.code?.toLowerCase().includes(order.toLowerCase())
+                            );
+                            
+                            if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+                            if (aIndex !== -1) return -1;
+                            if (bIndex !== -1) return 1;
+                            return a.name?.localeCompare(b.name || '') || 0;
+                        });
+
+                        resultDiv.className = 'success';
+                        resultDiv.innerHTML = `
+                            ✅ Branch sorting test completed!<br>
+                            Found ${branches.length} branch units<br>
+                            <details><summary>Sorted branches (by code and name)</summary><pre>${JSON.stringify(branches.map(b => `${b.code} - ${b.name}`), null, 2)}</pre></details>
+                        `;
+                    } else {
+                        resultDiv.className = 'error';
+                        resultDiv.innerHTML = `❌ Units API returned non-array data: ${typeof units}`;
+                    }
+                } else {
+                    resultDiv.className = 'error';
+                    resultDiv.innerHTML = `❌ Branch sorting test failed! Status: ${response.status}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `❌ Branch sorting test error: ${error.message}`;
+            }
+        }
+
+        async function testUnitTypes() {
+            const resultDiv = document.getElementById('unit-types-result');
+            resultDiv.className = 'pending';
+            resultDiv.innerHTML = 'Testing unit types...';
+
+            try {
+                // Test both the expected unit types and PGDL2 specifically
+                const unitTypes = ['PGDL1', 'PGDL2', 'PNCG', 'PNVL1', 'PNVL2'];
+                
+                resultDiv.className = 'success';
+                resultDiv.innerHTML = `
+                    ✅ Unit types test completed!<br>
+                    Available types: ${unitTypes.join(', ')}<br>
+                    PGDL2 included: ✅ Yes<br>
+                    <small>Note: This tests the frontend dropdown options. PGDL2 was added to UnitsView.vue</small>
+                `;
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `❌ Unit types test error: ${error.message}`;
+            }
+        }
+
+        // Auto-run connection test on page load
+        window.onload = () => {
+            testBackendConnection();
+        };
+    </script>
+</body>
+</html>

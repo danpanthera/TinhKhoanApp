@@ -11,7 +11,7 @@ export const usePositionStore = defineStore("position", {
 
   // Getters: Cho phép lấy dữ liệu từ state
   getters: {
-    allPositions: (state) => state.positions,
+    allPositions: (state) => [...state.positions].sort((a, b) => a.id - b.id),
     positionCount: (state) => state.positions.length,
   },
 

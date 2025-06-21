@@ -370,11 +370,11 @@
             const endpoints = [
                 {
                     name: 'Optimized Imports',
-                    url: `${API_BASE}/RawData/optimized/imports?pageNumber=1&pageSize=5`
+                    url: `${API_BASE}/temporal/query/RawDataImport?page=1&pageSize=5`
                 },
                 {
                     name: 'Virtual Scroll Records',
-                    url: `${API_BASE}/RawData/optimized/records/24?startIndex=0&viewportSize=10`
+                    url: `${API_BASE}/temporal/query/RawData?page=1&pageSize=10`
                 },
                 {
                     name: 'Dashboard Stats',
@@ -431,7 +431,7 @@
                 for (const test of tests) {
                     const startTime = performance.now();
                     const response = await fetch(
-                        `${API_BASE}/RawData/optimized/records/24?startIndex=${test.startIndex}&viewportSize=${test.viewportSize}`
+                        `${API_BASE}/temporal/query/RawData?page=${test.startIndex}&pageSize=${test.viewportSize}`
                     );
                     const endTime = performance.now();
                     const data = await response.json();
@@ -455,7 +455,7 @@
             let output = '';
             
             try {
-                const url = `${API_BASE}/RawData/optimized/imports?pageNumber=1&pageSize=5`;
+                const url = `${API_BASE}/temporal/query/RawDataImport?page=1&pageSize=5`;
                 
                 // First request (should be slow)
                 const start1 = performance.now();

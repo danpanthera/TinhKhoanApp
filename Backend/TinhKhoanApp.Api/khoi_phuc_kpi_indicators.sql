@@ -22,7 +22,7 @@ SELECT 1, 'Thu nợ đã XLRR', 5.0, 'Tỷ VND', 4, 1, 1
 WHERE EXISTS (SELECT 1 FROM KpiAssignmentTables WHERE TableType = 1);
 
 INSERT INTO KpiIndicators (TableId, IndicatorName, MaxScore, Unit, OrderIndex, ValueType, IsActive) 
-SELECT 1, 'Tỷ lệ thực thu lãi', 10.0, '%', 5, 2, 1
+SELECT 1, 'Phát triển khách hàng mới', 10.0, 'Khách hàng', 5, 2, 1
 WHERE EXISTS (SELECT 1 FROM KpiAssignmentTables WHERE TableType = 1);
 
 INSERT INTO KpiIndicators (TableId, IndicatorName, MaxScore, Unit, OrderIndex, ValueType, IsActive) 
@@ -67,7 +67,7 @@ SELECT 2, 'Thu nợ đã XLRR', 5.0, 'Tỷ VND', 4, 1, 1
 WHERE EXISTS (SELECT 1 FROM KpiAssignmentTables WHERE TableType = 2);
 
 INSERT INTO KpiIndicators (TableId, IndicatorName, MaxScore, Unit, OrderIndex, ValueType, IsActive) 
-SELECT 2, 'Tỷ lệ thực thu lãi', 10.0, '%', 5, 2, 1
+SELECT 2, 'Phát triển khách hàng mới', 10.0, 'Khách hàng', 5, 2, 1
 WHERE EXISTS (SELECT 1 FROM KpiAssignmentTables WHERE TableType = 2);
 
 INSERT INTO KpiIndicators (TableId, IndicatorName, MaxScore, Unit, OrderIndex, ValueType, IsActive) 

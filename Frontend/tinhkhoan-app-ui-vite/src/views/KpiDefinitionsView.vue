@@ -74,7 +74,8 @@
                   :key="table.id"
                   :value="table.id"
                 >
-                  {{ table.tableName }} ({{ getIndicatorCount(table.id) }} chỉ tiêu)
+                  {{ table.tableName }} ({{ getIndicatorCount(table.id) }} chỉ tiêu) 
+                  <span class="table-code">{{ table.tableType }}</span>
                 </option>
               </select>
             </div>
@@ -86,7 +87,10 @@
               <div class="table-details">
                 <div class="detail-item">
                   <span class="label">Loại:</span>
-                  <span class="value">{{ getTableTypeName(selectedTable.tableType) }}</span>
+                  <span class="value">
+                    {{ getTableTypeName(selectedTable.tableType) }}
+                    <span class="table-code">{{ selectedTable.tableType }}</span>
+                  </span>
                 </div>
                 <div class="detail-item">
                   <span class="label">Trạng thái:</span>
@@ -2565,5 +2569,34 @@ const loadAllBranchIndicators = async () => {
   font-size: 1.1rem;
   display: flex;
   align-items: center;
+}
+
+/* Table code styling in dropdown */
+.table-dropdown option {
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.table-code {
+  display: inline-block;
+  margin-left: 8px;
+  font-weight: 600;
+  color: #8B1538;
+  background-color: rgba(139, 21, 56, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.85em;
+}
+
+/* Add styling for detail-view table code */
+.detail-item .value .table-code {
+  display: inline-block;
+  margin-left: 6px;
+  font-weight: 600;
+  color: #8B1538;
+  background-color: rgba(139, 21, 56, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.85em;
 }
 </style>

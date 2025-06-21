@@ -115,7 +115,7 @@ curl "http://localhost:5055/api/KpiAssignment/tables" | jq '."\$values" | map(se
 2. **Tổng dư nợ BQ trong kỳ** (10 điểm, Tỷ VND)
 3. **Tỷ lệ nợ xấu nội bảng** (10 điểm, %)
 4. **Thu nợ đã XLRR** (5 điểm, Tỷ VND)
-5. **Tỷ lệ thực thu lãi** (10 điểm, %)
+5. **Phát triển khách hàng mới** (10 điểm, Khách hàng)
 6. **Lợi nhuận khoán tài chính** (20 điểm, Tỷ VND)
 7. **Thu dịch vụ** (10 điểm, Tỷ VND)
 8. **Chấp hành quy chế, quy trình nghiệp vụ...** (10 điểm, %)

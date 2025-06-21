@@ -26,26 +26,15 @@ internal class Program
         var builder = WebApplication.CreateBuilder(args);
 
         // Định nghĩa URL của Vue app dev server (Sếp thay 8080 bằng port thực tế của Vue app nếu khác)
-        // var vueAppDevServerUrl = "http://localhost:8080";
-
-        // 1. Lấy chuỗi kết nối từ appsettings.json
+        // var vueAppDevServerUrl = "http://localhost:8080";        // 1. Lấy connection string cho SQL Server
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-        // Log đường dẫn tuyệt đối file DB
-        // --- SIÊU LẬP TRÌNH VIÊN: GHI LOG ĐƯỜNG DẪN DB ĐỂ ANH DỄ KIỂM TRA ---
-        if (!string.IsNullOrEmpty(connectionString))
+        
+        if (string.IsNullOrEmpty(connectionString))
         {
-            try {
-                var dbPath = connectionString.Replace("Data Source=", "").Trim();
-                var absPath = System.IO.Path.GetFullPath(dbPath);
-                Console.WriteLine($"[DEBUG] Đường dẫn tuyệt đối file SQLite DB: {absPath}");
-            } catch (Exception ex) {
-                Console.WriteLine($"[DEBUG] Lỗi khi lấy đường dẫn DB: {ex.Message}");
-            }
-        }
-        // --- HẾT PHẦN GHI LOG DB ---
-        // 2. Đăng ký ApplicationDbContext với SQLite provider
+            throw new InvalidOperationException("SQL Server connection string is not configured.");
+        }        // 2. Đăng ký ApplicationDbContext với SQL Server provider
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlite(connectionString));
+            options.UseSqlServer(connectionString));
 
         // 3. Đăng ký các dịch vụ cho Controllers (quan trọng nếu Sếp dùng API Controllers)
         /* builder.Services.AddControllers(); */
@@ -95,8 +84,11 @@ internal class Program
         });        // Register services        // KPI services removed during cleanup        // 🗄️ Đăng ký Raw Data Import Service
         builder.Services.AddScoped<IRawDataImportService, RawDataImportService>();
         builder.Services.AddScoped<IExtendedRawDataImportService, ExtendedRawDataImportService>();
-          // 🗄️ Đăng ký SCD Type 2 Service
-        builder.Services.AddScoped<SCDType2Service>();        // ⚡ PERFORMANCE OPTIMIZATIONS - Enhanced Services
+          // 🗄️ Đăng ký Temporal Data Service cho high-performance import
+        builder.Services.AddScoped<ITemporalDataService, TemporalDataService>();
+        
+        // 🕒 Đăng ký Temporal Table Service cho SQL Server Temporal Tables
+        builder.Services.AddScoped<ITemporalTableService, TemporalTableService>();
         
         // Add optimized memory caching
         builder.Services.AddMemoryCache(options =>
@@ -142,25 +134,9 @@ internal class Program
         {
             builder.Services.AddScoped<ICacheService, MemoryCacheService>();
         }
-        
-        builder.Services.AddScoped<IPerformanceMonitorService, PerformanceMonitorService>();
-        builder.Services.AddScoped<IOptimizedSCDType2Service, OptimizedSCDType2Service>();
-        builder.Services.AddScoped<IStreamingExportService, StreamingExportService>(); // ⚡ NEW: Streaming Export Service
-        
-        // Register optimized repositories
+          builder.Services.AddScoped<IPerformanceMonitorService, PerformanceMonitorService>();
+        builder.Services.AddScoped<IStreamingExportService, StreamingExportService>(); // ⚡ NEW: Streaming Export Service          // Register optimized repositories
         builder.Services.AddScoped<OptimizedEmployeeRepository>();
-        builder.Services.AddScoped<OptimizedSCDRepository>();// Optimize Entity Framework (remove query splitting for SQLite)
-        builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        {
-            options.UseSqlite(connectionString, sqliteOptions =>
-            {
-                sqliteOptions.CommandTimeout(30);
-            });
-            
-            // Enable connection pooling
-            options.EnableServiceProviderCaching();
-            options.EnableSensitiveDataLogging(builder.Environment.IsDevelopment());
-        });
 
         // Add Global Exception Filter
         builder.Services.AddControllers(options =>
@@ -172,18 +148,21 @@ internal class Program
                 Location = Microsoft.AspNetCore.Mvc.ResponseCacheLocation.Any,
                 VaryByQueryKeys = new[] { "*" }
             });
-        });
-
-        // Add Health Checks
-        builder.Services.AddCustomHealthChecks();// Connection pooling is handled by the existing AddDbContext registration above
+        });        // Add Health Checks
+        builder.Services.AddCustomHealthChecks();
+        
+        // Connection pooling is handled by the existing AddDbContext registration above
 
         // ... (AddDbContext, AddControllers, AddSwaggerGen, etc.) ...
-        var app = builder.Build();        // Cấu hình HTTP request pipeline.
+        var app = builder.Build();
+        
+        // Cấu hình HTTP request pipeline.
         if (app.Environment.IsDevelopment())
-        {
-            app.UseSwagger();
+        {            app.UseSwagger();
             app.UseSwaggerUI();
-        }        // ⚡ OPTIMIZED MIDDLEWARE PIPELINE
+        }
+        
+        // ⚡ OPTIMIZED MIDDLEWARE PIPELINE
         
         // Add Response Compression (early in pipeline)
         app.UseResponseCompression();
@@ -242,11 +221,15 @@ internal class Program
         })
         .WithName("GetWeatherForecast")
         .WithOpenApi();
-        // --- KẾT THÚC PHẦN CODE MẪU WEATHERFORECAST ---        // Seed admin user nếu chưa có
+        // --- KẾT THÚC PHẦN CODE MẪU WEATHERFORECAST ---        // SEEDING DISABLED DUE TO DATABASE TRIGGER ISSUES
+        /*
+        // Seed admin user nếu chưa có
         using (var scope = app.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-              // Seed Units trước với cấu trúc phân cấp đúng            if (!db.Units.Any())
+              // Seed Units trước với cấu trúc phân cấp đúng            
+            // COMMENTED OUT DUE TO TRIGGER ISSUES
+            if (!db.Units.Any())
             {                // Tạo CNL1 (chi nhánh cấp 1 - root)
                 var cnl1Units = new[]
                 {
@@ -330,29 +313,40 @@ internal class Program
                 };
                 db.Units.AddRange(cnl2Departments);
                 db.SaveChanges();
-            }
-              // Seed Positions trước            if (!db.Positions.Any())
+            }            // Seed Positions - check if they exist to avoid conflicts with cleanup
+            if (!db.Positions.Any())
             {
-                db.Positions.AddRange(new[]
+                try
                 {
-                    new Position { Name = "Giamdoc", Description = "Giám đốc" },
-                    new Position { Name = "Phogiamdoc", Description = "Phó Giám đốc" },
-                    new Position { Name = "Truongphong", Description = "Trưởng phòng" },
-                    new Position { Name = "Photruongphong", Description = "Phó trưởng phòng" },
-                    new Position { Name = "GiamdocPhonggiaodich", Description = "Giám đốc phòng giao dịch" },
-                    new Position { Name = "PhogiamdocPhonggiaodich", Description = "Phó giám đốc phòng giao dịch" },
-                    new Position { Name = "Nhanvien", Description = "Nhân viên" }
-                    // Comment out old incorrect position names:
-                    // new Position { Name = "Phophong", Description = "Phó phòng" },
-                    // new Position { Name = "CB", Description = "Cán bộ" },
-                    // new Position { Name = "Cbtd", Description = "Cán bộ tín dụng" },
-                    // new Position { Name = "GDV", Description = "Giao dịch viên" },
-                    // new Position { Name = "KeToan", Description = "Kế toán" },
-                    // new Position { Name = "ThuQuy", Description = "Thủ quỹ" },
-                    // new Position { Name = "Truongpho", Description = "Trưởng/Phó phòng" }
-                });
-                db.SaveChanges();
-            }          if (!db.Employees.Any(e => e.Username == "admin"))
+                    // Use raw SQL to insert positions without explicit IDs to avoid identity conflicts
+                    db.Database.ExecuteSqlRaw(@"
+                        INSERT INTO Positions (Name, Description) VALUES 
+                        ('Giamdoc', 'Giám đốc'),
+                        ('Phogiamdoc', 'Phó Giám đốc'),
+                        ('Truongphong', 'Trưởng phòng'),
+                        ('Photruongphong', 'Phó trưởng phòng'),
+                        ('GiamdocPhonggiaodich', 'Giám đốc phòng giao dịch'),
+                        ('PhogiamdocPhonggiaodich', 'Phó giám đốc phòng giao dịch'),
+                        ('Nhanvien', 'Nhân viên')
+                    ");
+                }
+                catch (Exception ex)
+                {
+                    // If raw SQL fails, try EF approach as fallback
+                    Console.WriteLine($"Raw SQL insert failed, trying EF: {ex.Message}");
+                    db.Positions.AddRange(new[]
+                    {
+                        new Position { Name = "Giamdoc", Description = "Giám đốc" },
+                        new Position { Name = "Phogiamdoc", Description = "Phó Giám đốc" },
+                        new Position { Name = "Truongphong", Description = "Trưởng phòng" },
+                        new Position { Name = "Photruongphong", Description = "Phó trưởng phòng" },
+                        new Position { Name = "GiamdocPhonggiaodich", Description = "Giám đốc phòng giao dịch" },
+                        new Position { Name = "PhogiamdocPhonggiaodich", Description = "Phó giám đốc phòng giao dịch" },
+                        new Position { Name = "Nhanvien", Description = "Nhân viên" }
+                    });
+                    db.SaveChanges();
+                }
+            }if (!db.Employees.Any(e => e.Username == "admin"))
             {
                 // Find a basic position like "Nhanvien" (Nhân viên) for admin
                 var basicPosition = db.Positions.FirstOrDefault(p => p.Name == "Nhanvien") ?? 
@@ -385,14 +379,16 @@ internal class Program
             // await EmployeeSeeder.SeedEmployees(db); // Tạm comment để test import
         }
 
+        */
+        // END OF COMMENTED SEEDING SECTION
+
         app.Run();    }    private static async Task RunSeedOnly(string[] args)
     {
         Console.WriteLine("Chạy seeding dữ liệu...");
         
         var builder = WebApplication.CreateBuilder(args);
-        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-          builder.Services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlite(connectionString));
+        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");        builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseSqlServer(connectionString));
             
         var app = builder.Build();
         

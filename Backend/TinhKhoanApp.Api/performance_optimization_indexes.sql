@@ -1,151 +1,184 @@
 -- =====================================================
--- ADVANCED PERFORMANCE OPTIMIZATION INDEXES
--- Tối ưu hóa hiệu suất truy xuất dữ liệu cho hệ thống TinhKhoanApp
--- Updated: 2025-06-17 - Enhanced with SCD Type 2 optimization
+-- PERFORMANCE OPTIMIZATION INDEXES
+-- SQL Server version - comprehensive index strategy
 -- =====================================================
 
--- 1. ADVANCED SCD TYPE 2 INDEXES
--- Tối ưu cho SCD Type 2 với deleted records handling
-DROP INDEX IF EXISTS IX_RawDataRecords_SCD_Composite;
+-- 1. MAIN SCD INDEXES (RawDataRecords_SCD)
+-- Core operational indexes for SCD Type 2 operations
+
+-- Primary composite index for SCD queries
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_RawDataRecords_SCD_Composite')
 CREATE INDEX IX_RawDataRecords_SCD_Composite 
-ON RawDataRecords_SCD (DataSource, BranchCode, StatementDate, IsCurrent)
-WHERE IsDeleted = 0;
+ON RawDataRecords_SCD (SourceID, IsCurrent, ValidFrom DESC, ValidTo ASC) 
+INCLUDE (JsonData, CreatedDate, ModifiedDate);
 
-DROP INDEX IF EXISTS IX_RawDataRecords_SCD_SourceId_Hash;
+-- Source ID + RecordHash for duplicate detection
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_RawDataRecords_SCD_SourceId_Hash')
 CREATE INDEX IX_RawDataRecords_SCD_SourceId_Hash 
-ON RawDataRecords_SCD (SourceId, RecordHash, IsCurrent, VersionNumber);
+ON RawDataRecords_SCD (SourceID, RecordHash) 
+WHERE IsCurrent = 1;
 
-DROP INDEX IF EXISTS IX_RawDataRecords_SCD_Current_Active;
-CREATE INDEX IX_RawDataRecords_SCD_Current_Active 
-ON RawDataRecords_SCD (IsCurrent, IsDeleted, DataType, BranchCode);
+-- 2. JSON FIELD INDEXES (If SQL Server supports computed columns for JSON)
+-- Account number extraction index
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_RawDataRecords_SCD_JsonData_AccountNo')
+CREATE INDEX IX_RawDataRecords_SCD_JsonData_AccountNo 
+ON RawDataRecords_SCD (JSON_VALUE(JsonData, '$.AccountNo'));
 
-DROP INDEX IF EXISTS IX_RawDataRecords_SCD_ValidFromTo;
-CREATE INDEX IX_RawDataRecords_SCD_ValidFromTo 
-ON RawDataRecords_SCD (ValidFrom, ValidTo, IsCurrent);
+-- Balance extraction index for financial queries
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_RawDataRecords_SCD_JsonData_Balance')
+CREATE INDEX IX_RawDataRecords_SCD_JsonData_Balance 
+ON RawDataRecords_SCD (JSON_VALUE(JsonData, '$.Balance'));
 
--- 2. EMPLOYEES TABLE OPTIMIZATION
-DROP INDEX IF EXISTS IX_Employees_Active_Unit;
-CREATE INDEX IX_Employees_Active_Unit 
-ON Employees (UnitId, IsActive, EmployeeCode);
+-- 3. RAWDATAIMPORTS TABLE INDEXES
+-- Import date performance
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_RawDataImports_ImportDate')
+CREATE INDEX IX_RawDataImports_ImportDate ON RawDataImports (ImportDate DESC);
 
-DROP INDEX IF EXISTS IX_Employees_Search_Optimized;
-CREATE INDEX IX_Employees_Search_Optimized 
-ON Employees (EmployeeCode, FullName, CBCode, IsActive);
+-- Data type filtering
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_RawDataImports_DataType')
+CREATE INDEX IX_RawDataImports_DataType ON RawDataImports (DataType);
 
--- 3. UNITS TABLE OPTIMIZATION  
-DROP INDEX IF EXISTS IX_Units_Hierarchy;
-CREATE INDEX IX_Units_Hierarchy 
-ON Units (ParentUnitId, UnitCode, UnitType);
+-- Statement date for reporting
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_RawDataImports_StatementDate')
+CREATE INDEX IX_RawDataImports_StatementDate ON RawDataImports (StatementDate DESC);
 
--- 4. RAW DATA IMPORT OPTIMIZATION
-CREATE INDEX IF NOT EXISTS IX_RawDataImports_ImportDate ON RawDataImports (ImportDate DESC);
-CREATE INDEX IF NOT EXISTS IX_RawDataImports_DataType ON RawDataImports (DataType);
-CREATE INDEX IF NOT EXISTS IX_RawDataImports_StatementDate ON RawDataImports (StatementDate DESC);
-CREATE INDEX IF NOT EXISTS IX_RawDataImports_Status ON RawDataImports (Status);
-CREATE INDEX IF NOT EXISTS IX_RawDataImports_DataType_ImportDate ON RawDataImports (DataType, ImportDate DESC);
-CREATE INDEX IF NOT EXISTS IX_RawDataImports_ImportedBy ON RawDataImports (ImportedBy);
+-- Status filtering
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_RawDataImports_Status')
+CREATE INDEX IX_RawDataImports_Status ON RawDataImports (Status);
 
--- 2. INDEXES CHO BẢNG RawDataRecords  
--- Tăng tốc join với RawDataImports và tìm kiếm theo JSON
-CREATE INDEX IF NOT EXISTS IX_RawDataRecords_ImportId ON RawDataRecords (RawDataImportId);
-CREATE INDEX IF NOT EXISTS IX_RawDataRecords_ProcessedDate ON RawDataRecords (ProcessedDate DESC);
-CREATE INDEX IF NOT EXISTS IX_RawDataRecords_ImportId_ProcessedDate ON RawDataRecords (RawDataImportId, ProcessedDate DESC);
+-- Composite index for common queries
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_RawDataImports_DataType_ImportDate')
+CREATE INDEX IX_RawDataImports_DataType_ImportDate ON RawDataImports (DataType, ImportDate DESC);
 
--- 3. INDEXES CHO CÁC BẢNG SCD HISTORY
--- Tối ưu hóa truy vấn lịch sử và phiên bản
+-- User tracking
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_RawDataImports_ImportedBy')
+CREATE INDEX IX_RawDataImports_ImportedBy ON RawDataImports (ImportedBy);
 
--- LN01_History Performance Indexes
-CREATE INDEX IF NOT EXISTS IX_LN01_History_Performance_1 ON LN01_History (IsCurrent, ValidFrom DESC) WHERE IsCurrent = 1;
-CREATE INDEX IF NOT EXISTS IX_LN01_History_Performance_2 ON LN01_History (SourceID, VersionNumber DESC);
-CREATE INDEX IF NOT EXISTS IX_LN01_History_Performance_3 ON LN01_History (ValidFrom, ValidTo, IsCurrent);
-CREATE INDEX IF NOT EXISTS IX_LN01_History_CreatedDate ON LN01_History (CreatedDate DESC);
-CREATE INDEX IF NOT EXISTS IX_LN01_History_ModifiedDate ON LN01_History (ModifiedDate DESC);
+-- 4. RAWDATARECORDS TABLE INDEXES  
+-- Import relationship
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_RawDataRecords_ImportId')
+CREATE INDEX IX_RawDataRecords_ImportId ON RawDataRecords (RawDataImportId);
 
--- Indexes cho các trường business quan trọng của LN01
-CREATE INDEX IF NOT EXISTS IX_LN01_History_BUKRS ON LN01_History (BUKRS) WHERE IsCurrent = 1;
-CREATE INDEX IF NOT EXISTS IX_LN01_History_MANDT ON LN01_History (MANDT) WHERE IsCurrent = 1;
+-- Processing date for monitoring
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_RawDataRecords_ProcessedDate')
+CREATE INDEX IX_RawDataRecords_ProcessedDate ON RawDataRecords (ProcessedDate DESC);
 
--- GL01_History Performance Indexes  
-CREATE INDEX IF NOT EXISTS IX_GL01_History_Performance_1 ON GL01_History (IsCurrent, ValidFrom DESC) WHERE IsCurrent = 1;
-CREATE INDEX IF NOT EXISTS IX_GL01_History_Performance_2 ON GL01_History (SourceID, VersionNumber DESC);
-CREATE INDEX IF NOT EXISTS IX_GL01_History_Performance_3 ON GL01_History (ValidFrom, ValidTo, IsCurrent);
-CREATE INDEX IF NOT EXISTS IX_GL01_History_CreatedDate ON GL01_History (CreatedDate DESC);
-CREATE INDEX IF NOT EXISTS IX_GL01_History_ModifiedDate ON GL01_History (ModifiedDate DESC);
+-- Composite for import analysis
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_RawDataRecords_ImportId_ProcessedDate')
+CREATE INDEX IX_RawDataRecords_ImportId_ProcessedDate ON RawDataRecords (RawDataImportId, ProcessedDate DESC);
 
--- Indexes cho các trường business quan trọng của GL01
-CREATE INDEX IF NOT EXISTS IX_GL01_History_BUKRS ON GL01_History (BUKRS) WHERE IsCurrent = 1;
-CREATE INDEX IF NOT EXISTS IX_GL01_History_BELNR ON GL01_History (BELNR) WHERE IsCurrent = 1;
-CREATE INDEX IF NOT EXISTS IX_GL01_History_GJAHR ON GL01_History (GJAHR) WHERE IsCurrent = 1;
-CREATE INDEX IF NOT EXISTS IX_GL01_History_HKONT ON GL01_History (HKONT) WHERE IsCurrent = 1;
-CREATE INDEX IF NOT EXISTS IX_GL01_History_DMBTR ON GL01_History (DMBTR DESC) WHERE IsCurrent = 1;
+-- 5. HISTORY TABLE PERFORMANCE INDEXES
 
--- DP01_History Performance Indexes
-CREATE INDEX IF NOT EXISTS IX_DP01_History_Performance_1 ON DP01_History (IsCurrent, ValidFrom DESC) WHERE IsCurrent = 1;
-CREATE INDEX IF NOT EXISTS IX_DP01_History_Performance_2 ON DP01_History (SourceID, VersionNumber DESC);
-CREATE INDEX IF NOT EXISTS IX_DP01_History_Performance_3 ON DP01_History (ValidFrom, ValidTo, IsCurrent);
-CREATE INDEX IF NOT EXISTS IX_DP01_History_CreatedDate ON DP01_History (CreatedDate DESC);
-CREATE INDEX IF NOT EXISTS IX_DP01_History_ModifiedDate ON DP01_History (ModifiedDate DESC);
+-- LN01_History optimizations
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_LN01_History_Performance_1')
+CREATE INDEX IX_LN01_History_Performance_1 ON LN01_History (IsCurrent, ValidFrom DESC) WHERE IsCurrent = 1;
 
--- 4. INDEXES CHO BẢNG SCD GENERIC (nếu có)
--- Indexes cho RawDataRecords_SCD (bảng SCD chung)
-CREATE INDEX IF NOT EXISTS IX_RawDataRecords_SCD_Performance_1 ON RawDataRecords_SCD (IsCurrent, ValidFrom DESC) WHERE IsCurrent = 1;
-CREATE INDEX IF NOT EXISTS IX_RawDataRecords_SCD_Performance_2 ON RawDataRecords_SCD (SourceId, VersionNumber DESC);
-CREATE INDEX IF NOT EXISTS IX_RawDataRecords_SCD_Performance_3 ON RawDataRecords_SCD (ValidFrom, ValidTo, IsCurrent);
-CREATE INDEX IF NOT EXISTS IX_RawDataRecords_SCD_DataType ON RawDataRecords_SCD (DataType) WHERE IsCurrent = 1;
-CREATE INDEX IF NOT EXISTS IX_RawDataRecords_SCD_BranchCode ON RawDataRecords_SCD (BranchCode) WHERE IsCurrent = 1;
-CREATE INDEX IF NOT EXISTS IX_RawDataRecords_SCD_StatementDate ON RawDataRecords_SCD (StatementDate DESC) WHERE IsCurrent = 1;
-CREATE INDEX IF NOT EXISTS IX_RawDataRecords_SCD_CreatedAt ON RawDataRecords_SCD (CreatedAt DESC);
-CREATE INDEX IF NOT EXISTS IX_RawDataRecords_SCD_ImportDate ON RawDataRecords_SCD (ImportDate DESC);
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_LN01_History_Performance_2')
+CREATE INDEX IX_LN01_History_Performance_2 ON LN01_History (SourceID, VersionNumber DESC);
 
--- 5. INDEXES CHO BẢNG ImportLog
-CREATE INDEX IF NOT EXISTS IX_ImportLog_Performance_1 ON ImportLog (TableName, ImportDate DESC);
-CREATE INDEX IF NOT EXISTS IX_ImportLog_Performance_2 ON ImportLog (Status, ImportDate DESC);
-CREATE INDEX IF NOT EXISTS IX_ImportLog_Performance_3 ON ImportLog (BatchId, ImportDate DESC);
-CREATE INDEX IF NOT EXISTS IX_ImportLog_StartTime ON ImportLog (StartTime DESC);
-CREATE INDEX IF NOT EXISTS IX_ImportLog_EndTime ON ImportLog (EndTime DESC);
-CREATE INDEX IF NOT EXISTS IX_ImportLog_Duration ON ImportLog (Duration DESC);
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_LN01_History_Performance_3')
+CREATE INDEX IX_LN01_History_Performance_3 ON LN01_History (ValidFrom, ValidTo, IsCurrent);
 
--- 6. COMPOSITE INDEXES ĐỂ TỐI ƯU TRUY VẤN PHỨC TẠP
--- Composite index cho truy vấn thường dùng
-CREATE INDEX IF NOT EXISTS IX_RawDataImports_Composite_1 ON RawDataImports (DataType, Status, ImportDate DESC);
-CREATE INDEX IF NOT EXISTS IX_RawDataImports_Composite_2 ON RawDataImports (ImportedBy, DataType, ImportDate DESC);
-CREATE INDEX IF NOT EXISTS IX_RawDataImports_Composite_3 ON RawDataImports (StatementDate DESC, DataType, Status);
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_LN01_History_CreatedDate')
+CREATE INDEX IX_LN01_History_CreatedDate ON LN01_History (CreatedDate DESC);
 
--- Composite indexes cho SCD queries
-CREATE INDEX IF NOT EXISTS IX_LN01_History_Composite_1 ON LN01_History (BUKRS, IsCurrent, ValidFrom DESC);
-CREATE INDEX IF NOT EXISTS IX_GL01_History_Composite_1 ON GL01_History (BUKRS, GJAHR, IsCurrent);
-CREATE INDEX IF NOT EXISTS IX_GL01_History_Composite_2 ON GL01_History (HKONT, BUKRS, IsCurrent);
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_LN01_History_ModifiedDate')
+CREATE INDEX IX_LN01_History_ModifiedDate ON LN01_History (ModifiedDate DESC);
 
--- 7. COMPOSITE INDEXES ĐỂ TỐI ƯU TRUY VẤN PHỨC TẠP
--- Composite index cho truy vấn thường dùng
-CREATE INDEX IF NOT EXISTS IX_RawDataImports_Composite_1 ON RawDataImports (DataType, Status, ImportDate DESC);
-CREATE INDEX IF NOT EXISTS IX_RawDataImports_Composite_2 ON RawDataImports (ImportedBy, DataType, ImportDate DESC);
-CREATE INDEX IF NOT EXISTS IX_RawDataImports_Composite_3 ON RawDataImports (StatementDate DESC, DataType, Status);
+-- Business key indexes for LN01
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_LN01_History_BUKRS')
+CREATE INDEX IX_LN01_History_BUKRS ON LN01_History (BUKRS) WHERE IsCurrent = 1;
 
--- Composite indexes cho SCD queries
-CREATE INDEX IF NOT EXISTS IX_LN01_History_Composite_1 ON LN01_History (BUKRS, IsCurrent, ValidFrom DESC);
-CREATE INDEX IF NOT EXISTS IX_GL01_History_Composite_1 ON GL01_History (BUKRS, GJAHR, IsCurrent);
-CREATE INDEX IF NOT EXISTS IX_GL01_History_Composite_2 ON GL01_History (HKONT, BUKRS, IsCurrent);
--- 8. ANALYZE DATABASE STATISTICS
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_LN01_History_MANDT')
+CREATE INDEX IX_LN01_History_MANDT ON LN01_History (MANDT) WHERE IsCurrent = 1;
+
+-- GL01_History optimizations
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_GL01_History_Performance_1')
+CREATE INDEX IX_GL01_History_Performance_1 ON GL01_History (IsCurrent, ValidFrom DESC) WHERE IsCurrent = 1;
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_GL01_History_Performance_2')
+CREATE INDEX IX_GL01_History_Performance_2 ON GL01_History (SourceID, VersionNumber DESC);
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_GL01_History_Performance_3')
+CREATE INDEX IX_GL01_History_Performance_3 ON GL01_History (ValidFrom, ValidTo, IsCurrent);
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_GL01_History_CreatedDate')
+CREATE INDEX IX_GL01_History_CreatedDate ON GL01_History (CreatedDate DESC);
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_GL01_History_ModifiedDate')
+CREATE INDEX IX_GL01_History_ModifiedDate ON GL01_History (ModifiedDate DESC);
+
+-- Business key indexes for GL01
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_GL01_History_BUKRS_GJAHR')
+CREATE INDEX IX_GL01_History_BUKRS_GJAHR ON GL01_History (BUKRS, GJAHR) WHERE IsCurrent = 1;
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_GL01_History_BELNR_BUZEI')
+CREATE INDEX IX_GL01_History_BELNR_BUZEI ON GL01_History (BELNR, BUZEI) WHERE IsCurrent = 1;
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_GL01_History_HKONT')
+CREATE INDEX IX_GL01_History_HKONT ON GL01_History (HKONT) WHERE IsCurrent = 1;
+
+-- DP01_History optimizations
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_DP01_History_Performance_1')
+CREATE INDEX IX_DP01_History_Performance_1 ON DP01_History (IsCurrent, ValidFrom DESC) WHERE IsCurrent = 1;
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_DP01_History_Performance_2')
+CREATE INDEX IX_DP01_History_Performance_2 ON DP01_History (SourceID, VersionNumber DESC);
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_DP01_History_KUNNR')
+CREATE INDEX IX_DP01_History_KUNNR ON DP01_History (KUNNR) WHERE IsCurrent = 1;
+
+-- 6. IMPORT LOG AND MONITORING INDEXES
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_ImportLog_ImportDate')
+CREATE INDEX IX_ImportLog_ImportDate ON ImportLog (ImportDate DESC);
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_ImportLog_TableName_Status')
+CREATE INDEX IX_ImportLog_TableName_Status ON ImportLog (TableName, Status);
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_ImportLog_BatchId')
+CREATE INDEX IX_ImportLog_BatchId ON ImportLog (BatchId);
+
+-- 7. COMPOSITE INDEXES FOR COMPLEX QUERIES
+-- SCD composite indexes
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_LN01_History_Composite_1')
+CREATE INDEX IX_LN01_History_Composite_1 ON LN01_History (BUKRS, IsCurrent, ValidFrom DESC);
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_GL01_History_Composite_1')
+CREATE INDEX IX_GL01_History_Composite_1 ON GL01_History (BUKRS, GJAHR, IsCurrent);
+
+IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'IX_GL01_History_Composite_2')
+CREATE INDEX IX_GL01_History_Composite_2 ON GL01_History (HKONT, BUKRS, IsCurrent);
+
+-- 8. UPDATE DATABASE STATISTICS (SQL Server)
 -- Cập nhật thống kê để query optimizer hoạt động tối ưu
-ANALYZE;
+UPDATE STATISTICS LN01_History;
+UPDATE STATISTICS GL01_History;
+UPDATE STATISTICS DP01_History;
+UPDATE STATISTICS RawDataRecords_SCD;
+UPDATE STATISTICS ImportLog;
 
--- 9. VACUUM DATABASE (chạy định kỳ để tối ưu storage)
--- VACUUM; -- Uncomment để chạy vacuum
+-- 9. MAINTENANCE TASKS (SQL Server)
+-- Có thể chạy định kỳ để tối ưu performance
+-- ALTER INDEX ALL ON LN01_History REORGANIZE;
+-- ALTER INDEX ALL ON GL01_History REORGANIZE;
 
--- 10. PRAGMA SETTINGS ĐỂ TỐI ƯU HIỆU SUẤT
-PRAGMA journal_mode = WAL;
-PRAGMA synchronous = NORMAL;
-PRAGMA cache_size = 10000;
-PRAGMA temp_store = MEMORY;
-PRAGMA mmap_size = 268435456; -- 256MB
+-- 10. SQL SERVER SETTINGS ĐỂ TỐI ƯU HIỆU SUẤT
+-- Các setting này cần được cấu hình ở mức database hoặc server
+-- Ví dụ các thiết lập có thể cân nhắc:
+-- - Recovery Model: SIMPLE hoặc FULL tùy yêu cầu backup
+-- - Auto Update Statistics: ON
+-- - Auto Create Statistics: ON
+-- - Page Verify: CHECKSUM
+-- - Query Store: ON (SQL Server 2016+)
 
 -- =====================================================
 -- KẾT THÚC SCRIPT TỐI ƯU HÓA INDEX
 -- =====================================================
 
--- Ghi chú:
--- 1. Chạy ANALYZE sau khi tạo indexes để cập nhật statistics
--- 2. Chạy VACUUM định kỳ để tối ưu database size
--- 3. Monitor query performance sau khi apply indexes
--- 4. Có thể cần adjust cache_size và mmap_size tùy theo RAM available
+-- Ghi chú (SQL Server):
+-- 1. Chạy UPDATE STATISTICS sau khi tạo indexes để cập nhật statistics
+-- 2. Chạy ALTER INDEX...REORGANIZE hoặc REBUILD định kỳ để tối ưu index fragmentation
+-- 3. Monitor query performance và index usage với sys.dm_db_index_usage_stats
+-- 4. Sử dụng SQL Server Profiler hoặc Extended Events để monitor performance
+-- 5. Cân nhắc index compression cho các bảng lớn (Enterprise Edition)
+-- 6. Sử dụng filtered indexes khi có điều kiện WHERE để giảm kích thước index

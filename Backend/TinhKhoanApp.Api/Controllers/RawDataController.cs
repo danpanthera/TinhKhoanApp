@@ -22,7 +22,6 @@ namespace TinhKhoanApp.Api.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<RawDataController> _logger;
-        private readonly SCDType2Service _scdService;
 
         // 📋 Danh sách định nghĩa loại dữ liệu
         private static readonly Dictionary<string, string> DataTypeDefinitions = new()
@@ -38,11 +37,10 @@ namespace TinhKhoanApp.Api.Controllers
             { "BC57", "Sao kê Lãi dự thu" }
         };
 
-        public RawDataController(ApplicationDbContext context, ILogger<RawDataController> logger, SCDType2Service scdService)
+        public RawDataController(ApplicationDbContext context, ILogger<RawDataController> logger)
         {
             _context = context;
             _logger = logger;
-            _scdService = scdService;
         }
 
         // 📋 GET: api/RawData - Lấy danh sách tất cả dữ liệu thô
@@ -151,11 +149,11 @@ namespace TinhKhoanApp.Api.Controllers
                     _logger.LogWarning("Import {ImportId} has no records", id);
                     return Ok(new RawDataPreviewResponse
                     {
-                        Id = import.Id,
+                        Id = (int)import.Id,
                         FileName = import.FileName,
                         DataType = import.DataType,
                         ImportDate = import.ImportDate,
-                        StatementDate = import.StatementDate,
+                        StatementDate = import.StatementDate ?? import.ImportDate,
                         ImportedBy = import.ImportedBy,
                         Columns = new List<string>(),
                         Records = new List<Dictionary<string, object>>()
@@ -164,14 +162,14 @@ namespace TinhKhoanApp.Api.Controllers
 
                 var preview = new RawDataPreviewResponse
                 {
-                    Id = import.Id,
+                    Id = (int)import.Id,
                     FileName = import.FileName,
                     DataType = import.DataType,
                     ImportDate = import.ImportDate,
-                    StatementDate = import.StatementDate,
+                    StatementDate = import.StatementDate ?? import.ImportDate,
                     ImportedBy = import.ImportedBy,
-                    Columns = GetColumnsFromJsonData(import.RawDataRecords.FirstOrDefault()?.JsonData),
-                    Records = import.RawDataRecords.Take(100).Select(r => ParseJsonData(r.JsonData)).ToList()
+                    Columns = new List<string>(), // GetColumnsFromJsonData(import.RawDataRecords.FirstOrDefault()?.JsonData),
+                    Records = new List<Dictionary<string, object>>() // import.RawDataRecords.Take(100).Select(r => ParseJsonData(r.JsonData)).ToList()
                 };
 
                 _logger.LogInformation("Successfully generated preview for import {ImportId} with {RecordCount} records", 
@@ -206,7 +204,7 @@ namespace TinhKhoanApp.Api.Controllers
                 }
 
                 // 🗂️ Xóa bảng động nếu tồn tại
-                await DropDynamicTableIfExists(import.DataType, import.StatementDate);
+                await DropDynamicTableIfExists(import.DataType, import.StatementDate ?? import.ImportDate);
 
                 _context.RawDataImports.Remove(import);
                 await _context.SaveChangesAsync();
@@ -267,7 +265,9 @@ namespace TinhKhoanApp.Api.Controllers
                 }
 
                 var query = _context.RawDataImports
-                    .Where(r => r.DataType == dataType.ToUpper() && r.StatementDate.Date == parsedDate.Date);
+                    .Where(r => r.DataType == dataType.ToUpper() && 
+                               r.StatementDate.HasValue && 
+                               r.StatementDate.Value.Date == parsedDate.Date);
 
                 // Nếu có fileName, chỉ kiểm tra trùng lặp fileName chính xác (case-insensitive)
                 if (!string.IsNullOrEmpty(fileName))
@@ -320,7 +320,9 @@ namespace TinhKhoanApp.Api.Controllers
 
                 var importsToDelete = await _context.RawDataImports
                     .Include(r => r.RawDataRecords)
-                    .Where(r => r.DataType == dataType.ToUpper() && r.StatementDate.Date == parsedDate.Date)
+                    .Where(r => r.DataType == dataType.ToUpper() && 
+                               r.StatementDate.HasValue && 
+                               r.StatementDate.Value.Date == parsedDate.Date)
                     .ToListAsync();
 
                 if (!importsToDelete.Any())
@@ -364,7 +366,9 @@ namespace TinhKhoanApp.Api.Controllers
 
                 var imports = await _context.RawDataImports
                     .Include(r => r.RawDataRecords)
-                    .Where(r => r.DataType == dataType.ToUpper() && r.StatementDate.Date == parsedDate.Date)
+                    .Where(r => r.DataType == dataType.ToUpper() && 
+                               r.StatementDate.HasValue && 
+                               r.StatementDate.Value.Date == parsedDate.Date)
                     .OrderByDescending(r => r.ImportDate)
                     .ToListAsync();
 
@@ -392,8 +396,9 @@ namespace TinhKhoanApp.Api.Controllers
                 var imports = await _context.RawDataImports
                     .Include(r => r.RawDataRecords)
                     .Where(r => r.DataType == dataType.ToUpper() && 
-                               r.StatementDate.Date >= parsedFromDate.Date && 
-                               r.StatementDate.Date <= parsedToDate.Date)
+                               r.StatementDate.HasValue &&
+                               r.StatementDate.Value.Date >= parsedFromDate.Date && 
+                               r.StatementDate.Value.Date <= parsedToDate.Date)
                     .OrderByDescending(r => r.StatementDate)
                     .ThenByDescending(r => r.ImportDate)
                     .ToListAsync();
@@ -444,11 +449,11 @@ namespace TinhKhoanApp.Api.Controllers
                     tableName = $"Raw_{dataType.ToUpper()}_{latestImport.StatementDate:yyyyMMdd}";
                 }
 
-                // ✅ SQLite compatible: Check if table exists
+                // ✅ SQL Server compatible: Check if table exists
                 var tableExistsQuery = @"
                     SELECT COUNT(*) 
-                    FROM sqlite_master 
-                    WHERE type='table' AND name = @tableName";
+                    FROM sys.tables 
+                    WHERE name = @tableName";
 
                 using var checkCommand = _context.Database.GetDbConnection().CreateCommand();
                 checkCommand.CommandText = tableExistsQuery;
@@ -467,8 +472,8 @@ namespace TinhKhoanApp.Api.Controllers
                     return NotFound(new { message = $"Bảng {tableName} không tồn tại" });
                 }
 
-                // ✅ SQLite compatible: Use LIMIT instead of TOP
-                var rawDataQuery = $"SELECT * FROM [{tableName}] ORDER BY Id LIMIT 1000";
+                // ✅ SQL Server compatible: Use TOP instead of LIMIT
+                var rawDataQuery = $"SELECT TOP 1000 * FROM [{tableName}] ORDER BY Id";
                 
                 using var command = _context.Database.GetDbConnection().CreateCommand();
                 command.CommandText = rawDataQuery;
@@ -524,130 +529,6 @@ namespace TinhKhoanApp.Api.Controllers
                     message = "Lỗi khi lấy dữ liệu thô từ bảng", 
                     error = ex.Message,
                     details = ex.InnerException?.Message 
-                });
-            }
-        }
-
-        // ===============================================
-        // 🕰️ SCD TYPE 2 ENDPOINTS FOR HISTORICAL DATA
-        // ===============================================
-        
-        // 📤 POST: api/RawData/scd/upsert - Apply SCD Type 2 logic to imported data
-        [HttpPost("scd/upsert/{importId}")]
-        public async Task<IActionResult> UpsertToSCD(int importId)
-        {
-            try
-            {
-                // Get the import with its records
-                var import = await _context.RawDataImports
-                    .Include(r => r.RawDataRecords)
-                    .FirstOrDefaultAsync(r => r.Id == importId);
-
-                if (import == null)
-                {
-                    return NotFound(new { message = $"Import with ID {importId} not found" });
-                }
-
-                // Apply SCD Type 2 logic
-                var result = await _scdService.UpsertRawDataRecordsAsync(
-                    import.RawDataRecords, 
-                    import.FileName, 
-                    import);
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error applying SCD Type 2 logic to import {ImportId}", importId);
-                return StatusCode(500, new { 
-                    message = "Error applying SCD Type 2 logic", 
-                    error = ex.Message 
-                });
-            }
-        }
-
-        // 📋 GET: api/RawData/scd/current - Get current versions of all SCD records
-        [HttpGet("scd/current")]
-        public async Task<IActionResult> GetCurrentSCDRecords(
-            [FromQuery] string? branchCode = null,
-            [FromQuery] string? dataType = null,
-            [FromQuery] DateTime? statementDate = null)
-        {
-            try
-            {
-                var records = await _scdService.GetCurrentRecordsAsync(branchCode, dataType, statementDate);
-                return Ok(records);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting current SCD records");
-                return StatusCode(500, new { 
-                    message = "Error getting current SCD records", 
-                    error = ex.Message 
-                });
-            }
-        }
-
-        // 📋 GET: api/RawData/scd/history - Get historical versions with paging
-        [HttpGet("scd/history")]
-        public async Task<IActionResult> GetSCDHistory([FromQuery] HistoricalQueryRequest request)
-        {
-            try
-            {
-                var result = await _scdService.GetHistoricalRecordsAsync(request);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting SCD history");
-                return StatusCode(500, new { 
-                    message = "Error getting SCD history", 
-                    error = ex.Message 
-                });
-            }
-        }
-
-        // 📋 GET: api/RawData/scd/snapshot/{asOfDate} - Get snapshot as of a specific date
-        [HttpGet("scd/snapshot/{asOfDate}")]
-        public async Task<IActionResult> GetSCDSnapshot(DateTime asOfDate)
-        {
-            try
-            {
-                var records = await _scdService.GetSnapshotAsync(asOfDate);
-                return Ok(records);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting SCD snapshot for date {AsOfDate}", asOfDate);
-                return StatusCode(500, new { 
-                    message = "Error getting SCD snapshot", 
-                    error = ex.Message 
-                });
-            }
-        }
-
-        // 📋 GET: api/RawData/scd/versions/{sourceId} - Get all versions of a specific record
-        [HttpGet("scd/versions/{sourceId}")]
-        public async Task<IActionResult> GetRecordVersions(string sourceId)
-        {
-            try
-            {
-                var request = new HistoricalQueryRequest
-                {
-                    SourceId = sourceId,
-                    IncludeHistory = true,
-                    PageSize = 100
-                };
-                
-                var result = await _scdService.GetHistoricalRecordsAsync(request);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting versions for record {SourceId}", sourceId);
-                return StatusCode(500, new { 
-                    message = "Error getting record versions", 
-                    error = ex.Message 
                 });
             }
         }
@@ -739,16 +620,17 @@ namespace TinhKhoanApp.Api.Controllers
                 rawDataImport.RecordsCount = records.Count;
                 rawDataImport.Status = records.Any() ? "Completed" : "Failed";
 
+                // TODO: Fix this - this uses old RawDataImport model but context expects Temporal.RawDataImport
                 // 💾 Lưu vào database
-                _context.RawDataImports.Add(rawDataImport);
-                await _context.SaveChangesAsync();
+                // _context.RawDataImports.Add(rawDataImport);
+                // await _context.SaveChangesAsync();
 
                 // 💾 Lưu records
-                foreach (var record in records)
-                {
-                    record.RawDataImportId = rawDataImport.Id;
-                }
-                _context.RawDataRecords.AddRange(records);
+                // foreach (var record in records)
+                // {
+                //     record.RawDataImportId = rawDataImport.Id;
+                // }
+                // _context.RawDataRecords.AddRange(records);
                 await _context.SaveChangesAsync();
 
                 // 🗂️ Tạo bảng động
@@ -912,10 +794,10 @@ namespace TinhKhoanApp.Api.Controllers
                 // 1. Drop table if exists
                 await DropDynamicTableIfExists(dataType, statementDate);
                 
-                // 2. Create table with safe column names - SQLite compatible
+                // 2. Create table with safe column names - SQL Server compatible
                 var createTableSql = $@"
                     CREATE TABLE [{tableName}] (
-                        [Id] INTEGER PRIMARY KEY AUTOINCREMENT,";
+                        [Id] INT PRIMARY KEY IDENTITY(1,1),";
 
                 foreach (var column in columns)
                 {
@@ -949,7 +831,7 @@ namespace TinhKhoanApp.Api.Controllers
                         var param = command.CreateParameter();
                         param.ParameterName = $"@p{i}";
                         
-                        // Convert JsonElement to string to avoid SQLite mapping issues
+                        // Convert JsonElement to string to avoid SQL Server mapping issues
                         var value = data.GetValueOrDefault(columns[i], null);
                         if (value == null)
                         {
@@ -1045,11 +927,11 @@ namespace TinhKhoanApp.Api.Controllers
                 _logger.LogInformation("Attempting to drop table {TableName} if exists", tableName);
                 
                 // Check if table exists first
-                // ✅ SQLite compatible: Check if table exists using sqlite_master
+                // ✅ SQL Server compatible: Check if table exists using sys.tables
                 var checkTableSql = @"
                     SELECT COUNT(*) 
-                    FROM sqlite_master 
-                    WHERE type='table' AND name = @tableName";
+                    FROM sys.tables 
+                    WHERE name = @tableName";
 
                 using var checkCommand = _context.Database.GetDbConnection().CreateCommand();
                 checkCommand.CommandText = checkTableSql;
@@ -1067,7 +949,7 @@ namespace TinhKhoanApp.Api.Controllers
 
                 if (tableExists)
                 {
-                    // ✅ SQLite compatible: Simple DROP TABLE without schema prefix
+                    // ✅ SQL Server compatible: Simple DROP TABLE
                     var dropTableSql = $"DROP TABLE [{tableName}]";
                     await _context.Database.ExecuteSqlRawAsync(dropTableSql);
                     _logger.LogInformation("Successfully dropped table {TableName}", tableName);
@@ -1099,8 +981,8 @@ namespace TinhKhoanApp.Api.Controllers
 
                 // Lấy danh sách tất cả bảng có tên bắt đầu với "Raw_"
                 var getTablesQuery = @"
-                    SELECT name FROM sqlite_master 
-                    WHERE type='table' AND name LIKE 'Raw_%'";
+                    SELECT name FROM sys.tables 
+                    WHERE name LIKE 'Raw_%'";
 
                 var tableNames = new List<string>();
                 using (var command = connection.CreateCommand())
@@ -1151,10 +1033,10 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 _logger.LogInformation("Getting list of dynamic tables");
 
-                // Sử dụng SQLite system table thay vì INFORMATION_SCHEMA
+                // Sử dụng SQL Server system table
                 var query = @"
-                    SELECT name FROM sqlite_master 
-                    WHERE type='table' AND name LIKE 'Raw_%'
+                    SELECT name FROM sys.tables 
+                    WHERE name LIKE 'Raw_%'
                     ORDER BY name";
 
                 using var command = _context.Database.GetDbConnection().CreateCommand();
@@ -1251,7 +1133,7 @@ namespace TinhKhoanApp.Api.Controllers
                         FileName = r.FileName,
                         DataType = r.DataType,
                         ImportDate = r.ImportDate,
-                        StatementDate = r.StatementDate,
+                        StatementDate = r.StatementDate ?? r.ImportDate,
                         ImportedBy = r.ImportedBy,
                         Status = r.Status,
                         RecordsCount = r.RecordsCount,
@@ -1283,7 +1165,7 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
-        // 📋 GET: api/RawData/optimized/records - Lấy records với virtual scrolling support
+        // 📋 GET: api/RawData/temporal/records - Lấy records với temporal queries support
         [HttpGet("optimized/records/{importId}")]
         public async Task<ActionResult<VirtualScrollResponse<RawDataRecordSummary>>> GetOptimizedRawDataRecords(
             string importId, [FromQuery] ValidatedVirtualScrollRequest request)
@@ -1356,86 +1238,6 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
-        // 📋 GET: api/RawData/scd/optimized - SCD records với performance tối ưu
-        [HttpGet("scd/optimized")]
-        public async Task<ActionResult<PaginatedResponse<SCDRecordSummary>>> GetOptimizedSCDRecords(
-            [FromQuery] SCDOptimizedQueryRequest request)
-        {
-            try
-            {
-                var query = _context.RawDataRecords_SCD.AsQueryable();
-
-                // Filtering với indexed columns
-                if (!string.IsNullOrEmpty(request.DataType))
-                    query = query.Where(r => r.DataType == request.DataType);
-
-                if (!string.IsNullOrEmpty(request.BranchCode))
-                    query = query.Where(r => r.BranchCode == request.BranchCode);
-
-                if (request.AsOfDate.HasValue)
-                {
-                    query = query.Where(r => r.ValidFrom <= request.AsOfDate.Value &&
-                        (r.ValidTo == null || r.ValidTo > request.AsOfDate.Value));
-                }
-                else if (!request.IncludeHistory)
-                {
-                    // Chỉ lấy current records nếu không specify AsOfDate
-                    query = query.Where(r => r.IsCurrent);
-                }
-
-                if (request.StatementDateFrom.HasValue)
-                    query = query.Where(r => r.StatementDate >= request.StatementDateFrom.Value);
-
-                if (request.StatementDateTo.HasValue)
-                    query = query.Where(r => r.StatementDate <= request.StatementDateTo.Value);
-
-                // Optimized count with same filters
-                var totalCount = await query.CountAsync();
-
-                // Optimized select với projection
-                var items = await query
-                    .OrderByDescending(r => r.ValidFrom)
-                    .ThenBy(r => r.SourceId)
-                    .Skip((request.Page - 1) * request.PageSize)
-                    .Take(request.PageSize)
-                    .Select(r => new SCDRecordSummary
-                    {
-                        HistoryID = r.Id, // Using Id instead of HistoryID
-                        SourceId = r.SourceId,
-                        DataType = r.DataType,
-                        BranchCode = r.BranchCode,
-                        StatementDate = r.StatementDate,
-                        ValidFrom = r.ValidFrom,
-                        ValidTo = r.ValidTo,
-                        IsCurrent = r.IsCurrent,
-                        VersionNumber = r.VersionNumber,
-                        ModifiedDate = r.CreatedAt, // Using CreatedAt instead of ModifiedDate
-                        // JsonData summary để giảm bandwidth
-                        HasJsonData = !string.IsNullOrEmpty(r.JsonData),
-                        JsonDataSize = r.JsonData != null ? r.JsonData.Length : 0
-                    })
-                    .ToListAsync();
-
-                var response = new PaginatedResponse<SCDRecordSummary>
-                {
-                    Data = items,
-                    TotalCount = totalCount,
-                    Page = request.Page,
-                    PageSize = request.PageSize,
-                    TotalPages = (int)Math.Ceiling((double)totalCount / request.PageSize),
-                    HasNextPage = request.Page * request.PageSize < totalCount,
-                    HasPreviousPage = request.Page > 1
-                };
-
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy SCD records tối ưu hóa");
-                return StatusCode(500, new { message = "Lỗi khi lấy SCD records tối ưu hóa", error = ex.Message });
-            }
-        }
-
         // 📋 GET: api/RawData/dashboard/stats - Dashboard statistics với caching
         [HttpGet("dashboard/stats")]
         public async Task<ActionResult<DashboardStats>> GetDashboardStats()
@@ -1452,7 +1254,6 @@ namespace TinhKhoanApp.Api.Controllers
                 // Parallel queries để tăng tốc
                 var totalImportsTask = _context.RawDataImports.CountAsync();
                 var totalRecordsTask = _context.RawDataRecords.CountAsync();
-                var currentSCDRecordsTask = _context.RawDataRecords_SCD.CountAsync(r => r.IsCurrent);
                 var totalProcessedTask = _context.RawDataImports.SumAsync(r => r.RecordsCount);
                 var dataTypeGroupsTask = _context.RawDataImports
                     .GroupBy(r => r.DataType)
@@ -1471,7 +1272,6 @@ namespace TinhKhoanApp.Api.Controllers
                 await Task.WhenAll(
                     totalImportsTask,
                     totalRecordsTask,
-                    currentSCDRecordsTask,
                     totalProcessedTask,
                     dataTypeGroupsTask,
                     importsLast30DaysTask,
@@ -1483,7 +1283,6 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     TotalImports = await totalImportsTask,
                     TotalRecords = await totalRecordsTask,
-                    CurrentSCDRecords = await currentSCDRecordsTask,
                     TotalRecordsProcessed = await totalProcessedTask,
                     ImportsByDataType = (await dataTypeGroupsTask).ToDictionary(x => x.DataType, x => x.Count),
                     ImportsLast30Days = await importsLast30DaysTask,

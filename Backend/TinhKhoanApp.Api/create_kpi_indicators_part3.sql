@@ -5,7 +5,7 @@
 INSERT INTO KpiIndicators (TableId, IndicatorName, MaxScore, Unit, OrderIndex) VALUES
 (16, 'Tổng dư nợ BQ', 30, 'Tỷ VND', 1),
 (16, 'Tỷ lệ nợ xấu', 15, '%', 2),
-(16, 'Tỷ lệ thực thu lãi', 10, '%', 3),
+(16, 'Phát triển khách hàng mới', 10, 'Khách hàng', 3),
 (16, 'Thu nợ đã XLRR', 10, 'Tỷ VND', 4),
 (16, 'Thực hiện nhiệm vụ theo chương trình công tác', 10, '%', 5),
 (16, 'Chấp hành quy chế, quy trình nghiệp vụ, văn hóa Agribank', 10, '%', 6),
@@ -30,7 +30,7 @@ INSERT INTO KpiIndicators (TableId, IndicatorName, MaxScore, Unit, OrderIndex) V
 INSERT INTO KpiIndicators (TableId, IndicatorName, MaxScore, Unit, OrderIndex) VALUES
 (18, 'Tổng dư nợ BQ', 30, 'Tỷ VND', 1),
 (18, 'Tỷ lệ nợ xấu', 15, '%', 2),
-(18, 'Tỷ lệ thực thu lãi', 10, '%', 3),
+(18, 'Phát triển khách hàng mới', 10, 'Khách hàng', 3),
 (18, 'Thu nợ đã XLRR', 10, 'Tỷ VND', 4),
 (18, 'Thực hiện nhiệm vụ theo chương trình công tác', 10, '%', 5),
 (18, 'Chấp hành quy chế, quy trình nghiệp vụ, văn hóa Agribank', 10, '%', 6),
@@ -50,7 +50,7 @@ INSERT INTO KpiIndicators (TableId, IndicatorName, MaxScore, Unit, OrderIndex) V
 INSERT INTO KpiIndicators (TableId, IndicatorName, MaxScore, Unit, OrderIndex) VALUES
 (20, 'Tổng dư nợ', 20, 'Tỷ VND', 1),
 (20, 'Tỷ lệ nợ xấu', 15, '%', 2),
-(20, 'Tỷ lệ thực thu lãi', 10, '%', 3),
+(20, 'Phát triển khách hàng mới', 10, 'Khách hàng', 3),
 (20, 'Thu nợ đã XLRR', 10, 'Tỷ VND', 4),
 (20, 'Điều hành theo chương trình công tác', 10, '%', 5),
 (20, 'Chấp hành quy chế, quy trình nghiệp vụ, văn hóa Agribank', 10, '%', 6),
@@ -62,7 +62,7 @@ INSERT INTO KpiIndicators (TableId, IndicatorName, MaxScore, Unit, OrderIndex) V
 INSERT INTO KpiIndicators (TableId, IndicatorName, MaxScore, Unit, OrderIndex) VALUES
 (21, 'Tổng dư nợ BQ', 30, 'Tỷ VND', 1),
 (21, 'Tỷ lệ nợ xấu', 15, '%', 2),
-(21, 'Tỷ lệ thực thu lãi', 10, '%', 3),
+(21, 'Phát triển khách hàng mới', 10, 'Khách hàng', 3),
 (21, 'Thu nợ đã XLRR', 10, 'Tỷ VND', 4),
 (21, 'Thực hiện nhiệm vụ theo chương trình công tác', 10, '%', 5),
 (21, 'Chấp hành quy chế, quy trình nghiệp vụ, văn hóa Agribank', 10, '%', 6),

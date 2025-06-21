@@ -20,7 +20,7 @@
           <div class="detail-content">
             <div class="detail-item">
               <strong>Tên hệ thống:</strong>
-              <span>Agribank Lai Châu (7800) Center Management System</span>
+              <span>Agribank Lai Châu Center Management System</span>
             </div>
             <div class="detail-item">
               <strong>Mã sản phẩm:</strong>
@@ -62,7 +62,7 @@
             </div>
             <div class="detail-item">
               <strong>Đơn vị:</strong>
-              <span>Agribank CN T. Lai Châu (7800)</span>
+              <span>Chi nhánh Lai Châu</span>
             </div>
             <div class="detail-item">
               <strong>Bản quyền:</strong>

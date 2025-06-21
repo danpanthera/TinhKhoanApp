@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Models; // Đảm bảo namespace này đúng với nơi Sếp đặt các Model
 using TinhKhoanApp.Api.Models.RawData; // Thêm namespace cho Raw Data models
+using TinhKhoanApp.Api.Models.Temporal; // Thêm namespace cho Temporal models
 
 namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
 {
@@ -44,17 +45,18 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<ImportedDataRecord> ImportedDataRecords { get; set; }
         public DbSet<ImportedDataItem> ImportedDataItems { get; set; }
         
-        // 🗄️ DbSets cho hệ thống Kho Dữ liệu Thô
-        public DbSet<RawDataImport> RawDataImports { get; set; }
+        // 🗄️ DbSets cho hệ thống Kho Dữ liệu Thô (Legacy)
+        public DbSet<Models.RawDataImport> LegacyRawDataImports { get; set; }
         public DbSet<RawDataRecord> RawDataRecords { get; set; }
         
-        // 🗄️ DbSet cho SCD Type 2 Raw Data
-        public DbSet<RawDataRecord_SCD> RawDataRecords_SCD { get; set; }
+        // 🚀 DbSets cho hệ thống Temporal Tables (High Performance)
+        public DbSet<Models.Temporal.RawDataImport> RawDataImports { get; set; }
+        public DbSet<RawDataImportArchive> RawDataImportArchives { get; set; }
+        public DbSet<Models.Temporal.ImportLog> ImportLogs { get; set; }
         
         // 📊 DbSets cho hệ thống SCD Type 2 History Tables
         public DbSet<LN01History> LN01History { get; set; }
         public DbSet<GL01History> GL01History { get; set; }
-        public DbSet<ImportLog> ImportLogs { get; set; }
         
         // 🆕 DbSets cho các bảng SCD Type 2 mới
         public DbSet<LN03History> LN03History { get; set; }

@@ -12,22 +12,22 @@ namespace TinhKhoanApp.Api.Models
 
         [Required]
         [StringLength(50)]
-        [Column("UnitCode")]
+        [Column("Code")]
         public string Code { get; set; } = string.Empty; // Khởi tạo giá trị mặc định
 
         [Required]
         [StringLength(255)]
-        [Column("UnitName")]
+        [Column("Name")]
         public string Name { get; set; } = string.Empty; // Khởi tạo giá trị mặc định
 
         [StringLength(100)]
-        [Column("UnitType")]
+        [Column("Type")]
         public string? Type { get; set; } // Đã sửa: Thêm dấu ? để cho phép null
 
         public int? ParentUnitId { get; set; }
 
-        // Add SortOrder property for consistent ordering
-        public int? SortOrder { get; set; }
+        // [Column("SortOrder")]
+        // public int? SortOrder { get; set; } // Thứ tự hiển thị cho chi nhánh
 
         [ForeignKey("ParentUnitId")]
         public virtual Unit? ParentUnit { get; set; } // Đã sửa: Thêm dấu ? để cho phép null

@@ -4,7 +4,8 @@
 -- =====================================================
 
 -- 1. View cho dữ liệu LN01 hiện tại
-CREATE VIEW IF NOT EXISTS LN01_Current AS
+IF NOT EXISTS (SELECT * FROM sys.views WHERE name = 'LN01_Current')
+EXEC('CREATE VIEW LN01_Current AS
 SELECT 
     SourceID,
     MANDT, BUKRS, LAND1, WAERS, SPRAS, 
@@ -13,10 +14,11 @@ SELECT
     XFMCA, TXJCD,
     ValidFrom, ModifiedDate, VersionNumber
 FROM LN01_History
-WHERE IsCurrent = 1;
+WHERE IsCurrent = 1');
 
 -- 2. View cho dữ liệu GL01 hiện tại
-CREATE VIEW IF NOT EXISTS GL01_Current AS
+IF NOT EXISTS (SELECT * FROM sys.views WHERE name = 'GL01_Current')
+EXEC('CREATE VIEW GL01_Current AS
 SELECT 
     SourceID,
     MANDT, BUKRS, GJAHR, BELNR, BUZEI,
@@ -37,10 +39,11 @@ SELECT
     POSN2, KKBER, EMPFB,
     ValidFrom, ModifiedDate, VersionNumber
 FROM GL01_History
-WHERE IsCurrent = 1;
+WHERE IsCurrent = 1');
 
 -- 3. View cho dữ liệu DP01 hiện tại
-CREATE VIEW IF NOT EXISTS DP01_Current AS
+IF NOT EXISTS (SELECT * FROM sys.views WHERE name = 'DP01_Current')
+EXEC('CREATE VIEW DP01_Current AS
 SELECT 
     SourceID,
     MANDT, KUNNR, LAND1, NAME1, NAME2,
@@ -68,10 +71,11 @@ SELECT
     DUEFL, HZUOR, SPERZ, ETIKG,
     ValidFrom, ModifiedDate, VersionNumber
 FROM DP01_History
-WHERE IsCurrent = 1;
+WHERE IsCurrent = 1');
 
 -- 4. View thống kê import
-CREATE VIEW IF NOT EXISTS ImportStatistics AS
+IF NOT EXISTS (SELECT * FROM sys.views WHERE name = 'ImportStatistics')
+EXEC('CREATE VIEW ImportStatistics AS
 SELECT 
     TableName,
     COUNT(*) as TotalImports,
@@ -92,7 +96,8 @@ FROM ImportLog
 GROUP BY TableName;
 
 -- 5. View import gần đây
-CREATE VIEW IF NOT EXISTS RecentImports AS
+IF NOT EXISTS (SELECT * FROM sys.views WHERE name = 'RecentImports')
+EXEC('CREATE VIEW RecentImports AS
 SELECT 
     il.LogID,
     il.BatchId,
@@ -113,4 +118,4 @@ SELECT
     END as HasChanges
 FROM ImportLog il
 ORDER BY il.ImportDate DESC
-LIMIT 50;
+OFFSET 0 ROWS FETCH NEXT 50 ROWS ONLY;');

@@ -26,14 +26,10 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                // Sử dụng raw SQL query để tránh lỗi NULL handling
+                // Sử dụng EF Core navigation properties
                 var employees = await _context.Employees
-                    .FromSqlRaw(@"
-                        SELECT e.*, u.UnitName as UnitName, p.Name as PositionName 
-                        FROM Employees e 
-                        LEFT JOIN Units u ON e.UnitId = u.Id 
-                        LEFT JOIN Positions p ON e.PositionId = p.Id
-                    ")
+                    .Include(e => e.Unit)
+                    .Include(e => e.Position)
                     .Select(e => new EmployeeListItemDto
                     {
                         Id = e.Id,
@@ -45,9 +41,9 @@ namespace TinhKhoanApp.Api.Controllers
                         PhoneNumber = e.PhoneNumber ?? "",
                         IsActive = e.IsActive,
                         UnitId = e.UnitId,
-                        UnitName = null, // Sẽ populate sau
+                        UnitName = e.Unit != null ? e.Unit.Name : "",
                         PositionId = e.PositionId,
-                        PositionName = null, // Sẽ populate sau
+                        PositionName = e.Position != null ? e.Position.Name : "",
                         Roles = new List<RoleDto>() // Empty for now
                     })
                     .OrderBy(e => e.EmployeeCode)
@@ -61,18 +57,18 @@ namespace TinhKhoanApp.Api.Controllers
                 var simpleEmployees = await _context.Database
                     .SqlQueryRaw<SimpleEmployeeDto>(@"
                         SELECT 
-                            Id, 
-                            COALESCE(EmployeeCode, '') as EmployeeCode,
-                            COALESCE(CBCode, '') as CBCode,
-                            COALESCE(FullName, '') as FullName,
-                            COALESCE(Username, '') as Username,
-                            COALESCE(Email, '') as Email,
-                            COALESCE(PhoneNumber, '') as PhoneNumber,
-                            IsActive,
-                            UnitId,
-                            PositionId
-                        FROM Employees 
-                        ORDER BY EmployeeCode
+                            ""Id"", 
+                            COALESCE(""EmployeeCode"", '') as ""EmployeeCode"",
+                            COALESCE(""CBCode"", '') as ""CBCode"",
+                            COALESCE(""FullName"", '') as ""FullName"",
+                            COALESCE(""Username"", '') as ""Username"",
+                            COALESCE(""Email"", '') as ""Email"",
+                            COALESCE(""PhoneNumber"", '') as ""PhoneNumber"",
+                            ""IsActive"",
+                            ""UnitId"",
+                            ""PositionId""
+                        FROM ""Employees"" 
+                        ORDER BY ""EmployeeCode""
                     ")
                     .ToListAsync();
 

@@ -30,7 +30,7 @@
         </div>
       </div>
 
-      <!-- Branch and Department Filter -->
+      <!-- Branch and Department Filter for Employees -->
       <div class="card-agribank" v-if="selectedPeriodId">
         <div class="card-header">
           <h3 class="card-title">🔍 Lọc cán bộ theo đơn vị</h3>
@@ -70,8 +70,8 @@
           </div>
         </div>
       </div>
-      
-      <!-- Employee Table -->
+
+      <!-- Employee Table (moved up to show right after filtering) -->
       <div v-if="selectedBranchId || selectedDepartmentId" class="card-agribank">
         <div class="card-header">
           <h3 class="card-title">👥 Danh sách Cán bộ ({{ filteredEmployeesCount }} người)</h3>
@@ -147,42 +147,31 @@
         </div>
       </div>
       
-      <!-- KPI Table Selection -->
-      <div class="card-agribank" v-if="selectedPeriodId">
+      <!-- KPI Table Selection (appears after selecting employees) -->
+      <div class="card-agribank" v-if="selectedEmployeeIds.length > 0">
         <div class="card-header">
-          <h3 class="card-title">📊 Chọn bảng KPI</h3>
+          <h3 class="card-title">📊 Chọn bảng KPI cho Cán bộ</h3>
         </div>
         <div class="card-body">
           <div class="form-group">
-            <label class="form-label">Bảng KPI:</label>
-            <select v-model="selectedTableId" @change="loadTableDetails" class="form-control">
-              <option value="">-- Chọn bảng --</option>
-              <option v-for="table in kpiTables" :key="table.id" :value="table.id">
-                {{ table.tableName }} ({{ table.category }})
+            <label class="form-label">📋 Bảng KPI:</label>
+            <select v-model="selectedTableId" @change="onTableChange" class="form-control">
+              <option value="">-- Chọn bảng KPI --</option>
+              <option v-for="table in staffKpiTables" :key="table.id" :value="table.id">
+                📊 {{ table.tableName }} ({{ table.indicatorCount }} chỉ tiêu)
               </option>
             </select>
           </div>
           
-          <!-- KPI Loading/Status Messages -->
-          <div v-if="selectedTableId && indicators.length === 0" class="alert-agribank alert-info" style="margin-top: 15px;">
-            <strong>ℹ️ Thông tin:</strong> 
-            <span v-if="loading">Đang tải danh sách chỉ tiêu KPI...</span>
-            <span v-else>Không có chỉ tiêu KPI nào được tìm thấy cho bảng này. 
-              <button @click="loadTableDetails" class="btn-agribank btn-outline" style="margin-left: 8px; padding: 4px 8px; font-size: 0.75rem;">
-                🔄 Thử lại
-              </button>
-            </span>
-          </div>
-          
-          <div v-if="selectedEmployeeIds.length > 0 && !selectedTableId" class="alert-agribank alert-warning" style="margin-top: 15px;">
-            <strong>⚠️ Lưu ý:</strong> Đã chọn {{ selectedEmployeeIds.length }} cán bộ nhưng chưa chọn bảng KPI. 
-            Vui lòng chọn bảng KPI phù hợp hoặc hệ thống sẽ tự động chọn.
+          <div class="alert-agribank alert-info" v-if="selectedTableId && selectedKpiTable">
+            <strong>📊 Đã chọn:</strong> 
+            "{{ selectedKpiTable.tableName }}" → <strong>{{ selectedKpiTable.indicatorCount }}</strong> chỉ tiêu KPI
           </div>
         </div>
       </div>
       
       <!-- KPI Indicators Table -->
-      <div v-if="indicators.length > 0" class="card-agribank">
+      <div v-if="selectedTableId && indicators.length > 0" class="card-agribank">
         <div class="card-header">
           <h3 class="card-title">📊 {{ getKpiTableTitle() }}</h3>
           <div>
@@ -316,23 +305,53 @@ const targetValues = ref({})
 const targetErrors = ref({})
 
 // Computed properties cho bộ lọc
-// Updated branchOptions: Use SortOrder from backend instead of hardcoded sorting
+// Lọc 23 bảng KPI dành cho Cán bộ
+const staffKpiTables = computed(() => {
+  return kpiTables.value
+    .filter(table => table.category === 'Dành cho Cán bộ')
+    .sort((a, b) => (a.tableName || '').localeCompare(b.tableName || ''))
+})
+
+// Bảng KPI đã chọn
+const selectedKpiTable = computed(() => {
+  if (!selectedTableId.value) return null
+  return kpiTables.value.find(table => table.id === parseInt(selectedTableId.value))
+})
+
+// Updated branchOptions: Custom ordering as requested
 const branchOptions = computed(() => {
+  // Định nghĩa thứ tự theo yêu cầu: CnLaiChau, CnTamDuong, CnPhongTho, CnSinHo, CnMuongTe, CnThanUyen, CnThanhPho, CnTanUyen, CnNamNhun
+  const customOrder = [
+    'CnLaiChau',     // Chi nhánh tỉnh Lai Châu
+    'CnTamDuong',    // Chi nhánh Tam Đường
+    'CnPhongTho',    // Chi nhánh Phong Thổ  
+    'CnSinHo',       // Chi nhánh Sìn Hồ
+    'CnMuongTe',     // Chi nhánh Mường Tè
+    'CnThanUyen',    // Chi nhánh Than Uyên
+    'CnThanhPho',    // Chi nhánh Thành Phố
+    'CnTanUyen',     // Chi nhánh Tân Uyên
+    'CnNamNhun'      // Chi nhánh Nậm Nhùn
+  ];
+
   return units.value
     .filter(unit => {
       const type = (unit.type || '').toUpperCase()
       return type === 'CNL1' || type === 'CNL2'
     })
     .sort((a, b) => {
-      // Primary sort: SortOrder (nulls last)
-      const sortOrderA = a.sortOrder ?? Number.MAX_SAFE_INTEGER;
-      const sortOrderB = b.sortOrder ?? Number.MAX_SAFE_INTEGER;
+      const indexA = customOrder.indexOf(a.code);
+      const indexB = customOrder.indexOf(b.code);
       
-      if (sortOrderA !== sortOrderB) {
-        return sortOrderA - sortOrderB;
+      // Nếu cả hai đều có trong custom order, sắp xếp theo thứ tự đó
+      if (indexA !== -1 && indexB !== -1) {
+        return indexA - indexB;
       }
       
-      // Secondary sort: Name
+      // Nếu chỉ có một trong hai có trong custom order, ưu tiên cái đó
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      
+      // Nếu cả hai đều không có trong custom order, sắp xếp theo tên
       return (a.name || '').localeCompare(b.name || '');
     })
 })
@@ -498,6 +517,24 @@ async function loadTableDetails() {
     indicators.value = []
     errorMessage.value = 'Không thể tải chi tiết bảng KPI: ' + (error.response?.data?.message || error.message)
   }
+}
+
+function onTableChange() {
+  console.log('📊 KPI table changed to:', selectedTableId.value)
+  selectedEmployeeIds.value = []
+  targetValues.value = {}
+  targetErrors.value = {}
+  
+  // Tải chi tiết bảng KPI được chọn
+  if (selectedTableId.value) {
+    loadTableDetails()
+  } else {
+    indicators.value = []
+  }
+  
+  // Log để debug
+  const table = kpiTables.value.find(t => t.id === parseInt(selectedTableId.value))
+  console.log('Selected KPI table:', table)
 }
 
 function onBranchChange() {

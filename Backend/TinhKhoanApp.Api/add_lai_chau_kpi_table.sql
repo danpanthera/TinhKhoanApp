@@ -19,7 +19,7 @@ VALUES
     (@TableId, N'Tổng dư nợ HSX&CN', 5, N'Tỷ VND', 5, 'NUMBER', 1),
     (@TableId, N'Tỷ lệ nợ xấu nội bảng', 10, N'%', 6, 'PERCENTAGE', 1),
     (@TableId, N'Thu nợ đã XLRR', 5, N'Tỷ VND', 7, 'NUMBER', 1),
-    (@TableId, N'Tỷ lệ thực thu lãi', 10, N'%', 8, 'PERCENTAGE', 1),
+    (@TableId, N'Phát triển khách hàng mới', 10, N'Khách hàng', 8, 'NUMBER', 1),
     (@TableId, N'Lợi nhuận khoán tài chính', 20, N'Tỷ VND', 9, 'NUMBER', 1),
     (@TableId, N'Thu dịch vụ', 10, N'Tỷ VND', 10, 'NUMBER', 1),
     (@TableId, N'Chấp hành quy chế, quy trình nghiệp vụ, nội dung chỉ đạo, điều hành, văn hóa Agribank', 10, N'%', 11, 'PERCENTAGE', 1);
