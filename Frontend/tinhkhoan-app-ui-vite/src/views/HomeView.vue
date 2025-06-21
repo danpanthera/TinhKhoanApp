@@ -5,10 +5,10 @@
         <h1 class="hero-title">
           <img src="/src/assets/Logo-Agribank-2.png" alt="Agribank Logo" class="hero-logo" />
           <br>
-          Agribank Lai Châu Center
+          AGRIBANK LAI CHÂU CENTER
         </h1>
         <p class="hero-subtitle">
-          Hệ thống quản lý tính khoán và lương | Hệ thống Báo cáo
+          HỆ THỐNG QUẢN LÝ TÍNH KHOÁN | HỆ THỐNG BÁO CÁO
         </p>
       </div>
     </div>
@@ -50,7 +50,7 @@ onMounted(() => {
 }
 
 .hero-title {
-  font-size: 3.5rem;
+  font-size: 4.5rem; /* Tăng từ 3.5rem lên 4.5rem (tăng 2 cỡ) */
   font-weight: 700;
   color: #8B1538;
   margin-bottom: 20px;
@@ -82,7 +82,7 @@ onMounted(() => {
 }
 
 .hero-subtitle {
-  font-size: 1.5rem;
+  font-size: 2.0rem; /* Tăng từ 1.5rem lên 2.0rem (tăng 2 cỡ) */
   color: #A91B47;
   margin-bottom: 50px;
   font-weight: 500;
