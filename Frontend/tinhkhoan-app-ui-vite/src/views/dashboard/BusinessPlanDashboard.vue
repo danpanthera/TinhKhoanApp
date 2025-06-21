@@ -204,6 +204,7 @@
                   :key="indicator.code"
                   class="kpi-card-wrapper"
                   :style="{ animationDelay: `${index * 0.1}s` }"
+                  :data-indicator="indicator.code"
                 >
                   <kpi-card
                     :indicator="indicator"
@@ -508,7 +509,7 @@ const loadIndicators = async () => {
     console.error('Lỗi tải indicators:', error);
     // Mock data for demo - 6 chỉ tiêu cố định theo yêu cầu
     indicators.value = [
-      { code: 'HuyDong', name: 'Huy động vốn' },
+      { code: 'HuyDong', name: 'Nguồn vốn' },
       { code: 'DuNo', name: 'Dư nợ' },
       { code: 'TyLeNoXau', name: 'Tỷ lệ nợ xấu' },
       { code: 'ThuNoXLRR', name: 'Thu nợ đã XLRR' },
@@ -560,7 +561,7 @@ const loadDashboardData = async () => {
     dashboardData.value = [
       {
         code: 'HuyDong',
-        name: 'Huy động vốn',
+        name: 'Nguồn vốn',
         actualValue: Math.round(1200000 * unitMultiplier),
         planValue: Math.round(1500000 * unitMultiplier),
         unit: 'triệu VNĐ',
@@ -636,12 +637,12 @@ const loadDashboardData = async () => {
       months: ['T7', 'T8', 'T9', 'T10', 'T11', 'T12'],
       series: [
         {
-          name: 'Huy động vốn',
+          name: 'Nguồn vốn',
           data: [1000, 1100, 1050, 1200, 1150, 1200].map(v => Math.round(v * unitMultiplier)),
           color: '#8B1538'
         },
         {
-          name: 'Dư nợ cho vay',
+          name: 'Dư nợ',
           data: [2000, 2100, 2200, 2350, 2400, 2800].map(v => Math.round(v * unitMultiplier)),
           color: '#A6195C'
         }
@@ -677,8 +678,29 @@ const refreshDashboard = async () => {
 };
 
 const showIndicatorDetail = (indicator) => {
+  // Add a small animation/highlight effect before switching
+  const indicatorElement = document.querySelector(`[data-indicator="${indicator.code}"]`);
+  if (indicatorElement) {
+    indicatorElement.classList.add('indicator-highlight');
+    setTimeout(() => {
+      indicatorElement.classList.remove('indicator-highlight');
+    }, 700);
+  }
+  
+  // Set active indicator and switch to detail view
   activeIndicator.value = indicator.code;
-  viewMode.value = 'detail';
+  
+  // Add a small delay for better UX
+  setTimeout(() => {
+    viewMode.value = 'detail';
+    
+    // Show a success message
+    ElMessage({
+      message: `Đang xem chi tiết chỉ tiêu: ${indicator.name}`,
+      type: 'success',
+      duration: 2000
+    });
+  }, 300);
 };
 
 const handleFilterChange = (filters) => {

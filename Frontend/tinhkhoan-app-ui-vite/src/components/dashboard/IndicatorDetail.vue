@@ -129,32 +129,48 @@
         height="300"
         @sort-change="handleSortChange"
       >
-        <el-table-column prop="unitName" label="Đơn vị" width="200" />
-        <el-table-column prop="actualValue" label="Thực hiện" align="right" sortable>
+        <el-table-column prop="unitName" label="Đơn vị" width="180" />
+        <el-table-column prop="actualValue" label="Thực hiện" align="right" sortable width="120">
           <template #default="{ row }">
             {{ formatValue(row.actualValue) }}
           </template>
         </el-table-column>
-        <el-table-column prop="planValue" label="Kế hoạch" align="right" sortable>
+        <el-table-column prop="planValue" label="Kế hoạch" align="right" sortable width="120">
           <template #default="{ row }">
             {{ formatValue(row.planValue) }}
           </template>
         </el-table-column>
-        <el-table-column prop="completionRate" label="Tỷ lệ (%)" align="right" sortable>
+        <el-table-column prop="completionRate" label="Tỷ lệ (%)" align="right" sortable width="100">
           <template #default="{ row }">
             <span :class="getCompletionClass(row.completionRate)">
               {{ row.completionRate.toFixed(1) }}%
             </span>
           </template>
         </el-table-column>
-        <el-table-column prop="yoyGrowth" label="So với cùng kỳ (%)" align="right" sortable>
+        <el-table-column prop="vsStartYear" label="So với đầu năm" align="right" sortable width="140">
           <template #default="{ row }">
-            <span :class="row.yoyGrowth >= 0 ? 'positive' : 'negative'">
+            <span :class="getChangeClass(row.vsStartYear, indicator.code)">
+              {{ row.vsStartYear >= 0 ? '+' : '' }}{{ formatValue(row.vsStartYear) }} 
+              ({{ row.vsStartYearPercent >= 0 ? '+' : '' }}{{ row.vsStartYearPercent.toFixed(1) }}%)
+            </span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="vsStartMonth" label="So với đầu tháng" align="right" sortable width="140">
+          <template #default="{ row }">
+            <span :class="getChangeClass(row.vsStartMonth, indicator.code)">
+              {{ row.vsStartMonth >= 0 ? '+' : '' }}{{ formatValue(row.vsStartMonth) }} 
+              ({{ row.vsStartMonthPercent >= 0 ? '+' : '' }}{{ row.vsStartMonthPercent.toFixed(1) }}%)
+            </span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="yoyGrowth" label="So với cùng kỳ (%)" align="right" sortable width="140">
+          <template #default="{ row }">
+            <span :class="getChangeClass(row.yoyGrowth, indicator.code)">
               {{ row.yoyGrowth >= 0 ? '+' : '' }}{{ row.yoyGrowth }}%
             </span>
           </template>
         </el-table-column>
-        <el-table-column label="Thao tác" width="120" align="center">
+        <el-table-column label="Thao tác" width="100" align="center" fixed="right">
           <template #default="{ row }">
             <el-button size="small" type="text" @click="drillDown(row)">
               Chi tiết
@@ -205,11 +221,105 @@ const detailTrendData = ref([
 ]);
 
 const unitDetailData = ref([
-  { unitName: 'CN Lai Châu', actualValue: 1450, planValue: 1350, completionRate: 107.4, yoyGrowth: 12.5 },
-  { unitName: 'CN Điện Biên', actualValue: 980, planValue: 1000, completionRate: 98.0, yoyGrowth: 8.2 },
-  { unitName: 'CN Sơn La', actualValue: 1200, planValue: 1100, completionRate: 109.1, yoyGrowth: 15.3 },
-  { unitName: 'PGD Mường Tè', actualValue: 250, planValue: 240, completionRate: 104.2, yoyGrowth: 10.1 },
-  { unitName: 'PGD Tam Đường', actualValue: 180, planValue: 200, completionRate: 90.0, yoyGrowth: 5.8 }
+  { 
+    unitName: 'Chi nhánh Lai Châu', 
+    actualValue: 1450, 
+    planValue: 1350, 
+    completionRate: 107.4, 
+    yoyGrowth: 12.5,
+    vsStartYear: 150,
+    vsStartYearPercent: 11.5,
+    vsStartMonth: 30,
+    vsStartMonthPercent: 2.1
+  },
+  { 
+    unitName: 'Chi nhánh Thành Phố', 
+    actualValue: 980, 
+    planValue: 1000, 
+    completionRate: 98.0, 
+    yoyGrowth: 8.2,
+    vsStartYear: 120,
+    vsStartYearPercent: 13.9,
+    vsStartMonth: 25,
+    vsStartMonthPercent: 2.6
+  },
+  { 
+    unitName: 'Chi nhánh Tam Đường', 
+    actualValue: 1200, 
+    planValue: 1100, 
+    completionRate: 109.1, 
+    yoyGrowth: 15.3,
+    vsStartYear: 180,
+    vsStartYearPercent: 17.6,
+    vsStartMonth: 40,
+    vsStartMonthPercent: 3.4
+  },
+  { 
+    unitName: 'Chi nhánh Tân Uyên', 
+    actualValue: 850, 
+    planValue: 900, 
+    completionRate: 94.4, 
+    yoyGrowth: 7.5,
+    vsStartYear: 100,
+    vsStartYearPercent: 13.3,
+    vsStartMonth: 20,
+    vsStartMonthPercent: 2.4
+  },
+  { 
+    unitName: 'Chi nhánh Sìn Hồ', 
+    actualValue: 780, 
+    planValue: 780, 
+    completionRate: 100.0, 
+    yoyGrowth: 9.8,
+    vsStartYear: 110,
+    vsStartYearPercent: 16.4,
+    vsStartMonth: 15,
+    vsStartMonthPercent: 2.0
+  },
+  { 
+    unitName: 'Chi nhánh Phong Thổ', 
+    actualValue: 920, 
+    planValue: 850, 
+    completionRate: 108.2, 
+    yoyGrowth: 14.2,
+    vsStartYear: 130,
+    vsStartYearPercent: 16.5,
+    vsStartMonth: 35,
+    vsStartMonthPercent: 4.0
+  },
+  { 
+    unitName: 'Chi nhánh Than Uyên', 
+    actualValue: 750, 
+    planValue: 800, 
+    completionRate: 93.8, 
+    yoyGrowth: 6.8,
+    vsStartYear: 90,
+    vsStartYearPercent: 13.6,
+    vsStartMonth: 18,
+    vsStartMonthPercent: 2.5
+  },
+  { 
+    unitName: 'Chi nhánh Mường Tè', 
+    actualValue: 680, 
+    planValue: 700, 
+    completionRate: 97.1, 
+    yoyGrowth: 8.1,
+    vsStartYear: 85,
+    vsStartYearPercent: 14.3,
+    vsStartMonth: 12,
+    vsStartMonthPercent: 1.8
+  },
+  { 
+    unitName: 'Chi nhánh Nậm Nhùn', 
+    actualValue: 650, 
+    planValue: 650, 
+    completionRate: 100.0, 
+    yoyGrowth: 10.2,
+    vsStartYear: 80,
+    vsStartYearPercent: 14.0,
+    vsStartMonth: 15,
+    vsStartMonthPercent: 2.4
+  }
 ]);
 
 // Computed
@@ -245,6 +355,15 @@ const getCompletionClass = (rate) => {
   if (rate >= 100) return 'positive';
   if (rate >= 80) return 'warning';
   return 'negative';
+};
+
+const getChangeClass = (value, indicatorCode) => {
+  // Đối với Tỷ lệ nợ xấu, giảm là tốt
+  if (indicatorCode === 'TyLeNoXau') {
+    return value < 0 ? 'positive' : value > 0 ? 'negative' : '';
+  }
+  // Đối với các chỉ tiêu khác, tăng là tốt
+  return value > 0 ? 'positive' : value < 0 ? 'negative' : '';
 };
 
 const exportDetail = () => {

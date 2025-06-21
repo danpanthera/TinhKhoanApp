@@ -187,11 +187,50 @@ export const dashboardService = {
   async getUnits() {
     try {
       const response = await api.get('/api/units');
-      return response.data;
+      return this.sortUnits(response.data);
     } catch (error) {
       console.error('Error fetching units:', error);
       throw error;
     }
+  },
+  
+  /**
+   * Sort units in the correct order for KPI display
+   * Order: Hội sở (CnLaiChau) -> Branches in specific order
+   */
+  sortUnits(units) {
+    // Define the correct branch order
+    const branchOrder = [
+      'Chi nhánh Lai Châu',    // Hội sở (parent)
+      'Chi nhánh Thành Phố',
+      'Chi nhánh Tam Đường',
+      'Chi nhánh Tân Uyên',
+      'Chi nhánh Sìn Hồ',
+      'Chi nhánh Phong Thổ',
+      'Chi nhánh Than Uyên',
+      'Chi nhánh Mường Tè',
+      'Chi nhánh Nậm Nhùn'
+    ];
+    
+    return [...units].sort((a, b) => {
+      const nameA = a.unitName || a.name || '';
+      const nameB = b.unitName || b.name || '';
+      
+      const indexA = branchOrder.indexOf(nameA);
+      const indexB = branchOrder.indexOf(nameB);
+      
+      // If both names are in the predefined order, sort by that order
+      if (indexA !== -1 && indexB !== -1) {
+        return indexA - indexB;
+      }
+      
+      // If only one name is in the order, prioritize it
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      
+      // For other units, maintain alphabetical sorting
+      return nameA.localeCompare(nameB);
+    });
   },
 
   /**
