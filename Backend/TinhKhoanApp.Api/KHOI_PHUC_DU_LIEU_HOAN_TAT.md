@@ -62,8 +62,8 @@
 5. Trưởng phòng Kế hoạch và Quản lý rủi ro
 6. Phó phòng Kế hoạch và Quản lý rủi ro
 7. CBTD
-8. Trưởng phòng KTNV CNL1
-9. Phó phòng KTNV CNL1
+8. Trưởng phòng KTNQ CNL1
+9. Phó phòng KTNQ CNL1
 10. GDV
 11. TQ HK KTNB
 12. Trưởng phòng IT TH KTGS

@@ -249,16 +249,6 @@
                     >
                       ✏️
                     </button>
-                    <!-- Nút Update chỉ hiển thị cho chỉ tiêu định lượng -->
-                    <button 
-                      v-if="!isQualitativeIndicator(indicator.indicatorName)"
-                      @click="updateIndicatorValue(indicator)" 
-                      class="btn-agribank btn-primary"
-                      style="padding: 4px 8px; font-size: 0.75rem; margin-left: 4px;"
-                      title="Cập nhật giá trị thực hiện"
-                    >
-                      📊 Update
-                    </button>
                     <button 
                       @click="clearIndicatorTarget(indicator.id)" 
                       class="btn-agribank btn-outline"
@@ -834,54 +824,6 @@ function moveIndicatorDown(index) {
     const temp = indicators.value[index]
     indicators.value[index] = indicators.value[index + 1]
     indicators.value[index + 1] = temp
-  }
-}
-
-// Helper function để kiểm tra xem có phải chỉ tiêu định tính không
-function isQualitativeIndicator(indicatorName) {
-  const qualitativeIndicators = [
-    'Điều hành theo chương trình công tác',
-    'Chấp hành quy chế, quy trình nghiệp vụ', 
-    'BQ kết quả thực hiện CB trong phòng mình phụ trách',
-    'Hoàn thành chỉ tiêu giao khoán SPDV',
-    'Chấp hành quy chế, quy trình nghiệp vụ, văn hóa Agribank',
-    'Thực hiện nhiệm vụ theo chương trình công tác, các công việc theo chức năng nhiệm vụ được giao',
-    'Thực hiện nhiệm vụ theo chương trình công tác',
-    'Thực hiện chức năng, nhiệm vụ được giao',
-    'Chấp hành quy chế, quy trình nghiệp vụ, nội dung chỉ đạo, điều hành của CNL2, văn hóa Agribank',
-    'Điều hành theo chương trình công tác, chấp hành quy chế, quy trình nghiệp vụ, văn hóa Agribank',
-    'Điều hành theo chương trình công tác, nhiệm vụ được giao',
-    'Thực hiện nhiệm vụ theo chương trình công tác',
-    'Chấp hành quy chế, quy trình nghiệp vụ',
-    'Thực hiện nhiệm vụ theo chương trình công tác, chức năng nhiệm vụ của phòng',
-    'Thực hiện nhiệm vụ theo chương trình công tác, các công việc theo chức năng nhiệm vụ của phòng',
-    'Chấp hành quy chế, quy trình nghiệp vụ, nội dung chỉ đạo, điều hành của CNL1, văn hóa Agribank'
-  ]
-  
-  return qualitativeIndicators.some(qual => 
-    indicatorName && indicatorName.toLowerCase().includes(qual.toLowerCase())
-  )
-}
-
-// Hàm xử lý update giá trị thực hiện cho chỉ tiêu định lượng
-function updateIndicatorValue(indicator) {
-  const newValue = prompt(
-    `Cập nhật giá trị thực hiện cho:\n"${indicator.indicatorName}"\n\nĐơn vị: ${indicator.unit || 'N/A'}\nGiá trị hiện tại: ${targetValues.value[indicator.id] || 'Chưa có'}`,
-    targetValues.value[indicator.id] || ''
-  )
-  
-  if (newValue !== null) { // Người dùng không cancel
-    const numericValue = parseFloat(newValue)
-    if (isNaN(numericValue) || numericValue < 0) {
-      alert('Giá trị không hợp lệ. Vui lòng nhập số dương.')
-      return
-    }
-    
-    targetValues.value[indicator.id] = numericValue
-    // Xóa lỗi nếu có
-    delete targetErrors.value[indicator.id]
-    
-    console.log(`✅ Updated indicator ${indicator.indicatorName}: ${numericValue}`)
   }
 }
 
