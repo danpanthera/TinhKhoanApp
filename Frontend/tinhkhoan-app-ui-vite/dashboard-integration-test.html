@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Integration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .result {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 3px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .error {
+            color: red;
+        }
+        .success {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dashboard Integration Test</h1>
+    <p>Testing the integration between Frontend and Backend Dashboard modules</p>
+
+    <div class="container">
+        <h2>1. Authentication Test</h2>
+        <button onclick="testAuth()">Test Login</button>
+        <div id="authResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>2. Units API Test</h2>
+        <button onclick="testUnits()">Get Units</button>
+        <div id="unitsResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>3. Dashboard Indicators Test</h2>
+        <button onclick="testDashboardIndicators()">Get Dashboard Indicators</button>
+        <div id="indicatorsResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>4. Business Plan Targets Test</h2>
+        <button onclick="testBusinessPlanTargets()">Get Business Plan Targets</button>
+        <div id="targetsResult" class="result"></div>
+    </div>
+
+    <div class="container">
+        <h2>5. Dashboard Calculations Test</h2>
+        <button onclick="testDashboardCalculations()">Get Dashboard Calculations</button>
+        <div id="calculationsResult" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5055/api';
+        let authToken = null;
+
+        async function testAuth() {
+            const resultDiv = document.getElementById('authResult');
+            try {
+                resultDiv.textContent = 'Testing authentication...';
+                
+                // Try to login with test credentials
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    authToken = data.token;
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✓ Authentication successful!\nToken: ${authToken.substring(0, 50)}...`;
+                } else {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `✗ Authentication failed: ${error.message}`;
+            }
+        }
+
+        async function testUnits() {
+            const resultDiv = document.getElementById('unitsResult');
+            try {
+                resultDiv.textContent = 'Fetching units...';
+                
+                const response = await fetch(`${API_BASE}/units`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✓ Units fetched successfully!\nCount: ${data.$values ? data.$values.length : data.length}\nFirst few units:\n${JSON.stringify(data.$values ? data.$values.slice(0, 3) : data.slice(0, 3), null, 2)}`;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `✗ Units test failed: ${error.message}`;
+            }
+        }
+
+        async function testDashboardIndicators() {
+            const resultDiv = document.getElementById('indicatorsResult');
+            try {
+                resultDiv.textContent = 'Fetching dashboard indicators...';
+                
+                const headers = { 'Content-Type': 'application/json' };
+                if (authToken) {
+                    headers['Authorization'] = `Bearer ${authToken}`;
+                }
+                
+                const response = await fetch(`${API_BASE}/dashboard/indicators`, { headers });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✓ Dashboard indicators fetched successfully!\nData: ${JSON.stringify(data, null, 2)}`;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `✗ Dashboard indicators test failed: ${error.message}`;
+            }
+        }
+
+        async function testBusinessPlanTargets() {
+            const resultDiv = document.getElementById('targetsResult');
+            try {
+                resultDiv.textContent = 'Fetching business plan targets...';
+                
+                const headers = { 'Content-Type': 'application/json' };
+                if (authToken) {
+                    headers['Authorization'] = `Bearer ${authToken}`;
+                }
+                
+                const response = await fetch(`${API_BASE}/businessplantarget`, { headers });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✓ Business plan targets fetched successfully!\nData: ${JSON.stringify(data, null, 2)}`;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `✗ Business plan targets test failed: ${error.message}`;
+            }
+        }
+
+        async function testDashboardCalculations() {
+            const resultDiv = document.getElementById('calculationsResult');
+            try {
+                resultDiv.textContent = 'Fetching dashboard calculations...';
+                
+                const headers = { 'Content-Type': 'application/json' };
+                if (authToken) {
+                    headers['Authorization'] = `Bearer ${authToken}`;
+                }
+                
+                const response = await fetch(`${API_BASE}/dashboard/calculations`, { headers });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    resultDiv.className = 'result success';
+                    resultDiv.textContent = `✓ Dashboard calculations fetched successfully!\nData: ${JSON.stringify(data, null, 2)}`;
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.textContent = `✗ Dashboard calculations test failed: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>

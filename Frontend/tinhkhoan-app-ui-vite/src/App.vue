@@ -114,6 +114,30 @@
           </div>
         </div>
 
+        <!-- Dashboard Dropdown Menu -->
+        <div class="nav-dropdown" @mouseenter="handleDashboardMouseEnter" @mouseleave="handleDashboardMouseLeave">
+          <a href="#" class="nav-dropdown-trigger" :class="{ active: isDashboardSectionActive }">
+            <span>📈 Dashboard</span>
+            <svg class="dropdown-arrow" :class="{ rotated: showDashboardMenu }" viewBox="0 0 24 24" width="16" height="16">
+              <path fill="currentColor" d="M7 10l5 5 5-5z"/>
+            </svg>
+          </a>
+          <div class="nav-dropdown-menu" :class="{ show: showDashboardMenu }" @click="hideAllMenus">
+            <router-link to="/dashboard/target-assignment" class="dropdown-item">
+              <span class="item-icon">🎯</span>
+              <span>Giao chỉ tiêu kế hoạch</span>
+            </router-link>
+            <router-link to="/dashboard/calculation" class="dropdown-item">
+              <span class="item-icon">🧮</span>
+              <span>Cập nhật số liệu</span>
+            </router-link>
+            <router-link to="/dashboard/business-plan" class="dropdown-item">
+              <span class="item-icon">📈</span>
+              <span>DASHBOARD TỔNG HỢP</span>
+            </router-link>
+          </div>
+        </div>
+
         <!-- About Dropdown Menu -->
         <div class="nav-dropdown" @mouseenter="handleAboutMouseEnter" @mouseleave="handleAboutMouseLeave">
           <a href="#" class="nav-dropdown-trigger" :class="{ active: isAboutSectionActive }">
@@ -187,12 +211,16 @@ const showHRMenu = ref(false);
 // KPI Dropdown menu state
 const showKPIMenu = ref(false);
 
+// Dashboard Dropdown menu state
+const showDashboardMenu = ref(false);
+
 // About Dropdown menu state
 const showAboutMenu = ref(false);
 
 // Dropdown menu timeout references
 const hrMenuTimeout = ref(null);
 const kpiMenuTimeout = ref(null);
+const dashboardMenuTimeout = ref(null);
 const aboutMenuTimeout = ref(null);
 
 // Enhanced dropdown handlers with auto-hide functionality
@@ -224,6 +252,20 @@ const handleKPIMouseLeave = () => {
   }, 300); // 300ms delay before hiding
 };
 
+const handleDashboardMouseEnter = () => {
+  if (dashboardMenuTimeout.value) {
+    clearTimeout(dashboardMenuTimeout.value);
+    dashboardMenuTimeout.value = null;
+  }
+  showDashboardMenu.value = true;
+};
+
+const handleDashboardMouseLeave = () => {
+  dashboardMenuTimeout.value = setTimeout(() => {
+    showDashboardMenu.value = false;
+  }, 300); // 300ms delay before hiding
+};
+
 const handleAboutMouseEnter = () => {
   if (aboutMenuTimeout.value) {
     clearTimeout(aboutMenuTimeout.value);
@@ -242,6 +284,7 @@ const handleAboutMouseLeave = () => {
 const hideAllMenus = () => {
   showHRMenu.value = false;
   showKPIMenu.value = false;
+  showDashboardMenu.value = false;
   showAboutMenu.value = false;
   
   // Clear any pending timeouts
@@ -252,6 +295,10 @@ const hideAllMenus = () => {
   if (kpiMenuTimeout.value) {
     clearTimeout(kpiMenuTimeout.value);
     kpiMenuTimeout.value = null;
+  }
+  if (dashboardMenuTimeout.value) {
+    clearTimeout(dashboardMenuTimeout.value);
+    dashboardMenuTimeout.value = null;
   }
   if (aboutMenuTimeout.value) {
     clearTimeout(aboutMenuTimeout.value);
@@ -292,6 +339,12 @@ const isKPISectionActive = computed(() => {
   return kpiRoutes.includes(route.path);
 });
 
+// Check if current route is in Dashboard section
+const isDashboardSectionActive = computed(() => {
+  const dashboardRoutes = ['/dashboard', '/dashboard/target-assignment', '/dashboard/calculation', '/dashboard/business-plan'];
+  return dashboardRoutes.includes(route.path);
+});
+
 // Check if current route is in About section
 const isAboutSectionActive = computed(() => {
   const aboutRoutes = ['/about/info', '/about/user-guide', '/about/software-info'];
@@ -311,18 +364,18 @@ const loadBackgroundImages = async () => {
     const backgroundPath = '/images/backgrounds/';
     const supportedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
     
-    // 📝 Danh sách tên file có thể có trong thư mục
+    // 📝 Danh sách tên file có thể có trong thư mục (bao gồm file hiện có)
     const potentialFileNames = [
+      // Files hiện có trong thư mục
+      'AgribankLaiChau_chuan', 'anh-dep-lai-chau-29', 'background-2', 'background-3', 'File_000',
       // Tên thông thường
-      'background-1', 'background-2', 'background-3', 'background-4', 'background-5',
+      'background-1', 'background-4', 'background-5',
       'bg-1', 'bg-2', 'bg-3', 'bg-4', 'bg-5',
       'image-1', 'image-2', 'image-3', 'image-4', 'image-5',
+      // Các file lai châu khác (có thể tồn tại)
+      'anh-dep-lai-chau-8', 'anh-dep-lai-chau-16', 'anh-dep-lai-chau-19', 'anh-dep-lai-chau-33',
       // Số đơn giản
       '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15',
-      // Tên file đặc biệt (dựa trên folder hiện tại)
-      'anh-dep-lai-chau-8', 'anh-dep-lai-chau-9', 'anh-dep-lai-chau-10', 
-      'anh-dep-lai-chau-12', 'anh-dep-lai-chau-16', 'anh-dep-lai-chau-19',
-      'anh-dep-lai-chau-29', 'anh-dep-lai-chau-33',
       // Các tên khác có thể
       'wallpaper-1', 'wallpaper-2', 'wallpaper-3', 'nature-1', 'nature-2',
       'scenery-1', 'scenery-2', 'landscape-1', 'landscape-2'
@@ -360,14 +413,16 @@ const loadBackgroundImages = async () => {
           loadedImages.push(fullPath);
           
           // 🏷️ Tạo tên hiển thị đẹp
-          const displayName = fileName.includes('lai-chau') 
-            ? `🏔️ Lai Châu ${fileName.split('-').pop()}`
+          const displayName = fileName.includes('lai-chau') || fileName.includes('AgribankLaiChau')
+            ? `🏔️ Lai Châu ${fileName.includes('AgribankLaiChau') ? 'chính thức' : fileName.split('-').pop()}`
             : fileName.includes('background')
             ? `🖼️ Nền ${fileName.split('-').pop()}`
             : fileName.includes('nature')
             ? `🌿 Thiên nhiên ${fileName.split('-').pop()}`
             : fileName.includes('landscape')
             ? `🏞️ Phong cảnh ${fileName.split('-').pop()}`
+            : fileName.includes('File_')
+            ? `📄 Ảnh ${fileName.split('_').pop()}`
             : `🎨 ${fileName}`;
             
           loadedNames.push(displayName);
@@ -401,7 +456,23 @@ const loadBackgroundImages = async () => {
       backgroundImages.value = sortedData.map(item => item.image);
       backgroundNames.value = sortedData.map(item => item.name);
       
-      console.log(`🎉 Đã load ${loadedImages.length} ảnh nền thành công!`);
+      // Nếu có ít hơn 7 ảnh local, thêm ảnh online để đủ
+      if (backgroundImages.value.length < 7) {
+        const additionalImages = [
+          'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
+          'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
+          'https://images.unsplash.com/photo-1439066615861-d1af74d74000?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
+          'https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
+          'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80'
+        ];
+        const additionalNames = ['🏔️ Núi tuyết', '🌲 Rừng cây', '🏞️ Hồ núi', '🌅 Bình minh', '🌾 Cánh đồng'];
+        
+        const needed = Math.min(7 - backgroundImages.value.length, additionalImages.length);
+        backgroundImages.value.push(...additionalImages.slice(0, needed));
+        backgroundNames.value.push(...additionalNames.slice(0, needed));
+      }
+      
+      console.log(`🎉 Đã load ${backgroundImages.value.length} ảnh nền (${loadedImages.length} local + ${backgroundImages.value.length - loadedImages.length} online)!`);
       console.log('📋 Danh sách ảnh:', backgroundNames.value);
     }
     

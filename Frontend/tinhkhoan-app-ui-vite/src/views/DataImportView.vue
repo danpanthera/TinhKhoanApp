@@ -614,7 +614,31 @@ const refreshAllData = async () => {
       calculateDataTypeStats()
       showSuccess('Đã tải lại dữ liệu thành công')
     } else {
-      showError(result.error || 'Không thể tải dữ liệu')
+      // Hiển thị thông báo lỗi chi tiết
+      const errorMsg = result.error || 'Không thể tải dữ liệu'
+      console.error('🔥 Chi tiết lỗi:', {
+        error: result.error,
+        errorCode: result.errorCode,
+        errorStatus: result.errorStatus
+      })
+      
+      // Sử dụng mock data để demo vẫn hoạt động
+      if (result.fallbackData && result.fallbackData.length > 0) {
+        allImports.value = result.fallbackData
+        calculateDataTypeStats()
+        showError(`⚠️ Chế độ Demo: ${errorMsg}`)
+        console.info('🎭 Sử dụng mock data cho demo')
+      } else {
+        allImports.value = []
+        showError(`❌ Lỗi kết nối: ${errorMsg}`)
+      }
+      
+      // Nếu là lỗi kết nối, hiển thị hướng dẫn khắc phục
+      if (result.errorCode === 'ERR_NETWORK' || result.errorCode === 'ERR_CONNECTION_REFUSED') {
+        setTimeout(() => {
+          alert(`🔧 HƯỚNG DẪN KHẮC PHỤC:\n\n1. Kiểm tra backend server có đang chạy không\n2. Đảm bảo server chạy trên port đúng (hiện tại: ${import.meta.env.VITE_API_BASE_URL})\n3. Kiểm tra firewall không chặn kết nối\n4. Thử restart server nếu cần thiết\n\n📝 Hiện tại đang sử dụng dữ liệu demo`)
+        }, 1000)
+      }
     }
     
   } catch (error) {

@@ -3,7 +3,7 @@
     <div class="welcome-hero">
       <div class="hero-content">
         <h1 class="hero-title">
-          <img src="/Logo-Agribank-2.png" alt="Agribank Logo" class="hero-logo" />
+          <img src="/src/assets/Logo-Agribank-2.png" alt="Agribank Logo" class="hero-logo" />
           <br>
           Agribank Lai Châu Center
         </h1>

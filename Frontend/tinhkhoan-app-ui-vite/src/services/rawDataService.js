@@ -16,11 +16,61 @@ class RawDataService {
       };
     } catch (error) {
       console.error('❌ Lỗi lấy danh sách import:', error);
+      
+      // Xử lý các loại lỗi cụ thể
+      let errorMessage = 'Lỗi kết nối server';
+      if (error.code === 'ERR_NETWORK' || error.code === 'ERR_CONNECTION_REFUSED') {
+        errorMessage = 'Không thể kết nối đến server backend. Vui lòng kiểm tra:\n• Server backend có đang chạy?\n• Cổng kết nối có đúng không?\n• Firewall có chặn kết nối không?';
+      } else if (error.response?.status === 404) {
+        errorMessage = 'API endpoint không tồn tại';
+      } else if (error.response?.status >= 500) {
+        errorMessage = 'Lỗi server nội bộ';
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
       return {
         success: false,
-        error: error.response?.data?.message || 'Lỗi kết nối server'
+        error: errorMessage,
+        errorCode: error.code,
+        errorStatus: error.response?.status,
+        // Fallback data để demo vẫn hoạt động
+        fallbackData: this.getMockData()
       };
     }
+  }
+
+  // 🔄 Mock data cho demo khi server không có
+  getMockData() {
+    return [
+      {
+        id: 'demo-1',
+        dataType: 'excel',
+        fileName: 'demo-data-lai-chau.xlsx',
+        uploadDate: '2025-06-21T10:30:00Z',
+        status: 'Completed',
+        recordCount: 1250,
+        fileSize: 2048576
+      },
+      {
+        id: 'demo-2', 
+        dataType: 'csv',
+        fileName: 'agribank-branches.csv',
+        uploadDate: '2025-06-20T15:45:00Z',
+        status: 'Completed',
+        recordCount: 23,
+        fileSize: 524288
+      },
+      {
+        id: 'demo-3',
+        dataType: 'archive',
+        fileName: 'kpi-data-2025.zip',
+        uploadDate: '2025-06-19T09:15:00Z', 
+        status: 'Processing',
+        recordCount: 0,
+        fileSize: 10485760
+      }
+    ];
   }
 
   // 📤 Import dữ liệu theo loại

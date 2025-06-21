@@ -159,6 +159,34 @@ const routes = [
       import(/* webpackChunkName: "demo" */ "../components/StreamingExportDemo.vue"),
     meta: { requiresAuth: true }
   },
+  // === DASHBOARD ROUTES ===
+  {
+    path: "/dashboard",
+    name: "dashboard",
+    redirect: "/dashboard/business-plan",
+    meta: { requiresAuth: true }
+  },
+  {
+    path: "/dashboard/target-assignment",
+    name: "target-assignment",
+    component: () =>
+      import(/* webpackChunkName: "dashboard" */ "../views/dashboard/TargetAssignment.vue"),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: "/dashboard/calculation",
+    name: "calculation-dashboard",
+    component: () =>
+      import(/* webpackChunkName: "dashboard" */ "../views/dashboard/CalculationDashboard.vue"),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: "/dashboard/business-plan",
+    name: "business-plan-dashboard",
+    component: () =>
+      import(/* webpackChunkName: "dashboard" */ "../views/dashboard/BusinessPlanDashboard.vue"),
+    meta: { requiresAuth: true }
+  },
 ];
 
 const router = createRouter({

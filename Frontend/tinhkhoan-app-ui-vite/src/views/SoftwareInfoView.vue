@@ -66,7 +66,7 @@
             </div>
             <div class="detail-item">
               <strong>Bản quyền:</strong>
-              <span>© 2024 Agribank</span>
+              <span>© 2025 Agribank Lai Châu</span>
             </div>
           </div>
         </div>
