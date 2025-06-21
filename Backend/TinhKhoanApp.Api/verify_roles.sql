@@ -11,8 +11,8 @@ WITH RequiredRoles AS (
     UNION ALL SELECT 5, 'TruongphongKhqlrr', 'Trưởng phòng KH&QLRR'
     UNION ALL SELECT 6, 'PhophongKhqlrr', 'Phó phòng KH&QLRR'
     UNION ALL SELECT 7, 'Cbtd', 'Cán bộ tín dụng'
-    UNION ALL SELECT 8, 'TruongphongKtnqCnl1', 'Trưởng phòng KTNV CNL1'
-    UNION ALL SELECT 9, 'PhophongKtnqCnl1', 'Phó phòng KTNV CNL1'
+    UNION ALL SELECT 8, 'TruongphongKtnqCnl1', 'Trưởng phòng KTNQ CNL1'
+    UNION ALL SELECT 9, 'PhophongKtnqCnl1', 'Phó phòng KTNQ CNL1'
     UNION ALL SELECT 10, 'Gdv', 'GDV'
     UNION ALL SELECT 11, 'TqHkKtnb', 'TQ/HK/KTNB'
     UNION ALL SELECT 12, 'TruongphoItThKtgs', 'Trưởng phòng IT/TH/KTGS'
@@ -25,8 +25,8 @@ WITH RequiredRoles AS (
     UNION ALL SELECT 19, 'PhogiamdocCnl2Kt', 'Phó giám đốc CNL2 phụ trách Kinh tế'
     UNION ALL SELECT 20, 'TruongphongKhCnl2', 'Trưởng phòng KH CNL2'
     UNION ALL SELECT 21, 'PhophongKhCnl2', 'Phó phòng KH CNL2'
-    UNION ALL SELECT 22, 'TruongphongKtnqCnl2', 'Trưởng phòng KTNV CNL2'
-    UNION ALL SELECT 23, 'PhophongKtnqCnl2', 'Phó phòng KTNV CNL2'
+    UNION ALL SELECT 22, 'TruongphongKtnqCnl2', 'Trưởng phòng KTNQ CNL2'
+    UNION ALL SELECT 23, 'PhophongKtnqCnl2', 'Phó phòng KTNQ CNL2'
 )
 SELECT 
     req.Id as 'ID',

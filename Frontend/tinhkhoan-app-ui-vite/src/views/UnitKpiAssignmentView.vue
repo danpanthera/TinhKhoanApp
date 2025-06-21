@@ -348,7 +348,17 @@ function onPeriodChange() {
   availableKpiIndicators.value = []
   kpiTargets.value = {}
   currentAssignments.value = []
-  clearMessages()
+  errorMessage.value = ''
+}
+
+// Helper function để xử lý string operations an toàn
+function safeStringIncludes(str, searchString) {
+  return str && typeof str === 'string' && str.toLowerCase().includes(searchString.toLowerCase())
+}
+
+// Helper function để xử lý type checking an toàn
+function safeStringEquals(str1, str2) {
+  return str1 && typeof str1 === 'string' && str1 === str2
 }
 
 async function onBranchChange() {
@@ -380,16 +390,18 @@ async function onBranchChange() {
     
     // Find appropriate KPI table based on branch type
     let kpiTable = null
-    const branchType = (branch.type || '').toUpperCase()
+    const branchType = (branch.type && typeof branch.type === 'string' ? branch.type : '').toUpperCase()
     console.log('🔍 Branch type:', branchType)
     console.log('📊 Available KPI tables:', kpiTables.value.length)
     
     // Log all available branch tables
     const branchTables = kpiTables.value.filter(t => 
-      t.category === 'Dành cho Chi nhánh' || 
-      t.category?.toLowerCase().includes('chi nhánh') ||
-      t.category?.toLowerCase().includes('branch') ||
-      t.category?.toLowerCase().includes('unit')
+      t && t.category && (
+        t.category === 'Dành cho Chi nhánh' || 
+        safeStringIncludes(t.category, 'chi nhánh') ||
+        safeStringIncludes(t.category, 'branch') ||
+        safeStringIncludes(t.category, 'unit')
+      )
     )
     console.log('🏢 Branch KPI tables found:', branchTables.length)
     branchTables.forEach(table => {
@@ -400,21 +412,21 @@ async function onBranchChange() {
     if (branchType === 'CNL1') {
       // For CNL1, try multiple matching strategies
       kpiTable = branchTables.find(t => 
-        t.tableType === 'HoiSo' || 
-        t.tableType === 'CnTamDuong' || 
-        t.tableName?.toLowerCase().includes('hội sở (7800)') ||
-        t.tableName?.toLowerCase().includes('cnl1') ||
-        t.tableName?.toLowerCase().includes('chi nhánh cấp 1')
+        safeStringEquals(t.tableType, 'HoiSo') || 
+        safeStringEquals(t.tableType, 'CnTamDuong') || 
+        safeStringIncludes(t.tableName, 'hội sở (7800)') ||
+        safeStringIncludes(t.tableName, 'cnl1') ||
+        safeStringIncludes(t.tableName, 'chi nhánh cấp 1')
       )
       console.log('🎯 Looking for CNL1 table, found:', kpiTable?.tableName || 'None')
     } else if (branchType === 'CNL2') {
       // For CNL2, try multiple matching strategies  
       kpiTable = branchTables.find(t => 
-        t.tableType === 'GiamdocCnl2' ||
-        t.tableType === 'CnPhongTho' || 
-        t.tableName?.toLowerCase().includes('giám đốc cnl2') ||
-        t.tableName?.toLowerCase().includes('cnl2') ||
-        t.tableName?.toLowerCase().includes('chi nhánh cấp 2')
+        safeStringEquals(t.tableType, 'GiamdocCnl2') ||
+        safeStringEquals(t.tableType, 'CnPhongTho') || 
+        safeStringIncludes(t.tableName, 'giám đốc cnl2') ||
+        safeStringIncludes(t.tableName, 'cnl2') ||
+        safeStringIncludes(t.tableName, 'chi nhánh cấp 2')
       )
       console.log('🎯 Looking for CNL2 table, found:', kpiTable?.tableName || 'None')
     }
@@ -424,9 +436,9 @@ async function onBranchChange() {
       console.log('🔍 No direct match, trying fallback patterns...')
       // Look for any table containing branch-related keywords
       kpiTable = branchTables.find(t => 
-        t.tableName?.toLowerCase().includes('chi nhánh') ||
-        t.tableName?.toLowerCase().includes('cnl') ||
-        (t.tableType && t.tableType.toLowerCase().includes('cnl'))
+        safeStringIncludes(t.tableName, 'chi nhánh') ||
+        safeStringIncludes(t.tableName, 'cnl') ||
+        safeStringIncludes(t.tableType, 'cnl')
       )
       console.log('🎯 Fallback search found:', kpiTable?.tableName || 'None')
     }
