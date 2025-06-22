@@ -45,8 +45,21 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 var importedData = await _context.ImportedDataRecords
-                    .Include(r => r.ImportedDataItems)
                     .OrderByDescending(r => r.ImportDate)
+                    .Select(r => new 
+                    {
+                        r.Id,
+                        r.FileName,
+                        r.FileType,
+                        r.Category,
+                        r.ImportDate,
+                        r.StatementDate,
+                        r.ImportedBy,
+                        r.Status,
+                        r.RecordsCount,
+                        r.Notes
+                        // Skip CompressedData và CompressionRatio để tránh lỗi database
+                    })
                     .ToListAsync();
 
                 return Ok(importedData);
@@ -373,13 +386,14 @@ namespace TinhKhoanApp.Api.Controllers
                 // Compress data if there are items
                 if (items.Any())
                 {
-                    var dataToCompress = items.Select(item => new { item.RawData, item.ProcessingNotes }).ToList();
-                    var (compressedData, compressionRatio) = await _compressionService.CompressDataAsync(dataToCompress);
+                    // Tạm thời comment out compression để tránh lỗi database schema
+                    // var dataToCompress = items.Select(item => new { item.RawData, item.ProcessingNotes }).ToList();
+                    // var (compressedData, compressionRatio) = await _compressionService.CompressDataAsync(dataToCompress);
                     
-                    record.CompressedData = compressedData;
-                    record.CompressionRatio = compressionRatio;
+                    // record.CompressedData = compressedData;
+                    // record.CompressionRatio = compressionRatio;
                     
-                    _logger.LogInformation($"Compressed {items.Count} records with ratio {compressionRatio:P2} for file {file.FileName}");
+                    // _logger.LogInformation($"Compressed {items.Count} records with ratio {compressionRatio:P2} for file {file.FileName}");
                 }
 
                 record.RecordsCount = items.Count;
@@ -1100,7 +1114,9 @@ namespace TinhKhoanApp.Api.Controllers
         }
 
         // GET: api/DataImport/{id}/decompress - Get decompressed data
-        [HttpGet("{id}/decompress")]
+        // [HttpGet("{id}/decompress")]
+        // Tạm thời comment out để tránh lỗi CompressedData trong database
+        /*
         public async Task<ActionResult<object>> GetDecompressedData(int id)
         {
             try
@@ -1134,6 +1150,7 @@ namespace TinhKhoanApp.Api.Controllers
                 return StatusCode(500, new { message = "Error decompressing data", error = ex.Message });
             }
         }
+        */
 
         // ...existing code...
     }

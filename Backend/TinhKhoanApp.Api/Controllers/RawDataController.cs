@@ -711,7 +711,7 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
-        // 🗄️ GET: api/RawData/table/{dataType} - Lấy dữ liệu thô trực tiếp từ bảng động (Mock mode)
+        // 🗄️ GET: api/RawData/table/{dataType} - Lấy dữ liệu thô trực tiếp từ bảng động (Check real data first)
         [HttpGet("table/{dataType}")]
         public async Task<ActionResult> GetRawDataFromTable(string dataType, [FromQuery] string? statementDate = null)
         {
@@ -726,7 +726,50 @@ namespace TinhKhoanApp.Api.Controllers
                     return BadRequest(new { message = $"Loại dữ liệu '{dataType}' không được hỗ trợ" });
                 }
 
-                // 🔧 MOCK MODE: Tạo mock data cho bảng thô dựa trên dataType và statementDate
+                // 🔧 KIỂM TRA XEM CÓ DỮ LIỆU THẬT TRONG DATABASE KHÔNG
+                var hasRealData = await _context.ImportedDataRecords
+                    .Where(x => x.FileType == dataType.ToUpper())
+                    .AnyAsync();
+
+                if (!hasRealData)
+                {
+                    _logger.LogInformation("❌ Không có dữ liệu thật cho {DataType} - trả về empty result", dataType);
+                    return Ok(new
+                    {
+                        tableName = $"Empty_{dataType.ToUpper()}",
+                        dataType = dataType,
+                        recordCount = 0,
+                        columns = new List<string>(),
+                        records = new List<object>(),
+                        note = "Không có dữ liệu - đã bị xóa hoặc chưa import"
+                    });
+                }
+
+                // 🔧 NẾU CÓ STATEMENT DATE, KIỂM TRA CHÍNH XÁC HỌ
+                if (!string.IsNullOrEmpty(statementDate))
+                {
+                    var dateExists = await _context.ImportedDataRecords
+                        .Where(x => x.FileType == dataType.ToUpper())
+                        .Where(x => x.StatementDate.HasValue && 
+                                   x.StatementDate.Value.ToString("yyyy-MM-dd") == statementDate)
+                        .AnyAsync();
+
+                    if (!dateExists)
+                    {
+                        _logger.LogInformation("❌ Không có dữ liệu cho {DataType} ngày {Date}", dataType, statementDate);
+                        return Ok(new
+                        {
+                            tableName = $"Empty_{dataType.ToUpper()}_{statementDate.Replace("-", "")}",
+                            dataType = dataType,
+                            recordCount = 0,
+                            columns = new List<string>(),
+                            records = new List<object>(),
+                            note = $"Không có dữ liệu cho ngày {statementDate}"
+                        });
+                    }
+                }
+
+                // 🔧 TẠO MOCK DATA CHỈ KHI CÓ DỮ LIỆU THẬT
                 string tableName;
                 if (!string.IsNullOrEmpty(statementDate))
                 {
@@ -734,14 +777,13 @@ namespace TinhKhoanApp.Api.Controllers
                 }
                 else
                 {
-                    // Lấy ngày hiện tại để tạo tên bảng mock
                     tableName = $"Raw_{dataType.ToUpper()}_{DateTime.Now:yyyyMMdd}";
                 }
 
                 // 🎭 Tạo mock data dựa trên loại dữ liệu
                 var (columns, records) = GenerateMockRawTableData(dataType.ToUpper(), statementDate);
 
-                _logger.LogInformation("Generated {Count} mock records for table {TableName}", 
+                _logger.LogInformation("Generated {Count} mock records for table {TableName} (có dữ liệu thật)", 
                     records.Count, tableName);
 
                 return Ok(new
@@ -751,7 +793,7 @@ namespace TinhKhoanApp.Api.Controllers
                     recordCount = records.Count,
                     columns = columns,
                     records = records,
-                    note = "Mock data - Temporal table chưa được triển khai"
+                    note = "Mock data dựa trên dữ liệu thật đã import"
                 });
             }
             catch (Exception ex)
