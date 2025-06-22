@@ -4,332 +4,332 @@ using TinhKhoanApp.Api.Models.Temporal;
 
 namespace TinhKhoanApp.Api.Controllers
 {
-    /// <summary>
-    /// Controller chuyên dụng cho các thao tác SQL Server Temporal Tables
-    /// Thay thế hoàn toàn cho SCD Type 2 controllers
-    /// </summary>
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class TemporalController : ControllerBase
     {
-        private readonly ITemporalTableService _temporalService;
+        private readonly ITemporalDataService _temporalService;
         private readonly ILogger<TemporalController> _logger;
 
-        public TemporalController(
-            ITemporalTableService temporalService,
-            ILogger<TemporalController> logger)
+        public TemporalController(ITemporalDataService temporalService, ILogger<TemporalController> logger)
         {
             _temporalService = temporalService;
             _logger = logger;
         }
 
         /// <summary>
-        /// 🕒 Query temporal data with advanced filtering and pagination
+        /// Import dữ liệu hàng ngày vào temporal tables
         /// </summary>
-        [HttpPost("query")]
-        public async Task<ActionResult<TemporalQueryResult<RawDataImport>>> QueryTemporalData(
-            [FromBody] TemporalQueryRequest request)
+        [HttpPost("import")]
+        public async Task<IActionResult> ImportDailyData([FromBody] TemporalImportRequest request)
         {
             try
             {
-                _logger.LogInformation("🔍 Executing temporal query: {Request}", request);
-                
-                var result = await _temporalService.GetTemporalDataAsync<RawDataImport>(request);
+                if (request.Data == null || !request.Data.Any())
+                {
+                    return BadRequest("No data provided for import");
+                }
+
+                var recordsImported = await _temporalService.ImportDailyDataAsync(request);
                 
                 return Ok(new
                 {
                     success = true,
-                    data = result,
-                    message = $"Retrieved {result.TotalCount} records successfully"
+                    message = $"Successfully imported {recordsImported} records",
+                    recordsImported = recordsImported,
+                    importDate = request.ImportDate,
+                    batchId = $"API_{DateTime.UtcNow:yyyyMMdd_HHmmss}"
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error executing temporal query");
-                return StatusCode(500, new { success = false, message = ex.Message });
+                _logger.LogError(ex, "Error importing temporal data");
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Import failed",
+                    error = ex.Message
+                });
             }
         }
 
         /// <summary>
-        /// 🕒 Query temporal data with GET method (for frontend compatibility)
+        /// Lấy dữ liệu tại một thời điểm cụ thể (temporal query)
         /// </summary>
-        [HttpGet("query/{tableName?}")]
-        public async Task<ActionResult<TemporalQueryResult<RawDataImport>>> QueryTemporalDataGet(
-            string? tableName = null,
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10,
-            [FromQuery] string? sortBy = null,
-            [FromQuery] string? sortOrder = "desc",
-            [FromQuery] string? searchTerm = null,
-            [FromQuery] string? branchCode = null,
-            [FromQuery] string? departmentCode = null,
+        [HttpGet("as-of")]
+        public async Task<IActionResult> GetDataAsOf(
+            [FromQuery] DateTime asOfDate,
             [FromQuery] string? employeeCode = null,
+            [FromQuery] string? branchCode = null,
             [FromQuery] string? kpiCode = null,
-            [FromQuery] DateTime? fromDate = null,
-            [FromQuery] DateTime? toDate = null)
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null)
         {
             try
             {
-                var request = new TemporalQueryRequest
-                {
-                    Page = page,
-                    PageSize = Math.Min(pageSize, 100), // Max 100 records per page
-                    OrderBy = sortBy ?? "ImportDate",
-                    FromDate = fromDate,
-                    ToDate = toDate,
-                    Filter = searchTerm
-                };
-
-                _logger.LogInformation("🔍 Executing temporal GET query for {TableName} with filters", tableName ?? "RawDataImport");
-                
-                var result = await _temporalService.GetTemporalDataAsync<RawDataImport>(request);
+                var data = await _temporalService.GetDataAsOfAsync(asOfDate, employeeCode, branchCode, kpiCode, startDate, endDate);
                 
                 return Ok(new
                 {
                     success = true,
-                    records = result.Data,
-                    totalCount = result.TotalCount,
-                    page = page,
-                    pageSize = pageSize,
-                    totalPages = (int)Math.Ceiling((double)result.TotalCount / pageSize),
-                    message = $"Retrieved {result.Data?.Count() ?? 0} records successfully"
+                    asOfDate = asOfDate,
+                    recordCount = data.Count,
+                    data = data
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error executing temporal GET query");
-                return StatusCode(500, new { success = false, message = ex.Message });
-            }
-        }
-
-        /// <summary>
-        /// 📚 Get complete history of an entity
-        /// </summary>
-        [HttpGet("history/{entityId}")]
-        public async Task<ActionResult<TemporalHistoryResult<RawDataImport>>> GetEntityHistory(
-            string entityId,
-            [FromQuery] DateTime? fromDate = null,
-            [FromQuery] DateTime? toDate = null)
-        {
-            try
-            {
-                _logger.LogInformation("📚 Getting history for entity: {EntityId}", entityId);
-                
-                var result = await _temporalService.GetHistoryDataAsync<RawDataImport>(entityId, fromDate, toDate);
-                
-                return Ok(new
-                {
-                    success = true,
-                    data = result,
-                    message = $"Retrieved {result.TotalVersions} versions successfully"
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error getting entity history for {EntityId}", entityId);
-                return StatusCode(500, new { success = false, message = ex.Message });
-            }
-        }
-
-        /// <summary>
-        /// ⏰ Get entity state as of specific date
-        /// </summary>
-        [HttpGet("as-of/{entityId}")]
-        public async Task<ActionResult<RawDataImport>> GetAsOfDate(
-            string entityId,
-            [FromQuery] DateTime asOfDate)
-        {
-            try
-            {
-                _logger.LogInformation("⏰ Getting entity {EntityId} as of {AsOfDate}", entityId, asOfDate);
-                
-                var result = await _temporalService.GetAsOfDateAsync<RawDataImport>(entityId, asOfDate);
-                
-                if (result == null)
-                {
-                    return NotFound(new
-                    {
-                        success = false,
-                        message = $"No data found for entity {entityId} as of {asOfDate}"
-                    });
-                }
-                
-                return Ok(new
-                {
-                    success = true,
-                    data = result,
-                    message = "Entity retrieved successfully"
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error getting entity as of date");
-                return StatusCode(500, new { success = false, message = ex.Message });
-            }
-        }
-
-        /// <summary>
-        /// 🛠️ Enable temporal table for a specific table
-        /// </summary>
-        [HttpPost("enable/{tableName}")]
-        public async Task<ActionResult> EnableTemporalTable(string tableName)
-        {
-            try
-            {
-                _logger.LogInformation("🛠️ Enabling temporal table: {TableName}", tableName);
-                
-                var success = await _temporalService.EnableTemporalTableAsync(tableName);
-                
-                if (success)
-                {
-                    return Ok(new
-                    {
-                        success = true,
-                        message = $"Temporal table enabled successfully for {tableName}"
-                    });
-                }
-                
-                return BadRequest(new
+                _logger.LogError(ex, "Error retrieving temporal data as of {AsOfDate}", asOfDate);
+                return StatusCode(500, new
                 {
                     success = false,
-                    message = $"Failed to enable temporal table for {tableName}"
+                    message = "Query failed",
+                    error = ex.Message
                 });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error enabling temporal table {TableName}", tableName);
-                return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
 
         /// <summary>
-        /// 📈 Create columnstore index for performance optimization
+        /// So sánh dữ liệu giữa 2 thời điểm
         /// </summary>
-        [HttpPost("index/{tableName}")]
-        public async Task<ActionResult> CreateColumnstoreIndex(
-            string tableName,
-            [FromBody] CreateIndexRequest request)
+        [HttpGet("compare")]
+        public async Task<IActionResult> CompareDataBetweenDates(
+            [FromQuery] DateTime date1,
+            [FromQuery] DateTime date2,
+            [FromQuery] string? employeeCode = null,
+            [FromQuery] string? branchCode = null,
+            [FromQuery] string? kpiCode = null)
         {
             try
             {
-                _logger.LogInformation("📈 Creating columnstore index for: {TableName}", tableName);
+                var comparison = await _temporalService.CompareDataBetweenDatesAsync(date1, date2, employeeCode, branchCode, kpiCode);
                 
-                var success = await _temporalService.CreateColumnstoreIndexAsync(
-                    tableName, 
-                    request.IndexName, 
-                    request.Columns);
-                
-                if (success)
+                return Ok(new
                 {
-                    return Ok(new
-                    {
-                        success = true,
-                        message = $"Columnstore index created successfully for {tableName}"
-                    });
-                }
-                
-                return BadRequest(new
+                    success = true,
+                    date1 = date1,
+                    date2 = date2,
+                    comparisonCount = comparison.Count,
+                    changes = comparison.GroupBy(c => c.ChangeType).ToDictionary(g => g.Key, g => g.Count()),
+                    data = comparison
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error comparing temporal data between {Date1} and {Date2}", date1, date2);
+                return StatusCode(500, new
                 {
                     success = false,
-                    message = $"Failed to create columnstore index for {tableName}"
+                    message = "Comparison failed",
+                    error = ex.Message
                 });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error creating columnstore index for {TableName}", tableName);
-                return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
 
         /// <summary>
-        /// 📊 Get temporal table statistics
+        /// Lấy lịch sử thay đổi của một record cụ thể
         /// </summary>
-        [HttpGet("statistics/{tableName}")]
-        public async Task<ActionResult<TemporalStatistics>> GetTemporalStatistics(string tableName)
+        [HttpGet("history")]
+        public async Task<IActionResult> GetRecordHistory(
+            [FromQuery] string employeeCode = "",
+            [FromQuery] string kpiCode = "",
+            [FromQuery] string branchCode = "",
+            [FromQuery] DateTime? importDate = null)
         {
             try
             {
-                _logger.LogInformation("📊 Getting statistics for: {TableName}", tableName);
-                
-                var stats = await _temporalService.GetTemporalStatisticsAsync(tableName);
+                if (string.IsNullOrEmpty(kpiCode) || string.IsNullOrEmpty(branchCode))
+                {
+                    return BadRequest("KpiCode and BranchCode are required");
+                }
+
+                var history = await _temporalService.GetRecordHistoryAsync(employeeCode, kpiCode, branchCode, importDate);
                 
                 return Ok(new
                 {
                     success = true,
-                    data = stats,
-                    message = "Statistics retrieved successfully"
+                    employeeCode = employeeCode,
+                    kpiCode = kpiCode,
+                    branchCode = branchCode,
+                    historyCount = history.Count,
+                    history = history
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error getting statistics for {TableName}", tableName);
-                return StatusCode(500, new { success = false, message = ex.Message });
+                _logger.LogError(ex, "Error retrieving record history for {EmployeeCode}/{KpiCode}/{BranchCode}", 
+                    employeeCode, kpiCode, branchCode);
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "History query failed",
+                    error = ex.Message
+                });
             }
         }
 
         /// <summary>
-        /// 🔍 Compare data between two dates (replaces SCD Type 2 comparison)
+        /// Lấy tổng hợp thay đổi theo ngày
         /// </summary>
-        [HttpPost("compare")]
-        public async Task<ActionResult> CompareTemporalData([FromBody] CompareTemporalDataRequest request)
+        [HttpGet("daily-summary")]
+        public async Task<IActionResult> GetDailyChangeSummary(
+            [FromQuery] DateTime reportDate,
+            [FromQuery] string? branchCode = null)
         {
             try
             {
-                _logger.LogInformation("🔍 Comparing temporal data between {Date1} and {Date2}", 
-                    request.Date1, request.Date2);
-
-                var query1 = new TemporalQueryRequest 
-                { 
-                    AsOfDate = request.Date1,
-                    Filter = request.Filter,
-                    PageSize = int.MaxValue // Get all records for comparison
-                };
+                var summary = await _temporalService.GetDailyChangeSummaryAsync(reportDate, branchCode);
                 
-                var query2 = new TemporalQueryRequest 
-                { 
-                    AsOfDate = request.Date2,
-                    Filter = request.Filter,
-                    PageSize = int.MaxValue
-                };
-
-                var result1 = await _temporalService.GetTemporalDataAsync<RawDataImport>(query1);
-                var result2 = await _temporalService.GetTemporalDataAsync<RawDataImport>(query2);
-
-                // TODO: Implement comparison logic here
-                var comparison = new
-                {
-                    Date1Records = result1.TotalCount,
-                    Date2Records = result2.TotalCount,
-                    Difference = result2.TotalCount - result1.TotalCount,
-                    // Add more comparison metrics as needed
-                };
-
                 return Ok(new
                 {
                     success = true,
-                    data = comparison,
-                    message = "Data comparison completed successfully"
+                    reportDate = reportDate,
+                    branchCode = branchCode,
+                    summaryCount = summary.Count,
+                    totalChanges = summary.Sum(s => s.NewRecords + s.ModifiedRecords + s.DeletedRecords),
+                    summary = summary
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Error comparing temporal data");
-                return StatusCode(500, new { success = false, message = ex.Message });
+                _logger.LogError(ex, "Error retrieving daily change summary for {ReportDate}", reportDate);
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Daily summary query failed",
+                    error = ex.Message
+                });
             }
         }
-    }
 
-    // Request DTOs
-    public class CreateIndexRequest
-    {
-        public string IndexName { get; set; } = string.Empty;
-        public string[] Columns { get; set; } = Array.Empty<string>();
-    }
+        /// <summary>
+        /// Lấy phân tích hiệu suất với moving averages và trends
+        /// </summary>
+        [HttpGet("analytics")]
+        public async Task<IActionResult> GetPerformanceAnalytics(
+            [FromQuery] DateTime startDate,
+            [FromQuery] DateTime endDate,
+            [FromQuery] string? branchCode = null,
+            [FromQuery] string? employeeCode = null)
+        {
+            try
+            {
+                var analytics = await _temporalService.GetPerformanceAnalyticsAsync(startDate, endDate, branchCode, employeeCode);
+                
+                return Ok(new
+                {
+                    success = true,
+                    startDate = startDate,
+                    endDate = endDate,
+                    analyticsCount = analytics.Count,
+                    dateRange = (endDate - startDate).Days,
+                    analytics = analytics
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving performance analytics for {StartDate} to {EndDate}", startDate, endDate);
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Analytics query failed",
+                    error = ex.Message
+                });
+            }
+        }
 
-    public class CompareTemporalDataRequest
-    {
-        public DateTime Date1 { get; set; }
-        public DateTime Date2 { get; set; }
-        public string? Filter { get; set; }
+        /// <summary>
+        /// Health check cho temporal tables system
+        /// </summary>
+        [HttpGet("health")]
+        public async Task<IActionResult> GetHealthCheck()
+        {
+            try
+            {
+                var healthData = await _temporalService.GetHealthCheckAsync();
+                
+                return Ok(new
+                {
+                    success = true,
+                    message = "Temporal tables health check completed",
+                    timestamp = DateTime.UtcNow,
+                    healthData = healthData
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error performing temporal health check");
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Health check failed",
+                    error = ex.Message
+                });
+            }
+        }
+
+        /// <summary>
+        /// Test import với sample data để kiểm tra temporal functionality
+        /// </summary>
+        [HttpPost("test-import")]
+        public async Task<IActionResult> TestImport()
+        {
+            try
+            {
+                var testRequest = new TemporalImportRequest
+                {
+                    ImportDate = DateTime.Today,
+                    ImportSource = "TEST_API",
+                    DataType = "TEST_QUARTERLY",
+                    FileName = "test_temporal_import.json",
+                    ImportedBy = "SYSTEM_TEST",
+                    Data = new List<RawDataImportDto>
+                    {
+                        new RawDataImportDto
+                        {
+                            BranchCode = "CNH_TEST",
+                            DepartmentCode = "DEPT_TEST",
+                            EmployeeCode = "EMP_TEST_001",
+                            KpiCode = "TEST_KPI_001",
+                            KpiName = "Test Capital Source",
+                            Value = 1000.5m,
+                            Unit = "Billion VND",
+                            Note = "Test temporal import data"
+                        },
+                        new RawDataImportDto
+                        {
+                            BranchCode = "CNH_TEST",
+                            DepartmentCode = "DEPT_TEST",
+                            EmployeeCode = "EMP_TEST_002",
+                            KpiCode = "TEST_KPI_002",
+                            KpiName = "Test Debt Balance",
+                            Value = 800.3m,
+                            Unit = "Billion VND",
+                            Note = "Test temporal import data"
+                        }
+                    }
+                };
+
+                var recordsImported = await _temporalService.ImportDailyDataAsync(testRequest);
+                
+                return Ok(new
+                {
+                    success = true,
+                    message = "Test import completed successfully",
+                    recordsImported = recordsImported,
+                    testData = testRequest
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error performing test temporal import");
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Test import failed",
+                    error = ex.Message
+                });
+            }
+        }
     }
 }
