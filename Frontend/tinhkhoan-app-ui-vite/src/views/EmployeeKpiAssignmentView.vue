@@ -521,7 +521,7 @@ async function loadTableDetails() {
 
 function onTableChange() {
   console.log('📊 KPI table changed to:', selectedTableId.value)
-  selectedEmployeeIds.value = []
+  // Không xóa selectedEmployeeIds nữa để giữ trạng thái chọn cán bộ
   targetValues.value = {}
   targetErrors.value = {}
   

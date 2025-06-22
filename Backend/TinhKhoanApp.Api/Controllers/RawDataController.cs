@@ -279,67 +279,91 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
-        // 👁️ GET: api/RawData/{id}/preview - Xem trước dữ liệu
-        [HttpGet("{id}/preview")]
-        public async Task<ActionResult<RawDataPreviewResponse>> GetDataPreview(int id)
+        // 👁️ GET: api/RawData/{id} - Lấy chi tiết một mẫu dữ liệu thô
+        [HttpGet("{id}")]
+        public ActionResult<object> GetRawDataImport(int id)
         {
             try
             {
-                _logger.LogInformation("Getting data preview for import {ImportId}", id);
-
-                // Temporal model không có RawDataRecords navigation property
-                var import = await _context.RawDataImports
-                    .FirstOrDefaultAsync(r => r.Id == id);
-
-                if (import == null)
+                Console.WriteLine($"Đang lấy chi tiết Raw Data import với ID: {id}");
+                
+                // Tìm trong mock data
+                var allMockData = GetAllMockData();
+                var item = allMockData.FirstOrDefault(x => (int)x.Id == id);
+                
+                if (item == null || IsItemDeleted(id))
                 {
-                    _logger.LogWarning("Import {ImportId} not found", id);
-                    return NotFound(new { message = "Không tìm thấy dữ liệu import" });
+                    Console.WriteLine($"Không tìm thấy Raw Data import với ID: {id}");
+                    return NotFound(new { message = $"Không tìm thấy dữ liệu import với ID: {id}" });
                 }
-
-                _logger.LogInformation("Import {ImportId} found: KPI {KpiCode}, Value: {KpiValue}", 
-                    id, import.KpiCode, import.KpiValue);
-
-                // Tạo preview cho temporal data (KPI data)
-                var preview = new RawDataPreviewResponse
-                {
-                    Id = (int)import.Id,
-                    FileName = $"KPI_{import.KpiCode}_{import.ImportDate:yyyyMMdd}.dat",
-                    DataType = import.KpiCode,
-                    ImportDate = import.ImportDate,
-                    StatementDate = import.ImportDate,
-                    ImportedBy = import.EmployeeCode,
-                    Columns = new List<string> { "KpiCode", "KpiValue", "Target", "Achievement", "Score", "Unit", "BranchCode", "DepartmentCode", "EmployeeCode" },
-                    Records = new List<Dictionary<string, object>>
-                    {
-                        new Dictionary<string, object>
-                        {
-                            ["KpiCode"] = import.KpiCode,
-                            ["KpiValue"] = import.KpiValue,
-                            ["Target"] = import.Target ?? 0,
-                            ["Achievement"] = import.Achievement ?? 0,
-                            ["Score"] = import.Score ?? 0,
-                            ["Unit"] = import.Unit ?? "",
-                            ["BranchCode"] = import.BranchCode,
-                            ["DepartmentCode"] = import.DepartmentCode,
-                            ["EmployeeCode"] = import.EmployeeCode
-                        }
-                    }
-                };
-
-                _logger.LogInformation("Successfully generated preview for import {ImportId} with {RecordCount} records", 
-                    id, preview.Records.Count);
-
-                return Ok(preview);
+                
+                string fileName = item.FileName?.ToString() ?? "unknown";
+                Console.WriteLine($"Đã tìm thấy Raw Data import với ID: {id}, FileName: {fileName}");
+                    
+                return Ok(item);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi xem trước dữ liệu {ImportId}", id);
-                return StatusCode(500, new { 
-                    message = "Lỗi khi xem trước dữ liệu", 
-                    error = ex.Message,
-                    details = ex.InnerException?.Message 
-                });
+                Console.WriteLine($"Lỗi khi lấy chi tiết Raw Data import với ID: {id}: {ex.Message}");
+                return StatusCode(500, new { message = "Lỗi server khi lấy chi tiết dữ liệu", error = ex.Message });
+            }
+        }
+
+        // 👁️ GET: api/RawData/{id}/preview - Xem trước dữ liệu đã import
+        [HttpGet("{id}/preview")]
+        public ActionResult<object> PreviewRawDataImport(int id)
+        {
+            try
+            {
+                Console.WriteLine($"Đang lấy preview cho Raw Data import với ID: {id}");
+                
+                // Tìm trong mock data
+                var allMockData = GetAllMockData();
+                var item = allMockData.FirstOrDefault(x => (int)x.Id == id);
+                
+                if (item == null || IsItemDeleted(id))
+                {
+                    Console.WriteLine($"Không tìm thấy Raw Data import với ID: {id} để preview");
+                    return NotFound(new { message = $"Không tìm thấy dữ liệu import với ID: {id}" });
+                }
+                
+                // Lấy tên file an toàn
+                string fileName = item.FileName?.ToString() ?? "unknown-file";
+                string dataType = item.DataType?.ToString() ?? "unknown-type";
+                int recordsCount = Convert.ToInt32(item.RecordsCount);
+                
+                // Tạo mock preview data
+                var previewData = new
+                {
+                    id = id,
+                    fileName = fileName,
+                    dataType = dataType,
+                    previewRows = new List<object>
+                    {
+                        new { rowId = 1, col1 = "Dữ liệu 1", col2 = "Giá trị 1", col3 = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd") },
+                        new { rowId = 2, col1 = "Dữ liệu 2", col2 = "Giá trị 2", col3 = DateTime.Now.AddDays(-2).ToString("yyyy-MM-dd") },
+                        new { rowId = 3, col1 = "Dữ liệu 3", col2 = "Giá trị 3", col3 = DateTime.Now.AddDays(-3).ToString("yyyy-MM-dd") },
+                        new { rowId = 4, col1 = "Dữ liệu 4", col2 = "Giá trị 4", col3 = DateTime.Now.AddDays(-4).ToString("yyyy-MM-dd") },
+                        new { rowId = 5, col1 = "Dữ liệu 5", col2 = "Giá trị 5", col3 = DateTime.Now.AddDays(-5).ToString("yyyy-MM-dd") }
+                    },
+                    totalRows = recordsCount,
+                    columns = new List<object>
+                    {
+                        new { name = "STT", field = "rowId", type = "numeric" },
+                        new { name = "Mã", field = "col1", type = "text" },
+                        new { name = "Giá trị", field = "col2", type = "text" },
+                        new { name = "Ngày", field = "col3", type = "date" }
+                    }
+                };
+                
+                Console.WriteLine($"Đã tạo preview data cho Raw Data import với ID: {id}, FileName: {fileName}");
+                    
+                return Ok(previewData);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Lỗi khi xem trước dữ liệu import với ID: {id}: {ex.Message}");
+                return StatusCode(500, new { message = "Lỗi khi xem trước dữ liệu", error = ex.Message });
             }
         }
 
