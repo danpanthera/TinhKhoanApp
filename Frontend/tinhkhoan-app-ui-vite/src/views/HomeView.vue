@@ -8,7 +8,7 @@
           AGRIBANK LAI CHAU CENTER
         </h1>
         <p class="hero-subtitle">
-          HỆ THỐNG QUẢN LÝ TÍNH KHOÁN VÀ LƯƠNG | HỆ THỐNG BÁO CÁO
+          HỆ THỐNG QUẢN LÝ TÍNH KHOÁN | HỆ THỐNG BÁO CÁO
         </p>
       </div>
     </div>

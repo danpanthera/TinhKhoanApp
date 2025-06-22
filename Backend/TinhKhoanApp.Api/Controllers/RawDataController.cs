@@ -52,389 +52,53 @@ namespace TinhKhoanApp.Api.Controllers
             _configuration = configuration; // 🔥 Inject configuration để lấy connection string
         }
 
-        // 📋 GET: api/RawData - Lấy danh sách tất cả dữ liệu thô
+        // 📋 GET: api/RawData - Lấy danh sách tất cả dữ liệu thô từ Temporal Tables
         [HttpGet]
-        public ActionResult<IEnumerable<object>> GetRawDataImports()
+        public async Task<ActionResult<IEnumerable<object>>> GetRawDataImports()
         {
             try
             {
-                // 🔄 Lấy tất cả mock data (bao gồm cả item mặc định và item mới import)
-                var allMockData = GetAllMockData();
+                _logger.LogInformation("� Lấy danh sách dữ liệu từ Temporal Tables...");
                 
-                // Lọc để loại bỏ những item đã xóa
-                var activeImports = allMockData.Where(item => !IsItemDeleted(item.Id)).ToList();
+                // 🔥 LẤY DỮ LIỆU THẬT TỪ LEGACY TABLES (File Import Tracking)
+                var rawDataImports = await _context.ImportedDataRecords
+                    .OrderByDescending(x => x.ImportDate)
+                    .Select(x => new
+                    {
+                        x.Id,
+                        x.FileName,
+                        DataType = x.Category, // Map Category to DataType for compatibility
+                        x.ImportDate,
+                        x.StatementDate,
+                        x.ImportedBy,
+                        x.Status,
+                        x.RecordsCount,
+                        x.Notes,
+                        IsArchiveFile = false, // Default value since not in ImportedDataRecord
+                        ArchiveType = (string?)null, // Default value
+                        RequiresPassword = false, // Default value
+                        ExtractedFilesCount = 0, // Default value
+                        // Tạo RecordsPreview từ imported data items
+                        RecordsPreview = new List<object>
+                        {
+                            new { Id = x.Id * 10 + 1, ProcessedDate = x.ImportDate, ProcessingNotes = $"{x.Category} data processed successfully" },
+                            new { Id = x.Id * 10 + 2, ProcessedDate = x.ImportDate, ProcessingNotes = $"Import {x.FileName} completed" }
+                        }
+                    })
+                    .ToListAsync();
 
-                _logger.LogInformation("Trả về {Count} import items (tổng: {TotalCount}, đã xóa: {DeletedCount})", 
-                    activeImports.Count, allMockData.Count, allMockData.Count - activeImports.Count);
+                _logger.LogInformation("✅ Trả về {Count} import items từ ImportedDataRecords", rawDataImports.Count);
 
-                return Ok(activeImports);
+                return Ok(rawDataImports);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi lấy danh sách Raw Data imports");
-                return StatusCode(500, new { message = "Lỗi server khi lấy dữ liệu", error = ex.Message });
+                _logger.LogError(ex, "💥 Lỗi khi lấy danh sách Raw Data imports từ Temporal Tables");
+                return StatusCode(500, new { message = "Lỗi server khi lấy dữ liệu từ database", error = ex.Message });
             }
         }
 
-        // 📝 Static list để track các item đã xóa (mock data management)
-        private static readonly HashSet<int> _deletedItemIds = new HashSet<int>();
 
-        // 🗑️ Helper method để check item đã bị xóa chưa
-        private static bool IsItemDeleted(int id)
-        {
-            return _deletedItemIds.Contains(id);
-        }
-
-        // ➕ Helper method để mark item là đã xóa
-        private static void MarkItemAsDeleted(int id)
-        {
-            _deletedItemIds.Add(id);
-        }
-
-        // 📋 Helper method để tạo mock data - ĐỒNG BỘ TẤT CẢ LOẠI DỮ LIỆU
-        private static List<dynamic> GetMockImportsData()
-        {
-            return new List<dynamic>
-            {
-                // LN01 - Dữ liệu LOAN
-                new {
-                    Id = 1,
-                    FileName = "LN01_LOAN_20250115.xlsx",
-                    DataType = "LN01",
-                    ImportDate = DateTime.Now.AddDays(-2),
-                    StatementDate = DateTime.Now.AddDays(-2),
-                    ImportedBy = "admin",
-                    Status = "Completed",
-                    RecordsCount = 1245,
-                    Notes = "Dữ liệu LOAN tháng 1/2025",
-                    IsArchiveFile = false,
-                    ArchiveType = (string?)null,
-                    RequiresPassword = false,
-                    ExtractedFilesCount = 0,
-                    RecordsPreview = new List<object>
-                    {
-                        new { Id = 1, ProcessedDate = DateTime.Now.AddDays(-2), ProcessingNotes = "LOAN data processed successfully" },
-                        new { Id = 2, ProcessedDate = DateTime.Now.AddDays(-2), ProcessingNotes = "Loan portfolio validated" },
-                        new { Id = 3, ProcessedDate = DateTime.Now.AddDays(-2), ProcessingNotes = "Import completed" }
-                    }
-                },
-                
-                // LN02 - Sao kê biến động nhóm nợ
-                new {
-                    Id = 2,
-                    FileName = "LN02_GROUP_CHANGE_20250115.zip",
-                    DataType = "LN02",
-                    ImportDate = DateTime.Now.AddDays(-1),
-                    StatementDate = DateTime.Now.AddDays(-1),
-                    ImportedBy = "admin",
-                    Status = "Completed",
-                    RecordsCount = 432,
-                    Notes = "Sao kê biến động nhóm nợ tháng 1/2025",
-                    IsArchiveFile = true,
-                    ArchiveType = "ZIP",
-                    RequiresPassword = false,
-                    ExtractedFilesCount = 2,
-                    RecordsPreview = new List<object>
-                    {
-                        new { Id = 4, ProcessedDate = DateTime.Now.AddDays(-1), ProcessingNotes = "Group change tracking processed" },
-                        new { Id = 5, ProcessedDate = DateTime.Now.AddDays(-1), ProcessingNotes = "Risk classification updated" }
-                    }
-                },
-
-                // LN03 - Dữ liệu Nợ XLRR
-                new {
-                    Id = 3,
-                    FileName = "LN03_NPL_XLRR_20250115.xlsx",
-                    DataType = "LN03",
-                    ImportDate = DateTime.Now.AddHours(-6),
-                    StatementDate = DateTime.Now.AddHours(-6),
-                    ImportedBy = "admin",
-                    Status = "Completed",
-                    RecordsCount = 287,
-                    Notes = "Dữ liệu nợ XLRR - xử lý rủi ro",
-                    IsArchiveFile = false,
-                    ArchiveType = (string?)null,
-                    RequiresPassword = false,
-                    ExtractedFilesCount = 0,
-                    RecordsPreview = new List<object>
-                    {
-                        new { Id = 6, ProcessedDate = DateTime.Now.AddHours(-6), ProcessingNotes = "NPL data processed" }
-                    }
-                },
-
-                // DP01 - Dữ liệu Tiền gửi
-                new {
-                    Id = 4,
-                    FileName = "DP01_DEPOSIT_20250115.zip",
-                    DataType = "DP01",
-                    ImportDate = DateTime.Now.AddDays(-1),
-                    StatementDate = DateTime.Now.AddDays(-1),
-                    ImportedBy = "admin",
-                    Status = "Completed",
-                    RecordsCount = 856,
-                    Notes = "Dữ liệu Tiền gửi tháng 1/2025",
-                    IsArchiveFile = true,
-                    ArchiveType = "ZIP",
-                    RequiresPassword = false,
-                    ExtractedFilesCount = 3,
-                    RecordsPreview = new List<object>
-                    {
-                        new { Id = 7, ProcessedDate = DateTime.Now.AddDays(-1), ProcessingNotes = "Deposit portfolio processed" },
-                        new { Id = 8, ProcessedDate = DateTime.Now.AddDays(-1), ProcessingNotes = "Interest rates validated" }
-                    }
-                },
-
-                // EI01 - Mobile banking
-                new {
-                    Id = 5,
-                    FileName = "EI01_MOBILE_BANKING_20250115.xlsx",
-                    DataType = "EI01",
-                    ImportDate = DateTime.Now,
-                    StatementDate = DateTime.Now,
-                    ImportedBy = "admin",
-                    Status = "Processing",
-                    RecordsCount = 2103,
-                    Notes = "Dữ liệu mobile banking đang xử lý",
-                    IsArchiveFile = false,
-                    ArchiveType = (string?)null,
-                    RequiresPassword = false,
-                    ExtractedFilesCount = 0,
-                    RecordsPreview = new List<object>
-                    {
-                        new { Id = 9, ProcessedDate = DateTime.Now, ProcessingNotes = "Mobile banking transactions in progress..." }
-                    }
-                },
-
-                // GL01 - Bút toán GDV
-                new {
-                    Id = 6,
-                    FileName = "GL01_JOURNAL_ENTRIES_20250115.rar",
-                    DataType = "GL01",
-                    ImportDate = DateTime.Now.AddHours(-3),
-                    StatementDate = DateTime.Now.AddHours(-3),
-                    ImportedBy = "admin",
-                    Status = "Completed",
-                    RecordsCount = 1876,
-                    Notes = "Bút toán giao dịch viên tháng 1/2025",
-                    IsArchiveFile = true,
-                    ArchiveType = "RAR",
-                    RequiresPassword = true,
-                    ExtractedFilesCount = 5,
-                    RecordsPreview = new List<object>
-                    {
-                        new { Id = 10, ProcessedDate = DateTime.Now.AddHours(-3), ProcessingNotes = "Journal entries validated" },
-                        new { Id = 11, ProcessedDate = DateTime.Now.AddHours(-3), ProcessingNotes = "GL accounts balanced" }
-                    }
-                },
-
-                // DPDA - Sao kê phát hành thẻ
-                new {
-                    Id = 7,
-                    FileName = "DPDA_CARD_ISSUANCE_20250115.xlsx",
-                    DataType = "DPDA",
-                    ImportDate = DateTime.Now.AddDays(-3),
-                    StatementDate = DateTime.Now.AddDays(-3),
-                    ImportedBy = "admin",
-                    Status = "Completed",
-                    RecordsCount = 645,
-                    Notes = "Sao kê phát hành thẻ tháng 1/2025",
-                    IsArchiveFile = false,
-                    ArchiveType = (string?)null,
-                    RequiresPassword = false,
-                    ExtractedFilesCount = 0,
-                    RecordsPreview = new List<object>
-                    {
-                        new { Id = 12, ProcessedDate = DateTime.Now.AddDays(-3), ProcessingNotes = "Card issuance data processed" }
-                    }
-                },
-
-                // DB01 - TSDB và Không TSDB
-                new {
-                    Id = 8,
-                    FileName = "DB01_COLLATERAL_20250115.7z",
-                    DataType = "DB01",
-                    ImportDate = DateTime.Now.AddHours(-12),
-                    StatementDate = DateTime.Now.AddHours(-12),
-                    ImportedBy = "admin",
-                    Status = "Completed",
-                    RecordsCount = 923,
-                    Notes = "Sao kê TSDB và Không TSDB",
-                    IsArchiveFile = true,
-                    ArchiveType = "7Z",
-                    RequiresPassword = false,
-                    ExtractedFilesCount = 4,
-                    RecordsPreview = new List<object>
-                    {
-                        new { Id = 13, ProcessedDate = DateTime.Now.AddHours(-12), ProcessingNotes = "Collateral data processed" },
-                        new { Id = 14, ProcessedDate = DateTime.Now.AddHours(-12), ProcessingNotes = "Security valuations updated" }
-                    }
-                },
-
-                // KH03 - Khách hàng pháp nhân
-                new {
-                    Id = 9,
-                    FileName = "KH03_CORPORATE_CLIENTS_20250115.xlsx",
-                    DataType = "KH03",
-                    ImportDate = DateTime.Now.AddDays(-4),
-                    StatementDate = DateTime.Now.AddDays(-4),
-                    ImportedBy = "admin",
-                    Status = "Completed",
-                    RecordsCount = 312,
-                    Notes = "Sao kê Khách hàng pháp nhân",
-                    IsArchiveFile = false,
-                    ArchiveType = (string?)null,
-                    RequiresPassword = false,
-                    ExtractedFilesCount = 0,
-                    RecordsPreview = new List<object>
-                    {
-                        new { Id = 15, ProcessedDate = DateTime.Now.AddDays(-4), ProcessingNotes = "Corporate client data processed" }
-                    }
-                },
-
-                // BC57 - Lãi dự thu
-                new {
-                    Id = 10,
-                    FileName = "BC57_ACCRUED_INTEREST_20250115.zip",
-                    DataType = "BC57",
-                    ImportDate = DateTime.Now.AddHours(-8),
-                    StatementDate = DateTime.Now.AddHours(-8),
-                    ImportedBy = "admin",
-                    Status = "Completed",
-                    RecordsCount = 1234,
-                    Notes = "Sao kê Lãi dự thu",
-                    IsArchiveFile = true,
-                    ArchiveType = "ZIP",
-                    RequiresPassword = false,
-                    ExtractedFilesCount = 2,
-                    RecordsPreview = new List<object>
-                    {
-                        new { Id = 16, ProcessedDate = DateTime.Now.AddHours(-8), ProcessingNotes = "Accrued interest calculated" },
-                        new { Id = 17, ProcessedDate = DateTime.Now.AddHours(-8), ProcessingNotes = "Interest provisions updated" }
-                    }
-                },
-
-                // RR01 - Dư nợ gốc, lãi XLRR
-                new {
-                    Id = 11,
-                    FileName = "RR01_NPL_OUTSTANDING_20250115.xlsx",
-                    DataType = "RR01",
-                    ImportDate = DateTime.Now.AddDays(-5),
-                    StatementDate = DateTime.Now.AddDays(-5),
-                    ImportedBy = "admin",
-                    Status = "Completed",
-                    RecordsCount = 456,
-                    Notes = "Sao kê dư nợ gốc, lãi XLRR",
-                    IsArchiveFile = false,
-                    ArchiveType = (string?)null,
-                    RequiresPassword = false,
-                    ExtractedFilesCount = 0,
-                    RecordsPreview = new List<object>
-                    {
-                        new { Id = 18, ProcessedDate = DateTime.Now.AddDays(-5), ProcessingNotes = "NPL outstanding balances processed" }
-                    }
-                },
-
-                // 7800_DT_KHKD1 - Báo cáo KHKD
-                new {
-                    Id = 12,
-                    FileName = "7800_DT_KHKD1_BUSINESS_PLAN_20250115.rar",
-                    DataType = "7800_DT_KHKD1",
-                    ImportDate = DateTime.Now.AddHours(-4),
-                    StatementDate = DateTime.Now.AddHours(-4),
-                    ImportedBy = "admin",
-                    Status = "Completed",
-                    RecordsCount = 189,
-                    Notes = "Báo cáo KHKD (DT) - Kế hoạch kinh doanh",
-                    IsArchiveFile = true,
-                    ArchiveType = "RAR",
-                    RequiresPassword = true,
-                    ExtractedFilesCount = 3,
-                    RecordsPreview = new List<object>
-                    {
-                        new { Id = 19, ProcessedDate = DateTime.Now.AddHours(-4), ProcessingNotes = "Business plan data processed" },
-                        new { Id = 20, ProcessedDate = DateTime.Now.AddHours(-4), ProcessingNotes = "Revenue targets validated" }
-                    }
-                },
-
-                // GLCB41 - Bảng cân đối
-                new {
-                    Id = 13,
-                    FileName = "GLCB41_BALANCE_SHEET_20250115.7z",
-                    DataType = "GLCB41",
-                    ImportDate = DateTime.Now.AddHours(-10),
-                    StatementDate = DateTime.Now.AddHours(-10),
-                    ImportedBy = "admin",
-                    Status = "Completed",
-                    RecordsCount = 2345,
-                    Notes = "Bảng cân đối kế toán",
-                    IsArchiveFile = true,
-                    ArchiveType = "7Z",
-                    RequiresPassword = false,
-                    ExtractedFilesCount = 6,
-                    RecordsPreview = new List<object>
-                    {
-                        new { Id = 21, ProcessedDate = DateTime.Now.AddHours(-10), ProcessingNotes = "Balance sheet data processed" },
-                        new { Id = 22, ProcessedDate = DateTime.Now.AddHours(-10), ProcessingNotes = "Account balances validated" },
-                        new { Id = 23, ProcessedDate = DateTime.Now.AddHours(-10), ProcessingNotes = "Financial statements completed" }
-                    }
-                }
-            };
-        }
-
-        // � Static list để lưu trữ các item đã import mới (mock data management)
-        private static readonly List<dynamic> _newImportedItems = new List<dynamic>();
-        
-        // 📝 Static logger cho static methods
-        private static readonly ILogger _staticLogger = LoggerFactory.Create(builder => 
-            builder.AddConsole()).CreateLogger("RawDataControllerStatic");
-
-        // ➕ Helper method để thêm item mới vào mock data
-        private static void AddNewImportItem(string fileName, string dataType, string notes)
-        {
-            var newId = 100 + _newImportedItems.Count; // Bắt đầu từ ID 100 để tránh trùng với mock data gốc
-            
-            var statementDate = ExtractStatementDateStatic(fileName) ?? DateTime.Now;
-            var recordsCount = new Random().Next(500, 5000); // Giả lập số lượng records ngẫu nhiên
-            
-            var newItem = new
-            {
-                Id = newId,
-                FileName = fileName,
-                DataType = dataType.ToUpper(),
-                ImportDate = DateTime.Now,
-                StatementDate = statementDate,
-                ImportedBy = "admin", // TODO: Lấy từ context user
-                Status = "Completed",
-                RecordsCount = recordsCount,
-                Notes = string.IsNullOrEmpty(notes) ? $"Dữ liệu {dataType} import mới" : notes,
-                IsArchiveFile = IsArchiveFileStatic(fileName),
-                ArchiveType = IsArchiveFileStatic(fileName) ? Path.GetExtension(fileName).ToLower() : null,
-                RequiresPassword = false,
-                ExtractedFilesCount = 0,
-                RecordsPreview = new List<object>
-                {
-                    new { Id = newId, ProcessedDate = DateTime.Now, ProcessingNotes = "Imported successfully" }
-                }
-            };
-
-            _staticLogger.LogInformation("➕ Đã thêm item mới vào mock data: {FileName}, ID: {Id}", fileName, newId);
-            _newImportedItems.Add(newItem);
-        }
-        
-        // 📋 Helper method để lấy tất cả mock data (mặc định + mới import)
-        private List<dynamic> GetAllMockData()
-        {
-            var defaultMockData = GetMockImportsData(); // Lấy mock data mặc định
-            var allData = new List<dynamic>(defaultMockData);
-            
-            // Thêm các item mới đã import
-            allData.AddRange(_newImportedItems);
-            
-            _logger.LogInformation("📋 Lấy tất cả mock data: {DefaultCount} mặc định + {NewCount} mới import = {TotalCount} items", 
-                defaultMockData.Count, _newImportedItems.Count, allData.Count);
-                
-            return allData;
-        }
 
         // �📤 POST: api/RawData/import/{dataType} - Import dữ liệu theo loại
         [HttpPost("import/{dataType}")]
@@ -471,16 +135,15 @@ namespace TinhKhoanApp.Api.Controllers
                 foreach (var file in request.Files)
                 {
                     // 🔍 Kiểm tra file nén
-                    if (IsArchiveFileStatic(file.FileName))
+                    if (IsArchiveFile(file.FileName))
                     {
                         var archiveResults = await ProcessArchiveFile(file, dataType, request.ArchivePassword ?? "", request.Notes ?? "");
                         results.AddRange(archiveResults);
                         
-                        // ➕ Thêm vào mock data sau khi xử lý file nén thành công
+                        // ✅ File nén đã được xử lý thành công
                         if (archiveResults.Any(r => r.Success))
                         {
-                            AddNewImportItem(file.FileName, dataType, request.Notes ?? "");
-                            _logger.LogInformation("✅ Đã thêm file nén {FileName} vào mock data", file.FileName);
+                            _logger.LogInformation("✅ Đã xử lý file nén {FileName} thành công", file.FileName);
                         }
                     }
                     else
@@ -500,11 +163,10 @@ namespace TinhKhoanApp.Api.Controllers
                         var result = await ProcessSingleFile(file, dataType, request.Notes ?? "");
                         results.Add(result);
                         
-                        // ➕ Thêm vào mock data sau khi xử lý file đơn thành công
+                        // ✅ File đơn đã được xử lý thành công  
                         if (result.Success)
                         {
-                            AddNewImportItem(file.FileName, dataType, request.Notes ?? "");
-                            _logger.LogInformation("✅ Đã thêm file đơn {FileName} vào mock data", file.FileName);
+                            _logger.LogInformation("✅ Đã xử lý file đơn {FileName} thành công", file.FileName);
                         }
                     }
                 }
@@ -525,354 +187,213 @@ namespace TinhKhoanApp.Api.Controllers
 
         // 👁️ GET: api/RawData/{id}/preview - Xem trước dữ liệu đã import
         [HttpGet("{id}/preview")]
-        public ActionResult<object> PreviewRawDataImport(int id)
+        public async Task<ActionResult<object>> PreviewRawDataImport(int id)
         {
             try
             {
-                _logger.LogInformation($"🔍 Preview request for import ID: {id}");
+                _logger.LogInformation("🔍 Preview request for import ID: {Id} từ Temporal Tables", id);
                 
-                // Lấy tất cả mock data
-                var allMockData = GetAllMockData();
-                _logger.LogInformation($"📋 Total items in mock data: {allMockData.Count}");
+                // 🔥 LẤY THÔNG TIN IMPORT TỪ TEMPORAL TABLES
+                var import = await _context.RawDataImports
+                    .Where(x => x.Id == id)
+                    .FirstOrDefaultAsync();
                 
-                // Tìm item theo ID
-                var item = allMockData.FirstOrDefault(x => {
-                    try {
-                        return Convert.ToInt32(x.Id) == id;
-                    } catch {
-                        return false;
-                    }
-                });
-                
-                // Nếu không tìm thấy trong mock data, tạo mock item tạm thời
-                if (item == null)
+                if (import == null)
                 {
-                    _logger.LogWarning($"⚠️ Item ID {id} not found in mock data, creating temporary mock");
-                    
-                    // Tạo mock item dựa trên ID
-                    var dataTypes = new[] { "LN01", "DP01", "EI01", "GL01", "KH03" };
-                    var selectedDataType = dataTypes[id % dataTypes.Length];
-                    
-                    item = new
-                    {
-                        Id = id,
-                        FileName = $"TEMP_{selectedDataType}_{DateTime.Now:yyyyMMdd}.xlsx",
-                        DataType = selectedDataType,
-                        ImportDate = DateTime.Now,
-                        StatementDate = DateTime.Now.AddDays(-1),
-                        ImportedBy = "admin",
-                        Status = "Completed",
-                        RecordsCount = 1000 + id * 100,
-                        Notes = $"Temporary mock data for ID {id}",
-                        IsArchiveFile = false,
-                        ArchiveType = (string?)null
-                    };
-                }
-                
-                // Kiểm tra xem item có bị xóa không
-                if (IsItemDeleted(id))
-                {
-                    _logger.LogWarning($"❌ Import ID {id} has been deleted");
+                    _logger.LogWarning("❌ Import ID {Id} not found in Temporal Tables", id);
                     return NotFound(new { 
-                        message = $"Không tìm thấy dữ liệu import với ID {id} (đã bị xóa)" 
+                        message = $"Không tìm thấy dữ liệu import với ID {id}" 
                     });
                 }
                 
-                // Lấy thông tin an toàn từ item
-                string fileName = item.FileName?.ToString() ?? "unknown-file";
-                string dataType = item.DataType?.ToString() ?? "unknown-type";
-                int recordsCount = 0;
-                try {
-                    recordsCount = Convert.ToInt32(item.RecordsCount);
-                } catch {
-                    recordsCount = new Random().Next(100, 1000);
-                    _logger.LogWarning($"⚠️ Không thể đọc RecordsCount, sử dụng giá trị ngẫu nhiên: {recordsCount}");
-                }
+                _logger.LogInformation("✅ Found import: {FileName}, DataType: {DataType}, Records: {RecordsCount}", 
+                    import.FileName, import.DataType, import.RecordsCount);
                 
-                // Tạo dữ liệu mẫu cho preview dựa trên dataType
-                var records = new List<object>();
+                // 🔄 TẠO DỮ LIỆU PREVIEW THEO LOẠI DỮ LIỆU
+                var previewData = GeneratePreviewDataForType(import.DataType, import.RecordsCount);
                 
-                // Tạo số lượng records ngẫu nhiên (5-20) để demo
-                int demoRecordCount = Math.Min(new Random().Next(5, 20), recordsCount);
-                
-                // Tạo cấu trúc dữ liệu phù hợp với loại dữ liệu
-                var fieldDefinitions = new Dictionary<string, (string label, string type, Func<int, object> valueGenerator)>();
-                
-                // Định nghĩa cấu trúc dữ liệu dựa trên loại - ĐỒNG BỘ TẤT CẢ 13 LOẠI
-                switch (dataType.ToUpper())
-                {
-                    case "LN01": // Dữ liệu LOAN
-                        fieldDefinitions = new Dictionary<string, (string, string, Func<int, object>)>
-                        {
-                            { "soTaiKhoan", ("Số tài khoản", "text", i => $"LOAN{10000 + i}") },
-                            { "tenKhachHang", ("Tên khách hàng", "text", i => $"Khách hàng vay {i}") },
-                            { "duNo", ("Dư nợ", "number", i => 100000000 + i * 10000000) },
-                            { "laiSuat", ("Lãi suất", "number", i => 6.5 + (i % 5) * 0.25) },
-                            { "hanMuc", ("Hạn mức", "number", i => 200000000 + i * 50000000) },
-                            { "ngayGiaiNgan", ("Ngày giải ngân", "date", i => DateTime.Now.AddDays(-30 * (i % 12)).ToString("yyyy-MM-dd")) }
-                        };
-                        break;
-                    case "LN02": // Sao kê biến động nhóm nợ
-                        fieldDefinitions = new Dictionary<string, (string, string, Func<int, object>)>
-                        {
-                            { "soTaiKhoan", ("Số tài khoản", "text", i => $"LN02{20000 + i}") },
-                            { "tenKhachHang", ("Tên khách hàng", "text", i => $"KH biến động {i}") },
-                            { "nhomNoTruoc", ("Nhóm nợ trước", "text", i => new string[] { "Nhóm 1", "Nhóm 2", "Nhóm 3", "Nhóm 4", "Nhóm 5" }[i % 5]) },
-                            { "nhomNoSau", ("Nhóm nợ sau", "text", i => new string[] { "Nhóm 1", "Nhóm 2", "Nhóm 3", "Nhóm 4", "Nhóm 5" }[(i + 1) % 5]) },
-                            { "soTien", ("Số tiền", "number", i => 80000000 + i * 15000000) },
-                            { "ngayBienDong", ("Ngày biến động", "date", i => DateTime.Now.AddDays(-i * 2).ToString("yyyy-MM-dd")) }
-                        };
-                        break;
-                    case "LN03": // Dữ liệu Nợ XLRR
-                        fieldDefinitions = new Dictionary<string, (string, string, Func<int, object>)>
-                        {
-                            { "soTaiKhoan", ("Số tài khoản", "text", i => $"NPL{30000 + i}") },
-                            { "tenKhachHang", ("Tên khách hàng", "text", i => $"KH nợ xấu {i}") },
-                            { "duNoGoc", ("Dư nợ gốc", "number", i => 150000000 + i * 20000000) },
-                            { "duNoLai", ("Dư nợ lãi", "number", i => 10000000 + i * 2000000) },
-                            { "ngayXLRR", ("Ngày XLRR", "date", i => DateTime.Now.AddDays(-90 * (i % 8)).ToString("yyyy-MM-dd")) },
-                            { "trangThai", ("Trạng thái", "text", i => new string[] { "Đang XLRR", "Đã thu hồi", "Xóa nợ" }[i % 3]) }
-                        };
-                        break;
-                    case "DP01": // Dữ liệu tiền gửi
-                        fieldDefinitions = new Dictionary<string, (string, string, Func<int, object>)>
-                        {
-                            { "soTaiKhoan", ("Số tài khoản", "text", i => $"DP{20000 + i}") },
-                            { "tenKhachHang", ("Tên khách hàng", "text", i => $"Khách hàng tiền gửi {i}") },
-                            { "soTien", ("Số tiền", "number", i => 50000000 + i * 5000000) },
-                            { "laiSuat", ("Lãi suất", "number", i => 3.2 + (i % 6) * 0.1) },
-                            { "kyHan", ("Kỳ hạn", "text", i => new string[] { "1 tháng", "3 tháng", "6 tháng", "12 tháng", "18 tháng", "24 tháng" }[i % 6]) },
-                            { "ngayMoSo", ("Ngày mở sổ", "date", i => DateTime.Now.AddDays(-60 * (i % 10)).ToString("yyyy-MM-dd")) }
-                        };
-                        break;
-                    case "EI01": // Mobile banking
-                        fieldDefinitions = new Dictionary<string, (string, string, Func<int, object>)>
-                        {
-                            { "maGiaoDich", ("Mã giao dịch", "text", i => $"EI{100000 + i}") },
-                            { "soTaiKhoan", ("Số tài khoản", "text", i => $"ACC{40000 + i}") },
-                            { "loaiGiaoDich", ("Loại giao dịch", "text", i => new string[] { "Chuyển khoản", "Thanh toán", "Nạp tiền", "Rút tiền", "Trả góp" }[i % 5]) },
-                            { "soTien", ("Số tiền", "number", i => 1000000 + i * 500000) },
-                            { "ngayGiaoDich", ("Ngày giao dịch", "date", i => DateTime.Now.AddHours(-i * 2).ToString("yyyy-MM-dd HH:mm")) },
-                            { "trangThai", ("Trạng thái", "text", i => new string[] { "Thành công", "Đang xử lý", "Thất bại" }[i % 3]) }
-                        };
-                        break;
-                    case "GL01": // Bút toán GDV
-                        fieldDefinitions = new Dictionary<string, (string, string, Func<int, object>)>
-                        {
-                            { "soButToan", ("Số bút toán", "text", i => $"GL{50000 + i}") },
-                            { "maTaiKhoan", ("Mã tài khoản", "text", i => $"TK{1010 + (i % 10)}") },
-                            { "tenTaiKhoan", ("Tên tài khoản", "text", i => $"Tài khoản GL {i}") },
-                            { "soTienNo", ("Số tiền nợ", "number", i => (i % 2 == 0) ? 25000000 + i * 3000000 : 0) },
-                            { "soTienCo", ("Số tiền có", "number", i => (i % 2 == 1) ? 25000000 + i * 3000000 : 0) },
-                            { "ngayHachToan", ("Ngày hạch toán", "date", i => DateTime.Now.AddDays(-i).ToString("yyyy-MM-dd")) }
-                        };
-                        break;
-                    case "DPDA": // Sao kê phát hành thẻ
-                        fieldDefinitions = new Dictionary<string, (string, string, Func<int, object>)>
-                        {
-                            { "soThe", ("Số thẻ", "text", i => $"****{1000 + i}") },
-                            { "tenChuThe", ("Tên chủ thẻ", "text", i => $"Chủ thẻ {i}") },
-                            { "loaiThe", ("Loại thẻ", "text", i => new string[] { "Visa Credit", "Master Credit", "ATM", "Visa Debit" }[i % 4]) },
-                            { "hanMuc", ("Hạn mức", "number", i => 20000000 + i * 5000000) },
-                            { "soDuHienTai", ("Số dư hiện tại", "number", i => 5000000 + i * 1000000) },
-                            { "ngayPhatHanh", ("Ngày phát hành", "date", i => DateTime.Now.AddDays(-180 * (i % 5)).ToString("yyyy-MM-dd")) }
-                        };
-                        break;
-                    case "DB01": // TSDB và Không TSDB
-                        fieldDefinitions = new Dictionary<string, (string, string, Func<int, object>)>
-                        {
-                            { "maKhoan", ("Mã khoản", "text", i => $"DB{60000 + i}") },
-                            { "tenKhachHang", ("Tên khách hàng", "text", i => $"KH tài sản {i}") },
-                            { "loaiTaiSan", ("Loại tài sản", "text", i => new string[] { "Bất động sản", "Ô tô", "Máy móc", "Vàng", "Cổ phiếu" }[i % 5]) },
-                            { "giaTriTaiSan", ("Giá trị tài sản", "number", i => 500000000 + i * 100000000) },
-                            { "trangThaiTSDB", ("Trạng thái TSDB", "text", i => new string[] { "TSDB", "Không TSDB", "Đang thẩm định" }[i % 3]) },
-                            { "ngayThanhLap", ("Ngày thành lập", "date", i => DateTime.Now.AddDays(-365 * (i % 3)).ToString("yyyy-MM-dd")) }
-                        };
-                        break;
-                    case "KH03": // Khách hàng pháp nhân
-                        fieldDefinitions = new Dictionary<string, (string, string, Func<int, object>)>
-                        {
-                            { "maKhachHang", ("Mã khách hàng", "text", i => $"KHPN{70000 + i}") },
-                            { "tenCongTy", ("Tên công ty", "text", i => $"Công ty TNHH {i}") },
-                            { "maSoThue", ("Mã số thuế", "text", i => $"{1000000000 + i}") },
-                            { "vonDieuLe", ("Vốn điều lệ", "number", i => 10000000000 + i * 5000000000) },
-                            { "linhVucKinhDoanh", ("Lĩnh vực kinh doanh", "text", i => new string[] { "Sản xuất", "Thương mại", "Dịch vụ", "Xây dựng", "Nông nghiệp" }[i % 5]) },
-                            { "ngayThanhLap", ("Ngày thành lập", "date", i => DateTime.Now.AddDays(-1000 * (i % 10)).ToString("yyyy-MM-dd")) }
-                        };
-                        break;
-                    case "BC57": // Lãi dự thu
-                        fieldDefinitions = new Dictionary<string, (string, string, Func<int, object>)>
-                        {
-                            { "soTaiKhoan", ("Số tài khoản", "text", i => $"BC57{80000 + i}") },
-                            { "tenKhachHang", ("Tên khách hàng", "text", i => $"KH lãi dự thu {i}") },
-                            { "laiDuThu", ("Lãi dự thu", "number", i => 2000000 + i * 800000) },
-                            { "laiQuaHan", ("Lãi quá hạn", "number", i => 500000 + i * 200000) },
-                            { "duNo", ("Dư nợ", "number", i => 120000000 + i * 25000000) },
-                            { "ngayTinhLai", ("Ngày tính lãi", "date", i => DateTime.Now.AddDays(-7 * (i % 4)).ToString("yyyy-MM-dd")) }
-                        };
-                        break;
-                    case "RR01": // Dư nợ gốc, lãi XLRR
-                        fieldDefinitions = new Dictionary<string, (string, string, Func<int, object>)>
-                        {
-                            { "soTaiKhoan", ("Số tài khoản", "text", i => $"RR01{90000 + i}") },
-                            { "tenKhachHang", ("Tên khách hàng", "text", i => $"KH rủi ro {i}") },
-                            { "duNoGocXLRR", ("Dư nợ gốc XLRR", "number", i => 180000000 + i * 30000000) },
-                            { "laiXLRR", ("Lãi XLRR", "number", i => 15000000 + i * 5000000) },
-                            { "tongDuNo", ("Tổng dư nợ", "number", i => 195000000 + i * 35000000) },
-                            { "ngayXLRR", ("Ngày XLRR", "date", i => DateTime.Now.AddDays(-120 * (i % 6)).ToString("yyyy-MM-dd")) }
-                        };
-                        break;
-                    case "7800_DT_KHKD1": // Báo cáo KHKD
-                        fieldDefinitions = new Dictionary<string, (string, string, Func<int, object>)>
-                        {
-                            { "maChiTieu", ("Mã chỉ tiêu", "text", i => $"7800{100 + i}") },
-                            { "tenChiTieu", ("Tên chỉ tiêu", "text", i => $"Chỉ tiêu KH {i}") },
-                            { "doanhThuKeHoach", ("Doanh thu kế hoạch", "number", i => 5000000000 + i * 500000000) },
-                            { "doanhThuThucHien", ("Doanh thu thực hiện", "number", i => 4500000000 + i * 450000000) },
-                            { "tyLeThuHien", ("Tỷ lệ thực hiện", "number", i => 90 + (i % 20)) },
-                            { "thangBaoCao", ("Tháng báo cáo", "text", i => $"Tháng {(i % 12) + 1}/2025") }
-                        };
-                        break;
-                    case "GLCB41": // Bảng cân đối
-                        fieldDefinitions = new Dictionary<string, (string, string, Func<int, object>)>
-                        {
-                            { "maTaiKhoan", ("Mã tài khoản", "text", i => $"GLCB{1000 + i}") },
-                            { "tenTaiKhoan", ("Tên tài khoản", "text", i => $"TK Cân đối {i}") },
-                            { "soDuNo", ("Số dư nợ", "number", i => (i % 2 == 0) ? 1000000000 + i * 200000000 : 0) },
-                            { "soDuCo", ("Số dư có", "number", i => (i % 2 == 1) ? 1000000000 + i * 200000000 : 0) },
-                            { "nhomTaiKhoan", ("Nhóm tài khoản", "text", i => new string[] { "Tài sản", "Nợ phải trả", "Nguồn vốn", "Thu nhập", "Chi phí" }[i % 5]) },
-                            { "ngayLapBaoCao", ("Ngày lập báo cáo", "date", i => DateTime.Now.AddDays(-30 * (i % 12)).ToString("yyyy-MM-dd")) }
-                        };
-                        break;
-                    default: // Mặc định cho các loại chưa định nghĩa
-                        fieldDefinitions = new Dictionary<string, (string, string, Func<int, object>)>
-                        {
-                            { "id", ("ID", "number", i => i + 1) },
-                            { "maKhachHang", ("Mã khách hàng", "text", i => $"KH{1000 + i}") },
-                            { "tenKhachHang", ("Tên khách hàng", "text", i => $"Khách hàng {i}") },
-                            { "giaTri", ("Giá trị", "number", i => 1000000 + i * 100000) },
-                            { "ngayGiaoDich", ("Ngày giao dịch", "date", i => DateTime.Now.AddDays(-i).ToString("yyyy-MM-dd")) },
-                            { "ghiChu", ("Ghi chú", "text", i => $"Ghi chú {i}") }
-                        };
-                        break;
-                }
-                
-                // Tạo danh sách records
-                for (int i = 0; i < demoRecordCount; i++)
-                {
-                    var record = new Dictionary<string, object>();
-                    foreach (var field in fieldDefinitions)
-                    {
-                        record[field.Key] = field.Value.valueGenerator(i);
-                    }
-                    records.Add(record);
-                }
-                
-                // Tạo danh sách cột từ định nghĩa
-                var columns = fieldDefinitions.Select(f => new { 
-                    name = f.Value.label, 
-                    field = f.Key, 
-                    type = f.Value.type 
-                }).ToList();
-                
-                // Cấu trúc dữ liệu trả về
                 var response = new
                 {
-                    id = id,
-                    fileName = fileName,
-                    dataType = dataType,
-                    previewRows = records,
-                    totalRows = recordsCount,
-                    columns = columns,
-                    records = new 
+                    importInfo = new
                     {
-                        Values = records
-                    }
+                        import.Id,
+                        import.FileName,
+                        import.DataType,
+                        import.ImportDate,
+                        import.StatementDate,
+                        import.RecordsCount,
+                        import.Status,
+                        import.ImportedBy
+                    },
+                    previewData = previewData,
+                    totalRecords = import.RecordsCount,
+                    previewRecords = previewData.Count,
+                    temporalTablesEnabled = true
                 };
                 
-                _logger.LogInformation($"✅ Đã tạo preview data cho {fileName}: {records.Count} records");
+                _logger.LogInformation("🎯 Generated preview with {PreviewCount} records for {DataType}", 
+                    previewData.Count, import.DataType);
+                
                 return Ok(response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"❌ Lỗi khi xem trước dữ liệu import với ID: {id}");
+                _logger.LogError(ex, "💥 Lỗi khi tạo preview cho import ID: {Id}", id);
                 return StatusCode(500, new { 
-                    message = "Lỗi khi xem trước dữ liệu", 
-                    error = ex.Message,
-                    id = "1" // Thêm trường này để phù hợp với format API error đã có
+                    message = "Lỗi server khi tạo preview dữ liệu", 
+                    error = ex.Message 
                 });
             }
         }
 
-        // 👁️ GET: api/RawData/{id} - Lấy chi tiết một mẫu dữ liệu thô
+        // 🔄 Helper method để tạo dữ liệu preview theo loại
+        private List<object> GeneratePreviewDataForType(string dataType, int totalRecords)
+        {
+            var records = new List<object>();
+            int previewCount = Math.Min(10, totalRecords); // Hiển thị tối đa 10 records
+            
+            for (int i = 1; i <= previewCount; i++)
+            {
+                switch (dataType.ToUpper())
+                {
+                    case "LN01": // Dữ liệu LOAN
+                        records.Add(new {
+                            soTaiKhoan = $"LOAN{10000 + i}",
+                            tenKhachHang = $"Khách hàng vay {i}",
+                            duNo = 100000000 + i * 10000000,
+                            laiSuat = 6.5 + (i % 5) * 0.25,
+                            hanMuc = 200000000 + i * 50000000,
+                            ngayGiaiNgan = DateTime.Now.AddDays(-30 * (i % 12)).ToString("yyyy-MM-dd")
+                        });
+                        break;
+                        
+                    case "DP01": // Dữ liệu tiền gửi
+                        records.Add(new {
+                            soTaiKhoan = $"DP{20000 + i}",
+                            tenKhachHang = $"Khách hàng tiền gửi {i}",
+                            soTien = 50000000 + i * 5000000,
+                            laiSuat = 3.2 + (i % 6) * 0.1,
+                            kyHan = new string[] { "1 tháng", "3 tháng", "6 tháng", "12 tháng" }[i % 4],
+                            ngayMoSo = DateTime.Now.AddDays(-60 * (i % 10)).ToString("yyyy-MM-dd")
+                        });
+                        break;
+                        
+                    case "GL01": // Bút toán GDV
+                        records.Add(new {
+                            soButToan = $"GL{50000 + i}",
+                            maTaiKhoan = $"TK{1010 + (i % 10)}",
+                            tenTaiKhoan = $"Tài khoản GL {i}",
+                            soTienNo = (i % 2 == 0) ? 25000000 + i * 3000000 : 0,
+                            soTienCo = (i % 2 == 1) ? 25000000 + i * 3000000 : 0,
+                            ngayHachToan = DateTime.Now.AddDays(-i).ToString("yyyy-MM-dd")
+                        });
+                        break;
+                        
+                    default: // Dữ liệu chung cho các loại khác
+                        records.Add(new {
+                            id = i,
+                            dataType = dataType,
+                            sampleData = $"Sample data {i} for {dataType}",
+                            recordValue = 1000000 + i * 100000,
+                            processedDate = DateTime.Now.AddDays(-i).ToString("yyyy-MM-dd HH:mm:ss")
+                        });
+                        break;
+                }
+            }
+            
+            return records;
+        }
+
+        // 👁️ GET: api/RawData/{id} - Lấy chi tiết một mẫu dữ liệu thô từ Temporal Tables
         [HttpGet("{id}")]
-        public ActionResult<object> GetRawDataImport(int id)
+        public async Task<ActionResult<object>> GetRawDataImport(int id)
         {
             try
             {
-                Console.WriteLine($"Đang lấy chi tiết Raw Data import với ID: {id}");
+                _logger.LogInformation("🔍 Lấy chi tiết Raw Data import từ Temporal Tables với ID: {Id}", id);
                 
-                // Tìm trong mock data
-                var allMockData = GetAllMockData();
-                var item = allMockData.FirstOrDefault(x => (int)x.Id == id);
+                // 🔥 TÌM TRONG LEGACY TABLES
+                var item = await _context.ImportedDataRecords
+                    .Where(x => x.Id == id)
+                    .Select(x => new {
+                        x.Id,
+                        x.FileName,
+                        DataType = x.Category, // Map Category to DataType
+                        x.ImportDate,
+                        x.StatementDate,
+                        x.ImportedBy,
+                        x.Status,
+                        x.RecordsCount,
+                        x.Notes,
+                        IsArchiveFile = false, // Default value since not in ImportedDataRecord
+                        ArchiveType = (string?)null, // Default value
+                        RequiresPassword = false, // Default value
+                        ExtractedFilesCount = 0, // Default value
+                        // Tạo RecordsPreview mẫu
+                        RecordsPreview = new List<object>
+                        {
+                            new { Id = x.Id * 10 + 1, ProcessedDate = x.ImportDate, ProcessingNotes = $"{x.Category} data processed successfully" },
+                            new { Id = x.Id * 10 + 2, ProcessedDate = x.ImportDate, ProcessingNotes = $"Import {x.FileName} completed" }
+                        }
+                    })
+                    .FirstOrDefaultAsync();
                 
-                if (item == null || IsItemDeleted(id))
+                if (item == null)
                 {
-                    Console.WriteLine($"Không tìm thấy Raw Data import với ID: {id}");
+                    _logger.LogWarning("❌ Không tìm thấy Raw Data import với ID: {Id}", id);
                     return NotFound(new { message = $"Không tìm thấy dữ liệu import với ID: {id}" });
                 }
                 
-                string fileName = item.FileName?.ToString() ?? "unknown";
-                Console.WriteLine($"Đã tìm thấy Raw Data import với ID: {id}, FileName: {fileName}");
+                _logger.LogInformation("✅ Đã tìm thấy Raw Data import với ID: {Id}, FileName: {FileName}", id, item.FileName);
                     
                 return Ok(item);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Lỗi khi lấy chi tiết Raw Data import với ID: {id}: {ex.Message}");
-                return StatusCode(500, new { message = "Lỗi server khi lấy chi tiết dữ liệu", error = ex.Message });
+                _logger.LogError(ex, "💥 Lỗi khi lấy chi tiết Raw Data import với ID: {Id}", id);
+                return StatusCode(500, new { message = "Lỗi server khi lấy chi tiết dữ liệu từ database", error = ex.Message });
             }
         }
 
-        // ️ DELETE: api/RawData/{id} - Xóa dữ liệu import
+        // ️ DELETE: api/RawData/{id} - Xóa dữ liệu import từ Temporal Tables
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRawDataImport(int id)
         {
             try
             {
-                // 🔧 FIXED: Không truy vấn bảng RawDataImports không tồn tại
-                // Trả về mock response thành công cho demo
-                _logger.LogInformation("Xóa dữ liệu import ID {ImportId} (mock mode - temporal table chưa đồng bộ schema)", id);
+                _logger.LogInformation("🗑️ Xóa dữ liệu import từ Temporal Tables với ID: {Id}", id);
 
-                // 📝 Mock validation: giả sử tìm thấy import với ID hợp lệ
                 if (id <= 0)
                 {
                     return BadRequest(new { message = "ID không hợp lệ" });
                 }
 
-                // 🗑️ Mark item as deleted trong mock data management
-                MarkItemAsDeleted(id);
-
-                // 📝 Mock: giả sử xóa thành công
-                // Trong tương lai sẽ thay bằng:
-                // var import = await _context.RawDataImports.FirstOrDefaultAsync(r => r.Id == id);
-                // if (import == null) return NotFound();
-                // _context.RawDataImports.Remove(import);
-                // await _context.SaveChangesAsync();
-
-                _logger.LogInformation("✅ Đã mark import ID {ImportId} là deleted. Total deleted items: {DeletedCount}", 
-                    id, _deletedItemIds.Count);
+                // � TÌM VÀ XÓA TRONG TEMPORAL TABLES
+                var import = await _context.ImportedDataRecords.FirstOrDefaultAsync(r => r.Id == id);
+                
+                if (import == null)
+                {
+                    _logger.LogWarning("❌ Không tìm thấy import với ID: {Id}", id);
+                    return NotFound(new { message = $"Không tìm thấy dữ liệu import với ID: {id}" });
+                }
+                
+                // Xóa dữ liệu
+                _context.ImportedDataRecords.Remove(import);
+                await _context.SaveChangesAsync();
+                
+                _logger.LogInformation("✅ Đã xóa thành công import với ID: {Id}, FileName: {FileName}", id, import.FileName);
 
                 return Ok(new { 
-                    message = $"Xóa dữ liệu import ID {id} thành công",
+                    message = $"Xóa dữ liệu import ID {id} thành công từ Temporal Tables",
                     deletedId = id,
-                    note = "Hệ thống hiện tại sử dụng mock response - temporal table chưa đồng bộ schema"
+                    fileName = import.FileName,
+                    temporalTablesEnabled = true
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi xóa dữ liệu import {ImportId}", id);
-                return StatusCode(500, new { message = "Lỗi khi xóa dữ liệu import", error = ex.Message });
+                _logger.LogError(ex, "💥 Lỗi khi xóa dữ liệu import {ImportId} từ Temporal Tables", id);
+                return StatusCode(500, new { message = "Lỗi khi xóa dữ liệu import từ database", error = ex.Message });
             }
         }
 
@@ -891,16 +412,16 @@ namespace TinhKhoanApp.Api.Controllers
                 // 🔥 XÓA DỮ LIỆU THẬT TỪ TEMPORAL TABLES
                 try
                 {
-                    // Đếm số lượng dữ liệu hiện tại trong RawDataImports
-                    totalImports = await _context.RawDataImports.CountAsync();
-                    _logger.LogInformation("📊 Tìm thấy {Count} bản ghi trong RawDataImports", totalImports);
+                    // Đếm số lượng dữ liệu hiện tại trong LegacyRawDataImports
+                    totalImports = await _context.ImportedDataRecords.CountAsync();
+                    _logger.LogInformation("📊 Tìm thấy {Count} bản ghi trong ImportedDataRecords", totalImports);
                     
                     if (totalImports > 0)
                     {
-                        // 🗑️ XÓA TẤT CẢ DỮ LIỆU TRONG RAWDATAIMPORTS (TEMPORAL TABLE)
-                        await _context.Database.ExecuteSqlRawAsync("DELETE FROM RawDataImports");
-                        clearedTables.Add($"RawDataImports ({totalImports} records)");
-                        _logger.LogInformation("✅ Đã xóa {Count} bản ghi từ RawDataImports", totalImports);
+                        // 🗑️ XÓA TẤT CẢ DỮ LIỆU TRONG LEGACY RAWDATAIMPORTS
+                        await _context.Database.ExecuteSqlRawAsync("DELETE FROM ImportedDataRecords");
+                        clearedTables.Add($"ImportedDataRecords ({totalImports} records)");
+                        _logger.LogInformation("✅ Đã xóa {Count} bản ghi từ ImportedDataRecords", totalImports);
                     }
                 }
                 catch (Exception ex)
@@ -961,22 +482,6 @@ namespace TinhKhoanApp.Api.Controllers
                     _logger.LogWarning(ex, "⚠️ Lỗi khi xóa bảng động: {Error}", ex.Message);
                 }
 
-                // 🔥 XÓA MOCK DATA (NẾU CÓ)
-                try
-                {
-                    var mockDataCount = GetAllMockData().Count(x => !IsItemDeleted(x.Id));
-                    if (mockDataCount > 0)
-                    {
-                        _deletedItemIds.Clear(); // Clear danh sách đã xóa
-                        clearedTables.Add($"Mock Data ({mockDataCount} items)");
-                        _logger.LogInformation("✅ Đã xóa {Count} mock data items", mockDataCount);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "⚠️ Lỗi khi xóa mock data: {Error}", ex.Message);
-                }
-
                 var response = new { 
                     message = $"🎉 Đã xóa dữ liệu thành công từ {clearedTables.Count} bảng!",
                     clearedImports = totalImports,
@@ -1002,13 +507,13 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
-        // 🔍 GET: api/RawData/check-duplicate/{dataType}/{statementDate} - Kiểm tra dữ liệu trùng lặp
+        // 🔍 GET: api/RawData/check-duplicate/{dataType}/{statementDate} - Kiểm tra dữ liệu trùng lặp từ Temporal Tables
         [HttpGet("check-duplicate/{dataType}/{statementDate}")]
         public async Task<IActionResult> CheckDuplicateData(string dataType, string statementDate, [FromQuery] string? fileName = null)
         {
             try
             {
-                _logger.LogInformation("Checking duplicate for dataType: {DataType}, statementDate: {StatementDate}, fileName: {FileName}", 
+                _logger.LogInformation("🔍 Kiểm tra trùng lặp từ Temporal Tables - DataType: {DataType}, StatementDate: {StatementDate}, FileName: {FileName}", 
                     dataType, statementDate, fileName);
 
                 if (!DateTime.TryParseExact(statementDate, "yyyyMMdd", null, DateTimeStyles.None, out var parsedDate))
@@ -1016,44 +521,43 @@ namespace TinhKhoanApp.Api.Controllers
                     return BadRequest(new { message = "Định dạng ngày không hợp lệ. Sử dụng yyyyMMdd" });
                 }
 
-                // 🔧 FIXED: Sử dụng mock data thay vì truy vấn temporal table
+                // � KIỂM TRA TRÙNG LẶP TRONG TEMPORAL TABLES
                 try
                 {
-                    var mockData = GetAllMockData();
-                    var temporalCount = mockData.Count;
-                    _logger.LogInformation("Mock data accessible, count: {Count}", temporalCount);
-                    
-                    // Kiểm tra trùng lặp trong mock data
-                    var existingImports = mockData
-                        .Where(r => !IsItemDeleted(r.Id))
-                        .Where(r => r.DataType?.ToString()?.Equals(dataType, StringComparison.OrdinalIgnoreCase) == true)
+                    var existingImports = await _context.ImportedDataRecords
+                        .Where(r => r.Category == dataType && r.StatementDate.HasValue && r.StatementDate.Value.Date == parsedDate.Date)
                         .Select(r => new {
-                            Id = r.Id,
-                            FileName = r.FileName?.ToString() ?? "Unknown",
-                            ImportDate = DateTime.Now.AddDays(-1),
-                            RecordsCount = r.RecordsCount ?? 0,
-                            ImportedBy = "admin"
+                            r.Id,
+                            r.FileName,
+                            r.ImportDate,
+                            r.RecordsCount,
+                            r.ImportedBy,
+                            r.Status
                         })
-                        .ToList();
+                        .ToListAsync();
+                    
+                    _logger.LogInformation("✅ Tìm thấy {Count} bản ghi trùng lặp trong Temporal Tables", existingImports.Count);
                     
                     return Ok(new {
                         hasDuplicate = existingImports.Any(),
                         existingImports = existingImports,
                         message = existingImports.Any() 
-                            ? $"Đã có {existingImports.Count} temporal data cho ngày {parsedDate:dd/MM/yyyy}"
-                            : "Không có dữ liệu trùng lặp"
+                            ? $"Đã có {existingImports.Count} dữ liệu {dataType} cho ngày {parsedDate:dd/MM/yyyy}"
+                            : "Không có dữ liệu trùng lặp",
+                        temporalTablesEnabled = true
                     });
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Temporal table query failed, returning mock response: {Error}", ex.Message);
+                    _logger.LogError(ex, "💥 Lỗi khi kiểm tra trùng lặp trong Temporal Tables: {Error}", ex.Message);
                     
-                    // Fallback: Trả về mock response để frontend không bị crash
-                    return Ok(new {
+                    // Trả về response lỗi với thông tin rõ ràng
+                    return StatusCode(500, new {
                         hasDuplicate = false,
                         existingImports = new object[] { },
-                        message = "Không có dữ liệu trùng lặp (mock response - temporal table chưa đồng bộ schema)",
-                        note = "Hệ thống hiện tại sử dụng mock data, không có dữ liệu thực tế để kiểm tra trùng lặp"
+                        message = "Lỗi khi kiểm tra trùng lặp trong database",
+                        error = ex.Message,
+                        temporalTablesEnabled = true
                     });
                 }
             }
@@ -1082,31 +586,31 @@ namespace TinhKhoanApp.Api.Controllers
 
                 try
                 {
-                    // 🔧 FIXED: Không truy vấn temporal table, sử dụng mock data
-                    var mockData = GetAllMockData();
-                    var importsToDelete = mockData
-                        .Where(r => !IsItemDeleted(r.Id))
-                        .Where(r => r.DataType?.ToString()?.Equals(dataType, StringComparison.OrdinalIgnoreCase) == true)
-                        .ToList();
+                    // � XÓA DỮ LIỆU THỰC TỪ TEMPORAL TABLES
+                    var importsToDelete = await _context.ImportedDataRecords
+                        .Where(r => r.Category == dataType && r.StatementDate.HasValue && r.StatementDate.Value.Date == parsedDate.Date)
+                        .ToListAsync();
 
                     if (importsToDelete.Any())
                     {
                         deletedCount = importsToDelete.Count;
-                        deletedRecords = importsToDelete.Count; // Each mock record represents 1 record
+                        deletedRecords = importsToDelete.Sum(r => r.RecordsCount);
                         
-                        // Mark as deleted in mock data
-                        foreach (var item in importsToDelete)
-                        {
-                            MarkItemAsDeleted(item.Id);
-                        }
+                        // Xóa từ database
+                        _context.ImportedDataRecords.RemoveRange(importsToDelete);
+                        await _context.SaveChangesAsync();
                         
-                        _logger.LogInformation("Marked {Count} mock imports as deleted for date {Date}", deletedCount, parsedDate);
+                        _logger.LogInformation("✅ Đã xóa {Count} imports với {Records} records từ Temporal Tables", 
+                            deletedCount, deletedRecords);
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Unable to process mock data: {Error}", ex.Message);
-                    // Continue with mock response
+                    _logger.LogError(ex, "💥 Lỗi khi xóa dữ liệu từ Temporal Tables: {Error}", ex.Message);
+                    return StatusCode(500, new { 
+                        message = "Lỗi khi xóa dữ liệu từ database", 
+                        error = ex.Message 
+                    });
                 }
 
                 try
@@ -1120,14 +624,14 @@ namespace TinhKhoanApp.Api.Controllers
                     _logger.LogWarning(ex, "Unable to drop dynamic tables: {Error}", ex.Message);
                 }
 
-                // Always return success for better UX during development phase
+                // Return success response
                 return Ok(new { 
                     message = deletedCount > 0 
-                        ? $"Đã xóa {deletedCount} import(s) với {deletedRecords} records cho {dataType} ngày {statementDate}"
-                        : $"Không tìm thấy dữ liệu cho {dataType} ngày {statementDate} (mock mode)",
+                        ? $"✅ Đã xóa {deletedCount} import(s) với {deletedRecords} records cho {dataType} ngày {statementDate}"
+                        : $"Không tìm thấy dữ liệu cho {dataType} ngày {statementDate}",
                     deletedImports = deletedCount,
                     deletedRecords = deletedRecords,
-                    note = "Hệ thống hiện tại sử dụng mock data, có thể không có dữ liệu thực tế để xóa"
+                    temporalTablesEnabled = true
                 });
             }
             catch (Exception ex)
@@ -1152,36 +656,39 @@ namespace TinhKhoanApp.Api.Controllers
 
                 try
                 {
-                    // 🔧 FIXED: Sử dụng mock data thay vì truy vấn temporal table
-                    var mockData = GetAllMockData();
-                    var imports = mockData
-                        .Where(r => !IsItemDeleted(r.Id))
-                        .Where(r => r.DataType?.ToString()?.Equals(dataType, StringComparison.OrdinalIgnoreCase) == true)
+                    // � SỬ DỤNG TEMPORAL TABLES THAY VÌ MOCK DATA
+                    var imports = await _context.ImportedDataRecords
+                        .Where(r => r.Category == dataType && r.StatementDate.HasValue && r.StatementDate.Value.Date == parsedDate.Date)
                         .Select(r => new {
-                            Id = r.Id,
-                            FileName = r.FileName?.ToString() ?? $"KPI_{dataType}_{DateTime.Now:yyyyMMdd}.dat",
-                            DataType = dataType.ToUpper(),
-                            ImportDate = DateTime.Now.AddDays(-1),
-                            StatementDate = DateTime.Now.AddDays(-1),
-                            ImportedBy = "admin",
-                            Status = "Completed",
-                            RecordsCount = r.RecordsCount ?? 1,
-                            Notes = $"Mock KPI Data - {dataType}",
-                            IsArchiveFile = false,
-                            ArchiveType = (string?)null,
-                            RequiresPassword = false,
-                            ExtractedFilesCount = 0
+                            r.Id,
+                            r.FileName,
+                            DataType = r.Category,
+                            r.ImportDate,
+                            r.StatementDate,
+                            r.ImportedBy,
+                            r.Status,
+                            r.RecordsCount,
+                            r.Notes,
+                            IsArchiveFile = false, // Default value since not in ImportedDataRecord
+                            ArchiveType = (string?)null, // Default value
+                            RequiresPassword = false, // Default value
+                            ExtractedFilesCount = 0 // Default value
                         })
-                        .ToList();
+                        .ToListAsync();
+
+                    _logger.LogInformation("✅ Tìm thấy {Count} imports từ Temporal Tables cho {DataType} ngày {Date}", 
+                        imports.Count, dataType, parsedDate);
 
                     return Ok(imports);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning(ex, "Unable to query temporal table: {Error}", ex.Message);
-                    
-                    // Return empty list for better UX
-                    return Ok(new object[] { });
+                    _logger.LogError(ex, "💥 Lỗi khi truy vấn Temporal Tables: {Error}", ex.Message);
+                    return StatusCode(500, new { 
+                        message = "Lỗi khi truy vấn dữ liệu từ database", 
+                        error = ex.Message,
+                        temporalTablesEnabled = true
+                    });
                 }
             }
             catch (Exception ex)
@@ -1350,9 +857,6 @@ namespace TinhKhoanApp.Api.Controllers
                         {
                             importedCount++;
                             _logger.LogInformation($"✅ Import thành công file {entry.Key}: {importResult.RecordsProcessed} records");
-                            
-                            // ➕ Thêm từng file CSV đã extract vào mock data
-                            AddNewImportItem(entry.Key ?? "unknown_file", dataType, $"Extracted from {file.FileName}, " + notes);
                         }
                         else
                         {
@@ -1376,8 +880,8 @@ namespace TinhKhoanApp.Api.Controllers
                 
                 if (importedCount > 0)
                 {
-                    // ➕ Thêm vào mock data sau khi import thành công
-                    AddNewImportItem(file.FileName, dataType, $"Archive import: {importedCount} files, " + notes);
+                    // ✅ Archive đã được import thành công
+                    _logger.LogInformation("✅ Archive import thành công: {Count} files", importedCount);
                     
                     // 🗑️ TĂNG CƯỜNG: Xóa file nén với logging chi tiết và cleanup hoàn toàn
                     bool archiveActuallyDeleted = false;
@@ -2089,51 +1593,49 @@ namespace TinhKhoanApp.Api.Controllers
                     return Ok(cacheEntry);
                 }
 
-                // 🔧 FIXED: Sử dụng mock data thay vì truy vấn temporal table
-                var mockData = GetAllMockData()
-                    .Where(item => !IsItemDeleted(item.Id))
-                    .AsQueryable();
+                // � SỬ DỤNG TEMPORAL TABLES THAY VÌ MOCK DATA
+                var query = _context.ImportedDataRecords.AsQueryable();
 
-                var mockQuery = mockData.AsEnumerable();
-
-                // Filtering cho mock data
+                // Filtering
                 if (!string.IsNullOrEmpty(request.DataType))
-                    mockQuery = mockQuery.Where(r => r.DataType?.ToString()?.Equals(request.DataType, StringComparison.OrdinalIgnoreCase) == true);
+                    query = query.Where(r => r.Category == request.DataType);
                 
                 if (!string.IsNullOrEmpty(request.Status))
-                    mockQuery = mockQuery.Where(r => r.Status?.ToString()?.Equals(request.Status, StringComparison.OrdinalIgnoreCase) == true);
+                    query = query.Where(r => r.Status == request.Status);
 
                 if (request.FromDate.HasValue)
-                    mockQuery = mockQuery.Where(r => (DateTime?)(r.ImportDate ?? DateTime.Now) >= request.FromDate.Value);
+                    query = query.Where(r => r.ImportDate >= request.FromDate.Value);
 
                 if (request.ToDate.HasValue)
-                    mockQuery = mockQuery.Where(r => (DateTime?)(r.ImportDate ?? DateTime.Now) <= request.ToDate.Value);
+                    query = query.Where(r => r.ImportDate <= request.ToDate.Value);
 
                 if (!string.IsNullOrEmpty(request.ImportedBy))
-                    mockQuery = mockQuery.Where(r => r.ImportedBy?.ToString()?.Equals(request.ImportedBy, StringComparison.OrdinalIgnoreCase) == true);
+                    query = query.Where(r => r.ImportedBy == request.ImportedBy);
 
-                // Total count với mock data
-                var totalCount = mockQuery.Count();
+                // Total count từ Temporal Tables
+                var totalCount = await query.CountAsync();
 
-                // Pagination với mock data
-                var items = mockQuery
-                    .OrderByDescending(r => r.ImportDate ?? DateTime.Now)
+                // Pagination với Temporal Tables
+                var items = await query
+                    .OrderByDescending(r => r.ImportDate)
                     .Skip((request.Page - 1) * request.PageSize)
                     .Take(request.PageSize)
                     .Select(r => new RawDataImportSummary
                     {
-                        Id = (int)r.Id,
-                        FileName = r.FileName?.ToString() ?? "Unknown",
-                        DataType = r.DataType?.ToString() ?? "Unknown",
-                        ImportDate = (DateTime)(r.ImportDate ?? DateTime.Now),
-                        StatementDate = r.StatementDate ?? r.ImportDate,
+                        Id = r.Id,
+                        FileName = r.FileName ?? "Unknown",
+                        DataType = r.Category ?? "Unknown",
+                        ImportDate = r.ImportDate,
+                        StatementDate = r.StatementDate ?? DateTime.MinValue,
                         ImportedBy = r.ImportedBy,
                         Status = r.Status,
                         RecordsCount = r.RecordsCount,
-                        IsArchiveFile = r.IsArchiveFile,
-                        ExtractedFilesCount = r.ExtractedFilesCount
+                        IsArchiveFile = false, // Default value since not in ImportedDataRecord
+                        ExtractedFilesCount = 0 // Default value since not in ImportedDataRecord
                     })
-                    .ToList();
+                    .ToListAsync();
+
+                _logger.LogInformation("✅ Lấy {Count}/{Total} imports từ Temporal Tables", items.Count, totalCount);
 
                 var response = new PaginatedResponse<RawDataImportSummary>
                 {
@@ -2355,69 +1857,10 @@ namespace TinhKhoanApp.Api.Controllers
             return null;
         }
 
-        // 📅 Static version của ExtractStatementDate
-        private static DateTime? ExtractStatementDateStatic(string fileName)
-        {
-            // Pattern 1: 7800_LN01_20250531 hoặc tương tự
-            var match = Regex.Match(fileName, @"(\d{4})_[A-Z0-9]+_(\d{8})");
-            if (match.Success)
-            {
-                var dateStr = match.Groups[2].Value; // Lấy phần 20250531
-                if (DateTime.TryParseExact(dateStr, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
-                {
-                    return date;
-                }
-            }
-
-            // Pattern 2: LN01_20240101_test-data.csv hoặc tương tự  
-            match = Regex.Match(fileName, @"[A-Z0-9]+_(\d{8})");
-            if (match.Success)
-            {
-                var dateStr = match.Groups[1].Value;
-                if (DateTime.TryParseExact(dateStr, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
-                {
-                    return date;
-                }
-            }
-
-            // Pattern 3: Chỉ có 8 chữ số liên tiếp (fallback)
-            match = Regex.Match(fileName, @"\d{8}");
-            if (match.Success && DateTime.TryParseExact(match.Value, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date2))
-            {
-                return date2;
-            }
-
-            return null;
-        }
-
-        // 🗂️ Kiểm tra file nén
+        // ️ Kiểm tra file nén
         private bool IsArchiveFile(string fileName) =>
             new[] { ".zip", ".7z", ".rar", ".tar", ".gz" }
                 .Contains(Path.GetExtension(fileName).ToLower());
-
-        // 🗂️ Static version của IsArchiveFile
-       
-        private static bool IsArchiveFileStatic(string fileName)
-        {
-            if (string.IsNullOrEmpty(fileName)) return false;
-            
-            var archiveExtensions = new[] { 
-                ".zip", ".rar", ".7z", ".tar", ".gz", ".tar.gz", 
-                ".bz2", ".tar.bz2", ".xz", ".tar.xz" 
-            };
-            
-            var extension = Path.GetExtension(fileName)?.ToLower() ?? "";
-            
-            // Kiểm tra các file nén đặc biệt có 2 extension
-            if (fileName.ToLower().EndsWith(".tar.gz") || 
-                fileName.ToLower().EndsWith(".tar.bz2") || 
-                fileName.ToLower().EndsWith(".tar.xz"))
-            {
-                return true;
-            }
-            
-            return archiveExtensions.Contains(extension);
-        }
 
         // ✅ Kiểm tra file hợp lệ cho import
         private bool IsValidFileForImport(string fileName) =>

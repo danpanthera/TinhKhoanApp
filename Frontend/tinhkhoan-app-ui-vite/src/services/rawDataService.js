@@ -584,18 +584,22 @@ class RawDataService {
     return null;
   }
 
-  // 🎨 Lấy màu sắc cho loại dữ liệu
+  // 🎨 Lấy màu sắc cho loại dữ liệu - ĐỒNG BỘ TẤT CẢ 13 LOẠI
   getDataTypeColor(dataType) {
     const colors = {
-      'LN01': '#10B981', // green
-      'LN03': '#F59E0B', // amber
-      'DP01': '#3B82F6', // blue
-      'EI01': '#8B5CF6', // purple
-      'GL01': '#EF4444', // red
-      'DPDA': '#06B6D4', // cyan
-      'DB01': '#84CC16', // lime
-      'KH03': '#F97316', // orange
-      'BC57': '#EC4899'  // pink
+      'LN01': '#10B981', // green - Dữ liệu LOAN
+      'LN02': '#059669', // emerald - Sao kê biến động nhóm nợ
+      'LN03': '#F59E0B', // amber - Dữ liệu Nợ XLRR
+      'DP01': '#3B82F6', // blue - Dữ liệu Tiền gửi
+      'EI01': '#8B5CF6', // purple - Dữ liệu mobile banking
+      'GL01': '#EF4444', // red - Dữ liệu bút toán GDV
+      'DPDA': '#06B6D4', // cyan - Dữ liệu sao kê phát hành thẻ
+      'DB01': '#84CC16', // lime - Sao kê TSDB và Không TSDB
+      'KH03': '#F97316', // orange - Sao kê Khách hàng pháp nhân
+      'BC57': '#EC4899', // pink - Sao kê Lãi dự thu
+      'RR01': '#DC2626', // red-600 - Sao kê dư nợ gốc, lãi XLRR
+      '7800_DT_KHKD1': '#7C2D12', // brown - Báo cáo KHKD (DT)
+      'GLCB41': '#1E40AF' // blue-800 - Bảng cân đối
     };
     return colors[dataType] || '#6B7280'; // gray default
   }
