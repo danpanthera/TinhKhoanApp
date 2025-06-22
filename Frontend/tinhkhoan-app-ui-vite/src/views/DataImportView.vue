@@ -588,6 +588,7 @@ const calculateDataTypeStats = () => {
   // Calculate from imports
   allImports.value.forEach(imp => {
     if (stats[imp.dataType]) {
+      // 🔧 Sử dụng đúng field name từ backend: recordsCount
       stats[imp.dataType].totalRecords += imp.recordsCount || 0
       if (!stats[imp.dataType].lastUpdate || 
           new Date(imp.importDate) > new Date(stats[imp.dataType].lastUpdate)) {

@@ -535,6 +535,13 @@ class RawDataService {
         icon: '⚖️',
         acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: 'GLCB41'
+      },
+      'API_IMPORT': {
+        name: 'API_IMPORT',
+        description: 'Import qua API/Temporal',
+        icon: '🔗',
+        acceptedFormats: ['.json', '.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'API_IMPORT'
       }
     };
   }
