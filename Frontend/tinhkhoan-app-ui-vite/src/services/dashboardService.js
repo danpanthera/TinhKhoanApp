@@ -11,7 +11,7 @@ export const dashboardService = {
    */
   async getTargets(params = {}) {
     try {
-      const response = await api.get('/api/businessplantarget', { params });
+      const response = await api.get('/businessplantarget', { params });
       return response.data;
     } catch (error) {
       console.error('Error fetching business plan targets:', error);
@@ -24,7 +24,7 @@ export const dashboardService = {
    */
   async getTarget(id) {
     try {
-      const response = await api.get(`/api/businessplantarget/${id}`);
+      const response = await api.get(`/businessplantarget/${id}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching business plan target:', error);
@@ -37,7 +37,7 @@ export const dashboardService = {
    */
   async createTarget(targetData) {
     try {
-      const response = await api.post('/api/businessplantarget', targetData);
+      const response = await api.post('/businessplantarget', targetData);
       return response.data;
     } catch (error) {
       console.error('Error creating business plan target:', error);
@@ -50,7 +50,7 @@ export const dashboardService = {
    */
   async updateTarget(id, targetData) {
     try {
-      const response = await api.put(`/api/businessplantarget/${id}`, targetData);
+      const response = await api.put(`/businessplantarget/${id}`, targetData);
       return response.data;
     } catch (error) {
       console.error('Error updating business plan target:', error);
@@ -63,7 +63,7 @@ export const dashboardService = {
    */
   async deleteTarget(id) {
     try {
-      await api.delete(`/api/businessplantarget/${id}`);
+      await api.delete(`/businessplantarget/${id}`);
       return true;
     } catch (error) {
       console.error('Error deleting business plan target:', error);
@@ -76,7 +76,7 @@ export const dashboardService = {
    */
   async bulkUpsertTargets(targetsData) {
     try {
-      const response = await api.post('/api/businessplantarget/bulk', targetsData);
+      const response = await api.post('/businessplantarget/bulk', targetsData);
       return response.data;
     } catch (error) {
       console.error('Error bulk upserting targets:', error);
@@ -91,7 +91,7 @@ export const dashboardService = {
    */
   async getDashboardData(params = {}) {
     try {
-      const response = await api.get('/api/dashboard/dashboard-data', { params });
+      const response = await api.get('/dashboard/dashboard-data', { params });
       return response.data;
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -104,7 +104,7 @@ export const dashboardService = {
    */
   async getComparisonData(params = {}) {
     try {
-      const response = await api.get('/api/dashboard/comparison', { params });
+      const response = await api.get('/dashboard/comparison', { params });
       return response.data;
     } catch (error) {
       console.error('Error fetching comparison data:', error);
@@ -117,7 +117,7 @@ export const dashboardService = {
    */
   async getTrendData(params = {}) {
     try {
-      const response = await api.get('/api/dashboard/trend', { params });
+      const response = await api.get('/dashboard/trend', { params });
       return response.data;
     } catch (error) {
       console.error('Error fetching trend data:', error);
@@ -130,7 +130,7 @@ export const dashboardService = {
    */
   async getCalculationResults(params = {}) {
     try {
-      const response = await api.get('/api/dashboard/calculation-results', { params });
+      const response = await api.get('/dashboard/calculation-results', { params });
       return response.data;
     } catch (error) {
       console.error('Error fetching calculation results:', error);
@@ -143,7 +143,7 @@ export const dashboardService = {
    */
   async triggerCalculations(params = {}) {
     try {
-      const response = await api.post('/api/dashboard/calculate', params);
+      const response = await api.post('/dashboard/calculate', params);
       return response.data;
     } catch (error) {
       console.error('Error triggering calculations:', error);
@@ -158,7 +158,7 @@ export const dashboardService = {
    */
   async getIndicators(params = {}) {
     try {
-      const response = await api.get('/api/dashboard/indicators', { params });
+      const response = await api.get('/dashboard/indicators', { params });
       return response.data;
     } catch (error) {
       console.error('Error fetching dashboard indicators:', error);
@@ -171,7 +171,7 @@ export const dashboardService = {
    */
   async getIndicatorsByUnit(unitId, params = {}) {
     try {
-      const response = await api.get(`/api/dashboard/indicators/unit/${unitId}`, { params });
+      const response = await api.get(`/dashboard/indicators/unit/${unitId}`, { params });
       return response.data;
     } catch (error) {
       console.error('Error fetching indicators by unit:', error);
@@ -186,7 +186,7 @@ export const dashboardService = {
    */
   async getUnits() {
     try {
-      const response = await api.get('/api/units');
+      const response = await api.get('/units');
       return this.sortUnits(response.data);
     } catch (error) {
       console.error('Error fetching units:', error);

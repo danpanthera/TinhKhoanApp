@@ -91,7 +91,9 @@ namespace TinhKhoanApp.Api.Models
     // 📤 DTO cho request import
     public class RawDataImportRequest
     {
+        [Required(ErrorMessage = "Vui lòng chọn ít nhất một file")]
         public IFormFileCollection? Files { get; set; }
+        
         public string? DataType { get; set; } // Loại dữ liệu (LN01, LN03, ...)
         public string? ArchivePassword { get; set; } // Mật khẩu file nén
         public string? Notes { get; set; } // Ghi chú
@@ -106,6 +108,7 @@ namespace TinhKhoanApp.Api.Models
         public string Message { get; set; }
         public DateTime? StatementDate { get; set; }
         public string TableName { get; set; } // Tên table được tạo
+        public bool IsArchiveDeleted { get; set; } = false; // ➕ Flag để báo file nén đã bị xóa
     }
     
     // 📋 DTO cho preview dữ liệu

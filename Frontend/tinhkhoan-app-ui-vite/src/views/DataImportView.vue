@@ -86,7 +86,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(dataType, key) in dataTypeDefinitions" :key="key">
+            <tr v-for="(dataType, key) in sortedDataTypeDefinitions" :key="key">
               <td>
                 <div class="data-type-info">
                   <span class="data-type-icon">{{ dataType.icon }}</span>
@@ -300,13 +300,31 @@
             <!-- Archive Password -->
             <div v-if="hasArchiveFile" class="form-group">
               <label>🔐 Mật khẩu file nén (nếu có)</label>
+              
+              <!-- Checkbox tự động điền mật khẩu mặc định -->
+              <div class="auto-password-section">
+                <label class="checkbox-wrapper">
+                  <input 
+                    type="checkbox" 
+                    v-model="useDefaultPassword"
+                    @change="onDefaultPasswordToggle"
+                  />
+                  <span class="checkmark"></span>
+                  <span class="checkbox-label">🔑 Tự động điền mật khẩu mặc định (Snk6S4GV)</span>
+                </label>
+              </div>
+              
               <input 
                 v-model="archivePassword" 
                 type="password" 
                 placeholder="Nhập mật khẩu file nén..."
                 class="form-input"
+                :class="{ 'auto-filled': useDefaultPassword }"
               />
-              <small class="form-hint">Để trống nếu file không có mật khẩu</small>
+              <small class="form-hint">
+                <span v-if="useDefaultPassword">✅ Đang sử dụng mật khẩu mặc định. Bạn có thể sửa nếu cần.</span>
+                <span v-else>Để trống nếu file không có mật khẩu</span>
+              </small>
             </div>
 
             <!-- Notes -->
@@ -318,6 +336,27 @@
                 class="form-textarea"
                 rows="3"
               ></textarea>
+            </div>
+          </div>
+          
+          <!-- Progress Section -->
+          <div v-if="uploading" class="upload-progress-section">
+            <div class="progress-header">
+              <h4>📤 Tiến độ upload</h4>
+              <div class="progress-stats">
+                <span class="progress-percentage">{{ uploadProgress }}%</span>
+                <span v-if="remainingTime > 0" class="remaining-time">
+                  ⏱️ Còn lại: {{ remainingTimeFormatted }}
+                </span>
+              </div>
+            </div>
+            
+            <div class="progress-bar-container">
+              <div class="progress-bar" :style="{ width: uploadProgress + '%' }"></div>
+            </div>
+            
+            <div class="progress-message">
+              {{ loadingMessage }}
             </div>
           </div>
         </div>
@@ -446,7 +485,6 @@ import rawDataService from '@/services/rawDataService'
 
 // Reactive state
 const loading = ref(false)
-const uploading = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
 const loadingMessage = ref('')
@@ -474,6 +512,11 @@ const previewData = ref([])
 const selectedFiles = ref([])
 const archivePassword = ref('')
 const importNotes = ref('')
+const useDefaultPassword = ref(true) // ✅ Checkbox tự động điền mật khẩu mặc định
+const uploading = ref(false)
+const uploadProgress = ref(0)
+const remainingTime = ref(0) // milliseconds
+const remainingTimeFormatted = ref('00:00') // mm:ss format
 
 // Confirmation state
 const confirmationMessage = ref('')
@@ -499,6 +542,16 @@ const hasArchiveFile = computed(() => {
   return selectedFiles.value.some(file => isArchiveFile(file.name))
 })
 
+// Sort data types alphabetically by key
+const sortedDataTypeDefinitions = computed(() => {
+  const sorted = {}
+  const sortedKeys = Object.keys(dataTypeDefinitions).sort()
+  sortedKeys.forEach(key => {
+    sorted[key] = dataTypeDefinitions[key]
+  })
+  return sorted
+})
+
 // Methods
 const clearMessage = () => {
   errorMessage.value = ''
@@ -512,11 +565,11 @@ const showError = (message) => {
   }, 5000)
 }
 
-const showSuccess = (message) => {
+const showSuccess = (message, timeout = 3000) => {
   successMessage.value = message
   setTimeout(() => {
     successMessage.value = ''
-  }, 3000)
+  }, timeout)
 }
 
 // Data type statistics
@@ -793,7 +846,11 @@ const openImportModal = (dataType) => {
   selectedFiles.value = []
   archivePassword.value = ''
   importNotes.value = ''
+  useDefaultPassword.value = true // ✅ Mặc định tick checkbox
   showImportModal.value = true
+  
+  // ✅ Tự động điền mật khẩu mặc định khi mở modal
+  onDefaultPasswordToggle()
 }
 
 const closeImportModal = () => {
@@ -802,6 +859,20 @@ const closeImportModal = () => {
   selectedFiles.value = []
   archivePassword.value = ''
   importNotes.value = ''
+  useDefaultPassword.value = true // ✅ Reset về mặc định
+  uploading.value = false
+  uploadProgress.value = 0
+  remainingTime.value = 0
+  remainingTimeFormatted.value = '00:00'
+}
+
+// ✅ Xử lý checkbox tự động điền mật khẩu mặc định
+const onDefaultPasswordToggle = () => {
+  if (useDefaultPassword.value) {
+    archivePassword.value = 'Snk6S4GV' // ✅ Điền mật khẩu mặc định
+  } else {
+    archivePassword.value = '' // ✅ Xóa mật khẩu nếu bỏ tick
+  }
 }
 
 const handleFileSelect = (event) => {
@@ -899,15 +970,44 @@ const performImport = async () => {
 const executeImport = async () => {
   try {
     uploading.value = true
-    loadingMessage.value = 'Đang upload và xử lý dữ liệu...'
+    uploadProgress.value = 0
+    loadingMessage.value = 'Đang chuẩn bị upload...'
     
     const result = await rawDataService.importData(selectedDataType.value, selectedFiles.value, {
       archivePassword: archivePassword.value,
-      notes: importNotes.value
+      notes: importNotes.value,
+      onProgress: (progress) => {
+        uploadProgress.value = progress.percentage
+        
+        if (progress.isNearCompletion) {
+          loadingMessage.value = `🎯 Sắp hoàn thành... ${progress.percentage}%`
+        } else {
+          loadingMessage.value = `📤 Đang upload: ${progress.percentage}% - ${progress.formattedSpeed} - Còn lại: ${progress.remainingTimeFormatted}`
+        }
+        
+        // Cập nhật remaining time trên UI
+        if (progress.remainingTime > 0) {
+          remainingTime.value = progress.remainingTime
+          remainingTimeFormatted.value = progress.remainingTimeFormatted
+        }
+      }
     })
     
     if (result.success) {
-      showSuccess(`✅ Import thành công! Đã xử lý ${result.data.length || 1} file(s)`)
+      uploadProgress.value = 100
+      loadingMessage.value = '🎉 Upload hoàn tất! Đang xử lý dữ liệu...'
+      
+      // 🗑️ Kiểm tra nếu có file nén bị xóa và hiển thị thông báo đặc biệt
+      const archiveDeletedResults = result.data.results?.filter(r => r.isArchiveDeleted) || []
+      
+      if (archiveDeletedResults.length > 0) {
+        // Hiển thị thông báo xóa file nén với thời gian ngắn (2s)
+        archiveDeletedResults.forEach(archiveResult => {
+          showSuccess(`🗑️ File nén "${archiveResult.fileName}" đã được xóa tự động sau khi import thành công`, 2000)
+        })
+      }
+      
+      showSuccess(`✅ Import thành công! Đã xử lý ${result.data.results?.length || 1} file(s)`)
       closeImportModal()
       
       // Thêm delay để đảm bảo dữ liệu đã được lưu
@@ -1831,49 +1931,69 @@ onMounted(async () => {
   font-style: italic;
 }
 
-.btn-cancel,
-.btn-import-confirm,
-.btn-confirm {
-  padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
-  font-weight: 600;
+/* ✅ CSS cho checkbox tự động điền mật khẩu */
+.auto-password-section {
+  margin-bottom: 12px;
+}
+
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
   cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+  display: none;
+}
+
+.checkmark {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #8B1538;
+  border-radius: 4px;
+  margin-right: 8px;
   transition: all 0.3s ease;
+  background: white;
 }
 
-.btn-cancel {
-  background: #6c757d;
+.checkbox-wrapper input[type="checkbox"]:checked + .checkmark {
+  background: #8B1538;
+  border-color: #8B1538;
+}
+
+.checkbox-wrapper input[type="checkbox"]:checked + .checkmark::after {
+  content: '✓';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
   color: white;
+  font-weight: bold;
+  font-size: 14px;
 }
 
-.btn-cancel:hover {
-  background: #5a6268;
+.checkbox-label {
+  font-size: 14px;
+  color: #495057;
+  user-select: none;
 }
 
-.btn-import-confirm {
-  background: #28a745;
-  color: white;
+.checkbox-wrapper:hover .checkmark {
+  border-color: #6c1a2f;
+  box-shadow: 0 2px 4px rgba(139, 21, 56, 0.2);
 }
 
-.btn-import-confirm:hover:not(:disabled) {
-  background: #218838;
-  transform: translateY(-1px);
+.form-input.auto-filled {
+  background: linear-gradient(135deg, #e8f5e8 0%, #f0fff0 100%);
+  border-color: #28a745;
+  color: #155724;
 }
 
-.btn-import-confirm:disabled {
-  background: #6c757d;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.btn-confirm {
-  background: #dc3545;
-  color: white;
-}
-
-.btn-confirm:hover {
-  background: #c82333;
+.form-input.auto-filled::placeholder {
+  color: #6c757d;
+  opacity: 0.7;
 }
 
 /* Preview Content */
@@ -1995,6 +2115,82 @@ onMounted(async () => {
   color: #2c3e50;
   line-height: 1.5;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+}
+
+/* Upload Progress Styles */
+.upload-progress-section {
+  margin-top: 20px;
+  padding: 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  border: 1px solid #dee2e6;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.progress-header h4 {
+  margin: 0;
+  color: #495057;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.progress-stats {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.progress-percentage {
+  font-size: 18px;
+  font-weight: bold;
+  color: #28a745;
+}
+
+.remaining-time {
+  font-size: 14px;
+  color: #6c757d;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid #dee2e6;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 12px;
+  background: #e9ecef;
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #28a745 0%, #20c997 50%, #17a2b8 100%);
+  transition: width 0.3s ease;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+  animation: progressShimmer 2s ease-in-out infinite;
+}
+
+@keyframes progressShimmer {
+  0% { box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3); }
+  50% { box-shadow: 0 2px 12px rgba(40, 167, 69, 0.5); }
+  100% { box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3); }
+}
+
+.progress-message {
+  font-size: 14px;
+  color: #6c757d;
+  text-align: center;
+  font-style: italic;
 }
 
 /* Animations */

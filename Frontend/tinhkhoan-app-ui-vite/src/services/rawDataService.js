@@ -73,7 +73,7 @@ class RawDataService {
     ];
   }
 
-  // 📤 Import dữ liệu theo loại
+  // 📤 Import dữ liệu theo loại với progress tracking và audio notification
   async importData(dataType, files, options = {}) {
     try {
       const formData = new FormData();
@@ -92,12 +92,80 @@ class RawDataService {
         formData.append('Notes', options.notes);
       }
 
+      // Tính tổng file size để track progress
+      const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+      const startTime = Date.now();
+      let lastLoadedAmount = 0;
+      let lastTime = startTime;
+
+      // Store this context for callback
+      const self = this;
+
       const response = await api.post(`${this.baseURL}/import/${dataType}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         },
-        timeout: 600000 // 10 phút timeout cho upload file lớn
+        timeout: 600000, // 10 phút timeout cho upload file lớn
+        maxContentLength: 500 * 1024 * 1024, // 500MB max
+        maxBodyLength: 500 * 1024 * 1024,
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          const currentTime = Date.now();
+          const elapsed = currentTime - startTime;
+          
+          // Tính tốc độ upload hiện tại (smoothing với exponential moving average)
+          const timeDelta = currentTime - lastTime;
+          const loadedDelta = progressEvent.loaded - lastLoadedAmount;
+          
+          if (timeDelta > 0) {
+            const currentSpeed = loadedDelta / timeDelta * 1000; // bytes per second
+            const remainingBytes = progressEvent.total - progressEvent.loaded;
+            
+            // Ước tính thời gian còn lại dựa trên tốc độ hiện tại
+            let remainingTime = remainingBytes > 0 && currentSpeed > 0 ? (remainingBytes / currentSpeed * 1000) : 0;
+            
+            // Nếu gần xong (> 95%) thì ước tính thời gian còn lại ngắn hơn
+            if (percentCompleted > 95) {
+              remainingTime = Math.min(remainingTime, 5000); // tối đa 5 giây
+            }
+            
+            console.log(`📊 Tiến độ upload ${dataType}: ${percentCompleted}%`);
+            
+            // Gọi callback progress nếu có
+            if (options.onProgress) {
+              console.log(`📊 Progress update: ${percentCompleted}%, Speed: ${self.formatFileSize(currentSpeed)}/s, Remaining: ${self.formatTime(remainingTime)}`);
+              options.onProgress({
+                loaded: progressEvent.loaded,
+                total: progressEvent.total,
+                percentage: percentCompleted,
+                remainingTime: Math.max(0, remainingTime), // milliseconds
+                remainingTimeFormatted: self.formatTime(remainingTime), // mm:ss format
+                uploadSpeed: currentSpeed, // bytes per second
+                formattedSpeed: self.formatFileSize(currentSpeed) + '/s',
+                formattedRemaining: self.formatTime(remainingTime),
+                formattedLoaded: self.formatFileSize(progressEvent.loaded),
+                formattedTotal: self.formatFileSize(progressEvent.total),
+                isNearCompletion: percentCompleted > 95
+              });
+            }
+            
+            lastLoadedAmount = progressEvent.loaded;
+            lastTime = currentTime;
+          }
+        }
       });
+
+      // 🔊 Phát âm thanh thông báo hoàn thành với notification
+      this.playCompletionSound();
+      
+      // Hiển thị browser notification nếu được phép
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('🎉 Đã upload xong!', {
+          body: `Import dữ liệu ${dataType} đã hoàn tất thành công`,
+          icon: '/favicon.ico',
+          tag: 'upload-complete'
+        });
+      }
 
       return {
         success: true,
@@ -361,64 +429,92 @@ class RawDataService {
         name: 'LN01',
         description: 'Dữ liệu LOAN',
         icon: '💰',
-        acceptedFormats: ['.csv', '.xlsx', '.xls'],
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: 'LN01'
+      },
+      'LN02': {
+        name: 'LN02',
+        description: 'Sao kê biến động nhóm nợ',
+        icon: '🔄',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'LN02'
       },
       'LN03': {
         name: 'LN03', 
         description: 'Dữ liệu Nợ XLRR',
         icon: '📊',
-        acceptedFormats: ['.csv', '.xlsx', '.xls'],
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: 'LN03'
       },
       'DP01': {
         name: 'DP01',
         description: 'Dữ liệu Tiền gửi',
         icon: '🏦',
-        acceptedFormats: ['.csv', '.xlsx', '.xls'],
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: 'DP01'
       },
       'EI01': {
         name: 'EI01',
         description: 'Dữ liệu mobile banking',
         icon: '📱',
-        acceptedFormats: ['.csv', '.xlsx', '.xls'],
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: 'EI01'
       },
       'GL01': {
         name: 'GL01',
         description: 'Dữ liệu bút toán GDV',
         icon: '✍️',
-        acceptedFormats: ['.csv', '.xlsx', '.xls'],
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: 'GL01'
       },
       'DPDA': {
         name: 'DPDA',
         description: 'Dữ liệu sao kê phát hành thẻ',
         icon: '💳',
-        acceptedFormats: ['.csv', '.xlsx', '.xls'],
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: 'DPDA'
       },
       'DB01': {
         name: 'DB01',
         description: 'Sao kê TSDB và Không TSDB',
         icon: '📋',
-        acceptedFormats: ['.csv', '.xlsx', '.xls'],
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: 'DB01'
       },
       'KH03': {
         name: 'KH03',
         description: 'Sao kê Khách hàng pháp nhân',
         icon: '🏢',
-        acceptedFormats: ['.csv', '.xlsx', '.xls'],
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: 'KH03'
       },
       'BC57': {
         name: 'BC57',
         description: 'Sao kê Lãi dự thu',
         icon: '📈',
-        acceptedFormats: ['.csv', '.xlsx', '.xls'],
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: 'BC57'
+      },
+      'RR01': {
+        name: 'RR01',
+        description: 'Sao kê dư nợ gốc, lãi XLRR',
+        icon: '📉',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'RR01'
+      },
+      '7800_DT_KHKD1': {
+        name: '7800_DT_KHKD1',
+        description: 'Báo cáo KHKD (DT)',
+        icon: '📑',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: '7800_DT_KHKD1'
+      },
+      'GLCB41': {
+        name: 'GLCB41',
+        description: 'Bảng cân đối',
+        icon: '⚖️',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'GLCB41'
       }
     };
   }
@@ -529,6 +625,86 @@ class RawDataService {
       hour: '2-digit',
       minute: '2-digit'
     });
+  }
+
+  // 🔊 Phát âm thanh thông báo hoàn thành
+  playCompletionSound() {
+    try {
+      // Tạo AudioContext để phát âm thanh
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      
+      // Tạo âm thanh thông báo dạng melody (3 nốt nhạc)
+      const notes = [
+        { freq: 523.25, duration: 0.2 }, // C5
+        { freq: 659.25, duration: 0.2 }, // E5  
+        { freq: 783.99, duration: 0.4 }  // G5
+      ];
+      
+      let startTime = audioContext.currentTime;
+      
+      notes.forEach((note, index) => {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        // Kết nối audio nodes
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        // Thiết lập tần số và âm lượng
+        oscillator.frequency.setValueAtTime(note.freq, startTime);
+        oscillator.type = 'sine'; // Âm thanh mềm mại
+        
+        // Envelope cho âm thanh mượt mà
+        gainNode.gain.setValueAtTime(0, startTime);
+        gainNode.gain.linearRampToValueAtTime(0.3, startTime + 0.05);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + note.duration);
+        
+        // Phát âm thanh
+        oscillator.start(startTime);
+        oscillator.stop(startTime + note.duration);
+        
+        startTime += note.duration + 0.1; // Gap giữa các nốt
+      });
+      
+      console.log('🔊 Đã phát âm thanh thông báo "Đã upload xong"');
+    } catch (error) {
+      console.warn('⚠️ Không thể phát âm thanh:', error);
+      // Fallback: sử dụng notification API nếu có
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('🎉 Đã upload xong!', {
+          body: 'Import dữ liệu đã hoàn tất',
+          icon: '/favicon.ico',
+          tag: 'upload-complete'
+        });
+      }
+    }
+  }
+
+  // ⏰ Format thời gian từ milliseconds sang mm:ss
+  formatTime(milliseconds) {
+    if (!milliseconds || milliseconds <= 0) return '00:00';
+    
+    const totalSeconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  }
+
+  // 📁 Format file size to human readable format
+  formatFileSize(bytes) {
+    if (!bytes || bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  }
+
+  // 📁 Format file size (bytes to human readable) - Legacy method
+  formatBytes(bytes) {
+    return this.formatFileSize(bytes);
   }
 
   // 📊 Lấy thống kê tổng quan
