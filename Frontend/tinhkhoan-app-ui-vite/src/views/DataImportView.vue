@@ -590,9 +590,14 @@ const calculateDataTypeStats = () => {
     if (stats[imp.dataType]) {
       // 🔧 Sử dụng đúng field name từ backend: recordsCount
       stats[imp.dataType].totalRecords += imp.recordsCount || 0
-      if (!stats[imp.dataType].lastUpdate || 
-          new Date(imp.importDate) > new Date(stats[imp.dataType].lastUpdate)) {
-        stats[imp.dataType].lastUpdate = imp.importDate
+      
+      // 🔧 Handle invalid dates từ backend (0001-01-01)
+      const importDate = imp.importDate;
+      if (importDate && importDate !== "0001-01-01T00:00:00") {
+        if (!stats[imp.dataType].lastUpdate || 
+            new Date(importDate) > new Date(stats[imp.dataType].lastUpdate)) {
+          stats[imp.dataType].lastUpdate = importDate
+        }
       }
     }
   })

@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "name": "Test Employee 1",
+    "department": "IT",
+    "salary": 50000,
+    "date": "2025-06-22"
+  },
+  {
+    "id": 2,
+    "name": "Test Employee 2", 
+    "department": "Finance",
+    "salary": 60000,
+    "date": "2025-06-22"
+  }
+]
