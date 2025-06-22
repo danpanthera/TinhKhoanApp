@@ -1048,6 +1048,7 @@ const previewImport = async (importItem) => {
       
       // Helper function để convert $values format nếu cần
       const convertDotNetArray = (data) => {
+        console.log('🔧 convertDotNetArray input:', typeof data, Array.isArray(data), data)
         if (data && typeof data === 'object' && data.$values && Array.isArray(data.$values)) {
           console.log('🔧 Converting $values format, length:', data.$values.length)
           return data.$values;
@@ -1061,8 +1062,18 @@ const previewImport = async (importItem) => {
         records = Array.isArray(rawRecords) ? rawRecords : [];
       } else if (result.data.previewRows) {
         console.log('📝 Processing previewRows path:', typeof result.data.previewRows, Array.isArray(result.data.previewRows))
-        let rawRows = convertDotNetArray(result.data.previewRows);
-        records = Array.isArray(rawRows) ? rawRows : [];
+        console.log('📝 previewRows content:', result.data.previewRows)
+        console.log('📝 previewRows length:', result.data.previewRows?.length)
+        
+        // previewRows đã là array rồi, không cần convert
+        if (Array.isArray(result.data.previewRows)) {
+          records = result.data.previewRows;
+          console.log('📝 Using previewRows directly as array:', records.length, 'items')
+        } else {
+          let rawRows = convertDotNetArray(result.data.previewRows);
+          console.log('📝 PreviewRows after conversion:', typeof rawRows, Array.isArray(rawRows), rawRows?.length, rawRows)
+          records = Array.isArray(rawRows) ? rawRows : [];
+        }
       } else if (Array.isArray(result.data)) {
         console.log('📝 Processing direct array path')
         records = result.data;
