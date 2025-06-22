@@ -104,6 +104,7 @@ namespace TinhKhoanApp.Api.Models
     {
         public bool Success { get; set; }
         public string FileName { get; set; }
+        public string DataType { get; set; } // ➕ Loại dữ liệu (ZIP, XLSX, CSV, v.v.)
         public int RecordsProcessed { get; set; }
         public string Message { get; set; }
         public DateTime? StatementDate { get; set; }
