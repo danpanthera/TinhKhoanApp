@@ -67,7 +67,7 @@ namespace TinhKhoanApp.Api.Controllers
                     {
                         x.Id,
                         x.FileName,
-                        DataType = x.Category, // Map Category to DataType for compatibility
+                        DataType = x.FileType, // 🔧 Fix: Map FileType to DataType (FileType chứa DataType thực tế)
                         x.ImportDate,
                         x.StatementDate,
                         x.ImportedBy,
@@ -81,7 +81,7 @@ namespace TinhKhoanApp.Api.Controllers
                         // Tạo RecordsPreview từ imported data items
                         RecordsPreview = new List<object>
                         {
-                            new { Id = x.Id * 10 + 1, ProcessedDate = x.ImportDate, ProcessingNotes = $"{x.Category} data processed successfully" },
+                            new { Id = x.Id * 10 + 1, ProcessedDate = x.ImportDate, ProcessingNotes = $"{x.FileType} data processed successfully" },
                             new { Id = x.Id * 10 + 2, ProcessedDate = x.ImportDate, ProcessingNotes = $"Import {x.FileName} completed" }
                         }
                     })
