@@ -362,10 +362,10 @@
         </div>
 
         <div class="modal-footer">
-          <button @click="closeImportModal" class="btn-cancel">Hủy</button>
+          <button @click="closeImportModal" class="btn-cancel btn-large">🚫 Hủy</button>
           <button 
             @click="performImport" 
-            class="btn-import-confirm"
+            class="btn-import-confirm btn-large"
             :disabled="selectedFiles.length === 0 || uploading"
             :style="{ backgroundColor: getDataTypeColor(selectedDataType) }"
           >
@@ -578,6 +578,7 @@ const getDataTypeStats = (dataType) => {
 }
 
 const calculateDataTypeStats = () => {
+  console.log('🔧 Calculating data type stats from imports:', allImports.value.length)
   const stats = {}
   
   // Initialize all data types
@@ -587,6 +588,7 @@ const calculateDataTypeStats = () => {
   
   // Calculate from imports
   allImports.value.forEach(imp => {
+    console.log(`📊 Processing import: ${imp.dataType}, records: ${imp.recordsCount}`)
     if (stats[imp.dataType]) {
       // 🔧 Sử dụng đúng field name từ backend: recordsCount
       stats[imp.dataType].totalRecords += imp.recordsCount || 0
@@ -602,6 +604,7 @@ const calculateDataTypeStats = () => {
     }
   })
   
+  console.log('📈 Final stats:', stats)
   dataTypeStats.value = stats
 }
 
@@ -667,11 +670,24 @@ const refreshAllData = async () => {
     loading.value = true
     loadingMessage.value = 'Đang tải lại dữ liệu...'
     
+    console.log('🔄 Starting refresh all data...')
     const result = await rawDataService.getAllImports()
+    console.log('📊 Raw result from getAllImports:', result)
+    
     if (result.success) {
       allImports.value = result.data || []
+      console.log('✅ Loaded imports:', allImports.value.length, 'items')
+      
+      // Force recalculation of stats
       calculateDataTypeStats()
-      showSuccess('Đã tải lại dữ liệu thành công')
+      
+      // Also refresh filtered results if there are any filters active
+      if (selectedFromDate.value) {
+        console.log('🔍 Reapplying date filter...')
+        await applyDateFilter()
+      }
+      
+      showSuccess(`✅ Đã tải lại dữ liệu thành công (${allImports.value.length} imports)`)
     } else {
       // Hiển thị thông báo lỗi chi tiết
       const errorMsg = result.error || 'Không thể tải dữ liệu'
@@ -1016,10 +1032,17 @@ const executeImport = async () => {
       showSuccess(`✅ Import thành công! Đã xử lý ${result.data.results?.length || 1} file(s)`)
       closeImportModal()
       
-      // Thêm delay để đảm bảo dữ liệu đã được lưu
+      // 🔧 TĂNG THỜI GIAN DELAY để đảm bảo database đã được update hoàn toàn
       loadingMessage.value = 'Đang tải lại dữ liệu...'
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      console.log('⏳ Waiting for database to update...')
+      await new Promise(resolve => setTimeout(resolve, 4000)) // Tăng từ 2s lên 4s
+      
+      console.log('🔄 Now refreshing data after import...')
       await refreshAllData()
+      
+      // Force reload stats một lần nữa để chắc chắn
+      console.log('🔄 Force recalculating stats...')
+      calculateDataTypeStats()
     } else {
       showError(result.error || 'Import thất bại')
     }
@@ -1807,11 +1830,8 @@ onMounted(async () => {
 }
 
 .modal-footer {
-  padding: 20px 24px;
-  border-top: 1px solid #e9ecef;
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
+  padding: 24px 32px !important; /* Padding lớn hơn cho footer */
+  gap: 20px !important; /* Gap lớn hơn giữa các nút */
 }
 
 /* Import Form */
@@ -2258,6 +2278,72 @@ onMounted(async () => {
     opacity: 1;
     transform: scale(1) translateY(0);
   }
+}
+
+/* 🔥 ENHANCED LARGE BUTTONS - NÚT TO HƠN VÀ NỔI BẬT HƠN */
+.btn-large {
+  padding: 16px 32px !important; /* Tăng padding cho to hơn */
+  font-size: 18px !important; /* Tăng font size */
+  font-weight: 700 !important; /* Font weight bold hơn */
+  border-radius: 12px !important; /* Bo góc to hơn */
+  min-width: 160px !important; /* Min width lớn hơn */
+  text-transform: uppercase !important; /* Chữ in hoa */
+   letter-spacing: 0.5px !important; /* Spacing giữa các chữ */
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important; /* Shadow nổi bật */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important; /* Animation mượt */
+  border: none !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.btn-large::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn-large:hover::before {
+  left: 100%;
+}
+
+.btn-large:hover {
+  transform: translateY(-3px) !important; /* Hiệu ứng nâng lên */
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25) !important; /* Shadow to hơn khi hover */
+}
+
+.btn-large:active {
+  transform: translateY(-1px) !important; /* Hiệu ứng ấn xuống */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+}
+
+.btn-cancel.btn-large {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
+  color: white !important;
+}
+
+.btn-cancel.btn-large:hover {
+  background: linear-gradient(135deg, #c0392b 0%, #a93226 100%) !important;
+}
+
+.btn-import-confirm.btn-large {
+  background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%) !important;
+  color: white !important;
+}
+
+.btn-import-confirm.btn-large:hover:not(:disabled) {
+  background: linear-gradient(135deg, #229954 0%, #27ae60 100%) !important;
+}
+
+.btn-import-confirm.btn-large:disabled {
+  background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%) !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
 }
 
 /* Responsive */

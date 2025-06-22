@@ -685,10 +685,10 @@ class RawDataService {
         oscillator.frequency.setValueAtTime(note.freq, startTime);
         oscillator.type = 'sine'; // Âm thanh mềm mại
         
-        // Envelope cho âm thanh mượt mà
+        // Envelope cho âm thanh mượt mà - TĂNG VOLUME LÊN GẤP ĐÔI
         gainNode.gain.setValueAtTime(0, startTime);
-        gainNode.gain.linearRampToValueAtTime(0.3, startTime + 0.05);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + note.duration);
+        gainNode.gain.linearRampToValueAtTime(0.6, startTime + 0.05); // 0.3 -> 0.6 (tăng gấp đôi)
+        gainNode.gain.exponentialRampToValueAtTime(0.02, startTime + note.duration);
         
         // Phát âm thanh
         oscillator.start(startTime);
