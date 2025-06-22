@@ -203,15 +203,20 @@ namespace TinhKhoanApp.Api.Services
                         results.Add(new Models.Temporal.RawDataImport
                         {
                             ImportDate = reader.GetDateTime("ImportDate"),
-                            EmployeeCode = reader.GetString("EmployeeCode"),
-                            KpiCode = reader.GetString("KpiCode"),
+                            EmployeeCode = reader.IsDBNull("EmployeeCode") ? string.Empty : reader.GetString("EmployeeCode"),
+                            KpiCode = reader.IsDBNull("KpiCode") ? string.Empty : reader.GetString("KpiCode"),
                             KpiName = reader.IsDBNull("KpiName") ? string.Empty : reader.GetString("KpiName"),
-                            BranchCode = reader.GetString("BranchCode"),
+                            BranchCode = reader.IsDBNull("BranchCode") ? string.Empty : reader.GetString("BranchCode"),
                             DepartmentCode = reader.IsDBNull("DepartmentCode") ? string.Empty : reader.GetString("DepartmentCode"),
-                            KpiValue = reader.GetDecimal("Value"),
+                            // Fix: Safe casting cho Value field - có thể là string hoặc decimal
+                            KpiValue = reader.IsDBNull("Value") ? 0 : 
+                                      reader.GetFieldType(reader.GetOrdinal("Value")) == typeof(string) ? 
+                                      decimal.TryParse(reader.GetString("Value"), out var val) ? val : 0 :
+                                      reader.GetDecimal("Value"),
                             Unit = reader.IsDBNull("Unit") ? null : reader.GetString("Unit"),
-                            DataType = reader.GetString("DataType"),
-                            ImportBatchId = Guid.TryParse(reader.GetString("ImportBatchId"), out var batchId) ? batchId : Guid.NewGuid(),
+                            DataType = reader.IsDBNull("DataType") ? string.Empty : reader.GetString("DataType"),
+                            ImportBatchId = reader.IsDBNull("ImportBatchId") ? Guid.NewGuid() : 
+                                           Guid.TryParse(reader.GetString("ImportBatchId"), out var batchId) ? batchId : Guid.NewGuid(),
                             FileName = reader.IsDBNull("FileName") ? string.Empty : reader.GetString("FileName"),
                             CreatedBy = reader.IsDBNull("ImportedBy") ? "SYSTEM" : reader.GetString("ImportedBy"),
                             CreatedDate = reader.GetDateTime("ImportedAt"),
@@ -227,9 +232,16 @@ namespace TinhKhoanApp.Api.Services
 
         public async Task<List<DailyChangeSummary>> GetDailyChangeSummaryAsync(DateTime reportDate, string? branchCode = null)
         {
+            // Fix: Ensure date is within SQL Server range
+            var safeReportDate = reportDate.Date;
+            if (safeReportDate < new DateTime(1753, 1, 1))
+                safeReportDate = new DateTime(1753, 1, 1);
+            if (safeReportDate > new DateTime(9999, 12, 31))
+                safeReportDate = new DateTime(9999, 12, 31);
+
             var parameters = new[]
             {
-                new SqlParameter("@ReportDate", SqlDbType.Date) { Value = reportDate },
+                new SqlParameter("@ReportDate", SqlDbType.Date) { Value = safeReportDate },
                 new SqlParameter("@BranchCode", SqlDbType.NVarChar, 20) { Value = branchCode ?? (object)DBNull.Value }
             };
 
@@ -295,7 +307,11 @@ namespace TinhKhoanApp.Api.Services
                             Unit = reader.GetString("Unit"),
                             MovingAverage7Days = reader.GetDecimal("MovingAverage7Days"),
                             DayOverDayChange = reader.IsDBNull("DayOverDayChange") ? 0m : reader.GetDecimal("DayOverDayChange"),
-                            PercentileRank = (decimal)reader.GetDouble("PercentileRank"),
+                            // Fix: Safe conversion từ any numeric type sang decimal
+                            PercentileRank = reader.IsDBNull("PercentileRank") ? 0m : 
+                                           reader.GetFieldType(reader.GetOrdinal("PercentileRank")) == typeof(double) ?
+                                           (decimal)reader.GetDouble("PercentileRank") :
+                                           reader.GetDecimal("PercentileRank"),
                             ValidFrom = reader.GetDateTime("ValidFrom"),
                             ValidTo = reader.GetDateTime("ValidTo")
                         });
