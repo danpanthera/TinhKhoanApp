@@ -1056,38 +1056,18 @@ const previewImport = async (importItem) => {
         return data;
       };
       
-      if (result.data.records) {
-        console.log('� Processing records path:', typeof result.data.records, Array.isArray(result.data.records))
-        let rawRecords = convertDotNetArray(result.data.records);
-        records = Array.isArray(rawRecords) ? rawRecords : [];
-      } else if (result.data.previewRows) {
-        console.log('📝 Processing previewRows path:', typeof result.data.previewRows, Array.isArray(result.data.previewRows))
+      // ✅ Ưu tiên previewRows trước vì đây là data thật
+      if (result.data.previewRows && Array.isArray(result.data.previewRows) && result.data.previewRows.length > 0) {
+        console.log('📝 Processing previewRows path (priority):', typeof result.data.previewRows, Array.isArray(result.data.previewRows))
         console.log('📝 previewRows content:', result.data.previewRows)
         console.log('📝 previewRows length:', result.data.previewRows?.length)
-        console.log('📝 previewRows has $values?', !!(result.data.previewRows && result.data.previewRows.$values))
-        console.log('📝 previewRows constructor:', result.data.previewRows?.constructor?.name)
         
-        // Xử lý cả trường hợp array trực tiếp và object có $values
-        let candidateArray = null;
-        
-        if (Array.isArray(result.data.previewRows)) {
-          candidateArray = result.data.previewRows;
-          console.log('📝 Case 1: Direct array')
-        } else if (result.data.previewRows && result.data.previewRows.$values && Array.isArray(result.data.previewRows.$values)) {
-          candidateArray = result.data.previewRows.$values;
-          console.log('📝 Case 2: $values array')
-        } else if (result.data.previewRows && typeof result.data.previewRows === 'object' && 'length' in result.data.previewRows && result.data.previewRows.length > 0) {
-          // Có thể là array-like object hoặc proxy
-          candidateArray = Array.from(result.data.previewRows);
-          console.log('📝 Case 3: Array-like object converted')
-        } else {
-          let rawRows = convertDotNetArray(result.data.previewRows);
-          candidateArray = Array.isArray(rawRows) ? rawRows : [];
-          console.log('📝 Case 4: Fallback conversion')
-        }
-        
-        records = candidateArray || [];
-        console.log('📝 Final candidateArray:', records.length, 'items', records)
+        records = result.data.previewRows;
+        console.log('📝 Using previewRows directly:', records.length, 'items')
+      } else if (result.data.records) {
+        console.log('📝 Processing records path:', typeof result.data.records, Array.isArray(result.data.records))
+        let rawRecords = convertDotNetArray(result.data.records);
+        records = Array.isArray(rawRecords) ? rawRecords : [];
       } else if (Array.isArray(result.data)) {
         console.log('📝 Processing direct array path')
         records = result.data;
