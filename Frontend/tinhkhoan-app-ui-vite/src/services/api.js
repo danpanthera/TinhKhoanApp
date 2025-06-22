@@ -30,11 +30,32 @@ apiClient.interceptors.request.use(
 // Add response interceptor - Thêm interceptor cho response  
 apiClient.interceptors.response.use(
   (response) => {
-    // Handle .NET JSON serialization format with $values automatically
-    if (response.data && response.data.$values && Array.isArray(response.data.$values)) {
-      console.log('🔧 API: Converting .NET $values format to array');
-      response.data = response.data.$values;
+    // 🔧 Recursive function để xử lý .NET $values format
+    function convertDotNetFormat(obj) {
+      if (obj && typeof obj === 'object') {
+        // Xử lý object có $values property
+        if (obj.$values && Array.isArray(obj.$values)) {
+          console.log('🔧 API: Converting .NET $values format to array');
+          return obj.$values.map(item => convertDotNetFormat(item));
+        }
+        
+        // Xử lý object thông thường - convert từng property
+        if (Array.isArray(obj)) {
+          return obj.map(item => convertDotNetFormat(item));
+        }
+        
+        const converted = {};
+        for (const [key, value] of Object.entries(obj)) {
+          converted[key] = convertDotNetFormat(value);
+        }
+        return converted;
+      }
+      
+      return obj;
     }
+    
+    // Áp dụng conversion cho toàn bộ response data
+    response.data = convertDotNetFormat(response.data);
     return response;
   },
   (error) => {

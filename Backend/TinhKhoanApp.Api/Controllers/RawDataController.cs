@@ -814,7 +814,7 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
-        // 🗄️ GET: api/RawData/table/{dataType} - Lấy dữ liệu thô trực tiếp từ bảng động
+        // 🗄️ GET: api/RawData/table/{dataType} - Lấy dữ liệu thô trực tiếp từ bảng động (Mock mode)
         [HttpGet("table/{dataType}")]
         public async Task<ActionResult> GetRawDataFromTable(string dataType, [FromQuery] string? statementDate = null)
         {
@@ -829,7 +829,7 @@ namespace TinhKhoanApp.Api.Controllers
                     return BadRequest(new { message = $"Loại dữ liệu '{dataType}' không được hỗ trợ" });
                 }
 
-                // Tạo tên bảng động với format mới
+                // 🔧 MOCK MODE: Tạo mock data cho bảng thô dựa trên dataType và statementDate
                 string tableName;
                 if (!string.IsNullOrEmpty(statementDate))
                 {
@@ -837,93 +837,24 @@ namespace TinhKhoanApp.Api.Controllers
                 }
                 else
                 {
-                    // 🔧 FIXED: Không truy vấn temporal table, sử dụng mock data
-                    var mockData = GetAllMockData();
-                    var latestImport = mockData
-                        .Where(r => !IsItemDeleted(r.Id))
-                        .Where(r => r.DataType?.ToString()?.Equals(dataType, StringComparison.OrdinalIgnoreCase) == true)
-                        .OrderByDescending(r => r.ImportDate ?? DateTime.Now)
-                        .FirstOrDefault();
-
-                    if (latestImport == null)
-                    {
-                        return NotFound(new { message = $"Không tìm thấy dữ liệu import nào cho {dataType}" });
-                    }
-
-                    tableName = $"Raw_{dataType.ToUpper()}_{latestImport.StatementDate:yyyyMMdd}";
+                    // Lấy ngày hiện tại để tạo tên bảng mock
+                    tableName = $"Raw_{dataType.ToUpper()}_{DateTime.Now:yyyyMMdd}";
                 }
 
-                // ✅ SQL Server compatible: Check if table exists
-                var tableExistsQuery = @"
-                    SELECT COUNT(*) 
-                    FROM sys.tables 
-                    WHERE name = @tableName";
+                // 🎭 Tạo mock data dựa trên loại dữ liệu
+                var (columns, records) = GenerateMockRawTableData(dataType.ToUpper(), statementDate);
 
-                using var checkCommand = _context.Database.GetDbConnection().CreateCommand();
-                checkCommand.CommandText = tableExistsQuery;
-                var tableNameParam = checkCommand.CreateParameter();
-                tableNameParam.ParameterName = "@tableName";
-                tableNameParam.Value = tableName;
-                checkCommand.Parameters.Add(tableNameParam);
-
-                await _context.Database.OpenConnectionAsync();
-                var tableExistsResult = await checkCommand.ExecuteScalarAsync();
-                var tableExists = Convert.ToInt32(tableExistsResult) > 0;
-
-                if (!tableExists)
-                {
-                    _logger.LogWarning("Table {TableName} does not exist", tableName);
-                    return NotFound(new { message = $"Bảng {tableName} không tồn tại" });
-                }
-
-                // ✅ SQL Server compatible: Use TOP instead of LIMIT
-                var rawDataQuery = $"SELECT TOP 1000 * FROM [{tableName}] ORDER BY Id";
-                
-                using var command = _context.Database.GetDbConnection().CreateCommand();
-                command.CommandText = rawDataQuery;
-                
-                if (_context.Database.GetDbConnection().State != System.Data.ConnectionState.Open)
-                {
-                    await _context.Database.OpenConnectionAsync();
-                }
-                
-                var results = new List<Dictionary<string, object>>();
-                using var reader = await command.ExecuteReaderAsync();
-                
-                var columnNames = new List<string>();
-                for (int i = 0; i < reader.FieldCount; i++)
-                {
-                    columnNames.Add(reader.GetName(i));
-                }
-
-                while (await reader.ReadAsync())
-                {
-                    var row = new Dictionary<string, object>();
-                    for (int i = 0; i < reader.FieldCount; i++)
-                    {
-                        var value = reader.IsDBNull(i) ? null : reader.GetValue(i);
-                        // Convert DateTime to string for JSON serialization
-                        if (value is DateTime dt)
-                        {
-                            value = dt.ToString("yyyy-MM-dd HH:mm:ss");
-                        }
-                        row[columnNames[i]] = value;
-                    }
-                    results.Add(row);
-                }
-
-                await _context.Database.CloseConnectionAsync();
-
-                _logger.LogInformation("Successfully fetched {Count} records from table {TableName}", 
-                    results.Count, tableName);
+                _logger.LogInformation("Generated {Count} mock records for table {TableName}", 
+                    records.Count, tableName);
 
                 return Ok(new
                 {
                     tableName = tableName,
                     dataType = dataType,
-                    recordCount = results.Count,
-                    columns = columnNames,
-                    records = results
+                    recordCount = records.Count,
+                    columns = columns,
+                    records = records,
+                    note = "Mock data - Temporal table chưa được triển khai"
                 });
             }
             catch (Exception ex)
@@ -2339,6 +2270,108 @@ END";
             var tableName = $"Raw_{dataType.ToUpper()}_{statementDate:yyyyMMdd}";
             _logger.LogInformation($"📋 Tên bảng được tạo: {tableName}");
             return tableName;
+        }
+
+        // 🎭 Tạo mock data cho bảng raw table
+        private (List<string> columns, List<Dictionary<string, object>> records) GenerateMockRawTableData(string dataType, string? statementDate = null)
+        {
+            var columns = new List<string>();
+            var records = new List<Dictionary<string, object>>();
+            
+            // Cấu trúc dữ liệu dựa trên loại
+            switch (dataType.ToUpper())
+            {
+                case "LN01": // Dữ liệu LOAN
+                    columns = new List<string> { "Id", "SoTaiKhoan", "TenKhachHang", "DuNo", "LaiSuat", "HanMuc", "NgayGiaiNgan", "NgayCapNhat" };
+                    for (int i = 1; i <= 15; i++)
+                    {
+                        records.Add(new Dictionary<string, object>
+                        {
+                            ["Id"] = i,
+                            ["SoTaiKhoan"] = $"LOAN{10000 + i}",
+                            ["TenKhachHang"] = $"Khách hàng vay {i}",
+                            ["DuNo"] = 100000000 + i * 10000000,
+                            ["LaiSuat"] = 6.5 + (i % 5) * 0.25,
+                            ["HanMuc"] = 200000000 + i * 50000000,
+                            ["NgayGiaiNgan"] = DateTime.Now.AddDays(-30 * (i % 12)).ToString("yyyy-MM-dd"),
+                            ["NgayCapNhat"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                        });
+                    }
+                    break;
+
+                case "DP01": // Dữ liệu tiền gửi
+                    columns = new List<string> { "Id", "SoTaiKhoan", "TenKhachHang", "SoTien", "LaiSuat", "KyHan", "NgayMoSo", "NgayCapNhat" };
+                    for (int i = 1; i <= 12; i++)
+                    {
+                        records.Add(new Dictionary<string, object>
+                        {
+                            ["Id"] = i,
+                            ["SoTaiKhoan"] = $"DP{20000 + i}",
+                            ["TenKhachHang"] = $"Khách hàng tiền gửi {i}",
+                            ["SoTien"] = 50000000 + i * 5000000,
+                            ["LaiSuat"] = 3.2 + (i % 6) * 0.1,
+                            ["KyHan"] = new string[] { "1 tháng", "3 tháng", "6 tháng", "12 tháng", "18 tháng", "24 tháng" }[i % 6],
+                            ["NgayMoSo"] = DateTime.Now.AddDays(-60 * (i % 10)).ToString("yyyy-MM-dd"),
+                            ["NgayCapNhat"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                        });
+                    }
+                    break;
+
+                case "EI01": // Mobile banking
+                    columns = new List<string> { "Id", "SoTaiKhoan", "LoaiGiaoDich", "SoTien", "PhiGiaoDich", "ThoiGian", "TrangThai", "NgayCapNhat" };
+                    for (int i = 1; i <= 20; i++)
+                    {
+                        records.Add(new Dictionary<string, object>
+                        {
+                            ["Id"] = i,
+                            ["SoTaiKhoan"] = $"MB{30000 + i}",
+                            ["LoaiGiaoDich"] = new string[] { "Chuyển tiền", "Nạp điện thoại", "Thanh toán hóa đơn", "Rút tiền", "Tra cứu số dư" }[i % 5],
+                            ["SoTien"] = 500000 + i * 100000,
+                            ["PhiGiaoDich"] = i % 3 == 0 ? 11000 : 0,
+                            ["ThoiGian"] = DateTime.Now.AddHours(-i).ToString("yyyy-MM-dd HH:mm:ss"),
+                            ["TrangThai"] = i % 10 == 0 ? "Thất bại" : "Thành công",
+                            ["NgayCapNhat"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                        });
+                    }
+                    break;
+
+                case "GL01": // Bút toán GDV
+                    columns = new List<string> { "Id", "SoChungTu", "TaiKhoanNo", "TaiKhoanCo", "SoTien", "DienGiai", "NgayGiaoDich", "NgayCapNhat" };
+                    for (int i = 1; i <= 18; i++)
+                    {
+                        records.Add(new Dictionary<string, object>
+                        {
+                            ["Id"] = i,
+                            ["SoChungTu"] = $"GL{100000 + i}",
+                            ["TaiKhoanNo"] = $"101{1000 + i}",
+                            ["TaiKhoanCo"] = $"111{2000 + i}",
+                            ["SoTien"] = 1000000 + i * 500000,
+                            ["DienGiai"] = $"Bút toán GDV số {i} - Giao dịch điện tử",
+                            ["NgayGiaoDich"] = DateTime.Now.AddDays(-i).ToString("yyyy-MM-dd"),
+                            ["NgayCapNhat"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                        });
+                    }
+                    break;
+
+                default: // Default generic structure
+                    columns = new List<string> { "Id", "TenCot1", "TenCot2", "GiaTri", "MoTa", "NgayCapNhat" };
+                    for (int i = 1; i <= 10; i++)
+                    {
+                        records.Add(new Dictionary<string, object>
+                        {
+                            ["Id"] = i,
+                            ["TenCot1"] = $"Dữ liệu {i}",
+                            ["TenCot2"] = $"Giá trị {dataType}_{i}",
+                            ["GiaTri"] = 1000 + i * 100,
+                            ["MoTa"] = $"Mô tả cho dòng {i} của {dataType}",
+                            ["NgayCapNhat"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+                        });
+                    }
+                    break;
+            }
+
+            _logger.LogInformation($"🎭 Generated {records.Count} mock records for {dataType} with {columns.Count} columns");
+            return (columns, records);
         }
     }
 }

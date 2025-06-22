@@ -1036,41 +1036,61 @@ const previewImport = async (importItem) => {
     console.log('👁️ Previewing import:', importItem)
     
     const result = await rawDataService.previewData(importItem.id)
-    console.log('Preview result:', result)
+    console.log('📋 Preview result:', result)
+    console.log('📋 Result data type:', typeof result.data, 'isArray:', Array.isArray(result.data))
+    console.log('📋 Result data content:', result.data)
     
     if (result.success) {
       selectedImport.value = importItem
-      // Backend trả về records với Values wrapper
-      console.log('Full result.data structure:', result.data)
-      const records = result.data.records?.Values || result.data.previewRows || []
-      previewData.value = records
+      
+      // 🔧 Xử lý nhiều format dữ liệu từ backend với debugging
+      let records = [];
+      
+      // Helper function để convert $values format nếu cần
+      const convertDotNetArray = (data) => {
+        if (data && typeof data === 'object' && data.$values && Array.isArray(data.$values)) {
+          console.log('🔧 Converting $values format, length:', data.$values.length)
+          return data.$values;
+        }
+        return data;
+      };
+      
+      if (result.data.records) {
+        console.log('� Processing records path:', typeof result.data.records, Array.isArray(result.data.records))
+        let rawRecords = convertDotNetArray(result.data.records);
+        records = Array.isArray(rawRecords) ? rawRecords : [];
+      } else if (result.data.previewRows) {
+        console.log('📝 Processing previewRows path:', typeof result.data.previewRows, Array.isArray(result.data.previewRows))
+        let rawRows = convertDotNetArray(result.data.previewRows);
+        records = Array.isArray(rawRows) ? rawRows : [];
+      } else if (Array.isArray(result.data)) {
+        console.log('📝 Processing direct array path')
+        records = result.data;
+      } else {
+        // Thử convert toàn bộ result.data nếu nó có $values
+        console.log('📝 Processing fallback conversion')
+        let converted = convertDotNetArray(result.data);
+        records = Array.isArray(converted) ? converted : [];
+      }
+      
+      console.log('🔧 Final processed records:', records.length, 'items')
+      console.log('🔧 Sample record:', records[0])
+      
+      // Đảm bảo records là một array thuần túy (không phải proxy)
+      previewData.value = [...records]
       showPreviewModal.value = true
-      console.log('Preview data loaded:', previewData.value.length, 'records')
-      console.log('Records structure:', result.data.records)
+      
+      console.log('✅ Preview data loaded:', previewData.value.length, 'records')
+      console.log('✅ Preview data is array:', Array.isArray(previewData.value))
+      
       showSuccess(`Đã tải ${previewData.value.length} bản ghi từ ${importItem.fileName}`)
     } else {
-      console.error('Preview failed:', result.error)
+      console.error('❌ Preview failed:', result.error)
       showError(`Lỗi khi tải preview: ${result.error || 'Không thể lấy dữ liệu thô'}`)
-      
-      // Thử lại sau 1 giây
-      setTimeout(async () => {
-        try {
-          const retryResult = await rawDataService.previewData(importItem.id)
-          if (retryResult.success) {
-            selectedImport.value = importItem
-            const retryRecords = retryResult.data.records?.Values || retryResult.data.previewRows || []
-            previewData.value = retryRecords
-            showPreviewModal.value = true
-            showSuccess(`Đã tải ${previewData.value.length} bản ghi từ ${importItem.fileName} (thử lại)`)
-          }
-        } catch (retryError) {
-          console.error('Retry preview failed:', retryError)
-        }
-      }, 1000)
     }
     
   } catch (error) {
-    console.error('Error loading preview:', error)
+    console.error('❌ Error loading preview:', error)
     showError(`Có lỗi xảy ra khi tải preview: ${error.message}`)
   } finally {
     loading.value = false
@@ -1148,20 +1168,44 @@ const viewRawDataFromTable = async (dataType) => {
     }
     
     const result = await rawDataService.getRawDataFromTable(dataType, selectedFromDate.value)
-    console.log('Raw data result:', result)
+    console.log('🗄️ Raw data result:', result)
+    console.log('🗄️ Result data type:', typeof result.data, 'isArray:', Array.isArray(result.data))
     
-    if (result.success) {
-      // Check if data exists - handle $values wrapper
-      console.log('Raw data full response:', result.data)
-      const records = result.data.records?.$values || result.data.records || []
-      if (!records || records.length === 0) {
+    if (result.success && result.data) {
+      // Helper function để convert $values format nếu cần
+      const convertDotNetArray = (data) => {
+        if (data && typeof data === 'object' && data.$values && Array.isArray(data.$values)) {
+          console.log('🔧 Converting raw data $values format, length:', data.$values.length)
+          return data.$values;
+        }
+        return data;
+      };
+      
+      // Xử lý dữ liệu records từ backend mock data
+      let records = [];
+      if (result.data.records) {
+        console.log('📝 Processing raw records path:', typeof result.data.records)
+        let rawRecords = convertDotNetArray(result.data.records);
+        records = Array.isArray(rawRecords) ? rawRecords : [];
+      } else if (Array.isArray(result.data)) {
+        console.log('📝 Processing direct array path for raw data')
+        records = result.data;
+      } else {
+        console.log('📝 Processing fallback conversion for raw data')
+        let converted = convertDotNetArray(result.data);
+        records = Array.isArray(converted) ? converted : [];
+      }
+      
+      console.log('🔧 Final processed raw records:', records.length, 'items')
+      
+      if (records.length === 0) {
         showError(`Không có dữ liệu thô ${dataType} cho ngày ${formatDate(selectedFromDate.value)}`)
         loading.value = false
         loadingMessage.value = ''
         return
       }
       
-      // Show raw data in a modal or new view
+      // Show raw data in a modal
       selectedImport.value = {
         id: 'table-' + dataType,
         fileName: `Bảng ${dataType} - ${formatDate(selectedFromDate.value)}`,
@@ -1170,20 +1214,20 @@ const viewRawDataFromTable = async (dataType) => {
         statementDate: selectedFromDate.value,
         importedBy: 'System'
       }
-      previewData.value = records
-      showPreviewModal.value = true
-      console.log('Raw data loaded:', records.length, 'records from table:', result.data.tableName)
-      showSuccess(`Đã tải ${previewData.value.length} bản ghi từ bảng ${result.data.tableName}`)
-    } else {
-      console.error('Raw data from table failed:', result.error)
-      showError(`Lỗi khi lấy dữ liệu thô: ${result.error}`)
       
-      // Fallback: try to view through import data
-      viewDataType(dataType)
+      // Đảm bảo records là một array thuần túy (không phải proxy)
+      previewData.value = [...records]
+      showPreviewModal.value = true
+      
+      console.log('✅ Raw data loaded:', previewData.value.length, 'records from table:', result.data.tableName || 'Mock Table')
+      showSuccess(`Đã tải ${previewData.value.length} bản ghi từ bảng ${result.data.tableName || 'Mock_' + dataType}`)
+    } else {
+      console.error('❌ Raw data from table failed:', result.error)
+      showError(`Lỗi khi lấy dữ liệu thô: ${result.error || 'Bảng không tồn tại hoặc chưa có dữ liệu'}`)
     }
     
   } catch (error) {
-    console.error('Error loading raw data from table:', error)
+    console.error('❌ Error loading raw data from table:', error)
     showError(`Có lỗi xảy ra khi tải dữ liệu thô: ${error.message}`)
   } finally {
     loading.value = false
