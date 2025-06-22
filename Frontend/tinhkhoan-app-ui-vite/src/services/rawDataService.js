@@ -10,9 +10,16 @@ class RawDataService {
   async getAllImports() {
     try {
       const response = await api.get(this.baseURL);
+      
+      // 🔧 Parse .NET $values format
+      let data = response.data;
+      if (data && data.$values) {
+        data = data.$values;
+      }
+      
       return {
         success: true,
-        data: response.data
+        data: data || []
       };
     } catch (error) {
       console.error('❌ Lỗi lấy danh sách import:', error);
@@ -167,9 +174,15 @@ class RawDataService {
         });
       }
 
+      // 🔧 Parse .NET $values format trong response
+      let data = response.data;
+      if (data && data.$values) {
+        data = data.$values;
+      }
+
       return {
         success: true,
-        data: response.data
+        data: data
       };
     } catch (error) {
       console.error(`❌ Lỗi import dữ liệu ${dataType}:`, error);
@@ -184,9 +197,16 @@ class RawDataService {
   async previewData(importId) {
     try {
       const response = await api.get(`${this.baseURL}/${importId}/preview`);
+      
+      // 🔧 Parse .NET $values format
+      let data = response.data;
+      if (data && data.$values) {
+        data = data.$values;
+      }
+      
       return {
         success: true,
-        data: response.data
+        data: data
       };
     } catch (error) {
       console.error('❌ Lỗi xem trước dữ liệu:', error);
