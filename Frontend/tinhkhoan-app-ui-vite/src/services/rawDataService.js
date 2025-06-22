@@ -9,7 +9,8 @@ class RawDataService {
   // 📋 Lấy danh sách tất cả dữ liệu thô đã import
   async getAllImports() {
     try {
-      const response = await api.get(this.baseURL);
+      // ✅ FIX: Gọi đúng endpoint DataImport thay vì RawData
+      const response = await api.get('/DataImport');
       
       // 🔧 Parse .NET $values format và map fields đúng
       let data = response.data;
@@ -134,7 +135,10 @@ class RawDataService {
       // Store this context for callback
       const self = this;
 
-      const response = await api.post(`${this.baseURL}/import/${dataType}`, formData, {
+      // ✅ FIX: Gọi đúng endpoint DataImport/upload với Category parameter
+      formData.append('Category', dataType);
+      
+      const response = await api.post('/DataImport/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         },

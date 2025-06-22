@@ -57,22 +57,17 @@ onMounted(() => {
 
 .hero-title {
   font-size: 4.5rem; /* Kích thước lớn cho tiêu đề chính */
-  font-weight: 800; /* Tăng độ đậm lên 800 */
-  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif; /* Font hiện đại */
-  color: #8B1538;
+  font-weight: 900; /* Tăng độ đậm tối đa */
+  font-family: 'Black Ops One', 'Anton', 'Impact', sans-serif; /* Font mạnh mẽ thay cho DIRTY STAINS */
+  color: #8B1538; /* Màu bordeaux Agribank */
   margin-bottom: 20px;
   text-shadow: 
     0 4px 8px rgba(139, 21, 56, 0.4), /* Bóng chính màu đỏ Agribank */
-    0 0 15px rgba(255, 223, 0, 0.6),  /* Ánh sáng vàng lung linh */
-    0 0 30px rgba(255, 255, 255, 0.5), /* Ánh sáng trắng lan tỏa */
-    0 0 45px rgba(139, 21, 56, 0.2);  /* Hào quang màu đỏ ngoài cùng */
+    0 2px 4px rgba(0, 0, 0, 0.3);     /* Bóng đậm để tạo chiều sâu */
   line-height: 1.2;
-  letter-spacing: 0.05em; /* Khoảng cách chữ để tạo sự thanh lịch */
-  background: linear-gradient(135deg, #8B1538 0%, #A91B47 50%, #C62D42 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: text-shimmer 3s ease-in-out infinite, gentle-sway 3s ease-in-out infinite; /* Hiệu ứng lung linh */
+  letter-spacing: 0.08em; /* Tăng khoảng cách chữ để tạo sự mạnh mẽ */
+  text-transform: uppercase; /* Viết hoa toàn bộ để tạo sự chuyên nghiệp */
+  /* Đứng yên, không animation */
 }
 
 .nature-icon {
@@ -87,7 +82,7 @@ onMounted(() => {
   width: auto;
   margin-bottom: 20px;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
-  animation: gentle-sway 3s ease-in-out infinite;
+  /* Bỏ animation để đứng yên */
 }
 
 @keyframes gentle-sway {
@@ -113,12 +108,16 @@ onMounted(() => {
 
 .hero-subtitle {
   font-size: 1.9rem; /* Tăng từ 1.5rem lên 1.9rem (+2 cỡ) */
-  color: #A91B47;
+  font-family: 'Crimson Text', 'Georgia', serif; /* Font thanh lịch thay cho Orlean */
+  color: #8B1538; /* Màu đỏ bordeaux Agribank */
   margin-bottom: 30px; /* Giảm từ 50px xuống 30px để dashboard gần hơn */
-  font-weight: 500;
+  font-weight: 600; /* Tăng độ đậm để nổi bật hơn */
+  font-style: italic; /* Nghiêng để tạo sự thanh lịch */
   text-shadow: 
-    0 2px 4px rgba(255, 255, 255, 0.9),
-    0 0 8px rgba(255, 255, 255, 0.7); /* Tăng cường độ nổi bật của text */
+    0 2px 4px rgba(139, 21, 56, 0.3),
+    0 1px 2px rgba(0, 0, 0, 0.2); /* Bóng nhẹ để tạo chiều sâu */
+  letter-spacing: 0.02em; /* Khoảng cách chữ nhẹ */
+  /* Đứng yên, không animation */
 }
 
 .dashboard-section {
