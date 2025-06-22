@@ -12,6 +12,11 @@
         </p>
       </div>
     </div>
+
+    <!-- Dashboard với 6 bảng chỉ tiêu KPI -->
+    <div class="dashboard-section">
+      <BusinessPlanDashboard />
+    </div>
   </div>
 </template>
 
@@ -19,6 +24,7 @@
 import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { isAuthenticated } from '../services/auth';
+import BusinessPlanDashboard from './dashboard/BusinessPlanDashboard.vue';
 
 const router = useRouter();
 
@@ -39,7 +45,7 @@ onMounted(() => {
 
 .welcome-hero {
   text-align: center;
-  padding: 60px 20px;
+  padding: 40px 20px 20px 20px; /* Giảm padding bottom để dashboard gần hơn */
   background: transparent; /* Làm hoàn toàn trong suốt */
 }
 
@@ -50,15 +56,23 @@ onMounted(() => {
 }
 
 .hero-title {
-  font-size: 4.5rem; /* Tăng từ 3.5rem lên 4.5rem (+2 cỡ) */
-  font-weight: 700;
+  font-size: 4.5rem; /* Kích thước lớn cho tiêu đề chính */
+  font-weight: 800; /* Tăng độ đậm lên 800 */
+  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif; /* Font hiện đại */
   color: #8B1538;
   margin-bottom: 20px;
   text-shadow: 
-    0 2px 4px rgba(139, 21, 56, 0.3),
-    0 0 10px rgba(255, 255, 255, 0.8),
-    0 0 20px rgba(255, 255, 255, 0.6); /* Thêm hiệu ứng ánh sáng để nổi bật trên ảnh nền */
+    0 4px 8px rgba(139, 21, 56, 0.4), /* Bóng chính màu đỏ Agribank */
+    0 0 15px rgba(255, 223, 0, 0.6),  /* Ánh sáng vàng lung linh */
+    0 0 30px rgba(255, 255, 255, 0.5), /* Ánh sáng trắng lan tỏa */
+    0 0 45px rgba(139, 21, 56, 0.2);  /* Hào quang màu đỏ ngoài cùng */
   line-height: 1.2;
+  letter-spacing: 0.05em; /* Khoảng cách chữ để tạo sự thanh lịch */
+  background: linear-gradient(135deg, #8B1538 0%, #A91B47 50%, #C62D42 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: text-shimmer 3s ease-in-out infinite, gentle-sway 3s ease-in-out infinite; /* Hiệu ứng lung linh */
 }
 
 .nature-icon {
@@ -81,14 +95,36 @@ onMounted(() => {
   50% { transform: rotate(5deg); }
 }
 
+/* Hiệu ứng lung linh cho chữ AGRIBANK LAI CHAU CENTER */
+@keyframes text-shimmer {
+  0% {
+    background-position: -200% center;
+    filter: brightness(1) drop-shadow(0 0 20px rgba(255, 223, 0, 0.3));
+  }
+  50% {
+    background-position: 200% center;
+    filter: brightness(1.2) drop-shadow(0 0 30px rgba(255, 223, 0, 0.6));
+  }
+  100% {
+    background-position: -200% center;
+    filter: brightness(1) drop-shadow(0 0 20px rgba(255, 223, 0, 0.3));
+  }
+}
+
 .hero-subtitle {
   font-size: 1.9rem; /* Tăng từ 1.5rem lên 1.9rem (+2 cỡ) */
   color: #A91B47;
-  margin-bottom: 50px;
+  margin-bottom: 30px; /* Giảm từ 50px xuống 30px để dashboard gần hơn */
   font-weight: 500;
   text-shadow: 
     0 2px 4px rgba(255, 255, 255, 0.9),
     0 0 8px rgba(255, 255, 255, 0.7); /* Tăng cường độ nổi bật của text */
+}
+
+.dashboard-section {
+  margin-top: 0px; /* Không có margin để dashboard liền kề */
+  padding: 0; /* Không có padding để dashboard full width */
+  background: transparent;
 }
 
 /* Responsive Design */
@@ -103,10 +139,11 @@ onMounted(() => {
   
   .hero-subtitle {
     font-size: 1.6rem; /* Tăng từ 1.2rem lên 1.6rem (+2 cỡ) */
+    margin-bottom: 20px; /* Giảm margin cho mobile */
   }
   
   .welcome-hero {
-    padding: 40px 15px;
+    padding: 30px 15px 15px 15px; /* Giảm padding cho mobile */
   }
 }
 
@@ -121,10 +158,15 @@ onMounted(() => {
   
   .hero-subtitle {
     font-size: 1.4rem; /* Thêm responsive cho subtitle mobile */
+    margin-bottom: 15px; /* Giảm margin cho mobile nhỏ */
   }
   
   .nature-icon {
     font-size: 2.5rem;
+  }
+  
+  .welcome-hero {
+    padding: 20px 15px 10px 15px; /* Giảm thêm padding cho mobile nhỏ */
   }
 }
 </style>

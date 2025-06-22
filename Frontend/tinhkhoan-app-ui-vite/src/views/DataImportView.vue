@@ -1832,13 +1832,16 @@ onMounted(async () => {
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   max-width: 90vw;
-  max-height: 90vh;
+  max-height: 80vh; /* Giảm từ 90vh xuống 80vh để có chỗ cho nút */
   overflow: hidden;
   animation: modalSlideIn 0.3s ease-out;
+  display: flex;
+  flex-direction: column; /* Đảm bảo layout flexbox */
 }
 
 .modal-large {
   width: 1000px;
+  max-height: 85vh; /* Tăng một chút cho modal lớn */
 }
 
 .modal-header {
@@ -1848,6 +1851,7 @@ onMounted(async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0; /* Không co lại */
 }
 
 .modal-header h3 {
@@ -1873,13 +1877,19 @@ onMounted(async () => {
 
 .modal-body {
   padding: 24px;
-  max-height: calc(90vh - 120px);
-  overflow-y: auto;
+  overflow-y: auto; /* Cho phép scroll trong body */
+  flex: 1; /* Chiếm hết không gian còn lại */
+  min-height: 0; /* Quan trọng để flexbox hoạt động đúng */
 }
 
 .modal-footer {
-  padding: 24px 32px !important; /* Padding lớn hơn cho footer */
-  gap: 20px !important; /* Gap lớn hơn giữa các nút */
+  padding: 20px 32px; /* Giảm padding từ 24px xuống 20px */
+  gap: 20px;
+  border-top: 1px solid #e9ecef; /* Thêm border để phân biệt */
+  background: #f8f9fa; /* Nền nhẹ để nổi bật */
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0; /* Không co lại */
 }
 
 /* Import Form */
