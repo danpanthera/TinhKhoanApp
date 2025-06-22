@@ -940,9 +940,9 @@ const previewImport = async (importItem) => {
     
     if (result.success) {
       selectedImport.value = importItem
-      // Backend trả về records với $values wrapper
+      // Backend trả về records với Values wrapper
       console.log('Full result.data structure:', result.data)
-      const records = result.data.records?.$values || result.data.records || []
+      const records = result.data.records?.Values || result.data.previewRows || []
       previewData.value = records
       showPreviewModal.value = true
       console.log('Preview data loaded:', previewData.value.length, 'records')
@@ -958,7 +958,7 @@ const previewImport = async (importItem) => {
           const retryResult = await rawDataService.previewData(importItem.id)
           if (retryResult.success) {
             selectedImport.value = importItem
-            const retryRecords = retryResult.data.records?.$values || retryResult.data.records || []
+            const retryRecords = retryResult.data.records?.Values || retryResult.data.previewRows || []
             previewData.value = retryRecords
             showPreviewModal.value = true
             showSuccess(`Đã tải ${previewData.value.length} bản ghi từ ${importItem.fileName} (thử lại)`)

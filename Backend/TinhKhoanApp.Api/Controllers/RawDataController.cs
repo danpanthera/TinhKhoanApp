@@ -315,7 +315,7 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                Console.WriteLine($"Đang lấy preview cho Raw Data import với ID: {id}");
+                _logger.LogInformation($"🔍 Đang lấy preview cho Raw Data import với ID: {id}");
                 
                 // Tìm trong mock data
                 var allMockData = GetAllMockData();
@@ -323,47 +323,112 @@ namespace TinhKhoanApp.Api.Controllers
                 
                 if (item == null || IsItemDeleted(id))
                 {
-                    Console.WriteLine($"Không tìm thấy Raw Data import với ID: {id} để preview");
+                    _logger.LogWarning($"⚠️ Không tìm thấy Raw Data import với ID: {id} để preview");
                     return NotFound(new { message = $"Không tìm thấy dữ liệu import với ID: {id}" });
                 }
                 
-                // Lấy tên file an toàn
+                // Lấy thông tin an toàn từ item
                 string fileName = item.FileName?.ToString() ?? "unknown-file";
                 string dataType = item.DataType?.ToString() ?? "unknown-type";
-                int recordsCount = Convert.ToInt32(item.RecordsCount);
+                int recordsCount = 0;
+                try {
+                    recordsCount = Convert.ToInt32(item.RecordsCount);
+                } catch {
+                    recordsCount = new Random().Next(100, 1000);
+                    _logger.LogWarning($"⚠️ Không thể đọc RecordsCount, sử dụng giá trị ngẫu nhiên: {recordsCount}");
+                }
                 
-                // Tạo mock preview data
-                var previewData = new
+                // Tạo dữ liệu mẫu cho preview dựa trên dataType
+                var records = new List<object>();
+                
+                // Tạo số lượng records ngẫu nhiên (5-20) để demo
+                int demoRecordCount = Math.Min(new Random().Next(5, 20), recordsCount);
+                
+                // Tạo cấu trúc dữ liệu phù hợp với loại dữ liệu
+                var fieldDefinitions = new Dictionary<string, (string label, string type, Func<int, object> valueGenerator)>();
+                
+                // Định nghĩa cấu trúc dữ liệu dựa trên loại
+                switch (dataType.ToUpper())
+                {
+                    case "LN01": // Dữ liệu LOAN
+                        fieldDefinitions = new Dictionary<string, (string, string, Func<int, object>)>
+                        {
+                            { "soTaiKhoan", ("Số tài khoản", "text", i => $"LOAN{10000 + i}") },
+                            { "tenKhachHang", ("Tên khách hàng", "text", i => $"Khách hàng {i}") },
+                            { "duNo", ("Dư nợ", "number", i => 100000000 + i * 10000000) },
+                            { "laiSuat", ("Lãi suất", "number", i => 6.5 + (i % 5) * 0.25) },
+                            { "hanMuc", ("Hạn mức", "number", i => 200000000 + i * 50000000) },
+                            { "ngayGiaiNgan", ("Ngày giải ngân", "date", i => DateTime.Now.AddDays(-30 * (i % 12)).ToString("yyyy-MM-dd")) }
+                        };
+                        break;
+                    case "DP01": // Dữ liệu tiền gửi
+                        fieldDefinitions = new Dictionary<string, (string, string, Func<int, object>)>
+                        {
+                            { "soTaiKhoan", ("Số tài khoản", "text", i => $"DP{20000 + i}") },
+                            { "tenKhachHang", ("Tên khách hàng", "text", i => $"Khách hàng tiền gửi {i}") },
+                            { "soTien", ("Số tiền", "number", i => 50000000 + i * 5000000) },
+                            { "laiSuat", ("Lãi suất", "number", i => 3.2 + (i % 6) * 0.1) },
+                            { "kyHan", ("Kỳ hạn", "text", i => new string[] { "1 tháng", "3 tháng", "6 tháng", "12 tháng", "18 tháng", "24 tháng" }[i % 6]) },
+                            { "ngayMoSo", ("Ngày mở sổ", "date", i => DateTime.Now.AddDays(-60 * (i % 10)).ToString("yyyy-MM-dd")) }
+                        };
+                        break;
+                    default: // Mặc định
+                        fieldDefinitions = new Dictionary<string, (string, string, Func<int, object>)>
+                        {
+                            { "id", ("ID", "number", i => i + 1) },
+                            { "maKhachHang", ("Mã khách hàng", "text", i => $"KH{1000 + i}") },
+                            { "tenKhachHang", ("Tên khách hàng", "text", i => $"Khách hàng {i}") },
+                            { "giaTri", ("Giá trị", "number", i => 1000000 + i * 100000) },
+                            { "ngayGiaoDich", ("Ngày giao dịch", "date", i => DateTime.Now.AddDays(-i).ToString("yyyy-MM-dd")) },
+                            { "ghiChu", ("Ghi chú", "text", i => $"Ghi chú {i}") }
+                        };
+                        break;
+                }
+                
+                // Tạo danh sách records
+                for (int i = 0; i < demoRecordCount; i++)
+                {
+                    var record = new Dictionary<string, object>();
+                    foreach (var field in fieldDefinitions)
+                    {
+                        record[field.Key] = field.Value.valueGenerator(i);
+                    }
+                    records.Add(record);
+                }
+                
+                // Tạo danh sách cột từ định nghĩa
+                var columns = fieldDefinitions.Select(f => new { 
+                    name = f.Value.label, 
+                    field = f.Key, 
+                    type = f.Value.type 
+                }).ToList();
+                
+                // Cấu trúc dữ liệu trả về
+                var response = new
                 {
                     id = id,
                     fileName = fileName,
                     dataType = dataType,
-                    previewRows = new List<object>
-                    {
-                        new { rowId = 1, col1 = "Dữ liệu 1", col2 = "Giá trị 1", col3 = DateTime.Now.AddDays(-1).ToString("yyyy-MM-dd") },
-                        new { rowId = 2, col1 = "Dữ liệu 2", col2 = "Giá trị 2", col3 = DateTime.Now.AddDays(-2).ToString("yyyy-MM-dd") },
-                        new { rowId = 3, col1 = "Dữ liệu 3", col2 = "Giá trị 3", col3 = DateTime.Now.AddDays(-3).ToString("yyyy-MM-dd") },
-                        new { rowId = 4, col1 = "Dữ liệu 4", col2 = "Giá trị 4", col3 = DateTime.Now.AddDays(-4).ToString("yyyy-MM-dd") },
-                        new { rowId = 5, col1 = "Dữ liệu 5", col2 = "Giá trị 5", col3 = DateTime.Now.AddDays(-5).ToString("yyyy-MM-dd") }
-                    },
+                    previewRows = records,
                     totalRows = recordsCount,
-                    columns = new List<object>
+                    columns = columns,
+                    records = new 
                     {
-                        new { name = "STT", field = "rowId", type = "numeric" },
-                        new { name = "Mã", field = "col1", type = "text" },
-                        new { name = "Giá trị", field = "col2", type = "text" },
-                        new { name = "Ngày", field = "col3", type = "date" }
+                        Values = records
                     }
                 };
                 
-                Console.WriteLine($"Đã tạo preview data cho Raw Data import với ID: {id}, FileName: {fileName}");
-                    
-                return Ok(previewData);
+                _logger.LogInformation($"✅ Đã tạo preview data cho {fileName}: {records.Count} records");
+                return Ok(response);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Lỗi khi xem trước dữ liệu import với ID: {id}: {ex.Message}");
-                return StatusCode(500, new { message = "Lỗi khi xem trước dữ liệu", error = ex.Message });
+                _logger.LogError(ex, $"❌ Lỗi khi xem trước dữ liệu import với ID: {id}");
+                return StatusCode(500, new { 
+                    message = "Lỗi khi xem trước dữ liệu", 
+                    error = ex.Message,
+                    id = "1" // Thêm trường này để phù hợp với format API error đã có
+                });
             }
         }
 
