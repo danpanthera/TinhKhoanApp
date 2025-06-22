@@ -397,112 +397,95 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
-        // 🗑️ DELETE: api/RawData/clear-all - Xóa toàn bộ dữ liệu import (TEMPORAL TABLES VERSION)
+        /// <summary>
+        /// 🗑️ Xóa triệt để toàn bộ dữ liệu đã import - KHÔNG THỂ HOÀN TÁC!
+        /// </summary>
         [HttpDelete("clear-all")]
         public async Task<IActionResult> ClearAllRawData()
         {
             try
             {
-                _logger.LogInformation("🚀 Bắt đầu xóa toàn bộ dữ liệu từ Temporal Tables...");
-                
-                int totalImports = 0;
-                int totalRecords = 0;
-                var clearedTables = new List<string>();
-                
-                // 🔥 XÓA DỮ LIỆU THẬT TỪ TEMPORAL TABLES
-                try
+                _logger.LogWarning("🚨 Bắt đầu xóa TOÀN BỘ dữ liệu Import - KHÔNG THỂ HOÀN TÁC!");
+
+                // 📊 Lấy count trước khi xóa để thông báo chi tiết
+                int recordCount = await _context.ImportedDataRecords.CountAsync();
+                int itemCount = await _context.ImportedDataItems.CountAsync();
+
+                _logger.LogInformation($"📋 Sẽ xóa {recordCount} ImportedDataRecords và {itemCount} ImportedDataItems");
+
+                // 🗑️ Xóa triệt để cả records và items (tuân theo foreign key constraints)
+                // Xóa Items trước để tránh vi phạm foreign key
+                if (itemCount > 0)
                 {
-                    // Đếm số lượng dữ liệu hiện tại trong LegacyRawDataImports
-                    totalImports = await _context.ImportedDataRecords.CountAsync();
-                    _logger.LogInformation("📊 Tìm thấy {Count} bản ghi trong ImportedDataRecords", totalImports);
-                    
-                    if (totalImports > 0)
-                    {
-                        // 🗑️ XÓA TẤT CẢ DỮ LIỆU TRONG LEGACY RAWDATAIMPORTS
-                        await _context.Database.ExecuteSqlRawAsync("DELETE FROM ImportedDataRecords");
-                        clearedTables.Add($"ImportedDataRecords ({totalImports} records)");
-                        _logger.LogInformation("✅ Đã xóa {Count} bản ghi từ ImportedDataRecords", totalImports);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "⚠️ Lỗi khi xóa RawDataImports: {Error}", ex.Message);
+                    _context.ImportedDataItems.RemoveRange(_context.ImportedDataItems);
+                    _logger.LogInformation($"✅ Đã đánh dấu xóa {itemCount} ImportedDataItems");
                 }
 
-                // � XÓA CÁC BẢNG DỮ LIỆU THEO LOẠI (LN01, GL01, DP01, v.v.)
-                var dataTypes = new[] { "LN01", "LN02", "LN03", "DP01", "EI01", "GL01", "DPDA", "DB01", "KH03", "BC57", "RR01", "7800_DT_KHKD1", "GLCB41" };
-                
-                foreach (var dataType in dataTypes)
+                if (recordCount > 0)
+                {
+                    _context.ImportedDataRecords.RemoveRange(_context.ImportedDataRecords);
+                    _logger.LogInformation($"✅ Đã đánh dấu xóa {recordCount} ImportedDataRecords");
+                }
+
+                // 💾 Lưu thay đổi với Temporal Tables (dữ liệu vẫn được backup trong history)
+                await _context.SaveChangesAsync();
+
+                // 🧹 Đếm và xóa các bảng dữ liệu động (nếu có)
+                int dynamicTablesCleared = 0;
+                foreach (var dataType in DataTypeDefinitions.Keys)
                 {
                     try
                     {
-                        var tableName = $"{dataType}_Data";
+                        var tableName = $"Data_{dataType}";
+                        using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
                         
-                        // Kiểm tra xem bảng có tồn tại không
-                        var tableExists = await _context.Database.ExecuteSqlRawAsync(
-                            "SELECT COUNT(*) FROM sys.tables WHERE name = {0}", tableName);
-                        
+                        // Kiểm tra bảng có tồn tại không
+                        var tableExists = await connection.QueryFirstOrDefaultAsync<int>(
+                            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = @TableName",
+                            new { TableName = tableName });
+
                         if (tableExists > 0)
                         {
-                            // Đếm số bản ghi trước khi xóa
-                            var countSql = $"SELECT COUNT(*) FROM [{tableName}]";
-                            var connection = _context.Database.GetDbConnection();
-                            if (connection.State != System.Data.ConnectionState.Open)
-                                await _context.Database.OpenConnectionAsync();
-                            
-                            using var command = connection.CreateCommand();
-                            command.CommandText = countSql;
-                            var count = (int)await command.ExecuteScalarAsync();
-                            
-                            if (count > 0)
+                            // Đếm records trước khi xóa
+                            var recordsInTable = await connection.QueryFirstOrDefaultAsync<int>(
+                                $"SELECT COUNT(*) FROM [{tableName}]");
+
+                            if (recordsInTable > 0)
                             {
-                                // Xóa dữ liệu
-                                await _context.Database.ExecuteSqlRawAsync($"DELETE FROM [{tableName}]");
-                                clearedTables.Add($"{tableName} ({count} records)");
-                                totalRecords += count;
-                                _logger.LogInformation("✅ Đã xóa {Count} bản ghi từ {TableName}", count, tableName);
+                                // Xóa dữ liệu trong bảng (giữ lại cấu trúc)
+                                await connection.ExecuteAsync($"DELETE FROM [{tableName}]");
+                                dynamicTablesCleared++;
+                                _logger.LogInformation($"🗑️ Đã xóa {recordsInTable} records từ bảng {tableName}");
                             }
                         }
                     }
-                    catch (Exception ex)
+                    catch (Exception tableEx)
                     {
-                        _logger.LogWarning(ex, "⚠️ Lỗi khi xóa bảng {DataType}: {Error}", dataType, ex.Message);
+                        _logger.LogWarning($"⚠️ Không thể xóa bảng Data_{dataType}: {tableEx.Message}");
                     }
                 }
 
-                // 🔥 XÓA CÁC BẢNG ĐỘNG (DYNAMIC TABLES)
-                try
+                var successMessage = $"Đã xóa thành công {recordCount} bản ghi import, {itemCount} items dữ liệu và {dynamicTablesCleared} bảng dữ liệu động";
+                _logger.LogInformation($"✅ {successMessage}");
+
+                return Ok(new
                 {
-                    var droppedTables = await DropAllDynamicTables();
-                    clearedTables.AddRange(droppedTables.Select(t => $"{t} (dynamic table)"));
-                    _logger.LogInformation("✅ Đã xóa {Count} bảng động", droppedTables.Count);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "⚠️ Lỗi khi xóa bảng động: {Error}", ex.Message);
-                }
-
-                var response = new { 
-                    message = $"🎉 Đã xóa dữ liệu thành công từ {clearedTables.Count} bảng!",
-                    clearedImports = totalImports,
-                    clearedRecords = totalRecords,
-                    clearedTables = clearedTables,
-                    temporalTablesEnabled = true,
-                    note = "Dữ liệu đã được xóa hoàn toàn từ Temporal Tables. Lịch sử thay đổi được giữ lại trong History Tables."
-                };
-
-                _logger.LogInformation("🎉 Hoàn thành xóa dữ liệu: {TotalTables} bảng, {TotalImports} imports, {TotalRecords} records", 
-                    clearedTables.Count, totalImports, totalRecords);
-
-                return Ok(response);
+                    success = true,
+                    message = successMessage,
+                    recordsCleared = recordCount,
+                    itemsCleared = itemCount,
+                    dynamicTablesCleared = dynamicTablesCleared,
+                    timestamp = DateTime.Now
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "💥 Lỗi nghiêm trọng khi xóa toàn bộ dữ liệu thô");
-                return StatusCode(500, new { 
-                    message = "Lỗi khi xóa dữ liệu", 
-                    error = ex.Message,
-                    temporalTablesEnabled = true 
+                _logger.LogError(ex, "❌ Lỗi khi xóa toàn bộ dữ liệu");
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Lỗi khi xóa dữ liệu: " + ex.Message,
+                    timestamp = DateTime.Now
                 });
             }
         }
@@ -1901,6 +1884,7 @@ namespace TinhKhoanApp.Api.Controllers
         // 📋 Lấy columns từ JSON
         private List<string> GetColumnsFromJsonData(string jsonData)
         {
+           
             if (string.IsNullOrEmpty(jsonData)) return new List<string>();
             
             try
@@ -2466,7 +2450,7 @@ ON [dbo].[{tableName}] ([RecordHash]);";
                         });
                     }
                     break;
-
+                        
                 case "LN02": // Sao kê biến động nhóm nợ
                     columns = new List<string> { "Id", "SoTaiKhoan", "TenKhachHang", "NhomNoTruoc", "NhomNoSau", "NgayChuyenNhom", "LyDoChuyenNhom", "NgayCapNhat" };
                     for (int i = 1; i <= 12; i++)
@@ -2484,7 +2468,7 @@ ON [dbo].[{tableName}] ([RecordHash]);";
                         });
                     }
                     break;
-
+                        
                 case "LN03": // Dữ liệu Nợ XLRR
                     columns = new List<string> { "Id", "SoTaiKhoan", "TenKhachHang", "NoGoc", "NoLai", "NoPhiPhat", "NgayQuaHan", "SoNgayQuaHan", "NgayCapNhat" };
                     for (int i = 1; i <= 10; i++)
@@ -2503,7 +2487,7 @@ ON [dbo].[{tableName}] ([RecordHash]);";
                         });
                     }
                     break;
-
+                        
                 case "DP01": // Dữ liệu Tiền gửi
                     columns = new List<string> { "Id", "SoTaiKhoan", "TenKhachHang", "SoTien", "LaiSuat", "KyHan", "NgayMoSo", "NgayCapNhat" };
                     for (int i = 1; i <= 12; i++)
@@ -2521,7 +2505,7 @@ ON [dbo].[{tableName}] ([RecordHash]);";
                         });
                     }
                     break;
-
+                        
                 case "EI01": // Dữ liệu mobile banking
                     columns = new List<string> { "Id", "SoTaiKhoan", "LoaiGiaoDich", "SoTien", "PhiGiaoDich", "ThoiGian", "TrangThai", "NgayCapNhat" };
                     for (int i = 1; i <= 20; i++)
@@ -2539,7 +2523,7 @@ ON [dbo].[{tableName}] ([RecordHash]);";
                         });
                     }
                     break;
-
+                        
                 case "GL01": // Dữ liệu bút toán GDV
                     columns = new List<string> { "Id", "SoChungTu", "TaiKhoanNo", "TaiKhoanCo", "SoTien", "DienGiai", "NgayGiaoDich", "NgayCapNhat" };
                     for (int i = 1; i <= 18; i++)
@@ -2557,7 +2541,7 @@ ON [dbo].[{tableName}] ([RecordHash]);";
                         });
                     }
                     break;
-
+                        
                 case "DPDA": // Dữ liệu sao kê phát hành thẻ
                     columns = new List<string> { "Id", "SoThe", "TenChuThe", "LoaiThe", "NgayPhatHanh", "NgayHetHan", "TrangThai", "NgayCapNhat" };
                     for (int i = 1; i <= 14; i++)
@@ -2575,7 +2559,7 @@ ON [dbo].[{tableName}] ([RecordHash]);";
                         });
                     }
                     break;
-
+                        
                 case "DB01": // Sao kê TSDB và Không TSDB
                     columns = new List<string> { "Id", "SoTaiKhoan", "TenKhachHang", "LoaiTSDB", "GiaTriTSDB", "TyLeChoVay", "NgayDanhGia", "NgayCapNhat" };
                     for (int i = 1; i <= 13; i++)
@@ -2593,7 +2577,7 @@ ON [dbo].[{tableName}] ([RecordHash]);";
                         });
                     }
                     break;
-
+                        
                 case "KH03": // Sao kê Khách hàng pháp nhân
                     columns = new List<string> { "Id", "MaKhachHang", "TenCongTy", "MaSoThue", "VonDieuLe", "DoanhThu", "LoiNhuan", "NgayCapNhat" };
                     for (int i = 1; i <= 11; i++)
@@ -2611,7 +2595,7 @@ ON [dbo].[{tableName}] ([RecordHash]);";
                         });
                     }
                     break;
-
+                        
                 case "BC57": // Sao kê Lãi dự thu
                     columns = new List<string> { "Id", "SoTaiKhoan", "TenKhachHang", "LaiDuThu", "LaiDaThu", "LaiConLai", "NgayTinhLai", "NgayCapNhat" };
                     for (int i = 1; i <= 16; i++)
@@ -2629,7 +2613,7 @@ ON [dbo].[{tableName}] ([RecordHash]);";
                         });
                     }
                     break;
-
+                        
                 case "RR01": // Sao kê dư nợ gốc, lãi XLRR
                     columns = new List<string> { "Id", "SoTaiKhoan", "TenKhachHang", "DuNoGoc", "DuNoLai", "TongDuNo", "NgayXLRR", "NgayCapNhat" };
                     for (int i = 1; i <= 9; i++)
@@ -2647,7 +2631,7 @@ ON [dbo].[{tableName}] ([RecordHash]);";
                         });
                     }
                     break;
-
+                        
                 case "7800_DT_KHKD1": // Báo cáo KHKD (DT)
                     columns = new List<string> { "Id", "MaChiNhanh", "TenChiNhanh", "DoanhThu", "ChiPhi", "LoiNhuan", "TyLeLoiNhuan", "NgayCapNhat" };
                     for (int i = 1; i <= 8; i++)
@@ -2665,7 +2649,7 @@ ON [dbo].[{tableName}] ([RecordHash]);";
                         });
                     }
                     break;
-
+                        
                 case "GLCB41": // Bảng cân đối
                     columns = new List<string> { "Id", "MaTaiKhoan", "TenTaiKhoan", "SoDuDauKy", "PhatSinhNo", "PhatSinhCo", "SoDuCuoiKy", "NgayCapNhat" };
                     for (int i = 1; i <= 17; i++)

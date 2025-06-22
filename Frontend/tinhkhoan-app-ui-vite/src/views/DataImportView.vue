@@ -581,30 +581,41 @@ const calculateDataTypeStats = () => {
   console.log('🔧 Calculating data type stats from imports:', allImports.value.length)
   const stats = {}
   
-  // Initialize all data types
+  // Initialize all data types để hiển thị 0 nếu không có dữ liệu
   Object.keys(dataTypeDefinitions).forEach(key => {
-    stats[key] = { totalRecords: 0, lastUpdate: null }
+    stats[key] = { totalRecords: 0, lastUpdate: null, count: 0 }
   })
   
-  // Calculate from imports
+  // Calculate from imports với logic cải thiện - FIX MAPPING VẤN ĐỀ
   allImports.value.forEach(imp => {
-    console.log(`📊 Processing import: ${imp.dataType}, records: ${imp.recordsCount}`)
-    if (stats[imp.dataType]) {
-      // 🔧 Sử dụng đúng field name từ backend: recordsCount
-      stats[imp.dataType].totalRecords += imp.recordsCount || 0
-      
-      // 🔧 Handle invalid dates từ backend (0001-01-01)
-      const importDate = imp.importDate;
-      if (importDate && importDate !== "0001-01-01T00:00:00") {
-        if (!stats[imp.dataType].lastUpdate || 
-            new Date(importDate) > new Date(stats[imp.dataType].lastUpdate)) {
-          stats[imp.dataType].lastUpdate = importDate
-        }
+    // 🔧 ĐỒNG BỘ FIELD MAPPING: Ưu tiên fileType (backend), sau đó dataType, category
+    const dataType = imp.fileType || imp.dataType || imp.category || 'UNKNOWN'
+    console.log(`📊 Processing import: ${imp.fileName}, fileType: ${imp.fileType}, dataType: ${imp.dataType}, category: ${imp.category}, final: ${dataType}, records: ${imp.recordsCount}`)
+    
+    // Nếu chưa có stats cho data type này, khởi tạo
+    if (!stats[dataType]) {
+      stats[dataType] = { totalRecords: 0, lastUpdate: null, count: 0 }
+    }
+    
+    // ✅ Đếm số lượng imports
+    stats[dataType].count++
+    
+    // 🔧 Sử dụng đúng field name từ backend: recordsCount và đảm bảo là số
+    const recordCount = parseInt(imp.recordsCount) || 0
+    stats[dataType].totalRecords += recordCount
+    
+    // 🔧 Handle invalid dates từ backend (0001-01-01) và cập nhật lastUpdate
+    const importDate = imp.importDate;
+    if (importDate && importDate !== "0001-01-01T00:00:00") {
+      const importDateTime = new Date(importDate)
+      if (!stats[dataType].lastUpdate || 
+          importDateTime > new Date(stats[dataType].lastUpdate)) {
+        stats[dataType].lastUpdate = importDate
       }
     }
   })
   
-  console.log('📈 Final stats:', stats)
+  console.log('📈 Final calculated stats:', stats)
   dataTypeStats.value = stats
 }
 
@@ -671,6 +682,10 @@ const refreshAllData = async () => {
     loadingMessage.value = 'Đang tải lại dữ liệu...'
     
     console.log('🔄 Starting refresh all data...')
+    
+    // 🔧 Clear cache trước khi load để luôn có dữ liệu mới nhất
+    localStorage.removeItem('rawDataCache')
+    
     const result = await rawDataService.getAllImports()
     console.log('📊 Raw result from getAllImports:', result)
     
@@ -678,7 +693,7 @@ const refreshAllData = async () => {
       allImports.value = result.data || []
       console.log('✅ Loaded imports:', allImports.value.length, 'items')
       
-      // Force recalculation of stats
+      // Force recalculation of stats sau khi có dữ liệu mới
       calculateDataTypeStats()
       
       // Also refresh filtered results if there are any filters active
@@ -697,7 +712,7 @@ const refreshAllData = async () => {
         errorStatus: result.errorStatus
       })
       
-      // Sử dụng mock data để demo vẫn hoạt động
+      // Sử dụng mock data để demo vẫn hoạt động nếu có
       if (result.fallbackData && result.fallbackData.length > 0) {
         allImports.value = result.fallbackData
         calculateDataTypeStats()
@@ -705,7 +720,8 @@ const refreshAllData = async () => {
         console.info('🎭 Sử dụng mock data cho demo')
       } else {
         allImports.value = []
-        showError(`❌ Lỗi kết nối: ${errorMsg}`)
+        calculateDataTypeStats()
+        showError(errorMsg)
       }
       
       // Nếu là lỗi kết nối, hiển thị hướng dẫn khắc phục
@@ -740,20 +756,52 @@ const clearAllData = async () => {
     
     const result = await rawDataService.clearAllData()
     if (result.success) {
+      // 🔧 Reset cache và force clear triệt để
       allImports.value = []
       filteredResults.value = []
-      calculateDataTypeStats()
-      showSuccess(`✅ ${result.data.message}`)
+      dataTypeStats.value = {}
+      
+      // ✅ Xóa tất cả cache có thể
+      localStorage.removeItem('rawDataCache')
+      localStorage.removeItem('dataTypeStats')  
+      localStorage.removeItem('lastRefresh')
+      sessionStorage.clear() // Clear session cache
+      
+      // Thông báo chi tiết từ backend
+      const data = result.data || result
+      const message = `✅ Đã xóa thành công ${data.recordsCleared || 0} bản ghi import, ${data.itemsCleared || 0} items dữ liệu${data.dynamicTablesCleared ? ` và ${data.dynamicTablesCleared} bảng dữ liệu động` : ''}`
+      showSuccess(message, 5000) // Hiển thị lâu hơn để user đọc
+      
+      console.log('🗑️ Clear completed. Details:', data)
+      
+      // Force refresh sau delay để đảm bảo DB đã update hoàn toàn
+      setTimeout(async () => {
+        console.log('🔄 Force refreshing data after clear...')
+        loadingMessage.value = 'Đang tải lại dữ liệu sau khi xóa...'
+        
+        await refreshAllData()
+        
+        // Force tính toán lại stats để đảm bảo hiển thị 0
+        calculateDataTypeStats()
+        
+        console.log('✅ Refresh after clear completed')
+        loadingMessage.value = ''
+      }, 1500) // Tăng delay để chắc chắn
+      
     } else {
-      showError(result.error || 'Không thể xóa dữ liệu')
+      showError(result.message || result.error || 'Không thể xóa dữ liệu')
+      console.error('❌ Clear failed:', result)
     }
     
   } catch (error) {
-    console.error('Error clearing all data:', error)
-    showError('Có lỗi xảy ra khi xóa dữ liệu')
+    console.error('❌ Error clearing all data:', error)
+    showError('Có lỗi xảy ra khi xóa dữ liệu: ' + error.message)
   } finally {
-    loading.value = false
-    loadingMessage.value = ''
+    // Reset loading state sau một khoảng thời gian
+    setTimeout(() => {
+      loading.value = false
+      loadingMessage.value = ''
+    }, 2000)
   }
 }
 

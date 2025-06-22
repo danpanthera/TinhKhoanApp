@@ -11,15 +11,41 @@ class RawDataService {
     try {
       const response = await api.get(this.baseURL);
       
-      // 🔧 Parse .NET $values format
+      // 🔧 Parse .NET $values format và map fields đúng
       let data = response.data;
       if (data && data.$values) {
         data = data.$values;
       }
       
+      // 🔧 ĐỒNG BỘ FIELD MAPPING để fix vấn đề backend trả fileType, frontend dùng dataType
+      const mappedData = (data || []).map(item => ({
+        ...item,
+        // ✅ QUYẾT ĐỊNH ƯU TIÊN: fileType (backend) > dataType > category
+        dataType: item.fileType || item.dataType || item.category || 'UNKNOWN',
+        // 🔧 Preserve original fields để debug
+        originalFileType: item.fileType,
+        originalDataType: item.dataType,
+        originalCategory: item.category,
+        // Format date đúng
+        importDate: item.importDate ? new Date(item.importDate) : new Date(),
+        // Đảm bảo recordsCount luôn là số nguyên
+        recordsCount: parseInt(item.recordsCount || 0),
+        // Normalize fileName 
+        fileName: item.fileName || item.name || 'Unknown File'
+      }));
+      
+      console.log('🔧 Mapped getAllImports data:', mappedData.length, 'items');
+      console.log('🔧 Sample mapping:', mappedData.length > 0 ? {
+        fileName: mappedData[0].fileName,
+        fileType: mappedData[0].originalFileType,
+        dataType: mappedData[0].dataType,
+        category: mappedData[0].originalCategory,
+        recordsCount: mappedData[0].recordsCount
+      } : 'No data');
+      
       return {
         success: true,
-        data: data || []
+        data: mappedData
       };
     } catch (error) {
       console.error('❌ Lỗi lấy danh sách import:', error);
@@ -329,16 +355,34 @@ class RawDataService {
   // 🗑️ Xóa toàn bộ dữ liệu import
   async clearAllData() {
     try {
+      console.log('🗑️ Bắt đầu xóa TOÀN BỘ dữ liệu...');
+      
       const response = await api.delete(`${this.baseURL}/clear-all`);
+      
+      console.log('✅ Kết quả xóa dữ liệu:', response.data);
+      
       return {
         success: true,
-        data: response.data
+        data: response.data,
+        message: response.data.message || 'Đã xóa thành công toàn bộ dữ liệu',
+        recordsCleared: response.data.recordsCleared || 0,
+        itemsCleared: response.data.itemsCleared || 0,
+        dynamicTablesCleared: response.data.dynamicTablesCleared || 0
       };
     } catch (error) {
-      console.error('❌ Lỗi xóa toàn bộ dữ liệu:', error);
+      console.error('❌ Lỗi khi xóa toàn bộ dữ liệu:', error);
+      
+      let errorMessage = 'Lỗi khi xóa dữ liệu';
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.code === 'ERR_NETWORK') {
+        errorMessage = 'Không thể kết nối đến server để xóa dữ liệu';
+      }
+      
       return {
         success: false,
-        error: error.response?.data?.message || 'Lỗi kết nối server'
+        message: errorMessage,
+        error: error.response?.data || error.message
       };
     }
   }
