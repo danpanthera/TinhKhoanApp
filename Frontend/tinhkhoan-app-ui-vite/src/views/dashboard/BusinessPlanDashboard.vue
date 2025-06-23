@@ -143,11 +143,13 @@
           <!-- Giá trị chính với animated counter -->
           <div class="value-section">
             <div class="main-value">
-              <CountUp
-                :end-val="indicator.currentValue"
-                :options="countUpOptions"
-                class="value-number"
-              />
+              <span 
+                :ref="`counter-${indicator.id}`"
+                class="value-number animated-counter"
+                :data-target="indicator.currentValue"
+              >
+                {{ animatedValues[indicator.id] || indicator.currentValue }}
+              </span>
               <span class="value-unit">{{ indicator.unit }}</span>
             </div>
             
@@ -259,7 +261,6 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import { ElMessage, ElDialog } from 'element-plus';
 import { useMotion } from '@vueuse/motion';
-import CountUp from 'vue-countup-v2';
 import * as echarts from 'echarts';
 import dayjs from 'dayjs';
 import LoadingOverlay from '../../components/dashboard/LoadingOverlay.vue';
@@ -273,6 +274,7 @@ const currentTime = ref(new Date());
 const showDetailModal = ref(false);
 const selectedIndicator = ref(null);
 const activeChartTab = ref('comparison');
+const animatedValues = ref({}); // Giá trị animated cho counters
 
 // Danh sách chi nhánh (14 chi nhánh theo yêu cầu)
 const branches = ref([
@@ -394,13 +396,37 @@ const chartTabs = ref([
   { key: 'completion', label: 'Hoàn thành', icon: '🎯' }
 ]);
 
-// Cấu hình CountUp
-const countUpOptions = {
-  useEasing: true,
-  useGrouping: true,
-  separator: ',',
-  decimal: '.',
-  duration: 2
+// Cấu hình animated counters tự tạo
+const animateCounter = (indicatorId, targetValue, duration = 2000) => {
+  const startValue = animatedValues.value[indicatorId] || 0;
+  const startTime = Date.now();
+  
+  const animate = () => {
+    const currentTime = Date.now();
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    
+    // Sử dụng easing function cho animation mượt
+    const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+    const currentValue = startValue + (targetValue - startValue) * easeOutQuart;
+    
+    animatedValues.value[indicatorId] = Math.round(currentValue * 10) / 10;
+    
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      animatedValues.value[indicatorId] = targetValue;
+    }
+  };
+  
+  animate();
+};
+
+// Khởi động animation cho tất cả counters
+const startAllCounterAnimations = () => {
+  indicators.value.forEach(indicator => {
+    animateCounter(indicator.id, indicator.currentValue);
+  });
 };
 
 // Sound effects (tái sử dụng code cũ)
@@ -558,6 +584,11 @@ const loadDashboardData = async () => {
       // Cập nhật dữ liệu từ API
       indicators.value = data.indicators;
     }
+    
+    // Khởi động animation cho counters
+    setTimeout(() => {
+      startAllCounterAnimations();
+    }, 300);
     
     // Tạo biểu đồ sau khi có dữ liệu với delay để đảm bảo DOM
     await nextTick();
@@ -1399,6 +1430,11 @@ setInterval(async () => {
   font-size: 32px;
   font-weight: 700;
   color: var(--card-gradient-start);
+}
+
+.animated-counter {
+  transition: all 0.3s ease;
+  display: inline-block;
 }
 
 .value-unit {
