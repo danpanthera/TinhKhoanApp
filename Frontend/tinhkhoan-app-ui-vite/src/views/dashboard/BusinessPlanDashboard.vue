@@ -161,8 +161,8 @@
             </div>
             
             <!-- Tăng giảm so với đầu năm -->
-            <div class="change-indicator" :class="getChangeClass(indicator.changeFromYearStartPercent)">
-              <span class="change-arrow">{{ getChangeArrow(indicator.changeFromYearStartPercent) }}</span>
+            <div class="change-indicator" :class="getChangeClass(indicator.changeFromYearStartPercent, indicator.id)">
+              <span class="change-arrow">{{ getChangeArrow(indicator.changeFromYearStartPercent, indicator.id) }}</span>
               <span class="change-text">
                 {{ formatChangePercent(indicator.changeFromYearStartPercent) }} so với đầu năm
               </span>
@@ -546,11 +546,17 @@ const getStatusText = (completionRate) => {
   return 'Cần cải thiện';
 };
 
-const getChangeClass = (percent) => {
+const getChangeClass = (percent, indicatorId = null) => {
+  // Xử lý đặc biệt cho chỉ tiêu Nợ xấu (ngược lại với các chỉ tiêu khác)
+  if (indicatorId === 'no_xau') {
+    return percent >= 0 ? 'change-negative' : 'change-positive'; // Nợ xấu tăng = xấu (đỏ), giảm = tốt (xanh)
+  }
+  // Các chỉ tiêu khác: tăng = tốt (xanh), giảm = xấu (đỏ)
   return percent >= 0 ? 'change-positive' : 'change-negative';
 };
 
-const getChangeArrow = (percent) => {
+const getChangeArrow = (percent, indicatorId = null) => {
+  // Arrow không thay đổi - vẫn hiển thị đúng hướng tăng/giảm
   return percent >= 0 ? '↗️' : '↘️';
 };
 

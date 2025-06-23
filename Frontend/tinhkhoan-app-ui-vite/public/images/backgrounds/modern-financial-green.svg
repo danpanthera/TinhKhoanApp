@@ -1,0 +1,124 @@
+<svg width="2940" height="1960" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Financial Green Gradient -->
+    <linearGradient id="financialGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#064e3b;stop-opacity:1" />
+      <stop offset="25%" style="stop-color:#065f46;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#047857;stop-opacity:1" />
+      <stop offset="75%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10b981;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Financial Chart Pattern -->
+    <pattern id="chartPattern" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
+      <!-- Grid lines -->
+      <line x1="0" y1="50" x2="200" y2="50" stroke="#10b981" stroke-width="0.5" opacity="0.3"/>
+      <line x1="0" y1="100" x2="200" y2="100" stroke="#059669" stroke-width="0.5" opacity="0.3"/>
+      <line x1="0" y1="150" x2="200" y2="150" stroke="#10b981" stroke-width="0.5" opacity="0.3"/>
+      <line x1="50" y1="0" x2="50" y2="200" stroke="#059669" stroke-width="0.5" opacity="0.3"/>
+      <line x1="100" y1="0" x2="100" y2="200" stroke="#10b981" stroke-width="0.5" opacity="0.3"/>
+      <line x1="150" y1="0" x2="150" y2="200" stroke="#059669" stroke-width="0.5" opacity="0.3"/>
+      
+      <!-- Chart data points -->
+      <circle cx="50" cy="120" r="2" fill="#10b981" opacity="0.6"/>
+      <circle cx="100" cy="80" r="2" fill="#059669" opacity="0.7"/>
+      <circle cx="150" cy="60" r="2" fill="#10b981" opacity="0.8"/>
+      
+      <!-- Trend line -->
+      <polyline points="50,120 100,80 150,60" stroke="#10b981" stroke-width="1" fill="none" opacity="0.5"/>
+    </pattern>
+    
+    <!-- Radial money/success rays -->
+    <radialGradient id="successRays" cx="80%" cy="30%" r="70%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:0.4" />
+      <stop offset="50%" style="stop-color:#059669;stop-opacity:0.2" />
+      <stop offset="100%" style="stop-color:#064e3b;stop-opacity:0" />
+    </radialGradient>
+    
+    <!-- Dollar sign pattern -->
+    <pattern id="dollarPattern" x="0" y="0" width="300" height="300" patternUnits="userSpaceOnUse">
+      <text x="150" y="150" font-family="Arial, sans-serif" font-size="24" fill="#10b981" opacity="0.1" text-anchor="middle">$</text>
+    </pattern>
+  </defs>
+  
+  <!-- Base gradient background -->
+  <rect width="100%" height="100%" fill="url(#financialGradient)"/>
+  
+  <!-- Chart pattern overlay -->
+  <rect width="100%" height="100%" fill="url(#chartPattern)"/>
+  
+  <!-- Success rays -->
+  <rect width="100%" height="100%" fill="url(#successRays)"/>
+  
+  <!-- Subtle dollar signs -->
+  <rect width="100%" height="100%" fill="url(#dollarPattern)"/>
+  
+  <!-- Financial building silhouettes -->
+  <g transform="translate(0, 1300)" opacity="0.6">
+    <!-- Bank building 1 -->
+    <rect x="200" y="0" width="150" height="660" fill="#065f46"/>
+    <rect x="220" y="20" width="20" height="20" fill="#10b981" opacity="0.7"/>
+    <rect x="250" y="20" width="20" height="20" fill="#059669" opacity="0.6"/>
+    <rect x="280" y="20" width="20" height="20" fill="#10b981" opacity="0.8"/>
+    <rect x="310" y="20" width="20" height="20" fill="#059669" opacity="0.7"/>
+    
+    <!-- Financial tower -->
+    <rect x="400" y="-200" width="100" height="860" fill="#047857"/>
+    <rect x="420" y="30" width="15" height="15" fill="#10b981" opacity="0.8"/>
+    <rect x="445" y="30" width="15" height="15" fill="#059669" opacity="0.7"/>
+    <rect x="470" y="30" width="15" height="15" fill="#10b981" opacity="0.6"/>
+    
+    <!-- Investment building -->
+    <rect x="550" y="50" width="120" height="610" fill="#065f46"/>
+    <rect x="570" y="80" width="18" height="18" fill="#059669" opacity="0.7"/>
+    <rect x="600" y="80" width="18" height="18" fill="#10b981" opacity="0.8"/>
+    <rect x="630" y="80" width="18" height="18" fill="#059669" opacity="0.6"/>
+    
+    <!-- More financial buildings -->
+    <rect x="700" y="-50" width="90" height="710" fill="#047857"/>
+    <rect x="820" y="100" width="110" height="560" fill="#065f46"/>
+    <rect x="950" y="-100" width="85" height="760" fill="#047857"/>
+  </g>
+  
+  <!-- Rising arrow charts -->
+  <g opacity="0.4">
+    <!-- Growth arrow 1 -->
+    <path d="M 300 800 L 450 650 L 600 550 L 750 400" stroke="#10b981" stroke-width="3" fill="none"/>
+    <polygon points="730,380 750,400 750,380 770,400" fill="#10b981"/>
+    
+    <!-- Growth arrow 2 -->
+    <path d="M 1000 900 L 1150 750 L 1300 650 L 1450 500" stroke="#059669" stroke-width="3" fill="none"/>
+    <polygon points="1430,480 1450,500 1450,480 1470,500" fill="#059669"/>
+    
+    <!-- Growth arrow 3 -->
+    <path d="M 1700 950 L 1850 800 L 2000 700 L 2150 550" stroke="#10b981" stroke-width="3" fill="none"/>
+    <polygon points="2130,530 2150,550 2150,530 2170,550" fill="#10b981"/>
+  </g>
+  
+  <!-- Floating money symbols -->
+  <g opacity="0.3">
+    <text x="400" y="300" font-family="Arial, sans-serif" font-size="48" fill="#10b981">$</text>
+    <text x="1200" y="400" font-family="Arial, sans-serif" font-size="36" fill="#059669">€</text>
+    <text x="1800" y="250" font-family="Arial, sans-serif" font-size="42" fill="#10b981">¥</text>
+    <text x="2400" y="350" font-family="Arial, sans-serif" font-size="40" fill="#059669">₫</text>
+    
+    <!-- Animated floating effect -->
+    <animateTransform attributeName="transform" type="translate" values="0,0;0,-20;0,0" dur="4s" repeatCount="indefinite"/>
+  </g>
+  
+  <!-- Rising trend particles -->
+  <g opacity="0.5">
+    <circle cx="500" cy="600" r="2" fill="#10b981">
+      <animate attributeName="cy" values="600;400;600" dur="6s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="1000" cy="700" r="3" fill="#059669">
+      <animate attributeName="cy" values="700;500;700" dur="5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="1500" cy="800" r="2.5" fill="#10b981">
+      <animate attributeName="cy" values="800;600;800" dur="7s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="2000" cy="650" r="2" fill="#059669">
+      <animate attributeName="cy" values="650;450;650" dur="5.5s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+</svg>

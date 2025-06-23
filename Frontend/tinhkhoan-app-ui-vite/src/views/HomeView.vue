@@ -5,10 +5,22 @@
         <h1 class="hero-title">
           <img src="/src/assets/Logo-Agribank-2.png" alt="Agribank Logo" class="hero-logo" />
           <br>
-          <span class="hero-text adaptive-text-line-1">AGRIBANK LAI CHAU CENTER</span>
+          <span 
+            ref="adaptiveTextLine1" 
+            class="hero-text adaptive-text-line-1"
+            :style="{ transform: `scaleX(${scaleFactorLine1})` }"
+          >
+            AGRIBANK LAI CHAU CENTER
+          </span>
         </h1>
         <p class="hero-subtitle">
-          <span class="hero-text adaptive-text-line-2">HỆ THỐNG QUẢN LÝ KHOÁN | HỆ THỐNG BÁO CÁO</span>
+          <span 
+            ref="adaptiveTextLine2"
+            class="hero-text adaptive-text-line-2"
+            :style="{ transform: `scaleX(${scaleFactorLine2})` }"
+          >
+            HỆ THỐNG QUẢN LÝ KHOÁN | HỆ THỐNG BÁO CÁO
+          </span>
         </p>
       </div>
     </div>
@@ -16,15 +28,128 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, ref, onUnmounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { isAuthenticated } from '../services/auth';
 
 const router = useRouter();
 
+// Refs cho 2 dòng text
+const adaptiveTextLine1 = ref(null);
+const adaptiveTextLine2 = ref(null);
+
+// Scale factors cho 2 dòng
+const scaleFactorLine1 = ref(1);
+const scaleFactorLine2 = ref(1);
+
+// Hàm check xem text có bị overflow không
+const checkTextOverflow = (element) => {
+  if (!element) return false;
+  return element.scrollWidth > element.offsetWidth;
+};
+
+// Hàm tính toán scale factor để text vừa với container
+const calculateScaleFactor = (element, currentScale = 1) => {
+  if (!element) return 1;
+  
+  // Reset về scale 1 để đo kích thước thực
+  element.style.transform = 'scaleX(1)';
+  
+  const containerWidth = element.parentElement.offsetWidth;
+  const textWidth = element.scrollWidth;
+  
+  // Nếu text vừa với container thì không cần scale
+  if (textWidth <= containerWidth) {
+    return 1;
+  }
+  
+  // Tính scale factor để text vừa với container (với một chút margin)
+  return Math.max(0.6, (containerWidth * 0.95) / textWidth);
+};
+
+// Hàm auto-adjust thông minh cho 2 dòng text
+const autoAdjustTextSize = () => {
+  nextTick(() => {
+    try {
+      // Tính scale factor cho dòng 1 (AGRIBANK LAI CHAU CENTER) - dòng chủ đạo
+      const scaleLine1 = calculateScaleFactor(adaptiveTextLine1.value);
+      scaleFactorLine1.value = scaleLine1;
+      
+      // Dòng 2 theo tỷ lệ của dòng 1 (proportional scaling)
+      const scaleLine2 = calculateScaleFactor(adaptiveTextLine2.value);
+      
+      // Nếu dòng 1 bị thu nhỏ, dòng 2 cũng thu theo tỷ lệ
+      if (scaleLine1 < 1) {
+        scaleFactorLine2.value = Math.min(scaleLine1, scaleLine2);
+      } else {
+        scaleFactorLine2.value = scaleLine2;
+      }
+      
+      console.log('📏 Auto-adjust text:', {
+        line1Scale: scaleFactorLine1.value,
+        line2Scale: scaleFactorLine2.value,
+        line1Width: adaptiveTextLine1.value?.scrollWidth,
+        line2Width: adaptiveTextLine2.value?.scrollWidth,
+        containerWidth: adaptiveTextLine1.value?.parentElement?.offsetWidth
+      });
+      
+    } catch (error) {
+      console.warn('❌ Lỗi auto-adjust text:', error);
+    }
+  });
+};
+
+// Debounce function để tối ưu performance
+const debounce = (func, wait) => {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+};
+
+// Debounced resize handler
+const debouncedAutoAdjust = debounce(autoAdjustTextSize, 150);
+
+// ResizeObserver để theo dõi thay đổi kích thước container
+let resizeObserver = null;
+
 onMounted(() => {
   if (!isAuthenticated()) {
     router.push('/login');
+    return;
+  }
+  
+  // Khởi tạo auto-adjust sau khi component mounted
+  setTimeout(autoAdjustTextSize, 100);
+  
+  // Lắng nghe resize window
+  window.addEventListener('resize', debouncedAutoAdjust);
+  
+  // Sử dụng ResizeObserver để theo dõi container
+  if (window.ResizeObserver && adaptiveTextLine1.value?.parentElement) {
+    resizeObserver = new ResizeObserver(debouncedAutoAdjust);
+    resizeObserver.observe(adaptiveTextLine1.value.parentElement);
+  }
+  
+  // Lắng nghe font load events
+  if (document.fonts) {
+    document.fonts.ready.then(autoAdjustTextSize);
+  }
+  
+  console.log('🎨 Adaptive text system initialized');
+});
+
+onUnmounted(() => {
+  // Cleanup event listeners
+  window.removeEventListener('resize', debouncedAutoAdjust);
+  
+  if (resizeObserver) {
+    resizeObserver.disconnect();
   }
 });
 </script>

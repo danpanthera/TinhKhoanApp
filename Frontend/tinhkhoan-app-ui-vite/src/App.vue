@@ -444,7 +444,10 @@ const loadBackgroundImages = async () => {
     if (loadedImages.length === 0) {
       console.log('⚠️ Không tìm thấy ảnh nền local, sử dụng ảnh online');
       backgroundImages.value = [
-        // 🌌 2 ảnh vũ trụ đẹp lung linh local theo yêu cầu anh
+        // � 2 ảnh nền hiện đại mới tuyệt đẹp cho Homepage (SVG vector)
+        '/images/backgrounds/modern-tech-city-night.svg', // Thành phố công nghệ đêm xanh
+        '/images/backgrounds/modern-financial-green.svg', // Tài chính xanh hiện đại
+        // �🌌 2 ảnh vũ trụ đẹp lung linh local theo yêu cầu anh
         '/src/assets/earth-from-space-1.jpg', // Trái Đất từ vũ trụ 1 (HDR 2K)
         '/src/assets/earth-from-space-2.jpg', // Trái Đất từ vũ trụ 2 (HDR 2K)
         // 🌌 Backup ảnh vũ trụ online tuyệt đẹp HDR
@@ -452,7 +455,7 @@ const loadBackgroundImages = async () => {
         'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?ixlib=rb-4.0.3&auto=format&fit=crop&w=2940&q=80', // Galaxy spiral tím xanh
         'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80'
       ];
-      backgroundNames.value = ['🌍 Trái Đất vũ trụ 1', '🌍 Trái Đất vũ trụ 2', '🌟 Vũ trụ kim cương', '🌀 Galaxy xoắn ốc', '🏔️ Núi tuyết'];
+      backgroundNames.value = ['🏙️ Thành phố công nghệ', '💰 Tài chính hiện đại', '🌍 Trái Đất vũ trụ 1', '🌍 Trái Đất vũ trụ 2', '🌟 Vũ trụ kim cương', '🌀 Galaxy xoắn ốc', '🏔️ Núi tuyết'];
     } else {
       // 🔄 Sắp xếp ảnh theo thứ tự tên file
       const sortedData = loadedImages.map((img, index) => ({
@@ -467,17 +470,20 @@ const loadBackgroundImages = async () => {
       // Nếu có ít hơn 7 ảnh local, thêm ảnh online để đủ
       if (backgroundImages.value.length < 7) {
         const additionalImages = [
-          // � 2 ảnh vũ trụ đẹp lung linh local theo yêu cầu anh (ưu tiên)
+          // 🎨 2 ảnh nền hiện đại mới tuyệt đẹp cho Homepage (SVG vector)
+          '/images/backgrounds/modern-tech-city-night.svg', // Thành phố công nghệ đêm xanh
+          '/images/backgrounds/modern-financial-green.svg', // Tài chính xanh hiện đại
+          // 🌌 2 ảnh vũ trụ đẹp lung linh local theo yêu cầu anh (ưu tiên)
           '/src/assets/earth-from-space-1.jpg', // Trái Đất từ vũ trụ 1 (HDR 2K)
           '/src/assets/earth-from-space-2.jpg', // Trái Đất từ vũ trụ 2 (HDR 2K)
-          // �🌌 Thêm ảnh vũ trụ HDR tuyệt đẹp khác
+          // 🌌 Thêm ảnh vũ trụ HDR tuyệt đẹp khác
           'https://images.unsplash.com/photo-1502134249126-9f3755a50d78?ixlib=rb-4.0.3&auto=format&fit=crop&w=2940&q=80', // Nebula tím hồng
           'https://images.unsplash.com/photo-1519904981063-b0cf448d479e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2940&q=80', // Tinh vân xanh
           'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
           'https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
           'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80'
         ];
-        const additionalNames = ['🌍 Trái Đất vũ trụ 1', '🌍 Trái Đất vũ trụ 2', '🌌 Nebula hồng', '💙 Tinh vân xanh', '🏔️ Núi tuyết', '🌅 Bình minh', '🌾 Cánh đồng'];
+        const additionalNames = ['🏙️ Thành phố công nghệ', '💰 Tài chính hiện đại', '🌍 Trái Đất vũ trụ 1', '🌍 Trái Đất vũ trụ 2', '🌌 Nebula hồng', '💙 Tinh vân xanh', '🏔️ Núi tuyết', '🌅 Bình minh', '🌾 Cánh đồng'];
         
         const needed = Math.min(7 - backgroundImages.value.length, additionalImages.length);
         backgroundImages.value.push(...additionalImages.slice(0, needed));
