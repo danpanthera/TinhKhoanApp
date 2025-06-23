@@ -85,9 +85,9 @@
     />
 
     <!-- Main Dashboard Content -->
-    <div class="dashboard-content" v-motion-slide-visible-once-bottom>
+    <div class="dashboard-content">
       <!-- Tổng quan nhanh -->
-      <div class="overview-section" v-motion-fade-visible-once>
+      <div class="overview-section">
         <div class="overview-card">
           <div class="overview-header">
             <h3>🎯 Tổng quan hiệu suất</h3>
@@ -121,7 +121,6 @@
           :key="indicator.id"
           class="indicator-card-modern"
           :class="[indicator.class, { 'loading-pulse': loading }]"
-          v-motion-slide-visible-once-bottom
           :style="{ '--delay': index * 100 + 'ms' }"
           @mouseenter="playHoverSound"
           @click="showIndicatorDetail(indicator)"
@@ -200,7 +199,7 @@
       </div>
 
       <!-- Biểu đồ chi tiết -->
-      <div class="charts-section" v-motion-slide-visible-once-bottom>
+      <div class="charts-section">
         <div class="charts-header">
           <h3>📈 Phân tích chi tiết</h3>
           <div class="chart-tabs">
@@ -260,7 +259,6 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import { ElMessage, ElDialog } from 'element-plus';
-import { useMotion } from '@vueuse/motion';
 import * as echarts from 'echarts';
 import dayjs from 'dayjs';
 import LoadingOverlay from '../../components/dashboard/LoadingOverlay.vue';

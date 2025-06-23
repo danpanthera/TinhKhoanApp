@@ -24,10 +24,106 @@ namespace TinhKhoanApp.Api.Controllers
 
         // Lấy dữ liệu 6 chỉ tiêu chính
         [HttpGet("indicators/{branchId}")]
-        public async Task<ActionResult> GetIndicators(string branchId)
+        public ActionResult GetIndicators(string branchId)
         {
             try
             {
+                // Mock data tạm thời để test
+                var result = new
+                {
+                    indicators = new[]
+                    {
+                        new
+                        {
+                            id = "nguon_von",
+                            name = "Nguồn vốn",
+                            icon = "💰",
+                            @class = "nguon-von",
+                            unit = "tỷ",
+                            format = "currency",
+                            currentValue = 245.8,
+                            targetValue = 250.0,
+                            completionRate = 98.3,
+                            changeFromYearStart = 25.2,
+                            changeFromYearStartPercent = 11.4
+                        },
+                        new
+                        {
+                            id = "du_no",
+                            name = "Dư nợ tín dụng",
+                            icon = "💳",
+                            @class = "du-no",
+                            unit = "tỷ",
+                            format = "currency",
+                            currentValue = 187.6,
+                            targetValue = 190.0,
+                            completionRate = 98.7,
+                            changeFromYearStart = 15.8,
+                            changeFromYearStartPercent = 9.2
+                        },
+                        new
+                        {
+                            id = "no_xau",
+                            name = "Nợ xấu",
+                            icon = "⚠️",
+                            @class = "no-xau",
+                            unit = "%",
+                            format = "percent",
+                            currentValue = 0.85,
+                            targetValue = 1.0,
+                            completionRate = 115.0,
+                            changeFromYearStart = -0.15,
+                            changeFromYearStartPercent = -15.0
+                        },
+                        new
+                        {
+                            id = "thu_no_xlrr",
+                            name = "Thu nợ XLRR",
+                            icon = "🏦",
+                            @class = "thu-no-xlrr",
+                            unit = "tỷ",
+                            format = "currency",
+                            currentValue = 12.4,
+                            targetValue = 15.0,
+                            completionRate = 82.7,
+                            changeFromYearStart = 2.1,
+                            changeFromYearStartPercent = 20.3
+                        },
+                        new
+                        {
+                            id = "thu_dich_vu",
+                            name = "Thu dịch vụ",
+                            icon = "🏦",
+                            @class = "thu-dich-vu",
+                            unit = "tỷ",
+                            format = "currency",
+                            currentValue = 28.9,
+                            targetValue = 30.0,
+                            completionRate = 96.3,
+                            changeFromYearStart = 3.1,
+                            changeFromYearStartPercent = 12.0
+                        },
+                        new
+                        {
+                            id = "tai_chinh",
+                            name = "Tài chính",
+                            icon = "💵",
+                            @class = "tai-chinh",
+                            unit = "tỷ",
+                            format = "currency",
+                            currentValue = 156.4,
+                            targetValue = 160.0,
+                            completionRate = 97.8,
+                            changeFromYearStart = 18.6,
+                            changeFromYearStartPercent = 13.5
+                        }
+                    }
+                };
+
+                return Ok(result);
+
+                // Code cũ - comment lại tạm thời
+                /*
                 var currentDate = DateTime.Now;
                 var yearStartDate = new DateTime(currentDate.Year, 1, 1);
 
@@ -132,6 +228,7 @@ namespace TinhKhoanApp.Api.Controllers
                 };
 
                 return Ok(result);
+                */
             }
             catch (Exception ex)
             {
