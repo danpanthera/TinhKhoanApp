@@ -42,64 +42,192 @@ const adaptiveTextLine2 = ref(null);
 const scaleFactorLine1 = ref(1);
 const scaleFactorLine2 = ref(1);
 
-// Hàm check xem text có bị overflow không
+// Hàm check xem text có bị overflow không với margin safety và multiple methods
 const checkTextOverflow = (element) => {
   if (!element) return false;
-  return element.scrollWidth > element.offsetWidth;
+  
+  const parent = element.parentElement;
+  if (!parent) return false;
+  
+  // Method 1: So sánh getBoundingClientRect width
+  const elementRect = element.getBoundingClientRect();
+  const parentRect = parent.getBoundingClientRect();
+  const elementWidth = elementRect.width;
+  const parentWidth = parentRect.width;
+  const safetyMargin = 20; // 20px safety margin
+  
+  const overflowByRect = elementWidth > (parentWidth - safetyMargin);
+  
+  // Method 2: So sánh scrollWidth với offsetWidth
+  const overflowByScroll = element.scrollWidth > (element.offsetWidth + 5);
+  
+  // Method 3: Check position
+  const overflowByPosition = elementRect.right > parentRect.right || elementRect.left < parentRect.left;
+  
+  const isOverflow = overflowByRect || overflowByScroll || overflowByPosition;
+  
+  if (isOverflow) {
+    console.log(`⚠️ Text overflow detected:`, {
+      elementWidth: elementWidth.toFixed(1),
+      parentWidth: parentWidth.toFixed(1),
+      scrollWidth: element.scrollWidth,
+      offsetWidth: element.offsetWidth,
+      overflowByRect,
+      overflowByScroll,
+      overflowByPosition
+    });
+  }
+  
+  return isOverflow;
 };
 
-// Hàm tính toán scale factor để text vừa với container
-const calculateScaleFactor = (element, currentScale = 1) => {
+// Hàm tính toán scale factor với binary search để tìm scale tối ưu
+const calculateOptimalScale = async (element) => {
   if (!element) return 1;
   
-  // Reset về scale 1 để đo kích thước thực
-  element.style.transform = 'scaleX(1)';
+  const container = element.parentElement;
+  if (!container) return 1;
   
-  const containerWidth = element.parentElement.offsetWidth;
-  const textWidth = element.scrollWidth;
+  // Reset về scale 1 để đo kích thước gốc
+  element.style.transform = 'scaleX(1)';
+  await nextTick();
+  
+  const containerWidth = container.offsetWidth - 40; // Margin 40px tổng để an toàn hơn
+  const originalTextWidth = element.scrollWidth;
+  
+  console.log(`📏 Đo text "${element.textContent.substring(0, 20)}...":`, {
+    containerWidth,
+    originalTextWidth,
+    overflow: originalTextWidth > containerWidth
+  });
   
   // Nếu text vừa với container thì không cần scale
-  if (textWidth <= containerWidth) {
+  if (originalTextWidth <= containerWidth) {
+    console.log('✅ Text vừa khít, không cần scale');
     return 1;
   }
   
-  // Tính scale factor để text vừa với container (với một chút margin)
-  return Math.max(0.6, (containerWidth * 0.95) / textWidth);
-};
-
-// Hàm auto-adjust thông minh cho 2 dòng text
-const autoAdjustTextSize = () => {
-  nextTick(() => {
-    try {
-      // Tính scale factor cho dòng 1 (AGRIBANK LAI CHAU CENTER) - dòng chủ đạo
-      const scaleLine1 = calculateScaleFactor(adaptiveTextLine1.value);
-      scaleFactorLine1.value = scaleLine1;
-      
-      // Dòng 2 theo tỷ lệ của dòng 1 (proportional scaling)
-      const scaleLine2 = calculateScaleFactor(adaptiveTextLine2.value);
-      
-      // Nếu dòng 1 bị thu nhỏ, dòng 2 cũng thu theo tỷ lệ
-      if (scaleLine1 < 1) {
-        scaleFactorLine2.value = Math.min(scaleLine1, scaleLine2);
-      } else {
-        scaleFactorLine2.value = scaleLine2;
-      }
-      
-      console.log('📏 Auto-adjust text:', {
-        line1Scale: scaleFactorLine1.value,
-        line2Scale: scaleFactorLine2.value,
-        line1Width: adaptiveTextLine1.value?.scrollWidth,
-        line2Width: adaptiveTextLine2.value?.scrollWidth,
-        containerWidth: adaptiveTextLine1.value?.parentElement?.offsetWidth
-      });
-      
-    } catch (error) {
-      console.warn('❌ Lỗi auto-adjust text:', error);
+  // Binary search để tìm scale factor tối ưu
+  let minScale = 0.2; // Scale tối thiểu thấp hơn
+  let maxScale = 1.0;
+  let optimalScale = 0.8; // Default safe scale
+  let iterations = 0;
+  const maxIterations = 20; // Tăng số lần thử
+  
+  while (minScale <= maxScale && iterations < maxIterations) {
+    const midScale = (minScale + maxScale) / 2;
+    
+    // Test scale này
+    element.style.transform = `scaleX(${midScale})`;
+    await nextTick();
+    
+    // Đo lại sau khi apply transform
+    const currentWidth = element.getBoundingClientRect().width;
+    
+    console.log(`🔍 Test scale ${midScale.toFixed(3)}: currentWidth=${currentWidth.toFixed(1)}, container=${containerWidth}`);
+    
+    if (currentWidth <= containerWidth) {
+      // Scale này OK, thử scale lớn hơn
+      optimalScale = midScale;
+      minScale = midScale + 0.001;
+    } else {
+      // Scale này quá lớn, thử scale nhỏ hơn
+      maxScale = midScale - 0.001;
     }
-  });
+    
+    iterations++;
+  }
+  
+  // Safety margin: giảm 5% để đảm bảo không overflow
+  const safeScale = Math.max(0.2, optimalScale * 0.95);
+  
+  console.log(`🎯 Tìm được optimal scale: ${optimalScale.toFixed(3)}, safe scale: ${safeScale.toFixed(3)} sau ${iterations} lần thử`);
+  return safeScale;
 };
 
-// Debounce function để tối ưu performance
+// Hàm auto-adjust thông minh với iterative scaling
+const autoAdjustTextSize = async () => {
+  if (!adaptiveTextLine1.value || !adaptiveTextLine2.value) {
+    console.warn('⚠️ Text elements chưa ready');
+    return;
+  }
+  
+  try {
+    console.log('🔄 Bắt đầu auto-adjust text size...');
+    
+    // Bước 1: Tính optimal scale cho dòng 1 (chủ đạo)
+    const optimalScale1 = await calculateOptimalScale(adaptiveTextLine1.value);
+    scaleFactorLine1.value = optimalScale1;
+    
+    // Apply scale cho dòng 1
+    adaptiveTextLine1.value.style.transform = `scaleX(${optimalScale1})`;
+    await nextTick();
+    
+    // Bước 2: Tính optimal scale cho dòng 2
+    const optimalScale2 = await calculateOptimalScale(adaptiveTextLine2.value);
+    
+    // Dòng 2 không được lớn hơn dòng 1 (proportional rule)
+    const finalScale2 = Math.min(optimalScale2, optimalScale1);
+    scaleFactorLine2.value = finalScale2;
+    
+    // Apply final scales
+    adaptiveTextLine1.value.style.transform = `scaleX(${optimalScale1})`;
+    adaptiveTextLine2.value.style.transform = `scaleX(${finalScale2})`;
+    
+    console.log('✅ Auto-adjust hoàn thành:', {
+      line1Scale: optimalScale1.toFixed(3),
+      line2Scale: finalScale2.toFixed(3),
+      line1Overflow: checkTextOverflow(adaptiveTextLine1.value),
+      line2Overflow: checkTextOverflow(adaptiveTextLine2.value)
+    });
+    
+    // Final check - nếu vẫn overflow thì force scale nhỏ hơn với multiple iterations
+    let finalCheck = 0;
+    const maxFinalChecks = 10; // Tăng số lần check cuối
+    
+    while ((checkTextOverflow(adaptiveTextLine1.value) || checkTextOverflow(adaptiveTextLine2.value)) && finalCheck < maxFinalChecks) {
+      console.log(`🔧 Final adjustment #${finalCheck + 1}`);
+      const adjustmentFactor = 0.92; // Giảm từng 8% thay vì 5%
+      scaleFactorLine1.value *= adjustmentFactor;
+      scaleFactorLine2.value *= adjustmentFactor;
+      
+      // Áp dụng scale mới
+      adaptiveTextLine1.value.style.transform = `scaleX(${scaleFactorLine1.value})`;
+      adaptiveTextLine2.value.style.transform = `scaleX(${scaleFactorLine2.value})`;
+      
+      await nextTick();
+      
+      // Thêm delay nhỏ để đảm bảo rendering hoàn thành
+      await new Promise(resolve => setTimeout(resolve, 10));
+      
+      finalCheck++;
+    }
+    
+    // Ultra-safe final check: Nếu vẫn overflow, force về scale tối thiểu
+    if (checkTextOverflow(adaptiveTextLine1.value) || checkTextOverflow(adaptiveTextLine2.value)) {
+      console.log(`🚨 Force ultra-safe scaling`);
+      scaleFactorLine1.value = Math.max(0.2, scaleFactorLine1.value * 0.8);
+      scaleFactorLine2.value = Math.max(0.2, scaleFactorLine2.value * 0.8);
+      
+      adaptiveTextLine1.value.style.transform = `scaleX(${scaleFactorLine1.value})`;
+      adaptiveTextLine2.value.style.transform = `scaleX(${scaleFactorLine2.value})`;
+    }
+    
+  } catch (error) {
+    console.error('❌ Lỗi auto-adjust text:', error);
+    // Fallback safe values - scale nhỏ hơn để đảm bảo an toàn
+    scaleFactorLine1.value = 0.6;
+    scaleFactorLine2.value = 0.6;
+    
+    // Apply fallback scales
+    if (adaptiveTextLine1.value && adaptiveTextLine2.value) {
+      adaptiveTextLine1.value.style.transform = `scaleX(${scaleFactorLine1.value})`;
+      adaptiveTextLine2.value.style.transform = `scaleX(${scaleFactorLine2.value})`;
+    }
+  }
+};
+
+// Debounce function với delay ngắn hơn cho responsive tốt hơn
 const debounce = (func, wait) => {
   let timeout;
   return function executedFunction(...args) {
@@ -112,11 +240,27 @@ const debounce = (func, wait) => {
   };
 };
 
-// Debounced resize handler
-const debouncedAutoAdjust = debounce(autoAdjustTextSize, 150);
+// Throttle function để giới hạn số lần gọi liên tiếp
+const throttle = (func, limit) => {
+  let inThrottle;
+  return function(...args) {
+    if (!inThrottle) {
+      func.apply(this, args);
+      inThrottle = true;
+      setTimeout(() => inThrottle = false, limit);
+    }
+  };
+};
 
-// ResizeObserver để theo dõi thay đổi kích thước container
+// Debounced resize handler với delay 100ms cho responsive nhanh
+const debouncedAutoAdjust = debounce(autoAdjustTextSize, 100);
+
+// Throttled version cho events thường xuyên
+const throttledAutoAdjust = throttle(autoAdjustTextSize, 200);
+
+// Real-time monitoring với MutationObserver
 let resizeObserver = null;
+let mutationObserver = null;
 
 onMounted(() => {
   if (!isAuthenticated()) {
@@ -124,33 +268,73 @@ onMounted(() => {
     return;
   }
   
-  // Khởi tạo auto-adjust sau khi component mounted
+  // Khởi tạo auto-adjust sau khi component mounted với multiple delays để chắc chắn
   setTimeout(autoAdjustTextSize, 100);
+  setTimeout(autoAdjustTextSize, 300);
+  setTimeout(autoAdjustTextSize, 500);
   
   // Lắng nghe resize window
   window.addEventListener('resize', debouncedAutoAdjust);
   
+  // Lắng nghe orientation change cho mobile
+  window.addEventListener('orientationchange', () => {
+    setTimeout(autoAdjustTextSize, 200);
+  });
+  
   // Sử dụng ResizeObserver để theo dõi container
   if (window.ResizeObserver && adaptiveTextLine1.value?.parentElement) {
-    resizeObserver = new ResizeObserver(debouncedAutoAdjust);
+    resizeObserver = new ResizeObserver(throttledAutoAdjust);
     resizeObserver.observe(adaptiveTextLine1.value.parentElement);
+    
+    // Observe cả hai text elements
+    if (adaptiveTextLine2.value?.parentElement) {
+      resizeObserver.observe(adaptiveTextLine2.value.parentElement);
+    }
   }
   
-  // Lắng nghe font load events
+  // Lắng nghe font load events với multiple checks
   if (document.fonts) {
-    document.fonts.ready.then(autoAdjustTextSize);
+    document.fonts.ready.then(() => {
+      setTimeout(autoAdjustTextSize, 100);
+    });
+    
+    // Listen for font load events
+    document.fonts.addEventListener('loadingdone', () => {
+      setTimeout(autoAdjustTextSize, 50);
+    });
   }
   
-  console.log('🎨 Adaptive text system initialized');
+  // Mutation observer để theo dõi thay đổi DOM
+  if (window.MutationObserver) {
+    mutationObserver = new MutationObserver(throttledAutoAdjust);
+    
+    if (adaptiveTextLine1.value?.parentElement) {
+      mutationObserver.observe(adaptiveTextLine1.value.parentElement, {
+        attributes: true,
+        childList: true,
+        subtree: true,
+        attributeFilter: ['style', 'class']
+      });
+    }
+  }
+  
+  console.log('🎨 Enhanced adaptive text system initialized');
 });
 
 onUnmounted(() => {
   // Cleanup event listeners
   window.removeEventListener('resize', debouncedAutoAdjust);
+  window.removeEventListener('orientationchange', debouncedAutoAdjust);
   
   if (resizeObserver) {
     resizeObserver.disconnect();
   }
+  
+  if (mutationObserver) {
+    mutationObserver.disconnect();
+  }
+  
+  console.log('🧹 Adaptive text system cleaned up');
 });
 </script>
 
@@ -183,9 +367,11 @@ onUnmounted(() => {
   width: auto;
   margin: 0 auto;
   background: transparent;
-  padding: 0 10px; /* Thêm padding để tránh text sát rìa */
+  padding: 0 20px; /* Tăng padding để đảm bảo text không sát biên */
   box-sizing: border-box; /* Đảm bảo padding không làm tăng width */
-  overflow: visible; /* Cho phép nội dung hiển thị đầy đủ */
+  overflow: hidden; /* Chặn overflow ở level container */
+  max-width: 100vw; /* Không vượt quá viewport width */
+  position: relative;
 }
 
 /* CSS cho chữ thẳng, không cong - Enhanced Responsive */
@@ -207,7 +393,13 @@ onUnmounted(() => {
   overflow: hidden; /* Ẩn nội dung bị tràn */
   max-width: 100%; /* Giới hạn trong container */
   transform-origin: center; /* Căn giữa khi scale */
-  transition: all 0.3s ease; /* Smooth transition */
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); /* Smooth transition với easing */
+  will-change: transform; /* Tối ưu hiệu năng animation */
+  text-overflow: clip; /* Không hiển thị ... khi overflow */
+  position: relative;
+  /* Backup constraints */
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 /* Dòng 1: AGRIBANK LAI CHAU CENTER */
@@ -216,6 +408,9 @@ onUnmounted(() => {
   letter-spacing: clamp(0.02em, 0.5vw, 0.08em); /* Auto scaling letter spacing */
   transform: scaleX(1); /* Mặc định không co giãn theo chiều ngang */
   will-change: transform; /* Tối ưu hiệu năng animation */
+  /* Enhanced constraints */
+  max-width: calc(100vw - 60px); /* Đảm bảo không vượt quá viewport - padding */
+  word-spacing: clamp(-0.05em, 0vw, 0.02em); /* Tinh chỉnh word spacing */
 }
 
 /* Dòng 2: HỆ THỐNG QUẢN LÝ KHOÁN | HỆ THỐNG BÁO CÁO */
@@ -224,6 +419,9 @@ onUnmounted(() => {
   letter-spacing: clamp(0.01em, 0.3vw, 0.05em); /* Auto scaling letter spacing */
   transform: scaleX(1); /* Mặc định không co giãn theo chiều ngang */
   will-change: transform; /* Tối ưu hiệu năng animation */
+  /* Enhanced constraints */
+  max-width: calc(100vw - 60px); /* Đảm bảo không vượt quá viewport - padding */
+  word-spacing: clamp(-0.03em, 0vw, 0.01em); /* Tinh chỉnh word spacing */
 }
 
 /* Media queries cho responsive co giãn nâng cao */
