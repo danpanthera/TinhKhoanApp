@@ -63,39 +63,45 @@ onMounted(() => {
   overflow: visible; /* Cho phép nội dung hiển thị đầy đủ */
 }
 
-/* CSS cho chữ thẳng, không cong */
+/* CSS cho chữ thẳng, không cong - Enhanced Responsive */
 .hero-text {
   display: inline-block;
-  transform: none; /* Chữ hoàn toàn thẳng */
+  transform: none;
   text-transform: uppercase;
+  /* Smart text wrapping */
+  word-break: keep-all; /* Giữ nguyên từ, không ngắt trong từ */
+  overflow-wrap: anywhere; /* Chỉ ngắt khi thực sự cần thiết */
+  hyphens: none; /* Không dùng dấu gạch ngang */
 }
 
 .hero-title {
-  font-size: 6.5rem; /* Tăng kích thước để nổi bật hơn */
-  font-weight: 800; /* Tăng độ đậm để "nổi" hơn */
-  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif; /* Font hiện đại, clean */
-  color: #8B1538 !important; /* Màu đỏ bordeaux thương hiệu Agribank cố định */
-  margin-bottom: 25px; /* Giảm khoảng cách để gọn hơn */
+  font-size: clamp(2.5rem, 8vw, 6.5rem); /* Responsive font-size tự động co giãn */
+  font-weight: 800;
+  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+  color: #8B1538 !important;
+  margin-bottom: 25px;
   text-shadow: 
-    0 8px 16px rgba(139, 21, 56, 0.4), /* Bóng đậm hơn màu đỏ Agribank */
-    0 4px 8px rgba(0, 0, 0, 0.3),      /* Bóng đen để tạo chiều sâu */
-    0 2px 4px rgba(139, 21, 56, 0.6);  /* Bóng gần tạo độ "nổi" */
-  line-height: 1.0; /* Giảm line-height để gọn hơn */
-  letter-spacing: 0.08em; /* Tăng khoảng cách chữ để nổi bật */
+    0 8px 16px rgba(139, 21, 56, 0.4),
+    0 4px 8px rgba(0, 0, 0, 0.3),
+    0 2px 4px rgba(139, 21, 56, 0.6);
+  line-height: 1.1;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  /* Bỏ gradient, dùng màu bordeaux cố định */
   background: none;
   -webkit-background-clip: unset;
   -webkit-text-fill-color: #8B1538;
   background-clip: unset;
-  /* Bỏ hiệu ứng 3D để chữ thẳng */
   transform: none;
   filter: drop-shadow(0 10px 20px rgba(139, 21, 56, 0.3));
-  /* Đảm bảo chữ không bị cắt */
-  white-space: nowrap;
-  width: auto;
+  /* Responsive text wrapping */
+  white-space: normal; /* Cho phép xuống dòng */
+  word-wrap: break-word; /* Tự động ngắt từ nếu quá dài */
+  overflow-wrap: break-word; /* Hỗ trợ break word tốt hơn */
+  hyphens: auto; /* Tự động thêm dấu gạch ngang khi ngắt từ */
+  width: 100%;
+  max-width: 100%;
   overflow: visible;
-  text-overflow: initial;
+  text-align: center; /* Căn giữa text */
 }
 
 .nature-icon {
@@ -136,90 +142,89 @@ onMounted(() => {
 }
 
 .hero-subtitle {
-  font-size: 2.6rem; /* Tăng kích thước để nổi bật hơn */
-  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif; /* Font hiện đại, clean */
-  color: #8B1538 !important; /* Màu đỏ bordeaux thương hiệu Agribank cố định */
-  margin-bottom: 0; /* Bỏ margin bottom vì không có dashboard */
-  margin-top: 5px; /* Giảm khoảng cách với title */
-  font-weight: 700; /* Tăng trọng lượng để nổi hơn */
-  font-style: normal; /* Bỏ italic để trang trọng hơn */
+  font-size: clamp(1.2rem, 4vw, 2.6rem); /* Responsive font-size tự động co giãn */
+  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+  color: #8B1538 !important;
+  margin-bottom: 0;
+  margin-top: 5px;
+  font-weight: 700;
+  font-style: normal;
   text-shadow: 
-    0 6px 12px rgba(139, 21, 56, 0.35), /* Bóng đậm hơn màu Agribank */
-    0 3px 6px rgba(0, 0, 0, 0.25),      /* Bóng đen để tạo chiều sâu */
-    0 1px 3px rgba(139, 21, 56, 0.5);   /* Bóng gần tạo độ "nổi" */
-  letter-spacing: 0.05em; /* Tăng khoảng cách chữ để nổi bật */
-  line-height: 1.2; /* Giảm line-height để gọn hơn */
-  /* Bỏ gradient, dùng màu bordeaux cố định */
+    0 6px 12px rgba(139, 21, 56, 0.35),
+    0 3px 6px rgba(0, 0, 0, 0.25),
+    0 1px 3px rgba(139, 21, 56, 0.5);
+  letter-spacing: 0.05em;
+  line-height: 1.3;
   background: none;
   -webkit-background-clip: unset;
   -webkit-text-fill-color: #8B1538;
   background-clip: unset;
-  /* Bỏ hiệu ứng 3D để chữ thẳng */
   transform: none;
   filter: drop-shadow(0 6px 12px rgba(139, 21, 56, 0.25));
-  /* Đảm bảo chữ không bị cắt */
-  white-space: nowrap;
-  width: auto;
+  /* Responsive text wrapping */
+  white-space: normal; /* Cho phép xuống dòng */
+  word-wrap: break-word; /* Tự động ngắt từ nếu quá dài */
+  overflow-wrap: break-word; /* Hỗ trợ break word tốt hơn */
+  hyphens: auto; /* Tự động thêm dấu gạch ngang khi ngắt từ */
+  width: 100%;
+  max-width: 100%;
   overflow: visible;
-  text-overflow: initial;
+  text-align: center; /* Căn giữa text */
 }
 
-/* Responsive Design */
+/* Responsive Design - Enhanced */
+@media (max-width: 1200px) {
+  .hero-content {
+    padding: 0 20px; /* Tăng padding cho màn hình lớn */
+  }
+}
+
 @media (max-width: 768px) {
   .welcome-hero {
-    min-height: 100vh; /* Vẫn chiếm toàn màn hình trên tablet */
-    padding: 0 15px 20px 15px; /* Giảm padding cho tablet */
-    padding-top: 1.5vh; /* Khoảng cách từ trên xuống trên tablet - giảm xuống */
+    min-height: 100vh;
+    padding: 0 15px 20px 15px;
+    padding-top: 1.5vh;
   }
   
-  .hero-title {
-    font-size: 3.8rem; /* Giảm size cho tablet để fit "CENTER" */
-    transform: none; /* Bỏ hiệu ứng 3D để chữ thẳng */
-    white-space: normal; /* Cho phép xuống dòng trên tablet nếu cần */
-    overflow: visible;
-    width: auto;
+  .hero-content {
+    padding: 0 10px; /* Giảm padding cho tablet */
   }
   
   .hero-logo {
     height: 70px;
-    transform: scale(1.05); /* Giảm scale cho tablet */
-  }
-  
-  .hero-subtitle {
-    font-size: 1.8rem; /* Giảm size cho tablet để fit */
-    transform: none; /* Bỏ hiệu ứng 3D để chữ thẳng */
-    white-space: normal; /* Cho phép xuống dòng trên tablet nếu cần */
-    overflow: visible;
-    width: auto;
+    transform: scale(1.05);
   }
 }
 
 @media (max-width: 480px) {
   .welcome-hero {
-    min-height: 100vh; /* Vẫn chiếm toàn màn hình trên mobile */
-    padding: 0 10px 20px 10px; /* Giảm padding cho mobile */
-    padding-top: 1vh; /* Khoảng cách từ trên xuống trên mobile - giảm xuống */
+    min-height: 100vh;
+    padding: 0 10px 20px 10px;
+    padding-top: 1vh;
   }
   
-  .hero-title {
-    font-size: 2.8rem; /* Giảm size cho mobile để fit "CENTER" */
-    transform: none; /* Bỏ hiệu ứng 3D để chữ thẳng */
-    white-space: normal; /* Cho phép xuống dòng trên mobile */
-    overflow: visible;
-    width: auto;
+  .hero-content {
+    padding: 0 5px; /* Padding nhỏ nhất cho mobile */
   }
   
   .hero-logo {
     height: 60px;
-    transform: scale(1.0); /* Bỏ scale cho mobile */
+    transform: scale(1.0);
+  }
+}
+
+/* Extra small screens - điện thoại nhỏ */
+@media (max-width: 320px) {
+  .hero-content {
+    padding: 0 2px; /* Padding tối thiểu */
+  }
+  
+  .hero-title {
+    letter-spacing: 0.02em; /* Giảm letter-spacing để tiết kiệm không gian */
   }
   
   .hero-subtitle {
-    font-size: 1.3rem; /* Giảm size cho mobile để fit */
-    transform: none; /* Bỏ hiệu ứng 3D để chữ thẳng */
-    white-space: normal; /* Cho phép xuống dòng trên mobile */
-    overflow: visible;
-    width: auto;
+    letter-spacing: 0.01em; /* Giảm letter-spacing cho subtitle */
   }
 }
 </style>
