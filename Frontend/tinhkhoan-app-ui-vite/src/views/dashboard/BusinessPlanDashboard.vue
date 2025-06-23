@@ -11,7 +11,7 @@
               <i class="dashboard-icon">📊</i>
             </div>
             <div class="title-wrapper">
-              <h1 class="dashboard-title">DASHBOARD TỔNG HỢP</h1>
+              <h1 class="dashboard-title">DASHBOARD CÁC CHỈ TIÊU KHKD</h1>
               <p class="dashboard-subtitle">
                 <span class="subtitle-icon">📅</span>
                 {{ getCurrentPeriodLabel() }}
@@ -274,21 +274,22 @@ const selectedIndicator = ref(null);
 const activeChartTab = ref('comparison');
 const animatedValues = ref({}); // Giá trị animated cho counters
 
-// Danh sách chi nhánh (14 chi nhánh theo yêu cầu)
+// Danh sách chi nhánh theo thứ tự cố định yêu cầu
 const branches = ref([
+  { id: 'CnLaiChau', name: 'CN Lai Châu' },
   { id: 'HoiSo', name: 'Hội Sở' },
   { id: 'CnTamDuong', name: 'CN Tam Đường' },
   { id: 'CnPhongTho', name: 'CN Phong Thổ' },
   { id: 'CnSinHo', name: 'CN Sin Hồ' },
   { id: 'CnMuongTe', name: 'CN Mường Tè' },
   { id: 'CnThanUyen', name: 'CN Than Uyên' },
-  { id: 'CnThanhpho', name: 'CN Thành phố' },
+  { id: 'CnThanhPho', name: 'CN Thành Phố' },
   { id: 'CnTanUyen', name: 'CN Tân Uyên' },
   { id: 'CnNamNhun', name: 'CN Nậm Nhùn' },
   { id: 'CnPhongThoPgdMuongSo', name: 'CN Phong Thổ - PGD Mường So' },
   { id: 'CnThanUyenPgdMuongThan', name: 'CN Than Uyên - PGD Mường Than' },
-  { id: 'CnThanhPhoPgdso1', name: 'CN Thành phố - PGD số 1' },
-  { id: 'CnThanhPhoPgdso2', name: 'CN Thành phố - PGD số 2' },
+  { id: 'CnThanhPhoPgdso1', name: 'CN Thành Phố - PGD số 1' },
+  { id: 'CnThanhPhoPgdso2', name: 'CN Thành Phố - PGD số 2' },
   { id: 'CnTanUyenPgdso3', name: 'CN Tân Uyên - PGD số 3' }
 ]);
 
@@ -1100,7 +1101,9 @@ setInterval(async () => {
 .current-time {
   font-family: 'Courier New', monospace;
   font-size: 14px;
-  opacity: 0.8;
+  color: white;
+  font-weight: bold;
+  opacity: 1;
   background: rgba(255, 255, 255, 0.1);
   padding: 8px 16px;
   border-radius: 25px;

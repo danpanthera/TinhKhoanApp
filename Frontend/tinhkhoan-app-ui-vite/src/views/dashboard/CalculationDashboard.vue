@@ -5,7 +5,7 @@
       <div class="header-title">
         <h2>
           <i class="mdi mdi-database-plus"></i>
-          Cập nhật số liệu vào bảng
+          2. Cập nhật tình hình thực hiện
         </h2>
         <p class="subtitle">Tính toán và cập nhật các chỉ tiêu kinh doanh theo chi nhánh</p>
       </div>
@@ -47,14 +47,42 @@
           </option>
         </select>
         
-        <!-- Action buttons -->
-        <button @click="loadData" :disabled="loading" class="btn btn-primary">
-          {{ loading ? 'Đang tải...' : '🔄 Tải lại' }}
-        </button>
+        <!-- 7 nút chức năng chính -->
+        <div class="calculation-buttons">
+          <button @click="calculateAll" :disabled="calculating || !selectedUnitId" class="btn btn-primary">
+            {{ calculating ? 'Đang tính...' : '⚡ Tính toán' }}
+          </button>
+          
+          <button @click="calculateNguonVon" :disabled="calculating || !selectedUnitId" class="btn btn-warning">
+            💰 Nguồn vốn
+          </button>
+          
+          <button @click="calculateDuNo" :disabled="calculating || !selectedUnitId" class="btn btn-info">
+            📊 Dư nợ
+          </button>
+          
+          <button @click="calculateNoXau" :disabled="calculating || !selectedUnitId" class="btn btn-danger">
+            ⚠️ Nợ xấu
+          </button>
+          
+          <button @click="calculateThuNoXLRR" :disabled="calculating || !selectedUnitId" class="btn btn-success">
+            💵 Thu nợ XLRR
+          </button>
+          
+          <button @click="calculateThuDichVu" :disabled="calculating || !selectedUnitId" class="btn btn-purple">
+            🎯 Thu dịch vụ
+          </button>
+          
+          <button @click="calculateTaiChinh" :disabled="calculating || !selectedUnitId" class="btn btn-gradient">
+            💼 Tài chính
+          </button>
+        </div>
         
-        <button @click="triggerCalculation" :disabled="calculating" class="btn btn-success">
-          {{ calculating ? 'Đang tính...' : '⚡ Tính toán' }}
-        </button>
+        <!-- Thông báo khi chưa chọn đơn vị -->
+        <div v-if="!selectedUnitId" class="unit-warning">
+          <i class="mdi mdi-information-outline"></i>
+          Vui lòng chọn Chi nhánh/Phòng ban để thực hiện tính toán
+        </div>
       </div>
     </div>
 
@@ -361,20 +389,21 @@ const trendPeriod = ref('MONTH');
 
 // Data
 const units = ref([
-  { id: 'HoiSo', name: 'Hội Sở', code: '7800' },
-  { id: 'CnTamDuong', name: 'CN Tam Đường', code: '7801' },
-  { id: 'CnPhongTho', name: 'CN Phong Thổ', code: '7802' },
-  { id: 'CnSinHo', name: 'CN Sin Hồ', code: '7803' },
-  { id: 'CnMuongTe', name: 'CN Mường Tè', code: '7804' },
-  { id: 'CnThanUyen', name: 'CN Than Uyên', code: '7805' },
-  { id: 'CnThanhpho', name: 'CN Thành phố', code: '7806' },
-  { id: 'CnTanUyen', name: 'CN Tân Uyên', code: '7807' },
-  { id: 'CnNamNhun', name: 'CN Nậm Nhùn', code: '7808' },
-  { id: 'CnPhongThoPgdMuongSo', name: 'CN Phong Thổ - PGD Mường So', code: '7802' },
-  { id: 'CnThanUyenPgdMuongThan', name: 'CN Than Uyên - PGD Mường Than', code: '7805' },
-  { id: 'CnThanhPhoPgdso1', name: 'CN Thành phố - PGD số 1', code: '7806' },
-  { id: 'CnThanhPhoPgdso2', name: 'CN Thành phố - PGD số 2', code: '7806' },
-  { id: 'CnTanUyenPgdso3', name: 'CN Tân Uyên - PGD số 3', code: '7807' }
+  { id: 'CnLaiChau', name: 'CN Lai Châu', code: '7800' },
+  { id: 'HoiSo', name: 'Hội Sở', code: '7801' },
+  { id: 'CnTamDuong', name: 'CN Tam Đường', code: '7802' },
+  { id: 'CnPhongTho', name: 'CN Phong Thổ', code: '7803' },
+  { id: 'CnSinHo', name: 'CN Sin Hồ', code: '7804' },
+  { id: 'CnMuongTe', name: 'CN Mường Tè', code: '7805' },
+  { id: 'CnThanUyen', name: 'CN Than Uyên', code: '7806' },
+  { id: 'CnThanhPho', name: 'CN Thành Phố', code: '7807' },
+  { id: 'CnTanUyen', name: 'CN Tân Uyên', code: '7808' },
+  { id: 'CnNamNhun', name: 'CN Nậm Nhùn', code: '7809' },
+  { id: 'CnPhongThoPgdMuongSo', name: 'CN Phong Thổ - PGD Mường So', code: '7803-01' },
+  { id: 'CnThanUyenPgdMuongThan', name: 'CN Than Uyên - PGD Mường Than', code: '7806-01' },
+  { id: 'CnThanhPhoPgdso1', name: 'CN Thành Phố - PGD số 1', code: '7807-01' },
+  { id: 'CnThanhPhoPgdso2', name: 'CN Thành Phố - PGD số 2', code: '7807-02' },
+  { id: 'CnTanUyenPgdso3', name: 'CN Tân Uyên - PGD số 3', code: '7808-01' }
 ]);
 const overview = ref({
   totalTargets: 0,
@@ -599,6 +628,193 @@ const triggerCalculation = async () => {
     calculating.value = false;
   }
 };
+
+// ===============================
+// 7 METHODS CHO CÁC NÚT CHỨC NĂNG
+// ===============================
+
+// 1. Tính toán tổng hợp (method cũ đã có)
+const calculateAll = async () => {
+  await triggerCalculation();
+};
+
+// 2. Tính Nguồn vốn
+const calculateNguonVon = async () => {
+  if (!selectedUnitId.value) {
+    errorMessage.value = 'Vui lòng chọn Chi nhánh/Phòng ban trước khi tính toán';
+    return;
+  }
+  
+  calculating.value = true;
+  errorMessage.value = '';
+  successMessage.value = '';
+  
+  try {
+    // TODO: Implement API call khi có công thức từ anh
+    console.log('🔧 Tính Nguồn vốn cho:', getSelectedUnitName());
+    
+    // Mock data tạm thời
+    setTimeout(() => {
+      calculatedIndicators.value[0].value = Math.floor(Math.random() * 1000) + 500; // 500-1500 tỷ
+      calculatedIndicators.value[0].calculated = true;
+      showCalculationResults.value = true;
+      successMessage.value = `✅ Đã tính Nguồn vốn cho ${getSelectedUnitName()}: ${formatNumber(calculatedIndicators.value[0].value)} tỷ`;
+      calculating.value = false;
+    }, 800);
+    
+  } catch (error) {
+    console.error('Error calculating Nguồn vốn:', error);
+    errorMessage.value = 'Có lỗi khi tính Nguồn vốn: ' + error.message;
+    calculating.value = false;
+  }
+};
+
+// 3. Tính Dư nợ
+const calculateDuNo = async () => {
+  if (!selectedUnitId.value) {
+    errorMessage.value = 'Vui lòng chọn Chi nhánh/Phòng ban trước khi tính toán';
+    return;
+  }
+  
+  calculating.value = true;
+  errorMessage.value = '';
+  successMessage.value = '';
+  
+  try {
+    console.log('🔧 Tính Dư nợ cho:', getSelectedUnitName());
+    
+    setTimeout(() => {
+      calculatedIndicators.value[1].value = Math.floor(Math.random() * 1000) + 800; // 800-1800 tỷ
+      calculatedIndicators.value[1].calculated = true;
+      showCalculationResults.value = true;
+      successMessage.value = `✅ Đã tính Dư nợ cho ${getSelectedUnitName()}: ${formatNumber(calculatedIndicators.value[1].value)} tỷ`;
+      calculating.value = false;
+    }, 800);
+    
+  } catch (error) {
+    console.error('Error calculating Dư nợ:', error);
+    errorMessage.value = 'Có lỗi khi tính Dư nợ: ' + error.message;
+    calculating.value = false;
+  }
+};
+
+// 4. Tính Nợ xấu (chỉ tiêu ngược - càng thấp càng tốt)
+const calculateNoXau = async () => {
+  if (!selectedUnitId.value) {
+    errorMessage.value = 'Vui lòng chọn Chi nhánh/Phòng ban trước khi tính toán';
+    return;
+  }
+  
+  calculating.value = true;
+  errorMessage.value = '';
+  successMessage.value = '';
+  
+  try {
+    console.log('🔧 Tính Nợ xấu cho:', getSelectedUnitName());
+    
+    setTimeout(() => {
+      calculatedIndicators.value[2].value = (Math.random() * 3).toFixed(2); // 0-3%
+      calculatedIndicators.value[2].calculated = true;
+      showCalculationResults.value = true;
+      successMessage.value = `✅ Đã tính Nợ xấu cho ${getSelectedUnitName()}: ${calculatedIndicators.value[2].value}% (càng thấp càng tốt)`;
+      calculating.value = false;
+    }, 800);
+    
+  } catch (error) {
+    console.error('Error calculating Nợ xấu:', error);
+    errorMessage.value = 'Có lỗi khi tính Nợ xấu: ' + error.message;
+    calculating.value = false;
+  }
+};
+
+// 5. Tính Thu nợ XLRR
+const calculateThuNoXLRR = async () => {
+  if (!selectedUnitId.value) {
+    errorMessage.value = 'Vui lòng chọn Chi nhánh/Phòng ban trước khi tính toán';
+    return;
+  }
+  
+  calculating.value = true;
+  errorMessage.value = '';
+  successMessage.value = '';
+  
+  try {
+    console.log('🔧 Tính Thu nợ XLRR cho:', getSelectedUnitName());
+    
+    setTimeout(() => {
+      calculatedIndicators.value[3].value = Math.floor(Math.random() * 100) + 20; // 20-120 tỷ
+      calculatedIndicators.value[3].calculated = true;
+      showCalculationResults.value = true;
+      successMessage.value = `✅ Đã tính Thu nợ XLRR cho ${getSelectedUnitName()}: ${formatNumber(calculatedIndicators.value[3].value)} tỷ`;
+      calculating.value = false;
+    }, 800);
+    
+  } catch (error) {
+    console.error('Error calculating Thu nợ XLRR:', error);
+    errorMessage.value = 'Có lỗi khi tính Thu nợ XLRR: ' + error.message;
+    calculating.value = false;
+  }
+};
+
+// 6. Tính Thu dịch vụ
+const calculateThuDichVu = async () => {
+  if (!selectedUnitId.value) {
+    errorMessage.value = 'Vui lòng chọn Chi nhánh/Phòng ban trước khi tính toán';
+    return;
+  }
+  
+  calculating.value = true;
+  errorMessage.value = '';
+  successMessage.value = '';
+  
+  try {
+    console.log('🔧 Tính Thu dịch vụ cho:', getSelectedUnitName());
+    
+    setTimeout(() => {
+      calculatedIndicators.value[4].value = Math.floor(Math.random() * 50) + 10; // 10-60 tỷ
+      calculatedIndicators.value[4].calculated = true;
+      showCalculationResults.value = true;
+      successMessage.value = `✅ Đã tính Thu dịch vụ cho ${getSelectedUnitName()}: ${formatNumber(calculatedIndicators.value[4].value)} tỷ`;
+      calculating.value = false;
+    }, 800);
+    
+  } catch (error) {
+    console.error('Error calculating Thu dịch vụ:', error);
+    errorMessage.value = 'Có lỗi khi tính Thu dịch vụ: ' + error.message;
+    calculating.value = false;
+  }
+};
+
+// 7. Tính Lợi nhuận khoán tài chính
+const calculateTaiChinh = async () => {
+  if (!selectedUnitId.value) {
+    errorMessage.value = 'Vui lòng chọn Chi nhánh/Phòng ban trước khi tính toán';
+    return;
+  }
+  
+  calculating.value = true;
+  errorMessage.value = '';
+  successMessage.value = '';
+  
+  try {
+    console.log('🔧 Tính Lợi nhuận khoán tài chính cho:', getSelectedUnitName());
+    
+    setTimeout(() => {
+      calculatedIndicators.value[5].value = Math.floor(Math.random() * 200) + 50; // 50-250 tỷ
+      calculatedIndicators.value[5].calculated = true;
+      showCalculationResults.value = true;
+      successMessage.value = `✅ Đã tính Lợi nhuận khoán tài chính cho ${getSelectedUnitName()}: ${formatNumber(calculatedIndicators.value[5].value)} tỷ`;
+      calculating.value = false;
+    }, 800);
+    
+  } catch (error) {
+    console.error('Error calculating Tài chính:', error);
+    errorMessage.value = 'Có lỗi khi tính Lợi nhuận khoán tài chính: ' + error.message;
+    calculating.value = false;
+  }
+};
+
+// ===============================
 
 const onPeriodTypeChange = () => {
   selectedPeriod.value = '';
@@ -1073,288 +1289,98 @@ onMounted(async () => {
   background: #f0f0f0;
 }
 
-.form-select {
-  padding: 8px 12px;
-  border: 1px solid #d9d9d9;
-  border-radius: 4px;
-  font-size: 14px;
-}
+/* ================================
+  CSS CHO 7 NÚT CHỨC NĂNG MỚI 
+================================ */
 
-.form-select:focus {
-  outline: none;
-  border-color: #8B1538;
-  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
-}
-
-.loading-section {
+.calculation-buttons {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 60px 20px;
-  text-align: center;
-}
-
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #8B1538;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 16px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.error-message {
-  background: #fff2f0;
-  border: 1px solid #ffccc7;
-  color: #a8071a;
-  padding: 12px 16px;
-  border-radius: 4px;
-  margin-bottom: 16px;
-}
-
-.success-message {
-  background: #f6ffed;
-  border: 1px solid #b7eb8f;
-  color: #389e0d;
-  padding: 12px 16px;
-  border-radius: 4px;
-  margin-bottom: 16px;
-}
-
-.no-data {
-  text-align: center;
-  padding: 40px;
-  color: #8c8c8c;
-}
-
-.action-section {
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Calculation Results Styles */
-.calculation-results {
-  margin-top: 30px;
-  padding: 24px;
-  background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
-  border-radius: 16px;
-  border: 1px solid #e6f0ff;
-}
-
-.results-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 2px solid #e6f0ff;
-}
-
-.results-header h3 {
-  color: #1890ff;
-  font-size: 24px;
-  margin: 0;
-  display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
+  margin-top: 12px;
 }
 
-.selected-unit-info {
-  background: #1890ff;
-  color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.warning-box {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  background: #fff7e6;
-  border: 1px solid #ffd666;
-  border-radius: 12px;
-  padding: 16px;
-  margin-bottom: 24px;
-  animation: shake 0.5s ease-in-out;
-}
-
-.warning-box i {
-  color: #fa8c16;
-  font-size: 24px;
-  margin-top: 4px;
-}
-
-.warning-content h4 {
-  color: #d48806;
-  margin: 0 0 8px 0;
-  font-size: 16px;
-}
-
-.warning-content p {
-  margin: 0 0 12px 0;
-  color: #8c5a00;
-}
-
-.warning-content ul {
-  margin: 0;
-  padding-left: 20px;
-  color: #8c5a00;
-}
-
-.indicators-results-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-  gap: 20px;
-}
-
-.result-card {
-  background: white;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+.calculation-buttons .btn {
+  min-width: 140px;
+  font-size: 13px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-weight: 600;
   transition: all 0.3s ease;
-  animation: fadeInUp 0.6s ease-out;
+  border: none;
+  cursor: pointer;
   position: relative;
   overflow: hidden;
 }
 
-.result-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--card-color) 0%, var(--card-color-light) 100%);
+.calculation-buttons .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
-.result-card.calculated {
-  border: 2px solid #52c41a;
-  transform: scale(1.02);
+.calculation-buttons .btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
-.result-card.missing {
-  border: 2px solid #ff7875;
-  opacity: 0.7;
+/* Các màu cho từng nút */
+.btn-warning {
+  background: linear-gradient(135deg, #faad14 0%, #fa8c16 100%);
+  color: white;
 }
 
-.result-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+.btn-warning:hover {
+  background: linear-gradient(135deg, #fa8c16 0%, #faad14 100%);
 }
 
-/* Card color variables */
-.result-card.nguon-von { --card-color: #52c41a; --card-color-light: #95de64; }
-.result-card.du-no { --card-color: #1890ff; --card-color-light: #69c0ff; }
-.result-card.no-xau { --card-color: #fa541c; --card-color-light: #ff7a45; }
-.result-card.thu-no-xlrr { --card-color: #722ed1; --card-color-light: #b37feb; }
-.result-card.thu-dich-vu { --card-color: #13c2c2; --card-color-light: #5cdbd3; }
-.result-card.tai-chinh { --card-color: #faad14; --card-color-light: #ffc53d; }
+.btn-danger {
+  background: linear-gradient(135deg, #ff4d4f 0%, #cf1322 100%);
+  color: white;
+}
 
-.result-card-header {
+.btn-danger:hover {
+  background: linear-gradient(135deg, #cf1322 0%, #ff4d4f 100%);
+}
+
+.btn-purple {
+  background: linear-gradient(135deg, #722ed1 0%, #531dab 100%);
+  color: white;
+}
+
+.btn-purple:hover {
+  background: linear-gradient(135deg, #531dab 0%, #722ed1 100%);
+}
+
+.btn-gradient {
+  background: linear-gradient(135deg, #13c2c2 0%, #36cfc9 100%);
+  color: white;
+}
+
+.btn-gradient:hover {
+  background: linear-gradient(135deg, #36cfc9 0%, #13c2c2 100%);
+}
+
+/* Warning khi chưa chọn đơn vị */
+.unit-warning {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-
-.result-icon {
-  font-size: 32px;
-  margin-right: 12px;
-}
-
-.result-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #333;
-  flex: 1;
-}
-
-.result-status .status-success {
-  color: #52c41a;
-  font-size: 24px;
-}
-
-.result-status .status-warning {
-  color: #fa8c16;
-  font-size: 24px;
-}
-
-.result-body {
-  text-align: center;
-}
-
-.result-value {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
   gap: 8px;
-  margin-bottom: 16px;
-}
-
-.value-number {
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--card-color);
-}
-
-.value-unit {
-  font-size: 16px;
-  color: #666;
-}
-
-.result-status-text {
-  padding: 8px 16px;
-  border-radius: 20px;
+  background: #fff7e6;
+  border: 1px solid #ffd591;
+  color: #d46b08;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-top: 12px;
   font-size: 14px;
-  font-weight: 500;
-  display: inline-block;
 }
 
-.calculated-text {
-  background: #f6ffed;
-  color: #389e0d;
-  border: 1px solid #b7eb8f;
+.unit-warning i {
+  font-size: 16px;
 }
 
-.missing-text {
-  background: #fff2f0;
-  color: #a8071a;
-  border: 1px solid #ffccc7;
-}
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Responsive */
+/* Responsive cho buttons */
 @media (max-width: 768px) {
   .header-controls {
     flex-direction: column;
