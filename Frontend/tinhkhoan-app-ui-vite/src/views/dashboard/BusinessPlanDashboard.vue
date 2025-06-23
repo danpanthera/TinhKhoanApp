@@ -38,6 +38,7 @@
                 v-model="selectedBranch" 
                 placeholder="Chọn chi nhánh"
                 @change="handleBranchChange"
+                @focus="isUserInteraction = true"
                 :loading="loading"
                 filterable
                 clearable
@@ -152,6 +153,7 @@
                 :ref="`counter-${indicator.id}`"
                 class="value-number animated-counter"
                 :data-target="indicator.currentValue"
+                :style="{ color: getProgressColor(indicator.completionRate) }"
               >
                 {{ animatedValues[indicator.id] || indicator.currentValue }}
               </span>
@@ -553,15 +555,26 @@ const getChangeArrow = (percent) => {
 };
 
 const getProgressColor = (percentage) => {
-  if (percentage >= 100) return '#52c41a';
-  if (percentage >= 90) return '#1890ff';
-  if (percentage >= 70) return '#faad14';
-  return '#f5222d';
+  // Thống nhất màu sắc theo yêu cầu:
+  // < 25%: màu đỏ đậm (bordeaux) 
+  // 26-50%: màu cam nhạt
+  // 51-75%: màu xanh dương nhạt  
+  // > 75%: màu xanh lá cây
+  if (percentage >= 75) return '#52c41a'; // Xanh lá cây
+  if (percentage >= 51) return '#1890ff'; // Xanh dương nhạt
+  if (percentage >= 26) return '#faad14'; // Cam nhạt  
+  return '#8B1538'; // Đỏ đậm bordeaux (< 25%)
 };
 
 // Xử lý sự kiện
+const isUserInteraction = ref(false);
+
 const handleBranchChange = async () => {
-  playClickSound();
+  // Chỉ phát âm thanh khi user chủ động thay đổi qua UI  
+  if (isUserInteraction.value) {
+    playClickSound();
+    isUserInteraction.value = false; // Reset flag
+  }
   await loadDashboardData();
 };
 
@@ -702,7 +715,7 @@ const createTrendChart = () => {
   try {
     const chartDom = document.getElementById('trend-chart');
     if (!chartDom || !chartDom.parentNode) {
-      console.log('⚠️ Trend chart container not ready, skipping...');
+      // Bỏ log để tránh spam console
       return;
     }
     
@@ -744,7 +757,8 @@ const createTrendChart = () => {
     
     myChart.setOption(option);
   } catch (error) {
-    console.warn('Error creating trend chart:', error);
+    // Chỉ log lỗi thực sự, bỏ warning để tránh spam console
+    console.error('Error creating trend chart:', error);
   }
 };
 
@@ -960,21 +974,20 @@ const getSelectedBranchName = () => {
 // Watch thay đổi branch
 watch(selectedBranch, handleBranchChange);
 
-// Watch thay đổi tab biểu đồ với delay
-watch(activeChartTab, () => {
-  nextTick(() => {
-    setTimeout(() => {
-      createCharts();
-    }, 150);
-  });
+// Watch thay đổi tab biểu đồ với delay và kiểm tra để tránh log spam
+watch(activeChartTab, (newTab, oldTab) => {
+  // Chỉ tạo lại chart khi tab thực sự thay đổi và không phải lần đầu load
+  if (newTab !== oldTab && oldTab !== undefined) {
+    nextTick(() => {
+      setTimeout(() => {
+        createCharts();
+      }, 150);
+    });
+  }
 });
 
-// Auto refresh mỗi 30 giây
-setInterval(async () => {
-  if (!loading.value) {
-    await loadDashboardData();
-  }
-}, 30000);
+// Bỏ auto refresh để tránh audio spam và log liên tục
+// Auto refresh đã được bỏ để tránh âm thanh và log không mong muốn
 </script>
 
 <style scoped>

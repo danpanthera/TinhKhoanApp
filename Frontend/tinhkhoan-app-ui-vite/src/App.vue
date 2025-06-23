@@ -176,6 +176,9 @@
       <div class="content-container">
         <router-view />
       </div>
+      
+      <!-- App Footer - Chân trang với thông tin user -->
+      <AppFooter />
     </div>
     
     <!-- PWA Install Prompt và các thông báo PWA -->
@@ -193,6 +196,7 @@ import { isAuthenticated, logout } from '@/services/auth';
 import ThemeSwitcher from '@/components/ThemeSwitcher.vue';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt.vue';
 import OfflineIndicator from '@/components/OfflineIndicator.vue';
+import AppFooter from '@/components/AppFooter.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -1100,6 +1104,8 @@ body, html {
   padding: 30px;
   text-align: left;
   color: var(--text-primary);
+  margin-bottom: 60px; /* Khoảng trống cho footer */
+  min-height: calc(100vh - 180px); /* Điều chỉnh để có chỗ cho footer */
 }
 
 .content-container h1 {

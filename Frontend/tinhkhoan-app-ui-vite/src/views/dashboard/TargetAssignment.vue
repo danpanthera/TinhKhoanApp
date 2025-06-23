@@ -11,6 +11,17 @@
       </div>
       
       <div class="header-controls">
+        <!-- Chọn đơn vị/phòng ban -->
+        <select v-model="selectedUnitId" @change="loadTargets" class="form-select" style="min-width: 200px;">
+          <option value="">Chọn đơn vị/phòng ban</option>
+          <option value="HO">Hội sở</option>
+          <option value="CN_HCM">Chi nhánh TP.HCM</option>
+          <option value="CN_HN">Chi nhánh Hà Nội</option>
+          <option value="CN_DN">Chi nhánh Đà Nẵng</option>
+          <option value="CN_CT">Chi nhánh Cần Thơ</option>
+          <option value="CN_HP">Chi nhánh Hải Phòng</option>
+        </select>
+        
         <!-- Chọn năm -->
         <select v-model="selectedYear" @change="loadTargets" class="form-select">
           <option value="">Chọn năm</option>
@@ -69,68 +80,73 @@
       <p>✅ {{ successMessage }}</p>
     </div>
 
-    <!-- Tabs cho từng đơn vị -->
-    <div v-if="!loading && units.length > 0" class="unit-tabs">
-      <div class="tab-navigation">
-        <button 
-          v-for="unit in units" 
-          :key="unit.id"
-          :class="['tab-button', { active: selectedUnitId === unit.id }]"
-          @click="selectUnit(unit.id)"
-        >
-          🏢 {{ unit.unitName || unit.name }}
-        </button>
+    <!-- Bảng chỉ tiêu cho đơn vị được chọn -->
+    <div v-if="!loading && selectedUnitId" class="targets-section">
+      <div class="section-header">
+        <h3>
+          <i class="mdi mdi-chart-line"></i>
+          Chỉ tiêu cho {{ getSelectedUnitName() }}
+        </h3>
       </div>
-
-      <!-- Content cho tab được chọn -->
-      <div v-if="selectedUnitId" class="tab-content">
-        <h3>Chỉ tiêu cho {{ getSelectedUnitName() }}</h3>
+      
+      <!-- Bảng chỉ tiêu -->
+      <div class="targets-table-container">
+        <table v-if="filteredTargets.length > 0" class="targets-table">
+          <thead>
+            <tr>
+              <th>STT</th>
+              <th>Tên chỉ tiêu</th>
+              <th>Giá trị mục tiêu</th>
+              <th>Đơn vị tính</th>
+              <th>Kỳ</th>
+              <th>Loại kỳ</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(target, index) in filteredTargets" :key="target.id">
+              <td class="text-center">{{ index + 1 }}</td>
+              <td>{{ target.indicatorName }}</td>
+              <td class="number-cell">{{ formatNumber(target.targetValue) }}</td>
+              <td>{{ target.unit || 'VND' }}</td>
+              <td>{{ target.period }}</td>
+              <td>{{ getPeriodTypeLabel(target.periodType) }}</td>
+              <td>
+                <span :class="['status-badge', target.isActive ? 'active' : 'inactive']">
+                  {{ target.isActive ? 'Hoạt động' : 'Không hoạt động' }}
+                </span>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <button @click="editTarget(target)" class="btn btn-sm btn-warning">
+                    ✏️ Sửa
+                  </button>
+                  <button @click="deleteTarget(target.id)" class="btn btn-sm btn-danger">
+                    🗑️ Xóa
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
         
-        <!-- Bảng chỉ tiêu -->
-        <div class="targets-table-container">
-          <table v-if="filteredTargets.length > 0" class="targets-table">
-            <thead>
-              <tr>
-                <th>Tên chỉ tiêu</th>
-                <th>Giá trị mục tiêu</th>
-                <th>Đơn vị tính</th>
-                <th>Kỳ</th>
-                <th>Loại kỳ</th>
-                <th>Trạng thái</th>
-                <th>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="target in filteredTargets" :key="target.id">
-                <td>{{ target.indicatorName }}</td>
-                <td class="number-cell">{{ formatNumber(target.targetValue) }}</td>
-                <td>{{ target.unit || 'VND' }}</td>
-                <td>{{ target.period }}</td>
-                <td>{{ getPeriodTypeLabel(target.periodType) }}</td>
-                <td>
-                  <span :class="['status-badge', target.isActive ? 'active' : 'inactive']">
-                    {{ target.isActive ? 'Hoạt động' : 'Không hoạt động' }}
-                  </span>
-                </td>
-                <td>
-                  <div class="action-buttons">
-                    <button @click="editTarget(target)" class="btn btn-sm btn-warning">
-                      ✏️ Sửa
-                    </button>
-                    <button @click="deleteTarget(target.id)" class="btn btn-sm btn-danger">
-                      🗑️ Xóa
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          
-          <div v-else class="no-data">
-            <p>Chưa có chỉ tiêu nào được giao cho đơn vị này trong kỳ đã chọn.</p>
-          </div>
+        <div v-else class="no-data">
+          <div class="no-data-icon">📊</div>
+          <h4>Chưa có dữ liệu</h4>
+          <p>Chưa có chỉ tiêu nào được giao cho đơn vị này trong kỳ đã chọn.</p>
+          <button @click="showCreateModal = true" class="btn btn-primary">
+            ➕ Thêm chỉ tiêu đầu tiên
+          </button>
         </div>
       </div>
+    </div>
+
+    <!-- Thông báo chọn đơn vị -->
+    <div v-if="!loading && !selectedUnitId" class="select-unit-message">
+      <div class="message-icon">🏢</div>
+      <h3>Vui lòng chọn đơn vị</h3>
+      <p>Hãy chọn đơn vị/phòng ban để xem và quản lý chỉ tiêu</p>
     </div>
 
     <!-- Modal tạo/sửa chỉ tiêu -->
@@ -158,12 +174,15 @@
             </div>
             
             <div class="form-group">
-              <label>Đơn vị *</label>
+              <label>Đơn vị/Phòng ban *</label>
               <select v-model="targetForm.unitId" class="form-select" required>
-                <option value="">Chọn đơn vị</option>
-                <option v-for="unit in units" :key="unit.id" :value="unit.id">
-                  {{ unit.unitName || unit.name }}
-                </option>
+                <option value="">Chọn đơn vị/phòng ban</option>
+                <option value="HO">Hội sở</option>
+                <option value="CN_HCM">Chi nhánh TP.HCM</option>
+                <option value="CN_HN">Chi nhánh Hà Nội</option>
+                <option value="CN_DN">Chi nhánh Đà Nẵng</option>
+                <option value="CN_CT">Chi nhánh Cần Thơ</option>
+                <option value="CN_HP">Chi nhánh Hải Phòng</option>
               </select>
             </div>
             
@@ -210,13 +229,16 @@
             <div class="form-group">
               <label>Giá trị mục tiêu *</label>
               <input 
-                v-model.number="targetForm.targetValue" 
-                type="number" 
-                step="0.01"
-                class="form-input" 
+                v-model="targetForm.targetValueFormatted" 
+                @input="onTargetValueInput"
+                @blur="formatTargetValue"
+                type="text" 
+                class="form-input number-input" 
                 required 
-                placeholder="Nhập giá trị mục tiêu"
+                placeholder="Nhập giá trị mục tiêu (VD: 1,000,000,000)"
+                autocomplete="off"
               />
+              <small class="form-hint">Số sẽ được tự động định dạng khi nhập (VD: 1,000,000,000)</small>
             </div>
             
             <div class="form-group">
@@ -289,14 +311,22 @@ const targetForm = ref({
   periodType: '',
   period: '',
   targetValue: '',
+  targetValueFormatted: '',
   unit: 'VND',
   isActive: true
 });
 
 // Data
 const targets = ref([]);
-const units = ref([]);
-const selectedUnitId = ref(null);
+const units = ref([
+  { id: 'HO', unitName: 'Hội sở', name: 'Hội sở' },
+  { id: 'CN_HCM', unitName: 'Chi nhánh TP.HCM', name: 'Chi nhánh TP.HCM' },
+  { id: 'CN_HN', unitName: 'Chi nhánh Hà Nội', name: 'Chi nhánh Hà Nội' },
+  { id: 'CN_DN', unitName: 'Chi nhánh Đà Nẵng', name: 'Chi nhánh Đà Nẵng' },
+  { id: 'CN_CT', unitName: 'Chi nhánh Cần Thơ', name: 'Chi nhánh Cần Thơ' },
+  { id: 'CN_HP', unitName: 'Chi nhánh Hải Phòng', name: 'Chi nhánh Hải Phòng' }
+]);
+const selectedUnitId = ref('');
 const selectedYear = ref(new Date().getFullYear());
 const periodType = ref('');
 const selectedPeriod = ref('');
@@ -342,21 +372,6 @@ const filteredTargets = computed(() => {
 });
 
 // Methods
-const loadUnits = async () => {
-  try {
-    const response = await dashboardService.getUnits();
-    units.value = response || [];
-    
-    // Auto-select first unit if available
-    if (units.value.length > 0 && !selectedUnitId.value) {
-      selectedUnitId.value = units.value[0].id;
-    }
-  } catch (error) {
-    console.error('Error loading units:', error);
-    errorMessage.value = 'Không thể tải danh sách đơn vị';
-  }
-};
-
 const loadTargets = async () => {
   if (!selectedYear.value) return;
   
@@ -376,6 +391,10 @@ const loadTargets = async () => {
       params.period = selectedPeriod.value;
     }
     
+    if (selectedUnitId.value) {
+      params.unitId = selectedUnitId.value;
+    }
+    
     const response = await dashboardService.getTargets(params);
     targets.value = response || [];
   } catch (error) {
@@ -386,13 +405,16 @@ const loadTargets = async () => {
   }
 };
 
-const selectUnit = (unitId) => {
-  selectedUnitId.value = unitId;
-};
-
 const getSelectedUnitName = () => {
-  const unit = units.value.find(u => u.id === selectedUnitId.value);
-  return unit ? (unit.unitName || unit.name) : '';
+  const unitMap = {
+    'HO': 'Hội sở',
+    'CN_HCM': 'Chi nhánh TP.HCM',
+    'CN_HN': 'Chi nhánh Hà Nội',
+    'CN_DN': 'Chi nhánh Đà Nẵng',
+    'CN_CT': 'Chi nhánh Cần Thơ',
+    'CN_HP': 'Chi nhánh Hải Phòng'
+  };
+  return unitMap[selectedUnitId.value] || '';
 };
 
 const getPeriodTypeLabel = (type) => {
@@ -403,6 +425,25 @@ const getPeriodTypeLabel = (type) => {
 const formatNumber = (value) => {
   if (!value && value !== 0) return '';
   return Number(value).toLocaleString('vi-VN');
+};
+
+// Xử lý format số cho input
+const onTargetValueInput = (event) => {
+  const value = event.target.value;
+  // Chỉ cho phép số và dấu phẩy
+  const cleanValue = value.replace(/[^\d,]/g, '');
+  event.target.value = cleanValue;
+  targetForm.value.targetValueFormatted = cleanValue;
+  
+  // Lưu giá trị số thuần
+  const numericValue = cleanValue.replace(/,/g, '');
+  targetForm.value.targetValue = numericValue ? parseFloat(numericValue) : '';
+};
+
+const formatTargetValue = () => {
+  if (targetForm.value.targetValue) {
+    targetForm.value.targetValueFormatted = formatNumber(targetForm.value.targetValue);
+  }
 };
 
 const onPeriodTypeChange = () => {
@@ -423,6 +464,7 @@ const editTarget = (target) => {
     periodType: target.periodType,
     period: target.period,
     targetValue: target.targetValue,
+    targetValueFormatted: formatNumber(target.targetValue),
     unit: target.unit,
     isActive: target.isActive
   };
@@ -482,6 +524,7 @@ const closeModals = () => {
     periodType: '',
     period: '',
     targetValue: '',
+    targetValueFormatted: '',
     unit: 'VND',
     isActive: true
   };
@@ -507,7 +550,6 @@ onMounted(async () => {
     return;
   }
   
-  await loadUnits();
   await loadTargets();
 });
 </script>
@@ -577,52 +619,104 @@ onMounted(async () => {
   z-index: 2;
 }
 
-.unit-tabs {
+.targets-section {
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-top: 20px;
 }
 
-.tab-navigation {
-  display: flex;
-  background: #f5f7fa;
-  border-bottom: 1px solid #ddd;
-  overflow-x: auto;
+.section-header {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 20px 30px;
+  border-bottom: 1px solid #dee2e6;
 }
 
-.tab-button {
-  background: none;
-  border: none;
-  padding: 15px 20px;
-  cursor: pointer;
-  border-bottom: 3px solid transparent;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-}
-
-.tab-button:hover {
-  background: #e6f7ff;
-}
-
-.tab-button.active {
-  border-bottom-color: #8B1538;
-  background: white;
+.section-header h3 {
+  margin: 0;
   color: #8B1538;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Segoe UI', 'Open Sans', sans-serif;
+}
+
+.section-header h3 i {
+  font-size: 24px;
+}
+
+.select-unit-message {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  margin-top: 20px;
+}
+
+.message-icon {
+  font-size: 48px;
+  margin-bottom: 20px;
+}
+
+.select-unit-message h3 {
+  color: #8B1538;
+  margin: 0 0 10px 0;
   font-weight: 600;
 }
 
-.tab-content {
-  padding: 20px;
+.select-unit-message p {
+  color: #6c757d;
+  margin: 0;
+  font-size: 16px;
 }
 
-.tab-content h3 {
+.text-center {
+  text-align: center;
+}
+
+.no-data {
+  text-align: center;
+  padding: 60px 20px;
+  color: #8c8c8c;
+}
+
+.no-data-icon {
+  font-size: 48px;
+  margin-bottom: 20px;
+  opacity: 0.6;
+}
+
+.no-data h4 {
+  color: #6c757d;
+  margin: 0 0 10px 0;
+  font-weight: 600;
+}
+
+.no-data p {
   margin: 0 0 20px 0;
-  color: #303133;
+  font-size: 16px;
+}
+
+.number-input {
+  text-align: right;
+  font-family: 'Courier New', monospace;
+  font-weight: 500;
+}
+
+.form-hint {
+  display: block;
+  margin-top: 4px;
+  color: #6c757d;
+  font-size: 12px;
+  font-style: italic;
 }
 
 .targets-table-container {
   overflow-x: auto;
+  padding: 20px 30px 30px 30px;
 }
 
 .targets-table {

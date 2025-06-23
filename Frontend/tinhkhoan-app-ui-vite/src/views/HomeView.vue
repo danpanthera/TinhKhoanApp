@@ -5,10 +5,10 @@
         <h1 class="hero-title">
           <img src="/src/assets/Logo-Agribank-2.png" alt="Agribank Logo" class="hero-logo" />
           <br>
-          <span class="hero-text">AGRIBANK LAI CHAU CENTER</span>
+          <span class="hero-text adaptive-text-line-1">AGRIBANK LAI CHAU CENTER</span>
         </h1>
         <p class="hero-subtitle">
-          <span class="hero-text">HỆ THỐNG QUẢN LÝ KHOÁN | HỆ THỐNG BÁO CÁO</span>
+          <span class="hero-text adaptive-text-line-2">HỆ THỐNG QUẢN LÝ KHOÁN | HỆ THỐNG BÁO CÁO</span>
         </p>
       </div>
     </div>
@@ -72,6 +72,86 @@ onMounted(() => {
   word-break: keep-all; /* Giữ nguyên từ, không ngắt trong từ */
   overflow-wrap: anywhere; /* Chỉ ngắt khi thực sự cần thiết */
   hyphens: none; /* Không dùng dấu gạch ngang */
+}
+
+/* === ADAPTIVE TEXT SCALING - Chữ co giãn tự động không xuống dòng === */
+.adaptive-text-line-1,
+.adaptive-text-line-2 {
+  display: inline-block;
+  white-space: nowrap; /* Không cho phép xuống dòng */
+  overflow: hidden; /* Ẩn nội dung bị tràn */
+  max-width: 100%; /* Giới hạn trong container */
+  transform-origin: center; /* Căn giữa khi scale */
+  transition: all 0.3s ease; /* Smooth transition */
+}
+
+/* Dòng 1: AGRIBANK LAI CHAU CENTER */
+.adaptive-text-line-1 {
+  font-size: clamp(1.8rem, 8vw, 6.5rem); /* Auto scaling font size */
+  letter-spacing: clamp(0.02em, 0.5vw, 0.08em); /* Auto scaling letter spacing */
+  transform: scaleX(1); /* Mặc định không co giãn theo chiều ngang */
+}
+
+/* Dòng 2: HỆ THỐNG QUẢN LÝ KHOÁN | HỆ THỐNG BÁO CÁO */
+.adaptive-text-line-2 {
+  font-size: clamp(1.2rem, 5vw, 3.5rem); /* Nhỏ hơn dòng 1 một chút */
+  letter-spacing: clamp(0.01em, 0.3vw, 0.05em); /* Auto scaling letter spacing */
+  transform: scaleX(1); /* Mặc định không co giãn theo chiều ngang */
+}
+
+/* Media queries cho responsive co giãn nâng cao */
+@media (max-width: 1200px) {
+  .adaptive-text-line-1 {
+    transform: scaleX(0.95); /* Co nhẹ 5% khi màn hình nhỏ hơn */
+  }
+  .adaptive-text-line-2 {
+    transform: scaleX(0.96); /* Co nhẹ 4% khi màn hình nhỏ hơn */
+  }
+}
+
+@media (max-width: 992px) {
+  .adaptive-text-line-1 {
+    transform: scaleX(0.9); /* Co 10% cho tablet */
+  }
+  .adaptive-text-line-2 {
+    transform: scaleX(0.92); /* Co 8% cho tablet */
+  }
+}
+
+@media (max-width: 768px) {
+  .adaptive-text-line-1 {
+    transform: scaleX(0.85); /* Co 15% cho mobile */
+  }
+  .adaptive-text-line-2 {
+    transform: scaleX(0.88); /* Co 12% cho mobile */
+  }
+}
+
+@media (max-width: 576px) {
+  .adaptive-text-line-1 {
+    transform: scaleX(0.8); /* Co 20% cho mobile nhỏ */
+  }
+  .adaptive-text-line-2 {
+    transform: scaleX(0.83); /* Co 17% cho mobile nhỏ */
+  }
+}
+
+@media (max-width: 480px) {
+  .adaptive-text-line-1 {
+    transform: scaleX(0.75); /* Co 25% cho mobile rất nhỏ */
+  }
+  .adaptive-text-line-2 {
+    transform: scaleX(0.78); /* Co 22% cho mobile rất nhỏ */
+  }
+}
+
+@media (max-width: 320px) {
+  .adaptive-text-line-1 {
+    transform: scaleX(0.7); /* Co tối đa 30% cho màn hình cực nhỏ */
+  }
+  .adaptive-text-line-2 {
+    transform: scaleX(0.73); /* Co tối đa 27% cho màn hình cực nhỏ */
+  }
 }
 
 .hero-title {

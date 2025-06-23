@@ -5,7 +5,18 @@ export async function login(username, password) {
   try {
     const res = await api.post('/auth/login', { username, password });
     if (res.data && res.data.token) {
+      // Lưu token
       localStorage.setItem('token', res.data.token);
+      
+      // Lưu thông tin user và thời gian login
+      localStorage.setItem('username', username);
+      localStorage.setItem('loginTime', new Date().toISOString());
+      
+      // Lưu thông tin user chi tiết nếu có
+      if (res.data.user) {
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+      }
+      
       return res.data;
     } else {
       throw new Error('Sai thông tin đăng nhập');
@@ -16,7 +27,11 @@ export async function login(username, password) {
 }
 
 export function logout() {
+  // Xóa tất cả thông tin liên quan đến session
   localStorage.removeItem('token');
+  localStorage.removeItem('username');
+  localStorage.removeItem('loginTime');
+  localStorage.removeItem('user');
 }
 
 export function getToken() {
