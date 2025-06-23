@@ -286,6 +286,17 @@ export const dashboardService = {
       { value: 'QUARTER', label: 'Quý' },
       { value: 'MONTH', label: 'Tháng' }
     ];
+  },
+
+  // API cho General Dashboard
+  async getGeneralDashboardData(branchId) {
+    try {
+      const response = await api.get(`/GeneralDashboard/indicators/${branchId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching general dashboard data:', error);
+      throw error;
+    }
   }
 };
 
