@@ -5,10 +5,10 @@
         <h1 class="hero-title">
           <img src="/src/assets/Logo-Agribank-2.png" alt="Agribank Logo" class="hero-logo" />
           <br>
-          AGRIBANK LAI CHAU CENTER
+          <span class="hero-text">AGRIBANK LAI CHAU CENTER</span>
         </h1>
         <p class="hero-subtitle">
-          HỆ THỐNG QUẢN LÝ KHOÁN | HỆ THỐNG BÁO CÁO
+          <span class="hero-text">HỆ THỐNG QUẢN LÝ KHOÁN | HỆ THỐNG BÁO CÁO</span>
         </p>
       </div>
     </div>
@@ -48,19 +48,26 @@ onMounted(() => {
   display: flex;
   align-items: flex-start; /* Đẩy lên trên */
   justify-content: center; /* Căn giữa theo chiều ngang */
-  padding-top: 15vh; /* Khoảng cách từ trên xuống - 15% chiều cao màn hình */
+  padding-top: 2vh; /* Giảm từ 4vh xuống 2vh để đưa lên cao hơn khoảng 1.5cm */
   width: 100%; /* Đảm bảo chiều rộng đúng với viewport */
   overflow-x: hidden; /* Ngăn cuộn ngang */
   box-sizing: border-box; /* Đảm bảo padding không làm tăng width */
 }
 
 .hero-content {
-  max-width: 95vw; /* Giới hạn chiều rộng tối đa là 95% viewport width */
+  width: auto;
   margin: 0 auto;
   background: transparent;
   padding: 0 10px; /* Thêm padding để tránh text sát rìa */
   box-sizing: border-box; /* Đảm bảo padding không làm tăng width */
-  overflow: hidden; /* Ngăn nội dung tràn ra */
+  overflow: visible; /* Cho phép nội dung hiển thị đầy đủ */
+}
+
+/* CSS cho chữ thẳng, không cong */
+.hero-text {
+  display: inline-block;
+  transform: none; /* Chữ hoàn toàn thẳng */
+  text-transform: uppercase;
 }
 
 .hero-title {
@@ -81,14 +88,14 @@ onMounted(() => {
   -webkit-background-clip: unset;
   -webkit-text-fill-color: #8B1538;
   background-clip: unset;
-  /* Thêm hiệu ứng 3D */
-  transform: perspective(500px) rotateX(15deg);
+  /* Bỏ hiệu ứng 3D để chữ thẳng */
+  transform: none;
   filter: drop-shadow(0 10px 20px rgba(139, 21, 56, 0.3));
-  /* Đảm bảo chữ trên 1 dòng nhưng vẫn fit màn hình */
+  /* Đảm bảo chữ không bị cắt */
   white-space: nowrap;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  width: auto;
+  overflow: visible;
+  text-overflow: initial;
 }
 
 .nature-icon {
@@ -147,14 +154,14 @@ onMounted(() => {
   -webkit-background-clip: unset;
   -webkit-text-fill-color: #8B1538;
   background-clip: unset;
-  /* Thêm hiệu ứng 3D nhẹ */
-  transform: perspective(300px) rotateX(10deg);
+  /* Bỏ hiệu ứng 3D để chữ thẳng */
+  transform: none;
   filter: drop-shadow(0 6px 12px rgba(139, 21, 56, 0.25));
-  /* Đảm bảo chữ trên 1 dòng nhưng vẫn fit màn hình */
+  /* Đảm bảo chữ không bị cắt */
   white-space: nowrap;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  width: auto;
+  overflow: visible;
+  text-overflow: initial;
 }
 
 /* Responsive Design */
@@ -162,13 +169,15 @@ onMounted(() => {
   .welcome-hero {
     min-height: 100vh; /* Vẫn chiếm toàn màn hình trên tablet */
     padding: 0 15px 20px 15px; /* Giảm padding cho tablet */
-    padding-top: 12vh; /* Khoảng cách từ trên xuống trên tablet */
+    padding-top: 1.5vh; /* Khoảng cách từ trên xuống trên tablet - giảm xuống */
   }
   
   .hero-title {
     font-size: 3.8rem; /* Giảm size cho tablet để fit "CENTER" */
-    transform: perspective(400px) rotateX(10deg); /* Giảm hiệu ứng 3D */
+    transform: none; /* Bỏ hiệu ứng 3D để chữ thẳng */
     white-space: normal; /* Cho phép xuống dòng trên tablet nếu cần */
+    overflow: visible;
+    width: auto;
   }
   
   .hero-logo {
@@ -178,8 +187,10 @@ onMounted(() => {
   
   .hero-subtitle {
     font-size: 1.8rem; /* Giảm size cho tablet để fit */
-    transform: perspective(250px) rotateX(8deg); /* Giảm hiệu ứng 3D */
+    transform: none; /* Bỏ hiệu ứng 3D để chữ thẳng */
     white-space: normal; /* Cho phép xuống dòng trên tablet nếu cần */
+    overflow: visible;
+    width: auto;
   }
 }
 
@@ -187,13 +198,15 @@ onMounted(() => {
   .welcome-hero {
     min-height: 100vh; /* Vẫn chiếm toàn màn hình trên mobile */
     padding: 0 10px 20px 10px; /* Giảm padding cho mobile */
-    padding-top: 10vh; /* Khoảng cách từ trên xuống trên mobile */
+    padding-top: 1vh; /* Khoảng cách từ trên xuống trên mobile - giảm xuống */
   }
   
   .hero-title {
     font-size: 2.8rem; /* Giảm size cho mobile để fit "CENTER" */
-    transform: perspective(300px) rotateX(8deg); /* Giảm hiệu ứng 3D */
+    transform: none; /* Bỏ hiệu ứng 3D để chữ thẳng */
     white-space: normal; /* Cho phép xuống dòng trên mobile */
+    overflow: visible;
+    width: auto;
   }
   
   .hero-logo {
@@ -203,8 +216,10 @@ onMounted(() => {
   
   .hero-subtitle {
     font-size: 1.3rem; /* Giảm size cho mobile để fit */
-    transform: perspective(200px) rotateX(5deg); /* Giảm hiệu ứng 3D */
+    transform: none; /* Bỏ hiệu ứng 3D để chữ thẳng */
     white-space: normal; /* Cho phép xuống dòng trên mobile */
+    overflow: visible;
+    width: auto;
   }
 }
 </style>

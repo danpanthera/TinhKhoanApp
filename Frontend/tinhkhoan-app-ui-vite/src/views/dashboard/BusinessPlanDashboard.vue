@@ -65,15 +65,15 @@
         </div>
         
         <div class="filter-item">
-          <label>Đơn vị</label>
+          <label>Chi nhánh</label>
           <el-select 
             v-model="selectedUnitId" 
-            placeholder="Chọn đơn vị" 
+            placeholder="Chọn chi nhánh" 
             clearable
             @change="refreshDashboard"
             class="custom-select"
           >
-            <el-option label="Toàn tỉnh" value="" />
+            <el-option label="Toàn tỉnh (Tất cả chi nhánh)" value="" />
             <el-option 
               v-for="unit in units" 
               :key="unit.id" 
@@ -206,12 +206,85 @@
                   :style="{ animationDelay: `${index * 0.1}s` }"
                   :data-indicator="indicator.code"
                 >
-                  <kpi-card
-                    :indicator="indicator"
-                    :show-trend="true"
-                    @click="showIndicatorDetail(indicator)"
-                    class="enhanced-kpi-card"
-                  />
+                  <!-- Enhanced KPI Card với hiệu ứng đẹp -->
+                  <div class="enhanced-kpi-card" @click="showIndicatorDetail(indicator)">
+                    <div class="card-header" :style="{ background: `linear-gradient(135deg, ${indicator.color}E6, ${indicator.color})` }">
+                      <div class="card-icon">
+                        <i :class="indicator.icon" class="icon"></i>
+                      </div>
+                      <div class="card-title">
+                        <h3>{{ indicator.name }}</h3>
+                        <div class="achievement-badge" :class="getAchievementBadgeClass(indicator)">
+                          {{ formatAchievementRate(indicator) }}%
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="card-content">
+                      <div class="main-metrics">
+                        <div class="metric-row">
+                          <span class="label">Thực hiện:</span>
+                          <span class="value primary">{{ formatNumber(indicator.actualValue) }} {{ indicator.unit }}</span>
+                        </div>
+                        <div class="metric-row">
+                          <span class="label">Kế hoạch:</span>
+                          <span class="value secondary">{{ formatNumber(indicator.planValue) }} {{ indicator.unit }}</span>
+                        </div>
+                      </div>
+                      
+                      <div class="growth-metrics">
+                        <div class="growth-item">
+                          <span class="growth-label">So với đầu năm</span>
+                          <div class="growth-value" :class="indicator.yoyGrowth >= 0 ? 'positive' : 'negative'">
+                            <i :class="indicator.yoyGrowth >= 0 ? 'mdi-trending-up' : 'mdi-trending-down'"></i>
+                            {{ formatGrowth(indicator.yoyGrowth) }}%
+                          </div>
+                          <div class="absolute-change">
+                            ({{ formatAbsoluteChange(indicator.actualValue, indicator.startOfYearValue) }} {{ indicator.unit }})
+                          </div>
+                        </div>
+                        
+                        <div class="growth-item">
+                          <span class="growth-label">So với đầu tháng</span>
+                          <div class="growth-value" :class="indicator.momGrowth >= 0 ? 'positive' : 'negative'">
+                            <i :class="indicator.momGrowth >= 0 ? 'mdi-trending-up' : 'mdi-trending-down'"></i>
+                            {{ formatGrowth(indicator.momGrowth) }}%
+                          </div>
+                          <div class="absolute-change">
+                            ({{ formatAbsoluteChange(indicator.actualValue, indicator.startOfMonthValue) }} {{ indicator.unit }})
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div class="progress-section">
+                        <div class="progress-bar">
+                          <div class="progress-fill" 
+                               :style="{ 
+                                 width: `${Math.min(formatAchievementRate(indicator), 100)}%`,
+                                 background: getProgressGradient(indicator)
+                               }">
+                          </div>
+                        </div>
+                        <div class="progress-text">
+                          {{ formatAchievementRate(indicator) }}% hoàn thành kế hoạch
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="card-sparkline">
+                      <div class="sparkline-container">
+                        <svg class="sparkline" viewBox="0 0 100 20">
+                          <polyline 
+                            :points="getSparklinePoints(indicator.trend)" 
+                            :stroke="indicator.color"
+                            stroke-width="2"
+                            fill="none"
+                          />
+                        </svg>
+                      </div>
+                      <span class="trend-label">Xu hướng {{ currentMonth }} tháng</span>
+                    </div>
+                  </div>
                 </div>
               </transition-group>
             </div>
@@ -415,6 +488,7 @@ const dashboardData = ref([]);
 const monthlyTrendData = ref([]);
 const unitComparisonData = ref([]);
 const selectedIndicators = ref(['HuyDong', 'DuNo']);
+const useKpiComponent = ref(true); // Flag to control component usage
 
 // Enhanced dashboard state
 const trendPeriod = ref('month');
@@ -500,6 +574,91 @@ const navigateToTargetAssignment = () => {
   router.push('/dashboard/target-assignment');
 };
 
+// Utility functions for fallback cards
+const formatNumber = (value) => {
+  if (!value) return '0';
+  return new Intl.NumberFormat('vi-VN').format(value);
+};
+
+const formatPercentage = (indicator) => {
+  if (!indicator.planValue || indicator.planValue === 0) return 0;
+  
+  let percentage;
+  if (indicator.code === 'TyLeNoXau') {
+    // For bad debt ratio, lower is better
+    percentage = Math.max(0, (indicator.planValue - indicator.actualValue) / indicator.planValue * 100 + 100);
+  } else {
+    percentage = (indicator.actualValue / indicator.planValue) * 100;
+  }
+  
+  return Math.round(percentage * 100) / 100;
+};
+
+const getAchievementClass = (indicator) => {
+  const percentage = formatPercentage(indicator);
+  if (percentage >= 100) return 'achievement-good';
+  if (percentage >= 80) return 'achievement-warning';
+  return 'achievement-danger';
+};
+
+// Hàm utility cho Enhanced KPI Cards
+const formatAchievementRate = (indicator) => {
+  if (!indicator.planValue || indicator.planValue === 0) return 0;
+  
+  let percentage;
+  if (indicator.code === 'NoXau') {
+    // Với nợ xấu, thực tế thấp hơn kế hoạch thì tốt
+    percentage = Math.max(0, (indicator.planValue - indicator.actualValue) / indicator.planValue * 100 + 100);
+  } else {
+    percentage = (indicator.actualValue / indicator.planValue) * 100;
+  }
+  
+  return Math.round(percentage * 100) / 100;
+};
+
+const getAchievementBadgeClass = (indicator) => {
+  const rate = formatAchievementRate(indicator);
+  if (rate >= 100) return 'badge-excellent';
+  if (rate >= 80) return 'badge-good';
+  if (rate >= 60) return 'badge-warning';
+  return 'badge-danger';
+};
+
+const formatGrowth = (value) => {
+  if (!value && value !== 0) return '0.0';
+  return value >= 0 ? `+${value.toFixed(1)}` : value.toFixed(1);
+};
+
+const formatAbsoluteChange = (current, previous) => {
+  if (!previous || previous === 0) return '0';
+  const change = current - previous;
+  return change >= 0 ? `+${formatNumber(Math.abs(change))}` : `-${formatNumber(Math.abs(change))}`;
+};
+
+const getProgressGradient = (indicator) => {
+  const rate = formatAchievementRate(indicator);
+  if (rate >= 100) return `linear-gradient(90deg, #10B981, #34D399)`;
+  if (rate >= 80) return `linear-gradient(90deg, #F59E0B, #FBBF24)`;
+  return `linear-gradient(90deg, #EF4444, #F87171)`;
+};
+
+const getSparklinePoints = (trend) => {
+  if (!trend || trend.length === 0) return '0,10 100,10';
+  
+  const max = Math.max(...trend);
+  const min = Math.min(...trend);
+  const range = max - min || 1;
+  
+  return trend.map((value, index) => {
+    const x = (index / (trend.length - 1)) * 100;
+    const y = 20 - ((value - min) / range) * 15;
+    return `${x},${y}`;
+  }).join(' ');
+};
+
+// Computed property cho tháng hiện tại
+const currentMonth = computed(() => new Date().getMonth() + 1);
+
 // Methods
 const loadIndicators = async () => {
   try {
@@ -507,14 +666,14 @@ const loadIndicators = async () => {
     indicators.value = response.$values || response;
   } catch (error) {
     console.error('Lỗi tải indicators:', error);
-    // Mock data for demo - 6 chỉ tiêu cố định theo yêu cầu
+    // 6 chỉ tiêu cố định theo thứ tự yêu cầu của anh
     indicators.value = [
-      { code: 'HuyDong', name: 'Nguồn vốn' },
-      { code: 'DuNo', name: 'Dư nợ' },
-      { code: 'TyLeNoXau', name: 'Tỷ lệ nợ xấu' },
-      { code: 'ThuNoXLRR', name: 'Thu nợ đã XLRR' },
-      { code: 'ThuDichVu', name: 'Thu dịch vụ' },
-      { code: 'LoiNhuanKhoan', name: 'Lợi nhuận khoán tài chính' }
+      { code: 'NguonVon', name: 'Nguồn vốn', icon: 'mdi-bank', color: '#8B1538' },
+      { code: 'DuNo', name: 'Dư nợ', icon: 'mdi-credit-card-outline', color: '#A6195C' },
+      { code: 'NoXau', name: 'Nợ xấu', icon: 'mdi-alert-circle-outline', color: '#B91D47' },
+      { code: 'ThuNoXLRR', name: 'Thu nợ XLRR', icon: 'mdi-cash-refund', color: '#C41E3A' },
+      { code: 'ThuDichVu', name: 'Thu dịch vụ', icon: 'mdi-account-cash', color: '#D02030' },
+      { code: 'LoiNhuanKhoan', name: 'Lợi nhuận khoán tài chính', icon: 'mdi-trending-up', color: '#DC2626' }
     ];
   }
 };
@@ -525,12 +684,17 @@ const loadUnits = async () => {
     units.value = response.$values || response;
   } catch (error) {
     console.error('Lỗi tải units:', error);
-    // Mock data for demo
+    // 9 chi nhánh theo yêu cầu của anh
     units.value = [
-      { id: 1, name: 'Chi nhánh Tam Đường' },
-      { id: 2, name: 'Chi nhánh Phong Thổ' },
-      { id: 3, name: 'Chi nhánh Sìn Hồ' },
-      { id: 4, name: 'Chi nhánh Mường Tè' }
+      { id: 'CnLaiChau', name: 'Chi nhánh Lai Châu', shortName: 'CN Lai Châu' },
+      { id: 'CnTamDuong', name: 'Chi nhánh Tam Đường', shortName: 'CN Tam Đường' },
+      { id: 'CnPhongTho', name: 'Chi nhánh Phong Thổ', shortName: 'CN Phong Thổ' },
+      { id: 'CnSinHo', name: 'Chi nhánh Sìn Hồ', shortName: 'CN Sìn Hồ' },
+      { id: 'CnMuongTe', name: 'Chi nhánh Mường Tè', shortName: 'CN Mường Tè' },
+      { id: 'CnThanUyen', name: 'Chi nhánh Than Uyên', shortName: 'CN Than Uyên' },
+      { id: 'CnThanhPho', name: 'Chi nhánh Thành phố', shortName: 'CN Thành phố' },
+      { id: 'CnTanUyen', name: 'Chi nhánh Tân Uyên', shortName: 'CN Tân Uyên' },
+      { id: 'CnNamNhun', name: 'Chi nhánh Nậm Nhùn', shortName: 'CN Nậm Nhùn' }
     ];
   }
 };
@@ -550,7 +714,7 @@ const loadDashboardData = async () => {
   } catch (error) {
     console.error('Lỗi tải dashboard data:', error);
     
-    // Mock data dynamic based on selected unit - 6 chỉ tiêu cố định
+    // Mock data dynamic cho 6 chỉ tiêu theo đúng thứ tự
     const selectedUnit = selectedUnitId.value 
       ? units.value.find(u => u.id === selectedUnitId.value)
       : null;
@@ -558,78 +722,103 @@ const loadDashboardData = async () => {
     const unitMultiplier = selectedUnit ? 0.7 + Math.random() * 0.6 : 1; // 0.7 - 1.3
     const unitName = selectedUnit ? selectedUnit.name : 'Toàn tỉnh';
     
+    // Tính toán cho từng tháng từ đầu năm
+    const currentMonth = new Date().getMonth() + 1;
+    const monthlyGrowth = Array.from({length: currentMonth}, (_, i) => {
+      const monthProgress = (i + 1) / 12;
+      return 0.8 + (monthProgress * 0.4) + (Math.random() * 0.2);
+    });
+    
     dashboardData.value = [
       {
-        code: 'HuyDong',
+        code: 'NguonVon',
         name: 'Nguồn vốn',
         actualValue: Math.round(1200000 * unitMultiplier),
         planValue: Math.round(1500000 * unitMultiplier),
+        startOfYearValue: Math.round(1000000 * unitMultiplier),
+        startOfMonthValue: Math.round(1150000 * unitMultiplier),
         unit: 'triệu VNĐ',
-        icon: 'mdi-hand-coin',
+        icon: 'mdi-bank',
         color: '#8B1538',
         dataDate: new Date(),
-        yoyGrowth: 12.5 * unitMultiplier,
-        trend: [100, 110, 105, 120, 115, 125].map(v => Math.round(v * unitMultiplier))
+        yoyGrowth: 20.0, // % so với đầu năm
+        momGrowth: 4.3,  // % so với đầu tháng
+        trend: monthlyGrowth.map(g => Math.round(1000000 * g * unitMultiplier))
       },
       {
         code: 'DuNo',
         name: 'Dư nợ',
         actualValue: Math.round(2800000 * unitMultiplier),
         planValue: Math.round(3000000 * unitMultiplier),
+        startOfYearValue: Math.round(2500000 * unitMultiplier),
+        startOfMonthValue: Math.round(2750000 * unitMultiplier),
         unit: 'triệu VNĐ',
-        icon: 'mdi-credit-card-multiple-outline',
+        icon: 'mdi-credit-card-outline',
         color: '#A6195C',
         dataDate: new Date(),
-        yoyGrowth: 8.3 * unitMultiplier,
-        trend: [200, 210, 220, 235, 240, 250].map(v => Math.round(v * unitMultiplier))
+        yoyGrowth: 12.0, // % so với đầu năm
+        momGrowth: 1.8,  // % so với đầu tháng
+        trend: monthlyGrowth.map(g => Math.round(2500000 * g * unitMultiplier))
       },
       {
-        code: 'TyLeNoXau',
-        name: 'Tỷ lệ nợ xấu',
-        actualValue: Math.round((1.2 + (1-unitMultiplier) * 0.8) * 100) / 100,
-        planValue: 2.0,
-        unit: '%',
-        icon: 'mdi-shield-alert-outline',
+        code: 'NoXau',
+        name: 'Nợ xấu',
+        actualValue: Math.round(34000 * unitMultiplier),
+        planValue: Math.round(30000 * unitMultiplier), // Nợ xấu kế hoạch thấp hơn thì tốt
+        startOfYearValue: Math.round(40000 * unitMultiplier),
+        startOfMonthValue: Math.round(35000 * unitMultiplier),
+        unit: 'triệu VNĐ',
+        icon: 'mdi-alert-circle-outline',
         color: '#B91D47',
         dataDate: new Date(),
-        yoyGrowth: -0.5 * unitMultiplier,
-        trend: [2.1, 1.9, 1.7, 1.5, 1.3, 1.2].map(v => Math.round((v + (1-unitMultiplier) * 0.5) * 100) / 100)
+        yoyGrowth: -15.0, // % giảm so với đầu năm (âm là tốt)
+        momGrowth: -2.9,  // % giảm so với đầu tháng
+        trend: monthlyGrowth.reverse().map(g => Math.round(40000 * g * unitMultiplier))
       },
       {
         code: 'ThuNoXLRR',
-        name: 'Thu nợ đã XLRR',
+        name: 'Thu nợ XLRR',
         actualValue: Math.round(45000 * unitMultiplier),
         planValue: Math.round(50000 * unitMultiplier),
+        startOfYearValue: Math.round(30000 * unitMultiplier),
+        startOfMonthValue: Math.round(42000 * unitMultiplier),
         unit: 'triệu VNĐ',
         icon: 'mdi-cash-refund',
-        color: '#E91E63',
+        color: '#C41E3A',
         dataDate: new Date(),
-        yoyGrowth: 15.2 * unitMultiplier,
-        trend: [30, 32, 35, 38, 42, 45].map(v => Math.round(v * unitMultiplier))
+        yoyGrowth: 50.0, // % so với đầu năm
+        momGrowth: 7.1,  // % so với đầu tháng
+        trend: monthlyGrowth.map(g => Math.round(30000 * g * unitMultiplier))
       },
       {
         code: 'ThuDichVu',
         name: 'Thu dịch vụ',
         actualValue: Math.round(18500 * unitMultiplier),
         planValue: Math.round(20000 * unitMultiplier),
+        startOfYearValue: Math.round(15000 * unitMultiplier),
+        startOfMonthValue: Math.round(17800 * unitMultiplier),
         unit: 'triệu VNĐ',
-        icon: 'mdi-account-cash-outline',
-        color: '#FF5722',
+        icon: 'mdi-account-cash',
+        color: '#D02030',
         dataDate: new Date(),
-        yoyGrowth: 22.1 * unitMultiplier,
-        trend: [12, 13, 15, 16, 17, 18.5].map(v => Math.round(v * unitMultiplier * 10) / 10)
+        yoyGrowth: 23.3, // % so với đầu năm
+        momGrowth: 3.9,  // % so với đầu tháng
+        trend: monthlyGrowth.map(g => Math.round(15000 * g * unitMultiplier))
       },
       {
         code: 'LoiNhuanKhoan',
         name: 'Lợi nhuận khoán tài chính',
         actualValue: Math.round(12500 * unitMultiplier),
         planValue: Math.round(15000 * unitMultiplier),
+        startOfYearValue: Math.round(10000 * unitMultiplier),
+        startOfMonthValue: Math.round(12000 * unitMultiplier),
         unit: 'triệu VNĐ',
-        icon: 'mdi-finance',
-        color: '#9C27B0',
+        icon: 'mdi-trending-up',
+        color: '#DC2626',
         dataDate: new Date(),
-        yoyGrowth: 18.7 * unitMultiplier,
-        trend: [8, 9, 9.5, 10, 11, 12.5].map(v => Math.round(v * unitMultiplier * 10) / 10)
+        yoyGrowth: 25.0, // % so với đầu năm
+        momGrowth: 4.2,  // % so với đầu tháng
+        trend: monthlyGrowth.map(g => Math.round(10000 * g * unitMultiplier))
       }
     ];
     
@@ -751,11 +940,26 @@ const resetCalculation = () => {
 
 // Lifecycle
 onMounted(async () => {
-  await Promise.all([
-    loadIndicators(),
-    loadUnits()
-  ]);
-  await loadDashboardData();
+  try {
+    await Promise.all([
+      loadIndicators(),
+      loadUnits()
+    ]);
+    await loadDashboardData();
+    
+    // Try to use KPI component, fallback to simple cards if there are issues
+    try {
+      // Test if KPI component can be used
+      useKpiComponent.value = true;
+    } catch (error) {
+      console.warn('KPI Component failed, using fallback cards:', error);
+      useKpiComponent.value = false;
+    }
+  } catch (error) {
+    console.error('Error loading dashboard:', error);
+    // Ensure at least the 6 indicators are shown even if loading fails
+    useKpiComponent.value = false;
+  }
 });
 
 // Watch for changes
@@ -1117,299 +1321,296 @@ watch([selectedDate, selectedUnitId], () => {
   }
 }
 
+/* Enhanced KPI Card Styling - Thiết kế đẹp lung linh */
 .enhanced-kpi-card {
-  transition: all 0.3s ease;
-  border-radius: 16px;
-  overflow: hidden;
-}
-
-.enhanced-kpi-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 15px 40px rgba(139, 21, 56, 0.15);
-}
-
-/* Charts section */
-.charts-section {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-  gap: 30px;
-  margin-bottom: 40px;
-}
-
-.chart-card {
-  background: white;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
   border-radius: 20px;
-  padding: 25px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-  animation: fadeIn 0.8s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.chart-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.chart-header h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #303133;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.chart-controls {
-  display: flex;
-  gap: 0;
-}
-
-.chart-controls :deep(.el-button) {
-  background: transparent;
-  color: #606266;
-  border-color: #DCDFE6;
-}
-
-.chart-controls :deep(.el-button.el-button--primary) {
-  background: #8B1538;
-  color: white;
-  border-color: #8B1538;
-}
-
-.chart-indicator-select {
-  width: 180px;
-}
-
-/* Top performers section */
-.top-performers-section {
-  margin-top: 40px;
-}
-
-.performers-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
-}
-
-.performer-card {
-  background: white;
-  border-radius: 16px;
-  padding: 25px;
-  box-shadow: 0 5px 20px rgba(0,0,0,0.08);
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  transition: all 0.3s ease;
-  position: relative;
+  box-shadow: 
+    0 10px 25px rgba(139, 21, 56, 0.08),
+    0 4px 10px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(139, 21, 56, 0.1);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
   overflow: hidden;
+  position: relative;
+  height: 280px;
+  display: flex;
+  flex-direction: column;
 }
 
-.performer-card::before {
+.enhanced-kpi-card::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #8B1538 0%, #B91D47 100%);
+  height: 3px;
+  background: linear-gradient(90deg, #8B1538, #A6195C, #B91D47);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.6s ease;
 }
 
-.performer-card.rank-1 .rank-badge {
-  background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+.enhanced-kpi-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 
+    0 20px 40px rgba(139, 21, 56, 0.15),
+    0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
-.performer-card.rank-2 .rank-badge {
-  background: linear-gradient(135deg, #C0C0C0 0%, #757575 100%);
+.enhanced-kpi-card:hover::before {
+  transform: scaleX(1);
 }
 
-.performer-card.rank-3 .rank-badge {
-  background: linear-gradient(135deg, #CD7F32 0%, #8B4513 100%);
+.card-header {
+  padding: 16px 20px;
+  border-radius: 20px 20px 0 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 70px;
 }
 
-.rank-badge {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
+.card-icon {
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card-icon .icon {
+  font-size: 24px;
+  color: #8B1538;
+}
+
+.card-title {
+  flex: 1;
+  color: white;
+}
+
+.card-title h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  line-height: 1.2;
+}
+
+.achievement-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 4px;
+  text-shadow: none;
+}
+
+.badge-excellent {
+  background: rgba(16, 185, 129, 0.9);
+  color: white;
+}
+
+.badge-good {
+  background: rgba(245, 158, 11, 0.9);
+  color: white;
+}
+
+.badge-warning {
+  background: rgba(249, 115, 22, 0.9);
+  color: white;
+}
+
+.badge-danger {
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+}
+
+.card-content {
+  padding: 16px 20px;
+  flex: 1;
   display: flex;
   flex-direction: column;
+  gap: 12px;
+}
+
+.main-metrics {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 12px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.metric-row {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: bold;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  margin-bottom: 8px;
 }
 
-.rank-badge i {
-  font-size: 24px;
+.metric-row:last-child {
+  margin-bottom: 0;
 }
 
-.rank-badge span {
+.metric-row .label {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.metric-row .value {
+  font-weight: 700;
   font-size: 14px;
 }
 
-.performer-info {
-  flex: 1;
+.value.primary {
+  color: #8B1538;
 }
 
-.performer-info h4 {
-  margin: 0 0 5px 0;
-  font-size: 16px;
-  color: #303133;
+.value.secondary {
+  color: #6b7280;
 }
 
-.performer-info p {
-  margin: 0;
-  font-size: 14px;
-  color: #909399;
+.growth-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
-.performer-progress {
-  width: 100px;
+.growth-item {
+  text-align: center;
+  padding: 8px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
 }
 
-/* Floating Action Button */
-.fab-container {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-  z-index: 999;
+.growth-label {
+  display: block;
+  font-size: 11px;
+  color: #6b7280;
+  margin-bottom: 4px;
+  font-weight: 500;
 }
 
-.fab {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #8B1538 0%, #B91D47 100%);
-  color: white;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  box-shadow: 0 6px 20px rgba(139, 21, 56, 0.4);
-  transition: all 0.3s ease;
+.growth-value {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 4px;
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 2px;
 }
 
-.fab:hover {
-  transform: scale(1.1);
-  box-shadow: 0 8px 25px rgba(139, 21, 56, 0.5);
+.growth-value.positive {
+  color: #059669;
 }
 
-.fab:active {
-  transform: scale(0.95);
+.growth-value.negative {
+  color: #dc2626;
 }
 
-/* Transitions */
-.fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition: all 0.3s ease;
+.absolute-change {
+  font-size: 10px;
+  color: #9ca3af;
 }
 
-.fade-slide-enter-from {
-  opacity: 0;
-  transform: translateX(30px);
+.progress-section {
+  margin-top: auto;
 }
 
-.fade-slide-leave-to {
-  opacity: 0;
-  transform: translateX(-30px);
+.progress-bar {
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 6px;
 }
 
-.card-flip-move,
-.card-flip-enter-active,
-.card-flip-leave-active {
-  transition: all 0.5s ease;
+.progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.card-flip-enter-from {
-  opacity: 0;
-  transform: rotateY(90deg);
-}
-
-.card-flip-leave-to {
-  opacity: 0;
-  transform: rotateY(-90deg);
-}
-
-/* Custom tabs */
-.custom-tabs :deep(.el-tabs__header) {
-  background: linear-gradient(135deg, #8B1538 0%, #B91D47 100%);
-  margin: 0;
-  border-radius: 12px 12px 0 0;
-}
-
-.custom-tabs :deep(.el-tabs__item) {
-  color: rgba(255,255,255,0.8);
-  border: none;
-  background: transparent;
-}
-
-.custom-tabs :deep(.el-tabs__item.is-active) {
-  color: white;
-  background: rgba(255,255,255,0.2);
-}
-
-/* Dialog styles */
-.calculation-content {
-  padding: 20px 0;
-}
-
-.calculation-progress {
-  margin-top: 20px;
+.progress-text {
+  font-size: 11px;
+  color: #6b7280;
   text-align: center;
+  font-weight: 600;
 }
 
-.calculation-progress p {
-  margin-top: 10px;
-  color: #606266;
-  font-size: 14px;
+.card-sparkline {
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #fafbfc 0%, #f3f4f6 100%);
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-/* Responsive design */
+.sparkline-container {
+  width: 60px;
+  height: 20px;
+}
+
+.sparkline {
+  width: 100%;
+  height: 100%;
+}
+
+.trend-label {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* Animation cho cards */
+@keyframes cardPulse {
+  0%, 100% { 
+    box-shadow: 0 10px 25px rgba(139, 21, 56, 0.08);
+  }
+  50% { 
+    box-shadow: 0 15px 35px rgba(139, 21, 56, 0.12);
+  }
+}
+
+.enhanced-kpi-card:hover {
+  animation: cardPulse 2s infinite;
+}
+
+/* Responsive cho enhanced cards */
 @media (max-width: 768px) {
-  .dashboard-title {
-    font-size: 24px;
+  .enhanced-kpi-card {
+    height: 260px;
   }
   
-  .header-content {
-    flex-direction: column;
-    text-align: center;
+  .card-header {
+    padding: 12px 16px;
+    min-height: 60px;
   }
   
-  .summary-stats {
-    justify-content: center;
+  .card-icon {
+    width: 40px;
+    height: 40px;
   }
   
-  .filters-section {
-    justify-content: center;
+  .card-icon .icon {
+    font-size: 20px;
   }
   
-  .kpi-cards-grid {
-    grid-template-columns: 1fr;
+  .card-title h3 {
+    font-size: 14px;
   }
   
-  .charts-section {
-    grid-template-columns: 1fr;
-  }
-  
-  .performers-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .overall-performance {
-    flex-direction: column;
+  .card-content {
+    padding: 12px 16px;
   }
 }
 

@@ -2,7 +2,7 @@
   <div class="raw-data-warehouse">
     <!-- Header Section -->
     <div class="header-section">
-      <h1>🏦 KHO DỮ LIỆU THÔ - AGRIBANK LAI CHAU</h1>
+      <h1>🏦 KHO DỮ LIỆU THÔ</h1>
       <p class="subtitle">Hệ thống quản lý và import dữ liệu nghiệp vụ ngân hàng chuyên nghiệp</p>
     </div>
 
@@ -1423,11 +1423,13 @@ onMounted(async () => {
 
 .header-section h1 {
   font-size: 2.8rem;
-  font-weight: 700;
+  font-weight: 800; /* Tăng độ đậm */
   margin-bottom: 15px;
-  font-family: 'Playfair Display', 'Georgia', serif;
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-  letter-spacing: 0.02em;
+  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif; /* Font hiện đại, giống Hero */
+  color: #FFFFFF; /* Màu trắng theo yêu cầu */
+  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.4); /* Tăng độ đậm của shadow */
+  letter-spacing: 0.04em; /* Tăng khoảng cách chữ */
+  text-transform: uppercase; /* Viết hoa */
 }
 
 .header-section .subtitle {
@@ -2029,36 +2031,148 @@ onMounted(async () => {
   font-weight: 600;
 }
 
-/* Responsive improvements */
-@media (max-width: 768px) {
-  .controls-section {
-    padding: 20px;
-    border-radius: 10px 10px 0 0;
-  }
-  
-  .controls-section h1 {
-    font-size: 2rem;
-  }
-  
-  .data-types-table {
-    font-size: 12px;
-  }
-  
-  .data-types-table thead th,
-  .data-types-table tbody td {
-    padding: 10px 8px;
-  }
-  
-  .btn-action {
-    padding: 6px 8px;
-    font-size: 11px;
-    margin: 1px 2px;
-  }
-  
-  .data-type-icon {
-    width: 30px;
-    height: 30px;
-    font-size: 1.2rem;
-  }
+/* Modal Styling */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  max-width: 90%;
+  max-height: 90%;
+  overflow: auto;
+  position: relative;
+}
+
+.modal-large {
+  max-width: 95%;
+  max-height: 95%;
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 15px 15px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.3s ease;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #e9ecef;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Preview Table Styling - Bordeaux background with white text */
+.preview-table {
+  margin-top: 20px;
+}
+
+.preview-table h4 {
+  color: #8B1538;
+  margin-bottom: 15px;
+  font-weight: 700;
+}
+
+.table-wrapper {
+  background: #8B1538; /* Nền đỏ bordeaux */
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(139, 21, 56, 0.3);
+}
+
+.preview-table table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #8B1538; /* Nền đỏ bordeaux */
+  color: white; /* Chữ trắng */
+}
+
+.preview-table table th {
+  background: #6B1028; /* Màu đậm hơn cho header */
+  color: white;
+  padding: 12px 8px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid #4A0B1C;
+  font-size: 0.9rem;
+}
+
+.preview-table table td {
+  padding: 10px 8px;
+  border-bottom: 1px solid #A6195C;
+  color: white; /* Chữ trắng */
+  font-size: 0.85rem;
+}
+
+.preview-table table tr:nth-child(even) {
+  background: #A0173A; /* Màu xen kẽ nhẹ hơn */
+}
+
+.preview-table table tr:hover {
+  background: #C41E3A; /* Màu hover sáng hơn */
+}
+
+.no-data {
+  padding: 40px;
+  text-align: center;
+  color: white;
+  background: #8B1538;
+  border-radius: 10px;
+}
+
+.preview-note {
+  background: #f8f9fa;
+  color: #8B1538;
+  padding: 10px 15px;
+  margin-top: 10px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 </style>
