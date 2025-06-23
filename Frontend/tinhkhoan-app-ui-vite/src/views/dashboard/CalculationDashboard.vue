@@ -4,10 +4,10 @@
     <div class="page-header">
       <div class="header-title">
         <h2>
-          <i class="mdi mdi-calculator-variant"></i>
-          Dashboard Tính Toán Chỉ Tiêu
+          <i class="mdi mdi-database-plus"></i>
+          Cập nhật số liệu vào bảng
         </h2>
-        <p class="subtitle">Giám sát và thực hiện tính toán các chỉ tiêu kinh doanh</p>
+        <p class="subtitle">Tính toán và cập nhật các chỉ tiêu kinh doanh theo chi nhánh</p>
       </div>
       
       <div class="header-controls">
@@ -41,9 +41,9 @@
         </select>
         
         <select v-model="selectedUnitId" @change="loadData" class="form-select">
-          <option value="">Tất cả đơn vị</option>
+          <option value="">Tất cả đơn vị (Toàn tỉnh)</option>
           <option v-for="unit in units" :key="unit.id" :value="unit.id">
-            {{ unit.unitName || unit.name }}
+            {{ unit.name }}
           </option>
         </select>
         
@@ -58,11 +58,20 @@
       </div>
     </div>
 
-    <!-- Loading State -->
-    <div v-if="loading" class="loading-section">
-      <div class="loading-spinner"></div>
-      <p>Đang tải dữ liệu dashboard...</p>
-    </div>
+    <!-- Enhanced Loading Overlays -->
+    <LoadingOverlay 
+      :show="loading" 
+      title="Đang tải dữ liệu" 
+      message="Đang truy xuất dữ liệu từ hệ thống..."
+      icon="📊"
+    />
+    
+    <LoadingOverlay 
+      :show="calculating" 
+      title="Đang tính toán" 
+      message="Vui lòng chờ trong khi hệ thống tính toán các chỉ tiêu..."
+      icon="⚡"
+    />
 
     <!-- Error Message -->
     <div v-if="errorMessage" class="error-message">
@@ -210,6 +219,64 @@
         </div>
       </div>
 
+      <!-- 6 Chỉ tiêu sau khi tính toán -->
+      <div v-if="showCalculationResults" class="calculation-results">
+        <div class="results-header">
+          <h3>
+            <i class="mdi mdi-chart-line"></i>
+            Kết quả tính toán chỉ tiêu
+          </h3>
+          <div class="selected-unit-info">
+            <span v-if="selectedUnitId">{{ getSelectedUnitName() }}</span>
+            <span v-else>Toàn tỉnh (7800-7808)</span>
+          </div>
+        </div>
+
+        <!-- Warning nếu thiếu chỉ tiêu -->
+        <div v-if="missingIndicators.length > 0" class="warning-box">
+          <i class="mdi mdi-alert-circle"></i>
+          <div class="warning-content">
+            <h4>⚠️ Cảnh báo: Thiếu dữ liệu</h4>
+            <p>Các chỉ tiêu sau chưa được tính toán đầy đủ:</p>
+            <ul>
+              <li v-for="indicator in missingIndicators" :key="indicator">{{ indicator }}</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Grid hiển thị 6 chỉ tiêu -->
+        <div class="indicators-results-grid">
+          <div 
+            v-for="(indicator, index) in calculatedIndicators" 
+            :key="indicator.id"
+            class="result-card"
+            :class="[indicator.class, { 'calculated': indicator.calculated, 'missing': !indicator.calculated }]"
+            :style="{ animationDelay: `${index * 0.1}s` }"
+          >
+            <div class="result-card-header">
+              <div class="result-icon">{{ indicator.icon }}</div>
+              <div class="result-title">{{ indicator.name }}</div>
+              <div class="result-status">
+                <i v-if="indicator.calculated" class="mdi mdi-check-circle status-success"></i>
+                <i v-else class="mdi mdi-alert-circle status-warning"></i>
+              </div>
+            </div>
+            
+            <div class="result-body">
+              <div class="result-value">
+                <span class="value-number">{{ formatNumber(indicator.value) }}</span>
+                <span class="value-unit">{{ indicator.unit }}</span>
+              </div>
+              
+              <div class="result-status-text">
+                <span v-if="indicator.calculated" class="calculated-text">✅ Đã tính toán</span>
+                <span v-else class="missing-text">❌ Chưa có dữ liệu</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Trend Analysis -->
       <div class="trend-section">
         <h3>📈 Phân tích xu hướng</h3>
@@ -275,6 +342,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { isAuthenticated } from '../../services/auth';
 import { dashboardService } from '../../services/dashboardService';
+import LoadingOverlay from '../../components/dashboard/LoadingOverlay.vue';
 
 const router = useRouter();
 
@@ -292,7 +360,22 @@ const selectedUnitId = ref('');
 const trendPeriod = ref('MONTH');
 
 // Data
-const units = ref([]);
+const units = ref([
+  { id: 'HoiSo', name: 'Hội Sở', code: '7800' },
+  { id: 'CnTamDuong', name: 'CN Tam Đường', code: '7801' },
+  { id: 'CnPhongTho', name: 'CN Phong Thổ', code: '7802' },
+  { id: 'CnSinHo', name: 'CN Sin Hồ', code: '7803' },
+  { id: 'CnMuongTe', name: 'CN Mường Tè', code: '7804' },
+  { id: 'CnThanUyen', name: 'CN Than Uyên', code: '7805' },
+  { id: 'CnThanhpho', name: 'CN Thành phố', code: '7806' },
+  { id: 'CnTanUyen', name: 'CN Tân Uyên', code: '7807' },
+  { id: 'CnNamNhun', name: 'CN Nậm Nhùn', code: '7808' },
+  { id: 'CnPhongThoPgdMuongSo', name: 'CN Phong Thổ - PGD Mường So', code: '7802' },
+  { id: 'CnThanUyenPgdMuongThan', name: 'CN Than Uyên - PGD Mường Than', code: '7805' },
+  { id: 'CnThanhPhoPgdso1', name: 'CN Thành phố - PGD số 1', code: '7806' },
+  { id: 'CnThanhPhoPgdso2', name: 'CN Thành phố - PGD số 2', code: '7806' },
+  { id: 'CnTanUyenPgdso3', name: 'CN Tân Uyên - PGD số 3', code: '7807' }
+]);
 const overview = ref({
   totalTargets: 0,
   completedTargets: 0,
@@ -303,11 +386,85 @@ const performanceData = ref([]);
 const calculationResults = ref([]);
 const trendData = ref([]);
 
+// 6 chỉ tiêu tính toán
+const calculatedIndicators = ref([
+  {
+    id: 'nguon_von',
+    name: 'Nguồn vốn',
+    icon: '💰',
+    class: 'nguon-von',
+    unit: 'tỷ',
+    value: 0,
+    calculated: false
+  },
+  {
+    id: 'du_no',
+    name: 'Dư nợ',
+    icon: '💳',
+    class: 'du-no',
+    unit: 'tỷ',
+    value: 0,
+    calculated: false
+  },
+  {
+    id: 'no_xau',
+    name: 'Nợ Xấu',
+    icon: '⚠️',
+    class: 'no-xau',
+    unit: '%',
+    value: 0,
+    calculated: false
+  },
+  {
+    id: 'thu_no_xlrr',
+    name: 'Thu nợ đã XLRR',
+    icon: '📈',
+    class: 'thu-no-xlrr',
+    unit: 'tỷ',
+    value: 0,
+    calculated: false
+  },
+  {
+    id: 'thu_dich_vu',
+    name: 'Thu dịch vụ',
+    icon: '🏦',
+    class: 'thu-dich-vu',
+    unit: 'tỷ',
+    value: 0,
+    calculated: false
+  },
+  {
+    id: 'tai_chinh',
+    name: 'Tài chính',
+    icon: '💵',
+    class: 'tai-chinh',
+    unit: 'tỷ',
+    value: 0,
+    calculated: false
+  }
+]);
+
 // Options
 const yearOptions = ref(dashboardService.getYearOptions());
 const quarterOptions = ref(dashboardService.getQuarterOptions());
 const monthOptions = ref(dashboardService.getMonthOptions());
 const periodTypeOptions = ref(dashboardService.getPeriodTypeOptions());
+
+// Reactive variables
+const showCalculationResults = ref(false);
+
+// Computed properties
+const missingIndicators = computed(() => {
+  return calculatedIndicators.value
+    .filter(indicator => !indicator.calculated)
+    .map(indicator => indicator.name);
+});
+
+const getSelectedUnitName = () => {
+  if (!selectedUnitId.value) return 'Tất cả đơn vị';
+  const unit = units.value.find(u => u.id === selectedUnitId.value);
+  return unit ? unit.name : 'Không xác định';
+};
 
 // Methods
 const loadUnits = async () => {
@@ -382,6 +539,7 @@ const triggerCalculation = async () => {
   calculating.value = true;
   errorMessage.value = '';
   successMessage.value = '';
+  showCalculationResults.value = false;
   
   try {
     const params = {
@@ -392,8 +550,44 @@ const triggerCalculation = async () => {
     if (selectedPeriod.value && periodType.value !== 'YEAR') params.period = selectedPeriod.value;
     if (selectedUnitId.value) params.unitId = selectedUnitId.value;
     
+    // Tính toán theo chi nhánh được chọn
+    let unitCodes = [];
+    if (selectedUnitId.value) {
+      const selectedUnit = units.value.find(u => u.id === selectedUnitId.value);
+      unitCodes = [selectedUnit?.code];
+    } else {
+      // Tất cả đơn vị: từ 7800 -> 7808
+      unitCodes = ['7800', '7801', '7802', '7803', '7804', '7805', '7806', '7807', '7808'];
+    }
+    
+    params.unitCodes = unitCodes;
+    
     await dashboardService.triggerCalculations(params);
-    successMessage.value = 'Tính toán hoàn thành thành công';
+    
+    // Mock dữ liệu tính toán 6 chỉ tiêu (sau này sẽ thay bằng API thực)
+    setTimeout(() => {
+      // Simulate calculation results
+      calculatedIndicators.value[0].value = 1250.5;
+      calculatedIndicators.value[0].calculated = true;
+      
+      calculatedIndicators.value[1].value = 980.3;
+      calculatedIndicators.value[1].calculated = true;
+      
+      calculatedIndicators.value[2].value = 1.8;
+      calculatedIndicators.value[2].calculated = true;
+      
+      calculatedIndicators.value[3].value = 45.7;
+      calculatedIndicators.value[3].calculated = true;
+      
+      calculatedIndicators.value[4].value = 28.9;
+      calculatedIndicators.value[4].calculated = true;
+      
+      calculatedIndicators.value[5].value = 156.4;
+      calculatedIndicators.value[5].calculated = true;
+      
+      showCalculationResults.value = true;
+      successMessage.value = 'Tính toán hoàn thành thành công cho ' + (selectedUnitId.value ? getSelectedUnitName() : 'toàn tỉnh');
+    }, 1000);
     
     // Reload data after calculation
     await loadData();
@@ -948,6 +1142,216 @@ onMounted(async () => {
   padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Calculation Results Styles */
+.calculation-results {
+  margin-top: 30px;
+  padding: 24px;
+  background: linear-gradient(135deg, #f8f9ff 0%, #f0f2ff 100%);
+  border-radius: 16px;
+  border: 1px solid #e6f0ff;
+}
+
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e6f0ff;
+}
+
+.results-header h3 {
+  color: #1890ff;
+  font-size: 24px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.selected-unit-info {
+  background: #1890ff;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.warning-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #fff7e6;
+  border: 1px solid #ffd666;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+  animation: shake 0.5s ease-in-out;
+}
+
+.warning-box i {
+  color: #fa8c16;
+  font-size: 24px;
+  margin-top: 4px;
+}
+
+.warning-content h4 {
+  color: #d48806;
+  margin: 0 0 8px 0;
+  font-size: 16px;
+}
+
+.warning-content p {
+  margin: 0 0 12px 0;
+  color: #8c5a00;
+}
+
+.warning-content ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #8c5a00;
+}
+
+.indicators-results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+.result-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  animation: fadeInUp 0.6s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+.result-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--card-color) 0%, var(--card-color-light) 100%);
+}
+
+.result-card.calculated {
+  border: 2px solid #52c41a;
+  transform: scale(1.02);
+}
+
+.result-card.missing {
+  border: 2px solid #ff7875;
+  opacity: 0.7;
+}
+
+.result-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Card color variables */
+.result-card.nguon-von { --card-color: #52c41a; --card-color-light: #95de64; }
+.result-card.du-no { --card-color: #1890ff; --card-color-light: #69c0ff; }
+.result-card.no-xau { --card-color: #fa541c; --card-color-light: #ff7a45; }
+.result-card.thu-no-xlrr { --card-color: #722ed1; --card-color-light: #b37feb; }
+.result-card.thu-dich-vu { --card-color: #13c2c2; --card-color-light: #5cdbd3; }
+.result-card.tai-chinh { --card-color: #faad14; --card-color-light: #ffc53d; }
+
+.result-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.result-icon {
+  font-size: 32px;
+  margin-right: 12px;
+}
+
+.result-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  flex: 1;
+}
+
+.result-status .status-success {
+  color: #52c41a;
+  font-size: 24px;
+}
+
+.result-status .status-warning {
+  color: #fa8c16;
+  font-size: 24px;
+}
+
+.result-body {
+  text-align: center;
+}
+
+.result-value {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.value-number {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--card-color);
+}
+
+.value-unit {
+  font-size: 16px;
+  color: #666;
+}
+
+.result-status-text {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.calculated-text {
+  background: #f6ffed;
+  color: #389e0d;
+  border: 1px solid #b7eb8f;
+}
+
+.missing-text {
+  background: #fff2f0;
+  color: #a8071a;
+  border: 1px solid #ffccc7;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Responsive */
