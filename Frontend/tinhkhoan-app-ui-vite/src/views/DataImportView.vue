@@ -70,36 +70,52 @@
     </div>
 
     <!-- Data Types List -->
-    <div class="data-types-section">
-      <div class="section-header">
-        <h2>📊 BẢNG QUẢN LÝ DỮ LIỆU NGHIỆP VỤ</h2>
-        <p>Theo dõi và quản lý tất cả loại dữ liệu của hệ thống Agribank Lai Chau</p>
+    <div class="data-types-section agribank-section">
+      <div class="section-header agribank-header">
+        <div class="header-content">
+          <div class="agribank-logo-header"></div>
+          <div class="header-text">
+            <h2>📊 BẢNG QUẢN LÝ DỮ LIỆU NGHIỆP VỤ AGRIBANK</h2>
+            <p>Theo dõi và quản lý tất cả loại dữ liệu của hệ thống Agribank Lai Châu</p>
+          </div>
+        </div>
+        <div class="agribank-brand-line"></div>
       </div>
 
-      <div class="data-types-table">
-        <table>
-          <thead>
+      <div class="data-types-table agribank-table">
+        <table class="enhanced-table">
+          <thead class="agribank-thead">
             <tr>
-              <th>Loại dữ liệu</th>
-              <th>Mô tả</th>
-              <th>Tổng records</th>
-              <th>Cập nhật cuối</th>
-              <th>Thao tác</th>
+              <th class="col-datatype">Loại dữ liệu</th>
+              <th class="col-description">Mô tả chi tiết</th>
+              <th class="col-records">Tổng records</th>
+              <th class="col-updated">Cập nhật cuối</th>
+              <th class="col-actions">Thao tác nghiệp vụ</th>
             </tr>
           </thead>
-          <tbody>
-            <tr v-for="(dataType, key) in sortedDataTypeDefinitions" :key="key">
-              <td>
-                <div class="data-type-info">
-                  <span class="data-type-icon">{{ dataType.icon }}</span>
-                  <strong>{{ key }}</strong>
+          <tbody class="agribank-tbody">
+            <tr v-for="(dataType, key) in sortedDataTypeDefinitions" :key="key" class="data-row enhanced-row">
+              <td class="col-datatype">
+                <div class="data-type-info enhanced-datatype">
+                  <span class="data-type-icon agribank-icon">{{ dataType.icon }}</span>
+                  <div class="datatype-details">
+                    <strong class="datatype-name">{{ key }}</strong>
+                    <span class="datatype-category">{{ getCategoryName(key) }}</span>
+                  </div>
                 </div>
               </td>
-              <td class="description-cell">{{ dataType.description }}</td>
-              <td class="records-cell">
-                <span class="records-count">{{ getDataTypeStats(key).totalRecords }}</span>
+              <td class="col-description description-cell enhanced-description">
+                <span class="description-text">{{ dataType.description }}</span>
               </td>
-              <td class="last-update-cell">{{ getDataTypeStats(key).lastUpdate || 'Chưa có dữ liệu' }}</td>
+              <td class="col-records records-cell enhanced-records">
+                <div class="records-info">
+                  <span class="records-count agribank-number">{{ formatRecordCount(getDataTypeStats(key).totalRecords) }}</span>
+                  <span class="records-label">bản ghi</span>
+                </div>
+              </td>
+              <td class="col-updated last-update-cell enhanced-lastupdate">
+                <span class="update-text">{{ getDataTypeStats(key).lastUpdate || 'Chưa có dữ liệu' }}</span>
+              </td>
               <td class="actions-cell">
                 <button 
                   @click="viewDataType(key)" 
@@ -115,7 +131,7 @@
                   title="Xem dữ liệu thô từ bảng"
                   :disabled="!selectedFromDate"
                 >
-                  👀
+                  �
                 </button>
                 <button 
                   @click="openImportModal(key)" 
@@ -640,7 +656,7 @@ const selectedFromDate = ref('')
 const selectedToDate = ref('')
 const filteredResults = ref([])
 const filteredResultsCurrentPage = ref(1)
-const itemsPerPage = 20
+const itemsPerPage = ref(20)
 
 // Data management
 const allImports = ref([])
@@ -1636,6 +1652,20 @@ const getProgressIcon = () => {
   return '📤';
 }
 
+// Utility methods for enhanced UI
+const formatRecordCount = (num) => {
+  return rawDataService.formatRecordCount(num)
+}
+
+const getCategoryName = (dataType) => {
+  // Phân loại dữ liệu theo ký tự đầu  
+  const firstChar = dataType.charAt(0).toUpperCase()
+  if (firstChar === 'D') return 'Nhóm Deposits'
+  if (firstChar === 'L' || firstChar === 'R') return 'Nhóm Loans/Rates'
+  if (firstChar === 'G') return 'Nhóm General'
+  return 'Nhóm khác'
+}
+
 // Lifecycle
 onMounted(async () => {
   await refreshAllData()
@@ -1971,75 +2001,413 @@ onMounted(async () => {
   transform: none;
 }
 
-/* 📱 Responsive cho bảng và nút thao tác */
+/* ==============================================
+   🏛️ GIAO DIỆN AGRIBANK CHUYÊN NGHIỆP 
+   Thiết kế bảng dữ liệu cao cấp với thương hiệu Agribank
+   ============================================== */
+
+/* 🎨 Header Section - Agribank Brand */
+.agribank-section {
+  background: linear-gradient(135deg, #00561B 0%, #1B5E20 50%, #2E7D32 100%);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 86, 27, 0.25);
+  overflow: hidden;
+  margin-bottom: 20px;
+}
+
+.agribank-header {
+  position: relative;
+  background: linear-gradient(135deg, #00561B 0%, #1B5E20 100%);
+  padding: 20px 30px;
+  color: white;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.agribank-logo-header {
+  width: 60px;
+  height: 60px;
+  background: url('/public/Logo-Agribank-2.png') no-repeat center;
+  background-size: contain;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+}
+
+.header-text h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  color: #FFFFFF;
+}
+
+.header-text p {
+  margin: 5px 0 0;
+  font-size: 14px;
+  opacity: 0.9;
+  color: #E8F5E8;
+}
+
+.agribank-brand-line {
+  height: 4px;
+  background: linear-gradient(90deg, #FFD700 0%, #FFA000 50%, #FF8F00 100%);
+  margin-top: 15px;
+}
+
+/* 🏛️ Enhanced Table Design */
+.agribank-table {
+  background: white;
+  border-radius: 0 0 12px 12px;
+  overflow: hidden;
+}
+
+.enhanced-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.agribank-thead {
+  background: linear-gradient(135deg, #00561B 0%, #1B5E20 100%);
+  color: white;
+}
+
+.agribank-thead th {
+  padding: 16px 20px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 3px solid #FFD700;
+  position: relative;
+}
+
+.agribank-thead th:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 20%;
+  height: 60%;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* 📊 Table Columns Responsive Design */
+.col-datatype { width: 20%; min-width: 160px; }
+.col-description { width: 30%; min-width: 200px; }
+.col-records { width: 15%; min-width: 120px; }
+.col-updated { width: 20%; min-width: 150px; }
+.col-actions { width: 15%; min-width: 200px; }
+
+/* 🎯 Enhanced Row Design */
+.enhanced-row {
+  transition: all 0.3s ease;
+  background: white;
+  border-bottom: 1px solid #E0E0E0;
+}
+
+.enhanced-row:nth-child(even) {
+  background: #FAFAFA;
+}
+
+.enhanced-row:hover {
+  background: linear-gradient(135deg, #E8F5E8 0%, #F1F8E9 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 86, 27, 0.15);
+}
+
+/* 🏷️ Enhanced Data Type Cell */
+.enhanced-datatype {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 12px 20px;
+}
+
+.agribank-icon {
+  font-size: 24px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.datatype-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.datatype-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #00561B;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.datatype-category {
+  font-size: 11px;
+  color: #666;
+  background: #E8F5E8;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+/* 📝 Enhanced Description */
+.enhanced-description {
+  padding: 12px 20px;
+}
+
+.description-text {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.4;
+}
+
+/* 🔢 Enhanced Records Display */
+.enhanced-records {
+  padding: 12px 20px;
+}
+
+.records-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agribank-number {
+  font-size: 18px;
+  font-weight: 700;
+  color: #00561B;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.records-label {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+}
+
+/* 📅 Enhanced Last Update */
+.enhanced-lastupdate {
+  padding: 12px 20px;
+}
+
+.update-text {
+  font-size: 14px;
+  color: #555;
+  font-weight: 500;
+}
+
+/* 🎮 Enhanced Actions - Responsive Button Group */
+.enhanced-actions {
+  padding: 8px 12px !important;
+  white-space: nowrap;
+}
+
+.action-buttons-group {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: nowrap;
+  min-width: 180px;
+}
+
+/* 🎯 Enhanced Action Buttons */
+.agribank-btn-view {
+  background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+}
+
+.agribank-btn-view:hover {
+  background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+}
+
+.agribank-btn-raw {
+  background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 2px 8px rgba(156, 39, 176, 0.3);
+}
+
+.agribank-btn-raw:hover {
+  background: linear-gradient(135deg, #7B1FA2 0%, #6A1B9A 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(156, 39, 176, 0.4);
+}
+
+.agribank-btn-import {
+  color: white;
+  border: none;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.agribank-btn-import:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.agribank-btn-delete {
+  background: linear-gradient(135deg, #F44336 0%, #D32F2F 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 2px 8px rgba(244, 67, 54, 0.3);
+}
+
+.agribank-btn-delete:hover {
+  background: linear-gradient(135deg, #D32F2F 0%, #C62828 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
+}
+
+/* 📱 Responsive Design for Action Buttons */
 @media (max-width: 1200px) {
-  .data-types-table table {
-    font-size: 0.9rem;
+  .action-buttons-group {
+    gap: 4px;
+    min-width: 160px;
   }
   
-  .actions-cell {
-    min-width: 180px;
-  }
-  
-  .btn-action {
-    margin: 1px;
-    padding: 6px 8px;
-    font-size: 0.8rem;
-    min-width: 30px;
-    height: 30px;
+  .btn-icon-only {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
   }
 }
 
 @media (max-width: 768px) {
-  .data-types-table {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+  .action-buttons-group {
+    gap: 3px;
+    min-width: 140px;
   }
   
-  .data-types-table table {
-    min-width: 800px;
-    font-size: 0.8rem;
+  .btn-icon-only {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
   }
   
-  .actions-cell {
-    min-width: 160px;
-  }
-  
-  .btn-action {
-    margin: 1px;
-    padding: 4px 6px;
-       font-size: 0.75rem;
-    min-width: 28px;
-    height: 28px;
-  }
-  
-  .btn-action.btn-icon-only {
-    padding: 4px;
-    min-width: 26px;
-    height: 26px;
+  .col-actions {
+    min-width: 140px;
   }
 }
 
-/* 🖼️ Popup overlay chính giữa màn hình - TĂNG CƯỜNG */
+/* 💫 Enhanced Modal with Agribank Branding */
 .modal-overlay {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  background-color: rgba(0, 0, 0, 0.7) !important;
+  background: linear-gradient(135deg, rgba(0, 86, 27, 0.8) 0%, rgba(0, 0, 0, 0.7) 100%) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  z-index: 10000 !important;
+  z-index: 9999 !important;
   padding: 20px !important;
   box-sizing: border-box !important;
-  backdrop-filter: blur(5px) !important;
+  backdrop-filter: blur(8px) !important;
+  animation: modalFadeIn 0.3s ease-out !important;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(8px);
+  }
+}
+
+.modal-content {
+  background: white !important;
+  border-radius: 16px !important;
+  width: 100% !important;
+  max-width: 800px !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  box-shadow: 0 20px 60px rgba(0, 86, 27, 0.4) !important;
+  border: 3px solid #FFD700 !important;
+  position: relative !important;
+  animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.enhanced-modal {
+  background: linear-gradient(135deg, #FFFFFF 0%, #F8F9FA 100%) !important;
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #00561B 0%, #1B5E20 100%) !important;
+  color: white !important;
+  padding: 20px 30px !important;
+  border-radius: 13px 13px 0 0 !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  border-bottom: 3px solid #FFD700 !important;
+}
+
+.modal-header h3 {
+  margin: 0 !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+.modal-close {
+  background: none !important;
+  border: none !important;
+  color: white !important;
+  font-size: 24px !important;
+  cursor: pointer !important;
+  padding: 8px !important;
+  border-radius: 50% !important;
+  width: 40px !important;
+  height: 40px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.3s ease !important;
+}
+
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  transform: scale(1.1) !important;
+}
+
+.modal-body {
+  padding: 30px !important;
+  background: white !important;
 }
 
 .modal-content {
   position: relative !important;
-  margin: 0 auto !important;
+  margin: 0 !important;
   max-height: 90vh !important;
   overflow-y: auto !important;
   transform: none !important;
@@ -2047,9 +2415,24 @@ onMounted(async () => {
   left: auto !important;
   right: auto !important;
   bottom: auto !important;
-  background: white !important;
-  border-radius: 15px !important;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+}
+
+.modal-content.enhanced-modal {
+  max-width: 700px !important;
+  width: 90% !important;
+  max-height: 85vh !important;
+}
+
+.modal-content.modal-large {
+  max-width: 900px !important;
+  width: 95% !important;
+  max-height: 90vh !important;
+}
+
+.modal-content.enhanced-confirmation-modal {
+  max-width: 500px !important;
+  width: 80% !important;
+  max-height: 70vh !important;
 }
 
 /* Đảm bảo modal hiển thị đẹp trên mobile */
@@ -2059,14 +2442,52 @@ onMounted(async () => {
   }
   
   .modal-content {
-    width: 95% !important;
+    max-width: 95vw !important;
     max-height: 95vh !important;
+    border-radius: 12px !important;
   }
   
-  .modal-content.enhanced-modal,
-  .modal-content.modal-large {
-    width: 98% !important;
-    max-width: none !important;
+  .modal-header {
+    padding: 15px 20px !important;
+    border-radius: 9px 9px 0 0 !important;
+  }
+  
+  .modal-header h3 {
+    font-size: 18px !important;
+    gap: 8px !important;
+  }
+  
+  .modal-close {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 20px !important;
+  }
+  
+  .modal-body {
+    padding: 20px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-overlay {
+    padding: 5px !important;
+  }
+  
+  .modal-content {
+    max-width: 98vw !important;
+    max-height: 98vh !important;
+  }
+  
+  .modal-header {
+    padding: 12px 15px !important;
+  }
+  
+  .modal-header h3 {
+    font-size: 16px !important;
+  }
+  
+  .modal-body {
+    padding: 15px !important;
   }
 }
 
