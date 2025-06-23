@@ -368,10 +368,13 @@ const loadBackgroundImages = async () => {
     const backgroundPath = '/images/backgrounds/';
     const supportedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
     
-    // 📝 Danh sách tên file có thể có trong thư mục (bao gồm file hiện có)
+    // 📝 Danh sách tên file có thể có trong thư mục (bao gồm file hiện có + 2 ảnh mới từ Pexels)
     const potentialFileNames = [
+      // ⭐ 2 Ảnh thiên nhiên siêu đẹp mới từ Pexels.com
+      'epic-mountain-canyon', 'crater-lake-mountains',
       // Files hiện có trong thư mục
       'AgribankLaiChau_chuan', 'anh-dep-lai-chau-29', 'background-2', 'background-3', 'File_000',
+      'nature-green-forest-path-hdr', 'nature-lake-forest-hdr', 'nature-mountain-sunset-hdr',
       // Tên thông thường
       'background-1', 'background-4', 'background-5',
       'bg-1', 'bg-2', 'bg-3', 'bg-4', 'bg-5',
@@ -416,9 +419,19 @@ const loadBackgroundImages = async () => {
           // ✅ Ảnh load thành công
           loadedImages.push(fullPath);
           
-          // 🏷️ Tạo tên hiển thị đẹp
-          const displayName = fileName.includes('lai-chau') || fileName.includes('AgribankLaiChau')
+          // 🏷️ Tạo tên hiển thị đẹp cho các ảnh
+          const displayName = fileName === 'epic-mountain-canyon'
+            ? '🏔️ Grand Canyon hùng vĩ (Pexels)'
+            : fileName === 'crater-lake-mountains'
+            ? '🌊 Crater Lake núi tuyết (Pexels)'
+            : fileName.includes('lai-chau') || fileName.includes('AgribankLaiChau')
             ? `🏔️ Lai Châu ${fileName.includes('AgribankLaiChau') ? 'chính thức' : fileName.split('-').pop()}`
+            : fileName.includes('nature-green-forest')
+            ? '🌲 Rừng xanh HDR'
+            : fileName.includes('nature-lake-forest')
+            ? '🏞️ Hồ rừng HDR'
+            : fileName.includes('nature-mountain-sunset')
+            ? '🌅 Núi hoàng hôn HDR'
             : fileName.includes('background')
             ? `🖼️ Nền ${fileName.split('-').pop()}`
             : fileName.includes('nature')
