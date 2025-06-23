@@ -1261,20 +1261,6 @@ const getFileType = (fileName) => {
   return typeMap[ext] || ext.toUpperCase()
 }
 
-const getFileIcon = (fileName) => {
-  // Lấy icon cho từng loại file
-  const ext = fileName.split('.').pop()?.toLowerCase() || ''
-  const iconMap = {
-    'csv': '📊',
-    'xlsx': '📗',
-    'xls': '📗',
-    'zip': '🗜️',
-    '7z': '🗜️',
-    'rar': '🗜️'
-  }
-  return iconMap[ext] || '📄'
-}
-
 // Hàm phát âm thanh chuông to khi upload hoàn thành
 const playLoudCompletionBell = () => {
   try {
