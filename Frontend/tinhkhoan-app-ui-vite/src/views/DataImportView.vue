@@ -104,10 +104,10 @@
                 <button 
                   @click="viewDataType(key)" 
                   class="btn-action btn-view"
-                  title="Xem dữ liệu import"
+                  title="Xem dữ liệu import ({{ getDataTypeStats(key).totalRecords }})"
                   :disabled="false"
                 >
-                  👁️ Xem Import ({{ getDataTypeStats(key).totalRecords }})
+                  👁️
                 </button>
                 <button 
                   @click="viewRawDataFromTable(key)" 
@@ -245,9 +245,9 @@
     </div>
 
     <!-- Import Modal -->
-    <div v-if="showImportModal" class="modal-overlay" @click="closeImportModal">
-      <div class="modal-content enhanced-modal" @click.stop>
-        <div class="modal-header">
+    <div v-if="showImportModal" class="modal-overlay modal-blur-backdrop" @click="closeImportModal">
+      <div class="modal-content enhanced-modal import-modal" @click.stop>
+        <div class="modal-header modal-header-branded">
           <h3>
             {{ dataTypeDefinitions[selectedDataType]?.icon }} 
             Import {{ dataTypeDefinitions[selectedDataType]?.name }}
@@ -494,11 +494,11 @@
           </div>
         </div>
 
-        <div class="modal-footer">
+        <div class="modal-footer modal-footer-enhanced">
           <button @click="closeImportModal" class="btn-cancel btn-large">🚫 Hủy</button>
           <button 
             @click="performImport" 
-            class="btn-import-confirm btn-large"
+            class="btn-import-confirm btn-large pulse-button"
             :disabled="selectedFiles.length === 0 || uploading"
             :style="{ backgroundColor: getDataTypeColor(selectedDataType) }"
           >
@@ -1840,58 +1840,41 @@ onMounted(async () => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-/* 🏦 AGRIBANK BRAND STYLING - Bảng Kho dữ liệu thô */
-
-/* Container chính */
-.data-import-view {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  min-height: 100vh;
-  font-family: 'Segoe UI', 'Arial', sans-serif;
+/* Cải thiện giao diện Modal Import */
+.modal-blur-backdrop {
+  backdrop-filter: blur(8px);
+  background-color: rgba(0, 0, 0, 0.7);
 }
 
-/* Header section với thương hiệu Agribank */
-.controls-section {
-  background: linear-gradient(135deg, #8B1538 0%, #A6195C 50%, #B91D47 100%);
-  color: white;
-  padding: 30px;
-  border-radius: 15px 15px 0 0;
-  margin-bottom: 0;
-  box-shadow: 0 8px 25px rgba(139, 21, 56, 0.3);
-}
-
-.controls-section h1 {
-  color: white;
-  font-size: 2.5rem;
-  font-weight: 700;
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-  margin-bottom: 10px;
-  font-family: 'Playfair Display', 'Georgia', serif;
-}
-
-.controls-section .subtitle {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.1rem;
-  margin-bottom: 20px;
-}
-
-/* Data types section - Table styling */
-.data-types-section {
-  background: white;
-  border-radius: 0 0 15px 15px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+.import-modal {
+  max-width: 700px;
+  border-radius: 15px;
   overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  border: none;
+  animation: modal-slide-down 0.3s ease-out;
 }
 
-.section-header {
+@keyframes modal-slide-down {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header-branded {
   background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
   color: white;
-  padding: 25px 30px;
-  border-bottom: 3px solid #8B1538;
+  padding: 20px 25px;
+  border-bottom: none;
   position: relative;
-  overflow: hidden;
 }
 
-.section-header::before {
+.modal-header-branded::before {
   content: '';
   position: absolute;
   top: 0;
@@ -1902,291 +1885,172 @@ onMounted(async () => {
   pointer-events: none;
 }
 
-.section-header h2 {
-  font-size: 2.0rem;
-  font-weight: 800; /* Tăng độ đậm như header chính */
-  margin-bottom: 8px;
-  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif; /* Font giống header chính */
-  color: #FFFFFF; /* Màu trắng như header chính */
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.4); /* Shadow đậm như header chính */
-  letter-spacing: 0.04em; /* Khoảng cách chữ như header chính */
-  text-transform: uppercase; /* Viết hoa như header chính */
-  position: relative;
-  z-index: 1;
-}
-
-.section-header p {
-  color: rgba(255, 255, 255, 0.9);
+.modal-header-branded h3 {
+  font-size: 1.8rem;
+  font-weight: 700;
   margin: 0;
-  font-size: 1rem;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   position: relative;
   z-index: 1;
 }
 
-/* Table styling với thương hiệu Agribank */
-.data-types-table {
-  overflow-x: auto;
-  min-width: 0; /* Cho phép table co lại */
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-}
-
-/* THÊM MỚI: CSS cải tiến cho Progress Bar */
-.progress-bar-container.enhanced {
-  height: 25px;
-  background-color: rgba(0, 0, 0, 0.1);
-  border-radius: 15px;
-  overflow: hidden;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
-  margin: 15px 0;
-  position: relative;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.progress-bar-container.enhanced .progress-bar {
-  height: 100%;
-  background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
-  border-radius: 15px;
+.modal-header-branded .modal-close {
+  color: white;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: width 0.3s ease-in-out;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
   position: relative;
-  overflow: hidden;
-  min-width: 50px; /* Luôn hiển thị phần nhỏ */
+  z-index: 1;
 }
 
-.progress-bar.progress-active {
-  animation: pulse 2s infinite;
+.modal-header-branded .modal-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
 }
 
-.progress-bar .progress-animation {
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
-  animation: shimmer 2s infinite;
+.modal-footer-enhanced {
+  padding: 20px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+  border-radius: 0 0 15px 15px;
 }
 
-@keyframes pulse {
+.btn-large {
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-cancel {
+  background: #f8f9fa;
+  color: #495057;
+  border: 1px solid #ced4da;
+}
+
+.btn-cancel:hover {
+  background: #e9ecef;
+  color: #212529;
+}
+
+.btn-import-confirm {
+  color: white;
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(139, 21, 56, 0.3);
+}
+
+.btn-import-confirm:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(139, 21, 56, 0.4);
+}
+
+.btn-import-confirm:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(139, 21, 56, 0.3);
+}
+
+.pulse-button:not(:disabled) {
+  animation: pulse-animation 2s infinite;
+}
+
+@keyframes pulse-animation {
   0% {
-    box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.4);
+    box-shadow: 0 0 0 0 rgba(139, 21, 56, 0.7);
   }
   70% {
-    box-shadow: 0 0 0 5px rgba(46, 125, 50, 0);
+    box-shadow: 0 0 0 10px rgba(139, 21, 56, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(46, 125, 50, 0);
+    box-shadow: 0 0 0 0 rgba(139, 21, 56, 0);
   }
 }
 
-@keyframes shimmer {
-  0% { left: -100%; }
-  100% { left: 100%; }
-}
-
-.progress-bar-container.enhanced .progress-text {
-  color: white;
-  font-weight: bold;
-  font-size: 14px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  z-index: 2;
-}
-
-.progress-bar.progress-near-complete {
-  background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
-}
-
-.progress-bar.progress-processing {
-  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
-}
-
-.upload-speed, .remaining-time {
-  background-color: rgba(0, 0, 0, 0.05);
-  padding: 4px 8px;
-  border-radius: 8px;
-  font-size: 12px;
-  color: #555;
-  margin-left: 8px;
-  display: inline-flex;
+/* Cải thiện giao diện button-action có icon */
+.btn-action {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
   align-items: center;
-  font-weight: 500;
+  justify-content: center;
+  margin: 0 3px;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-/* Enhance table styling trong .filtered-results-section */
-.filtered-results-section {
-  margin-top: 40px;
-  margin-bottom: 40px;
-  border-radius: 15px !important;
-  box-shadow: 0 8px 25px rgba(139, 21, 56, 0.4) !important;
-  background-color: #8B1538;
+.btn-view {
+  background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
   color: white;
-  overflow: hidden;
-  position: relative;
 }
 
-.filtered-results-section .section-header {
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
-  border-bottom: 3px solid rgba(255, 255, 255, 0.3);
-  padding: 25px 30px;
-  position: relative;
+.btn-view:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1E88E5 0%, #1565C0 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 5px 10px rgba(33, 150, 243, 0.4);
 }
 
-.filtered-results-section .section-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.1) 100%);
-  pointer-events: none;
-}
-
-.filtered-results-section .results-table {
-  padding: 25px;
-}
-
-.filtered-results-section table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
+.btn-raw-view {
+  background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);
   color: white;
-  min-width: 800px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-.filtered-results-section thead tr {
-  background-color: rgba(255, 255, 255, 0.15);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+.btn-raw-view:hover:not(:disabled) {
+  background: linear-gradient(135deg, #8E24AA 0%, #6A1B9A 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 5px 10px rgba(156, 39, 176, 0.4);
 }
 
-.filtered-results-section th {
-  padding: 18px 15px;
-  text-align: left;
-  font-weight: 700;
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-  position: relative;
+.btn-import {
+  color: white;
 }
 
-/* Border cho th */
-.filtered-results-section th:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 25%;
-  height: 50%;
-  width: 1px;
-  background-color: rgba(255, 255, 255, 0.3);
+.btn-import:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+  filter: brightness(1.1);
 }
 
-.filtered-results-section tbody tr {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-  transition: background-color 0.3s;
+.btn-delete {
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+  color: white;
 }
 
-.filtered-results-section tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+.btn-delete:hover:not(:disabled) {
+  background: linear-gradient(135deg, #e53935 0%, #c62828 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 5px 10px rgba(244, 67, 54, 0.4);
 }
 
-.filtered-results-section td {
-  padding: 15px;
-  vertical-align: middle;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+.btn-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
-/* Border cho td */
-.filtered-results-section td:not(:last-child) {
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Mở rộng styling cho bảng chính của data types */
-.data-types-table table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  background: white;
-  font-size: 14px;
-  min-width: 800px;
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.data-types-table thead tr {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-bottom: 2px solid #dee2e6;
-}
-
-.data-types-table th {
-  padding: 18px 15px;
-  text-align: left;
-  font-weight: 700;
-  font-size: 14px;
-  color: #495057;
-  text-transform: uppercase;
-  letter-spacing: 0.7px;
-  border-bottom: 2px solid #dee2e6;
-  position: relative;
-}
-
-/* Border cho th */
-.data-types-table th:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 25%;
-  height: 50%;
-  width: 1px;
-  background-color: #dee2e6;
-}
-
-.data-types-table tbody tr {
-  border-bottom: 1px solid #e9ecef;
-  transition: all 0.3s;
-}
-
-.data-types-table tbody tr:hover {
-  background-color: #f8f9fa;
-}
-
-.data-types-table td {
-  padding: 15px;
-  vertical-align: middle;
-  border-bottom: 1px solid #e9ecef;
-}
-
-/* Border cho td */
-.data-types-table td:not(:last-child) {
-  border-right: 1px solid #e9ecef;
-}
-
-/* Responsive styling cho các bảng */
-@media (max-width: 992px) {
-  .data-types-table, .filtered-results-section .results-table {
-    padding: 10px;
-  }
-  
-  .data-types-table table, .filtered-results-section table {
-    font-size: 13px;
-  }
-  
-  .data-types-table th, .data-types-table td,
-  .filtered-results-section th, .filtered-results-section td {
-    padding: 12px 10px;
-  }
-  
-  .btn-action {
-    padding: 6px 10px;
-    font-size: 12px;
-  }
+.btn-preview {
+  background: linear-gradient(135deg, #26A69A 0%, #00897B 100%);
+  color: white;
 }
 </style>
