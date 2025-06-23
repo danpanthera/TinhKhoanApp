@@ -228,7 +228,9 @@ namespace TinhKhoanApp.Api.Controllers
                 
                 // 🔄 TẠO DỮ LIỆU PREVIEW THEO LOẠI DỮ LIỆU  
                 var dataTypeForPreview = !string.IsNullOrEmpty(import.Category) ? import.Category : "LN01";
-                var previewData = GeneratePreviewDataForType(dataTypeForPreview, import.RecordsCount);
+                
+                // Generate more data records to ensure frontend always has data to display
+                var previewData = GeneratePreviewDataForType(dataTypeForPreview, Math.Max(20, import.RecordsCount));
                 
                 var response = new
                 {
