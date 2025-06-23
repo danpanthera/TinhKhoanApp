@@ -32,26 +32,35 @@ onMounted(() => {
 <style scoped>
 .home {
   padding: 0;
-  margin: -30px;
+  margin: 0;
   min-height: calc(100vh - 120px);
   background: transparent !important; /* Đảm bảo không có nền nào */
+  overflow-x: hidden; /* Ngăn cuộn ngang */
+  width: 100%; /* Đảm bảo chiều rộng không vượt quá viewport */
+  box-sizing: border-box; /* Đảm bảo padding không làm tăng width */
 }
 
 .welcome-hero {
   text-align: center;
-  padding: 0 20px 20px 20px; /* Giảm padding để đưa nội dung lên trên */
+  padding: 0 0 20px 0; /* Bỏ padding ngang để tránh overflow */
   background: transparent;
   min-height: 100vh; /* Chiếm toàn bộ màn hình */
   display: flex;
   align-items: flex-start; /* Đẩy lên trên */
   justify-content: center; /* Căn giữa theo chiều ngang */
   padding-top: 15vh; /* Khoảng cách từ trên xuống - 15% chiều cao màn hình */
+  width: 100%; /* Đảm bảo chiều rộng đúng với viewport */
+  overflow-x: hidden; /* Ngăn cuộn ngang */
+  box-sizing: border-box; /* Đảm bảo padding không làm tăng width */
 }
 
 .hero-content {
-  max-width: 1000px;
+  max-width: 95vw; /* Giới hạn chiều rộng tối đa là 95% viewport width */
   margin: 0 auto;
   background: transparent;
+  padding: 0 10px; /* Thêm padding để tránh text sát rìa */
+  box-sizing: border-box; /* Đảm bảo padding không làm tăng width */
+  overflow: hidden; /* Ngăn nội dung tràn ra */
 }
 
 .hero-title {
@@ -75,8 +84,11 @@ onMounted(() => {
   /* Thêm hiệu ứng 3D */
   transform: perspective(500px) rotateX(15deg);
   filter: drop-shadow(0 10px 20px rgba(139, 21, 56, 0.3));
-  /* Đảm bảo chữ trên 1 dòng */
+  /* Đảm bảo chữ trên 1 dòng nhưng vẫn fit màn hình */
   white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .nature-icon {
@@ -138,8 +150,11 @@ onMounted(() => {
   /* Thêm hiệu ứng 3D nhẹ */
   transform: perspective(300px) rotateX(10deg);
   filter: drop-shadow(0 6px 12px rgba(139, 21, 56, 0.25));
-  /* Đảm bảo chữ trên 1 dòng */
+  /* Đảm bảo chữ trên 1 dòng nhưng vẫn fit màn hình */
   white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Responsive Design */
