@@ -260,27 +260,34 @@
       </div>
     </div>
 
-    <!-- Import Modal -->
-    <div v-if="showImportModal" class="modal-overlay" @click="closeImportModal">
-      <div class="modal-content enhanced-modal" @click.stop>
-        <div class="modal-header">
-          <h3>
-            {{ dataTypeDefinitions[selectedDataType]?.icon }} 
-            Import {{ dataTypeDefinitions[selectedDataType]?.name }}
-          </h3>
-          <button @click="closeImportModal" class="modal-close">×</button>
+    <!-- Import Modal - Enhanced Agribank Design -->
+    <div v-if="showImportModal" class="modal-overlay agribank-modal-overlay" @click="closeImportModal">
+      <div class="modal-content enhanced-modal agribank-modal" @click.stop>
+        <div class="modal-header agribank-modal-header">
+          <div class="agribank-modal-title">
+            <div class="modal-icon-wrapper">
+              <span class="modal-icon">{{ dataTypeDefinitions[selectedDataType]?.icon }}</span>
+            </div>
+            <div class="modal-title-text">
+              <h3>Import Dữ Liệu {{ dataTypeDefinitions[selectedDataType]?.name }}</h3>
+              <p class="modal-subtitle">{{ dataTypeDefinitions[selectedDataType]?.description }}</p>
+            </div>
+          </div>
+          <div class="agribank-brand-stripe"></div>
+          <button @click="closeImportModal" class="modal-close agribank-close">×</button>
         </div>
 
-        <div class="modal-body">
-          <div class="import-form">
-            <!-- Enhanced File Upload Area -->
-            <div class="form-group">
-              <label class="form-label">
-                📁 Chọn file để import
-                <span class="file-size-limit">Tối đa: 500MB mỗi file</span>
+        <div class="modal-body agribank-modal-body">
+          <div class="import-form agribank-form">
+            <!-- Enhanced Agribank File Upload Area -->
+            <div class="form-group agribank-form-group">
+              <label class="form-label agribank-label">
+                <span class="label-icon">📁</span>
+                <span class="label-text">Chọn file để import</span>
+                <span class="file-size-limit agribank-limit">Tối đa: 500MB mỗi file</span>
               </label>
               <div 
-                class="upload-area"
+                class="upload-area agribank-upload-area"
                 :class="{ 
                   'drag-over': isDragOver, 
                   'has-files': selectedFiles.length > 0,
@@ -463,17 +470,22 @@
               </div>
             </div>
             
-            <div class="progress-bar-container enhanced">
-              <div class="progress-bar" 
+            <div class="progress-bar-container enhanced agribank-progress-container">
+              <div class="agribank-progress-header">
+                <span class="progress-title">Tiến trình upload</span>
+                <span class="progress-percentage">{{ uploadProgress }}%</span>
+              </div>
+              <div class="progress-bar agribank-progress-bar" 
                    :style="{ width: uploadProgress + '%' }"
                    :class="{ 
                      'progress-near-complete': uploadProgress > 95,
                      'progress-processing': uploadProgress === 100 && loadingMessage.includes('xử lý'),
                      'progress-active': uploadProgress > 0 && uploadProgress < 100
                    }">
-                <span class="progress-text">{{ uploadProgress }}%</span>
-                <div class="progress-animation"></div>
+                <div class="progress-glow"></div>
+                <div class="progress-animation agribank-animation"></div>
               </div>
+              <div class="progress-track"></div>
             </div>
             
             <div class="progress-details">
@@ -656,7 +668,7 @@ const selectedFromDate = ref('')
 const selectedToDate = ref('')
 const filteredResults = ref([])
 const filteredResultsCurrentPage = ref(1)
-const itemsPerPage = 20
+const itemsPerPage = ref(20)
 
 // Data management
 const allImports = ref([])
@@ -1235,6 +1247,83 @@ const formatRecordCount = (count) => {
   return rawDataService.formatRecordCount(count)
 }
 
+const getFileType = (fileName) => {
+  // Lấy phần mở rộng của file
+  const ext = fileName.split('.').pop()?.toLowerCase() || ''
+  const typeMap = {
+    'csv': 'CSV',
+    'xlsx': 'Excel',
+    'xls': 'Excel',
+    'zip': 'ZIP',
+    '7z': '7Z',
+    'rar': 'RAR'
+  }
+  return typeMap[ext] || ext.toUpperCase()
+}
+
+const getFileIcon = (fileName) => {
+  // Lấy icon cho từng loại file
+  const ext = fileName.split('.').pop()?.toLowerCase() || ''
+  const iconMap = {
+    'csv': '📊',
+    'xlsx': '📗',
+    'xls': '📗',
+    'zip': '🗜️',
+    '7z': '🗜️',
+    'rar': '🗜️'
+  }
+  return iconMap[ext] || '📄'
+}
+
+// Hàm phát âm thanh chuông to khi upload hoàn thành
+const playLoudCompletionBell = () => {
+  try {
+    // Tạo AudioContext để phát âm thanh
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // Tạo âm thanh chuông to với 3 tiếng chuông
+    const bellSounds = [
+      { freq: 800, duration: 0.3, volume: 0.8 }, // Chuông 1
+      { freq: 1000, duration: 0.3, volume: 0.9 }, // Chuông 2  
+      { freq: 1200, duration: 0.5, volume: 1.0 }  // Chuông 3 (to nhất)
+    ];
+    
+    let startTime = audioContext.currentTime;
+    
+    bellSounds.forEach((sound, index) => {
+      // Tạo oscillator cho từng tiếng chuông
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      // Kết nối: oscillator -> gainNode -> destination
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Cài đặt frequency và wave type
+      oscillator.frequency.setValueAtTime(sound.freq, startTime);
+      oscillator.type = 'sine'; // Âm thanh chuông mượt
+      
+      // Cài đặt volume envelope (fade in/out)
+      gainNode.gain.setValueAtTime(0, startTime);
+      gainNode.gain.linearRampToValueAtTime(sound.volume, startTime + 0.05);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + sound.duration);
+      
+      // Phát âm thanh
+      oscillator.start(startTime);
+      oscillator.stop(startTime + sound.duration);
+      
+      // Delay giữa các tiếng chuông
+      startTime += sound.duration + 0.2;
+    });
+    
+    console.log('🔔 Playing loud completion bell sound!');
+  } catch (error) {
+    console.warn('❌ Could not play completion bell:', error);
+    // Fallback: sử dụng âm thanh có sẵn
+    playNotificationSound();
+  }
+}
+
 const formatFileSize = (bytes) => {
   if (bytes === 0) return '0 Bytes'
   const k = 1024
@@ -1352,8 +1441,8 @@ const executeImport = async () => {
       
       showSuccess(`✅ Import thành công! Đã xử lý ${result.data.results?.length || 1} file(s)`)
       
-      // Phát âm thanh thông báo khi upload hoàn tất
-      playNotificationSound()
+      // Phát âm thanh chuông to khi upload hoàn tất
+      playLoudCompletionBell()
       
       closeImportModal()
       
@@ -2275,54 +2364,374 @@ onMounted(async () => {
   box-shadow: none !important;
 }
 
-/* 📱 Responsive cho giao diện Agribank */
-@media (max-width: 1024px) {
-  .action-buttons-group {
-    gap: 4px;
-    min-width: 160px;
+/* 🏦 Enhanced Agribank Modal Design */
+.agribank-modal-overlay {
+  background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(8px);
+  z-index: 10000;
+}
+
+.agribank-modal {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
+  border: 2px solid #10B981 !important;
+  border-radius: 20px !important;
+  box-shadow: 0 25px 50px rgba(16, 185, 129, 0.3) !important;
+  max-width: 800px !important;
+  width: 90% !important;
+  max-height: 90vh !important;
+  overflow: hidden !important;
+}
+
+.agribank-modal-header {
+  background: linear-gradient(135deg, #047857, #059669, #10B981) !important;
+  color: white !important;
+  padding: 20px 24px !important;
+  border-bottom: none !important;
+  position: relative !important;
+}
+
+.agribank-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.modal-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.modal-icon {
+  font-size: 28px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.modal-title-text h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.modal-subtitle {
+  margin: 4px 0 0 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+  font-weight: 400;
+}
+
+.agribank-brand-stripe {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #ffffff, #dcfce7, #bbf7d0, #ffffff);
+}
+
+.agribank-close {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 10px !important;
+  font-size: 20px !important;
+  font-weight: bold !important;
+  transition: all 0.3s ease !important;
+}
+
+.agribank-close:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+  transform: scale(1.1) !important;
+}
+
+.agribank-modal-body {
+  padding: 24px !important;
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%) !important;
+}
+
+.agribank-form-group {
+  margin-bottom: 24px !important;
+}
+
+.agribank-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-bottom: 12px !important;
+  font-weight: 600 !important;
+  color: #047857 !important;
+}
+
+.label-icon {
+  font-size: 1.2rem;
+}
+
+.label-text {
+  flex: 1;
+  font-size: 1rem;
+}
+
+.agribank-limit {
+  background: linear-gradient(135deg, #fef3c7, #fde68a) !important;
+  color: #92400e !important;
+  padding: 4px 8px !important;
+  border-radius: 8px !important;
+  font-size: 0.8rem !important;
+  font-weight: 600 !important;
+  border: 1px solid #fbbf24 !important;
+}
+
+.agribank-upload-area {
+  border: 3px dashed #10B981 !important;
+  border-radius: 16px !important;
+  background: linear-gradient(135deg, #f0fdf4, #ecfdf5) !important;
+  padding: 32px !important;
+  text-align: center !important;
+  transition: all 0.3s ease !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.agribank-upload-area::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent, rgba(16, 185, 129, 0.1), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.agribank-upload-area:hover::before,
+.agribank-upload-area.drag-over::before {
+  opacity: 1;
+}
+
+.agribank-upload-area:hover {
+  border-color: #059669 !important;
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.2) !important;
+}
+
+.agribank-upload-area.drag-over {
+  border-color: #047857 !important;
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0) !important;
+  transform: scale(1.02) !important;
+}
+
+.agribank-upload-icon {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.icon-circle {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #10B981, #059669);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  margin: 0 auto;
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+  position: relative;
+  z-index: 2;
+}
+
+.icon-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.3), transparent);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.7;
   }
-  
-  .btn-icon-only {
-    width: 36px !important;
-    height: 36px !important;
-    font-size: 14px !important;
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+    opacity: 0.3;
   }
 }
 
+.agribank-upload-title {
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: #047857 !important;
+  margin: 0 0 8px 0 !important;
+}
+
+.upload-desc {
+  color: #6b7280;
+  font-size: 0.95rem;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.agribank-formats {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
+  border: 1px solid #d1fae5 !important;
+}
+
+.agribank-format-badge {
+  background: linear-gradient(135deg, #10B981, #059669) !important;
+  color: white !important;
+  padding: 6px 12px !important;
+  border-radius: 8px !important;
+  font-size: 0.85rem !important;
+  font-weight: 600 !important;
+  margin: 4px !important;
+  display: inline-block !important;
+  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.3) !important;
+  transition: all 0.3s ease !important;
+}
+
+.agribank-format-badge:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 5px 12px rgba(16, 185, 129, 0.4) !important;
+}
+
+/* 📊 Enhanced Agribank Progress Bar */
+.agribank-progress-container {
+  background: linear-gradient(135deg, #ffffff, #f0fdf4) !important;
+  border: 2px solid #d1fae5 !important;
+  border-radius: 16px !important;
+  padding: 20px !important;
+  margin: 20px 0 !important;
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.1) !important;
+}
+
+.agribank-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.progress-title {
+  font-weight: 600;
+  color: #047857;
+  font-size: 1rem;
+}
+
+.progress-percentage {
+  font-weight: 700;
+  color: #059669;
+  font-size: 1.1rem;
+  font-family: 'Consolas', monospace;
+}
+
+.agribank-progress-bar {
+  height: 12px !important;
+  background: linear-gradient(90deg, #10B981, #059669, #047857) !important;
+  border-radius: 8px !important;
+  position: relative !important;
+  overflow: hidden !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.3) !important;
+}
+
+.progress-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  animation: shimmer 2s infinite;
+}
+
+.progress-track {
+  height: 12px;
+  background: #e5e7eb;
+  border-radius: 8px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: -1;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.agribank-animation {
+  background: linear-gradient(90deg, 
+    rgba(255, 255, 255, 0) 0%, 
+    rgba(255, 255, 255, 0.4) 50%, 
+    rgba(255, 255, 255, 0) 100%) !important;
+}
+
+/* 📱 Responsive cho modal Agribank */
 @media (max-width: 768px) {
-  .agribank-section {
-    padding: 16px;
-    margin-bottom: 16px;
+  .agribank-modal {
+    width: 95% !important;
+    margin: 20px !important;
   }
   
-  .header-content {
+  .agribank-modal-header {
+    padding: 16px !important;
+  }
+  
+  .agribank-modal-title {
     flex-direction: column;
     text-align: center;
     gap: 12px;
   }
   
-  .header-text h2 {
-    font-size: 1.5rem;
+  .modal-icon-wrapper {
+    width: 48px;
+    height: 48px;
   }
   
-  .action-buttons-group {
-    gap: 3px;
-    min-width: 140px;
+  .modal-icon {
+    font-size: 24px;
   }
   
-  .btn-icon-only {
-    width: 32px !important;
-    height: 32px !important;
-    font-size: 12px !important;
+  .modal-title-text h3 {
+    font-size: 1.25rem;
   }
   
-  .agribank-thead th {
-    padding: 12px 8px;
-    font-size: 0.8rem;
+  .agribank-upload-area {
+    padding: 24px 16px !important;
   }
   
-  .enhanced-row td {
-    padding: 10px 8px;
+  .icon-circle {
+    width: 64px;
+    height: 64px;
+    font-size: 24px;
+  }
+  
+  .agribank-upload-title {
+    font-size: 1.1rem !important;
   }
 }
 </style>
