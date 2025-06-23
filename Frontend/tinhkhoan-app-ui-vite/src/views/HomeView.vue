@@ -39,13 +39,12 @@ onMounted(() => {
 
 .welcome-hero {
   text-align: center;
-  padding: 40px 20px 60px 20px; /* Giảm padding top để đưa nội dung lên cao hơn */
+  padding: 40px 20px 60px 20px; /* Padding đều để cân bằng */
   background: transparent;
-  min-height: 70vh; /* Giảm min-height để đưa nội dung lên trên */
+  min-height: 100vh; /* Chiếm toàn bộ màn hình */
   display: flex;
-  align-items: flex-start; /* Căn lên trên thay vì center */
+  align-items: center; /* Căn giữa theo chiều dọc */
   justify-content: center; /* Căn giữa theo chiều ngang */
-  padding-top: 80px; /* Thêm padding-top cụ thể để control vị trí */
 }
 
 .hero-content {
@@ -145,8 +144,8 @@ onMounted(() => {
 /* Responsive Design */
 @media (max-width: 768px) {
   .welcome-hero {
-    padding-top: 60px; /* Giảm padding-top cho tablet */
-    min-height: 60vh;
+    min-height: 100vh; /* Vẫn chiếm toàn màn hình trên tablet */
+    padding: 20px 15px; /* Giảm padding cho tablet */
   }
   
   .hero-title {
@@ -169,8 +168,8 @@ onMounted(() => {
 
 @media (max-width: 480px) {
   .welcome-hero {
-    padding-top: 40px; /* Giảm padding-top cho mobile */
-    min-height: 50vh;
+    min-height: 100vh; /* Vẫn chiếm toàn màn hình trên mobile */
+    padding: 20px 10px; /* Giảm padding cho mobile */
   }
   
   .hero-title {
