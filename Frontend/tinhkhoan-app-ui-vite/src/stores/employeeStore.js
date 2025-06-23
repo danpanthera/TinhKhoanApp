@@ -134,8 +134,18 @@ export const useEmployeeStore = defineStore("employee", {
       this.isLoading = true;
       this.error = null;
       try {
+        // Make sure we include passwordHash if it exists on the current employee
+        const currentEmployee = await this.fetchEmployeeDetail(employeeData.id).catch(() => null);
+        
+        // If we can't get the current employee, proceed with the update as is
+        // If we have the current employee and it has a passwordHash, include it
+        const dataToSend = {
+          ...employeeData,
+          passwordHash: currentEmployee?.passwordHash || employeeData.passwordHash
+        };
+        
         // Gửi request cập nhật nhân viên
-        const response = await apiClient.put(`/Employees/${employeeData.id}`, employeeData);
+        const response = await apiClient.put(`/Employees/${employeeData.id}`, dataToSend);
         await this.fetchEmployees();
       } catch (err) {
         const errorMessage = err.response?.data?.message || 

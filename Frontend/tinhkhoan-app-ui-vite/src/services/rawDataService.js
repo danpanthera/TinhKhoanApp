@@ -569,20 +569,97 @@ class RawDataService {
 
   // 🔧 Utility methods
 
-  // 📋 Định nghĩa các loại dữ liệu và mô tả
+  // 📋 Định nghĩa các loại dữ liệu và mô tả (sắp xếp theo ABC)
   getDataTypeDefinitions() {
     return {
+      '7800_DT_KHKD1': {
+        name: '7800_DT_KHKD1',
+        description: 'Báo cáo KHKD (DT)',
+        icon: '�',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: '7800_DT_KHKD1'
+      },
+      'API_IMPORT': {
+        name: 'API_IMPORT',
+        description: 'Import qua API/Temporal',
+        icon: '�',
+        acceptedFormats: ['.json', '.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'API_IMPORT'
+      },
+      'BC57': {
+        name: 'BC57',
+        description: 'Sao kê Lãi dự thu',
+        icon: '�',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'BC57'
+      },
+      'DB01': {
+        name: 'DB01',
+        description: 'Sao kê TSDB và Không TSDB',
+        icon: '📋',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'DB01'
+      },
+      'DP01': {
+        name: 'DP01',
+        description: 'Dữ liệu Tiền gửi',
+        icon: '🏦',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'DP01'
+      },
+      'DPDA': {
+        name: 'DPDA',
+        description: 'Dữ liệu sao kê phát hành thẻ',
+        icon: '�',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'DPDA'
+      },
+      'EI01': {
+        name: 'EI01',
+        description: 'Dữ liệu mobile banking',
+        icon: '📱',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'EI01'
+      },
+      'GAHR26': {
+        name: 'GAHR26',
+        description: 'Báo cáo nhân sự GAHR26',
+        icon: '�',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'GAHR26'
+      },
+      'GL01': {
+        name: 'GL01',
+        description: 'Dữ liệu bút toán GDV',
+        icon: '✍️',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'GL01'
+      },
+      'GLCB41': {
+        name: 'GLCB41',
+        description: 'Bảng cân đối',
+        icon: '⚖️',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'GLCB41'
+      },
+      'KH03': {
+        name: 'KH03',
+        description: 'Sao kê Khách hàng pháp nhân',
+        icon: '🏢',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'KH03'
+      },
       'LN01': {
         name: 'LN01',
         description: 'Dữ liệu LOAN',
-        icon: '💰',
+        icon: '�',
         acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: 'LN01'
       },
       'LN02': {
         name: 'LN02',
         description: 'Sao kê biến động nhóm nợ',
-        icon: '🔄',
+        icon: '�',
         acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: 'LN02'
       },
@@ -593,82 +670,12 @@ class RawDataService {
         acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: 'LN03'
       },
-      'DP01': {
-        name: 'DP01',
-        description: 'Dữ liệu Tiền gửi',
-        icon: '🏦',
-        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
-        requiredKeyword: 'DP01'
-      },
-      'EI01': {
-        name: 'EI01',
-        description: 'Dữ liệu mobile banking',
-        icon: '📱',
-        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
-        requiredKeyword: 'EI01'
-      },
-      'GL01': {
-        name: 'GL01',
-        description: 'Dữ liệu bút toán GDV',
-        icon: '✍️',
-        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
-        requiredKeyword: 'GL01'
-      },
-      'DPDA': {
-        name: 'DPDA',
-        description: 'Dữ liệu sao kê phát hành thẻ',
-        icon: '💳',
-        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
-        requiredKeyword: 'DPDA'
-      },
-      'DB01': {
-        name: 'DB01',
-        description: 'Sao kê TSDB và Không TSDB',
-        icon: '📋',
-        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
-        requiredKeyword: 'DB01'
-      },
-      'KH03': {
-        name: 'KH03',
-        description: 'Sao kê Khách hàng pháp nhân',
-        icon: '🏢',
-        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
-        requiredKeyword: 'KH03'
-      },
-      'BC57': {
-        name: 'BC57',
-        description: 'Sao kê Lãi dự thu',
-        icon: '📈',
-        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
-        requiredKeyword: 'BC57'
-      },
       'RR01': {
         name: 'RR01',
         description: 'Sao kê dư nợ gốc, lãi XLRR',
-        icon: '📉',
+        icon: '�',
         acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: 'RR01'
-      },
-      '7800_DT_KHKD1': {
-        name: '7800_DT_KHKD1',
-        description: 'Báo cáo KHKD (DT)',
-        icon: '📑',
-        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
-        requiredKeyword: '7800_DT_KHKD1'
-      },
-      'GLCB41': {
-        name: 'GLCB41',
-        description: 'Bảng cân đối',
-        icon: '⚖️',
-        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
-        requiredKeyword: 'GLCB41'
-      },
-      'API_IMPORT': {
-        name: 'API_IMPORT',
-        description: 'Import qua API/Temporal',
-        icon: '🔗',
-        acceptedFormats: ['.json', '.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
-        requiredKeyword: 'API_IMPORT'
       }
     };
   }
@@ -739,23 +746,33 @@ class RawDataService {
   }
 
   // 🎨 Lấy màu sắc cho loại dữ liệu - ĐỒNG BỘ TẤT CẢ 13 LOẠI
+  // 🎨 Lấy màu sắc cho từng loại dữ liệu theo nhóm chữ cái đầu
   getDataTypeColor(dataType) {
-    const colors = {
-      'LN01': '#10B981', // green - Dữ liệu LOAN
-      'LN02': '#059669', // emerald - Sao kê biến động nhóm nợ
-      'LN03': '#F59E0B', // amber - Dữ liệu Nợ XLRR
-      'DP01': '#3B82F6', // blue - Dữ liệu Tiền gửi
-      'EI01': '#8B5CF6', // purple - Dữ liệu mobile banking
-      'GL01': '#EF4444', // red - Dữ liệu bút toán GDV
-      'DPDA': '#06B6D4', // cyan - Dữ liệu sao kê phát hành thẻ
-      'DB01': '#84CC16', // lime - Sao kê TSDB và Không TSDB
-      'KH03': '#F97316', // orange - Sao kê Khách hàng pháp nhân
-      'BC57': '#EC4899', // pink - Sao kê Lãi dự thu
-      'RR01': '#DC2626', // red-600 - Sao kê dư nợ gốc, lãi XLRR
-      '7800_DT_KHKD1': '#7C2D12', // brown - Báo cáo KHKD (DT)
-      'GLCB41': '#1E40AF' // blue-800 - Bảng cân đối
-    };
-    return colors[dataType] || '#6B7280'; // gray default
+    if (!dataType) return '#6B7280'; // gray default
+    
+    const firstChar = dataType.charAt(0).toUpperCase();
+    
+    // Phân nhóm màu theo chữ cái đầu
+    if (firstChar === 'D') {
+      // Loại dữ liệu bắt đầu bằng "D" - màu xanh lá
+      return '#10B981'; // green
+    } else if (firstChar === 'L' || firstChar === 'R') {
+      // Loại dữ liệu bắt đầu bằng "L" hoặc "R" - màu cam
+      return '#F97316'; // orange
+    } else if (firstChar === 'G') {
+      // Loại dữ liệu bắt đầu bằng "G" - màu tím
+      return '#8B5CF6'; // purple
+    } else {
+      // Các loại khác - màu mặc định theo định nghĩa riêng
+      const colors = {
+        '7800_DT_KHKD1': '#7C2D12', // brown - Báo cáo KHKD (DT)
+        'API_IMPORT': '#1E40AF', // blue-800 - Import qua API/Temporal
+        'BC57': '#EC4899', // pink - Sao kê Lãi dự thu
+        'EI01': '#06B6D4', // cyan - Dữ liệu mobile banking
+        'KH03': '#84CC16' // lime - Sao kê Khách hàng pháp nhân
+      };
+      return colors[dataType] || '#6B7280'; // gray default
+    }
   }
 
   // 📊 Format số lượng records with thousand separators (#,###)

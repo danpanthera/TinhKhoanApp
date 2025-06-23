@@ -173,7 +173,9 @@ namespace TinhKhoanApp.Api.Repositories
                     .AsNoTracking()
                     .Include(e => e.Unit)
                     .Include(e => e.Position)
-                    .FirstOrDefaultAsync(e => e.Id == (int)id && e.IsActive);
+                    .Include(e => e.EmployeeRoles)
+                        .ThenInclude(er => er.Role)
+                    .FirstOrDefaultAsync(e => e.Id == (int)id);
 
                 if (employee != null)
                 {

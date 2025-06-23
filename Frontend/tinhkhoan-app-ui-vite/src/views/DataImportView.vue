@@ -111,27 +111,27 @@
                 </button>
                 <button 
                   @click="viewRawDataFromTable(key)" 
-                  class="btn-action btn-raw-view"
+                  class="btn-action btn-raw-view btn-icon-only"
                   title="Xem dữ liệu thô từ bảng"
                   :disabled="!selectedFromDate"
                 >
-                  🗄️ Xem Thô
+                  👀
                 </button>
                 <button 
                   @click="openImportModal(key)" 
-                  class="btn-action btn-import"
+                  class="btn-action btn-import btn-icon-only"
                   :style="{ backgroundColor: getDataTypeColor(key) }"
                   title="Import dữ liệu"
                 >
-                  📤 Import
+                  📤
                 </button>
                 <button 
                   @click="deleteDataTypeByDate(key)" 
-                  class="btn-action btn-delete"
+                  class="btn-action btn-delete btn-icon-only"
                   title="Xóa theo ngày đã chọn"
                   :disabled="!selectedFromDate || getDataTypeStats(key).totalRecords === 0"
                 >
-                  🗑️ Xóa
+                  🗑️
                 </button>
               </td>
             </tr>
@@ -285,31 +285,33 @@
                 />
                 <div class="upload-content">
                   <div v-if="selectedFiles.length === 0" class="upload-prompt">
-                    <span class="upload-icon">📤</span>
-                    <h4>Kéo thả file vào đây hoặc click để chọn</h4>
+                    <div class="upload-icon">�</div>
+                    <h4 class="upload-title">Kéo thả file vào đây hoặc nhấp để chọn</h4>
                     <div class="supported-formats">
                       <p class="format-title">Định dạng hỗ trợ:</p>
                       <div class="format-list">
                         <span v-for="format in dataTypeDefinitions[selectedDataType]?.acceptedFormats" 
                               :key="format" 
-                              class="format-badge">
+                              class="format-badge agribank-badge">
                           {{ format }}
                         </span>
-                        <span class="format-badge zip-badge">ZIP</span>
-                        <span class="format-badge zip-badge">7Z</span>
-                        <span class="format-badge zip-badge">RAR</span>
+                        <span class="format-badge agribank-badge">ZIP</span>
+                        <span class="format-badge agribank-badge">7Z</span>
+                        <span class="format-badge agribank-badge">RAR</span>
                       </div>
                     </div>
+                    <div class="agribank-logo-watermark"></div>
                   </div>
                   <div v-else class="upload-summary">
                     <div class="files-selected">
                       <span class="summary-icon">✅</span>
                       <span class="summary-text">
-                        {{ selectedFiles.length }} file(s) đã chọn
+                        {{ selectedFiles.length }} file đã chọn
                         <span class="total-size">({{ formatTotalFileSize() }})</span>
                       </span>
                     </div>
-                    <p class="click-to-add">Click để thêm file khác</p>
+                    <p class="click-to-add">Nhấp để thêm file hoặc kéo thả để bổ sung</p>
+                    <div class="agribank-mini-logo"></div>
                   </div>
                 </div>
               </div>
@@ -659,12 +661,12 @@ const importNotes = ref('')
 const useDefaultPassword = ref(true) // ✅ Checkbox tự động điền mật khẩu mặc định
 const uploading = ref(false)
 const uploadProgress = ref(0)
-const remainingTime = ref(0 // milliseconds
+const remainingTime = ref(0) // milliseconds
 const remainingTimeFormatted = ref('00:00') // mm:ss format
-const uploadSpeed = ref(0 // bytes per second
+const uploadSpeed = ref(0) // bytes per second
 const uploadedBytes = ref(0)
 const totalBytes = ref(0)
-const currentStep = ref(0 // For processing steps
+const currentStep = ref(0) // For processing steps
 const isDragOver = ref(false)
 const showPassword = ref(false)
 
@@ -1658,11 +1660,13 @@ onMounted(async () => {
   content: '';
   position: absolute;
   top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
-  animation: shimmer 3s infinite;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100px;
+  background: url('/Logo-Agribank-2.png') no-repeat right center;
+  background-size: contain;
+  opacity: 0.1;
 }
 
 @keyframes shimmer {
@@ -1834,20 +1838,33 @@ onMounted(async () => {
 }
 
 .btn-clear-all {
-  background: linear-gradient(45deg, #dc3545, #c82333);
-  color: white;
-  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+  background-color: #ffebee;
+  color: #c62828;
+  border-color: #ffcdd2;
+}
+
+.btn-clear-all:hover {
+  background-color: #ffcdd2;
 }
 
 .btn-refresh {
-  background: linear-gradient(45deg, #28a745, #20c997);
-  color: white;
-  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+  background-color: #e3f2fd;
+  color: #1565c0;
+  border-color: #bbdefb;
 }
 
-.btn-clear-all:hover, .btn-refresh:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+.btn-refresh:hover {
+  background-color: #bbdefb;
+}
+
+.btn-debug {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border-color: #c8e6c9;
+}
+
+.btn-debug:hover {
+  background-color: #c8e6c9;
 }
 
 /* Nút icon chỉ hiển thị biểu tượng */
@@ -1873,353 +1890,226 @@ onMounted(async () => {
   transform: translateY(-1px);
 }
 
-/* 🏦 AGRIBANK BRAND STYLING - Bảng Kho dữ liệu thô */
-
-/* Container chính */
-.data-import-view {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  min-height: 100vh;
-  font-family: 'Segoe UI', 'Arial', sans-serif;
+/* 🎨 Cải thiện nút thao tác responsive và icon-only */
+.actions-cell {
+  padding: 8px !important;
+  white-space: nowrap;
+  min-width: 200px;
 }
 
-/* Header section với thương hiệu Agribank */
-.controls-section {
-  background: linear-gradient(135deg, #8B1538 0%, #A6195C 50%, #B91D47 100%);
-  color: white;
-  padding: 30px;
-  border-radius: 15px 15px 0 0;
-  margin-bottom: 0;
-  box-shadow: 0 8px 25px rgba(139, 21, 56, 0.3);
-}
-
-.controls-section h1 {
-  color: white;
-  font-size: 2.5rem;
-  font-weight: 700;
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-  margin-bottom: 10px;
-  font-family: 'Playfair Display', 'Georgia', serif;
-}
-
-.controls-section .subtitle {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.1rem;
-  margin-bottom: 20px;
-}
-
-/* Data types section - Table styling */
-.data-types-section {
-  background: white;
-  border-radius: 0 0 15px 15px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.section-header {
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
-  color: white;
-  padding: 25px 30px;
-  border-bottom: 3px solid #8B1538;
-  position: relative;
-  overflow: hidden;
-}
-
-.section-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.1) 100%);
-  pointer-events: none;
-}
-
-.section-header h2 {
-  font-size: 2.0rem;
-  font-weight: 800; /* Tăng độ đậm như header chính */
-  margin-bottom: 8px;
-  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif; /* Font giống header chính */
-  color: #FFFFFF; /* Màu trắng như header chính */
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.4); /* Shadow đậm như header chính */
-  letter-spacing: 0.04em; /* Khoảng cách chữ như header chính */
-  text-transform: uppercase; /* Viết hoa như header chính */
-  position: relative;
-  z-index: 1;
-}
-
-.section-header p {
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0;
-  font-size: 1rem;
-  position: relative;
-  z-index: 1;
-}
-
-/* Table styling với thương hiệu Agribank */
-.data-types-table {
-  overflow-x: auto;
-  min-width: 0; /* Cho phép table co lại */
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-}
-
-/* THÊM MỚI: CSS cải tiến cho Progress Bar */
-.progress-bar-container.enhanced {
-  height: 25px;
-  background-color: rgba(0, 0, 0, 0.1);
-  border-radius: 15px;
-  overflow: hidden;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
-  margin: 15px 0;
-  position: relative;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.progress-bar-container.enhanced .progress-bar {
-  height: 100%;
-  background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
-  border-radius: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: width 0.3s ease-in-out;
-  position: relative;
-  overflow: hidden;
-  min-width: 50px; /* Luôn hiển thị phần nhỏ */
-}
-
-.progress-bar.progress-active {
-  animation: pulse 2s infinite;
-}
-
-.progress-bar .progress-animation {
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
-  animation: shimmer 2s infinite;
-}
-
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.4);
-  }
-  70% {
-    box-shadow: 0 0 0 5px rgba(46, 125, 50, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(46, 125, 50, 0);
-  }
-}
-
-@keyframes shimmer {
-  0% { left: -100%; }
-  100% { left: 100%; }
-}
-
-.progress-bar-container.enhanced .progress-text {
-  color: white;
-  font-weight: bold;
-  font-size: 14px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-  z-index: 2;
-}
-
-.progress-bar.progress-near-complete {
-  background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
-}
-
-.progress-bar.progress-processing {
-  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
-}
-
-.upload-speed, .remaining-time {
-  background-color: rgba(0, 0, 0, 0.05);
-  padding: 4px 8px;
-  border-radius: 8px;
-  font-size: 12px;
-  color: #555;
-  margin-left: 8px;
+.btn-action {
+  margin: 2px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
-  font-weight: 500;
+  justify-content: center;
+  gap: 4px;
+  min-width: 35px;
+  height: 35px;
 }
 
-/* Enhance table styling trong .filtered-results-section */
-.filtered-results-section {
-  margin-top: 40px;
-  margin-bottom: 40px;
-  border-radius: 15px !important;
-  box-shadow: 0 8px 25px rgba(139, 21, 56, 0.4) !important;
-  background-color: #8B1538;
+.btn-action.btn-icon-only {
+  padding: 6px;
+  min-width: 32px;
+  height: 32px;
+  font-size: 0.9rem;
+  gap: 0;
+}
+
+.btn-action.btn-icon-only .emoji {
+  font-size: 14px;
+}
+
+.btn-view {
+  background-color: #3B82F6;
   color: white;
-  overflow: hidden;
-  position: relative;
 }
 
-.filtered-results-section .section-header {
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
-  border-bottom: 3px solid rgba(255, 255, 255, 0.3);
-  padding: 25px 30px;
-  position: relative;
+.btn-view:hover {
+  background-color: #2563EB;
+  transform: translateY(-1px);
 }
 
-.filtered-results-section .section-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.1) 100%);
-  pointer-events: none;
-}
-
-.filtered-results-section .results-table {
-  padding: 25px;
-}
-
-.filtered-results-section table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
+.btn-raw-view {
+  background-color: #8B5CF6;
   color: white;
-  min-width: 800px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
-.filtered-results-section thead tr {
-  background-color: rgba(255, 255, 255, 0.15);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+.btn-raw-view:hover {
+  background-color: #7C3AED;
+  transform: translateY(-1px);
 }
 
-.filtered-results-section th {
-  padding: 18px 15px;
-  text-align: left;
-  font-weight: 700;
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
-  position: relative;
+.btn-import {
+  color: white;
+  font-weight: 600;
 }
 
-/* Border cho th */
-.filtered-results-section th:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 25%;
-  height: 50%;
-  width: 1px;
-  background-color: rgba(255, 255, 255, 0.3);
+.btn-import:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
-.filtered-results-section tbody tr {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-  transition: background-color 0.3s;
+.btn-delete {
+  background-color: #EF4444;
+  color: white;
 }
 
-.filtered-results-section tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+.btn-delete:hover {
+  background-color: #DC2626;
+  transform: translateY(-1px);
 }
 
-.filtered-results-section td {
-  padding: 15px;
-  vertical-align: middle;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+.btn-delete:disabled {
+  background-color: #9CA3AF;
+  cursor: not-allowed;
+  transform: none;
 }
 
-/* Border cho td */
-.filtered-results-section td:not(:last-child) {
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* Mở rộng styling cho bảng chính của data types */
-.data-types-table table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  background: white;
-  font-size: 14px;
-  min-width: 800px;
-  border-radius: 10px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.data-types-table thead tr {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-bottom: 2px solid #dee2e6;
-}
-
-.data-types-table th {
-  padding: 18px 15px;
-  text-align: left;
-  font-weight: 700;
-  font-size: 14px;
-  color: #495057;
-  text-transform: uppercase;
-  letter-spacing: 0.7px;
-  border-bottom: 2px solid #dee2e6;
-  position: relative;
-}
-
-/* Border cho th */
-.data-types-table th:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  right: 0;
-  top: 25%;
-  height: 50%;
-  width: 1px;
-  background-color: #dee2e6;
-}
-
-.data-types-table tbody tr {
-  border-bottom: 1px solid #e9ecef;
-  transition: all 0.3s;
-}
-
-.data-types-table tbody tr:hover {
-  background-color: #f8f9fa;
-}
-
-.data-types-table td {
-  padding: 15px;
-  vertical-align: middle;
-  border-bottom: 1px solid #e9ecef;
-}
-
-/* Border cho td */
-.data-types-table td:not(:last-child) {
-  border-right: 1px solid #e9ecef;
-}
-
-/* Responsive styling cho các bảng */
-@media (max-width: 992px) {
-  .data-types-table, .filtered-results-section .results-table {
-    padding: 10px;
+/* 📱 Responsive cho bảng và nút thao tác */
+@media (max-width: 1200px) {
+  .data-types-table table {
+    font-size: 0.9rem;
   }
   
-  .data-types-table table, .filtered-results-section table {
-    font-size: 13px;
-  }
-  
-  .data-types-table th, .data-types-table td,
-  .filtered-results-section th, .filtered-results-section td {
-    padding: 12px 10px;
+  .actions-cell {
+    min-width: 180px;
   }
   
   .btn-action {
-    padding: 6px 10px;
-    font-size: 12px;
+    margin: 1px;
+    padding: 6px 8px;
+    font-size: 0.8rem;
+    min-width: 30px;
+    height: 30px;
+  }
+}
+
+@media (max-width: 768px) {
+  .data-types-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .data-types-table table {
+    min-width: 800px;
+    font-size: 0.8rem;
+  }
+  
+  .actions-cell {
+    min-width: 160px;
+  }
+  
+  .btn-action {
+    margin: 1px;
+    padding: 4px 6px;
+    font-size: 0.75rem;
+    min-width: 28px;
+    height: 28px;
+  }
+  
+  .btn-action.btn-icon-only {
+    padding: 4px;
+    min-width: 26px;
+    height: 26px;
+  }
+}
+
+/* 🖼️ Popup overlay chính giữa màn hình */
+.modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background-color: rgba(0, 0, 0, 0.6) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 9999 !important;
+  padding: 20px !important;
+  box-sizing: border-box !important;
+}
+
+.modal-content {
+  position: relative !important;
+  margin: 0 !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  transform: none !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+}
+
+.modal-content.enhanced-modal {
+  max-width: 700px !important;
+  width: 90% !important;
+  max-height: 85vh !important;
+}
+
+.modal-content.modal-large {
+  max-width: 900px !important;
+  width: 95% !important;
+  max-height: 90vh !important;
+}
+
+.modal-content.enhanced-confirmation-modal {
+  max-width: 500px !important;
+  width: 80% !important;
+  max-height: 70vh !important;
+}
+
+/* Đảm bảo modal hiển thị đẹp trên mobile */
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 10px !important;
+  }
+  
+  .modal-content {
+    width: 95% !important;
+    max-height: 95vh !important;
+  }
+  
+  .modal-content.enhanced-modal,
+  .modal-content.modal-large {
+    width: 98% !important;
+    max-width: none !important;
+  }
+}
+
+/* 🔄 Animation cho modal */
+.modal-overlay {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modal-content {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 </style>
