@@ -11,41 +11,56 @@
       </div>
       
       <div class="header-controls">
-        <!-- Time filters -->
-        <select v-model="selectedYear" @change="loadData" class="form-select">
-          <option value="">Chọn năm</option>
-          <option v-for="year in yearOptions" :key="year" :value="year">
-            {{ year }}
-          </option>
-        </select>
+        <!-- Time filters với accessibility -->
+        <div class="filter-group">
+          <label for="year-select" class="filter-label">Năm:</label>
+          <select id="year-select" v-model="selectedYear" @change="loadData" class="form-select" autocomplete="off" aria-label="Chọn năm">
+            <option value="">Chọn năm</option>
+            <option v-for="year in yearOptions" :key="year" :value="year">
+              {{ year }}
+            </option>
+          </select>
+        </div>
         
-        <select v-model="periodType" @change="onPeriodTypeChange" class="form-select">
-          <option value="">Chọn loại kỳ</option>
-          <option v-for="period in periodTypeOptions" :key="period.value" :value="period.value">
-            {{ period.label }}
-          </option>
-        </select>
+        <div class="filter-group">
+          <label for="period-type-select" class="filter-label">Loại kỳ:</label>
+          <select id="period-type-select" v-model="periodType" @change="onPeriodTypeChange" class="form-select" autocomplete="off" aria-label="Chọn loại kỳ">
+            <option value="">Chọn loại kỳ</option>
+            <option v-for="period in periodTypeOptions" :key="period.value" :value="period.value">
+              {{ period.label }}
+            </option>
+          </select>
+        </div>
         
-        <select v-if="periodType === 'QUARTER'" v-model="selectedPeriod" @change="loadData" class="form-select">
-          <option value="">Chọn quý</option>
-          <option v-for="quarter in quarterOptions" :key="quarter.value" :value="quarter.value">
-            {{ quarter.label }}
-          </option>
-        </select>
+        <div class="filter-group" v-if="periodType === 'QUARTER'">
+          <label for="quarter-select" class="filter-label">Quý:</label>
+          <select id="quarter-select" v-model="selectedPeriod" @change="loadData" class="form-select" autocomplete="off" aria-label="Chọn quý">
+            <option value="">Chọn quý</option>
+            <option v-for="quarter in quarterOptions" :key="quarter.value" :value="quarter.value">
+              {{ quarter.label }}
+            </option>
+          </select>
+        </div>
         
-        <select v-if="periodType === 'MONTH'" v-model="selectedPeriod" @change="loadData" class="form-select">
-          <option value="">Chọn tháng</option>
-          <option v-for="month in monthOptions" :key="month.value" :value="month.value">
-            {{ month.label }}
-          </option>
-        </select>
+        <div class="filter-group" v-if="periodType === 'MONTH'">
+          <label for="month-select" class="filter-label">Tháng:</label>
+          <select id="month-select" v-model="selectedPeriod" @change="loadData" class="form-select" autocomplete="off" aria-label="Chọn tháng">
+            <option value="">Chọn tháng</option>
+            <option v-for="month in monthOptions" :key="month.value" :value="month.value">
+              {{ month.label }}
+            </option>
+          </select>
+        </div>
         
-        <select v-model="selectedUnitId" @change="loadData" class="form-select">
-          <option value="">Tất cả đơn vị (Toàn tỉnh)</option>
-          <option v-for="unit in units" :key="unit.id" :value="unit.id">
-            {{ unit.name }}
-          </option>
-        </select>
+        <div class="filter-group">
+          <label for="unit-select" class="filter-label">Chi nhánh:</label>
+          <select id="unit-select" v-model="selectedUnitId" @change="loadData" class="form-select" autocomplete="organization" aria-label="Chọn chi nhánh">
+            <option value="">Tất cả đơn vị (Toàn tỉnh)</option>
+            <option v-for="unit in units" :key="unit.id" :value="unit.id">
+              {{ unit.name }}
+            </option>
+          </select>
+        </div>
         
         <!-- 7 nút chức năng chính -->
         <div class="calculation-buttons">
@@ -961,11 +976,46 @@ onMounted(async () => {
 
 .header-controls {
   display: flex;
-  gap: 15px;
   flex-wrap: wrap;
-  align-items: center;
-  position: relative;
-  z-index: 2;
+  gap: 16px;
+  align-items: end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 150px;
+}
+
+.filter-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-select {
+  padding: 8px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: #8B1538;
+  box-shadow: 0 0 0 2px rgba(139, 21, 56, 0.1);
+}
+
+.form-select:hover {
+  border-color: #8B1538;
 }
 
 .dashboard-content {

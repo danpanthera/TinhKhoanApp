@@ -32,8 +32,9 @@
           <!-- Bộ lọc nâng cao -->
           <div class="filter-panel">
             <div class="filter-group">
-              <label class="filter-label">Chi nhánh</label>
+              <label for="branch-selector" class="filter-label">Chi nhánh</label>
               <el-select 
+                id="branch-selector"
                 v-model="selectedBranch" 
                 placeholder="Chọn chi nhánh"
                 @change="handleBranchChange"
@@ -42,6 +43,8 @@
                 clearable
                 class="branch-selector"
                 size="large"
+                autocomplete="organization"
+                aria-label="Chọn chi nhánh"
               >
                 <el-option
                   v-for="branch in branches"
@@ -58,8 +61,9 @@
             </div>
             
             <div class="filter-group">
-              <label class="filter-label">Thời gian</label>
+              <label for="date-range-picker" class="filter-label">Thời gian</label>
               <el-date-picker
+                id="date-range-picker"
                 v-model="dateRange"
                 type="monthrange"
                 start-placeholder="Từ tháng"
@@ -68,6 +72,8 @@
                 value-format="YYYY-MM"
                 @change="handleDateRangeChange"
                 class="date-picker"
+                autocomplete="off"
+                aria-label="Chọn khoảng thời gian"
                 size="large"
               />
             </div>
@@ -90,7 +96,7 @@
       <div class="overview-section">
         <div class="overview-card">
           <div class="overview-header">
-            <h3>🎯 Tổng quan hiệu suất</h3>
+            <h3>🎯 Tổng quan hiệu suất của {{ getSelectedBranchName() }}</h3>
             <div class="refresh-btn" @click="refreshData" :class="{ spinning: loading }">
               <i>🔄</i>
             </div>
@@ -639,7 +645,7 @@ const createComparisonChart = () => {
   try {
     const chartDom = document.getElementById('comparison-chart');
     if (!chartDom || !chartDom.parentNode) {
-      console.warn('Comparison chart container not found or not attached to DOM');
+      console.log('⚠️ Comparison chart container not ready, skipping...');
       return;
     }
     
@@ -696,7 +702,7 @@ const createTrendChart = () => {
   try {
     const chartDom = document.getElementById('trend-chart');
     if (!chartDom || !chartDom.parentNode) {
-      console.warn('Trend chart container not found or not attached to DOM');
+      console.log('⚠️ Trend chart container not ready, skipping...');
       return;
     }
     
@@ -746,7 +752,7 @@ const createCompletionChart = () => {
   try {
     const chartDom = document.getElementById('completion-chart');
     if (!chartDom || !chartDom.parentNode) {
-      console.warn('Completion chart container not found or not attached to DOM');
+      console.log('⚠️ Completion chart container not ready, skipping...');
       return;
     }
     
@@ -814,7 +820,7 @@ const createMiniCharts = () => {
     indicators.value.forEach(indicator => {
       const chartDom = document.getElementById(`mini-chart-${indicator.id}`);
       if (!chartDom || !chartDom.parentNode) {
-        console.warn(`Mini chart container not found or not attached to DOM for ${indicator.id}`);
+        console.log(`⚠️ Mini chart container not ready for ${indicator.id}, skipping...`);
         return;
       }
       
@@ -942,6 +948,13 @@ const handleWindowResize = () => {
 // Phương thức tiện ích
 const updateTime = () => {
   currentTime.value = new Date();
+};
+
+// Lấy tên chi nhánh đã chọn
+const getSelectedBranchName = () => {
+  if (!selectedBranch.value) return 'Toàn hệ thống';
+  const branch = branches.value.find(b => b.id === selectedBranch.value);
+  return branch ? branch.name : 'Toàn hệ thống';
 };
 
 // Watch thay đổi branch
