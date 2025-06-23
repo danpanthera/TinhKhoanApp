@@ -47,7 +47,7 @@ themeStore.setupSystemThemeWatcher();
 
 // Khởi tạo offline store và PWA functionality
 const offlineStore = useOfflineStore();
-offlineStore.init();
+offlineStore.initialize();
 
 // Khởi tạo offline API service
 offlineApi.init();
