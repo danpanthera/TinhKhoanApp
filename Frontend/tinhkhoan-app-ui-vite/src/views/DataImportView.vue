@@ -2008,7 +2008,7 @@ onMounted(async () => {
   .btn-action {
     margin: 1px;
     padding: 4px 6px;
-    font-size: 0.75rem;
+       font-size: 0.75rem;
     min-width: 28px;
     height: 28px;
   }
@@ -2020,25 +2020,26 @@ onMounted(async () => {
   }
 }
 
-/* 🖼️ Popup overlay chính giữa màn hình */
+/* 🖼️ Popup overlay chính giữa màn hình - TĂNG CƯỜNG */
 .modal-overlay {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
-  background-color: rgba(0, 0, 0, 0.6) !important;
+  background-color: rgba(0, 0, 0, 0.7) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  z-index: 9999 !important;
+  z-index: 10000 !important;
   padding: 20px !important;
   box-sizing: border-box !important;
+  backdrop-filter: blur(5px) !important;
 }
 
 .modal-content {
   position: relative !important;
-  margin: 0 !important;
+  margin: 0 auto !important;
   max-height: 90vh !important;
   overflow-y: auto !important;
   transform: none !important;
@@ -2046,24 +2047,9 @@ onMounted(async () => {
   left: auto !important;
   right: auto !important;
   bottom: auto !important;
-}
-
-.modal-content.enhanced-modal {
-  max-width: 700px !important;
-  width: 90% !important;
-  max-height: 85vh !important;
-}
-
-.modal-content.modal-large {
-  max-width: 900px !important;
-  width: 95% !important;
-  max-height: 90vh !important;
-}
-
-.modal-content.enhanced-confirmation-modal {
-  max-width: 500px !important;
-  width: 80% !important;
-  max-height: 70vh !important;
+  background: white !important;
+  border-radius: 15px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* Đảm bảo modal hiển thị đẹp trên mobile */
