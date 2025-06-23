@@ -679,14 +679,15 @@ class RawDataService {
     return colors[dataType] || '#6B7280'; // gray default
   }
 
-  // 📊 Format số lượng records
+  // 📊 Format số lượng records with thousand separators (#,###)
   formatRecordCount(count) {
-    if (count >= 1000000) {
-      return `${(count / 1000000).toFixed(1)}M`;
-    } else if (count >= 1000) {
-      return `${(count / 1000).toFixed(1)}K`;
-    }
-    return count.toString();
+    if (!count && count !== 0) return '0';
+    
+    // Convert to number if it's a string
+    const num = typeof count === 'string' ? parseInt(count) : count;
+    
+    // Add thousand separators using Vietnamese locale for #,### format
+    return new Intl.NumberFormat('en-US').format(num);
   }
 
   // 📅 Format ngày

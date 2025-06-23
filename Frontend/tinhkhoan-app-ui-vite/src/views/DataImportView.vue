@@ -250,7 +250,7 @@
 
     <!-- Import Modal -->
     <div v-if="showImportModal" class="modal-overlay" @click="closeImportModal">
-      <div class="modal-content" @click.stop>
+      <div class="modal-content enhanced-modal" @click.stop>
         <div class="modal-header">
           <h3>
             {{ dataTypeDefinitions[selectedDataType]?.icon }} 
@@ -261,13 +261,22 @@
 
         <div class="modal-body">
           <div class="import-form">
-            <!-- File Upload -->
+            <!-- Enhanced File Upload Area -->
             <div class="form-group">
-              <label>📁 Chọn file để import</label>
+              <label class="form-label">
+                📁 Chọn file để import
+                <span class="file-size-limit">Tối đa: 500MB mỗi file</span>
+              </label>
               <div 
                 class="upload-area"
+                :class="{ 
+                  'drag-over': isDragOver, 
+                  'has-files': selectedFiles.length > 0,
+                  'has-zip': hasArchiveFile 
+                }"
                 @drop.prevent="handleFileDrop"
-                @dragover.prevent
+                @dragover.prevent="isDragOver = true"
+                @dragleave.prevent="isDragOver = false"
                 @click="$refs.fileInput.click()"
               >
                 <input 
@@ -279,55 +288,136 @@
                   style="display: none;"
                 />
                 <div class="upload-content">
-                  <span class="upload-icon">📤</span>
-                  <p><strong>Kéo thả file vào đây hoặc click để chọn</strong></p>
-                  <p class="upload-hint">Hỗ trợ: {{ dataTypeDefinitions[selectedDataType]?.acceptedFormats.join(', ') }}</p>
+                  <div v-if="selectedFiles.length === 0" class="upload-prompt">
+                    <span class="upload-icon">📤</span>
+                    <h4>Kéo thả file vào đây hoặc click để chọn</h4>
+                    <div class="supported-formats">
+                      <p class="format-title">Định dạng hỗ trợ:</p>
+                      <div class="format-list">
+                        <span v-for="format in dataTypeDefinitions[selectedDataType]?.acceptedFormats" 
+                              :key="format" 
+                              class="format-badge">
+                          {{ format }}
+                        </span>
+                        <span class="format-badge zip-badge">ZIP</span>
+                        <span class="format-badge zip-badge">7Z</span>
+                        <span class="format-badge zip-badge">RAR</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-else class="upload-summary">
+                    <div class="files-selected">
+                      <span class="summary-icon">✅</span>
+                      <span class="summary-text">
+                        {{ selectedFiles.length }} file(s) đã chọn
+                        <span class="total-size">({{ formatTotalFileSize() }})</span>
+                      </span>
+                    </div>
+                    <p class="click-to-add">Click để thêm file khác</p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Selected Files -->
+            <!-- Enhanced Selected Files Display -->
             <div v-if="selectedFiles.length > 0" class="selected-files">
-              <h4>
-                📋 File đã chọn
-                <span class="file-count-badge">{{ selectedFiles.length }}</span>
-              </h4>
-              <div v-for="(file, index) in selectedFiles" :key="index" class="file-item">
-                <span class="file-icon">{{ getFileIcon(file.name) }}</span>
-                <span class="file-name">{{ file.name }}</span>
-                <span class="file-size">{{ formatFileSize(file.size) }}</span>
-                <button @click="removeFile(index)" class="btn-remove-file" :title="`Xóa file ${file.name}`">×</button>
+              <div class="files-header">
+                <h4>
+                  📋 File đã chọn
+                  <span class="file-count-badge">{{ selectedFiles.length }}</span>
+                </h4>
+                <button @click="clearAllFiles" class="btn-clear-files" title="Xóa tất cả file">
+                  🗑️ Xóa tất cả
+                </button>
+              </div>
+              
+              <div class="files-list">
+                <div v-for="(file, index) in selectedFiles" :key="index" class="file-item enhanced-file-item">
+                  <div class="file-info">
+                    <span class="file-icon">{{ getFileIcon(file.name) }}</span>
+                    <div class="file-details">
+                      <span class="file-name" :title="file.name">{{ file.name }}</span>
+                      <div class="file-meta">
+                        <span class="file-size">{{ formatFileSize(file.size) }}</span>
+                        <span class="file-type">{{ getFileType(file.name) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="file-actions">
+                    <span v-if="isArchiveFile(file.name)" class="zip-indicator" title="File nén - sẽ được giải nén tự động">
+                      🗜️ ZIP
+                    </span>
+                    <button @click="removeFile(index)" class="btn-remove-file" :title="`Xóa file ${file.name}`">×</button>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- File Analysis Summary -->
+              <div v-if="fileAnalysisSummary" class="file-analysis">
+                <div class="analysis-item" v-if="fileAnalysisSummary.csvFiles > 0">
+                  <span class="analysis-icon">📊</span>
+                  <span>{{ fileAnalysisSummary.csvFiles }} file CSV</span>
+                </div>
+                <div class="analysis-item" v-if="fileAnalysisSummary.zipFiles > 0">
+                  <span class="analysis-icon">🗜️</span>
+                  <span>{{ fileAnalysisSummary.zipFiles }} file nén (sẽ giải nén tự động)</span>
+                </div>
+                <div class="analysis-item" v-if="fileAnalysisSummary.otherFiles > 0">
+                  <span class="analysis-icon">📄</span>
+                  <span>{{ fileAnalysisSummary.otherFiles }} file khác</span>
+                </div>
               </div>
             </div>
 
-            <!-- Archive Password -->
-            <div v-if="hasArchiveFile" class="form-group">
-              <label>🔐 Mật khẩu file nén (nếu có)</label>
+            <!-- Enhanced Archive Password Section -->
+            <div v-if="hasArchiveFile" class="form-group archive-section">
+              <label class="form-label">
+                🔐 Mật khẩu file nén 
+                <span class="optional-badge">Không bắt buộc</span>
+              </label>
               
-              <!-- Checkbox tự động điền mật khẩu mặc định -->
+              <!-- Enhanced Auto Password Section -->
               <div class="auto-password-section">
-                <label class="checkbox-wrapper">
+                <label class="checkbox-wrapper enhanced-checkbox">
                   <input 
                     type="checkbox" 
                     v-model="useDefaultPassword"
                     @change="onDefaultPasswordToggle"
                   />
                   <span class="checkmark"></span>
-                  <span class="checkbox-label">🔑 Tự động điền mật khẩu mặc định (Snk6S4GV)</span>
+                  <div class="checkbox-content">
+                    <span class="checkbox-label">🔑 Sử dụng mật khẩu mặc định</span>
+                    <span class="password-preview">Snk6S4GV</span>
+                  </div>
                 </label>
               </div>
               
-              <input 
-                v-model="archivePassword" 
-                type="password" 
-                placeholder="Nhập mật khẩu file nén..."
-                class="form-input"
-                :class="{ 'auto-filled': useDefaultPassword }"
-              />
-              <small class="form-hint">
-                <span v-if="useDefaultPassword">✅ Đang sử dụng mật khẩu mặc định. Bạn có thể sửa nếu cần.</span>
-                <span v-else>Để trống nếu file không có mật khẩu</span>
-              </small>
+              <div class="password-input-wrapper">
+                <input 
+                  v-model="archivePassword" 
+                  :type="showPassword ? 'text' : 'password'"
+                  placeholder="Nhập mật khẩu file nén..."
+                  class="form-input password-input"
+                  :class="{ 'auto-filled': useDefaultPassword }"
+                />
+                <button 
+                  type="button" 
+                  class="btn-toggle-password"
+                  @click="togglePasswordVisibility"
+                  :title="showPassword ? 'Ẩn mật khẩu' : 'Hiển thị mật khẩu'"
+                >
+                  {{ showPassword ? '🙈' : '👁️' }}
+                </button>
+              </div>
+              
+              <div class="form-hint enhanced-hint">
+                <div v-if="useDefaultPassword" class="hint-success">
+                  ✅ Đang sử dụng mật khẩu mặc định. Bạn có thể sửa nếu cần.
+                </div>
+                <div v-else class="hint-default">
+                  💡 Để trống nếu file không có mật khẩu. Hệ thống sẽ thử giải nén không mật khẩu trước.
+                </div>
+              </div>
             </div>
 
             <!-- Notes -->
@@ -342,24 +432,66 @@
             </div>
           </div>
           
-          <!-- Progress Section -->
-          <div v-if="uploading" class="upload-progress-section">
+          <!-- Enhanced Progress Section -->
+          <div v-if="uploading" class="upload-progress-section enhanced-progress">
             <div class="progress-header">
-              <h4>📤 Tiến độ upload</h4>
+              <h4>📤 Tiến độ import</h4>
               <div class="progress-stats">
-                <span class="progress-percentage">{{ uploadProgress }}%</span>
+                <span class="progress-percentage" :class="{ 'near-complete': uploadProgress > 95 }">
+                  {{ uploadProgress }}%
+                </span>
+                <span v-if="uploadSpeed > 0" class="upload-speed">
+                  📊 {{ formatFileSize(uploadSpeed) }}/s
+                </span>
                 <span v-if="remainingTime > 0" class="remaining-time">
                   ⏱️ Còn lại: {{ remainingTimeFormatted }}
                 </span>
               </div>
             </div>
             
-            <div class="progress-bar-container">
-              <div class="progress-bar" :style="{ width: uploadProgress + '%' }"></div>
+            <div class="progress-bar-container enhanced">
+              <div class="progress-bar" 
+                   :style="{ width: uploadProgress + '%' }"
+                   :class="{ 
+                     'progress-near-complete': uploadProgress > 95,
+                     'progress-processing': uploadProgress === 100 && loadingMessage.includes('xử lý')
+                   }">
+                <span class="progress-text">{{ uploadProgress }}%</span>
+              </div>
             </div>
             
-            <div class="progress-message">
-              {{ loadingMessage }}
+            <div class="progress-details">
+              <div class="progress-message">
+                <span class="message-icon">{{ getProgressIcon() }}</span>
+                <span class="message-text">{{ loadingMessage }}</span>
+              </div>
+              
+              <div v-if="uploadProgress > 0" class="progress-breakdown">
+                <div class="breakdown-item">
+                  <span class="breakdown-label">Đã upload:</span>
+                  <span class="breakdown-value">{{ formatFileSize(uploadedBytes) }}</span>
+                </div>
+                <div class="breakdown-item">
+                  <span class="breakdown-label">Tổng cộng:</span>
+                  <span class="breakdown-value">{{ formatFileSize(totalBytes) }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Processing Steps Indicator -->
+            <div v-if="uploadProgress === 100" class="processing-steps">
+              <div class="step-item" :class="{ active: currentStep >= 1 }">
+                <span class="step-icon">✅</span>
+                <span class="step-text">Upload hoàn tất</span>
+              </div>
+              <div class="step-item" :class="{ active: currentStep >= 2 }">
+                <span class="step-icon">{{ currentStep >= 2 ? '✅' : '⏳' }}</span>
+                <span class="step-text">Đang xử lý file nén</span>
+              </div>
+              <div class="step-item" :class="{ active: currentStep >= 3 }">
+                <span class="step-icon">{{ currentStep >= 3 ? '✅' : '⏳' }}</span>
+                <span class="step-text">Import dữ liệu</span>
+              </div>
             </div>
           </div>
         </div>
@@ -520,6 +652,12 @@ const uploading = ref(false)
 const uploadProgress = ref(0)
 const remainingTime = ref(0) // milliseconds
 const remainingTimeFormatted = ref('00:00') // mm:ss format
+const uploadSpeed = ref(0) // bytes per second
+const uploadedBytes = ref(0)
+const totalBytes = ref(0)
+const currentStep = ref(0) // For processing steps
+const isDragOver = ref(false)
+const showPassword = ref(false)
 
 // Confirmation state
 const confirmationMessage = ref('')
@@ -553,6 +691,30 @@ const sortedDataTypeDefinitions = computed(() => {
     sorted[key] = dataTypeDefinitions[key]
   })
   return sorted
+})
+
+// Enhanced computed properties
+const fileAnalysisSummary = computed(() => {
+  if (selectedFiles.value.length === 0) return null
+  
+  const analysis = {
+    csvFiles: 0,
+    zipFiles: 0,
+    otherFiles: 0
+  }
+  
+  selectedFiles.value.forEach(file => {
+    const ext = file.name.split('.').pop().toLowerCase()
+    if (ext === 'csv') {
+      analysis.csvFiles++
+    } else if (['zip', '7z', 'rar'].includes(ext)) {
+      analysis.zipFiles++
+    } else {
+      analysis.otherFiles++
+    }
+  })
+  
+  return analysis
 })
 
 // Methods
@@ -591,7 +753,13 @@ const debugRecalculateStats = () => {
 
 // Data type statistics
 const getDataTypeStats = (dataType) => {
-  return dataTypeStats.value[dataType] || { totalRecords: 0, lastUpdate: null }
+  const stats = dataTypeStats.value[dataType] || { totalRecords: 0, lastUpdate: null }
+  
+  // Apply formatting to totalRecords - return object with formatted totalRecords
+  return {
+    ...stats,
+    totalRecords: rawDataService.formatRecordCount(stats.totalRecords)
+  }
 }
 
 const calculateDataTypeStats = () => {
@@ -977,23 +1145,33 @@ const handleFileSelect = (event) => {
 }
 
 const handleFileDrop = (event) => {
-  event.preventDefault()
+  isDragOver.value = false
   const files = Array.from(event.dataTransfer.files)
   addFiles(files)
 }
 
 const addFiles = (files) => {
-  const validFiles = files.filter(file => {
-    // Validate file for selected data type
-    const validation = rawDataService.validateFile(file, selectedDataType.value)
-    if (!validation.valid) {
-      showError(validation.error)
-      return false
+  // Validate file sizes
+  const maxFileSize = 500 * 1024 * 1024 // 500MB
+  const validFiles = []
+  const invalidFiles = []
+  
+  files.forEach(file => {
+    if (file.size > maxFileSize) {
+      invalidFiles.push(file.name)
+    } else {
+      validFiles.push(file)
     }
-    return true
   })
   
-  selectedFiles.value = [...selectedFiles.value, ...validFiles]
+  if (invalidFiles.length > 0) {
+    showError(`Các file sau quá lớn (>500MB): ${invalidFiles.join(', ')}`)
+  }
+  
+  if (validFiles.length > 0) {
+    selectedFiles.value.push(...validFiles)
+    showSuccess(`Đã thêm ${validFiles.length} file`)
+  }
 }
 
 const removeFile = (index) => {
@@ -1067,15 +1245,24 @@ const executeImport = async () => {
   try {
     uploading.value = true
     uploadProgress.value = 0
+    currentStep.value = 0
     loadingMessage.value = 'Đang chuẩn bị upload...'
+    
+    // Calculate total file size
+    totalBytes.value = selectedFiles.value.reduce((sum, file) => sum + file.size, 0)
+    uploadedBytes.value = 0
+    uploadSpeed.value = 0
     
     const result = await rawDataService.importData(selectedDataType.value, selectedFiles.value, {
       archivePassword: archivePassword.value,
       notes: importNotes.value,
       onProgress: (progress) => {
         uploadProgress.value = progress.percentage
+        uploadedBytes.value = progress.loaded || 0
+        uploadSpeed.value = progress.uploadSpeed || 0
         
         if (progress.isNearCompletion) {
+          currentStep.value = 1
           loadingMessage.value = `🎯 Sắp hoàn thành... ${progress.percentage}%`
         } else {
           loadingMessage.value = `📤 Đang upload: ${progress.percentage}% - ${progress.formattedSpeed} - Còn lại: ${progress.remainingTimeFormatted}`
@@ -1091,7 +1278,19 @@ const executeImport = async () => {
     
     if (result.success) {
       uploadProgress.value = 100
+      currentStep.value = 1
       loadingMessage.value = '🎉 Upload hoàn tất! Đang xử lý dữ liệu...'
+      
+      // Processing ZIP files
+      if (hasArchiveFile.value) {
+        currentStep.value = 2
+        loadingMessage.value = '🗜️ Đang giải nén và xử lý file ZIP...'
+      }
+      
+      setTimeout(() => {
+        currentStep.value = 3
+        loadingMessage.value = '📊 Đang import dữ liệu vào database...'
+      }, 1000)
       
       // 🗑️ Kiểm tra nếu có file nén bị xóa và hiển thị thông báo đặc biệt
       const archiveDeletedResults = result.data.results?.filter(r => r.isArchiveDeleted) || []
@@ -1126,6 +1325,7 @@ const executeImport = async () => {
     showError('Có lỗi xảy ra khi import dữ liệu')
   } finally {
     uploading.value = false
+    currentStep.value = 0
     loadingMessage.value = ''
   }
 }
@@ -1664,12 +1864,14 @@ onMounted(async () => {
 }
 
 .section-header h2 {
-  color: white;
-  font-size: 1.8rem;
-  font-weight: 600;
+  font-size: 2.0rem;
+  font-weight: 800; /* Tăng độ đậm như header chính */
   margin-bottom: 8px;
-  font-family: 'Playfair Display', 'Georgia', serif;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif; /* Font giống header chính */
+  color: #FFFFFF; /* Màu trắng như header chính */
+  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.4); /* Shadow đậm như header chính */
+  letter-spacing: 0.04em; /* Khoảng cách chữ như header chính */
+  text-transform: uppercase; /* Viết hoa như header chính */
   position: relative;
   z-index: 1;
 }
@@ -1685,10 +1887,14 @@ onMounted(async () => {
 /* Table styling với thương hiệu Agribank */
 .data-types-table {
   overflow-x: auto;
+  min-width: 0; /* Cho phép table co lại */
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
 .data-types-table table {
   width: 100%;
+  min-width: 800px; /* Minimum width để đảm bảo các nút không bị chen chúc */
   border-collapse: collapse;
   background: white;
   font-size: 14px;
@@ -1797,23 +2003,64 @@ onMounted(async () => {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-/* Actions cell styling */
+/* Actions cell styling - Enhanced for responsive button layout */
 .actions-cell {
   text-align: center;
+  white-space: nowrap; /* Ngăn xuống dòng */
+  min-width: 380px; /* Đảm bảo đủ không gian cho 4 nút */
+  display: flex;
+  flex-wrap: nowrap; /* Ngăn các nút không bị xuống dòng */
+  justify-content: space-between; /* Phân bố đều các nút */
+  gap: 4px; /* Khoảng cách giữa các nút */
+  padding: 8px 5px; /* Thêm padding để tạo không gian */
 }
 
 .btn-action {
-  padding: 8px 12px;
-  margin: 2px 4px;
+  padding: 8px 6px;
+  margin: 0;
   border: none;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 11px; /* Giảm font size để tiết kiệm không gian */
   font-weight: 600;
   cursor: pointer;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
   transition: all 0.3s ease;
-  text-decoration: none;
-  display: inline-block;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  flex: 1; /* Các nút có width bằng nhau */
+  min-width: 0; /* Cho phép nút co lại nếu cần */
+  overflow: hidden;
+  text-overflow: ellipsis; /* Hiển thị ... nếu text bị tràn */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  line-height: 1; /* Giảm line-height để tối ưu không gian */
+  white-space: nowrap;
+}
+
+/* Responsive design for actions */
+@media (max-width: 1200px) {
+  .actions-cell {
+    min-width: 340px;
+  }
+  
+  .btn-action {
+    padding: 6px 4px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 992px) {
+  .actions-cell {
+    min-width: 300px;
+    padding: 6px 3px;
+  }
+  
+  .btn-action {
+    padding: 5px 3px;
+    font-size: 9px;
+  }
 }
 
 .btn-view {
@@ -2108,71 +2355,665 @@ onMounted(async () => {
   gap: 10px;
 }
 
-/* Preview Table Styling - Bordeaux background with white text */
-.preview-table {
+/* Enhanced Modal Styling */
+.enhanced-modal {
+  min-width: 600px;
+  max-width: 900px;
+}
+
+/* Enhanced Upload Area */
+.upload-area {
+  border: 2px dashed #8B1538;
+  border-radius: 15px;
+  padding: 30px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.upload-area::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 49%, rgba(139, 21, 56, 0.1) 50%, transparent 51%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.upload-area.drag-over {
+  border-color: #C41E3A;
+  background: linear-gradient(135deg, #fff8f8 0%, #fff 100%);
+  transform: scale(1.02);
+  box-shadow: 0 8px 25px rgba(139, 21, 56, 0.2);
+}
+
+.upload-area.drag-over::before {
+  opacity: 1;
+}
+
+.upload-area.has-files {
+  border-style: solid;
+  background: linear-gradient(135deg, #f0f8f0 0%, #fff 100%);
+  border-color: #28a745;
+}
+
+.upload-area.has-zip {
+  background: linear-gradient(135deg, #fff8e1 0%, #fff 100%);
+}
+
+.upload-prompt h4 {
+  color: #8B1538;
+  margin: 15px 0;
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+.supported-formats {
   margin-top: 20px;
 }
 
-.preview-table h4 {
-  color: #8B1538;
-  margin-bottom: 15px;
-  font-weight: 700;
-}
-
-.table-wrapper {
-  background: #8B1538; /* Nền đỏ bordeaux */
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 4px 15px rgba(139, 21, 56, 0.3);
-}
-
-.preview-table table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #8B1538; /* Nền đỏ bordeaux */
-  color: white; /* Chữ trắng */
-}
-
-.preview-table table th {
-  background: #6B1028; /* Màu đậm hơn cho header */
-  color: white;
-  padding: 12px 8px;
-  text-align: left;
-  font-weight: 600;
-  border-bottom: 2px solid #4A0B1C;
+.format-title {
+  color: #6c757d;
   font-size: 0.9rem;
+  margin-bottom: 10px;
+  font-weight: 500;
 }
 
-.preview-table table td {
-  padding: 10px 8px;
-  border-bottom: 1px solid #A6195C;
-  color: white; /* Chữ trắng */
-  font-size: 0.85rem;
+.format-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
 }
 
-.preview-table table tr:nth-child(even) {
-  background: #A0173A; /* Màu xen kẽ nhẹ hơn */
+.format-badge {
+  background: #e9ecef;
+  color: #495057;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border: 1px solid #dee2e6;
 }
 
-.preview-table table tr:hover {
-  background: #C41E3A; /* Màu hover sáng hơn */
+.format-badge.zip-badge {
+  background: #fff3cd;
+  color: #856404;
+  border-color: #ffeaa7;
 }
 
-.no-data {
-  padding: 40px;
-  text-align: center;
-  color: white;
-  background: #8B1538;
-  border-radius: 10px;
+.upload-summary {
+  padding: 10px 0;
 }
 
-.preview-note {
-  background: #f8f9fa;
+.files-selected {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.summary-icon {
+  font-size: 1.5rem;
+}
+
+.summary-text {
+  color: #28a745;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.total-size {
+  color: #6c757d;
+  font-weight: 400;
+}
+
+.click-to-add {
   color: #8B1538;
-  padding: 10px 15px;
-  margin-top: 10px;
+  font-size: 0.9rem;
+  margin: 0;
+  opacity: 0.8;
+}
+
+/* Enhanced Selected Files */
+.selected-files {
+  margin: 20px 0;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.files-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.files-header h4 {
+  margin: 0;
+  color: #8B1538;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-clear-files {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-clear-files:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+}
+
+.files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.enhanced-file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  background: white;
+  border: 1px solid #e9ecef;
   border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.enhanced-file-item:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-color: #8B1538;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.file-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.file-name {
+  font-weight: 600;
+  color: #495057;
+  word-break: break-all;
+  max-width: 300px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-meta {
+  display: flex;
+  gap: 15px;
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.file-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.zip-indicator {
+  background: #fff3cd;
+  color: #856404;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border: 1px solid #ffeaa7;
+}
+
+/* File Analysis */
+.file-analysis {
+  margin-top: 15px;
+  padding: 15px;
+  background: white;
+  border-radius: 8px;
+  border-left: 4px solid #8B1538;
+}
+
+.analysis-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.analysis-icon {
+  font-size: 1rem;
+}
+
+/* Enhanced Archive Section */
+.archive-section {
+  background: #fff8e1;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #ffeaa7;
+  margin: 20px 0;
+}
+
+.form-label {
+  color: #8B1538;
+  font-weight: 600;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.optional-badge {
+  background: #e9ecef;
+  color: #6c757d;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 400;
+}
+
+.enhanced-checkbox {
+  background: white;
+  padding: 12px 15px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  margin-bottom: 15px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.enhanced-checkbox:hover {
+  background: #f8f9fa;
+}
+
+.checkbox-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.password-preview {
+  font-family: 'Courier New', monospace;
+  color: #6c757d;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: #f8f9fa;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.password-input-wrapper {
+  position: relative;
+}
+
+.password-input {
+  padding-right: 45px !important;
+}
+
+.btn-toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 5px;
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+.btn-toggle-password:hover {
+  background: #f8f9fa;
+}
+
+.enhanced-hint {
+  margin-top: 10px;
+}
+
+.hint-success {
+  color: #28a745;
   font-size: 0.9rem;
   font-weight: 500;
+}
+
+.hint-default {
+  color: #6c757d;
+  font-size: 0.9rem;
+}
+
+/* Enhanced Progress Section */
+.enhanced-progress {
+  background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+  border: 2px solid #8B1538;
+  border-radius: 15px;
+  padding: 25px;
+  margin: 20px 0;
+}
+
+.progress-stats {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.progress-percentage {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #8B1538;
+  transition: all 0.3s ease;
+}
+
+.progress-percentage.near-complete {
+  color: #28a745;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.upload-speed {
+  color: #007bff;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+.remaining-time {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.progress-bar-container.enhanced {
+  background: #e9ecef;
+  height: 20px;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+  margin: 15px 0;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar {
+  background: linear-gradient(90deg, #8B1538 0%, #C41E3A 50%, #8B1538 100%);
+  height: 100%;
+  transition: width 0.3s ease;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.progress-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.progress-bar.progress-near-complete {
+  background: linear-gradient(90deg, #28a745 0%, #20c997 50%, #28a745 100%);
+}
+
+.progress-bar.progress-processing {
+  background: linear-gradient(90deg, #007bff 0%, #0056b3 50%, #007bff 100%);
+  animation: processing 2s infinite;
+}
+
+@keyframes processing {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+.progress-text {
+  color: white;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.progress-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 15px;
+}
+
+.progress-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.message-icon {
+  font-size: 1.2rem;
+}
+
+.message-text {
+  color: #495057;
+  font-weight: 500;
+}
+
+.progress-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 0.8rem;
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.breakdown-label {
+  color: #6c757d;
+}
+
+.breakdown-value {
+  color: #495057;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+/* Processing Steps */
+.processing-steps {
+  margin-top: 20px;
+  padding: 15px;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  color: #6c757d;
+  transition: all 0.3s ease;
+}
+
+.step-item.active {
+  color: #28a745;
+  font-weight: 600;
+}
+
+.step-icon {
+  font-size: 1rem;
+  width: 20px;
+  text-align: center;
+}
+
+/* Form Input Enhancements */
+.form-input {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.form-input:focus {
+  border-color: #8B1538;
+  box-shadow: 0 0 0 3px rgba(139, 21, 56, 0.1);
+  outline: none;
+}
+
+.form-input.auto-filled {
+  background: #f0f8f0;
+  border-color: #28a745;
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 80px;
+  transition: all 0.3s ease;
+}
+
+.form-textarea:focus {
+  border-color: #8B1538;
+  box-shadow: 0 0 0 3px rgba(139, 21, 56, 0.1);
+  outline: none;
+}
+
+/* Button Enhancements */
+.btn-large {
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.btn-import-confirm {
+  background: #8B1538;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-import-confirm:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 21, 56, 0.3);
+}
+
+.btn-import-confirm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-cancel {
+  background: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 10px 20px;
+}
+
+.btn-cancel:hover {
+  background: #5a6268;
+  transform: translateY(-1px);
+}
+
+/* File Size Limit */
+.file-size-limit {
+  color: #dc3545;
+  font-size: 0.8rem;
+  font-weight: 400;
+  margin-left: 10px;
+  background: #fff5f5;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .enhanced-modal {
+    min-width: 95%;
+    margin: 10px;
+  }
+  
+  .progress-details {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .files-header {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  
+  .enhanced-file-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .file-info {
+    width: 100%;
+  }
+  
+  .file-actions {
+    align-self: flex-end;
+  }
 }
 </style>

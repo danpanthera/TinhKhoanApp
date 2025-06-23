@@ -51,7 +51,9 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<RawDataRecord> RawDataRecords { get; set; }
         
         // 🚀 DbSets cho hệ thống Temporal Tables (High Performance)
-        public DbSet<Models.Temporal.RawDataImport> RawDataImports { get; set; }
+        // Temporarily commented out while using ImportedDataRecords
+        // public DbSet<Models.Temporal.RawDataImport> RawDataImports { get; set; }
+        public DbSet<Models.Temporal.OptimizedRawDataImport> OptimizedRawDataImports { get; set; }
         public DbSet<RawDataImportArchive> RawDataImportArchives { get; set; }
         public DbSet<Models.Temporal.ImportLog> ImportLogs { get; set; }
         

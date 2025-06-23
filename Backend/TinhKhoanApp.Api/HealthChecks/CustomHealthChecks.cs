@@ -28,7 +28,7 @@ namespace TinhKhoanApp.Api.HealthChecks
                 await _context.Database.CanConnectAsync(cancellationToken);
                 
                 // Test a simple query
-                var recordCount = await _context.RawDataImports.CountAsync(cancellationToken);
+                var recordCount = await _context.ImportedDataRecords.CountAsync(cancellationToken);
                 
                 stopwatch.Stop();
                 
@@ -127,7 +127,7 @@ namespace TinhKhoanApp.Api.HealthChecks
                 var stopwatch = System.Diagnostics.Stopwatch.StartNew();
                 
                 // Test optimized query performance
-                var recentImports = await _context.RawDataImports
+                var recentImports = await _context.ImportedDataRecords
                     .OrderByDescending(x => x.ImportDate)
                     .Take(10)
                     .ToListAsync(cancellationToken);
