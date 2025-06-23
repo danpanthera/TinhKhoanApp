@@ -131,7 +131,7 @@
               <span class="item-icon">🧮</span>
               <span>Cập nhật số liệu</span>
             </router-link>
-            <router-link to="/dashboard/general" class="dropdown-item">
+            <router-link to="/dashboard/business-plan" class="dropdown-item">
               <span class="item-icon">📈</span>
               <span>DASHBOARD TỔNG HỢP</span>
             </router-link>

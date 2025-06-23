@@ -187,13 +187,6 @@ const routes = [
       import(/* webpackChunkName: "dashboard" */ "../views/dashboard/BusinessPlanDashboard.vue"),
     meta: { requiresAuth: true }
   },
-  {
-    path: "/dashboard/general",
-    name: "general-dashboard",
-    component: () =>
-      import(/* webpackChunkName: "dashboard" */ "../views/dashboard/GeneralDashboard.vue"),
-    meta: { requiresAuth: true }
-  },
 ];
 
 const router = createRouter({
