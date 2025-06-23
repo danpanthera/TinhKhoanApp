@@ -82,7 +82,6 @@
             <tr>
               <th>Loại dữ liệu</th>
               <th>Mô tả</th>
-              <th>Định dạng file</th>
               <th>Tổng records</th>
               <th>Cập nhật cuối</th>
               <th>Thao tác</th>
@@ -97,9 +96,6 @@
                 </div>
               </td>
               <td class="description-cell">{{ dataType.description }}</td>
-              <td>
-                <span class="file-formats">{{ dataType.acceptedFormats.join(', ') }}</span>
-              </td>
               <td class="records-cell">
                 <span class="records-count">{{ getDataTypeStats(key).totalRecords }}</span>
               </td>
@@ -454,9 +450,11 @@
                    :style="{ width: uploadProgress + '%' }"
                    :class="{ 
                      'progress-near-complete': uploadProgress > 95,
-                     'progress-processing': uploadProgress === 100 && loadingMessage.includes('xử lý')
+                     'progress-processing': uploadProgress === 100 && loadingMessage.includes('xử lý'),
+                     'progress-active': uploadProgress > 0 && uploadProgress < 100
                    }">
                 <span class="progress-text">{{ uploadProgress }}%</span>
+                <div class="progress-animation"></div>
               </div>
             </div>
             
@@ -617,6 +615,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import rawDataService from '@/services/rawDataService'
+import { playNotificationSound } from '@/utils/soundUtils'
 
 // Reactive state
 const loading = ref(false)
@@ -629,7 +628,7 @@ const selectedFromDate = ref('')
 const selectedToDate = ref('')
 const filteredResults = ref([])
 const filteredResultsCurrentPage = ref(1)
-const itemsPerPage = 20
+const itemsPerPage = ref(20)
 
 // Data management
 const allImports = ref([])
@@ -670,13 +669,13 @@ const dataTypeDefinitions = rawDataService.getDataTypeDefinitions()
 
 // Computed properties
 const paginatedFilteredResults = computed(() => {
-  const start = (filteredResultsCurrentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
+  const start = (filteredResultsCurrentPage.value - 1) * itemsPerPage.value
+  const end = start + itemsPerPage.value
   return filteredResults.value.slice(start, end)
 })
 
 const filteredResultsTotalPages = computed(() => {
-  return Math.ceil(filteredResults.value.length / itemsPerPage)
+  return Math.ceil(filteredResults.value.length / itemsPerPage.value)
 })
 
 const hasArchiveFile = computed(() => {
@@ -1303,6 +1302,10 @@ const executeImport = async () => {
       }
       
       showSuccess(`✅ Import thành công! Đã xử lý ${result.data.results?.length || 1} file(s)`)
+      
+      // Phát âm thanh thông báo khi upload hoàn tất
+      playNotificationSound()
+      
       closeImportModal()
       
       // 🔧 TĂNG THỜI GIAN DELAY để đảm bảo database đã được update hoàn toàn
@@ -1608,6 +1611,17 @@ const getStatusClass = (status) => {
     'Processing': 'status-processing'
   }
   return statusMap[status] || 'status-pending'
+}
+
+// Utility method to get progress icon
+const getProgressIcon = () => {
+  if (uploadProgress.value === 0) return '🔄';
+  if (uploadProgress.value < 20) return '📤';
+  if (uploadProgress.value < 50) return '📊';
+  if (uploadProgress.value < 80) return '⏳';
+  if (uploadProgress.value < 100) return '🔄';
+  if (uploadProgress.value === 100 && currentStep.value >= 1) return '✅';
+  return '📤';
 }
 
 // Lifecycle
@@ -1917,2091 +1931,55 @@ onMounted(async () => {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
-/* THÊM MỚI: Styling cho kết quả lọc theo ngày với nền đỏ, chữ trắng */
-.filtered-results-section {
-  margin-top: 30px;
-  margin-bottom: 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(139, 21, 56, 0.3);
-  overflow: hidden;
-  background-color: #8B1538; /* Màu đỏ Agribank */
-  color: white;
-}
-
-.filtered-results-section .section-header {
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-  padding: 20px 30px;
-}
-
-.filtered-results-section .results-table {
-  padding: 20px;
-}
-
-.filtered-results-section table {
-  width: 100%;
-  border-collapse: collapse;
-  color: white;
-  min-width: 800px;
-}
-
-.filtered-results-section thead tr {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-}
-
-.filtered-results-section th {
-  padding: 15px;
-  text-align: left;
-  font-weight: 600;
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.filtered-results-section tbody tr {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  transition: background-color 0.3s;
-}
-
-.filtered-results-section tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-}
-
-.filtered-results-section td {
-  padding: 15px;
-  vertical-align: middle;
-}
-
-.filtered-results-section .pagination {
-  margin-top: 20px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  color: white;
-}
-
-.filtered-results-section .pagination-btn {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: none;
-  padding: 8px 15px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.filtered-results-section .pagination-btn:hover:not([disabled]) {
-  background-color: rgba(255, 255, 255, 0.3);
-}
-
-.filtered-results-section .pagination-btn[disabled] {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.filtered-results-section .pagination-info {
-  font-size: 14px;
-}
-
-.data-types-table table {
-  width: 100%;
-  min-width: 800px; /* Minimum width để đảm bảo các nút không bị chen chúc */
-  border-collapse: collapse;
-  background: white;
-  font-size: 14px;
-}
-
-/* Debug button */
-.btn-debug {
-  background: linear-gradient(45deg, #ff6b6b, #ffa726);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
-}
-
-.btn-debug:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
-  background: linear-gradient(45deg, #ff5252, #ff9800);
-}
-
-.btn-debug:active {
-  transform: translateY(0);
-}
-
-.btn-debug:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Existing styles for other buttons */
-.bulk-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.btn-clear-all, .btn-refresh {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
-}
-
-.btn-clear-all {
-  background: linear-gradient(45deg, #dc3545, #c82333);
-  color: white;
-  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
-}
-
-.btn-refresh {
-  background: linear-gradient(45deg, #28a745, #20c997);
-  color: white;
-  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
-}
-
-.btn-clear-all:hover, .btn-refresh:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-/* 🏦 AGRIBANK BRAND STYLING - Bảng Kho dữ liệu thô */
-
-/* Container chính */
-.data-import-view {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  min-height: 100vh;
-  font-family: 'Segoe UI', 'Arial', sans-serif;
-}
-
-/* Header section với thương hiệu Agribank */
-.controls-section {
-  background: linear-gradient(135deg, #8B1538 0%, #A6195C 50%, #B91D47 100%);
-  color: white;
-  padding: 30px;
-  border-radius: 15px 15px 0 0;
-  margin-bottom: 0;
-  box-shadow: 0 8px 25px rgba(139, 21, 56, 0.3);
-}
-
-.controls-section h1 {
-  color: white;
-  font-size: 2.5rem;
-  font-weight: 700;
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-  margin-bottom: 10px;
-  font-family: 'Playfair Display', 'Georgia', serif;
-}
-
-.controls-section .subtitle {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.1rem;
-  margin-bottom: 20px;
-}
-
-/* Data types section - Table styling */
-.data-types-section {
-  background: white;
-  border-radius: 0 0 15px 15px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.section-header {
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
-  color: white;
-  padding: 25px 30px;
-  border-bottom: 3px solid #8B1538;
-  position: relative;
-  overflow: hidden;
-}
-
-.section-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.1) 100%);
-  pointer-events: none;
-}
-
-.section-header h2 {
-  font-size: 2.0rem;
-  font-weight: 800; /* Tăng độ đậm như header chính */
-  margin-bottom: 8px;
-  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif; /* Font giống header chính */
-  color: #FFFFFF; /* Màu trắng như header chính */
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.4); /* Shadow đậm như header chính */
-  letter-spacing: 0.04em; /* Khoảng cách chữ như header chính */
-  text-transform: uppercase; /* Viết hoa như header chính */
-  position: relative;
-  z-index: 1;
-}
-
-.section-header p {
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0;
-  font-size: 1rem;
-  position: relative;
-  z-index: 1;
-}
-
-/* Table styling với thương hiệu Agribank */
-.data-types-table {
-  overflow-x: auto;
-  min-width: 0; /* Cho phép table co lại */
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-}
-
-/* THÊM MỚI: Styling cho kết quả lọc theo ngày với nền đỏ, chữ trắng */
-.filtered-results-section {
-  margin-top: 30px;
-  margin-bottom: 30px;
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(139, 21, 56, 0.3);
-  overflow: hidden;
-  background-color: #8B1538; /* Màu đỏ Agribank */
-  color: white;
-}
-
-.filtered-results-section .section-header {
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-  padding: 20px 30px;
-}
-
-.filtered-results-section .results-table {
-  padding: 20px;
-}
-
-.filtered-results-section table {
-  width: 100%;
-  border-collapse: collapse;
-  color: white;
-  min-width: 800px;
-}
-
-.filtered-results-section thead tr {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
-}
-
-.filtered-results-section th {
-  padding: 15px;
-  text-align: left;
-  font-weight: 600;
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.filtered-results-section tbody tr {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  transition: background-color 0.3s;
-}
-
-.filtered-results-section tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-}
-
-.filtered-results-section td {
-  padding: 15px;
-  vertical-align: middle;
-}
-
-.filtered-results-section .pagination {
-  margin-top: 20px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  color: white;
-}
-
-.filtered-results-section .pagination-btn {
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
-  border: none;
-  padding: 8px 15px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.filtered-results-section .pagination-btn:hover:not([disabled]) {
-  background-color: rgba(255, 255, 255, 0.3);
-}
-
-.filtered-results-section .pagination-btn[disabled] {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.filtered-results-section .pagination-info {
-  font-size: 14px;
-}
-
-/* Debug button */
-.btn-debug {
-  background: linear-gradient(45deg, #ff6b6b, #ffa726);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
-}
-
-.btn-debug:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
-  background: linear-gradient(45deg, #ff5252, #ff9800);
-}
-
-.btn-debug:active {
-  transform: translateY(0);
-}
-
-.btn-debug:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Existing styles for other buttons */
-.bulk-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.btn-clear-all, .btn-refresh {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
-}
-
-.btn-clear-all {
-  background: linear-gradient(45deg, #dc3545, #c82333);
-  color: white;
-  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
-}
-
-.btn-refresh {
-  background: linear-gradient(45deg, #28a745, #20c997);
-  color: white;
-  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
-}
-
-.btn-clear-all:hover, .btn-refresh:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-/* 🏦 AGRIBANK BRAND STYLING - Bảng Kho dữ liệu thô */
-
-/* Container chính */
-.data-import-view {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  min-height: 100vh;
-  font-family: 'Segoe UI', 'Arial', sans-serif;
-}
-
-/* Header section với thương hiệu Agribank */
-.controls-section {
-  background: linear-gradient(135deg, #8B1538 0%, #A6195C 50%, #B91D47 100%);
-  color: white;
-  padding: 30px;
-  border-radius: 15px 15px 0 0;
-  margin-bottom: 0;
-  box-shadow: 0 8px 25px rgba(139, 21, 56, 0.3);
-}
-
-.controls-section h1 {
-  color: white;
-  font-size: 2.5rem;
-  font-weight: 700;
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-  margin-bottom: 10px;
-  font-family: 'Playfair Display', 'Georgia', serif;
-}
-
-.controls-section .subtitle {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.1rem;
-  margin-bottom: 20px;
-}
-
-/* Data types section - Table styling */
-.data-types-section {
-  background: white;
-  border-radius: 0 0 15px 15px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.section-header {
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
-  color: white;
-  padding: 25px 30px;
-  border-bottom: 3px solid #8B1538;
-  position: relative;
-  overflow: hidden;
-}
-
-.section-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.1) 100%);
-  pointer-events: none;
-}
-
-.section-header h2 {
-  font-size: 2.0rem;
-  font-weight: 800; /* Tăng độ đậm như header chính */
-  margin-bottom: 8px;
-  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif; /* Font giống header chính */
-  color: #FFFFFF; /* Màu trắng như header chính */
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.4); /* Shadow đậm như header chính */
-  letter-spacing: 0.04em; /* Khoảng cách chữ như header chính */
-  text-transform: uppercase; /* Viết hoa như header chính */
-  position: relative;
-  z-index: 1;
-}
-
-.section-header p {
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0;
-  font-size: 1rem;
-  position: relative;
-  z-index: 1;
-}
-
-/* Table styling với thương hiệu Agribank */
-.data-types-table {
-  overflow-x: auto;
-  min-width: 0; /* Cho phép table co lại */
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-}
-
-/* Debug button */
-.btn-debug {
-  background: linear-gradient(45deg, #ff6b6b, #ffa726);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
-}
-
-.btn-debug:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
-  background: linear-gradient(45deg, #ff5252, #ff9800);
-}
-
-.btn-debug:active {
-  transform: translateY(0);
-}
-
-.btn-debug:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Existing styles for other buttons */
-.bulk-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.btn-clear-all, .btn-refresh {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
-}
-
-.btn-clear-all {
-  background: linear-gradient(45deg, #dc3545, #c82333);
-  color: white;
-  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
-}
-
-.btn-refresh {
-  background: linear-gradient(45deg, #28a745, #20c997);
-  color: white;
-  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
-}
-
-.btn-clear-all:hover, .btn-refresh:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-/* 🏦 AGRIBANK BRAND STYLING - Bảng Kho dữ liệu thô */
-
-/* Container chính */
-.data-import-view {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  min-height: 100vh;
-  font-family: 'Segoe UI', 'Arial', sans-serif;
-}
-
-/* Header section với thương hiệu Agribank */
-.controls-section {
-  background: linear-gradient(135deg, #8B1538 0%, #A6195C 50%, #B91D47 100%);
-  color: white;
-  padding: 30px;
-  border-radius: 15px 15px 0 0;
-  margin-bottom: 0;
-  box-shadow: 0 8px 25px rgba(139, 21, 56, 0.3);
-}
-
-.controls-section h1 {
-  color: white;
-  font-size: 2.5rem;
-  font-weight: 700;
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-  margin-bottom: 10px;
-  font-family: 'Playfair Display', 'Georgia', serif;
-}
-
-.controls-section .subtitle {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.1rem;
-  margin-bottom: 20px;
-}
-
-/* Data types section - Table styling */
-.data-types-section {
-  background: white;
-  border-radius: 0 0 15px 15px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.section-header {
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
-  color: white;
-  padding: 25px 30px;
-  border-bottom: 3px solid #8B1538;
-  position: relative;
-  overflow: hidden;
-}
-
-.section-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.1) 100%);
-  pointer-events: none;
-}
-
-.section-header h2 {
-  font-size: 2.0rem;
-  font-weight: 800; /* Tăng độ đậm như header chính */
-  margin-bottom: 8px;
-  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif; /* Font giống header chính */
-  color: #FFFFFF; /* Màu trắng như header chính */
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.4); /* Shadow đậm như header chính */
-  letter-spacing: 0.04em; /* Khoảng cách chữ như header chính */
-  text-transform: uppercase; /* Viết hoa như header chính */
-  position: relative;
-  z-index: 1;
-}
-
-.section-header p {
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0;
-  font-size: 1rem;
-  position: relative;
-  z-index: 1;
-}
-
-/* Table styling với thương hiệu Agribank */
-.data-types-table {
-  overflow-x: auto;
-  min-width: 0; /* Cho phép table co lại */
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-}
-
-/* Debug button */
-.btn-debug {
-  background: linear-gradient(45deg, #ff6b6b, #ffa726);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
-}
-
-.btn-debug:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
-  background: linear-gradient(45deg, #ff5252, #ff9800);
-}
-
-.btn-debug:active {
-  transform: translateY(0);
-}
-
-.btn-debug:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Existing styles for other buttons */
-.bulk-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.btn-clear-all, .btn-refresh {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
-}
-
-.btn-clear-all {
-  background: linear-gradient(45deg, #dc3545, #c82333);
-  color: white;
-  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
-}
-
-.btn-refresh {
-  background: linear-gradient(45deg, #28a745, #20c997);
-  color: white;
-  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
-}
-
-.btn-clear-all:hover, .btn-refresh:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-/* 🏦 AGRIBANK BRAND STYLING - Bảng Kho dữ liệu thô */
-
-/* Container chính */
-.data-import-view {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  min-height: 100vh;
-  font-family: 'Segoe UI', 'Arial', sans-serif;
-}
-
-/* Header section với thương hiệu Agribank */
-.controls-section {
-  background: linear-gradient(135deg, #8B1538 0%, #A6195C 50%, #B91D47 100%);
-  color: white;
-  padding: 30px;
-  border-radius: 15px 15px 0 0;
-  margin-bottom: 0;
-  box-shadow: 0 8px 25px rgba(139, 21, 56, 0.3);
-}
-
-.controls-section h1 {
-  color: white;
-  font-size: 2.5rem;
-  font-weight: 700;
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-  margin-bottom: 10px;
-  font-family: 'Playfair Display', 'Georgia', serif;
-}
-
-.controls-section .subtitle {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.1rem;
-  margin-bottom: 20px;
-}
-
-/* Data types section - Table styling */
-.data-types-section {
-  background: white;
-  border-radius: 0 0 15px 15px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.section-header {
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
-  color: white;
-  padding: 25px 30px;
-  border-bottom: 3px solid #8B1538;
-  position: relative;
-  overflow: hidden;
-}
-
-.section-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.1) 100%);
-  pointer-events: none;
-}
-
-.section-header h2 {
-  font-size: 2.0rem;
-  font-weight: 800; /* Tăng độ đậm như header chính */
-  margin-bottom: 8px;
-  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif; /* Font giống header chính */
-  color: #FFFFFF; /* Màu trắng như header chính */
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.4); /* Shadow đậm như header chính */
-  letter-spacing: 0.04em; /* Khoảng cách chữ như header chính */
-  text-transform: uppercase; /* Viết hoa như header chính */
-  position: relative;
-  z-index: 1;
-}
-
-.section-header p {
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0;
-  font-size: 1rem;
-  position: relative;
-  z-index: 1;
-}
-
-/* Table styling với thương hiệu Agribank */
-.data-types-table {
-  overflow-x: auto;
-  min-width: 0; /* Cho phép table co lại */
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-}
-
-/* Debug button */
-.btn-debug {
-  background: linear-gradient(45deg, #ff6b6b, #ffa726);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
-}
-
-.btn-debug:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
-  background: linear-gradient(45deg, #ff5252, #ff9800);
-}
-
-.btn-debug:active {
-  transform: translateY(0);
-}
-
-.btn-debug:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Existing styles for other buttons */
-.bulk-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.btn-clear-all, .btn-refresh {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
-}
-
-.btn-clear-all {
-  background: linear-gradient(45deg, #dc3545, #c82333);
-  color: white;
-  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
-}
-
-.btn-refresh {
-  background: linear-gradient(45deg, #28a745, #20c997);
-  color: white;
-  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
-}
-
-.btn-clear-all:hover, .btn-refresh:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-/* 🏦 AGRIBANK BRAND STYLING - Bảng Kho dữ liệu thô */
-
-/* Container chính */
-.data-import-view {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  min-height: 100vh;
-  font-family: 'Segoe UI', 'Arial', sans-serif;
-}
-
-/* Header section với thương hiệu Agribank */
-.controls-section {
-  background: linear-gradient(135deg, #8B1538 0%, #A6195C 50%, #B91D47 100%);
-  color: white;
-  padding: 30px;
-  border-radius: 15px 15px 0 0;
-  margin-bottom: 0;
-  box-shadow: 0 8px 25px rgba(139, 21, 56, 0.3);
-}
-
-.controls-section h1 {
-  color: white;
-  font-size: 2.5rem;
-  font-weight: 700;
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-  margin-bottom: 10px;
-  font-family: 'Playfair Display', 'Georgia', serif;
-}
-
-.controls-section .subtitle {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.1rem;
-  margin-bottom: 20px;
-}
-
-/* Data types section - Table styling */
-.data-types-section {
-  background: white;
-  border-radius: 0 0 15px 15px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.section-header {
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
-  color: white;
-  padding: 25px 30px;
-  border-bottom: 3px solid #8B1538;
-  position: relative;
-  overflow: hidden;
-}
-
-.section-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.1) 100%);
-  pointer-events: none;
-}
-
-.section-header h2 {
-  font-size: 2.0rem;
-  font-weight: 800; /* Tăng độ đậm như header chính */
-  margin-bottom: 8px;
-  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif; /* Font giống header chính */
-  color: #FFFFFF; /* Màu trắng như header chính */
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.4); /* Shadow đậm như header chính */
-  letter-spacing: 0.04em; /* Khoảng cách chữ như header chính */
-  text-transform: uppercase; /* Viết hoa như header chính */
-  position: relative;
-  z-index: 1;
-}
-
-.section-header p {
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0;
-  font-size: 1rem;
-  position: relative;
-  z-index: 1;
-}
-
-/* Table styling với thương hiệu Agribank */
-.data-types-table {
-  overflow-x: auto;
-  min-width: 0; /* Cho phép table co lại */
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-}
-
-/* Debug button */
-.btn-debug {
-  background: linear-gradient(45deg, #ff6b6b, #ffa726);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
-}
-
-.btn-debug:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
-  background: linear-gradient(45deg, #ff5252, #ff9800);
-}
-
-.btn-debug:active {
-  transform: translateY(0);
-}
-
-.btn-debug:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Existing styles for other buttons */
-.bulk-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.btn-clear-all, .btn-refresh {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
-}
-
-.btn-clear-all {
-  background: linear-gradient(45deg, #dc3545, #c82333);
-  color: white;
-  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
-}
-
-.btn-refresh {
-  background: linear-gradient(45deg, #28a745, #20c997);
-  color: white;
-  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
-}
-
-.btn-clear-all:hover, .btn-refresh:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-/* 🏦 AGRIBANK BRAND STYLING - Bảng Kho dữ liệu thô */
-
-/* Container chính */
-.data-import-view {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  min-height: 100vh;
-  font-family: 'Segoe UI', 'Arial', sans-serif;
-}
-
-/* Header section với thương hiệu Agribank */
-.controls-section {
-  background: linear-gradient(135deg, #8B1538 0%, #A6195C 50%, #B91D47 100%);
-  color: white;
-  padding: 30px;
-  border-radius: 15px 15px 0 0;
-  margin-bottom: 0;
-  box-shadow: 0 8px 25px rgba(139, 21, 56, 0.3);
-}
-
-.controls-section h1 {
-  color: white;
-  font-size: 2.5rem;
-  font-weight: 700;
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-  margin-bottom: 10px;
-  font-family: 'Playfair Display', 'Georgia', serif;
-}
-
-.controls-section .subtitle {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.1rem;
-  margin-bottom: 20px;
-}
-
-/* Data types section - Table styling */
-.data-types-section {
-  background: white;
-  border-radius: 0 0 15px 15px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.section-header {
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
-  color: white;
-  padding: 25px 30px;
-  border-bottom: 3px solid #8B1538;
-  position: relative;
-  overflow: hidden;
-}
-
-.section-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.1) 100%);
-  pointer-events: none;
-}
-
-.section-header h2 {
-  font-size: 2.0rem;
-  font-weight: 800; /* Tăng độ đậm như header chính */
-  margin-bottom: 8px;
-  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif; /* Font giống header chính */
-  color: #FFFFFF; /* Màu trắng như header chính */
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.4); /* Shadow đậm như header chính */
-  letter-spacing: 0.04em; /* Khoảng cách chữ như header chính */
-  text-transform: uppercase; /* Viết hoa như header chính */
-  position: relative;
-  z-index: 1;
-}
-
-.section-header p {
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0;
-  font-size: 1rem;
-  position: relative;
-  z-index: 1;
-}
-
-/* Table styling với thương hiệu Agribank */
-.data-types-table {
-  overflow-x: auto;
-  min-width: 0; /* Cho phép table co lại */
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-}
-
-/* Debug button */
-.btn-debug {
-  background: linear-gradient(45deg, #ff6b6b, #ffa726);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
-}
-
-.btn-debug:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
-  background: linear-gradient(45deg, #ff5252, #ff9800);
-}
-
-.btn-debug:active {
-  transform: translateY(0);
-}
-
-.btn-debug:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Existing styles for other buttons */
-.bulk-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.btn-clear-all, .btn-refresh {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
-}
-
-.btn-clear-all {
-  background: linear-gradient(45deg, #dc3545, #c82333);
-  color: white;
-  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
-}
-
-.btn-refresh {
-  background: linear-gradient(45deg, #28a745, #20c997);
-  color: white;
-  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
-}
-
-.btn-clear-all:hover, .btn-refresh:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-/* 🏦 AGRIBANK BRAND STYLING - Bảng Kho dữ liệu thô */
-
-/* Container chính */
-.data-import-view {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  min-height: 100vh;
-  font-family: 'Segoe UI', 'Arial', sans-serif;
-}
-
-/* Header section với thương hiệu Agribank */
-.controls-section {
-  background: linear-gradient(135deg, #8B1538 0%, #A6195C 50%, #B91D47 100%);
-  color: white;
-  padding: 30px;
-  border-radius: 15px 15px 0 0;
-  margin-bottom: 0;
-  box-shadow: 0 8px 25px rgba(139, 21, 56, 0.3);
-}
-
-.controls-section h1 {
-  color: white;
-  font-size: 2.5rem;
-  font-weight: 700;
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-  margin-bottom: 10px;
-  font-family: 'Playfair Display', 'Georgia', serif;
-}
-
-.controls-section .subtitle {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.1rem;
-  margin-bottom: 20px;
-}
-
-/* Data types section - Table styling */
-.data-types-section {
-  background: white;
-  border-radius: 0 0 15px 15px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.section-header {
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
-  color: white;
-  padding: 25px 30px;
-  border-bottom: 3px solid #8B1538;
-  position: relative;
-  overflow: hidden;
-}
-
-.section-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.1) 100%);
-  pointer-events: none;
-}
-
-.section-header h2 {
-  font-size: 2.0rem;
-  font-weight: 800; /* Tăng độ đậm như header chính */
-  margin-bottom: 8px;
-  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif; /* Font giống header chính */
-  color: #FFFFFF; /* Màu trắng như header chính */
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.4); /* Shadow đậm như header chính */
-  letter-spacing: 0.04em; /* Khoảng cách chữ như header chính */
-  text-transform: uppercase; /* Viết hoa như header chính */
-  position: relative;
-  z-index: 1;
-}
-
-.section-header p {
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0;
-  font-size: 1rem;
-  position: relative;
-  z-index: 1;
-}
-
-/* Table styling với thương hiệu Agribank */
-.data-types-table {
-  overflow-x: auto;
-  min-width: 0; /* Cho phép table co lại */
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-}
-
-/* Debug button */
-.btn-debug {
-  background: linear-gradient(45deg, #ff6b6b, #ffa726);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
-}
-
-.btn-debug:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
-  background: linear-gradient(45deg, #ff5252, #ff9800);
-}
-
-.btn-debug:active {
-  transform: translateY(0);
-}
-
-.btn-debug:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Existing styles for other buttons */
-.bulk-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.btn-clear-all, .btn-refresh {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
-}
-
-.btn-clear-all {
-  background: linear-gradient(45deg, #dc3545, #c82333);
-  color: white;
-  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
-}
-
-.btn-refresh {
-  background: linear-gradient(45deg, #28a745, #20c997);
-  color: white;
-  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
-}
-
-.btn-clear-all:hover, .btn-refresh:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-/* 🏦 AGRIBANK BRAND STYLING - Bảng Kho dữ liệu thô */
-
-/* Container chính */
-.data-import-view {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  min-height: 100vh;
-  font-family: 'Segoe UI', 'Arial', sans-serif;
-}
-
-/* Header section với thương hiệu Agribank */
-.controls-section {
-  background: linear-gradient(135deg, #8B1538 0%, #A6195C 50%, #B91D47 100%);
-  color: white;
-  padding: 30px;
-  border-radius: 15px 15px 0 0;
-  margin-bottom: 0;
-  box-shadow: 0 8px 25px rgba(139, 21, 56, 0.3);
-}
-
-.controls-section h1 {
-  color: white;
-  font-size: 2.5rem;
-  font-weight: 700;
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-  margin-bottom: 10px;
-  font-family: 'Playfair Display', 'Georgia', serif;
-}
-
-.controls-section .subtitle {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.1rem;
-  margin-bottom: 20px;
-}
-
-/* Data types section - Table styling */
-.data-types-section {
-  background: white;
-  border-radius: 0 0 15px 15px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.section-header {
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
-  color: white;
-  padding: 25px 30px;
-  border-bottom: 3px solid #8B1538;
-  position: relative;
-  overflow: hidden;
-}
-
-.section-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.1) 100%);
-  pointer-events: none;
-}
-
-.section-header h2 {
-  font-size: 2.0rem;
-  font-weight: 800; /* Tăng độ đậm như header chính */
-  margin-bottom: 8px;
-  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif; /* Font giống header chính */
-  color: #FFFFFF; /* Màu trắng như header chính */
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.4); /* Shadow đậm như header chính */
-  letter-spacing: 0.04em; /* Khoảng cách chữ như header chính */
-  text-transform: uppercase; /* Viết hoa như header chính */
-  position: relative;
-  z-index: 1;
-}
-
-.section-header p {
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0;
-  font-size: 1rem;
-  position: relative;
-  z-index: 1;
-}
-
-/* Table styling với thương hiệu Agribank */
-.data-types-table {
-  overflow-x: auto;
-  min-width: 0; /* Cho phép table co lại */
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-}
-
-/* Debug button */
-.btn-debug {
-  background: linear-gradient(45deg, #ff6b6b, #ffa726);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3);
-}
-
-.btn-debug:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
-  background: linear-gradient(45deg, #ff5252, #ff9800);
-}
-
-.btn-debug:active {
-  transform: translateY(0);
-}
-
-.btn-debug:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Existing styles for other buttons */
-.bulk-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.btn-clear-all, .btn-refresh {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: none;
-}
-
-.btn-clear-all {
-  background: linear-gradient(45deg, #dc3545, #c82333);
-  color: white;
-  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
-}
-
-.btn-refresh {
-  background: linear-gradient(45deg, #28a745, #20c997);
-  color: white;
-  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
-}
-
-.btn-clear-all:hover, .btn-refresh:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-/* 🏦 AGRIBANK BRAND STYLING - Bảng Kho dữ liệu thô */
-
-/* Container chính */
-.data-import-view {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  min-height: 100vh;
-  font-family: 'Segoe UI', 'Arial', sans-serif;
-}
-
-/* Header section với thương hiệu Agribank */
-.controls-section {
-  background: linear-gradient(135deg, #8B1538 0%, #A6195C 50%, #B91D47 100%);
-  color: white;
-  padding: 30px;
-  border-radius: 15px 15px 0 0;
-  margin-bottom: 0;
-  box-shadow: 0 8px 25px rgba(139, 21, 56, 0.3);
-}
-
-.controls-section h1 {
-  color: white;
-  font-size: 2.5rem;
-  font-weight: 700;
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
-  margin-bottom: 10px;
-  font-family: 'Playfair Display', 'Georgia', serif;
-}
-
-.controls-section .subtitle {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.1rem;
-  margin-bottom: 20px;
-}
-
-/* Data types section - Table styling */
-.data-types-section {
-  background: white;
-  border-radius: 0 0 15px 15px;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-}
-
-.section-header {
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
-  color: white;
-  padding: 25px 30px;
-  border-bottom: 3px solid #8B1538;
-  position: relative;
-  overflow: hidden;
-}
-
-.section-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.1) 100%);
-  pointer-events: none;
-}
-
-.section-header h2 {
-  font-size: 2.0rem;
-  font-weight: 800; /* Tăng độ đậm như header chính */
-  margin-bottom: 8px;
-  font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif; /* Font giống header chính */
-  color: #FFFFFF; /* Màu trắng như header chính */
-  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.4); /* Shadow đậm như header chính */
-  letter-spacing: 0.04em; /* Khoảng cách chữ như header chính */
-  text-transform: uppercase; /* Viết hoa như header chính */
-  position: relative;
-  z-index: 1;
-}
-
-.section-header p {
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0;
-  font-size: 1rem;
-  position: relative;
-  z-index: 1;
-}
-
-/* Table styling với thương hiệu Agribank */
-.data-types-table {
-  overflow-x: auto;
-  min-width: 0; /* Cho phép table co lại */
-  border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-}
-
-/* Confirmation Modal */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: white;
-  border-radius: 15px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  max-width: 90%;
-  max-height: 90%;
-  overflow: auto;
-  position: relative;
-}
-
-.modal-large {
-  max-width: 95%;
-  max-height: 95%;
-}
-
-.modal-header {
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
-  color: white;
-  padding: 20px;
-  border-radius: 15px 15px 0 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 1.4rem;
-  font-weight: 700;
-}
-
-.modal-close {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 1.5rem;
-  cursor: pointer;
-  padding: 0;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  transition: background 0.3s ease;
-}
-
-.modal-close:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.modal-body {
-  padding: 20px;
-}
-
-.modal-footer {
-  padding: 15px 20px;
-  border-top: 1px solid #e9ecef;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-/* Enhanced Modal Styling */
-.enhanced-modal {
-  min-width: 600px;
-  max-width: 900px;
-}
-
-/* Enhanced Upload Area */
-.upload-area {
-  border: 2px dashed #8B1538;
-  border-radius: 15px;
-  padding: 30px 20px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
-  position: relative;
-  overflow: hidden;
-}
-
-.upload-area::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, transparent 49%, rgba(139, 21, 56, 0.1) 50%, transparent 51%);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.upload-area.drag-over {
-  border-color: #C41E3A;
-  background: linear-gradient(135deg, #fff8f8 0%, #fff 100%);
-  transform: scale(1.02);
-  box-shadow: 0 8px 25px rgba(139, 21, 56, 0.2);
-}
-
-.upload-area.drag-over::before {
-  opacity: 1;
-}
-
-.upload-area.has-files {
-  border-style: solid;
-  background: linear-gradient(135deg, #f0f8f0 0%, #fff 100%);
-  border-color: #28a745;
-}
-
-.upload-area.has-zip {
-  background: linear-gradient(135deg, #fff8e1 0%, #fff 100%);
-}
-
-.upload-prompt h4 {
-  color: #8B1538;
-  margin: 15px 0;
-  font-weight: 600;
-  font-size: 1.2rem;
-}
-
-.supported-formats {
-  margin-top: 20px;
-}
-
-.format-title {
-  color: #6c757d;
-  font-size: 0.9rem;
-  margin-bottom: 10px;
-  font-weight: 500;
-}
-
-.format-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-}
-
-.format-badge {
-  background: #e9ecef;
-  color: #495057;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  border: 1px solid #dee2e6;
-}
-
-.format-badge.zip-badge {
-  background: #fff3cd;
-  color: #856404;
-  border-color: #ffeaa7;
-}
-
-.upload-summary {
-  padding: 10px 0;
-}
-
-.files-selected {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.summary-icon {
-  font-size: 1.5rem;
-}
-
-.summary-text {
-  color: #28a745;
-  font-weight: 600;
-  font-size: 1.1rem;
-}
-
-.total-size {
-  color: #6c757d;
-  font-weight: 400;
-}
-
-.click-to-add {
-  color: #8B1538;
-  font-size: 0.9rem;
-  margin: 0;
-  opacity: 0.8;
-}
-
-/* Enhanced Selected Files */
-.selected-files {
-  margin: 20px 0;
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 12px;
-  border: 1px solid #e9ecef;
-}
-
-.files-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.files-header h4 {
-  margin: 0;
-  color: #8B1538;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.btn-clear-files {
-  background: #dc3545;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.btn-clear-files:hover {
-  background: #c82333;
-  transform: translateY(-1px);
-}
-
-.files-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.enhanced-file-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 15px;
-  background: white;
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-}
-
-.enhanced-file-item:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-color: #8B1538;
-}
-
-.file-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-}
-
-.file-details {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.file-name {
-  font-weight: 600;
-  color: #495057;
-  word-break: break-all;
-  max-width: 300px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.file-meta {
-  display: flex;
-  gap: 15px;
-  font-size: 0.8rem;
-  color: #6c757d;
-}
-
-.file-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.zip-indicator {
-  background: #fff3cd;
-  color: #856404;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  border: 1px solid #ffeaa7;
-}
-
-/* File Analysis */
-.file-analysis {
-  margin-top: 15px;
-  padding: 15px;
-  background: white;
-  border-radius: 8px;
-  border-left: 4px solid #8B1538;
-}
-
-.analysis-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 8px;
-  font-size: 0.9rem;
-  color: #495057;
-}
-
-.analysis-icon {
-  font-size: 1rem;
-}
-
-/* Enhanced Archive Section */
-.archive-section {
-  background: #fff8e1;
-  padding: 20px;
-  border-radius: 12px;
-  border: 1px solid #ffeaa7;
-  margin: 20px 0;
-}
-
-.form-label {
-  color: #8B1538;
-  font-weight: 600;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.optional-badge {
-  background: #e9ecef;
-  color: #6c757d;
-  font-size: 0.7rem;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-weight: 400;
-}
-
-.enhanced-checkbox {
-  background: white;
-  padding: 12px 15px;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
-  margin-bottom: 15px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.enhanced-checkbox:hover {
-  background: #f8f9fa;
-}
-
-.checkbox-content {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.password-preview {
-  font-family: 'Courier New', monospace;
-  color: #6c757d;
-  font-size: 0.8rem;
-  font-weight: 600;
-  background: #f8f9fa;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.password-input-wrapper {
-  position: relative;
-}
-
-.password-input {
-  padding-right: 45px !important;
-}
-
-.btn-toggle-password {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1rem;
-  padding: 5px;
-  border-radius: 4px;
-  transition: background 0.3s ease;
-}
-
-.btn-toggle-password:hover {
-  background: #f8f9fa;
-}
-
-.enhanced-hint {
-  margin-top: 10px;
-}
-
-.hint-success {
-  color: #28a745;
-  font-size: 0.9rem;
-  font-weight: 500;
-}
-
-.hint-default {
-  color: #6c757d;
-  font-size: 0.9rem;
-}
-
-/* Enhanced Progress Section */
-.enhanced-progress {
-  background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
-  border: 2px solid #8B1538;
-  border-radius: 15px;
-  padding: 25px;
-  margin: 20px 0;
-}
-
-.progress-stats {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.progress-percentage {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #8B1538;
-  transition: all 0.3s ease;
-}
-
-.progress-percentage.near-complete {
-  color: #28a745;
-  animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
-.upload-speed {
-  color: #007bff;
-  font-weight: 600;
-  font-family: 'Courier New', monospace;
-}
-
-.remaining-time {
-  color: #dc3545;
-  font-weight: 600;
-}
-
+/* THÊM MỚI: CSS cải tiến cho Progress Bar */
 .progress-bar-container.enhanced {
-  background: #e9ecef;
-  height: 20px;
-  border-radius: 10px;
+  height: 25px;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 15px;
   overflow: hidden;
-  position: relative;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
   margin: 15px 0;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.progress-bar {
-  background: linear-gradient(90deg, #8B1538 0%, #C41E3A 50%, #8B1538 100%);
+.progress-bar-container.enhanced .progress-bar {
   height: 100%;
-  transition: width 0.3s ease;
-  position: relative;
+  background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+  border-radius: 15px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: width 0.3s ease-in-out;
+  position: relative;
   overflow: hidden;
+  min-width: 50px; /* Luôn hiển thị phần nhỏ */
 }
 
-.progress-bar::before {
-  content: '';
+.progress-bar.progress-active {
+  animation: pulse 2s infinite;
+}
+
+.progress-bar .progress-animation {
   position: absolute;
   top: 0;
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  animation: shimmer 1.5s infinite;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 5px rgba(46, 125, 50, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(46, 125, 50, 0);
+  }
 }
 
 @keyframes shimmer {
@@ -4009,229 +1987,206 @@ onMounted(async () => {
   100% { left: 100%; }
 }
 
+.progress-bar-container.enhanced .progress-text {
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  z-index: 2;
+}
+
 .progress-bar.progress-near-complete {
-  background: linear-gradient(90deg, #28a745 0%, #20c997 50%, #28a745 100%);
+  background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
 }
 
 .progress-bar.progress-processing {
-  background: linear-gradient(90deg, #007bff 0%, #0056b3 50%, #007bff 100%);
-  animation: processing 2s infinite;
+  background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
 }
 
-@keyframes processing {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.8; }
-}
-
-.progress-text {
-  color: white;
-  font-weight: 600;
-  font-size: 0.8rem;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-}
-
-.progress-details {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 20px;
-  margin-top: 15px;
-}
-
-.progress-message {
-  display: flex;
+.upload-speed, .remaining-time {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #555;
+  margin-left: 8px;
+  display: inline-flex;
   align-items: center;
-  gap: 8px;
-  flex: 1;
-}
-
-.message-icon {
-  font-size: 1.2rem;
-}
-
-.message-text {
-  color: #495057;
   font-weight: 500;
 }
 
-.progress-breakdown {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  font-size: 0.8rem;
+/* Enhance table styling trong .filtered-results-section */
+.filtered-results-section {
+  margin-top: 40px;
+  margin-bottom: 40px;
+  border-radius: 15px !important;
+  box-shadow: 0 8px 25px rgba(139, 21, 56, 0.4) !important;
+  background-color: #8B1538;
+  color: white;
+  overflow: hidden;
+  position: relative;
 }
 
-.breakdown-item {
-  display: flex;
-  justify-content: space-between;
-  gap: 15px;
+.filtered-results-section .section-header {
+  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
+  border-bottom: 3px solid rgba(255, 255, 255, 0.3);
+  padding: 25px 30px;
+  position: relative;
 }
 
-.breakdown-label {
-  color: #6c757d;
+.filtered-results-section .section-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.1) 100%);
+  pointer-events: none;
 }
 
-.breakdown-value {
-  color: #495057;
-  font-weight: 600;
-  font-family: 'Courier New', monospace;
+.filtered-results-section .results-table {
+  padding: 25px;
 }
 
-/* Processing Steps */
-.processing-steps {
-  margin-top: 20px;
+.filtered-results-section table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: white;
+  min-width: 800px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.filtered-results-section thead tr {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.filtered-results-section th {
+  padding: 18px 15px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+  position: relative;
+}
+
+/* Border cho th */
+.filtered-results-section th:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 25%;
+  height: 50%;
+  width: 1px;
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.filtered-results-section tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  transition: background-color 0.3s;
+}
+
+.filtered-results-section tbody tr:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.filtered-results-section td {
   padding: 15px;
+  vertical-align: middle;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Border cho td */
+.filtered-results-section td:not(:last-child) {
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Mở rộng styling cho bảng chính của data types */
+.data-types-table table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
   background: white;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
+  font-size: 14px;
+  min-width: 800px;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
-.step-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 0;
-  color: #6c757d;
-  transition: all 0.3s ease;
+.data-types-table thead tr {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-bottom: 2px solid #dee2e6;
 }
 
-.step-item.active {
-  color: #28a745;
-  font-weight: 600;
+.data-types-table th {
+  padding: 18px 15px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 14px;
+  color: #495057;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  border-bottom: 2px solid #dee2e6;
+  position: relative;
 }
 
-.step-icon {
-  font-size: 1rem;
-  width: 20px;
-  text-align: center;
+/* Border cho th */
+.data-types-table th:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 25%;
+  height: 50%;
+  width: 1px;
+  background-color: #dee2e6;
 }
 
-/* Form Input Enhancements */
-.form-input {
-  width: 100%;
-  padding: 12px 15px;
-  border: 2px solid #e9ecef;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: all 0.3s ease;
+.data-types-table tbody tr {
+  border-bottom: 1px solid #e9ecef;
+  transition: all 0.3s;
 }
 
-.form-input:focus {
-  border-color: #8B1538;
-  box-shadow: 0 0 0 3px rgba(139, 21, 56, 0.1);
-  outline: none;
+.data-types-table tbody tr:hover {
+  background-color: #f8f9fa;
 }
 
-.form-input.auto-filled {
-  background: #f0f8f0;
-  border-color: #28a745;
+.data-types-table td {
+  padding: 15px;
+  vertical-align: middle;
+  border-bottom: 1px solid #e9ecef;
 }
 
-.form-textarea {
-  width: 100%;
-  padding: 12px 15px;
-  border: 2px solid #e9ecef;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-family: inherit;
-  resize: vertical;
-  min-height: 80px;
-  transition: all 0.3s ease;
+/* Border cho td */
+.data-types-table td:not(:last-child) {
+  border-right: 1px solid #e9ecef;
 }
 
-.form-textarea:focus {
-  border-color: #8B1538;
-  box-shadow: 0 0 0 3px rgba(139, 21, 56, 0.1);
-  outline: none;
-}
-
-/* Button Enhancements */
-.btn-large {
-  padding: 12px 24px;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.btn-import-confirm {
-  background: #8B1538;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.btn-import-confirm:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(139, 21, 56, 0.3);
-}
-
-.btn-import-confirm:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.btn-cancel {
-  background: #6c757d;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  padding: 10px 20px;
-}
-
-.btn-cancel:hover {
-  background: #5a6268;
-  transform: translateY(-1px);
-}
-
-/* File Size Limit */
-.file-size-limit {
-  color: #dc3545;
-  font-size: 0.8rem;
-  font-weight: 400;
-  margin-left: 10px;
-  background: #fff5f5;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .enhanced-modal {
-    min-width: 95%;
-    margin: 10px;
+/* Responsive styling cho các bảng */
+@media (max-width: 992px) {
+  .data-types-table, .filtered-results-section .results-table {
+    padding: 10px;
   }
   
-  .progress-details {
-    flex-direction: column;
-    gap: 10px;
+  .data-types-table table, .filtered-results-section table {
+    font-size: 13px;
   }
   
-  .files-header {
-    flex-direction: column;
-    gap: 10px;
-    align-items: flex-start;
+  .data-types-table th, .data-types-table td,
+  .filtered-results-section th, .filtered-results-section td {
+    padding: 12px 10px;
   }
   
-  .enhanced-file-item {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-  
-  .file-info {
-    width: 100%;
-  }
-  
-  .file-actions {
-    align-self: flex-end;
+  .btn-action {
+    padding: 6px 10px;
+    font-size: 12px;
   }
 }
 </style>
