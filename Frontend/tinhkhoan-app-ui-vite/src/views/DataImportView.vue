@@ -2,8 +2,8 @@
   <div class="raw-data-warehouse">
     <!-- Header Section -->
     <div class="header-section">
-      <h1>🗄️ KHO DỮ LIỆU THÔ</h1>
-      <p class="subtitle">Import và quản lý dữ liệu thô theo từng loại dữ liệu chuyên biệt</p>
+      <h1>🏦 KHO DỮ LIỆU THÔ - AGRIBANK LAI CHAU</h1>
+      <p class="subtitle">Hệ thống quản lý và import dữ liệu nghiệp vụ ngân hàng chuyên nghiệp</p>
     </div>
 
     <!-- Thông báo -->
@@ -72,8 +72,8 @@
     <!-- Data Types List -->
     <div class="data-types-section">
       <div class="section-header">
-        <h2>📊 Danh sách loại dữ liệu</h2>
-        <p>Mỗi loại dữ liệu được hiển thị với các thao tác: Xem, Import, Xóa theo ngày</p>
+        <h2>📊 BẢNG QUẢN LÝ DỮ LIỆU NGHIỆP VỤ</h2>
+        <p>Theo dõi và quản lý tất cả loại dữ liệu của hệ thống Agribank Lai Chau</p>
       </div>
 
       <div class="data-types-table">
@@ -1392,6 +1392,149 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+/* 🏦 AGRIBANK BRAND STYLING - Header section */
+.header-section {
+  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 50%, #8B1538 100%);
+  color: white;
+  padding: 40px 30px;
+  text-align: center;
+  margin-bottom: 30px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(139, 21, 56, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.header-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.header-section h1 {
+  font-size: 2.8rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  font-family: 'Playfair Display', 'Georgia', serif;
+  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.02em;
+}
+
+.header-section .subtitle {
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* 🏦 Alert styling với thương hiệu Agribank */
+.alert {
+  padding: 15px 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.alert::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 4px;
+  background: currentColor;
+}
+
+.alert-success {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.alert-error {
+  background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.alert-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.alert-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: currentColor;
+  opacity: 0.7;
+  margin-left: auto;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.alert-close:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Loading styling với thương hiệu Agribank */
+.loading-section {
+  text-align: center;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+  border-radius: 15px;
+  margin-bottom: 25px;
+  border: 2px solid #8B1538;
+  box-shadow: 0 6px 20px rgba(139, 21, 56, 0.15);
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #8B1538;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-section p {
+  color: #8B1538;
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
 /* Debug button */
 .btn-debug {
   background: linear-gradient(45deg, #ff6b6b, #ffa726);
@@ -1454,5 +1597,468 @@ onMounted(async () => {
 .btn-clear-all:hover, .btn-refresh:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* 🏦 AGRIBANK BRAND STYLING - Bảng Kho dữ liệu thô */
+
+/* Container chính */
+.data-import-view {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  min-height: 100vh;
+  font-family: 'Segoe UI', 'Arial', sans-serif;
+}
+
+/* Header section với thương hiệu Agribank */
+.controls-section {
+  background: linear-gradient(135deg, #8B1538 0%, #A6195C 50%, #B91D47 100%);
+  color: white;
+  padding: 30px;
+  border-radius: 15px 15px 0 0;
+  margin-bottom: 0;
+  box-shadow: 0 8px 25px rgba(139, 21, 56, 0.3);
+}
+
+.controls-section h1 {
+  color: white;
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+  margin-bottom: 10px;
+  font-family: 'Playfair Display', 'Georgia', serif;
+}
+
+.controls-section .subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.1rem;
+  margin-bottom: 20px;
+}
+
+/* Data types section - Table styling */
+.data-types-section {
+  background: white;
+  border-radius: 0 0 15px 15px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.section-header {
+  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
+  color: white;
+  padding: 25px 30px;
+  border-bottom: 3px solid #8B1538;
+  position: relative;
+  overflow: hidden;
+}
+
+.section-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.1) 100%);
+  pointer-events: none;
+}
+
+.section-header h2 {
+  color: white;
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-family: 'Playfair Display', 'Georgia', serif;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 1;
+}
+
+.section-header p {
+  color: rgba(255, 255, 255, 0.9);
+  margin: 0;
+  font-size: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* Table styling với thương hiệu Agribank */
+.data-types-table {
+  overflow-x: auto;
+}
+
+.data-types-table table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  font-size: 14px;
+}
+
+.data-types-table thead tr {
+  background: linear-gradient(135deg, #8B1538 0%, #A6195C 100%);
+  color: white;
+}
+
+.data-types-table thead th {
+  padding: 18px 15px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  position: relative;
+}
+
+.data-types-table thead th:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+}
+
+.data-types-table tbody tr {
+  border-bottom: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.data-types-table tbody tr:hover {
+  background: linear-gradient(135deg, #f8f9fa 0%, #fff8f8 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(139, 21, 56, 0.1);
+}
+
+.data-types-table tbody tr:nth-child(even) {
+  background: #fafbfc;
+}
+
+.data-types-table tbody tr:nth-child(even):hover {
+  background: linear-gradient(135deg, #f8f9fa 0%, #fff5f5 100%);
+}
+
+.data-types-table tbody td {
+  padding: 15px;
+  vertical-align: middle;
+  border: none;
+}
+
+/* Data type info styling */
+.data-type-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.data-type-icon {
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #8B1538 0%, #A6195C 100%);
+  color: white;
+  border-radius: 10px;
+  box-shadow: 0 3px 8px rgba(139, 21, 56, 0.3);
+  animation: gentle-pulse 3s ease-in-out infinite;
+}
+
+@keyframes gentle-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.data-type-info strong {
+  color: #8B1538;
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Records count styling */
+.records-cell {
+  text-align: center;
+}
+
+.records-count {
+  display: inline-block;
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  min-width: 60px;
+  box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Actions cell styling */
+.actions-cell {
+  text-align: center;
+}
+
+.btn-action {
+  padding: 8px 12px;
+  margin: 2px 4px;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.btn-view {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+}
+
+.btn-raw-view {
+  background: linear-gradient(135deg, #6f42c1 0%, #5a2d91 100%);
+  color: white;
+}
+
+.btn-import {
+  background: linear-gradient(135deg, #8B1538 0%, #A6195C 100%);
+  color: white;
+}
+
+.btn-delete {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+}
+
+.btn-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  filter: brightness(1.1);
+}
+
+.btn-action:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* File formats styling */
+.file-formats {
+  color: #6c757d;
+  font-size: 0.9rem;
+  font-family: 'Courier New', monospace;
+  background: #f8f9fa;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border-left: 3px solid #8B1538;
+}
+
+/* Description cell */
+.description-cell {
+  color: #495057;
+  font-style: italic;
+  max-width: 200px;
+}
+
+/* Last update cell */
+.last-update-cell {
+  color: #6c757d;
+  font-size: 0.9rem;
+  font-family: 'Courier New', monospace;
+}
+
+/* Control Panel styling với thương hiệu Agribank */
+.control-panel {
+  background: linear-gradient(135deg, #f8f9fa 0%, #fff 100%);
+  padding: 25px;
+  border-radius: 15px;
+  margin-bottom: 25px;
+  border: 2px solid #8B1538;
+  box-shadow: 0 6px 20px rgba(139, 21, 56, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.control-panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #8B1538 0%, #C41E3A 50%, #8B1538 100%);
+}
+
+.date-control-section,
+.bulk-actions-section {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(139, 21, 56, 0.2);
+  box-shadow: 0 3px 10px rgba(139, 21, 56, 0.1);
+}
+
+.date-control-section:last-child,
+.bulk-actions-section:last-child {
+  margin-bottom: 0;
+}
+
+.date-control-section h3,
+.bulk-actions-section h3 {
+  color: #8B1538;
+  margin-bottom: 15px;
+  font-weight: 700;
+  font-size: 1.3rem;
+  font-family: 'Playfair Display', 'Georgia', serif;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Date controls */
+.date-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: center;
+}
+
+.date-range {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.date-range label {
+  color: #8B1538;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.date-input {
+  padding: 8px 12px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.date-input:focus {
+  border-color: #8B1538;
+  box-shadow: 0 0 0 3px rgba(139, 21, 56, 0.1);
+  outline: none;
+}
+
+/* Bulk actions */
+.bulk-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.btn-filter,
+.btn-clear,
+.btn-clear-all,
+.btn-refresh,
+.btn-debug {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-filter {
+  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
+  color: white;
+}
+
+.btn-clear {
+  background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+  color: white;
+}
+
+.btn-clear-all {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+}
+
+.btn-refresh {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+}
+
+.btn-debug {
+  background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+  color: #212529;
+}
+
+.btn-filter:hover,
+.btn-clear:hover,
+.btn-clear-all:hover,
+.btn-refresh:hover,
+.btn-debug:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25);
+  filter: brightness(1.1);
+}
+
+.btn-filter:disabled,
+.btn-clear:disabled,
+.btn-clear-all:disabled,
+.btn-refresh:disabled,
+.btn-debug:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.bulk-actions-section h3 {
+  color: #8B1538;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .controls-section {
+    padding: 20px;
+    border-radius: 10px 10px 0 0;
+  }
+  
+  .controls-section h1 {
+    font-size: 2rem;
+  }
+  
+  .data-types-table {
+    font-size: 12px;
+  }
+  
+  .data-types-table thead th,
+  .data-types-table tbody td {
+    padding: 10px 8px;
+  }
+  
+  .btn-action {
+    padding: 6px 8px;
+    font-size: 11px;
+    margin: 1px 2px;
+  }
+  
+  .data-type-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 1.2rem;
+  }
 }
 </style>

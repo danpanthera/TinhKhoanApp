@@ -5,17 +5,12 @@
         <h1 class="hero-title">
           <img src="/src/assets/Logo-Agribank-2.png" alt="Agribank Logo" class="hero-logo" />
           <br>
-          AGRIBANK LAI CHAU CENTER
+          AGRIBANK LAI CHAU
         </h1>
         <p class="hero-subtitle">
-          HỆ THỐNG QUẢN LÝ TÍNH KHOÁN | HỆ THỐNG BÁO CÁO
+          HỆ THỐNG QUẢN LÝ KHOÁN | HỆ THỐNG BÁO CÁO
         </p>
       </div>
-    </div>
-
-    <!-- Dashboard với 6 bảng chỉ tiêu KPI -->
-    <div class="dashboard-section">
-      <BusinessPlanDashboard />
     </div>
   </div>
 </template>
@@ -24,7 +19,6 @@
 import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { isAuthenticated } from '../services/auth';
-import BusinessPlanDashboard from './dashboard/BusinessPlanDashboard.vue';
 
 const router = useRouter();
 
@@ -45,28 +39,37 @@ onMounted(() => {
 
 .welcome-hero {
   text-align: center;
-  padding: 40px 20px 20px 20px; /* Giảm padding bottom để dashboard gần hơn */
-  background: transparent; /* Làm hoàn toàn trong suốt */
+  padding: 60px 20px 60px 20px; /* Tăng padding để tạo không gian trang trọng */
+  background: transparent;
+  min-height: 80vh; /* Chiếm phần lớn màn hình */
+  display: flex;
+  align-items: center; /* Căn giữa theo chiều dọc */
+  justify-content: center; /* Căn giữa theo chiều ngang */
 }
 
 .hero-content {
-  max-width: 1200px;
+  max-width: 1000px;
   margin: 0 auto;
-  background: transparent; /* Làm hoàn toàn trong suốt */
+  background: transparent;
 }
 
 .hero-title {
-  font-size: 4.5rem; /* Kích thước lớn cho tiêu đề chính */
-  font-weight: 900; /* Tăng độ đậm tối đa */
-  font-family: 'New York', 'Times New Roman', serif; /* Font New York theo yêu cầu anh */
-  color: #8B1538; /* Màu bordeaux Agribank */
-  margin-bottom: 10px; /* Giảm từ 20px xuống 10px để sát với dòng dưới */
+  font-size: 5.5rem; /* Tăng kích thước để trang trọng hơn */
+  font-weight: 700; /* Độ đậm vừa phải, trang trọng */
+  font-family: 'Playfair Display', 'Georgia', 'Times New Roman', serif; /* Font trang trọng, sang trọng */
+  color: #8B1538; /* Màu đỏ bordeaux thương hiệu Agribank */
+  margin-bottom: 30px; /* Tăng khoảng cách với dòng dưới */
   text-shadow: 
-    0 4px 8px rgba(139, 21, 56, 0.4), /* Bóng chính màu đỏ Agribank */
-    0 2px 4px rgba(0, 0, 0, 0.3);     /* Bóng đậm để tạo chiều sâu */
-  line-height: 1.2;
-  letter-spacing: 0.08em; /* Tăng khoảng cách chữ để tạo sự mạnh mẽ */
-  text-transform: uppercase; /* Viết hoa toàn bộ để tạo sự chuyên nghiệp */
+    0 6px 12px rgba(139, 21, 56, 0.3), /* Bóng mềm mại màu đỏ Agribank */
+    0 3px 6px rgba(0, 0, 0, 0.2);      /* Bóng nhẹ để tạo chiều sâu */
+  line-height: 1.1;
+  letter-spacing: 0.05em; /* Khoảng cách chữ vừa phải, thanh lịch */
+  text-transform: uppercase;
+  /* Thêm hiệu ứng gradient text - màu bordeaux Agribank */
+  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 50%, #8B1538 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .nature-icon {
@@ -77,12 +80,11 @@ onMounted(() => {
 }
 
 .hero-logo {
-  height: 60px;
+  height: 80px; /* Tăng kích thước logo */
   width: auto;
-  margin-bottom: 20px;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
-  /* Thêm animation lắc lư như cũ */
-  animation: gentle-sway 3s ease-in-out infinite;
+  margin-bottom: 30px; /* Tăng khoảng cách */
+  filter: drop-shadow(0 6px 12px rgba(139, 21, 56, 0.4)); /* Bóng màu Agribank */
+  animation: gentle-sway 4s ease-in-out infinite; /* Chậm hơn, mềm mại hơn */
 }
 
 @keyframes gentle-sway {
@@ -107,29 +109,48 @@ onMounted(() => {
 }
 
 .hero-subtitle {
-  font-size: 1.9rem; /* Tăng từ 1.5rem lên 1.9rem (+2 cỡ) */
-  font-family: 'Labora', 'Arial', sans-serif; /* Font Labora theo yêu cầu anh */
-  color: #8B1538; /* Màu đỏ bordeaux Agribank */
-  margin-bottom: 30px; /* Giảm từ 50px xuống 30px để dashboard gần hơn */
-  margin-top: 1mm; /* Sát lại dòng trên 1mm theo yêu cầu anh */
-  font-weight: 600; /* Tăng độ đậm để nổi bật hơn */
-  font-style: italic; /* Nghiêng để tạo sự thanh lịch */
+  font-size: 2.2rem; /* Tăng kích thước để cân đối với title */
+  font-family: 'Crimson Text', 'Playfair Display', 'Georgia', serif; /* Font serif trang trọng */
+  color: #8B1538; /* Màu đỏ bordeaux thương hiệu Agribank */
+  margin-bottom: 0; /* Bỏ margin bottom vì không có dashboard */
+  margin-top: 10px; /* Khoảng cách vừa phải với title */
+  font-weight: 500; /* Trọng lượng vừa phải */
+  font-style: normal; /* Bỏ italic để trang trọng hơn */
   text-shadow: 
-    0 2px 4px rgba(139, 21, 56, 0.3),
-    0 1px 2px rgba(0, 0, 0, 0.2); /* Bóng nhẹ để tạo chiều sâu */
-  letter-spacing: 0.02em; /* Khoảng cách chữ nhẹ */
-}
-
-.dashboard-section {
-  margin-top: 0px; /* Không có margin để dashboard liền kề */
-  padding: 0; /* Không có padding để dashboard full width */
-  background: transparent;
+    0 3px 6px rgba(139, 21, 56, 0.25), /* Bóng nhẹ màu Agribank */
+    0 1px 3px rgba(0, 0, 0, 0.15);     /* Bóng nhẹ để tạo chiều sâu */
+  letter-spacing: 0.03em; /* Khoảng cách chữ thanh lịch */
+  line-height: 1.3; /* Tăng line-height để dễ đọc */
+  /* Thêm hiệu ứng gradient text nhẹ - màu bordeaux Agribank */
+  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .hero-title {
-    font-size: 3.2rem; /* Tăng từ 2.5rem lên 3.2rem (+2 cỡ) */
+    font-size: 3.8rem; /* Responsive cho tablet */
+  }
+  
+  .hero-logo {
+    height: 60px;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.8rem; /* Responsive cho tablet */
+  }
+  
+  .welcome-hero {
+    padding: 40px 15px 40px 15px;
+    min-height: 70vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-title {
+    font-size: 2.8rem; /* Responsive cho mobile */
   }
   
   .hero-logo {
@@ -137,35 +158,12 @@ onMounted(() => {
   }
   
   .hero-subtitle {
-    font-size: 1.6rem; /* Tăng từ 1.2rem lên 1.6rem (+2 cỡ) */
-    margin-bottom: 20px; /* Giảm margin cho mobile */
+    font-size: 1.4rem; /* Responsive cho mobile */
   }
   
   .welcome-hero {
-    padding: 30px 15px 15px 15px; /* Giảm padding cho mobile */
-  }
-}
-
-@media (max-width: 480px) {
-  .hero-title {
-    font-size: 2.4rem; /* Tăng từ 2rem lên 2.4rem (+2 cỡ) */
-  }
-  
-  .hero-logo {
-    height: 40px;
-  }
-  
-  .hero-subtitle {
-    font-size: 1.4rem; /* Thêm responsive cho subtitle mobile */
-    margin-bottom: 15px; /* Giảm margin cho mobile nhỏ */
-  }
-  
-  .nature-icon {
-    font-size: 2.5rem;
-  }
-  
-  .welcome-hero {
-    padding: 20px 15px 10px 15px; /* Giảm thêm padding cho mobile nhỏ */
+    padding: 30px 15px 30px 15px;
+    min-height: 60vh;
   }
 }
 </style>
