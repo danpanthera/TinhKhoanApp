@@ -256,7 +256,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import { ElMessage, ElDialog } from 'element-plus';
 import { useMotion } from '@vueuse/motion';
 import CountUp from 'vue-countup-v2';
@@ -559,9 +559,11 @@ const loadDashboardData = async () => {
       indicators.value = data.indicators;
     }
     
-    // Tạo biểu đồ sau khi có dữ liệu
+    // Tạo biểu đồ sau khi có dữ liệu với delay để đảm bảo DOM
     await nextTick();
-    createCharts();
+    setTimeout(() => {
+      createCharts();
+    }, 200);
     
     playSuccessSound();
     ElMessage.success({
@@ -584,181 +586,244 @@ const loadDashboardData = async () => {
   }
 };
 
-// Tạo biểu đồ với ECharts
-const createCharts = () => {
-  createComparisonChart();
-  createTrendChart();
-  createCompletionChart();
-  createMiniCharts();
+// Tạo biểu đồ với ECharts (có error handling và delay)
+const createCharts = async () => {
+  try {
+    // Đợi DOM render hoàn toàn
+    await nextTick();
+    
+    // Thêm delay nhỏ để đảm bảo tất cả element đã sẵn sàng
+    setTimeout(() => {
+      createComparisonChart();
+      createTrendChart();
+      createCompletionChart();
+      createMiniCharts();
+    }, 100);
+    
+  } catch (error) {
+    console.warn('Error creating charts:', error);
+  }
 };
 
 const createComparisonChart = () => {
-  const chartDom = document.getElementById('comparison-chart');
-  if (!chartDom) return;
-  
-  const myChart = echarts.init(chartDom);
-  const option = {
-    title: {
-      text: 'So sánh Thực hiện vs Kế hoạch',
-      left: 'center',
-      textStyle: { color: '#333', fontSize: 16, fontWeight: 'bold' }
-    },
-    tooltip: {
-      trigger: 'axis',
-      axisPointer: { type: 'shadow' }
-    },
-    legend: {
-      data: ['Kế hoạch', 'Thực hiện'],
-      bottom: 10
-    },
-    xAxis: {
-      type: 'category',
-      data: indicators.value.map(i => i.name),
-      axisLabel: { rotate: 45, fontSize: 10 }
-    },
-    yAxis: { type: 'value' },
-    series: [
-      {
-        name: 'Kế hoạch',
-        type: 'bar',
-        data: indicators.value.map(i => i.targetValue),
-        itemStyle: { color: '#91caff' }
-      },
-      {
-        name: 'Thực hiện',
-        type: 'bar',
-        data: indicators.value.map(i => i.currentValue),
-        itemStyle: { color: '#1890ff' }
-      }
-    ]
-  };
-  
-  myChart.setOption(option);
-};
-
-const createTrendChart = () => {
-  const chartDom = document.getElementById('trend-chart');
-  if (!chartDom) return;
-  
-  const myChart = echarts.init(chartDom);
-  // Mock dữ liệu xu hướng 6 tháng
-  const months = ['T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
-  
-  const option = {
-    title: {
-      text: 'Xu hướng 6 tháng gần nhất',
-      left: 'center',
-      textStyle: { color: '#333', fontSize: 16, fontWeight: 'bold' }
-    },
-    tooltip: { trigger: 'axis' },
-    legend: {
-      data: indicators.value.map(i => i.name),
-      bottom: 10,
-      type: 'scroll'
-    },
-    xAxis: {
-      type: 'category',
-      data: months
-    },
-    yAxis: { type: 'value' },
-    series: indicators.value.map((indicator, index) => ({
-      name: indicator.name,
-      type: 'line',
-      smooth: true,
-      data: months.map(() => indicator.currentValue * (0.8 + Math.random() * 0.4)),
-      lineStyle: { width: 3 }
-    }))
-  };
-  
-  myChart.setOption(option);
-};
-
-const createCompletionChart = () => {
-  const chartDom = document.getElementById('completion-chart');
-  if (!chartDom) return;
-  
-  const myChart = echarts.init(chartDom);
-  const option = {
-    title: {
-      text: 'Tỷ lệ hoàn thành các chỉ tiêu',
-      left: 'center',
-      textStyle: { color: '#333', fontSize: 16, fontWeight: 'bold' }
-    },
-    tooltip: {
-      trigger: 'item',
-      formatter: '{a} <br/>{b}: {c}% ({d}%)'
-    },
-    legend: {
-      orient: 'vertical',
-      left: 'left',
-      data: indicators.value.map(i => i.name)
-    },
-    series: [
-      {
-        name: 'Tỷ lệ hoàn thành',
-        type: 'pie',
-        radius: ['50%', '70%'],
-        avoidLabelOverlap: false,
-        itemStyle: {
-          borderRadius: 10,
-          borderColor: '#fff',
-          borderWidth: 2
-        },
-        label: {
-          show: false,
-          position: 'center'
-        },
-        emphasis: {
-          label: {
-            show: true,
-            fontSize: 20,
-            fontWeight: 'bold'
-          }
-        },
-        labelLine: { show: false },
-        data: indicators.value.map(indicator => ({
-          value: indicator.completionRate,
-          name: indicator.name
-        }))
-      }
-    ]
-  };
-  
-  myChart.setOption(option);
-};
-
-const createMiniCharts = () => {
-  indicators.value.forEach(indicator => {
-    const chartDom = document.getElementById(`mini-chart-${indicator.id}`);
-    if (!chartDom) return;
+  try {
+    const chartDom = document.getElementById('comparison-chart');
+    if (!chartDom || !chartDom.parentNode) {
+      console.warn('Comparison chart container not found or not attached to DOM');
+      return;
+    }
+    
+    // Dispose existing chart instance nếu có
+    const existingChart = echarts.getInstanceByDom(chartDom);
+    if (existingChart) {
+      existingChart.dispose();
+    }
     
     const myChart = echarts.init(chartDom);
-    // Mock dữ liệu mini chart
-    const data = Array.from({length: 7}, () => Math.random() * 100);
-    
     const option = {
-      grid: { top: 5, left: 5, right: 5, bottom: 5 },
-      xAxis: { type: 'category', show: false, data: ['', '', '', '', '', '', ''] },
-      yAxis: { type: 'value', show: false },
+      title: {
+        text: 'So sánh Thực hiện vs Kế hoạch',
+        left: 'center',
+        textStyle: { color: '#333', fontSize: 16, fontWeight: 'bold' }
+      },
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'shadow' }
+      },
+      legend: {
+        data: ['Kế hoạch', 'Thực hiện'],
+        bottom: 10
+      },
+      xAxis: {
+        type: 'category',
+        data: indicators.value.map(i => i.name),
+        axisLabel: { rotate: 45, fontSize: 10 }
+      },
+      yAxis: { type: 'value' },
       series: [
         {
-          type: 'line',
-          smooth: true,
-          symbol: 'none',
-          lineStyle: { color: indicator.id === 'nguon_von' ? '#52c41a' : 
-                             indicator.id === 'du_no' ? '#1890ff' :
-                             indicator.id === 'no_xau' ? '#fa541c' :
-                             indicator.id === 'thu_no_xlrr' ? '#722ed1' :
-                             indicator.id === 'thu_dich_vu' ? '#13c2c2' : '#faad14', 
-                      width: 2 },
-          areaStyle: { opacity: 0.3 },
-          data: data
+          name: 'Kế hoạch',
+          type: 'bar',
+          data: indicators.value.map(i => i.targetValue),
+          itemStyle: { color: '#91caff' }
+        },
+        {
+          name: 'Thực hiện',
+          type: 'bar',
+          data: indicators.value.map(i => i.currentValue),
+          itemStyle: { color: '#1890ff' }
         }
       ]
     };
     
     myChart.setOption(option);
-  });
+  } catch (error) {
+    console.warn('Error creating comparison chart:', error);
+  }
+};
+
+const createTrendChart = () => {
+  try {
+    const chartDom = document.getElementById('trend-chart');
+    if (!chartDom || !chartDom.parentNode) {
+      console.warn('Trend chart container not found or not attached to DOM');
+      return;
+    }
+    
+    // Dispose existing chart instance nếu có
+    const existingChart = echarts.getInstanceByDom(chartDom);
+    if (existingChart) {
+      existingChart.dispose();
+    }
+    
+    const myChart = echarts.init(chartDom);
+    // Mock dữ liệu xu hướng 6 tháng
+    const months = ['T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+    
+    const option = {
+      title: {
+        text: 'Xu hướng 6 tháng gần nhất',
+        left: 'center',
+        textStyle: { color: '#333', fontSize: 16, fontWeight: 'bold' }
+      },
+      tooltip: { trigger: 'axis' },
+      legend: {
+        data: indicators.value.map(i => i.name),
+        bottom: 10,
+        type: 'scroll'
+      },
+      xAxis: {
+        type: 'category',
+        data: months
+      },
+      yAxis: { type: 'value' },
+      series: indicators.value.map((indicator, index) => ({
+        name: indicator.name,
+        type: 'line',
+        smooth: true,
+        data: months.map(() => indicator.currentValue * (0.8 + Math.random() * 0.4)),
+        lineStyle: { width: 3 }
+      }))
+    };
+    
+    myChart.setOption(option);
+  } catch (error) {
+    console.warn('Error creating trend chart:', error);
+  }
+};
+
+const createCompletionChart = () => {
+  try {
+    const chartDom = document.getElementById('completion-chart');
+    if (!chartDom || !chartDom.parentNode) {
+      console.warn('Completion chart container not found or not attached to DOM');
+      return;
+    }
+    
+    // Dispose existing chart instance nếu có
+    const existingChart = echarts.getInstanceByDom(chartDom);
+    if (existingChart) {
+      existingChart.dispose();
+    }
+    
+    const myChart = echarts.init(chartDom);
+    const option = {
+      title: {
+        text: 'Tỷ lệ hoàn thành các chỉ tiêu',
+        left: 'center',
+        textStyle: { color: '#333', fontSize: 16, fontWeight: 'bold' }
+      },
+      tooltip: {
+        trigger: 'item',
+        formatter: '{a} <br/>{b}: {c}% ({d}%)'
+      },
+      legend: {
+        orient: 'vertical',
+        left: 'left',
+        data: indicators.value.map(i => i.name)
+      },
+      series: [
+        {
+          name: 'Tỷ lệ hoàn thành',
+          type: 'pie',
+          radius: ['50%', '70%'],
+          avoidLabelOverlap: false,
+          itemStyle: {
+            borderRadius: 10,
+            borderColor: '#fff',
+            borderWidth: 2
+          },
+          label: {
+            show: false,
+            position: 'center'
+          },
+          emphasis: {
+            label: {
+              show: true,
+              fontSize: 20,
+              fontWeight: 'bold'
+            }
+          },
+          labelLine: { show: false },
+          data: indicators.value.map(indicator => ({
+            value: indicator.completionRate,
+            name: indicator.name
+          }))
+        }
+      ]
+    };
+    
+    myChart.setOption(option);
+  } catch (error) {
+    console.warn('Error creating completion chart:', error);
+  }
+};
+
+const createMiniCharts = () => {
+  try {
+    indicators.value.forEach(indicator => {
+      const chartDom = document.getElementById(`mini-chart-${indicator.id}`);
+      if (!chartDom || !chartDom.parentNode) {
+        console.warn(`Mini chart container not found or not attached to DOM for ${indicator.id}`);
+        return;
+      }
+      
+      // Dispose existing chart instance nếu có
+      const existingChart = echarts.getInstanceByDom(chartDom);
+      if (existingChart) {
+        existingChart.dispose();
+      }
+      
+      const myChart = echarts.init(chartDom);
+      // Mock dữ liệu mini chart
+      const data = Array.from({length: 7}, () => Math.random() * 100);
+      
+      const option = {
+        grid: { top: 5, left: 5, right: 5, bottom: 5 },
+        xAxis: { type: 'category', show: false, data: ['', '', '', '', '', '', ''] },
+        yAxis: { type: 'value', show: false },
+        series: [
+          {
+            type: 'line',
+            smooth: true,
+            symbol: 'none',
+            lineStyle: { color: indicator.id === 'nguon_von' ? '#52c41a' : 
+                               indicator.id === 'du_no' ? '#1890ff' :
+                               indicator.id === 'no_xau' ? '#fa541c' :
+                               indicator.id === 'thu_no_xlrr' ? '#722ed1' :
+                               indicator.id === 'thu_dich_vu' ? '#13c2c2' : '#faad14', 
+                        width: 2 },
+            areaStyle: { opacity: 0.3 },
+            data: data
+          }
+        ]
+      };
+      
+      myChart.setOption(option);
+    });
+  } catch (error) {
+    console.warn('Error creating mini charts:', error);
+  }
 };
 
 // Lifecycle
@@ -779,8 +844,72 @@ onMounted(async () => {
       sounds.value.notification();
     }
   }, 1000);
+  
+  // Window resize handler cho charts
+  window.addEventListener('resize', handleWindowResize);
 });
 
+onBeforeUnmount(() => {
+  // Cleanup window resize listener
+  window.removeEventListener('resize', handleWindowResize);
+  
+  // Dispose all chart instances
+  try {
+    ['comparison-chart', 'trend-chart', 'completion-chart'].forEach(id => {
+      const chartDom = document.getElementById(id);
+      if (chartDom) {
+        const chartInstance = echarts.getInstanceByDom(chartDom);
+        if (chartInstance) {
+          chartInstance.dispose();
+        }
+      }
+    });
+    
+    indicators.value.forEach(indicator => {
+      const chartDom = document.getElementById(`mini-chart-${indicator.id}`);
+      if (chartDom) {
+        const chartInstance = echarts.getInstanceByDom(chartDom);
+        if (chartInstance) {
+          chartInstance.dispose();
+        }
+      }
+    });
+  } catch (error) {
+    console.warn('Error disposing charts:', error);
+  }
+});
+
+// Window resize handler
+const handleWindowResize = () => {
+  setTimeout(() => {
+    try {
+      // Resize all chart instances
+      ['comparison-chart', 'trend-chart', 'completion-chart'].forEach(id => {
+        const chartDom = document.getElementById(id);
+        if (chartDom) {
+          const chartInstance = echarts.getInstanceByDom(chartDom);
+          if (chartInstance) {
+            chartInstance.resize();
+          }
+        }
+      });
+      
+      indicators.value.forEach(indicator => {
+        const chartDom = document.getElementById(`mini-chart-${indicator.id}`);
+        if (chartDom) {
+          const chartInstance = echarts.getInstanceByDom(chartDom);
+          if (chartInstance) {
+            chartInstance.resize();
+          }
+        }
+      });
+    } catch (error) {
+      console.warn('Error resizing charts:', error);
+    }
+  }, 100);
+};
+
+// Phương thức tiện ích
 const updateTime = () => {
   currentTime.value = new Date();
 };
@@ -788,10 +917,12 @@ const updateTime = () => {
 // Watch thay đổi branch
 watch(selectedBranch, handleBranchChange);
 
-// Watch thay đổi tab biểu đồ
+// Watch thay đổi tab biểu đồ với delay
 watch(activeChartTab, () => {
   nextTick(() => {
-    createCharts();
+    setTimeout(() => {
+      createCharts();
+    }, 150);
   });
 });
 
