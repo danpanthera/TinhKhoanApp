@@ -54,12 +54,12 @@ const checkTextOverflow = (element) => {
   const parentRect = parent.getBoundingClientRect();
   const elementWidth = elementRect.width;
   const parentWidth = parentRect.width;
-  const safetyMargin = 20; // 20px safety margin
+  const safetyMargin = 10; // Giảm safety margin từ 20px xuống 10px để ít strict hơn
   
   const overflowByRect = elementWidth > (parentWidth - safetyMargin);
   
-  // Method 2: So sánh scrollWidth với offsetWidth
-  const overflowByScroll = element.scrollWidth > (element.offsetWidth + 5);
+  // Method 2: So sánh scrollWidth với offsetWidth (ít strict hơn)
+  const overflowByScroll = element.scrollWidth > (element.offsetWidth + 10); // Tăng tolerance từ 5 lên 10
   
   // Method 3: Check position
   const overflowByPosition = elementRect.right > parentRect.right || elementRect.left < parentRect.left;
@@ -81,8 +81,8 @@ const checkTextOverflow = (element) => {
   return isOverflow;
 };
 
-// Hàm tính toán scale factor với binary search để tìm scale tối ưu
-const calculateOptimalScale = async (element) => {
+// Hàm tính toán scale đơn giản dựa trên kích thước thực tế
+const calculateSimpleScale = (element) => {
   if (!element) return 1;
   
   const container = element.parentElement;
@@ -90,62 +90,34 @@ const calculateOptimalScale = async (element) => {
   
   // Reset về scale 1 để đo kích thước gốc
   element.style.transform = 'scaleX(1)';
-  await nextTick();
   
-  const containerWidth = container.offsetWidth - 40; // Margin 40px tổng để an toàn hơn
-  const originalTextWidth = element.scrollWidth;
+  // Lấy kích thước container với padding an toàn
+  const containerWidth = container.offsetWidth - 40; // 40px total padding cho an toàn
+  const textWidth = element.scrollWidth;
   
-  console.log(`📏 Đo text "${element.textContent.substring(0, 20)}...":`, {
+  console.log(`📏 Đo text "${element.textContent.substring(0, 15)}...":`, {
     containerWidth,
-    originalTextWidth,
-    overflow: originalTextWidth > containerWidth
+    textWidth,
+    needScale: textWidth > containerWidth
   });
   
-  // Nếu text vừa với container thì không cần scale
-  if (originalTextWidth <= containerWidth) {
-    console.log('✅ Text vừa khít, không cần scale');
+  // Nếu text vừa khít thì không cần scale
+  if (textWidth <= containerWidth) {
+    console.log('✅ Text vừa khít, scale = 1');
     return 1;
   }
   
-  // Binary search để tìm scale factor tối ưu
-  let minScale = 0.2; // Scale tối thiểu thấp hơn
-  let maxScale = 1.0;
-  let optimalScale = 0.8; // Default safe scale
-  let iterations = 0;
-  const maxIterations = 20; // Tăng số lần thử
+  // Tính scale đơn giản: containerWidth / textWidth
+  const calculatedScale = containerWidth / textWidth;
   
-  while (minScale <= maxScale && iterations < maxIterations) {
-    const midScale = (minScale + maxScale) / 2;
-    
-    // Test scale này
-    element.style.transform = `scaleX(${midScale})`;
-    await nextTick();
-    
-    // Đo lại sau khi apply transform
-    const currentWidth = element.getBoundingClientRect().width;
-    
-    console.log(`🔍 Test scale ${midScale.toFixed(3)}: currentWidth=${currentWidth.toFixed(1)}, container=${containerWidth}`);
-    
-    if (currentWidth <= containerWidth) {
-      // Scale này OK, thử scale lớn hơn
-      optimalScale = midScale;
-      minScale = midScale + 0.001;
-    } else {
-      // Scale này quá lớn, thử scale nhỏ hơn
-      maxScale = midScale - 0.001;
-    }
-    
-    iterations++;
-  }
+  // Đảm bảo scale không quá nhỏ (tối thiểu 0.4 để đọc được)
+  const finalScale = Math.max(0.4, calculatedScale);
   
-  // Safety margin: giảm 5% để đảm bảo không overflow
-  const safeScale = Math.max(0.2, optimalScale * 0.95);
-  
-  console.log(`🎯 Tìm được optimal scale: ${optimalScale.toFixed(3)}, safe scale: ${safeScale.toFixed(3)} sau ${iterations} lần thử`);
-  return safeScale;
+  console.log(`🎯 Scale đơn giản: ${calculatedScale.toFixed(3)}, final: ${finalScale.toFixed(3)}`);
+  return finalScale;
 };
 
-// Hàm auto-adjust thông minh với iterative scaling
+// Hàm auto-adjust thông minh với scaling độc lập cho từng dòng
 const autoAdjustTextSize = async () => {
   if (!adaptiveTextLine1.value || !adaptiveTextLine2.value) {
     console.warn('⚠️ Text elements chưa ready');
@@ -153,9 +125,9 @@ const autoAdjustTextSize = async () => {
   }
   
   try {
-    console.log('🔄 Bắt đầu auto-adjust text size...');
+    console.log('🔄 Bắt đầu auto-adjust text size - scaling độc lập cho từng dòng...');
     
-    // Bước 1: Tính optimal scale cho dòng 1 (chủ đạo)
+    // Bước 1: Tính optimal scale cho dòng 1 (độc lập)
     const optimalScale1 = await calculateOptimalScale(adaptiveTextLine1.value);
     scaleFactorLine1.value = optimalScale1;
     
@@ -163,61 +135,77 @@ const autoAdjustTextSize = async () => {
     adaptiveTextLine1.value.style.transform = `scaleX(${optimalScale1})`;
     await nextTick();
     
-    // Bước 2: Tính optimal scale cho dòng 2
+    // Bước 2: Tính optimal scale cho dòng 2 (độc lập, không ràng buộc với dòng 1)
     const optimalScale2 = await calculateOptimalScale(adaptiveTextLine2.value);
+    scaleFactorLine2.value = optimalScale2; // Không so sánh với dòng 1 nữa
     
-    // Dòng 2 không được lớn hơn dòng 1 (proportional rule)
-    const finalScale2 = Math.min(optimalScale2, optimalScale1);
-    scaleFactorLine2.value = finalScale2;
-    
-    // Apply final scales
+    // Apply final scales (mỗi dòng độc lập)
     adaptiveTextLine1.value.style.transform = `scaleX(${optimalScale1})`;
-    adaptiveTextLine2.value.style.transform = `scaleX(${finalScale2})`;
+    adaptiveTextLine2.value.style.transform = `scaleX(${optimalScale2})`;
     
-    console.log('✅ Auto-adjust hoàn thành:', {
+    console.log('✅ Auto-adjust hoàn thành (scaling độc lập):', {
+      line1Text: 'AGRIBANK LAI CHAU CENTER',
       line1Scale: optimalScale1.toFixed(3),
-      line2Scale: finalScale2.toFixed(3),
       line1Overflow: checkTextOverflow(adaptiveTextLine1.value),
-      line2Overflow: checkTextOverflow(adaptiveTextLine2.value)
+      line2Text: 'HỆ THỐNG QUẢN LÝ KHOÁN | HỆ THỐNG BÁO CÁO',
+      line2Scale: optimalScale2.toFixed(3),
+      line2Overflow: checkTextOverflow(adaptiveTextLine2.value),
+      scalingMode: 'Independent - mỗi dòng tối ưu riêng'
     });
     
-    // Final check - nếu vẫn overflow thì force scale nhỏ hơn với multiple iterations
+    // Final check - kiểm tra và điều chỉnh từng dòng riêng biệt nếu vẫn overflow
     let finalCheck = 0;
-    const maxFinalChecks = 10; // Tăng số lần check cuối
+    const maxFinalChecks = 3; // Giảm số lần check để tránh over-adjustment
     
-    while ((checkTextOverflow(adaptiveTextLine1.value) || checkTextOverflow(adaptiveTextLine2.value)) && finalCheck < maxFinalChecks) {
-      console.log(`🔧 Final adjustment #${finalCheck + 1}`);
-      const adjustmentFactor = 0.92; // Giảm từng 8% thay vì 5%
-      scaleFactorLine1.value *= adjustmentFactor;
-      scaleFactorLine2.value *= adjustmentFactor;
+    while (finalCheck < maxFinalChecks) {
+      let needAdjustment = false;
       
-      // Áp dụng scale mới
-      adaptiveTextLine1.value.style.transform = `scaleX(${scaleFactorLine1.value})`;
-      adaptiveTextLine2.value.style.transform = `scaleX(${scaleFactorLine2.value})`;
+      // Kiểm tra và điều chỉnh dòng 1 nếu cần
+      if (checkTextOverflow(adaptiveTextLine1.value)) {
+        console.log(`🔧 Final adjustment dòng 1 #${finalCheck + 1}`);
+        const adjustmentFactor = 0.97; // Giảm ít hơn - từng 3%
+        scaleFactorLine1.value = Math.max(0.6, scaleFactorLine1.value * adjustmentFactor);
+        adaptiveTextLine1.value.style.transform = `scaleX(${scaleFactorLine1.value})`;
+        needAdjustment = true;
+      }
+      
+      // Kiểm tra và điều chỉnh dòng 2 nếu cần (độc lập với dòng 1)
+      if (checkTextOverflow(adaptiveTextLine2.value)) {
+        console.log(`🔧 Final adjustment dòng 2 #${finalCheck + 1}`);
+        const adjustmentFactor = 0.97; // Giảm ít hơn - từng 3%
+        scaleFactorLine2.value = Math.max(0.6, scaleFactorLine2.value * adjustmentFactor);
+        adaptiveTextLine2.value.style.transform = `scaleX(${scaleFactorLine2.value})`;
+        needAdjustment = true;
+      }
+      
+      // Nếu không cần adjustment nữa thì thoát
+      if (!needAdjustment) {
+        break;
+      }
       
       await nextTick();
-      
-      // Thêm delay nhỏ để đảm bảo rendering hoàn thành
       await new Promise(resolve => setTimeout(resolve, 10));
-      
       finalCheck++;
     }
     
-    // Ultra-safe final check: Nếu vẫn overflow, force về scale tối thiểu
-    if (checkTextOverflow(adaptiveTextLine1.value) || checkTextOverflow(adaptiveTextLine2.value)) {
-      console.log(`🚨 Force ultra-safe scaling`);
-      scaleFactorLine1.value = Math.max(0.2, scaleFactorLine1.value * 0.8);
-      scaleFactorLine2.value = Math.max(0.2, scaleFactorLine2.value * 0.8);
-      
+    // Ultra-safe final check: Điều chỉnh từng dòng riêng biệt nếu vẫn overflow
+    if (checkTextOverflow(adaptiveTextLine1.value)) {
+      console.log(`🚨 Force ultra-safe scaling cho dòng 1`);
+      scaleFactorLine1.value = Math.max(0.65, scaleFactorLine1.value * 0.94); // Tăng min lên 0.65
       adaptiveTextLine1.value.style.transform = `scaleX(${scaleFactorLine1.value})`;
+    }
+    
+    if (checkTextOverflow(adaptiveTextLine2.value)) {
+      console.log(`🚨 Force ultra-safe scaling cho dòng 2`);
+      scaleFactorLine2.value = Math.max(0.65, scaleFactorLine2.value * 0.94); // Tăng min lên 0.65
       adaptiveTextLine2.value.style.transform = `scaleX(${scaleFactorLine2.value})`;
     }
     
   } catch (error) {
     console.error('❌ Lỗi auto-adjust text:', error);
-    // Fallback safe values - scale nhỏ hơn để đảm bảo an toàn
-    scaleFactorLine1.value = 0.6;
-    scaleFactorLine2.value = 0.6;
+    // Fallback safe values - scale tối ưu để đảm bảo đọc được mà vẫn vừa màn hình
+    scaleFactorLine1.value = 0.8; // Tăng từ 0.75 lên 0.8
+    scaleFactorLine2.value = 0.8; // Tăng từ 0.75 lên 0.8
     
     // Apply fallback scales
     if (adaptiveTextLine1.value && adaptiveTextLine2.value) {
