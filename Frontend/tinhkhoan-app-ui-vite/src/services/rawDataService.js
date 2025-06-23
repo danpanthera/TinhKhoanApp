@@ -18,11 +18,11 @@ class RawDataService {
         data = data.$values;
       }
       
-      // 🔧 ĐỒNG BỘ FIELD MAPPING để fix vấn đề backend trả fileType, frontend dùng dataType
+      // 🔧 ĐỒNG BỘ FIELD MAPPING để fix vấn đề backend trả category, frontend dùng dataType
       const mappedData = (data || []).map(item => ({
         ...item,
-        // ✅ QUYẾT ĐỊNH ƯU TIÊN: fileType (backend) > dataType > category
-        dataType: item.fileType || item.dataType || item.category || 'UNKNOWN',
+        // ✅ FIX TRIỆT ĐỂ: Backend trả về category="LN01", ưu tiên category trước
+        dataType: item.category || item.dataType || item.fileType || 'UNKNOWN',
         // 🔧 Preserve original fields để debug
         originalFileType: item.fileType,
         originalDataType: item.dataType,

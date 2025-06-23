@@ -440,11 +440,12 @@ const loadBackgroundImages = async () => {
     if (loadedImages.length === 0) {
       console.log('⚠️ Không tìm thấy ảnh nền local, sử dụng ảnh online');
       backgroundImages.value = [
-        'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-        'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-        'https://images.unsplash.com/photo-1439066615861-d1af74d74000?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80'
+        // 🌌 2 ảnh vũ trụ tuyệt đẹp HDR theo yêu cầu anh
+        'https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2893&q=80', // Vũ trụ sao kim cương
+        'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?ixlib=rb-4.0.3&auto=format&fit=crop&w=2940&q=80', // Galaxy spiral tím xanh
+        'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80'
       ];
-      backgroundNames.value = ['🏔️ Núi tuyết', '🌲 Rừng cây', '🏞️ Hồ núi'];
+      backgroundNames.value = ['� Vũ trụ kim cương', '� Galaxy xoắn ốc', '�️ Núi tuyết'];
     } else {
       // 🔄 Sắp xếp ảnh theo thứ tự tên file
       const sortedData = loadedImages.map((img, index) => ({
@@ -459,13 +460,14 @@ const loadBackgroundImages = async () => {
       // Nếu có ít hơn 7 ảnh local, thêm ảnh online để đủ
       if (backgroundImages.value.length < 7) {
         const additionalImages = [
+          // 🌌 Thêm ảnh vũ trụ HDR tuyệt đẹp khác
+          'https://images.unsplash.com/photo-1502134249126-9f3755a50d78?ixlib=rb-4.0.3&auto=format&fit=crop&w=2940&q=80', // Nebula tím hồng
+          'https://images.unsplash.com/photo-1519904981063-b0cf448d479e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2940&q=80', // Tinh vân xanh
           'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-          'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-          'https://images.unsplash.com/photo-1439066615861-d1af74d74000?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
           'https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
           'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80'
         ];
-        const additionalNames = ['🏔️ Núi tuyết', '🌲 Rừng cây', '🏞️ Hồ núi', '🌅 Bình minh', '🌾 Cánh đồng'];
+        const additionalNames = ['� Nebula hồng', '💙 Tinh vân xanh', '�️ Núi tuyết', '🌅 Bình minh', '🌾 Cánh đồng'];
         
         const needed = Math.min(7 - backgroundImages.value.length, additionalImages.length);
         backgroundImages.value.push(...additionalImages.slice(0, needed));

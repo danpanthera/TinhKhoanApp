@@ -238,6 +238,8 @@ const getTimeAgo = (date) => {
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(0, 0, 0, 0.06);
+  /* ✨ Enhanced visual effects */
+  background: linear-gradient(135deg, #ffffff 0%, #fafbff 100%);
 }
 
 .kpi-card::before {
@@ -252,8 +254,29 @@ const getTimeAgo = (date) => {
   transition: transform 0.6s ease;
 }
 
+.kpi-card::after {
+  /* ✨ Glowing border effect */
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, #8B1538, #B91D47, #8B1538);
+  border-radius: 22px;
+  z-index: -1;
+  opacity: 0;
+  filter: blur(10px);
+  transition: opacity 0.3s ease;
+}
+
 .kpi-card:hover::before {
   transform: translateX(0);
+}
+
+.kpi-card:hover::after {
+  opacity: 0.3;
+  animation: borderGlow 2s ease-in-out infinite alternate;
 }
 
 .kpi-card.is-clickable {
@@ -261,8 +284,70 @@ const getTimeAgo = (date) => {
 }
 
 .kpi-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(139, 21, 56, 0.15);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 
+    0 20px 50px rgba(139, 21, 56, 0.2),
+    0 0 30px rgba(139, 21, 56, 0.1);
+}
+
+/* ✨ Achievement status effects */
+.kpi-card.is-achieved {
+  background: linear-gradient(135deg, #f6ffed 0%, #f0f9ff 100%);
+  border-color: rgba(82, 196, 26, 0.3);
+}
+
+.kpi-card.is-achieved::after {
+  background: linear-gradient(45deg, #52c41a, #73d13d, #52c41a);
+}
+
+.kpi-card.is-achieved:hover {
+  box-shadow: 
+    0 20px 50px rgba(82, 196, 26, 0.2),
+    0 0 30px rgba(82, 196, 26, 0.1);
+}
+
+.kpi-card.is-warning {
+  background: linear-gradient(135deg, #fffbe6 0%, #fff7e6 100%);
+  border-color: rgba(250, 173, 20, 0.3);
+}
+
+.kpi-card.is-warning::after {
+  background: linear-gradient(45deg, #faad14, #ffc53d, #faad14);
+}
+
+.kpi-card.is-danger {
+  background: linear-gradient(135deg, #fff2f0 0%, #fff1f0 100%);
+  border-color: rgba(255, 77, 79, 0.3);
+}
+
+.kpi-card.is-danger::after {
+  background: linear-gradient(45deg, #ff4d4f, #ff7875, #ff4d4f);
+}
+
+/* ✨ Spectacular animations */
+@keyframes borderGlow {
+  0% { filter: blur(8px) brightness(1); }
+  100% { filter: blur(12px) brightness(1.2); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(180deg); }
 }
 
 /* Decorative elements */
@@ -279,6 +364,12 @@ const getTimeAgo = (date) => {
   position: absolute;
   border-radius: 50%;
   opacity: 0.05;
+  transition: all 0.3s ease;
+}
+
+.kpi-card:hover .decoration-circle {
+  opacity: 0.1;
+  animation: float 3s ease-in-out infinite;
 }
 
 .circle-1 {
@@ -295,6 +386,7 @@ const getTimeAgo = (date) => {
   background: #B91D47;
   top: 20px;
   right: 20px;
+  animation-delay: 0.5s;
 }
 
 /* Header section */
@@ -378,14 +470,44 @@ const getTimeAgo = (date) => {
   display: flex;
   align-items: center;
   margin-bottom: 25px;
-  background: #f9fafb;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border-radius: 16px;
   padding: 20px;
+  position: relative;
+  /* ✨ Enhanced with shadows and border */
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  overflow: hidden;
+}
+
+.card-values::before {
+  /* ✨ Animated background shimmer */
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(139, 21, 56, 0.03),
+    transparent
+  );
+  animation: valueShimmer 3s ease-in-out infinite;
 }
 
 .value-item {
   flex: 1;
   text-align: center;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.value-item:hover {
+  transform: scale(1.05);
 }
 
 .value-label {
@@ -394,21 +516,87 @@ const getTimeAgo = (date) => {
   color: #6b7280;
   margin-bottom: 8px;
   font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .value-number {
   display: block;
-  font-size: 26px;
-  font-weight: 700;
+  font-size: 28px;
+  font-weight: 800;
   color: #1f2937;
   line-height: 1;
+  position: relative;
+  /* ✨ Enhanced typography with gradient */
+  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.value-item.actual .value-number {
+  /* ✨ Special effects for actual value */
+  background: linear-gradient(135deg, #8B1538 0%, #B91D47 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  position: relative;
+}
+
+.value-item.actual .value-number::after {
+  /* ✨ Pulse effect for actual value */
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #8B1538, #B91D47);
+  opacity: 0;
+  z-index: -1;
+  filter: blur(6px);
+  animation: valuePulse 2s ease-in-out infinite;
+}
+
+.kpi-card.is-achieved .value-item.actual .value-number::after {
+  background: linear-gradient(135deg, #52c41a, #73d13d);
 }
 
 .value-divider {
-  width: 1px;
+  width: 2px;
   height: 40px;
-  background: #e5e7eb;
+  background: linear-gradient(180deg, transparent 0%, #e5e7eb 50%, transparent 100%);
   margin: 0 20px;
+  position: relative;
+  /* ✨ Animated divider */
+  overflow: hidden;
+}
+
+.value-divider::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: 0;
+  right: 0;
+  height: 100%;
+  background: linear-gradient(180deg, transparent, #8B1538, transparent);
+  animation: dividerPulse 3s ease-in-out infinite;
+}
+
+/* ✨ Additional spectacular animations */
+@keyframes valueShimmer {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+@keyframes valuePulse {
+  0%, 100% { opacity: 0; transform: scale(1); }
+  50% { opacity: 0.3; transform: scale(1.1); }
+}
+
+@keyframes dividerPulse {
+  0%, 100% { transform: translateY(150%); }
+  50% { transform: translateY(-50%); }
 }
 
 /* Progress section */
@@ -437,10 +625,13 @@ const getTimeAgo = (date) => {
 
 .progress-bar-wrapper {
   position: relative;
-  height: 10px;
+  height: 12px;
   background: #f3f4f6;
-  border-radius: 5px;
+  border-radius: 6px;
   overflow: hidden;
+  /* ✨ Enhanced with gradient and glow */
+  background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .progress-bar-bg {
@@ -449,36 +640,69 @@ const getTimeAgo = (date) => {
   background: repeating-linear-gradient(
     45deg,
     transparent,
-    transparent 10px,
-    rgba(0,0,0,0.02) 10px,
-    rgba(0,0,0,0.02) 20px
+    transparent 8px,
+    rgba(0,0,0,0.03) 8px,
+    rgba(0,0,0,0.03) 16px
   );
+  /* ✨ Animated background pattern */
+  animation: backgroundShift 3s linear infinite;
 }
 
 .progress-bar-fill {
   height: 100%;
-  border-radius: 5px;
-  transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 6px;
+  transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  /* ✨ Enhanced with multiple shadows and animation */
+  box-shadow: 
+    0 0 10px rgba(139, 21, 56, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  animation: progressPulse 2s ease-in-out infinite;
 }
 
 .progress-glow {
   position: absolute;
-  top: 0;
+  top: -2px;
   right: 0;
-  bottom: 0;
-  width: 50px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
-  animation: shimmer 2s infinite;
+  bottom: -2px;
+  width: 60px;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.8), 
+    rgba(255, 255, 255, 0.9),
+    rgba(255, 255, 255, 0.8),
+    transparent
+  );
+  border-radius: 8px;
+  animation: shimmer 2.5s ease-in-out infinite;
+  filter: blur(1px);
 }
 
-@keyframes shimmer {
-  0% {
-    transform: translateX(-50px);
-  }
-  100% {
-    transform: translateX(50px);
-  }
+/* ✨ Achievement sparkles effect */
+.progress-bar-fill::after {
+  content: '✨';
+  position: absolute;
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  opacity: 0;
+  animation: sparkle 3s ease-in-out infinite;
+}
+
+.kpi-card.is-achieved .progress-bar-fill::after {
+  opacity: 1;
+}
+
+/* ✨ Enhanced animations */
+@keyframes backgroundShift {
+  0% { background-position: 0 0; }
+  100% { background-position: 32px 0; }
+}
+
+@keyframes progressPulse {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.1); }
 }
 
 /* Trend section */

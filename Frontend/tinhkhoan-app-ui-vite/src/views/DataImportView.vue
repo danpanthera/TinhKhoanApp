@@ -588,9 +588,10 @@ const calculateDataTypeStats = () => {
   
   // Calculate from imports với logic cải thiện - FIX MAPPING VẤN ĐỀ
   allImports.value.forEach(imp => {
-    // 🔧 ĐỒNG BỘ FIELD MAPPING: Ưu tiên fileType (backend), sau đó dataType, category
-    const dataType = imp.fileType || imp.dataType || imp.category || 'UNKNOWN'
-    console.log(`📊 Processing import: ${imp.fileName}, fileType: ${imp.fileType}, dataType: ${imp.dataType}, category: ${imp.category}, final: ${dataType}, records: ${imp.recordsCount}`)
+    // 🔧 FIX TRIỆT ĐỂ: Backend trả về category="LN01", không có dataType hoặc fileType có ý nghĩa
+    // Ưu tiên category trước, sau đó fileType, rồi dataType 
+    const dataType = imp.category || imp.dataType || imp.fileType || 'UNKNOWN'
+    console.log(`📊 Processing import: ${imp.fileName}, category: ${imp.category}, fileType: ${imp.fileType}, dataType: ${imp.dataType}, final: ${dataType}, records: ${imp.recordsCount}`)
     
     // Nếu chưa có stats cho data type này, khởi tạo
     if (!stats[dataType]) {

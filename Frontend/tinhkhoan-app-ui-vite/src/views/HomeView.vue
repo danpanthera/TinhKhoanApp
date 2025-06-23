@@ -58,16 +58,15 @@ onMounted(() => {
 .hero-title {
   font-size: 4.5rem; /* Kích thước lớn cho tiêu đề chính */
   font-weight: 900; /* Tăng độ đậm tối đa */
-  font-family: 'Black Ops One', 'Anton', 'Impact', sans-serif; /* Font mạnh mẽ thay cho DIRTY STAINS */
+  font-family: 'New York', 'Times New Roman', serif; /* Font New York theo yêu cầu anh */
   color: #8B1538; /* Màu bordeaux Agribank */
-  margin-bottom: 20px;
+  margin-bottom: 10px; /* Giảm từ 20px xuống 10px để sát với dòng dưới */
   text-shadow: 
     0 4px 8px rgba(139, 21, 56, 0.4), /* Bóng chính màu đỏ Agribank */
     0 2px 4px rgba(0, 0, 0, 0.3);     /* Bóng đậm để tạo chiều sâu */
   line-height: 1.2;
   letter-spacing: 0.08em; /* Tăng khoảng cách chữ để tạo sự mạnh mẽ */
   text-transform: uppercase; /* Viết hoa toàn bộ để tạo sự chuyên nghiệp */
-  /* Đứng yên, không animation */
 }
 
 .nature-icon {
@@ -82,7 +81,8 @@ onMounted(() => {
   width: auto;
   margin-bottom: 20px;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
-  /* Bỏ animation để đứng yên */
+  /* Thêm animation lắc lư như cũ */
+  animation: gentle-sway 3s ease-in-out infinite;
 }
 
 @keyframes gentle-sway {
@@ -108,16 +108,16 @@ onMounted(() => {
 
 .hero-subtitle {
   font-size: 1.9rem; /* Tăng từ 1.5rem lên 1.9rem (+2 cỡ) */
-  font-family: 'Crimson Text', 'Georgia', serif; /* Font thanh lịch thay cho Orlean */
+  font-family: 'Labora', 'Arial', sans-serif; /* Font Labora theo yêu cầu anh */
   color: #8B1538; /* Màu đỏ bordeaux Agribank */
   margin-bottom: 30px; /* Giảm từ 50px xuống 30px để dashboard gần hơn */
+  margin-top: 1mm; /* Sát lại dòng trên 1mm theo yêu cầu anh */
   font-weight: 600; /* Tăng độ đậm để nổi bật hơn */
   font-style: italic; /* Nghiêng để tạo sự thanh lịch */
   text-shadow: 
     0 2px 4px rgba(139, 21, 56, 0.3),
     0 1px 2px rgba(0, 0, 0, 0.2); /* Bóng nhẹ để tạo chiều sâu */
   letter-spacing: 0.02em; /* Khoảng cách chữ nhẹ */
-  /* Đứng yên, không animation */
 }
 
 .dashboard-section {
