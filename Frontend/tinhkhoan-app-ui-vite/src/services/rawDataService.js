@@ -569,36 +569,29 @@ class RawDataService {
 
   // 🔧 Utility methods
 
-  // 📋 Định nghĩa các loại dữ liệu và mô tả (sắp xếp theo ABC)
+  // 📋 Định nghĩa các loại dữ liệu và mô tả
   getDataTypeDefinitions() {
     return {
-      '7800_DT_KHKD1': {
-        name: '7800_DT_KHKD1',
-        description: 'Báo cáo KHKD (DT)',
-        icon: '�',
+      'LN01': {
+        name: 'LN01',
+        description: 'Dữ liệu LOAN',
+        icon: '💰',
         acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
-        requiredKeyword: '7800_DT_KHKD1'
+        requiredKeyword: 'LN01'
       },
-      'API_IMPORT': {
-        name: 'API_IMPORT',
-        description: 'Import qua API/Temporal',
-        icon: '�',
-        acceptedFormats: ['.json', '.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
-        requiredKeyword: 'API_IMPORT'
-      },
-      'BC57': {
-        name: 'BC57',
-        description: 'Sao kê Lãi dự thu',
-        icon: '�',
+      'LN02': {
+        name: 'LN02',
+        description: 'Sao kê biến động nhóm nợ',
+        icon: '🔄',
         acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
-        requiredKeyword: 'BC57'
+        requiredKeyword: 'LN02'
       },
-      'DB01': {
-        name: 'DB01',
-        description: 'Sao kê TSDB và Không TSDB',
-        icon: '📋',
+      'LN03': {
+        name: 'LN03', 
+        description: 'Dữ liệu Nợ XLRR',
+        icon: '📊',
         acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
-        requiredKeyword: 'DB01'
+        requiredKeyword: 'LN03'
       },
       'DP01': {
         name: 'DP01',
@@ -606,13 +599,6 @@ class RawDataService {
         icon: '🏦',
         acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: 'DP01'
-      },
-      'DPDA': {
-        name: 'DPDA',
-        description: 'Dữ liệu sao kê phát hành thẻ',
-        icon: '�',
-        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
-        requiredKeyword: 'DPDA'
       },
       'EI01': {
         name: 'EI01',
@@ -624,7 +610,7 @@ class RawDataService {
       'GAHR26': {
         name: 'GAHR26',
         description: 'Báo cáo nhân sự GAHR26',
-        icon: '�',
+        icon: '👥',
         acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: 'GAHR26'
       },
@@ -635,12 +621,19 @@ class RawDataService {
         acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: 'GL01'
       },
-      'GLCB41': {
-        name: 'GLCB41',
-        description: 'Bảng cân đối',
-        icon: '⚖️',
+      'DPDA': {
+        name: 'DPDA',
+        description: 'Dữ liệu sao kê phát hành thẻ',
+        icon: '💳',
         acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
-        requiredKeyword: 'GLCB41'
+        requiredKeyword: 'DPDA'
+      },
+      'DB01': {
+        name: 'DB01',
+        description: 'Sao kê TSDB và Không TSDB',
+        icon: '📋',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'DB01'
       },
       'KH03': {
         name: 'KH03',
@@ -649,33 +642,40 @@ class RawDataService {
         acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: 'KH03'
       },
-      'LN01': {
-        name: 'LN01',
-        description: 'Dữ liệu LOAN',
-        icon: '�',
+      'BC57': {
+        name: 'BC57',
+        description: 'Sao kê Lãi dự thu',
+        icon: '📈',
         acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
-        requiredKeyword: 'LN01'
-      },
-      'LN02': {
-        name: 'LN02',
-        description: 'Sao kê biến động nhóm nợ',
-        icon: '�',
-        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
-        requiredKeyword: 'LN02'
-      },
-      'LN03': {
-        name: 'LN03', 
-        description: 'Dữ liệu Nợ XLRR',
-        icon: '📊',
-        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
-        requiredKeyword: 'LN03'
+        requiredKeyword: 'BC57'
       },
       'RR01': {
         name: 'RR01',
         description: 'Sao kê dư nợ gốc, lãi XLRR',
-        icon: '�',
+        icon: '📉',
         acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: 'RR01'
+      },
+      '7800_DT_KHKD1': {
+        name: '7800_DT_KHKD1',
+        description: 'Báo cáo KHKD (DT)',
+        icon: '📑',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: '7800_DT_KHKD1'
+      },
+      'GLCB41': {
+        name: 'GLCB41',
+        description: 'Bảng cân đối',
+        icon: '⚖️',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'GLCB41'
+      },
+      'API_IMPORT': {
+        name: 'API_IMPORT',
+        description: 'Import qua API/Temporal',
+        icon: '🔗',
+        acceptedFormats: ['.json', '.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'API_IMPORT'
       }
     };
   }
