@@ -15,7 +15,7 @@
         <div class="divider">|</div>
         <div class="ip-info">
           <span class="ip-icon">🌐</span>
-          <span class="ip-address">{{ userIP || 'Đang tải...' }}</span>
+          <span class="ip-address" :class="{ 'loading': !userIP }">{{ userIP || 'Đang tải IP...' }}</span>
         </div>
       </div>
     </div>
@@ -241,7 +241,18 @@ onMounted(async () => {
   }
 }
 
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 .app-footer {
   animation: slideInUp 0.5s ease-out;
+}
+
+/* Loading state cho IP */
+.ip-address.loading {
+  animation: pulse 1.5s infinite;
+  opacity: 0.7;
 }
 </style>

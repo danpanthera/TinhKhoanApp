@@ -90,6 +90,7 @@ onMounted(() => {
   font-size: clamp(1.8rem, 8vw, 6.5rem); /* Auto scaling font size */
   letter-spacing: clamp(0.02em, 0.5vw, 0.08em); /* Auto scaling letter spacing */
   transform: scaleX(1); /* Mặc định không co giãn theo chiều ngang */
+  will-change: transform; /* Tối ưu hiệu năng animation */
 }
 
 /* Dòng 2: HỆ THỐNG QUẢN LÝ KHOÁN | HỆ THỐNG BÁO CÁO */
@@ -97,6 +98,7 @@ onMounted(() => {
   font-size: clamp(1.2rem, 5vw, 3.5rem); /* Nhỏ hơn dòng 1 một chút */
   letter-spacing: clamp(0.01em, 0.3vw, 0.05em); /* Auto scaling letter spacing */
   transform: scaleX(1); /* Mặc định không co giãn theo chiều ngang */
+  will-change: transform; /* Tối ưu hiệu năng animation */
 }
 
 /* Media queries cho responsive co giãn nâng cao */
