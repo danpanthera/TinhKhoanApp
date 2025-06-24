@@ -162,7 +162,7 @@
       </div>
     </div>
 
-    <!-- Import Modal đơn giản -->
+    <!-- Import Modal đầy đủ -->
     <div v-if="showImportModal" class="modal-overlay" @click="closeImportModal">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
@@ -170,7 +170,62 @@
           <button @click="closeImportModal" class="modal-close">×</button>
         </div>
         <div class="modal-body">
-          <p>Chức năng import sẽ được phát triển sau...</p>
+          <!-- Form upload file -->
+          <div class="import-form">
+            <div class="form-group">
+              <label class="form-label">Chọn file để import:</label>
+              <input 
+                type="file" 
+                ref="fileInput"
+                multiple 
+                @change="handleFileSelect" 
+                class="file-input"
+              />
+            </div>
+            
+            <!-- Danh sách file đã chọn -->
+            <div v-if="selectedFiles.length > 0" class="selected-files">
+              <h4>Files đã chọn:</h4>
+              <ul class="files-list">
+                <li v-for="(file, index) in selectedFiles" :key="index" class="file-item">
+                  {{ file.name }} ({{ formatFileSize(file.size) }})
+                  <button @click="removeFile(index)" class="btn-remove">×</button>
+                </li>
+              </ul>
+            </div>
+            
+            <!-- Phần nhập mật khẩu cho file nén nếu cần -->
+            <div v-if="hasArchiveFile" class="form-group">
+              <label class="form-label">Mật khẩu file nén (nếu có):</label>
+              <input 
+                type="password" 
+                v-model="archivePassword" 
+                class="password-input" 
+                placeholder="Nhập mật khẩu file nén..." 
+              />
+            </div>
+            
+            <!-- Ghi chú -->
+            <div class="form-group">
+              <label class="form-label">Ghi chú:</label>
+              <textarea 
+                v-model="importNotes" 
+                class="notes-input" 
+                placeholder="Thêm ghi chú cho lần import này..."
+              ></textarea>
+            </div>
+          </div>
+        </div>
+        
+        <div class="modal-footer">
+          <button @click="closeImportModal" class="btn-cancel">Hủy</button>
+          <button 
+            @click="performImport" 
+            class="btn-submit"
+            :disabled="selectedFiles.length === 0 || uploading"
+          >
+            {{ uploading ? 'Đang xử lý...' : 'Import Dữ liệu' }}
+          </button>
         </div>
       </div>
     </div>
@@ -198,6 +253,11 @@ const dataTypeStats = ref({})
 // Modal state
 const showImportModal = ref(false)
 const selectedDataType = ref(null)
+const selectedFiles = ref([])
+const archivePassword = ref('')
+const importNotes = ref('')
+const uploading = ref(false)
+const uploadProgress = ref(0)
 
 // Data type definitions - lấy từ service
 const dataTypeDefinitions = rawDataService.getDataTypeDefinitions()
@@ -406,11 +466,77 @@ const viewRawDataFromTable = async (dataType) => {
 const openImportModal = (dataType) => {
   selectedDataType.value = dataType
   showImportModal.value = true
+  // Reset form
+  selectedFiles.value = []
+  archivePassword.value = ''
+  importNotes.value = ''
+  uploading.value = false
+  uploadProgress.value = 0
 }
 
 const closeImportModal = () => {
   showImportModal.value = false
   selectedDataType.value = null
+}
+
+// Xử lý file
+const handleFileSelect = (event) => {
+  const files = event.target.files
+  if (files.length > 0) {
+    selectedFiles.value = [...selectedFiles.value, ...Array.from(files)]
+  }
+}
+
+const removeFile = (index) => {
+  selectedFiles.value.splice(index, 1)
+}
+
+const isArchiveFile = (fileName) => {
+  const ext = fileName.split('.').pop().toLowerCase()
+  return ['zip', 'rar', '7z'].includes(ext)
+}
+
+const formatFileSize = (size) => {
+  if (size < 1024) return size + ' B'
+  else if (size < 1024 * 1024) return (size / 1024).toFixed(2) + ' KB'
+  else if (size < 1024 * 1024 * 1024) return (size / (1024 * 1024)).toFixed(2) + ' MB'
+  else return (size / (1024 * 1024 * 1024)).toFixed(2) + ' GB'
+}
+
+// Thực hiện import
+const performImport = async () => {
+  if (selectedFiles.value.length === 0) {
+    showError('Vui lòng chọn ít nhất một file để import')
+    return
+  }
+
+  try {
+    uploading.value = true
+    uploadProgress.value = 0
+    
+    const options = {
+      archivePassword: archivePassword.value,
+      notes: importNotes.value,
+      onProgress: (progress) => {
+        uploadProgress.value = progress
+      }
+    }
+    
+    const result = await rawDataService.importData(selectedDataType.value, selectedFiles.value, options)
+    
+    if (result.success) {
+      showSuccess(`Import thành công ${result.processedFiles || selectedFiles.value.length} file`)
+      closeImportModal()
+      await refreshAllData() // Tải lại dữ liệu sau khi import
+    } else {
+      showError(`Lỗi khi import: ${result.error}`)
+    }
+  } catch (error) {
+    console.error('❌ Lỗi khi import:', error)
+    showError(`Lỗi khi import: ${error.message || 'Không xác định'}`)
+  } finally {
+    uploading.value = false
+  }
 }
 
 // Utility methods
