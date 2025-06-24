@@ -314,21 +314,56 @@
       </div>
     </div>
 
-    <!-- Import Modal - Enhanced Agribank Design -->
+    <!-- Import Modal - Premium Agribank Design -->
     <div v-if="showImportModal" class="modal-overlay agribank-modal-overlay" @click="closeImportModal">
-      <div class="modal-content enhanced-modal agribank-modal" @click.stop>
-        <div class="modal-header agribank-modal-header">
-          <div class="agribank-modal-title">
-            <div class="modal-icon-wrapper">
-              <span class="modal-icon">{{ dataTypeDefinitions[selectedDataType]?.icon }}</span>
-            </div>
-            <div class="modal-title-text">
-              <h3>Import Dữ Liệu {{ dataTypeDefinitions[selectedDataType]?.name }}</h3>
-              <p class="modal-subtitle">{{ dataTypeDefinitions[selectedDataType]?.description }}</p>
-            </div>
+      <div class="modal-content agribank-premium-modal" @click.stop>
+        <!-- Agribank Header với hiệu ứng gradient cao cấp -->
+        <div class="modal-header agribank-premium-header">
+          <div class="agribank-header-background">
+            <div class="agribank-gradient-overlay"></div>
+            <div class="agribank-pattern-overlay"></div>
           </div>
-          <div class="agribank-brand-stripe"></div>
-          <button @click="closeImportModal" class="modal-close agribank-close">×</button>
+          
+          <div class="agribank-header-content">
+            <!-- Logo và thương hiệu -->
+            <div class="agribank-brand-section">
+              <div class="agribank-logo-circle">
+                <div class="agribank-logo-icon">🏦</div>
+                <div class="agribank-logo-glow"></div>
+              </div>
+              <div class="agribank-brand-text">
+                <h1 class="agribank-title">AGRIBANK LAI CHÂU</h1>
+                <p class="agribank-tagline">Ngân hàng Nông nghiệp và Phát triển Nông thôn</p>
+              </div>
+            </div>
+            
+            <!-- Tiêu đề modal -->
+            <div class="modal-title-section">
+              <div class="modal-icon-container">
+                <div class="modal-icon-circle">
+                  <span class="modal-icon-large">{{ dataTypeDefinitions[selectedDataType]?.icon }}</span>
+                  <div class="icon-pulse"></div>
+                </div>
+              </div>
+              <div class="modal-title-content">
+                <h2 class="modal-main-title">IMPORT DỮ LIỆU NGHIỆP VỤ</h2>
+                <h3 class="modal-data-type">{{ dataTypeDefinitions[selectedDataType]?.name }}</h3>
+                <p class="modal-description">{{ dataTypeDefinitions[selectedDataType]?.description }}</p>
+              </div>
+            </div>
+            
+            <!-- Nút đóng cao cấp -->
+            <button @click="closeImportModal" class="agribank-close-button">
+              <span class="close-icon">✕</span>
+              <div class="close-ripple"></div>
+            </button>
+          </div>
+          
+          <!-- Thanh thương hiệu Agribank -->
+          <div class="agribank-brand-stripe">
+            <div class="stripe-pattern"></div>
+            <div class="stripe-glow"></div>
+          </div>
         </div>
 
         <div class="modal-body agribank-modal-body">
@@ -393,201 +428,193 @@
                 </div>
               </div>
             </div>
-
-            <!-- Enhanced Selected Files Display -->
-            <div v-if="selectedFiles.length > 0" class="selected-files">
-              <div class="files-header">
-                <h4>
-                  📋 File đã chọn
-                  <span class="file-count-badge">{{ selectedFiles.length }}</span>
-                </h4>
-                <button @click="clearAllFiles" class="btn-clear-files" title="Xóa tất cả file">
-                  🗑️ Xóa tất cả
+            
+            <!-- Danh sách file đã chọn -->
+            <div v-if="selectedFiles.length > 0" class="selected-files-section">
+              <div class="section-header">
+                <div class="section-icon">📋</div>
+                <div class="section-title">
+                  <h4>File đã chọn ({{ selectedFiles.length }})</h4>
+                  <p class="section-subtitle">Tổng dung lượng: {{ formatTotalFileSize() }}</p>
+                </div>
+                <button @click="clearAllFiles" class="btn-clear-all-files">
+                  <span class="clear-icon">🗑️</span>
+                  <span class="clear-text">Xóa tất cả</span>
                 </button>
               </div>
               
-              <div class="files-list">
-                <div v-for="(file, index) in selectedFiles" :key="index" class="file-item enhanced-file-item">
-                  <div class="file-info">
-                    <span class="file-icon">{{ getFileIcon(file.name) }}</span>
-                    <div class="file-details">
-                      <span class="file-name" :title="file.name">{{ file.name }}</span>
-                      <div class="file-meta">
-                        <span class="file-size">{{ formatFileSize(file.size) }}</span>
-                        <span class="file-type">{{ getFileType(file.name) }}</span>
-                      </div>
+              <div class="files-grid">
+                <div v-for="(file, index) in selectedFiles" :key="index" class="file-card">
+                  <div class="file-preview">
+                    <div class="file-icon-circle" :class="{ 'archive': isArchiveFile(file.name) }">
+                      <span class="file-icon">{{ getFileIcon(file.name) }}</span>
+                    </div>
+                    <div v-if="isArchiveFile(file.name)" class="archive-badge">
+                      <span class="archive-icon">🗜️</span>
+                      <span class="archive-text">NÉN</span>
                     </div>
                   </div>
-                  <div class="file-actions">
-                    <span v-if="isArchiveFile(file.name)" class="zip-indicator" title="File nén - sẽ được giải nén tự động">
-                      🗜️ ZIP
-                    </span>
-                    <button @click="removeFile(index)" class="btn-remove-file" :title="`Xóa file ${file.name}`">×</button>
+                  
+                  <div class="file-details">
+                    <h5 class="file-name" :title="file.name">{{ file.name }}</h5>
+                    <div class="file-meta">
+                      <span class="file-size">{{ formatFileSize(file.size) }}</span>
+                      <span class="file-type-badge">{{ getFileType(file.name) }}</span>
+                    </div>
                   </div>
-                </div>
-              </div>
-              
-              <!-- File Analysis Summary -->
-              <div v-if="fileAnalysisSummary" class="file-analysis">
-                <div class="analysis-item" v-if="fileAnalysisSummary.csvFiles > 0">
-                  <span class="analysis-icon">📊</span>
-                  <span>{{ fileAnalysisSummary.csvFiles }} file CSV</span>
-                </div>
-                <div class="analysis-item" v-if="fileAnalysisSummary.zipFiles > 0">
-                  <span class="analysis-icon">🗜️</span>
-                  <span>{{ fileAnalysisSummary.zipFiles }} file nén (sẽ giải nén tự động)</span>
-                </div>
-                <div class="analysis-item" v-if="fileAnalysisSummary.otherFiles > 0">
-                  <span class="analysis-icon">📄</span>
-                  <span>{{ fileAnalysisSummary.otherFiles }} file khác</span>
+                  
+                  <button @click="removeFile(index)" class="btn-remove-file" :title="`Xóa ${file.name}`">
+                    <span class="remove-icon">✕</span>
+                  </button>
                 </div>
               </div>
             </div>
-
-            <!-- Enhanced Archive Password Section -->
-            <div v-if="hasArchiveFile" class="form-group archive-section">
-              <label class="form-label">
-                🔐 Mật khẩu file nén 
-                <span class="optional-badge">Không bắt buộc</span>
-              </label>
+            
+            <!-- Phần mật khẩu file nén -->
+            <div v-if="hasArchiveFile" class="form-section password-section">
+              <div class="section-header">
+                <div class="section-icon">🔐</div>
+                <div class="section-title">
+                  <h4>Mật khẩu file nén</h4>
+                  <p class="section-subtitle">Chỉ cần thiết nếu file có mật khẩu bảo vệ</p>
+                </div>
+              </div>
               
-              <!-- Enhanced Auto Password Section -->
-              <div class="auto-password-section">
-                <label class="checkbox-wrapper enhanced-checkbox">
+              <div class="password-content">
+                <!-- Checkbox mật khẩu mặc định -->
+                <div class="password-option">
+                  <label class="premium-checkbox">
+                    <input 
+                      type="checkbox" 
+                      v-model="useDefaultPassword"
+                      @change="onDefaultPasswordToggle"
+                    />
+                    <span class="checkbox-mark"></span>
+                    <div class="checkbox-content">
+                      <span class="checkbox-title">🔑 Sử dụng mật khẩu mặc định hệ thống</span>
+                      <span class="checkbox-subtitle">Snk6S4GV (được sử dụng cho hầu hết các file)</span>
+                    </div>
+                  </label>
+                </div>
+                
+                <!-- Nhập mật khẩu -->
+                <div class="password-input-group">
                   <input 
-                    type="checkbox" 
-                    v-model="useDefaultPassword"
-                    @change="onDefaultPasswordToggle"
+                    v-model="archivePassword" 
+                    :type="showPassword ? 'text' : 'password'"
+                    placeholder="Nhập mật khẩu file nén (để trống nếu không có)..."
+                    class="premium-input password-input"
+                    :class="{ 'has-default': useDefaultPassword }"
                   />
-                  <span class="checkmark"></span>
-                  <div class="checkbox-content">
-                    <span class="checkbox-label">🔑 Sử dụng mật khẩu mặc định</span>
-                    <span class="password-preview">Snk6S4GV</span>
-                  </div>
-                </label>
-              </div>
-              
-              <div class="password-input-wrapper">
-                <input 
-                  v-model="archivePassword" 
-                  :type="showPassword ? 'text' : 'password'"
-                  placeholder="Nhập mật khẩu file nén..."
-                  class="form-input password-input"
-                  :class="{ 'auto-filled': useDefaultPassword }"
-                />
-                <button 
-                  type="button" 
-                  class="btn-toggle-password"
-                  @click="togglePasswordVisibility"
-                  :title="showPassword ? 'Ẩn mật khẩu' : 'Hiển thị mật khẩu'"
-                >
-                  {{ showPassword ? '🙈' : '👁️' }}
-                </button>
-              </div>
-              
-              <div class="form-hint enhanced-hint">
-                <div v-if="useDefaultPassword" class="hint-success">
-                  ✅ Đang sử dụng mật khẩu mặc định. Bạn có thể sửa nếu cần.
+                  <button 
+                    type="button" 
+                    class="btn-toggle-password"
+                    @click="togglePasswordVisibility"
+                  >
+                    <span class="toggle-icon">{{ showPassword ? '🙈' : '👁️' }}</span>
+                  </button>
                 </div>
-                <div v-else class="hint-default">
-                  💡 Để trống nếu file không có mật khẩu. Hệ thống sẽ thử giải nén không mật khẩu trước.
+                
+                <div class="password-hint">
+                  <div v-if="useDefaultPassword" class="hint-item success">
+                    <span class="hint-icon">✅</span>
+                    <span class="hint-text">Đang sử dụng mật khẩu mặc định. Có thể chỉnh sửa nếu cần.</span>
+                  </div>
+                  <div v-else class="hint-item info">
+                    <span class="hint-icon">💡</span>
+                    <span class="hint-text">Hệ thống sẽ thử giải nén không mật khẩu nếu để trống.</span>
+                  </div>
                 </div>
               </div>
             </div>
-
-            <!-- Notes -->
-            <div class="form-group">
-              <label>📝 Ghi chú</label>
-              <textarea 
-                v-model="importNotes" 
-                placeholder="Ghi chú về dữ liệu import (không bắt buộc)..."
-                class="form-textarea"
-                rows="3"
-              ></textarea>
+            
+            <!-- Phần ghi chú -->
+            <div class="form-section notes-section">
+              <div class="section-header">
+                <div class="section-icon">📝</div>
+                <div class="section-title">
+                  <h4>Ghi chú import</h4>
+                  <p class="section-subtitle">Thêm mô tả hoặc ghi chú cho lần import này</p>
+                </div>
+              </div>
+              
+              <div class="notes-content">
+                <textarea 
+                  v-model="importNotes" 
+                  placeholder="Ví dụ: Dữ liệu sao kê tháng 12/2024 từ chi nhánh Lai Châu..."
+                  class="premium-textarea"
+                  rows="3"
+                ></textarea>
+                <div class="notes-counter">
+                  <span class="counter-text">{{ importNotes.length }}/500 ký tự</span>
+                </div>
+              </div>
             </div>
           </div>
           
-          <!-- Enhanced Progress Section -->
-          <div v-if="uploading" class="upload-progress-section enhanced-progress">
-            <div class="progress-header">
-              <h4>📤 Tiến độ import</h4>
-              <div class="progress-stats">
-                <span class="progress-percentage" :class="{ 'near-complete': uploadProgress > 95 }">
-                  {{ uploadProgress }}%
-                </span>
-                <span v-if="uploadSpeed > 0" class="upload-speed">
-                  📊 {{ formatFileSize(uploadSpeed) }}/s
-                </span>
-                <span v-if="remainingTime > 0" class="remaining-time">
-                  ⏱️ Còn lại: {{ remainingTimeFormatted }}
-                </span>
-              </div>
-            </div>
-            
-            <div class="progress-bar-container enhanced agribank-progress-container">
-              <div class="agribank-progress-header">
-                <span class="progress-title">Tiến trình upload</span>
-                <span class="progress-percentage">{{ uploadProgress }}%</span>
-              </div>
-              <div class="progress-bar agribank-progress-bar" 
-                   :style="{ width: uploadProgress + '%' }"
-                   :class="{ 
-                     'progress-near-complete': uploadProgress > 95,
-                     'progress-processing': uploadProgress === 100 && loadingMessage.includes('xử lý'),
-                     'progress-active': uploadProgress > 0 && uploadProgress < 100
-                   }">
-                <div class="progress-glow"></div>
-                <div class="progress-animation agribank-animation"></div>
-              </div>
-              <div class="progress-track"></div>
-            </div>
-            
-            <div class="progress-details">
-              <div class="progress-message">
-                <span class="message-icon">{{ getProgressIcon() }}</span>
-                <span class="message-text">{{ loadingMessage }}</span>
-              </div>
-              
-              <div v-if="uploadProgress > 0" class="progress-breakdown">
-                <div class="breakdown-item">
-                  <span class="breakdown-label">Đã upload:</span>
-                  <span class="breakdown-value">{{ formatFileSize(uploadedBytes) }}</span>
-                </div>
-                <div class="breakdown-item">
-                  <span class="breakdown-label">Tổng cộng:</span>
-                  <span class="breakdown-value">{{ formatFileSize(totalBytes) }}</span>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Processing Steps Indicator -->
-            <div v-if="uploadProgress === 100" class="processing-steps">
-              <div class="step-item" :class="{ active: currentStep >= 1 }">
-                <span class="step-icon">✅</span>
-                <span class="step-text">Upload hoàn tất</span>
-              </div>
-              <div class="step-item" :class="{ active: currentStep >= 2 }">
-                <span class="step-icon">{{ currentStep >= 2 ? '✅' : '⏳' }}</span>
-                <span class="step-text">Đang xử lý file nén</span>
-              </div>
-              <div class="step-item" :class="{ active: currentStep >= 3 }">
-                <span class="step-icon">{{ currentStep >= 3 ? '✅' : '⏳' }}</span>
-                <span class="step-text">Import dữ liệu</span>
-              </div>
-            </div>
-          </div>
+          <!-- Progress section được di chuyển vào footer -->
+          <!-- <div v-if="uploading" class="upload-progress-section enhanced-progress">
+            ... phần progress cũ đã được di chuyển vào footer ...
+          </div> -->
         </div>
 
-        <div class="modal-footer">
-          <button @click="closeImportModal" class="btn-cancel btn-large">🚫 Hủy</button>
-          <button 
-            @click="performImport" 
-            class="btn-import-confirm btn-large"
-            :disabled="selectedFiles.length === 0 || uploading"
-            :style="{ backgroundColor: getDataTypeColor(selectedDataType) }"
-          >
-            {{ uploading ? '⏳ Đang import...' : '📤 Import Dữ liệu' }}
-          </button>
+        <!-- Modal Footer cao cấp -->
+        <div class="modal-footer agribank-premium-footer">
+          <div class="footer-background">
+            <div class="footer-gradient"></div>
+          </div>
+          
+          <div class="footer-content">
+            <div class="footer-info">
+              <div class="info-item">
+                <span class="info-icon">📁</span>
+                <span class="info-text">{{ selectedFiles.length }} file đã chọn</span>
+              </div>
+              <div v-if="selectedFiles.length > 0" class="info-item">
+                <span class="info-icon">💾</span>
+                <span class="info-text">{{ formatTotalFileSize() }}</span>
+              </div>
+              <div v-if="hasArchiveFile" class="info-item">
+                <span class="info-icon">🔐</span>
+                <span class="info-text">File nén được phát hiện</span>
+              </div>
+            </div>
+            
+            <div class="footer-actions">
+              <button @click="closeImportModal" class="btn-cancel agribank-btn-cancel">
+                <span class="btn-icon">✕</span>
+                <span class="btn-text">Hủy bỏ</span>
+                <div class="btn-ripple"></div>
+              </button>
+              
+              <button 
+                @click="performImport" 
+                class="btn-import agribank-btn-import"
+                :disabled="selectedFiles.length === 0 || uploading"
+                :class="{ 'btn-importing': uploading }"
+              >
+                <span class="btn-icon">{{ uploading ? '⏳' : '🚀' }}</span>
+                <span class="btn-text">
+                  {{ uploading ? 'Đang Import...' : 'Bắt đầu Import' }}
+                </span>
+                <div class="btn-shine"></div>
+                <div class="btn-glow"></div>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Progress bar trong footer khi đang upload -->
+          <div v-if="uploading" class="footer-progress">
+            <div class="progress-track">
+              <div class="progress-fill" :style="{ width: uploadProgress + '%' }">
+                <div class="progress-shimmer"></div>
+              </div>
+            </div>
+            <div class="progress-text">
+              <span>{{ uploadProgress }}% hoàn thành</span>
+              <span v-if="remainingTime > 0">{{ remainingTimeFormatted }} còn lại</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1293,6 +1320,18 @@ const addFiles = (files) => {
 
 const removeFile = (index) => {
   selectedFiles.value.splice(index, 1)
+}
+
+// Xóa tất cả file đã chọn
+const clearAllFiles = () => {
+  selectedFiles.value = []
+  archivePassword.value = ''
+  useDefaultPassword.value = true
+}
+
+// Toggle hiển thị/ẩn mật khẩu
+const togglePasswordVisibility = () => {
+  showPassword.value = !showPassword.value
 }
 
 const getFileIcon = (fileName) => {
@@ -3362,6 +3401,1798 @@ onMounted(async () => {
   
   .agribank-table-wrapper {
     max-height: 400px;
+  }
+}
+
+/* 🏦 PREMIUM AGRIBANK MODAL STYLING */
+/* Modal overlay cao cấp */
+.agribank-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: modalOverlayFadeIn 0.3s ease-out;
+}
+
+@keyframes modalOverlayFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal content cao cấp */
+.agribank-premium-modal {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  max-width: 900px;
+  max-height: 85vh; /* Đảm bảo không vượt quá chiều cao màn hình */
+  overflow: hidden;
+  animation: modalSlideIn 0.4s ease-out;
+  position: relative;
+  display: flex;
+  flex-direction: column; /* Để footer luôn ở dưới cùng */
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Header cao cấp với gradient và hiệu ứng */
+.agribank-premium-header {
+  position: relative;
+  color: white;
+  padding: 0;
+  overflow: hidden;
+}
+
+.agribank-header-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 30%, #E63946 70%, #C41E3A 100%);
+}
+
+.agribank-gradient-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.05) 100%);
+}
+
+.agribank-pattern-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 1px, transparent 1px),
+    radial-gradient(circle at 80% 80%, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 30px 30px;
+}
+
+.agribank-header-content {
+  position: relative;
+  z-index: 1;
+  padding: 30px 40px;
+}
+
+/* Phần thương hiệu */
+.agribank-brand-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.agribank-logo-circle {
+  position: relative;
+  width: 70px;
+  height: 70px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(255,255,255,0.3);
+}
+
+.agribank-logo-icon {
+  font-size: 32px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.agribank-logo-glow {
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  border-radius: 50%;
+  background: linear-gradient(45deg, rgba(255,255,255,0.3), transparent, rgba(255,255,255,0.1));
+  animation: logoGlow 3s ease-in-out infinite;
+}
+
+@keyframes logoGlow {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+.agribank-brand-text {
+  flex: 1;
+}
+
+.agribank-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin: 0 0 8px 0;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  letter-spacing: 0.5px;
+}
+
+.agribank-tagline {
+  font-size: 0.95rem;
+  margin: 0;
+  opacity: 0.9;
+  font-weight: 400;
+}
+
+/* Phần tiêu đề modal */
+.modal-title-section {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+.modal-icon-container {
+  position: relative;
+}
+
+.modal-icon-circle {
+  width: 80px;
+  height: 80px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid rgba(255,255,255,0.4);
+  position: relative;
+}
+
+.modal-icon-large {
+  font-size: 36px;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
+}
+
+.icon-pulse {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.5);
+  animation: iconPulse 2s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+  0%, 100% { opacity: 0; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+.modal-title-content {
+  flex: 1;
+}
+
+.modal-main-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.modal-data-type {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: rgba(255,255,255,0.95);
+}
+
+.modal-description {
+  font-size: 1rem;
+  margin: 0;
+  opacity: 0.85;
+  font-weight: 400;
+}
+
+/* Nút đóng cao cấp */
+.agribank-close-button {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 45px;
+  height: 45px;
+  background: rgba(255,255,255,0.15);
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 2;
+}
+
+.agribank-close-button:hover {
+  background: rgba(255,255,255,0.25);
+  border-color: rgba(255,255,255,0.5);
+  transform: scale(1.05);
+}
+
+.close-icon {
+  font-size: 20px;
+  color: white;
+  font-weight: bold;
+}
+
+.close-ripple {
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.3);
+  opacity: 0;
+  animation: closeRipple 2s ease-in-out infinite;
+}
+
+@keyframes closeRipple {
+  0% { opacity: 0; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.2); }
+  100% { opacity: 0; transform: scale(1.4); }
+}
+
+/* Thanh thương hiệu */
+.agribank-brand-stripe {
+  height: 8px;
+  background: linear-gradient(90deg, 
+    rgba(255,255,255,0.3) 0%,
+    rgba(255,255,255,0.6) 25%,
+    rgba(255,255,255,0.8) 50%,
+    rgba(255,255,255,0.6) 75%,
+    rgba(255,255,255,0.3) 100%
+  );
+  position: relative;
+  overflow: hidden;
+}
+
+.stripe-pattern {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+  animation: stripeMove 3s linear infinite;
+}
+
+@keyframes stripeMove {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.stripe-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    rgba(255,255,255,0.1),
+    rgba(255,255,255,0.3),
+    rgba(255,255,255,0.1)
+  );
+}
+
+/* Modal Body cao cấp */
+.agribank-premium-body {
+  padding: 30px 40px;
+  background: #fafafa;
+  flex: 1; /* Chiếm không gian còn lại */
+  overflow-y: auto; /* Cho phép scroll khi nội dung quá dài */
+  max-height: calc(85vh - 200px); /* Trừ đi chiều cao header và footer */
+}
+
+/* Custom scrollbar cho modal body */
+.agribank-premium-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.agribank-premium-body::-webkit-scrollbar-track {
+  background: #f1f3f4;
+  border-radius: 4px;
+}
+
+.agribank-premium-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #8B1538, #C41E3A);
+  border-radius: 4px;
+}
+
+.agribank-premium-body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #C41E3A, #E63946);
+}
+
+/* Hướng dẫn nhanh */
+.agribank-quick-guide {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 15px;
+  padding: 15px 20px; /* Giảm padding */
+  margin-bottom: 20px; /* Giảm margin */
+  border: 1px solid #dee2e6;
+}
+
+.guide-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.guide-icon {
+  font-size: 20px;
+}
+
+.guide-header h4 {
+  margin: 0;
+  color: #495057;
+  font-weight: 600;
+}
+
+.guide-steps {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.guide-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 15px;
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #e9ecef;
+  flex: 1;
+  min-width: 200px;
+}
+
+.step-number {
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #8B1538, #C41E3A);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.step-text {
+  font-size: 14px;
+  color: #495057;
+}
+
+/* Form cao cấp */
+.agribank-premium-form {
+  background: white;
+  border-radius: 15px;
+  border: 1px solid #e9ecef;
+  overflow: hidden;
+}
+
+.form-section {
+  margin-bottom: 15px; /* Giảm khoảng cách giữa các section */
+}
+
+.form-section:last-child {
+  margin-bottom: 0; /* Bỏ margin cho section cuối */
+}
+
+.agribank-upload-section {
+  padding: 0;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 15px 20px; /* Giảm padding */
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-bottom: 1px solid #dee2e6;
+}
+
+.section-icon {
+  font-size: 24px;
+  color: #8B1538;
+}
+
+.section-title {
+  flex: 1;
+}
+
+.section-title h4 {
+  margin: 0 0 4px 0;
+  font-weight: 600;
+  color: #495057;
+}
+
+.section-subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.file-limit-badge {
+  background: linear-gradient(135deg, #8B1538, #C41E3A);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.limit-icon {
+  font-size: 14px;
+}
+
+/* Khu vực upload cao cấp */
+.agribank-upload-zone {
+  padding: 30px 25px; /* Giảm padding */
+  border: 3px dashed #dee2e6;
+  background: #fafafa;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.agribank-upload-zone:hover {
+  border-color: #8B1538;
+  background: #f8f9fa;
+}
+
+.agribank-upload-zone.drag-active {
+  border-color: #C41E3A;
+  background: linear-gradient(135deg, rgba(196, 30, 58, 0.1), rgba(139, 21, 56, 0.05));
+  transform: scale(1.02);
+}
+
+.agribank-upload-zone.has-files {
+  border-style: solid;
+  border-color: #28a745;
+  background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(40, 167, 69, 0.05));
+}
+
+/* Upload empty state */
+.upload-empty-state {
+  text-align: center;
+  position: relative;
+}
+
+.upload-visual {
+  position: relative;
+  margin-bottom: 20px; /* Giảm margin */
+}
+
+.upload-icon-circle {
+  width: 80px; /* Giảm kích thước */
+  height: 80px;
+  background: linear-gradient(135deg, #8B1538, #C41E3A);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 15px; /* Giảm margin */
+  position: relative;
+  box-shadow: 0 10px 30px rgba(139, 21, 56, 0.3);
+}
+
+.upload-main-icon {
+  font-size: 32px; /* Giảm kích thước */
+  color: white;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.upload-icon-pulse {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  border-radius: 50%;
+  border: 3px solid rgba(139, 21, 56, 0.3);
+  animation: uploadPulse 2s ease-in-out infinite;
+}
+
+@keyframes uploadPulse {
+  0%, 100% { opacity: 0; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+.upload-arrows {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 150px;
+  height: 150px;
+}
+
+.arrow {
+  position: absolute;
+  font-size: 20px;
+  color: #8B1538;
+  opacity: 0.6;
+  animation: arrowFloat 3s ease-in-out infinite;
+}
+
+.arrow-1 { top: 20px; right: 20px; animation-delay: 0s; }
+.arrow-2 { top: 20px; left: 20px; animation-delay: 0.5s; }
+.arrow-3 { bottom: 20px; left: 20px; animation-delay: 1s; }
+.arrow-4 { bottom: 20px; right: 20px; animation-delay: 1.5s; }
+
+@keyframes arrowFloat {
+  0%, 100% { opacity: 0.6; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-5px); }
+}
+
+.upload-content h3 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #495057;
+  margin: 0 0 8px 0;
+}
+
+.upload-description {
+  font-size: 1rem;
+  color: #6c757d;
+  margin: 0 0 25px 0;
+}
+
+.format-support {
+  background: white;
+  border-radius: 15px;
+  padding: 15px; /* Giảm padding */
+  border: 1px solid #e9ecef;
+  margin-bottom: 15px; /* Giảm margin */
+}
+
+.format-title {
+  font-weight: 600;
+  color: #495057;
+  margin: 0 0 15px 0;
+  font-size: 14px;
+}
+
+.format-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 10px;
+}
+
+.format-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.format-item:hover {
+  background: #e9ecef;
+  transform: translateY(-2px);
+}
+
+.format-item.archive {
+  background: linear-gradient(135deg, #ffc107, #ff8c00);
+  color: white;
+  border-color: #ff8c00;
+}
+
+.format-icon {
+  font-size: 18px;
+  margin-bottom: 4px;
+}
+
+.format-name {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Watermark */
+.agribank-watermark {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0.3;
+}
+
+.watermark-logo {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+.watermark-text {
+  font-size: 10px;
+  font-weight: bold;
+  color: #8B1538;
+  letter-spacing: 1px;
+}
+
+/* Upload has files */
+.upload-has-files {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.files-summary {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+}
+
+.summary-icon-circle {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #28a745, #20c997);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.summary-icon {
+  font-size: 24px;
+  color: white;
+}
+
+.summary-glow {
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  border-radius: 50%;
+  border: 2px solid rgba(40, 167, 69, 0.3);
+  animation: summaryGlow 2s ease-in-out infinite;
+}
+
+@keyframes summaryGlow {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.1); }
+}
+
+.summary-content h4 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #495057;
+  margin: 0 0 4px 0;
+}
+
+.summary-size {
+  font-size: 14px;
+  color: #28a745;
+  font-weight: 500;
+  margin: 0 0 4px 0;
+}
+
+.summary-action {
+  font-size: 13px;
+  color: #6c757d;
+  margin: 0;
+}
+
+/* Selected Files Section */
+.selected-files-section {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 15px;
+  overflow: hidden;
+  margin-bottom: 15px;
+}
+
+.btn-clear-all-files {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #6c757d;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-clear-all-files:hover {
+  background: #e9ecef;
+  color: #495057;
+}
+
+.files-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 15px;
+  padding: 20px;
+}
+
+.file-card {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 15px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.file-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.file-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.file-icon-circle {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #6c757d, #495057);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: white;
+}
+
+.file-icon-circle.archive {
+  background: linear-gradient(135deg, #ffc107, #ff8c00);
+}
+
+.archive-badge {
+  background: #ff8c00;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.file-details h5 {
+  margin: 0 0 6px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #495057;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.file-size {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.file-type-badge {
+  background: #e9ecef;
+  color: #495057;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.btn-remove-file {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+.btn-remove-file:hover {
+  background: #c82333;
+  transform: scale(1.1);
+}
+
+/* Password Section */
+.password-section {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 15px;
+  overflow: hidden;
+  margin-bottom: 15px;
+}
+
+.password-content {
+  padding: 20px;
+}
+
+.password-option {
+  margin-bottom: 15px;
+}
+
+.premium-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.premium-checkbox input[type="checkbox"] {
+  margin: 0;
+  width: 18px;
+  height: 18px;
+  accent-color: #8B1538;
+}
+
+.checkbox-mark {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #dee2e6;
+  border-radius: 4px;
+  position: relative;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.checkbox-content {
+  flex: 1;
+}
+
+.checkbox-title {
+  font-weight: 600;
+  color: #495057;
+  font-size: 14px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.checkbox-subtitle {
+  font-size: 12px;
+  color: #6c757d;
+  font-family: monospace;
+}
+
+.password-input-group {
+  position: relative;
+  margin-bottom: 15px;
+}
+
+.premium-input {
+  width: 100%;
+  padding: 12px 50px 12px 15px;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  font-size: 14px;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.premium-input:focus {
+  border-color: #8B1538;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(139, 21, 56, 0.1);
+}
+
+.premium-input.has-default {
+  border-color: #28a745;
+  background: rgba(40, 167, 69, 0.05);
+}
+
+.btn-toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.btn-toggle-password:hover {
+  background: #f8f9fa;
+}
+
+.password-hint {
+  margin-top: 10px;
+}
+
+.hint-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.hint-item.success {
+  background: rgba(40, 167, 69, 0.1);
+  color: #155724;
+}
+
+.hint-item.info {
+  background: rgba(13, 110, 253, 0.1);
+  color: #0c5460;
+}
+
+/* Notes Section */
+.notes-section {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.notes-content {
+  padding: 20px;
+}
+
+.premium-textarea {
+  width: 100%;
+  padding: 12px 15px;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  font-size: 14px;
+  background: white;
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+  transition: all 0.3s ease;
+}
+
+.premium-textarea:focus {
+  border-color: #8B1538;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(139, 21, 56, 0.1);
+}
+
+.notes-counter {
+  text-align: right;
+  margin-top: 8px;
+}
+
+.counter-text {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+/* Mobile responsive cho các section mới */
+@media (max-width: 768px) {
+  .files-grid {
+    grid-template-columns: 1fr;
+    padding: 15px;
+    gap: 12px;
+  }
+  
+  .file-card {
+    padding: 12px;
+  }
+  
+  .password-content, .notes-content {
+    padding: 15px;
+  }
+  
+  .premium-input, .premium-textarea {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+  
+  .password-input-group .premium-input {
+    padding-right: 45px;
+  }
+}
+
+/* Modal Footer cao cấp */
+.agribank-premium-footer {
+  background: white;
+  border-top: 1px solid #e9ecef;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0; /* Không cho footer bị co lại */
+  margin-top: auto; /* Đẩy footer xuống dưới cùng */
+}
+
+.footer-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+}
+
+.footer-gradient {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #8B1538, #C41E3A, #8B1538);
+}
+
+.footer-content {
+  position: relative;
+  z-index: 1;
+  padding: 20px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.footer-info {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(139, 21, 56, 0.1);
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.info-icon {
+  font-size: 16px;
+}
+
+.info-text {
+  color: #495057;
+}
+
+.footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Nút hủy cao cấp */
+.agribank-btn-cancel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: #f8f9fa;
+  color: #6c757d;
+  border: 2px solid #dee2e6;
+  border-radius: 25px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.agribank-btn-cancel:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+  color: #495057;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+/* Nút import cao cấp */
+.agribank-btn-import {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 30px;
+  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 50%, #E63946 100%);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(139, 21, 56, 0.3);
+}
+
+.agribank-btn-import:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(139, 21, 56, 0.4);
+}
+
+.agribank-btn-import:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.agribank-btn-import.btn-importing {
+  background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+}
+
+.btn-icon {
+  font-size: 18px;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+}
+
+.btn-text {
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* Hiệu ứng shine cho nút import */
+.btn-shine {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  transition: left 0.6s ease;
+}
+
+.agribank-btn-import:hover .btn-shine {
+  left: 100%;
+}
+
+/* Hiệu ứng glow */
+.btn-glow {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: 25px;
+  background: linear-gradient(135deg, #8B1538, #C41E3A);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.agribank-btn-import:hover .btn-glow {
+  opacity: 0.7;
+  animation: btnGlow 2s ease-in-out infinite;
+}
+
+@keyframes btnGlow {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+
+/* Ripple effect */
+.btn-ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.3s ease, height 0.3s ease;
+}
+
+.agribank-btn-cancel:active .btn-ripple {
+  width: 100px;
+  height: 100px;
+}
+
+/* Footer progress */
+.footer-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(248, 249, 250, 0.95);
+  backdrop-filter: blur(5px);
+  padding: 15px 30px;
+  border-top: 1px solid #e9ecef;
+}
+
+.progress-track {
+  height: 6px;
+  background: #e9ecef;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #8B1538, #C41E3A, #E63946);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-shimmer {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: progressShimmer 2s linear infinite;
+}
+
+@keyframes progressShimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.progress-text {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .agribank-premium-modal {
+    margin: 10px;
+    max-width: calc(100vw - 20px);
+    max-height: 95vh; /* Tăng chiều cao cho mobile */
+  }
+  
+  .agribank-header-content {
+    padding: 15px 20px; /* Giảm padding cho mobile */
+  }
+  
+  .agribank-brand-section {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px; /* Giảm gap */
+  }
+  
+  .modal-title-section {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px; /* Giảm gap */
+  }
+  
+  .agribank-premium-body {
+    padding: 15px 20px; /* Giảm padding cho mobile */
+    max-height: calc(95vh - 180px); /* Điều chỉnh cho mobile */
+  }
+  
+  .agribank-quick-guide {
+    padding: 10px 15px; /* Giảm padding cho mobile */
+    margin-bottom: 15px;
+  }
+  
+  .guide-steps {
+    flex-direction: column;
+    gap: 10px; /* Giảm gap */
+  }
+  
+  .guide-step {
+    min-width: auto; /* Bỏ min-width cho mobile */
+    padding: 8px 12px; /* Giảm padding */
+  }
+  
+  .section-header {
+    padding: 12px 15px; /* Giảm padding cho mobile */
+  }
+  
+  .agribank-upload-zone {
+    padding: 20px 15px; /* Giảm padding cho mobile */
+  }
+  
+  .upload-icon-circle {
+    width: 60px; /* Giảm kích thước cho mobile */
+    height: 60px;
+  }
+  
+  .upload-main-icon {
+    font-size: 24px; /* Giảm kích thước cho mobile */
+  }
+  
+  .footer-content {
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px 20px;
+  }
+  
+  .footer-info {
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px; /* Giảm gap */
+  }
+  
+  .info-item {
+    padding: 6px 10px; /* Giảm padding */
+    font-size: 12px; /* Giảm font-size */
+  }
+  
+  .footer-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .agribank-btn-cancel, .agribank-btn-import {
+    flex: 1;
+    justify-content: center;
+    padding: 12px 20px; /* Giảm padding cho mobile */
+    font-size: 14px; /* Giảm font-size */
+  }
+}
+
+/* CSS cho các phần mới trong modal */
+/* Selected Files Section */
+.selected-files-section {
+  margin-top: 20px;
+  background: white;
+  border-radius: 15px;
+  border: 1px solid #e9ecef;
+  overflow: hidden;
+}
+
+.selected-files-section .section-header {
+  background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+  border-bottom: 1px solid #e1bee7;
+}
+
+.btn-clear-all-files {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #ff5722, #ff7043);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-clear-all-files:hover {
+  background: linear-gradient(135deg, #e64a19, #ff5722);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 87, 34, 0.3);
+}
+
+.files-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 15px;
+  padding: 20px;
+}
+
+.file-card {
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  padding: 15px;
+  transition: all 0.3s ease;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.file-card:hover {
+  border-color: #8B1538;
+  background: white;
+  box-shadow: 0 5px 15px rgba(139, 21, 56, 0.1);
+  transform: translateY(-2px);
+}
+
+.file-preview {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.file-icon-circle {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6c757d, #495057);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.file-icon-circle.archive {
+  background: linear-gradient(135deg, #ffc107, #ff8c00);
+}
+
+.archive-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: linear-gradient(135deg, #ffc107, #ff8c00);
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.file-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-details .file-name {
+  font-weight: 600;
+  color: #495057;
+  margin: 0 0 6px 0;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.file-size {
+  font-size: 12px;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.file-type-badge {
+  background: linear-gradient(135deg, #8B1538, #C41E3A);
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+}
+
+.btn-remove-file {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.btn-remove-file:hover {
+  background: linear-gradient(135deg, #c82333, #bd2130);
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.remove-icon {
+  font-size: 14px;
+}
+
+/* Password Section */
+.password-section {
+  margin-top: 20px;
+}
+
+.password-section .section-header {
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border-bottom: 1px solid #ffeaa7;
+}
+
+.password-content {
+  padding: 20px;
+}
+
+.password-option {
+  margin-bottom: 15px;
+}
+
+.premium-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 2px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.premium-checkbox:hover {
+  border-color: #8B1538;
+  background: white;
+}
+
+.premium-checkbox input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.checkbox-mark {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #8B1538;
+  border-radius: 4px;
+  position: relative;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.premium-checkbox input[type="checkbox"]:checked + .checkbox-mark {
+  background: linear-gradient(135deg, #8B1538, #C41E3A);
+  border-color: #8B1538;
+}
+
+.premium-checkbox input[type="checkbox"]:checked + .checkbox-mark::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.checkbox-content {
+  flex: 1;
+}
+
+.checkbox-title {
+  display: block;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 4px;
+}
+
+.checkbox-subtitle {
+  display: block;
+  font-size: 12px;
+  color: #6c757d;
+  font-style: italic;
+}
+
+.password-input-group {
+  position: relative;
+  margin-bottom: 15px;
+}
+
+.premium-input {
+  width: 100%;
+  padding: 15px 50px 15px 20px;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  background: white;
+}
+
+.premium-input:focus {
+  border-color: #8B1538;
+  box-shadow: 0 0 0 3px rgba(139, 21, 56, 0.1);
+  outline: none;
+}
+
+.premium-input.has-default {
+  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+  border-color: #28a745;
+}
+
+.btn-toggle-password {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.btn-toggle-password:hover {
+  background: rgba(139, 21, 56, 0.1);
+}
+
+.toggle-icon {
+  font-size: 16px;
+}
+
+.password-hint {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.hint-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hint-item.success {
+  color: #155724;
+}
+
+.hint-item.info {
+  color: #495057;
+}
+
+.hint-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.hint-text {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Notes Section */
+.notes-section {
+  margin-top: 20px;
+}
+
+.notes-section .section-header {
+  background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
+  border-bottom: 1px solid #c8e6c9;
+}
+
+.notes-content {
+  padding: 20px;
+}
+
+.premium-textarea {
+  width: 100%;
+  padding: 15px;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  transition: all 0.3s ease;
+  background: white;
+  min-height: 80px;
+}
+
+.premium-textarea:focus {
+  border-color: #8B1538;
+  box-shadow: 0 0 0 3px rgba(139, 21, 56, 0.1);
+  outline: none;
+}
+
+.notes-counter {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.counter-text {
+  font-size: 12px;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+/* Responsive cho mobile */
+@media (max-width: 768px) {
+  .files-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 15px;
+  }
+  
+  .file-card {
+    padding: 12px;
+  }
+  
+  .premium-checkbox {
+    padding: 12px;
+  }
+  
+  .password-content, .notes-content {
+    padding: 15px;
   }
 }
 </style>
