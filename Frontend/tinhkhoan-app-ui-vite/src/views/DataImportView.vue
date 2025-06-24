@@ -156,68 +156,122 @@
       </div>
     </div>
 
-    <!-- Filtered Results Section (when date filter is applied) -->
-    <div v-if="filteredResults.length > 0" class="filtered-results-section">
-      <div class="section-header">
-        <h2>🔍 Kết quả lọc theo ngày</h2>
-        <p>Hiển thị {{ filteredResults.length }} bản ghi từ {{ formatDate(selectedFromDate) }} 
-           {{ selectedToDate ? ' đến ' + formatDate(selectedToDate) : '' }}</p>
+    <!-- Filtered Results Section (when date filter is applied) - Enhanced Agribank Design -->
+    <div v-if="filteredResults.length > 0" class="filtered-results-section agribank-filtered-section">
+      <div class="section-header agribank-filtered-header">
+        <div class="header-content agribank-filtered-content">
+          <div class="agribank-search-icon">
+            <div class="search-icon-wrapper">
+              <span class="search-icon">🔍</span>
+              <div class="search-glow"></div>
+            </div>
+          </div>
+          <div class="header-text agribank-filtered-text">
+            <h2>KẾT QUẢ LỌC THEO NGÀY - AGRIBANK</h2>
+            <p class="filtered-summary">
+              <span class="records-found">{{ filteredResults.length }} bản ghi</span> được tìm thấy từ 
+              <span class="date-range">{{ formatDate(selectedFromDate) }}</span>
+              <span v-if="selectedToDate" class="date-to"> đến <span class="date-range">{{ formatDate(selectedToDate) }}</span></span>
+            </p>
+            <div class="filter-stats">
+              <div class="stat-item">
+                <span class="stat-icon">📊</span>
+                <span class="stat-label">Tổng:</span>
+                <span class="stat-value">{{ filteredResults.length }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-icon">📁</span>
+                <span class="stat-label">Files:</span>
+                <span class="stat-value">{{ getUniqueFilesCount() }}</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-icon">🏦</span>
+                <span class="stat-label">Loại:</span>
+                <span class="stat-value">{{ getUniqueDataTypesCount() }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="agribank-filter-stripe"></div>
       </div>
 
-      <div class="results-table">
-        <table>
-          <thead>
+      <div class="results-table agribank-filtered-table">
+        <table class="enhanced-filtered-table">
+          <thead class="agribank-filtered-thead">
             <tr>
-              <th>Loại dữ liệu</th>
-              <th>Tên file</th>
-              <th>Ngày sao kê</th>
-              <th>Ngày import</th>
-              <th>Records</th>
-              <th>Trạng thái</th>
-              <th>Thao tác</th>
+              <th class="col-datatype-filter">Loại dữ liệu</th>
+              <th class="col-filename">Tên file</th>
+              <th class="col-statement">Ngày sao kê</th>
+              <th class="col-import">Ngày import</th>
+              <th class="col-records-filter">Records</th>
+              <th class="col-status">Trạng thái</th>
+              <th class="col-actions-filter">Thao tác</th>
             </tr>
           </thead>
-          <tbody>
-            <tr v-for="item in paginatedFilteredResults" :key="item.id">
-              <td>
+          <tbody class="agribank-filtered-tbody">
+            <tr v-for="item in paginatedFilteredResults" :key="item.id" class="filtered-row enhanced-filtered-row">
+              <td class="col-datatype-filter">
+                <div class="filtered-datatype-info">
+                  <span 
+                    class="data-type-badge agribank-filtered-badge" 
+                    :style="{ backgroundColor: getDataTypeColor(item.dataType) }"
+                  >
+                    <span class="badge-icon">{{ getDataTypeIcon(item.dataType) }}</span>
+                    <span class="badge-text">{{ item.dataType }}</span>
+                  </span>
+                </div>
+              </td>
+              <td class="col-filename filename-cell enhanced-filename">
+                <div class="filename-wrapper">
+                  <span class="file-icon">{{ getFileIcon(item.fileName) }}</span>
+                  <span class="filename agribank-filename">{{ item.fileName }}</span>
+                </div>
+              </td>
+              <td class="col-statement enhanced-date">
+                <div class="date-info">
+                  <span class="date-icon">📅</span>
+                  <span class="date-text">{{ formatDate(item.statementDate) }}</span>
+                </div>
+              </td>
+              <td class="col-import enhanced-date">
+                <div class="date-info">
+                  <span class="date-icon">⏰</span>
+                  <span class="date-text">{{ formatDate(item.importDate) }}</span>
+                </div>
+              </td>
+              <td class="col-records-filter records-cell enhanced-records-filter">
+                <div class="records-info-filter">
+                  <span class="records-icon">📊</span>
+                  <span class="records-count agribank-records">{{ formatNumber(item.recordsCount) }}</span>
+                  <span class="records-unit">records</span>
+                </div>
+              </td>
+              <td class="col-status enhanced-status">
                 <span 
-                  class="data-type-badge" 
-                  :style="{ backgroundColor: getDataTypeColor(item.dataType) }"
-                >
-                  {{ item.dataType }}
-                </span>
-              </td>
-              <td class="filename-cell">
-                <span class="filename">{{ item.fileName }}</span>
-              </td>
-              <td>{{ formatDate(item.statementDate) }}</td>
-              <td>{{ formatDate(item.importDate) }}</td>
-              <td class="records-cell">
-                <span class="records-count">{{ formatNumber(item.recordsCount) }}</span>
-              </td>
-              <td>
-                <span 
-                  class="status-badge" 
+                  class="status-badge agribank-status-badge" 
                   :class="getStatusClass(item.status)"
                 >
-                  {{ getStatusText(item.status) }}
+                  <span class="status-icon">{{ getStatusIcon(item.status) }}</span>
+                  <span class="status-text">{{ getStatusText(item.status) }}</span>
                 </span>
               </td>
-              <td class="actions-cell">
-                <button 
-                  @click="previewImport(item)" 
-                  class="btn-action btn-preview"
-                  title="Xem trước dữ liệu"
-                >
-                  👁️
-                </button>
-                <button 
-                  @click="deleteImport(item)" 
-                  class="btn-action btn-delete"
-                  title="Xóa import này"
-                >
-                  🗑️
-                </button>
+              <td class="col-actions-filter actions-cell enhanced-actions-filter">
+                <div class="action-buttons-group agribank-actions-group">
+                  <button 
+                    @click="previewImport(item)" 
+                    class="btn-action btn-preview agribank-btn-preview"
+                    title="Xem trước dữ liệu"
+                  >
+                    👁️
+                  </button>
+                  <button 
+                    @click="deleteImport(item)" 
+                    class="btn-action btn-delete agribank-btn-delete-filter"
+                    title="Xóa import này"
+                  >
+                    🗑️
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -1247,6 +1301,43 @@ const formatRecordCount = (count) => {
   return rawDataService.formatRecordCount(count)
 }
 
+// Thêm các method cho bảng lọc theo ngày
+const getUniqueFilesCount = () => {
+  // Đếm số file unique trong kết quả lọc
+  const uniqueFiles = new Set(filteredResults.value.map(item => item.fileName))
+  return uniqueFiles.size
+}
+
+const getUniqueDataTypesCount = () => {
+  // Đếm số loại dữ liệu unique trong kết quả lọc
+  const uniqueTypes = new Set(filteredResults.value.map(item => item.dataType))
+  return uniqueTypes.size
+}
+
+const getDataTypeIcon = (dataType) => {
+  // Lấy icon cho từng loại dữ liệu
+  const iconMap = {
+    'LN01': '💰', 'LN02': '🔄', 'LN03': '📊',
+    'DP01': '🏦', 'EI01': '📱', 'GAHR26': '👥',
+    'GL01': '✍️', 'DPDA': '💳', 'DB01': '📋',
+    'KH03': '🏢', 'BC57': '📈'
+  }
+  return iconMap[dataType] || '📄'
+}
+
+const getStatusIcon = (status) => {
+  // Lấy icon cho trạng thái
+  const iconMap = {
+    'completed': '✅',
+    'success': '✅', 
+    'failed': '❌',
+    'error': '❌',
+    'processing': '⏳',
+    'pending': '⏸️'
+  }
+  return iconMap[status] || '❓'
+}
+
 const getFileType = (fileName) => {
   // Lấy phần mở rộng của file
   const ext = fileName.split('.').pop()?.toLowerCase() || ''
@@ -2089,7 +2180,7 @@ onMounted(async () => {
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 24px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.1);
   border: 2px solid #e2e8f0;
   position: relative;
   overflow: hidden;
@@ -2102,7 +2193,7 @@ onMounted(async () => {
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #10B981, #059669, #047857);
+  background: linear-gradient(90deg, #10B981, #059669);
 }
 
 .agribank-header {
@@ -2155,6 +2246,7 @@ onMounted(async () => {
   height: 2px;
   background: linear-gradient(90deg, #10B981, #059669, transparent);
   border-radius: 1px;
+  margin-top: 8px;
 }
 
 /* 📊 Enhanced table styling */
@@ -2350,374 +2442,478 @@ onMounted(async () => {
   box-shadow: none !important;
 }
 
-/* 🏦 Enhanced Agribank Modal Design */
-.agribank-modal-overlay {
-  background: rgba(0, 0, 0, 0.7) !important;
-  backdrop-filter: blur(8px);
-  z-index: 10000;
+/* 🔍 Enhanced Agribank Filtered Results Design */
+.agribank-filtered-section {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border-radius: 20px;
+  padding: 28px;
+  margin: 32px 0;
+  box-shadow: 0 12px 30px rgba(16, 185, 129, 0.15);
+  border: 3px solid #bbf7d0;
+  position: relative;
+  overflow: hidden;
 }
 
-.agribank-modal {
-  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%) !important;
-  border: 2px solid #10B981 !important;
-  border-radius: 20px !important;
-  box-shadow: 0 25px 50px rgba(16, 185, 129, 0.3) !important;
-  max-width: 800px !important;
-  width: 90% !important;
-  max-height: 90vh !important;
-  overflow: hidden !important;
-}
-
-.agribank-modal-header {
-  background: linear-gradient(135deg, #047857, #059669, #10B981) !important;
-  color: white !important;
-  padding: 20px 24px !important;
-  border-bottom: none !important;
-  position: relative !important;
-}
-
-.agribank-modal-title {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.modal-icon-wrapper {
-  width: 56px;
-  height: 56px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.modal-icon {
-  font-size: 28px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.modal-title-text h3 {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 700;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.modal-subtitle {
-  margin: 4px 0 0 0;
-  font-size: 0.9rem;
-  opacity: 0.9;
-  font-weight: 400;
-}
-
-.agribank-brand-stripe {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #ffffff, #dcfce7, #bbf7d0, #ffffff);
-}
-
-.agribank-close {
-  background: rgba(255, 255, 255, 0.2) !important;
-  color: white !important;
-  border: 2px solid rgba(255, 255, 255, 0.3) !important;
-  width: 40px !important;
-  height: 40px !important;
-  border-radius: 10px !important;
-  font-size: 20px !important;
-  font-weight: bold !important;
-  transition: all 0.3s ease !important;
-}
-
-.agribank-close:hover {
-  background: rgba(255, 255, 255, 0.3) !important;
-  transform: scale(1.1) !important;
-}
-
-.agribank-modal-body {
-  padding: 24px !important;
-  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%) !important;
-}
-
-.agribank-form-group {
-  margin-bottom: 24px !important;
-}
-
-.agribank-label {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  margin-bottom: 12px !important;
-  font-weight: 600 !important;
-  color: #047857 !important;
-}
-
-.label-icon {
-  font-size: 1.2rem;
-}
-
-.label-text {
-  flex: 1;
-  font-size: 1rem;
-}
-
-.agribank-limit {
-  background: linear-gradient(135deg, #fef3c7, #fde68a) !important;
-  color: #92400e !important;
-  padding: 4px 8px !important;
-  border-radius: 8px !important;
-  font-size: 0.8rem !important;
-  font-weight: 600 !important;
-  border: 1px solid #fbbf24 !important;
-}
-
-.agribank-upload-area {
-  border: 3px dashed #10B981 !important;
-  border-radius: 16px !important;
-  background: linear-gradient(135deg, #f0fdf4, #ecfdf5) !important;
-  padding: 32px !important;
-  text-align: center !important;
-  transition: all 0.3s ease !important;
-  position: relative !important;
-  overflow: hidden !important;
-}
-
-.agribank-upload-area::before {
+.agribank-filtered-section::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, transparent, rgba(16, 185, 129, 0.1), transparent);
-  opacity: 0;
-  transition: opacity 0.3s ease;
+  height: 6px;
+  background: linear-gradient(90deg, #10B981, #059669, #047857, #10B981);
+  animation: shimmerTop 3s infinite;
 }
 
-.agribank-upload-area:hover::before,
-.agribank-upload-area.drag-over::before {
-  opacity: 1;
+@keyframes shimmerTop {
+  0%, 100% { transform: translateX(-100%); }
+  50% { transform: translateX(100%); }
 }
 
-.agribank-upload-area:hover {
-  border-color: #059669 !important;
-  background: linear-gradient(135deg, #ecfdf5, #d1fae5) !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.2) !important;
+.agribank-filtered-header {
+  margin-bottom: 24px;
 }
 
-.agribank-upload-area.drag-over {
-  border-color: #047857 !important;
-  background: linear-gradient(135deg, #d1fae5, #a7f3d0) !important;
-  transform: scale(1.02) !important;
-}
-
-.agribank-upload-icon {
-  position: relative;
+.agribank-filtered-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
   margin-bottom: 16px;
 }
 
-.icon-circle {
-  width: 80px;
-  height: 80px;
+.agribank-search-icon {
+  position: relative;
+}
+
+.search-icon-wrapper {
+  width: 64px;
+  height: 64px;
   background: linear-gradient(135deg, #10B981, #059669);
-  border-radius: 50%;
+  border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 32px;
-  margin: 0 auto;
-  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
   position: relative;
   z-index: 2;
 }
 
-.icon-glow {
+.search-icon {
+  font-size: 28px;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.search-glow {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 120px;
-  height: 120px;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.3), transparent);
+  width: 90px;
+  height: 90px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.4), transparent);
   border-radius: 50%;
-  animation: pulse 2s infinite;
+  animation: searchPulse 2s infinite;
 }
 
-@keyframes pulse {
+@keyframes searchPulse {
   0%, 100% {
     transform: translate(-50%, -50%) scale(1);
     opacity: 0.7;
   }
   50% {
-    transform: translate(-50%, -50%) scale(1.1);
+    transform: translate(-50%, -50%) scale(1.2);
     opacity: 0.3;
   }
 }
 
-.agribank-upload-title {
-  font-size: 1.25rem !important;
-  font-weight: 700 !important;
-  color: #047857 !important;
-  margin: 0 0 8px 0 !important;
+.agribank-filtered-text h2 {
+  margin: 0 0 8px 0;
+  font-size: 1.8rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, #047857, #10B981);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.5px;
 }
 
-.upload-desc {
-  color: #6b7280;
-  font-size: 0.95rem;
-  margin-bottom: 20px;
-  font-weight: 500;
-}
-
-.agribank-formats {
-  background: rgba(255, 255, 255, 0.7) !important;
-  border-radius: 12px !important;
-  padding: 16px !important;
-  border: 1px solid #d1fae5 !important;
-}
-
-.agribank-format-badge {
-  background: linear-gradient(135deg, #10B981, #059669) !important;
-  color: white !important;
-  padding: 6px 12px !important;
-  border-radius: 8px !important;
-  font-size: 0.85rem !important;
-  font-weight: 600 !important;
-  margin: 4px !important;
-  display: inline-block !important;
-  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.3) !important;
-  transition: all 0.3s ease !important;
-}
-
-.agribank-format-badge:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 5px 12px rgba(16, 185, 129, 0.4) !important;
-}
-
-/* 📊 Enhanced Agribank Progress Bar */
-.agribank-progress-container {
-  background: linear-gradient(135deg, #ffffff, #f0fdf4) !important;
-  border: 2px solid #d1fae5 !important;
-  border-radius: 16px !important;
-  padding: 20px !important;
-  margin: 20px 0 !important;
-  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.1) !important;
-}
-
-.agribank-progress-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.progress-title {
-  font-weight: 600;
-  color: #047857;
-  font-size: 1rem;
-}
-
-.progress-percentage {
-  font-weight: 700;
-  color: #059669;
+.filtered-summary {
+  color: #374151;
   font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.records-found {
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: 700;
+  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.3);
+}
+
+.date-range {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  color: #92400e;
+  padding: 3px 10px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: 1px solid #fbbf24;
+}
+
+.filter-stats {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 2px solid #d1fae5;
+  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.1);
+}
+
+.stat-icon {
+  font-size: 1.1rem;
+}
+
+.stat-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9rem;
+}
+
+.stat-value {
+  font-weight: 800;
+  color: #059669;
+  font-family: 'Consolas', monospace;
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid #bbf7d0;
+}
+
+.agribank-filter-stripe {
+  height: 3px;
+  background: linear-gradient(90deg, #10B981, #59f391, #10B981);
+  border-radius: 2px;
+  margin-top: 12px;
+}
+
+/* 📊 Enhanced Filtered Table */
+.agribank-filtered-table {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.12);
+  border: 2px solid #d1fae5;
+}
+
+.enhanced-filtered-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.agribank-filtered-thead {
+  background: linear-gradient(135deg, #047857, #059669, #10B981);
+  color: white;
+}
+
+.agribank-filtered-thead th {
+  padding: 18px 14px;
+  text-align: left;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  border-bottom: 4px solid #34d399;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.col-datatype-filter { width: 15%; }
+.col-filename { width: 25%; }
+.col-statement { width: 12%; }
+.col-import { width: 12%; }
+.col-records-filter { width: 12%; }
+.col-status { width: 12%; }
+.col-actions-filter { width: 12%; }
+
+.agribank-filtered-tbody .enhanced-filtered-row {
+  border-bottom: 1px solid #f0fdf4;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #ffffff 0%, #fafffe 100%);
+}
+
+.agribank-filtered-tbody .enhanced-filtered-row:hover {
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(16, 185, 129, 0.15);
+}
+
+.agribank-filtered-tbody .enhanced-filtered-row:nth-child(even) {
+  background: linear-gradient(135deg, #f9fffe 0%, #f0fdf4 100%);
+}
+
+.agribank-filtered-tbody .enhanced-filtered-row:nth-child(even):hover {
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+}
+
+/* Enhanced Data Type Badge for Filtered */
+.agribank-filtered-badge {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 8px 12px !important;
+  border-radius: 12px !important;
+  color: white !important;
+  font-weight: 700 !important;
+  font-size: 0.85rem !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2) !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  min-width: 90px !important;
+  justify-content: center !important;
+}
+
+.badge-icon {
+  font-size: 1.1rem;
+}
+
+.badge-text {
+  letter-spacing: 0.5px;
+}
+
+/* Enhanced Filename */
+.filename-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.file-icon {
+  font-size: 1.3rem;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+  border-radius: 8px;
+  border: 1px solid #d1fae5;
+}
+
+.agribank-filename {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.9rem;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Enhanced Date Info */
+.date-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.date-icon {
+  font-size: 1rem;
+  color: #059669;
+}
+
+.date-text {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.85rem;
   font-family: 'Consolas', monospace;
 }
 
-.agribank-progress-bar {
-  height: 12px !important;
-  background: linear-gradient(90deg, #10B981, #059669, #047857) !important;
-  border-radius: 8px !important;
-  position: relative !important;
-  overflow: hidden !important;
-  transition: all 0.3s ease !important;
-  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.3) !important;
+/* Enhanced Records for Filtered */
+.records-info-filter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
 }
 
-.progress-glow {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-  animation: shimmer 2s infinite;
+.records-icon {
+  font-size: 1.1rem;
+  color: #059669;
 }
 
-.progress-track {
-  height: 12px;
-  background: #e5e7eb;
+.agribank-records {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #047857;
+  font-family: 'Consolas', monospace;
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  padding: 4px 8px;
   border-radius: 8px;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: -1;
+  border: 1px solid #bbf7d0;
 }
 
-@keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
+.records-unit {
+  font-size: 0.7rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
 }
 
-.agribank-animation {
-  background: linear-gradient(90deg, 
-    rgba(255, 255, 255, 0) 0%, 
-    rgba(255, 255, 255, 0.4) 50%, 
-    rgba(255, 255, 255, 0) 100%) !important;
+/* Enhanced Status Badge */
+.agribank-status-badge {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 6px 10px !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  font-size: 0.8rem !important;
+  min-width: 80px !important;
+  justify-content: center !important;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1) !important;
 }
 
-/* 📱 Responsive cho modal Agribank */
-@media (max-width: 768px) {
-  .agribank-modal {
-    width: 95% !important;
-    margin: 20px !important;
+.status-icon {
+  font-size: 1rem;
+}
+
+/* Enhanced Actions for Filtered */
+.agribank-actions-group {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.agribank-btn-preview {
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  color: white !important;
+  border: none !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 14px !important;
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3) !important;
+  transition: all 0.3s ease !important;
+}
+
+.agribank-btn-preview:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4) !important;
+}
+
+.agribank-btn-delete-filter {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: white !important;
+  border: none !important;
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 14px !important;
+  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3) !important;
+  transition: all 0.3s ease !important;
+}
+
+.agribank-btn-delete-filter:hover {
+  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 15px rgba(239, 68, 68, 0.4) !important;
+}
+
+/* 📱 Responsive for Filtered Table */
+@media (max-width: 1024px) {
+  .agribank-filtered-section {
+    padding: 20px;
+    margin: 24px 0;
   }
   
-  .agribank-modal-header {
-    padding: 16px !important;
-  }
-  
-  .agribank-modal-title {
+  .agribank-filtered-content {
     flex-direction: column;
     text-align: center;
-    gap: 12px;
+    gap: 16px;
   }
   
-  .modal-icon-wrapper {
-    width: 48px;
-    height: 48px;
+  .search-icon-wrapper {
+    width: 56px;
+    height: 56px;
   }
   
-  .modal-icon {
+  .search-icon {
     font-size: 24px;
   }
   
-  .modal-title-text h3 {
-    font-size: 1.25rem;
+  .filter-stats {
+    justify-content: center;
   }
   
-  .agribank-upload-area {
-    padding: 24px 16px !important;
+  .agribank-filtered-thead th {
+    padding: 14px 10px;
+    font-size: 0.85rem;
   }
   
-  .icon-circle {
-    width: 64px;
-    height: 64px;
-    font-size: 24px;
+  .enhanced-filtered-row td {
+    padding: 12px 8px;
   }
   
-  .agribank-upload-title {
-    font-size: 1.1rem !important;
+  .agribank-actions-group {
+    gap: 6px;
+  }
+  
+  .agribank-btn-preview,
+  .agribank-btn-delete-filter {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .agribank-filtered-text h2 {
+    font-size: 1.5rem;
+  }
+  
+  .filtered-summary {
+    font-size: 1rem;
+  }
+  
+  .stat-item {
+    padding: 6px 10px;
+  }
+  
+  .agribank-filename {
+    max-width: 120px;
+  }
+  
+  .date-text {
+    font-size: 0.75rem;
+  }
+  
+  .agribank-filtered-thead th {
+    padding: 12px 6px;
+    font-size: 0.8rem;
+  }
+  
+  .enhanced-filtered-row td {
+    padding: 10px 6px;
   }
 }
 </style>
