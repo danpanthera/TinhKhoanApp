@@ -65,10 +65,20 @@ export default defineConfig({
   server: {
     host: '0.0.0.0', // Cho phép truy cập từ external network
     port: 3000,
-    strictPort: true,
+    strictPort: false, // Tự động chọn cổng khác nếu 3000 bị chiếm
     open: true,
+    hmr: {
+      // Cấu hình WebSocket cho Hot Module Replacement
+      host: 'localhost',
+      protocol: 'ws',
+      port: 3000,
+      timeout: 30000,
+      overlay: true,
+      clientPort: 3000
+    },
     watch: {
       usePolling: true,
+      interval: 1000 // Kiểm tra thay đổi mỗi giây
     },
     proxy: {
       '/api': {
