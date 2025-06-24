@@ -198,16 +198,23 @@ onUnmounted(() => {
   font-size: clamp(1.8rem, 8vw, 6.5rem);
   letter-spacing: clamp(0.02em, 0.5vw, 0.08em);
   transform: scale(1);
+  font-family: 'Montserrat', 'Roboto', sans-serif;
+  font-weight: 800;
+  color: #8B1538;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
   will-change: transform;
   word-spacing: clamp(-0.05em, 0vw, 0.02em);
 }
 
 /* Dòng 2: HỆ THỐNG QUẢN LÝ KHOÁN | HỆ THỐNG BÁO CÁO */
 .adaptive-text-line-2 {
-  font-size: clamp(1.2rem, 5vw, 3.5rem);
+  font-size: clamp(1rem, 4vw, 2.8rem);
   letter-spacing: clamp(0.01em, 0.3vw, 0.05em);
   transform: scale(1);
   will-change: transform;
+  font-family: 'Roboto Condensed', 'Arial', sans-serif;
+  font-weight: 500;
+  opacity: 0.9;
   word-spacing: clamp(-0.03em, 0vw, 0.01em);
 }
 

@@ -1,12 +1,12 @@
 import axios from "axios";
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api",
+  baseURL: import.meta.env.VITE_API_BASE_URL || "http://localhost:5055/api", // ✅ Thêm /api vào baseURL
   headers: {
     "Content-Type": "application/json",
     "Accept": "application/json"
   },
-  timeout: 10000, // timeout sau 10 giây
+  timeout: 15000, // Increased timeout to 15 seconds
   validateStatus: function (status) {
     return status >= 200 && status < 300; // chỉ chấp nhận status 2xx
   }

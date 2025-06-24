@@ -181,30 +181,62 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
-        // DELETE: api/DataImport/{id} - Delete imported data record
+        // DELETE: api/DataImport/{id} - Xóa bản ghi import theo ID
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteImportedData(int id)
+        public async Task<IActionResult> DeleteImportRecord(string id)
         {
             try
             {
+                _logger.LogInformation($"🗑️ Attempting to delete import record with ID: {id}");
+                
+                // Parse ID as integer if possible
+                if (!int.TryParse(id, out int recordId))
+                {
+                    _logger.LogWarning($"❌ Invalid ID format: {id}");
+                    return BadRequest(new { message = $"ID không hợp lệ: {id}" });
+                }
+                
+                // Tìm bản ghi cần xóa
                 var record = await _context.ImportedDataRecords
                     .Include(r => r.ImportedDataItems)
-                    .FirstOrDefaultAsync(r => r.Id == id);
-
+                    .FirstOrDefaultAsync(r => r.Id == recordId);
+                
                 if (record == null)
                 {
-                    return NotFound(new { message = "Import record not found" });
+                    _logger.LogWarning($"❌ Import record with ID {recordId} not found");
+                    return NotFound(new { message = $"Không tìm thấy bản ghi với ID {recordId}" });
                 }
-
+                
+                // Lưu thông tin để trả về
+                var fileName = record.FileName;
+                var category = record.Category;
+                var recordsCount = record.RecordsCount;
+                
+                // Xóa các ImportedDataItem liên quan trước
+                if (record.ImportedDataItems != null && record.ImportedDataItems.Any())
+                {
+                    _logger.LogInformation($"🗑️ Deleting {record.ImportedDataItems.Count} related data items");
+                    _context.ImportedDataItems.RemoveRange(record.ImportedDataItems);
+                }
+                
+                // Xóa bản ghi chính
                 _context.ImportedDataRecords.Remove(record);
                 await _context.SaveChangesAsync();
-
-                return Ok(new { message = "Import record deleted successfully" });
+                
+                _logger.LogInformation($"✅ Successfully deleted import record {recordId}: {fileName}");
+                
+                return Ok(new { 
+                    message = $"Đã xóa thành công bản ghi {fileName}",
+                    id = recordId,
+                    fileName = fileName,
+                    category = category,
+                    recordsCount = recordsCount
+                });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting import record {RecordId}", id);
-                return StatusCode(500, new { message = "Error deleting import record", error = ex.Message });
+                _logger.LogError(ex, $"❌ Error deleting import record {id}");
+                return StatusCode(500, new { message = $"Lỗi khi xóa bản ghi: {ex.Message}" });
             }
         }
 

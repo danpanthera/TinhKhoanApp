@@ -3,23 +3,35 @@ import api from './api';
 
 class RawDataService {
   constructor() {
-    this.baseURL = '/rawdata';
+    // ✅ FIX: Sửa baseURL thành RawData vì controller là RawDataController
+    this.baseURL = '/RawData';  // Controller route là api/RawData
   }
 
   // 📋 Lấy danh sách tất cả dữ liệu thô đã import
   async getAllImports() {
     try {
-      // ✅ FIX: Gọi đúng endpoint DataImport thay vì RawData
-      const response = await api.get('/DataImport');
+      // ✅ FIX: Gọi đúng endpoint RawData
+      console.log('📊 Calling API endpoint:', this.baseURL);
+      const response = await api.get(this.baseURL);
+      
+      // Debug response data structure
+      console.log('📊 Raw API response:', typeof response.data, response.data ? Object.keys(response.data) : 'No data');
       
       // 🔧 Parse .NET $values format và map fields đúng
       let data = response.data;
       if (data && data.$values) {
+        console.log('🔧 Found $values array in response');
         data = data.$values;
       }
       
+      // Handle empty or null data gracefully
+      if (!data || !Array.isArray(data)) {
+        console.warn('⚠️ API returned empty or invalid data:', data);
+        data = [];
+      }
+      
       // 🔧 ĐỒNG BỘ FIELD MAPPING để fix vấn đề backend trả category, frontend dùng dataType
-      const mappedData = (data || []).map(item => ({
+      const mappedData = data.map(item => ({
         ...item,
         // ✅ FIX TRIỆT ĐỂ: Backend trả về category="LN01", ưu tiên category trước
         dataType: item.category || item.dataType || item.fileType || 'UNKNOWN',
@@ -35,14 +47,19 @@ class RawDataService {
         fileName: item.fileName || item.name || 'Unknown File'
       }));
       
-      console.log('🔧 Mapped getAllImports data:', mappedData.length, 'items');
-      console.log('🔧 Sample mapping:', mappedData.length > 0 ? {
-        fileName: mappedData[0].fileName,
-        fileType: mappedData[0].originalFileType,
-        dataType: mappedData[0].dataType,
-        category: mappedData[0].originalCategory,
-        recordsCount: mappedData[0].recordsCount
-      } : 'No data');
+      console.log('✅ Mapped getAllImports data:', mappedData.length, 'items');
+      if (mappedData.length > 0) {
+        console.log('� First import data sample:', {
+          id: mappedData[0].id,
+          fileName: mappedData[0].fileName,
+          fileType: mappedData[0].originalFileType,
+          dataType: mappedData[0].dataType,
+          category: mappedData[0].originalCategory,
+          recordsCount: mappedData[0].recordsCount
+        });
+      } else {
+        console.log('ℹ️ No import data returned from API');
+      }
       
       return {
         success: true,
@@ -58,7 +75,7 @@ class RawDataService {
       } else if (error.response?.status === 404) {
         errorMessage = 'API endpoint không tồn tại';
       } else if (error.response?.status >= 500) {
-        errorMessage = 'Lỗi server nội bộ';
+        errorMessage = `Lỗi server nội bộ: ${error.response?.data?.message || error.message}`;
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       }
@@ -339,6 +356,35 @@ class RawDataService {
       return {
         success: false,
         error: error.response?.data?.message || 'Lỗi kết nối server'
+      };
+    }
+  }
+
+  // 🗑️ Xóa một bản ghi theo ID
+  async deleteImportRecord(id) {
+    try {
+      const response = await api.delete(`/DataImport/${id}`);
+      
+      if (response.status === 200 || response.status === 204) {
+        return {
+          success: true,
+          data: response.data,
+          message: response.data?.message || 'Đã xóa bản ghi thành công'
+        };
+      } else {
+        return {
+          success: false,
+          error: response.data?.message || 'Lỗi không xác định'
+        };
+      }
+    } catch (error) {
+      console.error('❌ Lỗi xóa bản ghi:', error);
+      
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'Lỗi khi xóa bản ghi',
+        errorCode: error.code,
+        errorStatus: error.response?.status
       };
     }
   }

@@ -4,6 +4,8 @@ import { isAuthenticated } from "../services/auth";
 // ⚡ ENHANCED LAZY LOADING - Preload critical routes and group by feature
 import HomeView from "../views/HomeView.vue";
 import LoginView from "../views/LoginView.vue";
+// Import DataImportView statically to avoid dynamic import issues
+import DataImportView from "../views/DataImportView_Simple.vue";
 
 // Preload critical components (optional for faster navigation)
 const preloadCriticalComponents = () => {
@@ -128,8 +130,7 @@ const routes = [
   {
     path: "/data-import",
     name: "data-import", 
-    component: () =>
-      import(/* webpackChunkName: "data" */ "../views/DataImportView.vue"),
+    component: DataImportView,
     meta: { requiresAuth: true }
   },
   {

@@ -65,32 +65,4 @@ namespace TinhKhoanApp.Api.Models
             ImportedDataItems = new HashSet<ImportedDataItem>();
         }
     }
-
-    /// <summary>
-    /// 📊 Bảng chi tiết chứa dữ liệu đã import - Tối ưu với Columnstore Index cho analytics
-    /// </summary>
-    [Table("ImportedDataItems")]
-    public class ImportedDataItem
-    {
-        [Key]
-        public int Id { get; set; }
-
-        [Required]
-        public int ImportedDataRecordId { get; set; }
-
-        [ForeignKey("ImportedDataRecordId")]
-        public virtual ImportedDataRecord ImportedDataRecord { get; set; } = null!;
-
-        [Required]
-        [Column(TypeName = "nvarchar(max)")] // Cho phép lưu JSON lớn
-        public string RawData { get; set; } = string.Empty; // JSON format
-
-        public DateTime ProcessedDate { get; set; }
-
-        [StringLength(1000)]
-        public string? ProcessingNotes { get; set; }
-
-        // 🕒 Temporal Table columns sẽ được quản lý bởi EF Core như shadow properties
-        // Không cần khai báo ở đây, sẽ được cấu hình trong OnModelCreating
-    }
 }

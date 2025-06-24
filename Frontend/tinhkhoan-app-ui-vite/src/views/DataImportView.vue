@@ -724,20 +724,45 @@
       </div>
     </div>
 
-    <!-- Confirmation Modal -->
-    <div v-if="showConfirmationModal" class="modal-overlay" @click="cancelConfirmation">
-      <div class="modal-content enhanced-confirmation-modal" @click.stop>
-        <div class="modal-header">
-          <h3>⚠️ Xác nhận thao tác</h3>
-          <button @click="cancelConfirmation" class="modal-close">×</button>
-        </div>
-        <div class="modal-body">
-          <div class="confirmation-icon-wrapper">
-            <div class="confirmation-icon">⚠️</div>
+    <!-- Confirmation Modal - Enhanced Agribank Style -->
+    <div v-if="showConfirmationModal" class="modal-overlay agribank-confirmation-overlay" @click="cancelConfirmation">
+      <div class="modal-content agribank-confirmation-modal" @click.stop>
+        <div class="modal-header agribank-confirmation-header">
+          <div class="agribank-header-background">
+            <div class="agribank-gradient-overlay"></div>
           </div>
-          <p class="confirmation-message">{{ confirmationMessage }}</p>
-          <div v-if="existingImports.length > 0" class="existing-imports">
-            <h4>📋 Dữ liệu hiện có:</h4>
+          <div class="confirmation-header-content">
+            <div class="confirmation-title-section">
+              <div class="confirmation-icon-wrapper">
+                <div class="confirmation-icon">
+                  <span v-if="confirmButtonText.includes('Xóa')">🗑️</span>
+                  <span v-else>⚠️</span>
+                </div>
+                <div class="confirmation-icon-pulse"></div>
+              </div>
+              <div class="confirmation-title-content">
+                <h3>XÁC NHẬN THAO TÁC</h3>
+                <p class="confirmation-subtitle">Vui lòng xác nhận hành động của bạn</p>
+              </div>
+            </div>
+            <button @click="cancelConfirmation" class="agribank-confirmation-close">
+              <span class="close-icon">✕</span>
+              <div class="close-ripple"></div>
+            </button>
+          </div>
+          <div class="agribank-confirmation-stripe"></div>
+        </div>
+        <div class="modal-body agribank-confirmation-body">
+          <div class="confirmation-content">
+            <div class="confirmation-message-wrapper">
+              <div class="confirmation-message-icon">
+                <span v-if="confirmButtonText.includes('Xóa')">❗</span>
+                <span v-else>ℹ️</span>
+              </div>
+              <p class="confirmation-message">{{ confirmationMessage }}</p>
+            </div>
+            <div v-if="existingImports.length > 0" class="existing-imports agribank-existing-imports">
+              <h4>📋 Dữ liệu hiện có:</h4>
             <div class="existing-imports-list">
               <div v-for="imp in existingImports" :key="imp.id" class="existing-import-item">
                 <span class="file-icon">{{ getFileIcon(imp.fileName) }}</span>
@@ -752,10 +777,19 @@
             </div>
           </div>
         </div>
-        <div class="modal-footer confirmation-footer">
-          <button @click="cancelConfirmation" class="btn-cancel btn-large">Hủy</button>
-          <button @click="confirmAction" class="btn-confirm btn-large" :style="{ backgroundColor: '#dc3545' }">
-            {{ confirmButtonText }}
+        <div class="modal-footer agribank-confirmation-footer">
+          <button @click="cancelConfirmation" class="btn-cancel agribank-btn-cancel">
+            <span class="btn-icon">✖️</span>
+            <span class="btn-text">Hủy bỏ</span>
+          </button>
+          <button 
+            @click="confirmAction" 
+            class="btn-confirm agribank-btn-confirm"
+            :class="{ 'btn-delete': confirmButtonText.includes('Xóa') }"
+          >
+            <span class="btn-icon">{{ confirmButtonText.includes('Xóa') ? '🗑️' : '✓' }}</span>
+            <span class="btn-text">{{ confirmButtonText }}</span>
+            <div class="btn-shine"></div>
           </button>
         </div>
       </div>
@@ -766,7 +800,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import rawDataService from '@/services/rawDataService'
-import { playNotificationSound } from '@/utils/soundUtils'
+// import { playNotificationSound } from '@/utils/soundUtils' // Temporarily commented out
 
 // Reactive state
 const loading = ref(false)
@@ -1493,7 +1527,7 @@ const playLoudCompletionBell = () => {
   } catch (error) {
     console.warn('❌ Could not play completion bell:', error);
     // Fallback: sử dụng âm thanh có sẵn
-    playNotificationSound();
+    // playNotificationSound(); // Temporarily commented out
   }
 }
 
@@ -1763,7 +1797,7 @@ const executeDeleteImport = async (importItem) => {
     loading.value = true
     loadingMessage.value = 'Đang xóa dữ liệu...'
     
-    const result = await rawDataService.deleteImport(importItem.id)
+    const result = await rawDataService.deleteImportRecord(importItem.id)
     if (result.success) {
       showSuccess('Đã xóa import thành công')
       await refreshAllData()
@@ -2439,7 +2473,7 @@ onMounted(async () => {
 
 /* 🏦 Enhanced Agribank styling cho bảng dữ liệu */
 .agribank-section {
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, #f8f9fa 0%, #e2e8f0 100%);
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 24px;
@@ -2705,962 +2739,46 @@ onMounted(async () => {
   box-shadow: none !important;
 }
 
-/* 🔍 Enhanced Agribank Filtered Results Design */
-.agribank-filtered-section {
-  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
-  border-radius: 20px;
-  padding: 28px;
-  margin: 32px 0;
-  box-shadow: 0 12px 30px rgba(16, 185, 129, 0.15);
-  border: 3px solid #bbf7d0;
-  position: relative;
-  overflow: hidden;
-}
-
-.agribank-filtered-section::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 6px;
-  background: linear-gradient(90deg, #10B981, #059669, #047857, #10B981);
-  animation: shimmerTop 3s infinite;
-}
-
-.agribank-filtered-header {
-  margin-bottom: 24px;
-}
-
-.agribank-filtered-content {
-  display: flex;
-  align-items: flex-start;
-  gap: 20px;
-  margin-bottom: 16px;
-}
-
-.agribank-search-icon {
-  position: relative;
-}
-
-.search-icon-wrapper {
-  width: 64px;
-  height: 64px;
-  background: linear-gradient(135deg, #10B981, #059669);
-  border-radius: 20px;
+/* 🚨 ENHANCED CONFIRMATION MODAL STYLING */
+.agribank-confirmation-overlay {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
-  position: relative;
-  z-index: 2;
-}
-
-.search-icon {
-  font-size: 28px;
-  color: white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.search-glow {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 90px;
-  height: 90px;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.4), transparent);
-  border-radius: 50%;
-  animation: searchPulse 2s infinite;
-}
-
-@keyframes searchPulse {
-  0%, 100% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 0.7;
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.2);
-    opacity: 0.3;
-  }
-}
-
-.agribank-filtered-text h2 {
-  margin: 0 0 8px 0;
-  font-size: 1.8rem;
-  font-weight: 800;
-  background: linear-gradient(135deg, #047857, #10B981);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: 0.5px;
-}
-
-.filtered-summary {
-  color: #374151;
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 12px;
-  line-height: 1.5;
-}
-
-.records-found {
-  background: linear-gradient(135deg, #10B981, #059669);
-  color: white;
-  padding: 4px 12px;
-  border-radius: 12px;
-  font-weight: 700;
-  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.3);
-}
-
-.date-range {
-  background: linear-gradient(135deg, #fef3c7, #fde68a);
-  color: #92400e;
-  padding: 3px 10px;
-  border-radius: 8px;
-  font-weight: 600;
-  border: 1px solid #fbbf24;
-}
-
-.filter-stats {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.8);
-  padding: 8px 12px;
-  border-radius: 12px;
-  border: 2px solid #d1fae5;
-  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.1);
-}
-
-.stat-icon {
-  font-size: 1.1rem;
-}
-
-.stat-label {
-  font-weight: 600;
-  color: #374151;
-  font-size: 0.9rem;
-}
-
-.stat-value {
-  font-weight: 800;
-  color: #059669;
-  font-family: 'Consolas', monospace;
-  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-  padding: 2px 8px;
-  border-radius: 6px;
-  border: 1px solid #bbf7d0;
-}
-
-.agribank-filter-stripe {
-  height: 3px;
-  background: linear-gradient(90deg, #10B981, #059669, transparent);
-  border-radius: 2px;
-  margin-top: 12px;
-}
-
-/* 📊 Enhanced Filtered Table */
-.agribank-filtered-table {
-  background: white;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.12);
-  border: 2px solid #d1fae5;
-}
-
-.agribank-filtered-thead {
-  background: linear-gradient(135deg, #047857, #059669, #10B981);
-  color: white;
-}
-
-.agribank-filtered-thead th {
-  padding: 18px 14px;
-  text-align: left;
-  font-weight: 700;
-  font-size: 0.95rem;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  border-bottom: 4px solid #34d399;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.col-datatype-filter { width: 15%; }
-.col-filename { width: 25%; }
-.col-statement { width: 12%; }
-.col-import { width: 12%; }
-.col-records-filter { width: 12%; }
-.col-status { width: 12%; }
-.col-actions-filter { width: 12%; }
-
-.agribank-filtered-tbody .enhanced-filtered-row {
-  border-bottom: 1px solid #f0fdf4;
-  transition: all 0.3s ease;
-  background: linear-gradient(135deg, #ffffff 0%, #fafffe 100%);
-}
-
-.agribank-filtered-tbody .enhanced-filtered-row:hover {
-  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(16, 185, 129, 0.15);
-}
-
-.agribank-filtered-tbody .enhanced-filtered-row:nth-child(even) {
-  background: linear-gradient(135deg, #f9fffe 0%, #f0fdf4 100%);
-}
-
-.agribank-filtered-tbody .enhanced-filtered-row:nth-child(even):hover {
-  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-}
-
-/* Enhanced Data Type Badge for Filtered */
-.agribank-filtered-badge {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  padding: 8px 12px !important;
-  border-radius: 12px !important;
-  color: white !important;
-  font-weight: 700 !important;
-  font-size: 0.85rem !important;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2) !important;
-  border: 2px solid rgba(255, 255, 255, 0.3) !important;
-  min-width: 90px !important;
-  justify-content: center !important;
-}
-
-.badge-icon {
-  font-size: 1.1rem;
-}
-
-.badge-text {
-  letter-spacing: 0.5px;
-}
-
-/* Enhanced Filename */
-.filename-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.file-icon {
-  font-size: 1.3rem;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
-  border-radius: 8px;
-  border: 1px solid #d1fae5;
-}
-
-.agribank-filename {
-  font-weight: 600;
-  color: #374151;
-  font-size: 0.9rem;
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Enhanced Date Info */
-.date-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.date-icon {
-  font-size: 1rem;
-  color: #059669;
-}
-
-.date-text {
-  font-weight: 600;
-  color: #374151;
-  font-size: 0.85rem;
-  font-family: 'Consolas', monospace;
-}
-
-/* Enhanced Records for Filtered */
-.records-info-filter {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  text-align: center;
-}
-
-.records-icon {
-  font-size: 1.1rem;
-  color: #059669;
-}
-
-.agribank-records {
-  font-size: 1.1rem;
-  font-weight: 800;
-  color: #047857;
-  font-family: 'Consolas', monospace;
-  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-  padding: 4px 8px;
-  border-radius: 8px;
-  border: 1px solid #bbf7d0;
-}
-
-.records-unit {
-  font-size: 0.7rem;
-  color: #6b7280;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-weight: 600;
-}
-
-/* Enhanced Status Badge */
-.agribank-status-badge {
-  display: flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  padding: 6px 10px !important;
-  border-radius: 12px !important;
-  font-weight: 600 !important;
-  font-size: 0.8rem !important;
-  min-width: 80px !important;
-  justify-content: center !important;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1) !important;
-}
-
-.status-icon {
-  font-size: 1rem;
-}
-
-/* Enhanced Actions for Filtered */
-.agribank-actions-group {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-}
-
-.agribank-btn-preview {
-  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
-  color: white !important;
-  border: none !important;
-  width: 36px !important;
-  height: 36px !important;
-  border-radius: 10px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 14px !important;
-  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3) !important;
-  transition: all 0.3s ease !important;
-}
-
-.agribank-btn-preview:hover {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 6px 15px rgba(59, 130, 246, 0.4) !important;
-}
-
-.agribank-btn-delete-filter {
-  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
-  color: white !important;
-  border: none !important;
-  width: 36px !important;
-  height: 36px !important;
-  border-radius: 10px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 14px !important;
-  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3) !important;
-  transition: all 0.3s ease !important;
-}
-
-.agribank-btn-delete-filter:hover {
-  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 6px 15px rgba(239, 68, 68, 0.4) !important;
-}
-
-/* 📱 Responsive for Filtered Table */
-@media (max-width: 1024px) {
-  .agribank-filtered-section {
-    padding: 20px;
-    margin: 24px 0;
-  }
-  
-  .agribank-filtered-content {
-    flex-direction: column;
-    text-align: center;
-    gap: 16px;
-  }
-  
-  .search-icon-wrapper {
-    width: 56px;
-    height: 56px;
-  }
-  
-  .search-icon {
-    font-size: 24px;
-  }
-  
-  .filter-stats {
-    justify-content: center;
-  }
-  
-  .agribank-filtered-thead th {
-    padding: 14px 10px;
-    font-size: 0.85rem;
-  }
-  
-  .enhanced-filtered-row td {
-    padding: 12px 8px;
-  }
-  
-  .agribank-actions-group {
-    gap: 6px;
-  }
-  
-  .agribank-btn-preview,
-  .agribank-btn-delete-filter {
-    width: 32px !important;
-    height: 32px !important;
-    font-size: 12px !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .agribank-filtered-text h2 {
-    font-size: 1.5rem;
-  }
-  
-  .filtered-summary {
-    font-size: 1rem;
-  }
-  
-  .stat-item {
-    padding: 6px 10px;
-  }
-  
-  .agribank-filename {
-    max-width: 120px;
-  }
-  
-  .date-text {
-    font-size: 0.75rem;
-  }
-  
-  .agribank-filtered-thead th {
-    padding: 12px 6px;
-    font-size: 0.8rem;
-  }
-  
-  .enhanced-filtered-row td {
-    padding: 10px 6px;
-  }
-}
-
-/* 👁️ Enhanced Agribank Preview Modal Design */
-.agribank-preview-overlay {
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
-}
-
-.agribank-preview-modal {
-  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
-  border-radius: 20px;
-  max-width: 95vw;
-  max-height: 95vh;
-  border: 3px solid #bbf7d0;
-  box-shadow: 0 20px 60px rgba(16, 185, 129, 0.3);
-  overflow: hidden;
-  position: relative;
-}
-
-.agribank-preview-modal::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 6px;
-  background: linear-gradient(90deg, #10B981, #059669, #047857, #10B981);
-  animation: shimmerTop 3s infinite;
-}
-
-.agribank-preview-header {
-  background: linear-gradient(135deg, #047857, #059669, #10B981);
-  color: white;
-  padding: 24px 28px;
-  border-bottom: 4px solid #34d399;
-  position: relative;
-}
-
-.agribank-preview-title {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin-bottom: 16px;
-}
-
-.preview-icon-wrapper {
-  width: 64px;
-  height: 64px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-  position: relative;
-  z-index: 2;
-}
-
-.preview-icon {
-  font-size: 28px;
-  color: white;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.preview-glow {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 90px;
-  height: 90px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
-  border-radius: 50%;
-  animation: previewPulse 2s infinite;
-}
-
-@keyframes previewPulse {
-  0%, 100% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 0.7;
-  }
-  50% {
-    transform: translate(-50%, -50%) scale(1.2);
-    opacity: 0.3;
-  }
-}
-
-.preview-title-text h3 {
-  margin: 0 0 8px 0;
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: white;
-  letter-spacing: 0.5px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.preview-subtitle {
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin: 0;
-  background: rgba(255, 255, 255, 0.1);
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.agribank-preview-stripe {
-  height: 3px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.8));
-  border-radius: 2px;
-}
-
-.agribank-preview-close {
-  background: rgba(255, 255, 255, 0.2) !important;
-  border: 2px solid rgba(255, 255, 255, 0.3) !important;
-  color: white !important;
-  font-size: 24px !important;
-  font-weight: bold !important;
-  width: 40px !important;
-  height: 40px !important;
-  border-radius: 50% !important;
-  transition: all 0.3s ease !important;
-}
-
-.agribank-preview-close:hover {
-  background: rgba(255, 255, 255, 0.3) !important;
-  transform: scale(1.1) !important;
-}
-
-.agribank-preview-body {
-  padding: 28px;
-  max-height: 70vh;
-  overflow-y: auto;
-}
-
-/* Preview Info Section */
-.agribank-preview-info {
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 24px;
-  border: 2px solid #d1fae5;
-  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.1);
-}
-
-.agribank-info-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 16px;
-}
-
-.agribank-info-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: linear-gradient(135deg, #ffffff, #f9fffe);
-  padding: 12px 16px;
-  border-radius: 12px;
-  border: 2px solid #bbf7d0;
-  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.1);
-}
-
-.info-icon {
-  font-size: 1.2rem;
-  width: 24px;
-  text-align: center;
-}
-
-.agribank-info-item label {
-  font-weight: 600;
-  color: #374151;
-  font-size: 0.95rem;
-  min-width: 80px;
-}
-
-.info-value {
-  font-weight: 700;
-  color: #059669;
-  font-family: 'Consolas', monospace;
-  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-  padding: 4px 10px;
-  border-radius: 8px;
-  border: 1px solid #bbf7d0;
-}
-
-.info-value.highlight {
-  background: linear-gradient(135deg, #10B981, #059669);
-  color: white;
-  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.3);
-}
-
-.agribank-preview-badge {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  padding: 6px 12px !important;
-  border-radius: 10px !important;
-  color: white !important;
-  font-weight: 700 !important;
-  font-size: 0.85rem !important;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2) !important;
-  border: 2px solid rgba(255, 255, 255, 0.3) !important;
-  min-width: 80px !important;
-  justify-content: center !important;
-}
-
-/* Preview Table Section */
-.agribank-preview-table {
-  background: white;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.12);
-  border: 2px solid #d1fae5;
-}
-
-.agribank-table-header {
-  background: linear-gradient(135deg, #047857, #059669, #10B981);
-  color: white;
-  padding: 20px 24px;
-  text-align: center;
-}
-
-.agribank-table-header h4 {
-  margin: 0 0 8px 0;
-  font-size: 1.4rem;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-}
-
-.table-note {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1rem;
-  font-weight: 500;
-}
-
-.agribank-table-wrapper {
-  max-height: 500px;
-  overflow: auto;
-  background: white;
-}
-
-.enhanced-preview-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-}
-
-.agribank-preview-thead {
-  background: linear-gradient(135deg, #047857, #059669, #10B981);
-  color: white;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.preview-th {
-  padding: 16px 12px !important;
-  text-align: left !important;
-  font-weight: 700 !important;
-  font-size: 0.9rem !important;
-  letter-spacing: 0.03em !important;
-  text-transform: uppercase !important;
-  border-bottom: 3px solid #34d399 !important;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.2) !important;
-}
-
-.agribank-preview-tbody .enhanced-preview-row {
-  border-bottom: 1px solid #f0fdf4;
-  transition: all 0.3s ease;
-  background: linear-gradient(135deg, #ffffff 0%, #fafffe 100%);
-}
-
-.agribank-preview-tbody .enhanced-preview-row:hover {
-  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
-}
-
-.agribank-preview-tbody .enhanced-preview-row:nth-child(even) {
-  background: linear-gradient(135deg, #f9fffe 0%, #f0fdf4 100%);
-}
-
-.agribank-preview-tbody .enhanced-preview-row:nth-child(even):hover {
-  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-}
-
-.preview-td {
-  padding: 12px !important;
-  color: #374151 !important;
-  font-size: 0.9rem !important;
-  border-right: 1px solid #f0fdf4 !important;
-  font-family: 'Consolas', monospace !important;
-  max-width: 200px !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
-}
-
-/* Preview Note */
-.agribank-preview-note {
-  background: linear-gradient(135deg, #fef3c7, #fde68a);
-  color: #92400e;
-  padding: 12px 20px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  border-top: 2px solid #fbbf24;
-}
-
-.note-icon {
-  font-size: 1.1rem;
-}
-
-.note-text {
-  flex: 1;
-}
-
-/* No Data States */
-.agribank-no-data,
-.agribank-no-preview {
-  text-align: center;
-  padding: 60px 20px;
-  color: #6b7280;
-  background: linear-gradient(135deg, #ffffff, #f9fffe);
-  border-radius: 16px;
-  border: 2px solid #d1fae5;
-}
-
-.agribank-empty-icon,
-.no-data-icon {
-  font-size: 4rem;
-  margin-bottom: 16px;
-  opacity: 0.7;
-}
-
-.agribank-no-preview h4 {
-  color: #374151;
-  margin: 0 0 8px 0;
-  font-size: 1.2rem;
-  font-weight: 600;
-}
-
-.agribank-no-preview p {
-  color: #6b7280;
-  margin: 0;
-  font-size: 1rem;
-}
-
-/* Preview Footer */
-.agribank-preview-footer {
-  background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
-  border-top: 3px solid #bbf7d0;
-  padding: 20px 28px;
-  text-align: center;
-}
-
-.agribank-btn-close {
-  background: linear-gradient(135deg, #059669, #10B981) !important;
-  color: white !important;
-  border: none !important;
-  padding: 12px 32px !important;
-  border-radius: 12px !important;
-  font-weight: 700 !important;
-  font-size: 1rem !important;
-  cursor: pointer !important;
-  transition: all 0.3s ease !important;
-  box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3) !important;
-}
-
-.agribank-btn-close:hover {
-  background: linear-gradient(135deg, #047857, #059669) !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4) !important;
-}
-
-/* Responsive Design for Preview Modal */
-@media (max-width: 1200px) {
-  .agribank-preview-modal {
-    max-width: 98vw;
-  }
-  
-  .agribank-info-grid {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  }
-}
-
-@media (max-width: 768px) {
-  .agribank-preview-title {
-    flex-direction: column;
-    text-align: center;
-    gap: 16px;
-  }
-  
-  .preview-icon-wrapper {
-    width: 56px;
-    height: 56px;
-  }
-  
-  .preview-icon {
-    font-size: 24px;
-  }
-  
-  .preview-title-text h3 {
-    font-size: 1.5rem;
-  }
-  
-  .agribank-info-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  
-  .agribank-info-item {
-    padding: 10px 12px;
-  }
-  
-  .preview-th {
-    padding: 12px 8px !important;
-    font-size: 0.8rem !important;
-  }
-  
-  .preview-td {
-    padding: 10px 8px !important;
-    font-size: 0.85rem !important;
-    max-width: 120px !important;
-  }
-  
-  .agribank-table-wrapper {
-    max-height: 400px;
-  }
-}
-
-/* 🏦 PREMIUM AGRIBANK MODAL STYLING */
-/* Modal overlay cao cấp */
-.agribank-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  animation: modalOverlayFadeIn 0.3s ease-out;
-}
-
-@keyframes modalOverlayFadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Modal content cao cấp */
-.agribank-premium-modal {
-  background: white;
-  border-radius: 20px;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
   width: 100%;
-  max-width: 900px;
-  max-height: 85vh; /* Đảm bảo không vượt quá chiều cao màn hình */
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+}
+
+.agribank-confirmation-modal {
+  width: 480px;
+  max-width: 90%;
+  background-color: white;
+  border-radius: 15px;
   overflow: hidden;
-  animation: modalSlideIn 0.4s ease-out;
-  position: relative;
-  display: flex;
-  flex-direction: column; /* Để footer luôn ở dưới cùng */
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+  animation: confirmationModalAppear 0.3s ease-out;
+  transform: translateY(0);
+  border: 1px solid rgba(139, 21, 56, 0.3);
 }
 
-@keyframes modalSlideIn {
-  from {
+@keyframes confirmationModalAppear {
+  0% {
     opacity: 0;
-    transform: translateY(-50px) scale(0.95);
+    transform: translateY(30px);
   }
-  to {
+  100% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 
-/* Header cao cấp với gradient và hiệu ứng */
-.agribank-premium-header {
+.agribank-confirmation-header {
   position: relative;
-  color: white;
   padding: 0;
   overflow: hidden;
 }
@@ -3669,1730 +2787,286 @@ onMounted(async () => {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 30%, #E63946 70%, #C41E3A 100%);
+  width: 100%;
+  height: 100%;
+  z-index: 1;
 }
 
 .agribank-gradient-overlay {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%, rgba(255,255,255,0.05) 100%);
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 50%, #8B1538 100%);
 }
 
-.agribank-pattern-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: 
-    radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 1px, transparent 1px),
-    radial-gradient(circle at 80% 80%, rgba(255,255,255,0.05) 1px, transparent 1px);
-  background-size: 30px 30px;
-}
-
-.agribank-header-content {
+.confirmation-header-content {
   position: relative;
-  z-index: 1;
-  padding: 30px 40px;
-}
-
-/* Phần thương hiệu */
-.agribank-brand-section {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  margin-bottom: 25px;
-}
-
-.agribank-logo-circle {
-  position: relative;
-  width: 70px;
-  height: 70px;
-  background: rgba(255,255,255,0.15);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid rgba(255,255,255,0.3);
-}
-
-.agribank-logo-icon {
-  font-size: 32px;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-}
-
-.agribank-logo-glow {
-  position: absolute;
-  top: -5px;
-  left: -5px;
-  right: -5px;
-  bottom: -5px;
-  border-radius: 50%;
-  background: linear-gradient(45deg, rgba(255,255,255,0.3), transparent, rgba(255,255,255,0.1));
-  animation: logoGlow 3s ease-in-out infinite;
-}
-
-@keyframes logoGlow {
-  0%, 100% { opacity: 0.7; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.05); }
-}
-
-.agribank-brand-text {
-  flex: 1;
-}
-
-.agribank-title {
-  font-size: 1.8rem;
-  font-weight: 800;
-  margin: 0 0 8px 0;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-  letter-spacing: 0.5px;
-}
-
-.agribank-tagline {
-  font-size: 0.95rem;
-  margin: 0;
-  opacity: 0.9;
-  font-weight: 400;
-}
-
-/* Phần tiêu đề modal */
-.modal-title-section {
-  display: flex;
-  align-items: center;
-  gap: 25px;
-}
-
-.modal-icon-container {
-  position: relative;
-}
-
-.modal-icon-circle {
-  width: 80px;
-  height: 80px;
-  background: rgba(255,255,255,0.2);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 3px solid rgba(255,255,255,0.4);
-  position: relative;
-}
-
-.modal-icon-large {
-  font-size: 36px;
-  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
-}
-
-.icon-pulse {
-  position: absolute;
-  top: -10px;
-  left: -10px;
-  right: -10px;
-  bottom: -10px;
-  border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.5);
-  animation: iconPulse 2s ease-in-out infinite;
-}
-
-@keyframes iconPulse {
-  0%, 100% { opacity: 0; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.1); }
-}
-
-.modal-title-content {
-  flex: 1;
-}
-
-.modal-main-title {
-  font-size: 1.6rem;
-  font-weight: 700;
-  margin: 0 0 8px 0;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-}
-
-.modal-data-type {
-  font-size: 1.3rem;
-  font-weight: 600;
-  margin: 0 0 8px 0;
-  color: rgba(255,255,255,0.95);
-}
-
-.modal-description {
-  font-size: 1rem;
-  margin: 0;
-  opacity: 0.85;
-  font-weight: 400;
-}
-
-/* Nút đóng cao cấp */
-.agribank-close-button {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 45px;
-  height: 45px;
-  background: rgba(255,255,255,0.15);
-  border: 2px solid rgba(255,255,255,0.3);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
   z-index: 2;
-}
-
-.agribank-close-button:hover {
-  background: rgba(255,255,255,0.25);
-  border-color: rgba(255,255,255,0.5);
-  transform: scale(1.05);
-}
-
-.close-icon {
-  font-size: 20px;
-  color: white;
-  font-weight: bold;
-}
-
-.close-ripple {
-  position: absolute;
-  top: -5px;
-  left: -5px;
-  right: -5px;
-  bottom: -5px;
-  border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.3);
-  opacity: 0;
-  animation: closeRipple 2s ease-in-out infinite;
-}
-
-@keyframes closeRipple {
-  0% { opacity: 0; transform: scale(1); }
-  50% { opacity: 0.7; transform: scale(1.2); }
-  100% { opacity: 0; transform: scale(1.4); }
-}
-
-/* Thanh thương hiệu */
-.agribank-brand-stripe {
-  height: 8px;
-  background: linear-gradient(90deg, 
-    rgba(255,255,255,0.3) 0%,
-    rgba(255,255,255,0.6) 25%,
-    rgba(255,255,255,0.8) 50%,
-    rgba(255,255,255,0.6) 75%,
-    rgba(255,255,255,0.3) 100%
-  );
-  position: relative;
-  overflow: hidden;
-}
-
-.stripe-pattern {
-  position: absolute;
-  top: 0;
-  left: -100%;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
-  animation: stripeMove 3s linear infinite;
-}
-
-@keyframes stripeMove {
-  0% { left: -100%; }
-  100% { left: 100%; }
-}
-
-.stripe-glow {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(90deg, 
-    rgba(255,255,255,0.1),
-    rgba(255,255,255,0.3),
-    rgba(255,255,255,0.1)
-  );
-}
-
-/* Modal Body cao cấp */
-.agribank-premium-body {
-  padding: 30px 40px;
-  background: #fafafa;
-  flex: 1; /* Chiếm không gian còn lại */
-  overflow-y: auto; /* Cho phép scroll khi nội dung quá dài */
-  max-height: calc(85vh - 200px); /* Trừ đi chiều cao header và footer */
-}
-
-/* Custom scrollbar cho modal body */
-.agribank-premium-body::-webkit-scrollbar {
-  width: 8px;
-}
-
-.agribank-premium-body::-webkit-scrollbar-track {
-  background: #f1f3f4;
-  border-radius: 4px;
-}
-
-.agribank-premium-body::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #8B1538, #C41E3A);
-  border-radius: 4px;
-}
-
-.agribank-premium-body::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #C41E3A, #E63946);
-}
-
-/* Hướng dẫn nhanh */
-.agribank-quick-guide {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-radius: 15px;
-  padding: 15px 20px; /* Giảm padding */
-  margin-bottom: 20px; /* Giảm margin */
-  border: 1px solid #dee2e6;
-}
-
-.guide-header {
+  padding: 20px;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 15px;
 }
 
-.guide-icon {
-  font-size: 20px;
-}
-
-.guide-header h4 {
-  margin: 0;
-  color: #495057;
-  font-weight: 600;
-}
-
-.guide-steps {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.guide-step {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 15px;
-  background: white;
-  border-radius: 10px;
-  border: 1px solid #e9ecef;
-  flex: 1;
-  min-width: 200px;
-}
-
-.step-number {
-  width: 24px;
-  height: 24px;
-  background: linear-gradient(135deg, #8B1538, #C41E3A);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: bold;
-}
-
-.step-text {
-  font-size: 14px;
-  color: #495057;
-}
-
-/* Form cao cấp */
-.agribank-premium-form {
-  background: white;
-  border-radius: 15px;
-  border: 1px solid #e9ecef;
-  overflow: hidden;
-}
-
-.form-section {
-  margin-bottom: 15px; /* Giảm khoảng cách giữa các section */
-}
-
-.form-section:last-child {
-  margin-bottom: 0; /* Bỏ margin cho section cuối */
-}
-
-.agribank-upload-section {
-  padding: 0;
-}
-
-.section-header {
+.confirmation-title-section {
   display: flex;
   align-items: center;
   gap: 15px;
-  padding: 15px 20px; /* Giảm padding */
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-bottom: 1px solid #dee2e6;
 }
 
-.section-icon {
-  font-size: 24px;
-  color: #8B1538;
-}
-
-.section-title {
-  flex: 1;
-}
-
-.section-title h4 {
-  margin: 0 0 4px 0;
-  font-weight: 600;
-  color: #495057;
-}
-
-.section-subtitle {
-  margin: 0;
-  font-size: 14px;
-  color: #6c757d;
-}
-
-.file-limit-badge {
-  background: linear-gradient(135deg, #8B1538, #C41E3A);
-  color: white;
-  padding: 8px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.limit-icon {
-  font-size: 14px;
-}
-
-/* Khu vực upload cao cấp */
-.agribank-upload-zone {
-  padding: 30px 25px; /* Giảm padding */
-  border: 3px dashed #dee2e6;
-  background: #fafafa;
-  cursor: pointer;
-  transition: all 0.3s ease;
+.confirmation-icon-wrapper {
   position: relative;
-  overflow: hidden;
+  width: 50px;
+  height: 50px;
 }
 
-.agribank-upload-zone:hover {
-  border-color: #8B1538;
-  background: #f8f9fa;
-}
-
-.agribank-upload-zone.drag-active {
-  border-color: #C41E3A;
-  background: linear-gradient(135deg, rgba(196, 30, 58, 0.1), rgba(139, 21, 56, 0.05));
-  transform: scale(1.02);
-}
-
-.agribank-upload-zone.has-files {
-  border-style: solid;
-  border-color: #28a745;
-  background: linear-gradient(135deg, rgba(40, 167, 69, 0.1), rgba(40, 167, 69, 0.05));
-}
-
-/* Upload empty state */
-.upload-empty-state {
-  text-align: center;
-  position: relative;
-}
-
-.upload-visual {
-  position: relative;
-  margin-bottom: 20px; /* Giảm margin */
-}
-
-.upload-icon-circle {
-  width: 80px; /* Giảm kích thước */
-  height: 80px;
-  background: linear-gradient(135deg, #8B1538, #C41E3A);
+.confirmation-icon {
+  width: 50px;
+  height: 50px;
+  background-color: rgba(255, 255, 255, 0.2);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 15px; /* Giảm margin */
-  position: relative;
-  box-shadow: 0 10px 30px rgba(139, 21, 56, 0.3);
-}
-
-.upload-main-icon {
-  font-size: 32px; /* Giảm kích thước */
-  color: white;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-}
-
-.upload-icon-pulse {
-  position: absolute;
-  top: -10px;
-  left: -10px;
-  right: -10px;
-  bottom: -10px;
-  border-radius: 50%;
-  border: 3px solid rgba(139, 21, 56, 0.3);
-  animation: uploadPulse 2s ease-in-out infinite;
-}
-
-@keyframes uploadPulse {
-  0%, 100% { opacity: 0; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.1); }
-}
-
-.upload-arrows {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 150px;
-  height: 150px;
-}
-
-.arrow {
-  position: absolute;
-  font-size: 20px;
-  color: #8B1538;
-  opacity: 0.6;
-  animation: arrowFloat 3s ease-in-out infinite;
-}
-
-.arrow-1 { top: 20px; right: 20px; animation-delay: 0s; }
-.arrow-2 { top: 20px; left: 20px; animation-delay: 0.5s; }
-.arrow-3 { bottom: 20px; left: 20px; animation-delay: 1s; }
-.arrow-4 { bottom: 20px; right: 20px; animation-delay: 1.5s; }
-
-@keyframes arrowFloat {
-  0%, 100% { opacity: 0.6; transform: translateY(0); }
-  50% { opacity: 1; transform: translateY(-5px); }
-}
-
-.upload-content h3 {
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: #495057;
-  margin: 0 0 8px 0;
-}
-
-.upload-description {
-  font-size: 1rem;
-  color: #6c757d;
-  margin: 0 0 25px 0;
-}
-
-.format-support {
-  background: white;
-  border-radius: 15px;
-  padding: 15px; /* Giảm padding */
-  border: 1px solid #e9ecef;
-  margin-bottom: 15px; /* Giảm margin */
-}
-
-.format-title {
-  font-weight: 600;
-  color: #495057;
-  margin: 0 0 15px 0;
-  font-size: 14px;
-}
-
-.format-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-  gap: 10px;
-}
-
-.format-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 12px 8px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
-  transition: all 0.3s ease;
-}
-
-.format-item:hover {
-  background: #e9ecef;
-  transform: translateY(-2px);
-}
-
-.format-item.archive {
-  background: linear-gradient(135deg, #ffc107, #ff8c00);
-  color: white;
-  border-color: #ff8c00;
-}
-
-.format-icon {
-  font-size: 18px;
-  margin-bottom: 4px;
-}
-
-.format-name {
-  font-size: 12px;
-  font-weight: 600;
-}
-
-/* Watermark */
-.agribank-watermark {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  opacity: 0.3;
-}
-
-.watermark-logo {
   font-size: 24px;
-  margin-bottom: 4px;
+  z-index: 2;
+  position: relative;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
-.watermark-text {
-  font-size: 10px;
-  font-weight: bold;
-  color: #8B1538;
+.confirmation-icon-pulse {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.4);
+  animation: pulse 2s infinite;
+  z-index: 1;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+}
+
+.confirmation-title-content {
+  color: white;
+}
+
+.confirmation-title-content h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
   letter-spacing: 1px;
 }
 
-/* Upload has files */
-.upload-has-files {
-  display: flex;
-  align-items: center;
-  gap: 20px;
+.confirmation-subtitle {
+  margin: 5px 0 0;
+  font-size: 14px;
+  opacity: 0.8;
 }
 
-.files-summary {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  flex: 1;
-}
-
-.summary-icon-circle {
-  width: 60px;
-  height: 60px;
-  background: linear-gradient(135deg, #28a745, #20c997);
-  border-radius: 50%;
+.agribank-confirmation-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-}
-
-.summary-icon {
-  font-size: 24px;
-  color: white;
-}
-
-.summary-glow {
-  position: absolute;
-  top: -5px;
-  left: -5px;
-  right: -5px;
-  bottom: -5px;
   border-radius: 50%;
-  border: 2px solid rgba(40, 167, 69, 0.3);
-  animation: summaryGlow 2s ease-in-out infinite;
+  transition: all 0.2s;
 }
 
-@keyframes summaryGlow {
-  0%, 100% { opacity: 0.7; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.1); }
+.agribank-confirmation-close:hover {
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
-.summary-content h4 {
-  font-size: 1.2rem;
-  font-weight: 600;
-  color: #495057;
-  margin: 0 0 4px 0;
+.agribank-confirmation-close .close-ripple {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: scale(0);
+  transition: transform 0.3s;
 }
 
-.summary-size {
-  font-size: 14px;
-  color: #28a745;
-  font-weight: 500;
-  margin: 0 0 4px 0;
+.agribank-confirmation-close:hover .close-ripple {
+  transform: scale(1.5);
+  opacity: 0;
 }
 
-.summary-action {
-  font-size: 13px;
-  color: #6c757d;
-  margin: 0;
-}
-
-/* Selected Files Section */
-.selected-files-section {
-  background: white;
-  border: 1px solid #e9ecef;
-  border-radius: 15px;
+.agribank-confirmation-stripe {
+  height: 6px;
+  background: linear-gradient(90deg, #E10F30 0%, #BF053D 100%);
+  position: relative;
   overflow: hidden;
-  margin-bottom: 15px;
 }
 
-.btn-clear-all-files {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  background: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #6c757d;
-  cursor: pointer;
-  transition: all 0.3s ease;
+.agribank-confirmation-stripe:after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shimmer 2s infinite;
 }
 
-.btn-clear-all-files:hover {
-  background: #e9ecef;
-  color: #495057;
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
-.files-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 15px;
+.agribank-confirmation-body {
   padding: 20px;
 }
 
-.file-card {
-  background: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 12px;
-  padding: 15px;
-  position: relative;
-  transition: all 0.3s ease;
-}
-
-.file-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.file-preview {
+.confirmation-content {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.confirmation-message-wrapper {
+  display: flex;
+  gap: 15px;
+  align-items: flex-start;
+  background-color: rgba(139, 21, 56, 0.05);
+  padding: 15px;
+  border-radius: 10px;
+  border-left: 4px solid #C41E3A;
+}
+
+.confirmation-message-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.confirmation-message {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #333;
+}
+
+.agribank-existing-imports {
+  background-color: #f8f9fa;
+  padding: 15px;
+  border-radius: 10px;
+  margin-top: 15px;
+}
+
+.agribank-existing-imports h4 {
+  margin-top: 0;
+  color: #8B1538;
+  font-size: 16px;
   margin-bottom: 10px;
 }
 
-.file-icon-circle {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #6c757d, #495057);
-  border-radius: 50%;
+.agribank-confirmation-footer {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  color: white;
-}
-
-.file-icon-circle.archive {
-  background: linear-gradient(135deg, #ffc107, #ff8c00);
-}
-
-.archive-badge {
-  background: #ff8c00;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 10px;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.file-details h5 {
-  margin: 0 0 6px 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: #495057;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.file-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.file-size {
-  font-size: 12px;
-  color: #6c757d;
-}
-
-.file-type-badge {
-  background: #e9ecef;
-  color: #495057;
-  padding: 2px 6px;
-  border-radius: 8px;
-  font-size: 10px;
-  font-weight: 500;
-}
-
-.btn-remove-file {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 24px;
-  height: 24px;
-  background: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: bold;
-  transition: all 0.3s ease;
-}
-
-.btn-remove-file:hover {
-  background: #c82333;
-  transform: scale(1.1);
-}
-
-/* Password Section */
-.password-section {
-  background: white;
-  border: 1px solid #e9ecef;
-  border-radius: 15px;
-  overflow: hidden;
-  margin-bottom: 15px;
-}
-
-.password-content {
+  justify-content: flex-end;
   padding: 20px;
-}
-
-.password-option {
-  margin-bottom: 15px;
-}
-
-.premium-checkbox {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  cursor: pointer;
-}
-
-.premium-checkbox input[type="checkbox"] {
-  margin: 0;
-  width: 18px;
-  height: 18px;
-  accent-color: #8B1538;
-}
-
-.checkbox-mark {
-  width: 18px;
-  height: 18px;
-  border: 2px solid #dee2e6;
-  border-radius: 4px;
-  position: relative;
-  background: white;
-  transition: all 0.3s ease;
-}
-
-.checkbox-content {
-  flex: 1;
-}
-
-.checkbox-title {
-  font-weight: 600;
-  color: #495057;
-  font-size: 14px;
-  display: block;
-  margin-bottom: 4px;
-}
-
-.checkbox-subtitle {
-  font-size: 12px;
-  color: #6c757d;
-  font-family: monospace;
-}
-
-.password-input-group {
-  position: relative;
-  margin-bottom: 15px;
-}
-
-.premium-input {
-  width: 100%;
-  padding: 12px 50px 12px 15px;
-  border: 2px solid #e9ecef;
-  border-radius: 10px;
-  font-size: 14px;
-  background: white;
-  transition: all 0.3s ease;
-}
-
-.premium-input:focus {
-  border-color: #8B1538;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(139, 21, 56, 0.1);
-}
-
-.premium-input.has-default {
-  border-color: #28a745;
-  background: rgba(40, 167, 69, 0.05);
-}
-
-.btn-toggle-password {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-}
-
-.btn-toggle-password:hover {
-  background: #f8f9fa;
-}
-
-.password-hint {
-  margin-top: 10px;
-}
-
-.hint-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 13px;
-}
-
-.hint-item.success {
-  background: rgba(40, 167, 69, 0.1);
-  color: #155724;
-}
-
-.hint-item.info {
-  background: rgba(13, 110, 253, 0.1);
-  color: #0c5460;
-}
-
-/* Notes Section */
-.notes-section {
-  background: white;
-  border: 1px solid #e9ecef;
-  border-radius: 15px;
-  overflow: hidden;
-}
-
-.notes-content {
-  padding: 20px;
-}
-
-.premium-textarea {
-  width: 100%;
-  padding: 12px 15px;
-  border: 2px solid #e9ecef;
-  border-radius: 10px;
-  font-size: 14px;
-  background: white;
-  resize: vertical;
-  min-height: 80px;
-  font-family: inherit;
-  transition: all 0.3s ease;
-}
-
-.premium-textarea:focus {
-  border-color: #8B1538;
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(139, 21, 56, 0.1);
-}
-
-.notes-counter {
-  text-align: right;
-  margin-top: 8px;
-}
-
-.counter-text {
-  font-size: 12px;
-  color: #6c757d;
-}
-
-/* Mobile responsive cho các section mới */
-@media (max-width: 768px) {
-  .files-grid {
-    grid-template-columns: 1fr;
-    padding: 15px;
-    gap: 12px;
-  }
-  
-  .file-card {
-    padding: 12px;
-  }
-  
-  .password-content, .notes-content {
-    padding: 15px;
-  }
-  
-  .premium-input, .premium-textarea {
-    padding: 10px 12px;
-    font-size: 14px;
-  }
-  
-  .password-input-group .premium-input {
-    padding-right: 45px;
-  }
-}
-
-/* Modal Footer cao cấp */
-.agribank-premium-footer {
-  background: white;
-  border-top: 1px solid #e9ecef;
-  position: relative;
-  overflow: hidden;
-  flex-shrink: 0; /* Không cho footer bị co lại */
-  margin-top: auto; /* Đẩy footer xuống dưới cùng */
-}
-
-.footer-background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-}
-
-.footer-gradient {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, #8B1538, #C41E3A, #8B1538);
-}
-
-.footer-content {
-  position: relative;
-  z-index: 1;
-  padding: 20px 30px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-}
-
-.footer-info {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  flex: 1;
-}
-
-.info-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: rgba(139, 21, 56, 0.1);
-  border-radius: 20px;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.info-icon {
-  font-size: 16px;
-}
-
-.info-text {
-  color: #495057;
-}
-
-.footer-actions {
-  display: flex;
-  align-items: center;
   gap: 15px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: #f8f9fa;
 }
 
-/* Nút hủy cao cấp */
 .agribank-btn-cancel {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 24px;
-  background: #f8f9fa;
-  color: #6c757d;
-  border: 2px solid #dee2e6;
-  border-radius: 25px;
-  font-weight: 600;
+  background-color: #f1f2f3;
+  color: #555;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.agribank-btn-cancel:hover {
-  background: #e9ecef;
-  border-color: #adb5bd;
-  color: #495057;
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-}
-
-/* Nút import cao cấp */
-.agribank-btn-import {
+  font-weight: 500;
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 14px 30px;
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 50%, #E63946 100%);
+  transition: all 0.2s;
+}
+
+.agribank-btn-cancel:hover {
+  background-color: #e5e5e5;
+}
+
+.agribank-btn-confirm {
+  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
   color: white;
   border: none;
-  border-radius: 25px;
-  font-weight: 700;
-  font-size: 16px;
+  padding: 10px 20px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 8px 25px rgba(139, 21, 56, 0.3);
-}
-
-.agribank-btn-import:hover:not(:disabled) {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 35px rgba(139, 21, 56, 0.4);
-}
-
-.agribank-btn-import:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.agribank-btn-import.btn-importing {
-  background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-}
-
-.btn-icon {
-  font-size: 18px;
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
-}
-
-.btn-text {
-  font-weight: 700;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-}
-
-/* Hiệu ứng shine cho nút import */
-.btn-shine {
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-  transition: left 0.6s ease;
-}
-
-.agribank-btn-import:hover .btn-shine {
-  left: 100%;
-}
-
-/* Hiệu ứng glow */
-.btn-glow {
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  border-radius: 25px;
-  background: linear-gradient(135deg, #8B1538, #C41E3A);
-  z-index: -1;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.agribank-btn-import:hover .btn-glow {
-  opacity: 0.7;
-  animation: btnGlow 2s ease-in-out infinite;
-}
-
-@keyframes btnGlow {
-  0%, 100% { transform: scale(1); opacity: 0.7; }
-  50% { transform: scale(1.05); opacity: 1; }
-}
-
-/* Ripple effect */
-.btn-ripple {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.3);
-  transform: translate(-50%, -50%);
-  transition: width 0.3s ease, height 0.3s ease;
-}
-
-.agribank-btn-cancel:active .btn-ripple {
-  width: 100px;
-  height: 100px;
-}
-
-/* Footer progress */
-.footer-progress {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(248, 249, 250, 0.95);
-  backdrop-filter: blur(5px);
-  padding: 15px 30px;
-  border-top: 1px solid #e9ecef;
-}
-
-.progress-track {
-  height: 6px;
-  background: #e9ecef;
-  border-radius: 3px;
-  overflow: hidden;
-  margin-bottom: 8px;
-}
-
-.progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #8B1538, #C41E3A, #E63946);
-  border-radius: 3px;
-  transition: width 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.progress-shimmer {
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
-  animation: progressShimmer 2s linear infinite;
-}
-
-@keyframes progressShimmer {
-  0% { left: -100%; }
-  100% { left: 100%; }
-}
-
-.progress-text {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 12px;
-  color: #6c757d;
   font-weight: 500;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .agribank-premium-modal {
-    margin: 10px;
-    max-width: calc(100vw - 20px);
-    max-height: 95vh; /* Tăng chiều cao cho mobile */
-  }
-  
-  .agribank-header-content {
-    padding: 15px 20px; /* Giảm padding cho mobile */
-  }
-  
-  .agribank-brand-section {
-    flex-direction: column;
-    text-align: center;
-    gap: 10px; /* Giảm gap */
-  }
-  
-  .modal-title-section {
-    flex-direction: column;
-    text-align: center;
-    gap: 10px; /* Giảm gap */
-  }
-  
-  .agribank-premium-body {
-    padding: 15px 20px; /* Giảm padding cho mobile */
-    max-height: calc(95vh - 180px); /* Điều chỉnh cho mobile */
-  }
-  
-  .agribank-quick-guide {
-    padding: 10px 15px; /* Giảm padding cho mobile */
-    margin-bottom: 15px;
-  }
-  
-  .guide-steps {
-    flex-direction: column;
-    gap: 10px; /* Giảm gap */
-  }
-  
-  .guide-step {
-    min-width: auto; /* Bỏ min-width cho mobile */
-    padding: 8px 12px; /* Giảm padding */
-  }
-  
-  .section-header {
-    padding: 12px 15px; /* Giảm padding cho mobile */
-  }
-  
-  .agribank-upload-zone {
-    padding: 20px 15px; /* Giảm padding cho mobile */
-  }
-  
-  .upload-icon-circle {
-    width: 60px; /* Giảm kích thước cho mobile */
-    height: 60px;
-  }
-  
-  .upload-main-icon {
-    font-size: 24px; /* Giảm kích thước cho mobile */
-  }
-  
-  .footer-content {
-    flex-direction: column;
-    gap: 15px;
-    padding: 15px 20px;
-  }
-  
-  .footer-info {
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 10px; /* Giảm gap */
-  }
-  
-  .info-item {
-    padding: 6px 10px; /* Giảm padding */
-    font-size: 12px; /* Giảm font-size */
-  }
-  
-  .footer-actions {
-    width: 100%;
-    justify-content: space-between;
-  }
-  
-  .agribank-btn-cancel, .agribank-btn-import {
-    flex: 1;
-    justify-content: center;
-    padding: 12px 20px; /* Giảm padding cho mobile */
-    font-size: 14px; /* Giảm font-size */
-  }
-}
-
-/* CSS cho các phần mới trong modal */
-/* Selected Files Section */
-.selected-files-section {
-  margin-top: 20px;
-  background: white;
-  border-radius: 15px;
-  border: 1px solid #e9ecef;
-  overflow: hidden;
-}
-
-.selected-files-section .section-header {
-  background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
-  border-bottom: 1px solid #e1bee7;
-}
-
-.btn-clear-all-files {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #ff5722, #ff7043);
-  color: white;
-  border: none;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.btn-clear-all-files:hover {
-  background: linear-gradient(135deg, #e64a19, #ff5722);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255, 87, 34, 0.3);
-}
-
-.files-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 15px;
-  padding: 20px;
-}
-
-.file-card {
-  background: #f8f9fa;
-  border: 2px solid #e9ecef;
-  border-radius: 12px;
-  padding: 15px;
-  transition: all 0.3s ease;
+  gap: 10px;
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  overflow: hidden;
+  transition: all 0.2s;
 }
 
-.file-card:hover {
-  border-color: #8B1538;
-  background: white;
-  box-shadow: 0 5px 15px rgba(139, 21, 56, 0.1);
+.agribank-btn-confirm.btn-delete {
+  background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+}
+
+.agribank-btn-confirm:hover {
   transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(139, 21, 56, 0.3);
 }
 
-.file-preview {
-  position: relative;
-  flex-shrink: 0;
+.agribank-btn-confirm.btn-delete:hover {
+  box-shadow: 0 5px 15px rgba(183, 28, 28, 0.3);
 }
 
-.file-icon-circle {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #6c757d, #495057);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
-.file-icon-circle.archive {
-  background: linear-gradient(135deg, #ffc107, #ff8c00);
-}
-
-.archive-badge {
+.agribank-btn-confirm .btn-shine {
   position: absolute;
-  top: -8px;
-  right: -8px;
-  background: linear-gradient(135deg, #ffc107, #ff8c00);
-  color: white;
-  font-size: 10px;
-  font-weight: bold;
-  padding: 2px 6px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-}
-
-.file-details {
-  flex: 1;
-  min-width: 0;
-}
-
-.file-details .file-name {
-  font-weight: 600;
-  color: #495057;
-  margin: 0 0 6px 0;
-  font-size: 14px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.file-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.file-size {
-  font-size: 12px;
-  color: #6c757d;
-  font-weight: 500;
-}
-
-.file-type-badge {
-  background: linear-gradient(135deg, #8B1538, #C41E3A);
-  color: white;
-  font-size: 10px;
-  font-weight: bold;
-  padding: 2px 8px;
-  border-radius: 10px;
-  text-transform: uppercase;
-}
-
-.btn-remove-file {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #dc3545, #c82333);
-  color: white;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: bold;
-  transition: all 0.3s ease;
-  flex-shrink: 0;
-}
-
-.btn-remove-file:hover {
-  background: linear-gradient(135deg, #c82333, #bd2130);
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
-}
-
-.remove-icon {
-  font-size: 14px;
-}
-
-/* Password Section */
-.password-section {
-  margin-top: 20px;
-}
-
-.password-section .section-header {
-  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
-  border-bottom: 1px solid #ffeaa7;
-}
-
-.password-content {
-  padding: 20px;
-}
-
-.password-option {
-  margin-bottom: 15px;
-}
-
-.premium-checkbox {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  cursor: pointer;
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 10px;
-  border: 2px solid #e9ecef;
-  transition: all 0.3s ease;
-}
-
-.premium-checkbox:hover {
-  border-color: #8B1538;
-  background: white;
-}
-
-.premium-checkbox input[type="checkbox"] {
-  width: 20px;
-  height: 20px;
-  margin: 0;
-  cursor: pointer;
-}
-
-.checkbox-mark {
-  width: 20px;
-  height: 20px;
-  border: 2px solid #8B1538;
-  border-radius: 4px;
-  position: relative;
-  background: white;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.premium-checkbox input[type="checkbox"]:checked + .checkbox-mark {
-  background: linear-gradient(135deg, #8B1538, #C41E3A);
-  border-color: #8B1538;
-}
-
-.premium-checkbox input[type="checkbox"]:checked + .checkbox-mark::after {
-  content: '✓';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: white;
-  font-weight: bold;
-  font-size: 14px;
-}
-
-.checkbox-content {
-  flex: 1;
-}
-
-.checkbox-title {
-  display: block;
-  font-weight: 600;
-  color: #495057;
-  margin-bottom: 4px;
-}
-
-.checkbox-subtitle {
-  display: block;
-  font-size: 12px;
-  color: #6c757d;
-  font-style: italic;
-}
-
-.password-input-group {
-  position: relative;
-  margin-bottom: 15px;
-}
-
-.premium-input {
+  top: 0;
+  left: 0;
   width: 100%;
-  padding: 15px 50px 15px 20px;
-  border: 2px solid #e9ecef;
-  border-radius: 10px;
-  font-size: 14px;
-  transition: all 0.3s ease;
-  background: white;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transform: translateX(-100%);
 }
 
-.premium-input:focus {
-  border-color: #8B1538;
-  box-shadow: 0 0 0 3px rgba(139, 21, 56, 0.1);
-  outline: none;
+.agribank-btn-confirm:hover .btn-shine {
+  animation: shine 1.5s infinite;
 }
 
-.premium-input.has-default {
-  background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-  border-color: #28a745;
-}
-
-.btn-toggle-password {
-  position: absolute;
-  right: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 5px;
-  border-radius: 50%;
-  transition: all 0.3s ease;
-}
-
-.btn-toggle-password:hover {
-  background: rgba(139, 21, 56, 0.1);
-}
-
-.toggle-icon {
-  font-size: 16px;
-}
-
-.password-hint {
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 12px;
-}
-
-.hint-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.hint-item.success {
-  color: #155724;
-}
-
-.hint-item.info {
-  color: #495057;
-}
-
-.hint-icon {
-  font-size: 16px;
-  flex-shrink: 0;
-}
-
-.hint-text {
-  font-size: 13px;
-  font-weight: 500;
-}
-
-/* Notes Section */
-.notes-section {
-  margin-top: 20px;
-}
-
-.notes-section .section-header {
-  background: linear-gradient(135deg, #e8f5e8 0%, #c8e6c9 100%);
-  border-bottom: 1px solid #c8e6c9;
-}
-
-.notes-content {
-  padding: 20px;
-}
-
-.premium-textarea {
-  width: 100%;
-  padding: 15px;
-  border: 2px solid #e9ecef;
-  border-radius: 10px;
-  font-size: 14px;
-  font-family: inherit;
-  resize: vertical;
-  transition: all 0.3s ease;
-  background: white;
-  min-height: 80px;
-}
-
-.premium-textarea:focus {
-  border-color: #8B1538;
-  box-shadow: 0 0 0 3px rgba(139, 21, 56, 0.1);
-  outline: none;
-}
-
-.notes-counter {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 8px;
-}
-
-.counter-text {
-  font-size: 12px;
-  color: #6c757d;
-  font-weight: 500;
-}
-
-/* Responsive cho mobile */
-@media (max-width: 768px) {
-  .files-grid {
-    grid-template-columns: 1fr;
-    gap: 10px;
-    padding: 15px;
+@keyframes shine {
+  0% {
+    transform: translateX(-100%);
   }
-  
-  .file-card {
-    padding: 12px;
+  60% {
+    transform: translateX(100%);
   }
-  
-  .premium-checkbox {
-    padding: 12px;
-  }
-  
-  .password-content, .notes-content {
-    padding: 15px;
+  100% {
+    transform: translateX(100%);
   }
 }
 </style>
