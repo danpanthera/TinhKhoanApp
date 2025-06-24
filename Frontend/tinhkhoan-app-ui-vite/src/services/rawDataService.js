@@ -3,7 +3,7 @@ import api from './api';
 
 class RawDataService {
   constructor() {
-    // ✅ FIX: Sửa baseURL thành RawData vì controller là RawDataController
+    // ✅ FIX: Sửa baseURL thành /RawData không cần /api vì api.js đã có
     this.baseURL = '/RawData';  // Controller route là api/RawData
   }
 
