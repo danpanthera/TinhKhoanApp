@@ -28,28 +28,34 @@
     <!-- Control Panel -->
     <div class="control-panel">
       <div class="date-control-section">
-        <h3>🗓️ Chọn ngày sao kê</h3>
-        <div class="date-controls">
-          <div class="date-range">
-            <label>Từ ngày:</label>
-            <input 
-              v-model="selectedFromDate" 
-              type="date" 
-              class="date-input"
-            />
-            <label>Đến ngày:</label>
-            <input 
-              v-model="selectedToDate" 
-              type="date" 
-              class="date-input"
-            />
+        <h3 class="agribank-date-title">🗓️ Chọn ngày sao kê</h3>
+        <div class="date-controls-enhanced">
+          <div class="date-range-group">
+            <div class="date-input-group">
+              <label>Từ ngày:</label>
+              <input 
+                v-model="selectedFromDate" 
+                type="date" 
+                class="date-input agribank-date-input"
+              />
+            </div>
+            <div class="date-input-group">
+              <label>Đến ngày:</label>
+              <input 
+                v-model="selectedToDate" 
+                type="date" 
+                class="date-input agribank-date-input"
+              />
+            </div>
           </div>
-          <button @click="applyDateFilter" class="btn-filter" :disabled="!selectedFromDate">
-            🔍 Lọc theo ngày
-          </button>
-          <button @click="clearDateFilter" class="btn-clear">
-            🗑️ Xóa bộ lọc
-          </button>
+          <div class="date-actions-group">
+            <button @click="applyDateFilter" class="btn-filter agribank-btn-filter" :disabled="!selectedFromDate">
+              🔍 Lọc theo ngày
+            </button>
+            <button @click="clearDateFilter" class="btn-clear agribank-btn-clear">
+              🗑️ Xóa bộ lọc
+            </button>
+          </div>
         </div>
       </div>
 
@@ -75,7 +81,7 @@
         <div class="header-content">
           <div class="agribank-logo-header"></div>
           <div class="header-text">
-            <h2>📊 BẢNG QUẢN LÝ DỮ LIỆU NGHIỆP VỤ AGRIBANK</h2>
+            <h2>📊 BẢNG QUẢN LÝ DỮ LIỆU NGHIỆP VỤ</h2>
             <p>Theo dõi và quản lý tất cả loại dữ liệu của hệ thống Agribank Lai Châu</p>
           </div>
         </div>
@@ -167,7 +173,7 @@
             </div>
           </div>
           <div class="header-text agribank-filtered-text">
-            <h2>KẾT QUẢ LỌC THEO NGÀY - AGRIBANK</h2>
+            <h2>KẾT QUẢ LỌC THEO NGÀY</h2>
             <p class="filtered-summary">
               <span class="records-found">{{ filteredResults.length }} bản ghi</span> được tìm thấy từ 
               <span class="date-range">{{ formatDate(selectedFromDate) }}</span>
@@ -1957,6 +1963,173 @@ onMounted(async () => {
   margin: 0;
   font-weight: 400;
   font-style: italic;
+}
+
+/* 🏦 CONTROL PANEL - Date Controls với thương hiệu Agribank */
+.control-panel {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border: 1px solid #e9ecef;
+  border-radius: 15px;
+  padding: 25px 30px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+}
+
+.date-control-section {
+  margin-bottom: 25px;
+}
+
+.agribank-date-title {
+  color: #8B1538; /* Màu đỏ thương hiệu Agribank */
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0 0 20px 0;
+  text-shadow: 0 1px 2px rgba(139, 21, 56, 0.1);
+}
+
+.date-controls-enhanced {
+  display: flex;
+  align-items: flex-end;
+  gap: 25px;
+  flex-wrap: wrap;
+}
+
+.date-range-group {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  flex: 1;
+  min-width: 300px;
+}
+
+.date-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.date-input-group label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 14px;
+}
+
+.agribank-date-input {
+  padding: 12px 15px;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  font-size: 14px;
+  background: white;
+  transition: all 0.3s ease;
+  min-width: 150px;
+}
+
+.agribank-date-input:focus {
+  border-color: #8B1538;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(139, 21, 56, 0.1);
+}
+
+.date-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.agribank-btn-filter {
+  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 50%, #E63946 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(139, 21, 56, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agribank-btn-filter:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(139, 21, 56, 0.4);
+}
+
+.agribank-btn-filter:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.agribank-btn-clear {
+  background: #f8f9fa;
+  color: #6c757d;
+  border: 2px solid #e9ecef;
+  padding: 12px 20px;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agribank-btn-clear:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+  transform: translateY(-1px);
+}
+
+.bulk-actions-section {
+  border-top: 1px solid #e9ecef;
+  padding-top: 20px;
+}
+
+.bulk-actions-section h3 {
+  color: #495057;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 15px 0;
+}
+
+.bulk-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Responsive cho date controls */
+@media (max-width: 768px) {
+  .control-panel {
+    padding: 20px;
+  }
+  
+  .date-controls-enhanced {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 20px;
+  }
+  
+  .date-range-group {
+    flex-direction: column;
+    min-width: auto;
+    gap: 15px;
+  }
+  
+  .date-actions-group {
+    justify-content: stretch;
+  }
+  
+  .agribank-btn-filter, .agribank-btn-clear {
+    flex: 1;
+    justify-content: center;
+  }
 }
 
 /* 🏦 Alert styling với thương hiệu Agribank */

@@ -252,6 +252,62 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
                       .HasForeignKey(d => d.UnitId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
+
+            // 🚀 === TEMPORAL TABLES + COLUMNSTORE INDEXES CONFIGURATION ===
+            
+            // 📊 Cấu hình Temporal Tables cho ImportedDataRecord với history tracking
+            modelBuilder.Entity<ImportedDataRecord>(entity =>
+            {
+                // Enable Temporal Table for full audit trail
+                entity.ToTable(tb => tb.IsTemporal(ttb =>
+                {
+                    ttb.UseHistoryTable("ImportedDataRecords_History");
+                    ttb.HasPeriodStart("SysStartTime");
+                    ttb.HasPeriodEnd("SysEndTime");
+                }));
+                
+                // Indexes for performance
+                entity.HasIndex(e => e.StatementDate)
+                      .HasDatabaseName("IX_ImportedDataRecords_StatementDate");
+                      
+                entity.HasIndex(e => new { e.Category, e.ImportDate })
+                      .HasDatabaseName("IX_ImportedDataRecords_Category_ImportDate");
+                      
+                entity.HasIndex(e => e.Status)
+                      .HasDatabaseName("IX_ImportedDataRecords_Status");
+                      
+                // Thiết lập precision cho các trường decimal
+                entity.Property(e => e.CompressionRatio).HasPrecision(5, 4);
+            });
+
+            // 📈 Cấu hình Temporal Tables cho ImportedDataItem với Columnstore Index
+            modelBuilder.Entity<ImportedDataItem>(entity =>
+            {
+                // Enable Temporal Table
+                entity.ToTable(tb => tb.IsTemporal(ttb =>
+                {
+                    ttb.UseHistoryTable("ImportedDataItems_History");
+                    ttb.HasPeriodStart("SysStartTime");
+                    ttb.HasPeriodEnd("SysEndTime");
+                }));
+                
+                // Indexes cho analytics performance
+                entity.HasIndex(e => e.ProcessedDate)
+                      .HasDatabaseName("IX_ImportedDataItems_ProcessedDate");
+                      
+                entity.HasIndex(e => e.ImportedDataRecordId)
+                      .HasDatabaseName("IX_ImportedDataItems_RecordId");
+                      
+                // JSON indexing (SQL Server 2016+)
+                entity.Property(e => e.RawData)
+                      .HasColumnType("nvarchar(max)");
+            });
+            
+            // 🎯 Custom SQL để tạo Columnstore Index (sẽ chạy qua migration)
+            // Columnstore Index cho analytics performance trên ImportedDataItems
+            // CREATE NONCLUSTERED COLUMNSTORE INDEX IX_ImportedDataItems_Columnstore
+            // ON ImportedDataItems (ImportedDataRecordId, ProcessedDate, RawData)
+            // WHERE ProcessedDate >= '2024-01-01'
         }
     }
 }
