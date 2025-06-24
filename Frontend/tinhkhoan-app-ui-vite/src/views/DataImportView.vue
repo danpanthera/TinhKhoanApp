@@ -120,7 +120,7 @@
                 </div>
               </td>
               <td class="col-updated last-update-cell enhanced-lastupdate">
-                <span class="update-text">{{ getDataTypeStats(key).lastUpdate || 'Chưa có dữ liệu' }}</span>
+                <span class="update-text">{{ formatDateTime(getDataTypeStats(key).lastUpdate) }}</span>
               </td>
               <td class="actions-cell">
                 <button 
@@ -1399,12 +1399,13 @@ const getStatusIcon = (status) => {
   const iconMap = {
     'completed': '✅',
     'success': '✅', 
+    'hoàn thành': '✅',
     'failed': '❌',
     'error': '❌',
     'processing': '⏳',
     'pending': '⏸️'
   }
-  return iconMap[status] || '❓'
+  return iconMap[status?.toLowerCase()] || '❓'
 }
 
 const getFileType = (fileName) => {
@@ -1419,6 +1420,32 @@ const getFileType = (fileName) => {
     'rar': 'RAR'
   }
   return typeMap[ext] || ext.toUpperCase()
+}
+
+// 🕒 Hàm format ngày giờ theo định dạng dd/mm/yyyy - hh:mm:ss
+const formatDateTime = (dateString) => {
+  if (!dateString || dateString === "0001-01-01T00:00:00") {
+    return 'Chưa có dữ liệu'
+  }
+  
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) {
+      return 'Ngày không hợp lệ'
+    }
+    
+    const day = String(date.getDate()).padStart(2, '0')
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const year = date.getFullYear()
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    const seconds = String(date.getSeconds()).padStart(2, '0')
+    
+    return `${day}/${month}/${year} - ${hours}:${minutes}:${seconds}`
+  } catch (error) {
+    console.error('Error formatting date:', error)
+    return 'Lỗi format ngày'
+  }
 }
 
 // Hàm phát âm thanh chuông to khi upload hoàn thành
