@@ -4,8 +4,8 @@ import { isAuthenticated } from "../services/auth";
 // ⚡ ENHANCED LAZY LOADING - Preload critical routes and group by feature
 import HomeView from "../views/HomeView.vue";
 import LoginView from "../views/LoginView.vue";
-// Import DataImportView statically to avoid dynamic import issues
-import DataImportView from "../views/DataImportView_Simple.vue";
+// ✅ Sử dụng file mới với bảng nghiệp vụ đầy đủ và template hợp lệ
+import DataImportView from "../views/DataImportViewFull.vue";
 
 // Preload critical components (optional for faster navigation)
 const preloadCriticalComponents = () => {
