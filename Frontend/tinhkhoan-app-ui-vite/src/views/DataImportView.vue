@@ -592,77 +592,101 @@
       </div>
     </div>
 
-    <!-- Preview Modal -->
-    <div v-if="showPreviewModal" class="modal-overlay" @click="closePreviewModal">
-      <div class="modal-content modal-large" @click.stop>
-        <div class="modal-header">
-          <h3>👁️ Xem trước: {{ selectedImport?.fileName }}</h3>
-          <button @click="closePreviewModal" class="modal-close">×</button>
+    <!-- Preview Modal - Enhanced Agribank Design -->
+    <div v-if="showPreviewModal" class="modal-overlay agribank-preview-overlay" @click="closePreviewModal">
+      <div class="modal-content modal-large agribank-preview-modal" @click.stop>
+        <div class="modal-header agribank-preview-header">
+          <div class="agribank-preview-title">
+            <div class="preview-icon-wrapper">
+              <span class="preview-icon">👁️</span>
+              <div class="preview-glow"></div>
+            </div>
+            <div class="preview-title-text">
+              <h3>XEM TRƯỚC DỮ LIỆU - AGRIBANK</h3>
+              <p class="preview-subtitle">{{ selectedImport?.fileName }}</p>
+            </div>
+          </div>
+          <div class="agribank-preview-stripe"></div>
+          <button @click="closePreviewModal" class="modal-close agribank-preview-close">×</button>
         </div>
 
-        <div class="modal-body">
-          <div v-if="previewData && previewData.length > 0" class="preview-content">
+        <div class="modal-body agribank-preview-body">
+          <div v-if="previewData && previewData.length > 0" class="preview-content agribank-preview-content">
             {{ console.log('🖼️ Modal rendering with data:', previewData.length, 'records') }}
-            <!-- Preview Info -->
-            <div class="preview-info">
-              <div class="info-grid">
-                <div class="info-item">
+            
+            <!-- Preview Info Section - Agribank Style -->
+            <div class="preview-info agribank-preview-info">
+              <div class="info-grid agribank-info-grid">
+                <div class="info-item agribank-info-item">
+                  <span class="info-icon">📊</span>
                   <label>Loại dữ liệu:</label>
-                  <span class="data-type-badge" :style="{ backgroundColor: getDataTypeColor(selectedImport?.dataType) }">
-                    {{ selectedImport?.dataType }}
+                  <span class="data-type-badge agribank-preview-badge" :style="{ backgroundColor: getDataTypeColor(selectedImport?.dataType) }">
+                    <span class="badge-icon">{{ getDataTypeIcon(selectedImport?.dataType) }}</span>
+                    <span class="badge-text">{{ selectedImport?.dataType }}</span>
                   </span>
                 </div>
-                <div class="info-item">
+                <div class="info-item agribank-info-item">
+                  <span class="info-icon">📅</span>
                   <label>Ngày sao kê:</label>
-                  <span>{{ formatDate(selectedImport?.statementDate) }}</span>
+                  <span class="info-value">{{ formatDate(selectedImport?.statementDate) }}</span>
                 </div>
-                <div class="info-item">
+                <div class="info-item agribank-info-item">
+                  <span class="info-icon">⏰</span>
                   <label>Ngày import:</label>
-                  <span>{{ formatDate(selectedImport?.importDate) }}</span>
+                  <span class="info-value">{{ formatDate(selectedImport?.importDate) }}</span>
                 </div>
-                <div class="info-item">
+                <div class="info-item agribank-info-item">
+                  <span class="info-icon">🔢</span>
                   <label>Số records:</label>
-                  <span>{{ formatNumber(previewData.length) }}</span>
+                  <span class="info-value highlight">{{ formatNumber(previewData.length) }}</span>
                 </div>
               </div>
             </div>
 
-            <!-- Data Table -->
-            <div class="preview-table">
-              <h4>📊 Dữ liệu mẫu (hiển thị tối đa 100 records)</h4>
-              <div class="table-wrapper">
-                <table v-if="previewData.length > 0">
-                  <thead>
+            <!-- Data Table - Agribank Style -->
+            <div class="preview-table agribank-preview-table">
+              <div class="preview-table-header agribank-table-header">
+                <h4>📊 DỮ LIỆU MẪU - AGRIBANK</h4>
+                <p class="table-note">Hiển thị tối đa 100 records đầu tiên</p>
+              </div>
+              <div class="table-wrapper agribank-table-wrapper">
+                <table v-if="previewData.length > 0" class="enhanced-preview-table">
+                  <thead class="agribank-preview-thead">
                     <tr>
-                      <th v-for="(column, index) in Object.keys(previewData[0] || {})" :key="index">{{ column }}</th>
+                      <th v-for="(column, index) in Object.keys(previewData[0] || {})" :key="index" class="preview-th">
+                        {{ column }}
+                      </th>
                     </tr>
                   </thead>
-                  <tbody>
-                    <tr v-for="(record, index) in previewData.slice(0, 100)" :key="index">
-                      <td v-for="(column, colIndex) in Object.keys(previewData[0] || {})" :key="colIndex">
+                  <tbody class="agribank-preview-tbody">
+                    <tr v-for="(record, index) in previewData.slice(0, 100)" :key="index" class="preview-row enhanced-preview-row">
+                      <td v-for="(column, colIndex) in Object.keys(previewData[0] || {})" :key="colIndex" class="preview-td">
                         {{ record[column] || '-' }}
                       </td>
                     </tr>
                   </tbody>
                 </table>
-                <div v-else class="no-data">
+                <div v-else class="no-data agribank-no-data">
+                  <div class="no-data-icon">📭</div>
                   <p>Không có dữ liệu để hiển thị</p>
                 </div>
               </div>
-              <div v-if="previewData.length > 100" class="preview-note">
-                💡 Chỉ hiển thị 100 records đầu tiên. Tổng cộng: {{ previewData.length }} records
+              <div v-if="previewData.length > 100" class="preview-note agribank-preview-note">
+                <span class="note-icon">💡</span>
+                <span class="note-text">Chỉ hiển thị 100 records đầu tiên. Tổng cộng: <strong>{{ previewData.length }}</strong> records</span>
               </div>
             </div>
           </div>
-          <div v-else class="no-preview-data">
+          <div v-else class="no-preview-data agribank-no-preview">
             {{ console.log('📭 Modal showing no data. previewData:', previewData) }}
-            <div class="empty-icon">📭</div>
-            <p>Không có dữ liệu để hiển thị</p>
+            <div class="empty-icon agribank-empty-icon">📭</div>
+            <h4>Không có dữ liệu</h4>
+            <p>Dữ liệu preview không khả dụng</p>
           </div>
         </div>
 
-        <div class="modal-footer">
-          <button @click="closePreviewModal" class="btn-cancel">Đóng</button>
+        <div class="modal-footer agribank-preview-footer">
+          <button @click="closePreviewModal" class="btn-cancel agribank-btn-close">Đóng</button>
         </div>
       </div>
     </div>
@@ -2465,11 +2489,6 @@ onMounted(async () => {
   animation: shimmerTop 3s infinite;
 }
 
-@keyframes shimmerTop {
-  0%, 100% { transform: translateX(-100%); }
-  50% { transform: translateX(100%); }
-}
-
 .agribank-filtered-header {
   margin-bottom: 24px;
 }
@@ -2603,7 +2622,7 @@ onMounted(async () => {
 
 .agribank-filter-stripe {
   height: 3px;
-  background: linear-gradient(90deg, #10B981, #59f391, #10B981);
+  background: linear-gradient(90deg, #10B981, #059669, transparent);
   border-radius: 2px;
   margin-top: 12px;
 }
@@ -2615,12 +2634,6 @@ onMounted(async () => {
   overflow: hidden;
   box-shadow: 0 8px 25px rgba(16, 185, 129, 0.12);
   border: 2px solid #d1fae5;
-}
-
-.enhanced-filtered-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .agribank-filtered-thead {
@@ -2914,6 +2927,441 @@ onMounted(async () => {
   
   .enhanced-filtered-row td {
     padding: 10px 6px;
+  }
+}
+
+/* 👁️ Enhanced Agribank Preview Modal Design */
+.agribank-preview-overlay {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+}
+
+.agribank-preview-modal {
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border-radius: 20px;
+  max-width: 95vw;
+  max-height: 95vh;
+  border: 3px solid #bbf7d0;
+  box-shadow: 0 20px 60px rgba(16, 185, 129, 0.3);
+  overflow: hidden;
+  position: relative;
+}
+
+.agribank-preview-modal::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #10B981, #059669, #047857, #10B981);
+  animation: shimmerTop 3s infinite;
+}
+
+.agribank-preview-header {
+  background: linear-gradient(135deg, #047857, #059669, #10B981);
+  color: white;
+  padding: 24px 28px;
+  border-bottom: 4px solid #34d399;
+  position: relative;
+}
+
+.agribank-preview-title {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.preview-icon-wrapper {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 2;
+}
+
+.preview-icon {
+  font-size: 28px;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.preview-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90px;
+  height: 90px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.3), transparent);
+  border-radius: 50%;
+  animation: previewPulse 2s infinite;
+}
+
+@keyframes previewPulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+    opacity: 0.3;
+  }
+}
+
+.preview-title-text h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: white;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.preview-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.agribank-preview-stripe {
+  height: 3px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.8));
+  border-radius: 2px;
+}
+
+.agribank-preview-close {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  color: white !important;
+  font-size: 24px !important;
+  font-weight: bold !important;
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 50% !important;
+  transition: all 0.3s ease !important;
+}
+
+.agribank-preview-close:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+  transform: scale(1.1) !important;
+}
+
+.agribank-preview-body {
+  padding: 28px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+/* Preview Info Section */
+.agribank-preview-info {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+  border: 2px solid #d1fae5;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.1);
+}
+
+.agribank-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+.agribank-info-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #ffffff, #f9fffe);
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 2px solid #bbf7d0;
+  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.1);
+}
+
+.info-icon {
+  font-size: 1.2rem;
+  width: 24px;
+  text-align: center;
+}
+
+.agribank-info-item label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.95rem;
+  min-width: 80px;
+}
+
+.info-value {
+  font-weight: 700;
+  color: #059669;
+  font-family: 'Consolas', monospace;
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid #bbf7d0;
+}
+
+.info-value.highlight {
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: white;
+  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.3);
+}
+
+.agribank-preview-badge {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 6px 12px !important;
+  border-radius: 10px !important;
+  color: white !important;
+  font-weight: 700 !important;
+  font-size: 0.85rem !important;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2) !important;
+  border: 2px solid rgba(255, 255, 255, 0.3) !important;
+  min-width: 80px !important;
+  justify-content: center !important;
+}
+
+/* Preview Table Section */
+.agribank-preview-table {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.12);
+  border: 2px solid #d1fae5;
+}
+
+.agribank-table-header {
+  background: linear-gradient(135deg, #047857, #059669, #10B981);
+  color: white;
+  padding: 20px 24px;
+  text-align: center;
+}
+
+.agribank-table-header h4 {
+  margin: 0 0 8px 0;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.table-note {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.agribank-table-wrapper {
+  max-height: 500px;
+  overflow: auto;
+  background: white;
+}
+
+.enhanced-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.agribank-preview-thead {
+  background: linear-gradient(135deg, #047857, #059669, #10B981);
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.preview-th {
+  padding: 16px 12px !important;
+  text-align: left !important;
+  font-weight: 700 !important;
+  font-size: 0.9rem !important;
+  letter-spacing: 0.03em !important;
+  text-transform: uppercase !important;
+  border-bottom: 3px solid #34d399 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.agribank-preview-tbody .enhanced-preview-row {
+  border-bottom: 1px solid #f0fdf4;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #ffffff 0%, #fafffe 100%);
+}
+
+.agribank-preview-tbody .enhanced-preview-row:hover {
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+}
+
+.agribank-preview-tbody .enhanced-preview-row:nth-child(even) {
+  background: linear-gradient(135deg, #f9fffe 0%, #f0fdf4 100%);
+}
+
+.agribank-preview-tbody .enhanced-preview-row:nth-child(even):hover {
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+}
+
+.preview-td {
+  padding: 12px !important;
+  color: #374151 !important;
+  font-size: 0.9rem !important;
+  border-right: 1px solid #f0fdf4 !important;
+  font-family: 'Consolas', monospace !important;
+  max-width: 200px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Preview Note */
+.agribank-preview-note {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  color: #92400e;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-top: 2px solid #fbbf24;
+}
+
+.note-icon {
+  font-size: 1.1rem;
+}
+
+.note-text {
+  flex: 1;
+}
+
+/* No Data States */
+.agribank-no-data,
+.agribank-no-preview {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+  background: linear-gradient(135deg, #ffffff, #f9fffe);
+  border-radius: 16px;
+  border: 2px solid #d1fae5;
+}
+
+.agribank-empty-icon,
+.no-data-icon {
+  font-size: 4rem;
+  margin-bottom: 16px;
+  opacity: 0.7;
+}
+
+.agribank-no-preview h4 {
+  color: #374151;
+  margin: 0 0 8px 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.agribank-no-preview p {
+  color: #6b7280;
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* Preview Footer */
+.agribank-preview-footer {
+  background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+  border-top: 3px solid #bbf7d0;
+  padding: 20px 28px;
+  text-align: center;
+}
+
+.agribank-btn-close {
+  background: linear-gradient(135deg, #059669, #10B981) !important;
+  color: white !important;
+  border: none !important;
+  padding: 12px 32px !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  font-size: 1rem !important;
+  cursor: pointer !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 6px 15px rgba(16, 185, 129, 0.3) !important;
+}
+
+.agribank-btn-close:hover {
+  background: linear-gradient(135deg, #047857, #059669) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4) !important;
+}
+
+/* Responsive Design for Preview Modal */
+@media (max-width: 1200px) {
+  .agribank-preview-modal {
+    max-width: 98vw;
+  }
+  
+  .agribank-info-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .agribank-preview-title {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+  
+  .preview-icon-wrapper {
+    width: 56px;
+    height: 56px;
+  }
+  
+  .preview-icon {
+    font-size: 24px;
+  }
+  
+  .preview-title-text h3 {
+    font-size: 1.5rem;
+  }
+  
+  .agribank-info-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .agribank-info-item {
+    padding: 10px 12px;
+  }
+  
+  .preview-th {
+    padding: 12px 8px !important;
+    font-size: 0.8rem !important;
+  }
+  
+  .preview-td {
+    padding: 10px 8px !important;
+    font-size: 0.85rem !important;
+    max-width: 120px !important;
+  }
+  
+  .agribank-table-wrapper {
+    max-height: 400px;
   }
 }
 </style>
