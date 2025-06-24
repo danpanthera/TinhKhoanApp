@@ -453,22 +453,22 @@ namespace TinhKhoanApp.Api.Controllers
 
                 _logger.LogInformation($"📋 Sẽ xóa {recordCount} ImportedDataRecords và {itemCount} ImportedDataItems");
 
-                // 🗑️ Xóa triệt để cả records và items (tuân theo foreign key constraints)
-                // Xóa Items trước để tránh vi phạm foreign key
-                if (itemCount > 0)
-                {
-                    _context.ImportedDataItems.RemoveRange(_context.ImportedDataItems);
-                    _logger.LogInformation($"✅ Đã đánh dấu xóa {itemCount} ImportedDataItems");
-                }
+        // 🗑️ Xóa triệt để cả records và items với Raw SQL để tránh lỗi Temporal Tables
+        using var deleteConnection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+        await deleteConnection.OpenAsync();
 
-                if (recordCount > 0)
-                {
-                    _context.ImportedDataRecords.RemoveRange(_context.ImportedDataRecords);
-                    _logger.LogInformation($"✅ Đã đánh dấu xóa {recordCount} ImportedDataRecords");
-                }
+        // Xóa Items trước để tránh vi phạm foreign key
+        if (itemCount > 0)
+        {
+            await deleteConnection.ExecuteAsync("DELETE FROM ImportedDataItems");
+            _logger.LogInformation($"✅ Đã xóa {itemCount} ImportedDataItems bằng Raw SQL");
+        }
 
-                // 💾 Lưu thay đổi với Temporal Tables (dữ liệu vẫn được backup trong history)
-                await _context.SaveChangesAsync();
+        if (recordCount > 0)
+        {
+            await deleteConnection.ExecuteAsync("DELETE FROM ImportedDataRecords");
+            _logger.LogInformation($"✅ Đã xóa {recordCount} ImportedDataRecords bằng Raw SQL");
+        }
 
                 // 🧹 Đếm và xóa các bảng dữ liệu động (nếu có)
                 int dynamicTablesCleared = 0;
