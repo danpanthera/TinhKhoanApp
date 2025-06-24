@@ -1127,39 +1127,45 @@ namespace TinhKhoanApp.Api.Controllers
                     };
                 }
 
-                var rawDataImport = new RawDataImport
+                // 📊 Xử lý dữ liệu
+                var records = await ExtractDataFromFile(file);
+                
+                // 🔧 FIX: Tạo ImportedDataRecord thay vì RawDataImport để tương thích với Temporal Tables
+                var importedDataRecord = new ImportedDataRecord
                 {
                     FileName = file.FileName,
-                    DataType = dataType.ToUpper(),
+                    FileType = dataType.ToUpper(),
+                    Category = dataType.ToUpper(),
                     ImportDate = DateTime.UtcNow,
                     StatementDate = statementDate.Value,
                     ImportedBy = "System", // TODO: Lấy từ context user
-                    Status = "Processing",
+                    Status = records.Any() ? "Completed" : "Failed",
+                    RecordsCount = records.Count,
                     Notes = notes
                 };
 
-                // 💾 Lưu file gốc
-                using var memoryStream = new MemoryStream();
-                await file.CopyToAsync(memoryStream);
-                rawDataImport.OriginalFileData = memoryStream.ToArray();
-
-                // 📊 Xử lý dữ liệu
-                var records = await ExtractDataFromFile(file);
-                rawDataImport.RecordsCount = records.Count;
-                rawDataImport.Status = records.Any() ? "Completed" : "Failed";
-
-                // TODO: Fix this - this uses old RawDataImport model but context expects Temporal.RawDataImport
-                // 💾 Lưu vào database
-                // _context.RawDataImports.Add(rawDataImport);
-                // await _context.SaveChangesAsync();
-
-                // 💾 Lưu records
-                // foreach (var record in records)
-                // {
-                //     record.RawDataImportId = rawDataImport.Id;
-                // }
-                // _context.RawDataRecords.AddRange(records);
+                // 💾 Lưu import record vào database
+                _context.ImportedDataRecords.Add(importedDataRecord);
                 await _context.SaveChangesAsync();
+
+                // 💾 Tạo ImportedDataItems từ records
+                var importedDataItems = new List<ImportedDataItem>();
+                foreach (var record in records)
+                {
+                    importedDataItems.Add(new ImportedDataItem
+                    {
+                        ImportedDataRecordId = importedDataRecord.Id,
+                        RawData = record.JsonData,
+                        ProcessedDate = DateTime.UtcNow,
+                        ProcessingNotes = "Processed successfully"
+                    });
+                }
+
+                // 💾 Lưu các data items
+                _context.ImportedDataItems.AddRange(importedDataItems);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("✅ Đã lưu {RecordsCount} records vào ImportedDataRecords và ImportedDataItems", records.Count);
 
                 // 🗂️ Tạo bảng động
                 var tableName = await CreateDynamicTable(dataType, statementDate.Value, records);
@@ -1169,7 +1175,7 @@ namespace TinhKhoanApp.Api.Controllers
                     Success = true,
                     FileName = file.FileName,
                     RecordsProcessed = records.Count,
-                    Message = $"✅ Xử lý thành công {records.Count} bản ghi",
+                    Message = $"✅ Xử lý thành công {records.Count} bản ghi vào ImportedDataRecords",
                     StatementDate = statementDate,
                     TableName = tableName
                 };
