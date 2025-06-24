@@ -33,11 +33,7 @@ namespace TinhKhoanApp.Api.Models
         [ForeignKey("ImportedDataRecordId")]
         public virtual ImportedDataRecord ImportedDataRecord { get; set; } = null!;
 
-        // 📅 Temporal Tables - System versioned columns
-        [Column("SysStartTime")]
-        public DateTime SysStartTime { get; set; }
-
-        [Column("SysEndTime")]
-        public DateTime SysEndTime { get; set; }
+        // ⚠️ Temporal Tables system versioned columns - Do NOT include as properties
+        // These are managed by SQL Server automatically as shadow properties
     }
 }

@@ -87,11 +87,87 @@ namespace TinhKhoanApp.Api.Controllers
             );
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
+        [HttpPost("setup-admin")]
+        public async Task<IActionResult> SetupAdminUser()
+        {
+            try
+            {
+                Console.WriteLine("🔧 Setting up admin user...");
+                
+                // Kiểm tra xem admin đã tồn tại chưa
+                var existingAdmin = await _context.Employees.FirstOrDefaultAsync(x => x.Username == "admin");
+                if (existingAdmin != null)
+                {
+                    Console.WriteLine("✅ Admin user already exists");
+                    return Ok(new { message = "Admin user already exists", user = new { existingAdmin.Username, existingAdmin.FullName } });
+                }
+                
+                // Tạo Unit mặc định nếu chưa có
+                var defaultUnit = await _context.Units.FirstOrDefaultAsync();
+                if (defaultUnit == null)
+                {
+                    defaultUnit = new Unit
+                    {
+                        Name = "Ban Giám Đốc",
+                        Code = "BGD",
+                        Type = "Ban"
+                    };
+                    _context.Units.Add(defaultUnit);
+                    await _context.SaveChangesAsync();
+                    Console.WriteLine("✅ Created default Unit");
+                }
+                
+                // Tạo Position mặc định nếu chưa có
+                var defaultPosition = await _context.Positions.FirstOrDefaultAsync();
+                if (defaultPosition == null)
+                {
+                    defaultPosition = new Position
+                    {
+                        Name = "Giám Đốc",
+                        Description = "Giám Đốc Agribank Lai Châu"
+                    };
+                    _context.Positions.Add(defaultPosition);
+                    await _context.SaveChangesAsync();
+                    Console.WriteLine("✅ Created default Position");
+                }
+                
+                // Tạo admin user
+                var adminUser = new Employee
+                {
+                    EmployeeCode = "ADMIN001",
+                    CBCode = "999999999",
+                    FullName = "Quản trị viên hệ thống",
+                    Username = "admin",
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin123"), // Hash password admin123
+                    Email = "admin@agribank.com.vn", 
+                    PhoneNumber = "0999999999",
+                    IsActive = true,
+                    UnitId = defaultUnit.Id,
+                    PositionId = defaultPosition.Id
+                };
+                
+                _context.Employees.Add(adminUser);
+                await _context.SaveChangesAsync();
+                
+                Console.WriteLine("✅ Admin user created successfully");
+                return Ok(new { 
+                    message = "Admin user created successfully",
+                    user = new { adminUser.Username, adminUser.FullName, adminUser.EmployeeCode }
+                });
+                
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error setting up admin user: {ex.Message}");
+                return StatusCode(500, $"Error setting up admin user: {ex.Message}");
+            }
+        }
     }
 
     public class LoginRequest
     {
-        public string Username { get; set; }
-        public string Password { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
     }
 }

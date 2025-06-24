@@ -49,7 +49,7 @@ namespace TinhKhoanApp.Api.Models
         public byte[]? CompressedData { get; set; }
         
         // 📊 Compression ratio for statistics
-        public double CompressionRatio { get; set; } = 0.0;
+        public float CompressionRatio { get; set; } = 0.0f;
 
         [StringLength(1000)]
         public string? Notes { get; set; }

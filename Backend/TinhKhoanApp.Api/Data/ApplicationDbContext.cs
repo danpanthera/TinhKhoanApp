@@ -283,13 +283,17 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
             // 📈 Cấu hình Temporal Tables cho ImportedDataItem với Columnstore Index
             modelBuilder.Entity<ImportedDataItem>(entity =>
             {
-                // Enable Temporal Table
+                // Enable Temporal Table với shadow properties
                 entity.ToTable(tb => tb.IsTemporal(ttb =>
                 {
                     ttb.UseHistoryTable("ImportedDataItems_History");
-                    ttb.HasPeriodStart("SysStartTime");
-                    ttb.HasPeriodEnd("SysEndTime");
+                    ttb.HasPeriodStart("SysStartTime").HasColumnName("SysStartTime");
+                    ttb.HasPeriodEnd("SysEndTime").HasColumnName("SysEndTime");
                 }));
+                
+                // ⚠️ QUAN TRỌNG: Định nghĩa shadow properties cho temporal columns
+                entity.Property<DateTime>("SysStartTime").HasColumnName("SysStartTime");
+                entity.Property<DateTime>("SysEndTime").HasColumnName("SysEndTime");
                 
                 // Indexes cho analytics performance
                 entity.HasIndex(e => e.ProcessedDate)

@@ -61,9 +61,11 @@ namespace TinhKhoanApp.Api.Controllers
                 _logger.LogInformation("� Lấy danh sách dữ liệu từ Temporal Tables...");
                 
                 // 🔥 LẤY DỮ LIỆU THẬT TỪ LEGACY TABLES (File Import Tracking)
-                var rawDataImports = await _context.ImportedDataRecords
+                var rawDataRecords = await _context.ImportedDataRecords
                     .OrderBy(x => x.StatementDate) // Sắp xếp theo ngày từ cũ đến mới
-                    .ThenBy(x => ExtractBranchCodeFromNotes(x.Notes)) // Sắp xếp theo mã chi nhánh tăng dần
+                    .ToListAsync();
+
+                var rawDataImports = rawDataRecords
                     .Select(x => new
                     {
                         x.Id,
@@ -87,7 +89,8 @@ namespace TinhKhoanApp.Api.Controllers
                             new { Id = x.Id * 10 + 2, ProcessedDate = x.ImportDate, ProcessingNotes = $"Import {x.FileName} completed" }
                         }
                     })
-                    .ToListAsync();
+                    .OrderBy(x => x.BranchCode) // Sắp xếp theo mã chi nhánh sau khi đã extract
+                    .ToList();
 
                 _logger.LogInformation("✅ Trả về {Count} import items từ ImportedDataRecords", rawDataImports.Count);
 
