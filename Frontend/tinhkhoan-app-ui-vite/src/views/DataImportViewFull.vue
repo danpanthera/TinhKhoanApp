@@ -816,6 +816,34 @@ const previewData = async (importId) => {
   }
 }
 
+// Các phương thức tiện ích cho view đã được nhắc đến trong template
+const getCategoryName = (dataType) => {
+  // Lấy tên category từ định nghĩa data type
+  return dataTypeDefinitions[dataType]?.category || 'Chưa phân loại'
+}
+
+const formatDateTime = (dateTimeString) => {
+  if (!dateTimeString) return 'N/A'
+  
+  try {
+    const date = new Date(dateTimeString)
+    if (isNaN(date.getTime())) {
+      return 'Thời gian không hợp lệ'
+    }
+    
+    const day = String(date.getDate()).padStart(2, '0')
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const year = date.getFullYear()
+    const hours = String(date.getHours()).padStart(2, '0')
+    const minutes = String(date.getMinutes()).padStart(2, '0')
+    
+    return `${day}/${month}/${year} ${hours}:${minutes}`
+  } catch (error) {
+    console.error('Error formatting datetime:', error)
+    return 'Lỗi format thời gian'
+  }
+}
+
 // Delete confirmation
 const confirmDelete = async (importId, fileName) => {
   if (confirm(`Bạn có chắc chắn muốn xóa bản ghi "${fileName}"?`)) {
@@ -900,14 +928,6 @@ const openImportModal = (dataType) => {
   showImportModal.value = true
 }
 
-// Đóng modal import
-const closeImportModal = () => {
-  showImportModal.value = false
-  selectedFiles.value = []
-  archivePassword.value = ''
-  importNotes.value = ''
-}
-
 // Hàm kiểm tra nếu file là file nén
 const isArchiveFile = (fileName) => {
   const archiveExtensions = ['.zip', '.rar', '.7z', '.tar', '.gz']
@@ -933,49 +953,13 @@ const handleFileSelect = (event) => {
   selectedFiles.value = Array.from(files)
 }
 
-// Xử lý xóa file đã chọn
-const removeFile = (index) => {
-  selectedFiles.value = selectedFiles.value.filter((_, i) => i !== index)
-}
-
-// Hàm xử lý import dữ liệu
-const performImport = async () => {
-  if (selectedFiles.value.length === 0) {
-    showError('Vui lòng chọn ít nhất một file để import')
-    return
-  }
+// Hàm định dạng số lượng bản ghi
+const formatRecordCount = (count) => {
+  // Nếu count không phải là số, trả về giá trị ban đầu
+  if (isNaN(parseInt(count))) return count || 0
   
-  uploading.value = true
-  uploadProgress.value = 10
-  
-  // Đây là hàm giả lập, thực tế cần tích hợp với API backend
-  try {
-    // Mô phỏng tiến trình upload
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    uploadProgress.value = 30
-    
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    uploadProgress.value = 60
-    
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    uploadProgress.value = 90
-    
-    await new Promise(resolve => setTimeout(resolve, 500))
-    uploadProgress.value = 100
-    
-    // Sau khi hoàn thành, đóng modal và hiển thị thông báo
-    setTimeout(() => {
-      closeImportModal()
-      showSuccess(`Đã import thành công dữ liệu ${selectedDataType.value}`)
-      uploading.value = false
-      // Tải lại dữ liệu
-      refreshAllData()
-    }, 500)
-  } catch (error) {
-    console.error('Error importing data:', error)
-    showError(`Lỗi khi import dữ liệu: ${error.message}`)
-    uploading.value = false
-  }
+  // Định dạng số với dấu phân cách hàng nghìn
+  return new Intl.NumberFormat('vi-VN').format(count)
 }
 </script>
 
@@ -1129,7 +1113,6 @@ const performImport = async () => {
 .agribank-btn-filter {
   background: #8B1538;
   color: white;
-  font-weight: bold;
 }
 
 .agribank-btn-filter:hover:not(:disabled) {
@@ -1218,13 +1201,11 @@ const performImport = async () => {
 .header-text h2 {
   margin: 0 0 8px 0;
   font-size: 1.8rem;
-  color: white;
 }
 
 .header-text p {
   margin: 0;
   opacity: 0.9;
-  color: white;
 }
 
 .agribank-brand-line {
@@ -1393,7 +1374,6 @@ const performImport = async () => {
 
 .modal-header h3 {
   margin: 0;
-  color: white;
 }
 
 .modal-close {
