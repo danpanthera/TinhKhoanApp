@@ -712,6 +712,45 @@ class RawDataService {
     }
   }
 
+  // ✅ Lấy danh sách import gần đây nhất
+  async getRecentImports(limit = 20) {
+    try {
+      console.log('📊 Getting recent imports with limit:', limit);
+      const response = await api.get(`${this.baseURL}/recent?limit=${limit}`);
+      
+      let data = response.data;
+      if (data && data.$values) {
+        data = data.$values;
+      }
+      
+      if (!Array.isArray(data)) {
+        data = [];
+      }
+      
+      const mappedData = data.map(item => ({
+        ...item,
+        dataType: item.category || item.dataType || item.fileType || 'UNKNOWN',
+        category: item.category || item.dataType || '',
+        fileType: item.fileType || item.dataType || '',
+        recordsCount: parseInt(item.recordsCount || 0),
+        fileName: item.fileName || 'Unknown File'
+      }));
+      
+      console.log('✅ Recent imports loaded:', mappedData.length, 'items');
+      
+      return {
+        success: true,
+        data: mappedData
+      };
+    } catch (error) {
+      console.error('❌ Error getting recent imports:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Lỗi kết nối server'
+      };
+    }
+  }
+
   // 🔧 Utility methods
 
   // 📋 Định nghĩa các loại dữ liệu và mô tả

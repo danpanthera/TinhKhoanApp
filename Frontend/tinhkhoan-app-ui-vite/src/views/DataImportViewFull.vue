@@ -383,6 +383,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import rawDataService from '@/services/rawDataService'
+import api from '@/services/api' // ✅ Import api để sử dụng trong fallback strategy
 
 // Reactive state
 const loading = ref(false)
@@ -661,6 +662,91 @@ const refreshAllData = async (skipSuccessMessage = false) => {
   } finally {
     loading.value = false
     loadingMessage.value = ''
+  }
+}
+
+// ✅ Thêm hàm refresh dữ liệu với nhiều cách fallback khác nhau  
+const refreshDataWithFallback = async () => {
+  console.log('🔄 Refresh data with multiple fallback strategies...');
+  
+  try {
+    // Chiến thuật 1: Gọi getRecentImports (nhanh nhất)
+    console.log('📊 Strategy 1: getRecentImports');
+    const recentResult = await rawDataService.getRecentImports(50);
+    
+    if (recentResult.success && recentResult.data && recentResult.data.length > 0) {
+      console.log('✅ Strategy 1 success:', recentResult.data.length, 'items');
+      allImports.value = recentResult.data;
+      calculateDataTypeStats();
+      return { success: true, data: recentResult.data, strategy: 'getRecentImports' };
+    }
+    
+    // Chiến thuật 2: Gọi getAllImports
+    console.log('📊 Strategy 2: getAllImports');
+    const importResult = await rawDataService.getAllImports();
+    
+    if (importResult.success && importResult.data && importResult.data.length > 0) {
+      console.log('✅ Strategy 2 success:', importResult.data.length, 'items');
+      allImports.value = importResult.data;
+      calculateDataTypeStats();
+      return { success: true, data: importResult.data, strategy: 'getAllImports' };
+    }
+    
+    // Chiến thuật 3: Gọi getAllData  
+    console.log('📊 Strategy 3: getAllData');
+    const dataResult = await rawDataService.getAllData();
+    
+    if (dataResult.success && dataResult.data && dataResult.data.length > 0) {
+      console.log('✅ Strategy 3 success:', dataResult.data.length, 'items');
+      allImports.value = dataResult.data;
+      calculateDataTypeStats();
+      return { success: true, data: dataResult.data, strategy: 'getAllData' };
+    }
+    
+    // Chiến thuật 4: Gọi trực tiếp API endpoint recent
+    console.log('📊 Strategy 4: Direct API recent call');
+    const directRecentResult = await api.get('/RawData/recent?limit=50');
+    
+    if (directRecentResult.data && Array.isArray(directRecentResult.data)) {
+      const mappedData = directRecentResult.data.map(item => ({
+        ...item,
+        dataType: item.category || item.dataType || item.fileType || 'UNKNOWN',
+        category: item.category || item.dataType || '',
+        recordsCount: parseInt(item.recordsCount || 0),
+        fileName: item.fileName || 'Unknown File'
+      }));
+      
+      console.log('✅ Strategy 4 success:', mappedData.length, 'items');
+      allImports.value = mappedData;
+      calculateDataTypeStats();
+      return { success: true, data: mappedData, strategy: 'directRecentAPI' };
+    }
+    
+    // Chiến thuật 5: Gọi trực tiếp API endpoint chính
+    console.log('📊 Strategy 5: Direct API call');
+    const directResult = await api.get('/RawData');
+    
+    if (directResult.data && Array.isArray(directResult.data)) {
+      const mappedData = directResult.data.map(item => ({
+        ...item,
+        dataType: item.category || item.dataType || item.fileType || 'UNKNOWN',
+        category: item.category || item.dataType || '',
+        recordsCount: parseInt(item.recordsCount || 0),
+        fileName: item.fileName || 'Unknown File'
+      }));
+      
+      console.log('✅ Strategy 5 success:', mappedData.length, 'items');
+      allImports.value = mappedData;
+      calculateDataTypeStats();
+      return { success: true, data: mappedData, strategy: 'directAPI' };
+    }
+    
+    console.log('❌ All strategies failed');
+    return { success: false, error: 'All refresh strategies failed' };
+    
+  } catch (error) {
+    console.error('❌ Error in refreshDataWithFallback:', error);
+    return { success: false, error: error.message };
   }
 }
 
@@ -1104,48 +1190,26 @@ const performImport = async () => {
         // Đóng modal import
         closeImportModal()
         
-        // Làm mới dữ liệu (không hiển thị thông báo để tránh gây rối)
-        await refreshAllData(true)
-        
-        // Tự động hiển thị dữ liệu vừa import
+        // ✅ FIX: Làm mới dữ liệu với độ trễ đủ để backend xử lý xong
         setTimeout(async () => {
-          console.log('🔍 Bắt đầu hiển thị dữ liệu sau khi import thành công cho loại:', selectedDataType.value);
+          console.log('� Refresh data sau khi import thành công...');
           
           try {
-            // Tải lại tất cả dữ liệu từ server
             loading.value = true
             loadingMessage.value = `Đang tải dữ liệu mới nhất...`
             
-            console.log('📊 Refresh data sau khi import...');
-            
-            // Refresh lại toàn bộ dữ liệu từ server với delay để đảm bảo data đã được lưu
-            await new Promise(resolve => setTimeout(resolve, 500)); // Delay 500ms
-            await refreshAllData(true)
+            // ✅ FIX: Sử dụng hàm refresh với fallback strategies
+            const refreshResult = await refreshDataWithFallback()
             
             console.log('📊 Dữ liệu sau khi refresh:', {
+              success: refreshResult.success,
+              strategy: refreshResult.strategy,
               totalImports: allImports.value.length,
               dataTypes: allImports.value.map(imp => imp.dataType || imp.category || imp.fileType).filter((v, i, a) => a.indexOf(v) === i)
             });
             
-            if (allImports.value.length === 0) {
-              console.log('⚠️ allImports rỗng, thử gọi API trực tiếp...');
-              
-              // Thử gọi API trực tiếp để lấy dữ liệu
-              const result = await rawDataService.getAllData();
-              
-              if (result.success && result.data && result.data.length > 0) {
-                console.log(`� API trả về ${result.data.length} bản ghi`);
-                
-                // Hiển thị tất cả dữ liệu mới nhất
-                filteredResults.value = result.data;
-                showSuccess(`Hiển thị ${result.data.length} bản ghi import mới nhất`);
-                showDataViewModal.value = true;
-              } else {
-                console.log('❌ API không trả về dữ liệu:', result);
-                showSuccess(`Import thành công! Vui lòng làm mới trang để xem dữ liệu.`);
-              }
-            } else {
-              // Lọc dữ liệu theo loại đã import
+            if (refreshResult.success && allImports.value.length > 0) {
+              // ✅ Lọc và hiển thị dữ liệu theo loại đã import
               const dataTypeResults = allImports.value.filter(imp => {
                 const typeMatches = 
                   (imp.dataType && imp.dataType.includes(selectedDataType.value)) || 
@@ -1159,31 +1223,39 @@ const performImport = async () => {
               
               if (dataTypeResults.length > 0) {
                 filteredResults.value = dataTypeResults;
-                showSuccess(`Hiển thị ${dataTypeResults.length} import(s) cho loại ${selectedDataType.value}`);
+                showSuccess(`✅ Hiển thị ${dataTypeResults.length} import(s) cho loại ${selectedDataType.value}`);
                 showDataViewModal.value = true;
               } else {
-                // Nếu không tìm thấy theo loại cụ thể, hiển thị tất cả dữ liệu mới nhất
-                console.log('⚠️ Không tìm thấy dữ liệu theo loại, hiển thị tất cả');
+                // ✅ Hiển thị tất cả dữ liệu mới nhất nếu không tìm thấy theo loại cụ thể
+                filteredResults.value = allImports.value.slice(0, 10); // Hiển thị 10 import mới nhất
+                showSuccess(`✅ Hiển thị ${filteredResults.value.length} bản ghi import mới nhất`);
+                showDataViewModal.value = true;
+              }
+            } else {
+              console.log('⚠️ Không có dữ liệu sau khi refresh, thử gọi API trực tiếp...');
+              
+              // Thử gọi API trực tiếp để lấy dữ liệu
+              const directResult = await rawDataService.getAllData();
+              
+              if (directResult.success && directResult.data && directResult.data.length > 0) {
+                console.log(`✅ API trực tiếp trả về ${directResult.data.length} bản ghi`);
                 
-                if (allImports.value.length > 0) {
-                  filteredResults.value = allImports.value;
-                  showSuccess(`Hiển thị ${allImports.value.length} bản ghi import mới nhất`);
-                  showDataViewModal.value = true;
-                } else {
-                  showSuccess(`Import thành công! Vui lòng làm mới trang để xem dữ liệu.`);
-                }
+                filteredResults.value = directResult.data.slice(0, 10); // Hiển thị 10 bản ghi mới nhất
+                showSuccess(`✅ Hiển thị ${filteredResults.value.length} bản ghi import mới nhất`);
+                showDataViewModal.value = true;
+              } else {
+                showSuccess(`✅ Import thành công! Vui lòng nhấn "🔄 Tải lại dữ liệu" để xem kết quả.`);
               }
             }
             
           } catch (error) {
             console.error('❌ Error fetching data after import:', error);
-            // Thay vì hiển thị lỗi, chỉ thông báo import thành công
-            showSuccess(`Import thành công! Vui lòng làm mới trang để xem dữ liệu.`);
+            showSuccess(`✅ Import thành công! Vui lòng nhấn "🔄 Tải lại dữ liệu" để xem kết quả.`);
           } finally {
             loading.value = false;
             loadingMessage.value = '';
           }
-        }, 2000); // Tăng delay thành 2 giây để đảm bảo backend đã xử lý xong
+        }, 2500); // ✅ Tăng delay thành 2.5 giây để đảm bảo backend xử lý xong
       }, 1000)
     } else {
       showDetailedError(`Lỗi khi import dữ liệu`, response)

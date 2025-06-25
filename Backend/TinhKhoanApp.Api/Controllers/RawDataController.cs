@@ -58,11 +58,11 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                _logger.LogInformation("� Lấy danh sách dữ liệu từ Temporal Tables...");
+                _logger.LogInformation("🔍 Lấy danh sách dữ liệu từ Temporal Tables...");
                 
                 // 🔥 LẤY DỮ LIỆU THẬT TỪ LEGACY TABLES (File Import Tracking)
                 var rawDataRecords = await _context.ImportedDataRecords
-                    .OrderBy(x => x.StatementDate) // Sắp xếp theo ngày từ cũ đến mới
+                    .OrderByDescending(x => x.ImportDate) // ✅ Sắp xếp theo ngày import mới nhất
                     .ToListAsync();
 
                 var rawDataImports = rawDataRecords
@@ -70,7 +70,9 @@ namespace TinhKhoanApp.Api.Controllers
                     {
                         x.Id,
                         x.FileName,
-                        DataType = x.FileType, // 🔧 Fix: Map FileType to DataType (FileType chứa DataType thực tế)
+                        DataType = x.Category ?? x.FileType, // ✅ Ưu tiên Category trước, fallback về FileType
+                        Category = x.Category ?? x.FileType, // ✅ Đảm bảo Category không null
+                        FileType = x.FileType, // ✅ Giữ nguyên FileType
                         x.ImportDate,
                         x.StatementDate,
                         x.ImportedBy,
@@ -89,7 +91,7 @@ namespace TinhKhoanApp.Api.Controllers
                             new { Id = x.Id * 10 + 2, ProcessedDate = x.ImportDate, ProcessingNotes = $"Import {x.FileName} completed" }
                         }
                     })
-                    .OrderBy(x => x.BranchCode) // Sắp xếp theo mã chi nhánh sau khi đã extract
+                    .OrderByDescending(x => x.ImportDate) // ✅ Sắp xếp theo ngày import mới nhất trước
                     .ToList();
 
                 _logger.LogInformation("✅ Trả về {Count} import items từ ImportedDataRecords", rawDataImports.Count);
@@ -1464,6 +1466,53 @@ namespace TinhKhoanApp.Api.Controllers
                     Message = $"Lỗi xử lý file: {ex.Message}",
                     FileName = file.FileName
                 };
+            }
+        }
+
+        // ✅ API mới: Lấy danh sách import gần đây nhất (để hiển thị ngay sau khi upload)
+        [HttpGet("recent")]
+        public async Task<ActionResult<IEnumerable<object>>> GetRecentImports([FromQuery] int limit = 20)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Lấy {Limit} import gần đây nhất", limit);
+
+                var recentImports = await _context.ImportedDataRecords
+                    .OrderByDescending(x => x.ImportDate)
+                    .Take(limit)
+                    .Select(x => new
+                    {
+                        x.Id,
+                        x.FileName,
+                        DataType = x.Category ?? x.FileType,
+                        Category = x.Category ?? x.FileType,
+                        FileType = x.FileType,
+                        x.ImportDate,
+                        x.StatementDate,
+                        x.ImportedBy,
+                        x.Status,
+                        x.RecordsCount,
+                        x.Notes,
+                        BranchCode = ExtractBranchCodeFromNotes(x.Notes),
+                        IsArchiveFile = false,
+                        ArchiveType = (string?)null,
+                        RequiresPassword = false,
+                        ExtractedFilesCount = 0,
+                        RecordsPreview = new List<object>
+                        {
+                            new { Id = x.Id * 10 + 1, ProcessedDate = x.ImportDate, ProcessingNotes = $"{x.FileType} data processed successfully" }
+                        }
+                    })
+                    .ToListAsync();
+
+                _logger.LogInformation("✅ Trả về {Count} import gần đây nhất", recentImports.Count);
+
+                return Ok(recentImports);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Lỗi khi lấy danh sách import gần đây nhất");
+                return StatusCode(500, new { message = "Lỗi server khi lấy dữ liệu gần đây nhất", error = ex.Message });
             }
         }
     }

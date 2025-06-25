@@ -276,8 +276,8 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
                 entity.HasIndex(e => e.Status)
                       .HasDatabaseName("IX_ImportedDataRecords_Status");
                       
-                // Thiết lập precision cho các trường decimal
-                entity.Property(e => e.CompressionRatio).HasPrecision(5, 4);
+                // Cấu hình CompressionRatio như float (double trong C#) để match với database
+                entity.Property(e => e.CompressionRatio).HasColumnType("float");
             });
 
             // 📈 Cấu hình Temporal Tables cho ImportedDataItem với Columnstore Index
