@@ -79,7 +79,7 @@ namespace TinhKhoanApp.Api.Controllers
                         x.Status,
                         x.RecordsCount,
                         x.Notes,
-                        BranchCode = ExtractBranchCodeFromNotes(x.Notes), // Extract branch code from Notes
+                        BranchCode = "7800", // Default branch code - will be extracted later
                         IsArchiveFile = false, // Default value since not in ImportedDataRecord
                         ArchiveType = (string?)null, // Default value
                         RequiresPassword = false, // Default value
@@ -92,11 +92,68 @@ namespace TinhKhoanApp.Api.Controllers
                         }
                     })
                     .OrderByDescending(x => x.ImportDate) // ✅ Sắp xếp theo ngày import mới nhất trước
+                    .Select(x => new
+                    {
+                        x.Id,
+                        x.FileName,
+                        x.DataType,
+                        x.Category,
+                        x.FileType,
+                        x.ImportDate,
+                        x.StatementDate,
+                        x.ImportedBy,
+                        x.Status,
+                        x.RecordsCount,
+                        x.Notes,
+                        BranchCode = "7800", // Default branch code - will be extracted later
+                        x.IsArchiveFile,
+                        x.ArchiveType,
+                        x.RequiresPassword,
+                        x.ExtractedFilesCount,
+                        x.RecordsPreview
+                    })
                     .ToList();
 
-                _logger.LogInformation("✅ Trả về {Count} import items từ ImportedDataRecords", rawDataImports.Count);
+                // Post-process to extract BranchCode from Notes
+                var processedRawDataImports = new List<object>();
+                foreach (var item in rawDataImports)
+                {
+                    // Inline branch code extraction to avoid EF translation issues
+                    string branchCode = "7800"; // Default
+                    if (!string.IsNullOrEmpty(item.Notes))
+                    {
+                        var match = Regex.Match(item.Notes, @"Branch: (78\d\d)");
+                        if (match.Success)
+                        {
+                            branchCode = match.Groups[1].Value;
+                        }
+                    }
+                    
+                    processedRawDataImports.Add(new
+                    {
+                        item.Id,
+                        item.FileName,
+                        item.DataType,
+                        item.Category,
+                        item.FileType,
+                        item.ImportDate,
+                        item.StatementDate,
+                        item.ImportedBy,
+                        item.Status,
+                        item.RecordsCount,
+                        item.Notes,
+                        BranchCode = branchCode,
+                        item.IsArchiveFile,
+                        item.ArchiveType,
+                        item.RequiresPassword,
+                        item.ExtractedFilesCount,
+                        item.RecordsPreview
+                    });
+                }
 
-                return Ok(rawDataImports);
+                _logger.LogInformation("✅ Trả về {Count} import items từ ImportedDataRecords", processedRawDataImports.Count);
+
+                return Ok(processedRawDataImports);
             }
             catch (Exception ex)
             {
@@ -104,21 +161,7 @@ namespace TinhKhoanApp.Api.Controllers
                 return StatusCode(500, new { message = "Lỗi server khi lấy dữ liệu từ database", error = ex.Message });
             }
         }
-        
-        // Helper method to extract branch code from Notes field
-        private string ExtractBranchCodeFromNotes(string? notes)
-        {
-            if (string.IsNullOrEmpty(notes))
-                return "7800"; // Default branch code
-                
-            var match = Regex.Match(notes, @"Branch: (78\d\d)");
-            if (match.Success)
-            {
-                return match.Groups[1].Value;
-            }
-            
-            return "7800"; // Default if not found
-        }
+
 
 
 
@@ -208,7 +251,7 @@ namespace TinhKhoanApp.Api.Controllers
         }
 
         // 👁️ GET: api/RawData/{id}/preview - Xem trước dữ liệu đã import
-        [HttpGet("{id}/preview")]
+        [HttpGet("{id:int}/preview")]
         public async Task<ActionResult<object>> PreviewRawDataImport(int id)
         {
             try
@@ -367,7 +410,7 @@ namespace TinhKhoanApp.Api.Controllers
         }
 
         // 👁️ GET: api/RawData/{id} - Lấy chi tiết một mẫu dữ liệu thô từ Temporal Tables
-        [HttpGet("{id}")]
+        [HttpGet("{id:int}")]
         public async Task<ActionResult<object>> GetRawDataImport(int id)
         {
             try
@@ -1355,43 +1398,80 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                // Tìm pattern ngày trong tên file (yyyyMMdd)
-                var dateMatch = System.Text.RegularExpressions.Regex.Match(fileName, @"(\d{8})");
-                if (dateMatch.Success)
+                // Try multiple patterns for date extraction
+                var patterns = new[]
                 {
-                    var dateStr = dateMatch.Groups[1].Value;
-                    if (DateTime.TryParseExact(dateStr, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out var date))
+                    @"(\d{8})", // YYYYMMDD anywhere in filename
+                    @"(\d{4}-\d{2}-\d{2})", // YYYY-MM-DD format
+                    @"(\d{2}_\d{2}_\d{4})" // DD_MM_YYYY format
+                };
+                
+                foreach (var pattern in patterns)
+                {
+                    var match = Regex.Match(fileName, pattern);
+                    if (match.Success)
                     {
-                        return date;
+                        var dateStr = match.Groups[1].Value;
+                        
+                        // Handle different formats
+                        if (dateStr.Length == 8 && dateStr.All(char.IsDigit))
+                        {
+                            // YYYYMMDD format
+                            if (DateTime.TryParseExact(dateStr, "yyyyMMdd", null, DateTimeStyles.None, out var date1))
+                                return date1;
+                        }
+                        else if (dateStr.Contains("-"))
+                        {
+                            // YYYY-MM-DD format
+                            if (DateTime.TryParse(dateStr, out var date2))
+                                return date2;
+                        }
+                        else if (dateStr.Contains("_"))
+                        {
+                            // DD_MM_YYYY format
+                            var parts = dateStr.Split('_');
+                            if (parts.Length == 3 && 
+                                int.TryParse(parts[0], out var day) &&
+                                int.TryParse(parts[1], out var month) &&
+                                int.TryParse(parts[2], out var year))
+                            {
+                                return new DateTime(year, month, day);
+                            }
+                        }
                     }
                 }
+                
+                _logger.LogWarning("⚠️ Không tìm thấy ngày hợp lệ trong tên file: {FileName}", fileName);
                 return null;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "❌ Lỗi khi trích xuất ngày từ tên file: {FileName}", fileName);
                 return null;
             }
         }
         
-        // ✅ Thêm method ExtractBranchCode bị thiếu
-        private string ExtractBranchCode(string fileName)
+        // ✅ Extract branch code from filename (expected format: 78XX)
+        private string? ExtractBranchCode(string fileName)
         {
             try
             {
-                // Tìm mã chi nhánh trong tên file (4 số đầu)
-                var branchMatch = System.Text.RegularExpressions.Regex.Match(fileName, @"^(\d{4})_");
-                if (branchMatch.Success)
+                var match = Regex.Match(fileName, @"(78\d{2})");
+                if (match.Success)
                 {
-                    return branchMatch.Groups[1].Value;
+                    return match.Groups[1].Value;
                 }
-                return "7800"; // Mặc định Lai Châu
+                
+                _logger.LogInformation("ℹ️ Không tìm thấy mã chi nhánh trong tên file: {FileName}, sử dụng mặc định 7800", fileName);
+                return "7800";
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "❌ Lỗi khi trích xuất mã chi nhánh từ tên file: {FileName}", fileName);
                 return "7800";
             }
         }
-        
+
         // ✅ Thêm method CreateDynamicTable bị thiếu (sửa thành sync)
         private string CreateDynamicTable(string dataType, DateTime statementDate, string branchCode, List<Dictionary<string, object>> records)
         {
@@ -1411,7 +1491,7 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
         
-        // ✅ Thêm method ProcessSingleFile bị thiếu
+        // ✅ Thêm method ProcessSingleFile bị thiếu - SỬA ĐỂ LƯU VÀO DATABASE
         private async Task<RawDataImportResult> ProcessSingleFile(IFormFile file, string dataType, string notes)
         {
             try
@@ -1437,6 +1517,13 @@ namespace TinhKhoanApp.Api.Controllers
                 var records = new List<Dictionary<string, object>>();
                 var headers = lines[0].Split(',').Select(h => h.Trim('"').Trim()).ToList();
                 
+                // Trích xuất ngày sao kê từ tên file
+                var statementDate = ExtractStatementDate(file.FileName) ?? DateTime.Now.Date;
+                var branchCode = ExtractBranchCode(file.FileName) ?? "7800";
+                
+                _logger.LogInformation("🔍 Trích xuất từ file {FileName}: StatementDate={StatementDate}, BranchCode={BranchCode}", 
+                    file.FileName, statementDate.ToString("yyyy-MM-dd"), branchCode);
+                
                 for (int i = 1; i < lines.Length; i++)
                 {
                     var values = lines[i].Split(',').Select(v => v.Trim('"').Trim()).ToList();
@@ -1446,15 +1533,60 @@ namespace TinhKhoanApp.Api.Controllers
                     {
                         record[headers[j]] = values[j];
                     }
+                    
+                    // Thêm metadata
+                    record["BranchCode"] = branchCode;
+                    record["StatementDate"] = statementDate.ToString("yyyy-MM-dd");
+                    record["ImportDate"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    record["ImportedBy"] = "System";
+                    
                     records.Add(record);
                 }
+                
+                // 💾 LƯU VÀO DATABASE
+                var importedDataRecord = new ImportedDataRecord
+                {
+                    FileName = file.FileName,
+                    FileType = dataType,
+                    Category = dataType,
+                    ImportDate = DateTime.UtcNow,
+                    StatementDate = statementDate,
+                    ImportedBy = "System",
+                    Status = "Completed",
+                    RecordsCount = records.Count,
+                    Notes = $"{notes} - Branch: {branchCode}"
+                };
+                
+                _context.ImportedDataRecords.Add(importedDataRecord);
+                await _context.SaveChangesAsync();
+                
+                _logger.LogInformation("✅ Đã lưu ImportedDataRecord ID={Id} với {Count} records", 
+                    importedDataRecord.Id, records.Count);
+                
+                // 💾 LƯU CÁC ITEMS
+                foreach (var record in records)
+                {
+                    var item = new ImportedDataItem
+                    {
+                        ImportedDataRecordId = importedDataRecord.Id,
+                        RawData = System.Text.Json.JsonSerializer.Serialize(record),
+                        ProcessedDate = DateTime.UtcNow,
+                        ProcessingNotes = $"Processed successfully - Branch: {branchCode}"
+                    };
+                    _context.ImportedDataItems.Add(item);
+                }
+                
+                await _context.SaveChangesAsync();
+                _logger.LogInformation("✅ Đã lưu {Count} ImportedDataItems", records.Count);
                 
                 return new RawDataImportResult
                 {
                     Success = true,
-                    Message = $"Đã xử lý thành công {records.Count} records",
+                    Message = $"Đã import thành công {records.Count} records vào database",
                     FileName = file.FileName,
-                    RecordsProcessed = records.Count
+                    RecordsProcessed = records.Count,
+                    DataType = dataType,
+                    StatementDate = statementDate
                 };
             }
             catch (Exception ex)
@@ -1471,48 +1603,138 @@ namespace TinhKhoanApp.Api.Controllers
 
         // ✅ API mới: Lấy danh sách import gần đây nhất (để hiển thị ngay sau khi upload)
         [HttpGet("recent")]
-        public async Task<ActionResult<IEnumerable<object>>> GetRecentImports([FromQuery] int limit = 20)
+        public async Task<ActionResult<IEnumerable<object>>> GetRecentImportsFixed([FromQuery] int limit = 20)
         {
             try
             {
                 _logger.LogInformation("🔍 Lấy {Limit} import gần đây nhất", limit);
 
-                var recentImports = await _context.ImportedDataRecords
+                // Simplest possible approach - no projections at all
+                var rawDataList = await _context.ImportedDataRecords
                     .OrderByDescending(x => x.ImportDate)
                     .Take(limit)
-                    .Select(x => new
+                    .ToListAsync();
+
+                // Build the response in memory 
+                var result = new List<object>();
+                foreach (var item in rawDataList)
+                {
+                    // Extract branch code from notes
+                    string branchCode = "7800"; // Default
+                    if (!string.IsNullOrEmpty(item.Notes))
                     {
-                        x.Id,
-                        x.FileName,
-                        DataType = x.Category ?? x.FileType,
-                        Category = x.Category ?? x.FileType,
-                        FileType = x.FileType,
-                        x.ImportDate,
-                        x.StatementDate,
-                        x.ImportedBy,
-                        x.Status,
-                        x.RecordsCount,
-                        x.Notes,
-                        BranchCode = ExtractBranchCodeFromNotes(x.Notes),
+                        var match = Regex.Match(item.Notes, @"Branch: (78\d\d)");
+                        if (match.Success)
+                        {
+                            branchCode = match.Groups[1].Value;
+                        }
+                    }
+
+                    result.Add(new
+                    {
+                        item.Id,
+                        item.FileName,
+                        DataType = item.Category ?? item.FileType,
+                        Category = item.Category ?? item.FileType,
+                        FileType = item.FileType,
+                        item.ImportDate,
+                        item.StatementDate,
+                        item.ImportedBy,
+                        item.Status,
+                        item.RecordsCount,
+                        item.Notes,
+                        BranchCode = branchCode,
                         IsArchiveFile = false,
                         ArchiveType = (string?)null,
                         RequiresPassword = false,
                         ExtractedFilesCount = 0,
-                        RecordsPreview = new List<object>
-                        {
-                            new { Id = x.Id * 10 + 1, ProcessedDate = x.ImportDate, ProcessingNotes = $"{x.FileType} data processed successfully" }
-                        }
-                    })
-                    .ToListAsync();
+                        RecordsPreview = new List<object>()
+                    });
+                }
 
-                _logger.LogInformation("✅ Trả về {Count} import gần đây nhất", recentImports.Count);
+                _logger.LogInformation("✅ Trả về {Count} import gần đây nhất", result.Count);
 
-                return Ok(recentImports);
+                return Ok(result);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "💥 Lỗi khi lấy danh sách import gần đây nhất");
                 return StatusCode(500, new { message = "Lỗi server khi lấy dữ liệu gần đây nhất", error = ex.Message });
+            }
+        }
+
+        // ✅ Simple test endpoint with no database access
+        [HttpGet("test-simple")]
+        public ActionResult<object> GetSimpleTest()
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Simple test endpoint");
+
+                var result = new
+                {
+                    message = "Simple test successful",
+                    timestamp = DateTime.UtcNow,
+                    version = "1.0.0"
+                };
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error in simple test endpoint");
+                return StatusCode(500, new { message = "Error in simple test", error = ex.Message });
+            }
+        }
+
+        // ✅ Brand new API: Use raw SQL to completely bypass Entity Framework type mapping issues
+        [HttpGet("imports/latest")]
+        public async Task<ActionResult<IEnumerable<object>>> GetLatestImports([FromQuery] int limit = 20)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Raw SQL implementation - getting {Limit} latest imports", limit);
+
+                // Use raw SQL to bypass Entity Framework type mapping completely
+                using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+                await connection.OpenAsync();
+                
+                var sql = @"
+                    SELECT TOP(@Limit) 
+                        Id,
+                        ImportDate,
+                        FileName,
+                        FileType,
+                        Category,
+                        ImportedBy,
+                        RecordsCount,
+                        Notes
+                    FROM ImportedDataRecords 
+                    ORDER BY ImportDate DESC";
+                
+                var rawResults = await connection.QueryAsync(sql, new { Limit = limit });
+                
+                // Build response manually from raw data
+                var result = rawResults.Select(x => new
+                {
+                    id = (int)x.Id,
+                    importDate = (DateTime)x.ImportDate,
+                    fileName = (string)(x.FileName ?? ""),
+                    fileType = (string)(x.FileType ?? ""),
+                    category = (string)(x.Category ?? ""),
+                    importedBy = (string)(x.ImportedBy ?? ""),
+                    recordCount = (int)x.RecordsCount,
+                    note = (string)(x.Notes ?? ""),
+                    branchCode = "N/A"
+                }).ToList();
+
+                _logger.LogInformation("✅ Successfully retrieved {Count} imports using raw SQL", result.Count);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error in raw SQL GetLatestImports implementation");
+                return StatusCode(500, new { message = "Error getting latest imports", error = ex.Message });
             }
         }
     }

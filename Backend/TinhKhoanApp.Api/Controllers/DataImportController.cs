@@ -1365,7 +1365,7 @@ namespace TinhKhoanApp.Api.Controllers
 
     public class DataPreviewResponse
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
         public required string FileName { get; set; }
         public required string Category { get; set; }
         public DateTime ImportDate { get; set; }

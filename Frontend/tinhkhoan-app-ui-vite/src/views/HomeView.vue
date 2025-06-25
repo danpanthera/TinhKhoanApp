@@ -193,20 +193,80 @@ onUnmounted(() => {
   text-overflow: clip;
 }
 
-/* Dòng 1: AGRIBANK LAI CHAU CENTER */
+/* Dòng 1: AGRIBANK LAI CHAU CENTER - HIỆU ỨNG CHUYỂN MÀU ĐUỆT ĐỜI */
 .adaptive-text-line-1 {
   font-size: clamp(1.8rem, 8vw, 6.5rem);
   letter-spacing: clamp(0.02em, 0.5vw, 0.08em);
   transform: scale(1);
   font-family: 'Montserrat', 'Roboto', sans-serif;
   font-weight: 800;
-  color: #8B1538;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
-  will-change: transform;
+  /* Gradient chuyển màu từ đỏ bordeaux sang trắng ngọc trai */
+  background: linear-gradient(45deg, 
+    #8B1538 0%,     /* Đỏ bordeaux đậm */
+    #C41E3A 25%,    /* Đỏ bordeaux sáng */
+    #f5f5f1 50%,    /* Trắng ngọc trai */
+    #C41E3A 75%,    /* Đỏ bordeaux sáng */
+    #8B1538 100%    /* Đỏ bordeaux đậm */
+  );
+  background-size: 400% 400%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  /* Animation chuyển màu mượt mà */
+  animation: agribank-gradient-flow 4s ease-in-out infinite;
+  /* Hiệu ứng đổ bóng để tạo độ sâu */
+  filter: drop-shadow(0 4px 8px rgba(139, 21, 56, 0.3))
+          drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  will-change: transform, background-position;
   word-spacing: clamp(-0.05em, 0vw, 0.02em);
+  /* Thêm hiệu ứng shimmer nhẹ */
+  position: relative;
 }
 
-/* Dòng 2: HỆ THỐNG QUẢN LÝ KHOÁN | HỆ THỐNG BÁO CÁO */
+/* Keyframes cho hiệu ứng chuyển màu gradient */
+@keyframes agribank-gradient-flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Hiệu ứng shimmer overlay cho dòng chữ chính */
+.adaptive-text-line-1::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(245, 245, 241, 0.6) 50%, 
+    transparent 100%
+  );
+  animation: shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Keyframes cho hiệu ứng shimmer */
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  50% {
+    left: 100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Dòng 2: HỆ THỐNG QUẢN LÝ KHOÁN - HIỆU ỨNG BỔ TRỢ */
 .adaptive-text-line-2 {
   font-size: clamp(1rem, 4vw, 2.8rem);
   letter-spacing: clamp(0.01em, 0.3vw, 0.05em);
@@ -214,8 +274,29 @@ onUnmounted(() => {
   will-change: transform;
   font-family: 'Roboto Condensed', 'Arial', sans-serif;
   font-weight: 500;
+  /* Gradient nhẹ nhàng hơn cho dòng phụ */
+  background: linear-gradient(45deg, 
+    #8B1538 0%,     /* Đỏ bordeaux */
+    #A91B47 50%,    /* Đỏ bordeaux nhạt */
+    #8B1538 100%    /* Đỏ bordeaux */
+  );
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: subtitle-gradient 5s ease-in-out infinite;
   opacity: 0.9;
   word-spacing: clamp(-0.03em, 0vw, 0.01em);
+}
+
+/* Keyframes cho dòng phụ */
+@keyframes subtitle-gradient {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 /* Media queries cho font size */
@@ -277,25 +358,15 @@ onUnmounted(() => {
   font-size: clamp(2.5rem, 8vw, 6.5rem);
   font-weight: 800;
   font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
-  color: #8B1538 !important;
   margin-bottom: 25px;
-  text-shadow: 
-    0 8px 16px rgba(139, 21, 56, 0.4),
-    0 4px 8px rgba(0, 0, 0, 0.3),
-    0 2px 4px rgba(139, 21, 56, 0.6);
   line-height: 1.1;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  background: none;
-  -webkit-background-clip: unset;
-  -webkit-text-fill-color: #8B1538;
-  background-clip: unset;
-  transform: none;
-  filter: drop-shadow(0 10px 20px rgba(139, 21, 56, 0.3));
   width: 100%;
   max-width: 100%;
   overflow: visible;
   text-align: center;
+  /* Loại bỏ màu cũ để gradient trong .adaptive-text-line-1 hoạt động */
 }
 
 .hero-logo {
@@ -315,27 +386,17 @@ onUnmounted(() => {
 .hero-subtitle {
   font-size: clamp(1.2rem, 4vw, 2.6rem);
   font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
-  color: #8B1538 !important;
   margin-bottom: 0;
   margin-top: 5px;
   font-weight: 700;
   font-style: normal;
-  text-shadow: 
-    0 6px 12px rgba(139, 21, 56, 0.35),
-    0 3px 6px rgba(0, 0, 0, 0.25),
-    0 1px 3px rgba(139, 21, 56, 0.5);
   letter-spacing: 0.05em;
   line-height: 1.3;
-  background: none;
-  -webkit-background-clip: unset;
-  -webkit-text-fill-color: #8B1538;
-  background-clip: unset;
-  transform: none;
-  filter: drop-shadow(0 6px 12px rgba(139, 21, 56, 0.25));
   width: 100%;
   max-width: 100%;
   overflow: visible;
   text-align: center;
+  /* Loại bỏ màu cứng để gradient trong .adaptive-text-line-2 hoạt động */
 }
 
 /* Responsive Design - Enhanced */
