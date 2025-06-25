@@ -44,7 +44,7 @@ internal class Program
                 // Dòng này sẽ yêu cầu System.Text.Json đọc và ghi Enum dưới dạng chuỗi tên của chúng.
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 // --- KẾT THÚC PHẦN THÊM ---
-                options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+                options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
             });        // 3.5. Đăng ký các business services        builder.Services.AddScoped<IKpiScoringService, KpiScoringService>();
         builder.Services.AddScoped<IEmployeeKpiAssignmentService, EmployeeKpiAssignmentService>();
         builder.Services.AddScoped<UnitKpiScoringService>();

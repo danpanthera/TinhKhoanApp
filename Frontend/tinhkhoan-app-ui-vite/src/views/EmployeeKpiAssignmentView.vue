@@ -308,7 +308,7 @@ const targetErrors = ref({})
 // Lọc 23 bảng KPI dành cho Cán bộ
 const staffKpiTables = computed(() => {
   return kpiTables.value
-    .filter(table => table.category === 'Dành cho Cán bộ')
+    .filter(table => table.category === 'Vai trò cán bộ')
     .sort((a, b) => (a.tableName || '').localeCompare(b.tableName || ''))
 })
 
