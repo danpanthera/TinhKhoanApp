@@ -205,6 +205,17 @@
               />
             </div>
             
+            <!-- Upload progress indicator -->
+            <div v-if="uploading" class="upload-progress-container">
+              <div class="progress-bar-wrapper">
+                <div class="progress-bar" :style="{ width: `${uploadProgress}%` }"></div>
+              </div>
+              <div class="progress-details">
+                <span class="progress-percentage">{{ uploadProgress }}%</span>
+                <span class="progress-status">{{ getUploadStatusText() }}</span>
+              </div>
+            </div>
+            
             <!-- Ghi chú -->
             <div class="form-group">
               <label class="form-label">Ghi chú:</label>
@@ -229,6 +240,112 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal hiển thị dữ liệu đã import -->
+    <div v-if="showDataViewModal" class="modal-overlay" @click="closeDataViewModal">
+      <div class="modal-content data-view-modal" @click.stop>
+        <div class="modal-header">
+          <h3>Dữ liệu {{ selectedDataType }} {{ statementDateFormatted }}</h3>
+          <button @click="closeDataViewModal" class="modal-close">×</button>
+        </div>
+        <div class="modal-body">
+          <div v-if="filteredResults.length > 0" class="data-table-container">
+            <table class="data-table enhanced-table">
+              <thead class="agribank-thead">
+                <tr>
+                  <th>Tên file</th>
+                  <th>Ngày import</th>
+                  <th>Số bản ghi</th>
+                  <th>Trạng thái</th>
+                  <th>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody class="agribank-tbody">
+                <tr v-for="(item, index) in filteredResults" :key="index">
+                  <td>{{ item.fileName }}</td>
+                  <td>{{ formatDateTime(item.importDate) }}</td>
+                  <td class="agribank-number">{{ formatRecordCount(item.recordsCount) }}</td>
+                  <td>{{ item.status }}</td>
+                  <td>
+                    <button 
+                      @click="previewData(item.id)" 
+                      class="btn-action btn-view"
+                      title="Xem chi tiết"
+                    >
+                      👁️
+                    </button>
+                    <button 
+                      @click="confirmDelete(item.id, item.fileName)" 
+                      class="btn-action btn-delete"
+                      title="Xóa bản ghi"
+                    >
+                      🗑️
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div v-else class="no-data-message">
+            <p>Không có dữ liệu import nào {{ selectedFromDate ? 'cho ngày đã chọn' : '' }}</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button @click="closeDataViewModal" class="btn-cancel">Đóng</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal hiển thị dữ liệu thô -->
+    <div v-if="showRawDataModal" class="modal-overlay" @click="closeRawDataModal">
+      <div class="modal-content raw-data-modal" @click.stop>
+        <div class="modal-header">
+          <h3>Dữ liệu thô {{ selectedDataType }} {{ statementDateFormatted }}</h3>
+          <button @click="closeRawDataModal" class="modal-close">×</button>
+        </div>
+        <div class="modal-body">
+          <div v-if="rawDataRecords.length > 0" class="raw-data-table-container">
+            <div class="table-summary">
+              <p>Hiển thị {{ rawDataRecords.length }} bản ghi dữ liệu thô</p>
+            </div>
+            <div class="responsive-table-wrapper">
+              <table class="raw-data-table enhanced-table">
+                <thead class="agribank-thead">
+                  <tr>
+                    <th v-for="(column, index) in Object.keys(rawDataRecords[0]).slice(0, 10)" :key="index">
+                      {{ column }}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="agribank-tbody">
+                  <tr v-for="(record, recordIndex) in rawDataRecords" :key="recordIndex">
+                    <td v-for="(column, columnIndex) in Object.keys(record).slice(0, 10)" :key="columnIndex">
+                      {{ record[column] }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="table-note">
+              <p><i>Lưu ý: Bảng hiển thị tối đa 10 cột đầu tiên để dễ đọc</i></p>
+            </div>
+          </div>
+          <div v-else class="no-data-message">
+            <p>Không có dữ liệu thô nào {{ selectedFromDate ? 'cho ngày đã chọn' : '' }}</p>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button @click="closeRawDataModal" class="btn-cancel">Đóng</button>
+          <button 
+            v-if="rawDataRecords.length > 0" 
+            @click="exportRawData" 
+            class="btn-export"
+          >
+            📥 Xuất dữ liệu
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -249,15 +366,23 @@ const selectedToDate = ref('')
 // Data management
 const allImports = ref([])
 const dataTypeStats = ref({})
+const filteredResults = ref([])
+const rawDataRecords = ref([])
 
 // Modal state
 const showImportModal = ref(false)
+const showDataViewModal = ref(false)
+const showRawDataModal = ref(false)
 const selectedDataType = ref(null)
 const selectedFiles = ref([])
 const archivePassword = ref('')
 const importNotes = ref('')
 const uploading = ref(false)
 const uploadProgress = ref(0)
+const statementDateFormatted = computed(() => {
+  if (!selectedFromDate.value) return ''
+  return `(${formatDate(selectedFromDate.value)})`
+})
 
 // Data type definitions - lấy từ service
 const dataTypeDefinitions = rawDataService.getDataTypeDefinitions()
@@ -270,6 +395,10 @@ const sortedDataTypeDefinitions = computed(() => {
     sorted[key] = dataTypeDefinitions[key]
   })
   return sorted
+})
+
+const hasArchiveFile = computed(() => {
+  return selectedFiles.value.some(file => isArchiveFile(file.name))
 })
 
 // Methods
@@ -290,6 +419,16 @@ const showSuccess = (message, timeout = 3000) => {
   setTimeout(() => {
     successMessage.value = ''
   }, timeout)
+}
+
+// Upload status text
+const getUploadStatusText = () => {
+  if (uploadProgress === 0) return 'Đang chuẩn bị...'
+  if (uploadProgress < 20) return 'Đang tải dữ liệu lên...'
+  if (uploadProgress < 50) return 'Đang xử lý dữ liệu...'
+  if (uploadProgress < 90) return 'Đang lưu dữ liệu...'
+  if (uploadProgress < 100) return 'Sắp hoàn thành...'
+  return 'Đã hoàn thành!'
 }
 
 // Data type statistics
@@ -443,7 +582,53 @@ const clearAllData = async () => {
 
 // Data type actions - stubs cho các chức năng sẽ phát triển
 const viewDataType = async (dataType) => {
-  showSuccess(`Chức năng xem dữ liệu ${dataType} đang được phát triển...`)
+  try {
+    loading.value = true
+    loadingMessage.value = `Đang tải dữ liệu ${dataType}...`
+    selectedDataType.value = dataType
+    
+    // If a date is selected, fetch data by date
+    if (selectedFromDate.value) {
+      const dateStr = selectedFromDate.value.replace(/-/g, '')
+      const result = await rawDataService.getByStatementDate(dataType, dateStr)
+      
+      if (result.success) {
+        filteredResults.value = result.data || []
+        
+        if (filteredResults.value.length === 0) {
+          showError(`Không có dữ liệu ${dataType} cho ngày ${formatDate(selectedFromDate.value)}`)
+        } else {
+          showSuccess(`Hiển thị ${filteredResults.value.length} import(s) cho loại ${dataType} ngày ${formatDate(selectedFromDate.value)}`)
+          showDataViewModal.value = true
+        }
+      } else {
+        showError(`Lỗi khi tải dữ liệu: ${result.error}`)
+        filteredResults.value = []
+      }
+    } else {
+      // Filter current results by data type
+      const dataTypeResults = allImports.value.filter(imp => 
+        imp.dataType === dataType || 
+        imp.category === dataType || 
+        imp.fileType === dataType
+      )
+      filteredResults.value = dataTypeResults
+      
+      if (dataTypeResults.length === 0) {
+        showError(`Chưa có dữ liệu import nào cho loại ${dataType}`)
+        return
+      }
+      
+      showSuccess(`Hiển thị ${dataTypeResults.length} import(s) cho loại ${dataType}`)
+      showDataViewModal.value = true
+    }
+  } catch (error) {
+    console.error('Error viewing data type:', error)
+    showError(`Lỗi khi tải dữ liệu: ${error.message}`)
+  } finally {
+    loading.value = false
+    loadingMessage.value = ''
+  }
 }
 
 const deleteDataTypeByDate = async (dataType) => {
@@ -451,112 +636,229 @@ const deleteDataTypeByDate = async (dataType) => {
     showError('Vui lòng chọn ngày để xóa dữ liệu')
     return
   }
-  showSuccess(`Chức năng xóa dữ liệu ${dataType} đang được phát triển...`)
-}
-
-const viewRawDataFromTable = async (dataType) => {
-  if (!selectedFromDate.value) {
-    showError('Vui lòng chọn ngày để xem dữ liệu thô')
-    return
-  }
-  showSuccess(`Chức năng xem dữ liệu thô ${dataType} đang được phát triển...`)
-}
-
-// Import methods
-const openImportModal = (dataType) => {
-  selectedDataType.value = dataType
-  showImportModal.value = true
-  // Reset form
-  selectedFiles.value = []
-  archivePassword.value = ''
-  importNotes.value = ''
-  uploading.value = false
-  uploadProgress.value = 0
-}
-
-const closeImportModal = () => {
-  showImportModal.value = false
-  selectedDataType.value = null
-}
-
-// Xử lý file
-const handleFileSelect = (event) => {
-  const files = event.target.files
-  if (files.length > 0) {
-    selectedFiles.value = [...selectedFiles.value, ...Array.from(files)]
-  }
-}
-
-const removeFile = (index) => {
-  selectedFiles.value.splice(index, 1)
-}
-
-const isArchiveFile = (fileName) => {
-  const ext = fileName.split('.').pop().toLowerCase()
-  return ['zip', 'rar', '7z'].includes(ext)
-}
-
-const formatFileSize = (size) => {
-  if (size < 1024) return size + ' B'
-  else if (size < 1024 * 1024) return (size / 1024).toFixed(2) + ' KB'
-  else if (size < 1024 * 1024 * 1024) return (size / (1024 * 1024)).toFixed(2) + ' MB'
-  else return (size / (1024 * 1024 * 1024)).toFixed(2) + ' GB'
-}
-
-// Thực hiện import
-const performImport = async () => {
-  if (selectedFiles.value.length === 0) {
-    showError('Vui lòng chọn ít nhất một file để import')
-    return
-  }
-
+  
+  const dateStr = selectedFromDate.value.replace(/-/g, '')
+  
+  // Check if data exists for this date
   try {
-    uploading.value = true
-    uploadProgress.value = 0
-    
-    const options = {
-      archivePassword: archivePassword.value,
-      notes: importNotes.value,
-      onProgress: (progress) => {
-        uploadProgress.value = progress
-      }
+    const checkResult = await rawDataService.checkDuplicateData(dataType, dateStr)
+    if (checkResult.success && !checkResult.data.hasDuplicate) {
+      showError(`Không có dữ liệu ${dataType} cho ngày ${formatDate(selectedFromDate.value)}`)
+      return
     }
     
-    const result = await rawDataService.importData(selectedDataType.value, selectedFiles.value, options)
-    
-    if (result.success) {
-      showSuccess(`Import thành công ${result.processedFiles || selectedFiles.value.length} file`)
-      closeImportModal()
-      await refreshAllData() // Tải lại dữ liệu sau khi import
-    } else {
-      showError(`Lỗi khi import: ${result.error}`)
+    // Hiển thị xác nhận
+    if (confirm(`Bạn có chắc chắn muốn xóa tất cả dữ liệu ${dataType} cho ngày ${formatDate(selectedFromDate.value)}?`)) {
+      performDeleteByDate(dataType, dateStr)
     }
   } catch (error) {
-    console.error('❌ Lỗi khi import:', error)
-    showError(`Lỗi khi import: ${error.message || 'Không xác định'}`)
+    console.error('Error checking duplicate data:', error)
+    showError('Có lỗi xảy ra khi kiểm tra dữ liệu')
+  }
+}
+
+const performDeleteByDate = async (dataType, dateStr) => {
+  try {
+    loading.value = true
+    loadingMessage.value = 'Đang xóa dữ liệu...'
+    
+    const result = await rawDataService.deleteByStatementDate(dataType, dateStr)
+    if (result.success) {
+      showSuccess(`✅ ${result.data.message}`)
+      await refreshAllData()
+      
+      // Remove from filtered results if they exist
+      filteredResults.value = filteredResults.value.filter(item => 
+        !(item.dataType === dataType && 
+          item.statementDate && 
+          new Date(item.statementDate).toISOString().slice(0, 10).replace(/-/g, '') === dateStr)
+      )
+    } else {
+      showError(`Lỗi khi xóa dữ liệu: ${result.error}`)
+    }
+  } catch (error) {
+    console.error('Error deleting data:', error)
+    showError(`Lỗi khi xóa dữ liệu: ${error.message}`)
   } finally {
-    uploading.value = false
+    loading.value = false
+    loadingMessage.value = ''
   }
 }
 
-// Utility methods
-const getDataTypeColor = (dataType) => {
-  return rawDataService.getDataTypeColor(dataType)
+// Data view modal methods
+
+const closeDataViewModal = () => {
+  showDataViewModal.value = false
 }
 
-const formatRecordCount = (count) => {
-  return rawDataService.formatRecordCount(count)
-}
-
-const formatDateTime = (dateString) => {
-  if (!dateString || dateString === "0001-01-01T00:00:00") {
-    return 'Chưa có dữ liệu'
+// Raw data modal methods
+const viewRawDataFromTable = async (dataType) => {
+  try {
+    loading.value = true
+    loadingMessage.value = `Đang tải dữ liệu thô ${dataType}...`
+    selectedDataType.value = dataType
+    
+    console.log('🗄️ Viewing raw data from table:', dataType)
+    console.log('Selected date:', selectedFromDate.value)
+    
+    // Check if date is selected
+    if (!selectedFromDate.value) {
+      showError('Vui lòng chọn ngày để xem dữ liệu thô')
+      loading.value = false
+      loadingMessage.value = ''
+      return
+    }
+    
+    const result = await rawDataService.getRawDataFromTable(dataType, selectedFromDate.value)
+    console.log('🗄️ Raw data result:', result)
+    
+    if (result.success && result.data) {
+      // Helper function để convert $values format nếu cần
+      const convertDotNetArray = (data) => {
+        if (data && typeof data === 'object' && data.$values && Array.isArray(data.$values)) {
+          console.log('🔧 Converting raw data $values format, length:', data.$values.length)
+          return data.$values;
+        }
+        return data;
+      };
+      
+      // Xử lý dữ liệu records từ backend
+      const records = result.data.records || [];
+      
+      if (records && records.length > 0) {
+        rawDataRecords.value = records;
+        showSuccess(`Đã tải ${records.length} bản ghi dữ liệu thô ${dataType}`);
+        showRawDataModal.value = true;
+      } else {
+        showError(`Không tìm thấy dữ liệu thô cho ${dataType} vào ngày ${formatDate(selectedFromDate.value)}`);
+      }
+    } else {
+      showError(`Lỗi khi tải dữ liệu thô: ${result.error || 'Không tìm thấy dữ liệu'}`);
+    }
+  } catch (error) {
+    console.error('Error viewing raw data:', error);
+    showError(`Lỗi khi tải dữ liệu thô: ${error.message}`);
+  } finally {
+    loading.value = false;
+    loadingMessage.value = '';
   }
+}
+
+const closeRawDataModal = () => {
+  showRawDataModal.value = false
+  rawDataRecords.value = []
+}
+
+const exportRawData = () => {
+  try {
+    // Create CSV content
+    let csvContent = "";
+    
+    // Get all unique headers
+    const headers = new Set();
+    rawDataRecords.value.forEach(record => {
+      Object.keys(record).forEach(key => headers.add(key));
+    });
+    
+    // Add headers
+    csvContent += Array.from(headers).join(',') + '\n';
+    
+    // Add data rows
+    rawDataRecords.value.forEach(record => {
+      const row = Array.from(headers).map(header => {
+        const value = record[header] || '';
+        // Handle values with commas by wrapping in quotes
+        return typeof value === 'string' && value.includes(',') 
+          ? `"${value}"` 
+          : value;
+      });
+      csvContent += row.join(',') + '\n';
+    });
+    
+    // Create download link
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `rawdata-${selectedDataType.value}-${selectedFromDate.value}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showSuccess('Đã xuất dữ liệu thành công');
+  } catch (error) {
+    console.error('Error exporting data:', error);
+    showError(`Lỗi khi xuất dữ liệu: ${error.message}`);
+  }
+}
+
+// Preview data method
+const previewData = async (importId) => {
+  try {
+    loading.value = true
+    loadingMessage.value = 'Đang tải dữ liệu chi tiết...'
+    
+    const result = await rawDataService.previewData(importId)
+    
+    if (result.success && result.data) {
+      // TODO: Implement preview modal
+      const recordsCount = result.data.previewRows?.length || 0
+      showSuccess(`Đã tải ${recordsCount} bản ghi chi tiết. Tính năng đang phát triển...`)
+    } else {
+      showError(`Lỗi khi tải dữ liệu chi tiết: ${result.error || 'Không tìm thấy dữ liệu'}`)
+    }
+  } catch (error) {
+    console.error('Error previewing data:', error)
+    showError(`Lỗi khi tải dữ liệu chi tiết: ${error.message}`)
+  } finally {
+    loading.value = false
+    loadingMessage.value = ''
+  }
+}
+
+// Delete confirmation
+const confirmDelete = async (importId, fileName) => {
+  if (confirm(`Bạn có chắc chắn muốn xóa bản ghi "${fileName}"?`)) {
+    try {
+      loading.value = true
+      loadingMessage.value = 'Đang xóa dữ liệu...'
+      
+      const result = await rawDataService.deleteImport(importId)
+      
+      if (result.success) {
+        showSuccess(`Đã xóa thành công bản ghi "${fileName}"`)
+        
+        // Remove from filtered results
+        filteredResults.value = filteredResults.value.filter(item => item.id !== importId)
+        
+        // Refresh all data
+        await refreshAllData()
+      } else {
+        showError(`Lỗi khi xóa bản ghi: ${result.error}`)
+      }
+    } catch (error) {
+      console.error('Error deleting import:', error)
+      showError(`Lỗi khi xóa bản ghi: ${error.message}`)
+    } finally {
+      loading.value = false
+      loadingMessage.value = ''
+    }
+  }
+}
+
+// Các phương thức tiện ích cho view đã được nhắc đến trong template
+const getCategoryName = (dataType) => {
+  // Lấy tên category từ định nghĩa data type
+  return dataTypeDefinitions[dataType]?.category || 'Chưa phân loại'
+}
+
+const formatDateTime = (dateTimeString) => {
+  if (!dateTimeString) return 'N/A'
   
   try {
-    const date = new Date(dateString)
+    const date = new Date(dateTimeString)
     if (isNaN(date.getTime())) {
-      return 'Ngày không hợp lệ'
+      return 'Thời gian không hợp lệ'
     }
     
     const day = String(date.getDate()).padStart(2, '0')
@@ -564,27 +866,73 @@ const formatDateTime = (dateString) => {
     const year = date.getFullYear()
     const hours = String(date.getHours()).padStart(2, '0')
     const minutes = String(date.getMinutes()).padStart(2, '0')
-    const seconds = String(date.getSeconds()).padStart(2, '0')
     
-    return `${day}/${month}/${year} - ${hours}:${minutes}:${seconds}`
+    return `${day}/${month}/${year} ${hours}:${minutes}`
   } catch (error) {
-    console.error('Error formatting date:', error)
-    return 'Lỗi format ngày'
+    console.error('Error formatting datetime:', error)
+    return 'Lỗi format thời gian'
   }
 }
 
-const getCategoryName = (dataType) => {
-  if (dataType.startsWith('D')) return 'Dữ liệu tiền gửi'
-  if (dataType.startsWith('L')) return 'Dữ liệu cho vay'
-  if (dataType.startsWith('R')) return 'Dữ liệu rủi ro'
-  if (dataType.startsWith('G')) return 'Dữ liệu tài khoản'
-  return 'Dữ liệu khác'
+const getDataTypeColor = (dataType) => {
+  // Màu sắc tương ứng với loại dữ liệu
+  const colors = {
+    'HDMB': '#2196F3',       // Xanh dương
+    'HDBH': '#4CAF50',       // Xanh lá
+    'HDTH': '#FF9800',       // Cam
+    'HDFX': '#9C27B0',       // Tím
+    'BAOHIEM': '#E91E63',    // Hồng
+    'DANCU': '#607D8B',      // Xám xanh
+    'PHICHUYENTIEN': '#795548', // Nâu
+    'LAMVIEC': '#00BCD4'     // Xanh ngọc
+  }
+  
+  return colors[dataType] || '#8B1538' // Màu mặc định là màu Agribank
 }
 
-// Lifecycle
-onMounted(async () => {
-  await refreshAllData()
-})
+const openImportModal = (dataType) => {
+  selectedDataType.value = dataType
+  selectedFiles.value = []
+  archivePassword.value = ''
+  importNotes.value = ''
+  uploading.value = false
+  uploadProgress.value = 0
+  showImportModal.value = true
+}
+
+// Hàm kiểm tra nếu file là file nén
+const isArchiveFile = (fileName) => {
+  const archiveExtensions = ['.zip', '.rar', '.7z', '.tar', '.gz']
+  return archiveExtensions.some(ext => fileName.toLowerCase().endsWith(ext))
+}
+
+// Hàm định dạng kích thước file
+const formatFileSize = (bytes) => {
+  if (bytes === 0) return '0 Bytes'
+  
+  const k = 1024
+  const sizes = ['Bytes', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
+}
+
+// Xử lý chọn file
+const handleFileSelect = (event) => {
+  const files = event.target.files
+  if (files.length === 0) return
+  
+  selectedFiles.value = Array.from(files)
+}
+
+// Hàm định dạng số lượng bản ghi
+const formatRecordCount = (count) => {
+  // Nếu count không phải là số, trả về giá trị ban đầu
+  if (isNaN(parseInt(count))) return count || 0
+  
+  // Định dạng số với dấu phân cách hàng nghìn
+  return new Intl.NumberFormat('vi-VN').format(count)
+}
 </script>
 
 <style scoped>
@@ -1012,24 +1360,124 @@ onMounted(async () => {
   padding: 20px;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .date-controls-enhanced {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .date-range-group {
-    flex-direction: column;
-  }
-  
-  .enhanced-table {
-    font-size: 14px;
-  }
-  
-  .agribank-thead th,
-  .agribank-tbody td {
-    padding: 10px 8px;
-  }
+/* Upload progress styles */
+.upload-progress-container {
+  margin: 15px 0;
+  padding: 15px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.progress-bar-wrapper {
+  height: 12px;
+  background-color: #e0e0e0;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #8B1538 0%, #C41E3A 100%);
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
+.progress-details {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #666;
+}
+
+.progress-percentage {
+  font-weight: bold;
+  color: #8B1538;
+}
+
+/* Agribank import styling */
+.btn-submit {
+  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-submit:hover:not(:disabled) {
+  background: linear-gradient(135deg, #7a1230 0%, #b31a33 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.btn-submit:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Data modal styles */
+.data-view-modal,
+.raw-data-modal {
+  max-width: 90%;
+  width: 1000px;
+  max-height: 80vh;
+}
+
+.data-table-container,
+.raw-data-table-container {
+  overflow-x: auto;
+  margin: 0 -20px;
+}
+
+.data-table,
+.raw-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.responsive-table-wrapper {
+  overflow-x: auto;
+  max-height: 50vh;
+}
+
+.table-summary {
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #8B1538;
+}
+
+.table-note {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+}
+
+.no-data-message {
+  text-align: center;
+  padding: 30px;
+  color: #666;
+  font-style: italic;
+}
+
+.btn-export {
+  background: #28a745;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-export:hover {
+  background: #218838;
 }
 </style>
