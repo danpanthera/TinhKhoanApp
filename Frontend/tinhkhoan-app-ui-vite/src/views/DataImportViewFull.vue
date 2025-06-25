@@ -164,23 +164,37 @@
 
     <!-- Import Modal đầy đủ -->
     <div v-if="showImportModal" class="modal-overlay" @click="closeImportModal">
-      <div class="modal-content" @click.stop>
+      <div class="modal-content import-modal" @click.stop>
         <div class="modal-header">
-          <h3>Import dữ liệu {{ selectedDataType }}</h3>
-          <button @click="closeImportModal" class="modal-close">×</button>
+          <div class="modal-header-content">
+            <div class="modal-icon">📤</div>
+            <h3>Import dữ liệu {{ selectedDataType }}</h3>
+          </div>
+          <button @click="closeImportModal" class="modal-close" aria-label="Đóng">
+            <span aria-hidden="true">×</span>
+          </button>
         </div>
         <div class="modal-body">
           <!-- Form upload file -->
           <div class="import-form">
             <div class="form-group">
               <label class="form-label">Chọn file để import:</label>
-              <input 
-                type="file" 
-                ref="fileInput"
-                multiple 
-                @change="handleFileSelect" 
-                class="file-input"
-              />
+              <div class="file-input-container">
+                <input 
+                  type="file" 
+                  ref="fileInput"
+                  multiple 
+                  @change="handleFileSelect" 
+                  class="file-input"
+                  id="file-upload"
+                />
+                <label for="file-upload" class="file-input-label">
+                  <span class="file-icon">📎</span>
+                  <span>Chọn tệp</span>
+                </label>
+                <span class="file-selected-text">{{ selectedFiles.length > 0 ? 
+                  `Đã chọn ${selectedFiles.length} tệp` : 'Chưa có tệp nào được chọn' }}</span>
+              </div>
             </div>
             
             <!-- Danh sách file đã chọn -->
@@ -188,8 +202,12 @@
               <h4>Files đã chọn:</h4>
               <ul class="files-list">
                 <li v-for="(file, index) in selectedFiles" :key="index" class="file-item">
-                  {{ file.name }} ({{ formatFileSize(file.size) }})
-                  <button @click="removeFile(index)" class="btn-remove">×</button>
+                  <div class="file-info">
+                    <span class="file-icon">{{ getFileIcon(file.name) }}</span>
+                    <span class="file-name">{{ file.name }}</span>
+                    <span class="file-size">({{ formatFileSize(file.size) }})</span>
+                  </div>
+                  <button @click="removeFile(index)" class="btn-remove" title="Xóa file này">×</button>
                 </li>
               </ul>
             </div>
@@ -197,22 +215,31 @@
             <!-- Phần nhập mật khẩu cho file nén nếu cần -->
             <div v-if="hasArchiveFile" class="form-group">
               <label class="form-label">Mật khẩu file nén (nếu có):</label>
-              <input 
-                type="password" 
-                v-model="archivePassword" 
-                class="password-input" 
-                placeholder="Nhập mật khẩu file nén..." 
-              />
+              <div class="password-input-container">
+                <input 
+                  type="password" 
+                  v-model="archivePassword" 
+                  class="password-input" 
+                  placeholder="Nhập mật khẩu file nén..." 
+                />
+                <span class="input-icon">🔑</span>
+              </div>
             </div>
             
             <!-- Upload progress indicator -->
             <div v-if="uploading" class="upload-progress-container">
+              <div class="upload-status">
+                <span class="upload-status-icon">{{ getUploadStatusIcon() }}</span>
+                <span class="upload-status-text">{{ getUploadStatusText() }}</span>
+              </div>
               <div class="progress-bar-wrapper">
                 <div class="progress-bar" :style="{ width: `${uploadProgress}%` }"></div>
               </div>
               <div class="progress-details">
                 <span class="progress-percentage">{{ uploadProgress }}%</span>
-                <span class="progress-status">{{ getUploadStatusText() }}</span>
+                <span class="progress-file-info" v-if="currentUploadingFile">
+                  {{ currentUploadingFile }} ({{ uploadedFiles }}/{{ totalFiles }})
+                </span>
               </div>
             </div>
             
@@ -229,13 +256,17 @@
         </div>
         
         <div class="modal-footer">
-          <button @click="closeImportModal" class="btn-cancel">Hủy</button>
+          <button @click="closeImportModal" class="btn-cancel">
+            <span class="btn-icon">✖️</span>
+            <span>Hủy</span>
+          </button>
           <button 
             @click="performImport" 
             class="btn-submit"
             :disabled="selectedFiles.length === 0 || uploading"
           >
-            {{ uploading ? 'Đang xử lý...' : 'Import Dữ liệu' }}
+            <span class="btn-icon">{{ uploading ? '⏳' : '📤' }}</span>
+            <span>{{ uploading ? 'Đang xử lý...' : 'Import Dữ liệu' }}</span>
           </button>
         </div>
       </div>
@@ -379,6 +410,9 @@ const archivePassword = ref('')
 const importNotes = ref('')
 const uploading = ref(false)
 const uploadProgress = ref(0)
+const currentUploadingFile = ref('')
+const uploadedFiles = ref(0)
+const totalFiles = ref(0)
 const statementDateFormatted = computed(() => {
   if (!selectedFromDate.value) return ''
   return `(${formatDate(selectedFromDate.value)})`
@@ -423,12 +457,33 @@ const showSuccess = (message, timeout = 3000) => {
 
 // Upload status text
 const getUploadStatusText = () => {
-  if (uploadProgress === 0) return 'Đang chuẩn bị...'
-  if (uploadProgress < 20) return 'Đang tải dữ liệu lên...'
-  if (uploadProgress < 50) return 'Đang xử lý dữ liệu...'
-  if (uploadProgress < 90) return 'Đang lưu dữ liệu...'
-  if (uploadProgress < 100) return 'Sắp hoàn thành...'
+  if (uploadProgress.value === 0) return 'Đang chuẩn bị...'
+  if (uploadProgress.value < 20) return 'Đang tải dữ liệu lên...'
+  if (uploadProgress.value < 50) return 'Đang xử lý dữ liệu...'
+  if (uploadProgress.value < 90) return 'Đang lưu dữ liệu...'
+  if (uploadProgress.value < 100) return 'Sắp hoàn thành...'
   return 'Đã hoàn thành!'
+}
+
+// Format date từ chuỗi ISO
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A'
+  
+  try {
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) {
+      return 'Ngày không hợp lệ'
+    }
+    
+    const day = String(date.getDate()).padStart(2, '0')
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const year = date.getFullYear()
+    
+    return `${day}/${month}/${year}`
+  } catch (error) {
+    console.error('Error formatting date:', error)
+    return 'Lỗi format ngày'
+  }
 }
 
 // Data type statistics
@@ -899,7 +954,164 @@ const openImportModal = (dataType) => {
   importNotes.value = ''
   uploading.value = false
   uploadProgress.value = 0
+  currentUploadingFile.value = ''
+  uploadedFiles.value = 0
+  totalFiles.value = 0
   showImportModal.value = true
+}
+
+// Đóng modal import
+const closeImportModal = () => {
+  if (uploading.value && uploadProgress.value < 100) {
+    // Nếu đang upload, hiển thị xác nhận
+    if (!confirm('Bạn có chắc muốn hủy quá trình import? Dữ liệu đang được tải lên sẽ bị mất.')) {
+      return; // Người dùng không muốn hủy
+    }
+    // TODO: Hủy quá trình upload nếu cần
+  }
+  
+  showImportModal.value = false
+  selectedFiles.value = []
+  archivePassword.value = ''
+  importNotes.value = ''
+  uploading.value = false
+  uploadProgress.value = 0
+}
+
+// Thực hiện import dữ liệu
+const performImport = async () => {
+  if (selectedFiles.value.length === 0) {
+    showError('Vui lòng chọn ít nhất một file để import')
+    return
+  }
+  
+  uploading.value = true
+  uploadProgress.value = 0
+  totalFiles.value = selectedFiles.value.length
+  uploadedFiles.value = 0
+  
+  try {
+    // Tạo form data
+    const formData = new FormData()
+    
+    // Thêm các file vào form data
+    selectedFiles.value.forEach(file => {
+      formData.append('files', file)
+    })
+    
+    // Thêm các thông tin khác
+    formData.append('dataType', selectedDataType.value)
+    if (archivePassword.value) {
+      formData.append('archivePassword', archivePassword.value)
+    }
+    if (importNotes.value) {
+      formData.append('notes', importNotes.value)
+    }
+    if (selectedFromDate.value) {
+      formData.append('statementDate', selectedFromDate.value)
+    }
+    
+    // Mô phỏng tiến trình upload (thay đổi này sau khi có API thực tế)
+    const simulateUpload = () => {
+      let progress = 0
+      const interval = setInterval(() => {
+        progress += Math.random() * 5
+        if (progress >= 100) {
+          progress = 100
+          clearInterval(interval)
+          
+          // Cập nhật thông tin sau khi upload hoàn tất
+          uploadProgress.value = 100
+          setTimeout(() => {
+            uploading.value = false
+            showSuccess(`Import dữ liệu ${selectedDataType.value} thành công!`)
+            closeImportModal()
+            refreshAllData() // Làm mới dữ liệu
+          }, 1000)
+        }
+        
+        // Cập nhật thông tin progress
+        uploadProgress.value = Math.floor(progress)
+        
+        // Mô phỏng thay đổi file đang upload
+        if (progress > 30 && progress < 60 && selectedFiles.value.length > 1) {
+          currentUploadingFile.value = selectedFiles.value[1].name
+          uploadedFiles.value = 1
+        } else if (progress >= 60 && selectedFiles.value.length > 2) {
+          currentUploadingFile.value = selectedFiles.value[2].name
+          uploadedFiles.value = 2
+        } else {
+          currentUploadingFile.value = selectedFiles.value[0].name
+          uploadedFiles.value = progress >= 95 ? selectedFiles.value.length : 0
+        }
+      }, 200)
+    }
+    
+    // TODO: Thay thế bằng API call thực tế
+    currentUploadingFile.value = selectedFiles.value[0].name
+    simulateUpload()
+    
+    // API call thực tế sẽ như sau (đã comment lại)
+    /*
+    const response = await rawDataService.importData(formData, (progressEvent) => {
+      const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+      uploadProgress.value = percentCompleted
+    })
+    
+    if (response.success) {
+      showSuccess(`Import dữ liệu ${selectedDataType.value} thành công!`)
+      closeImportModal()
+      refreshAllData() // Làm mới dữ liệu
+    } else {
+      showError(`Lỗi khi import dữ liệu: ${response.error}`)
+      uploading.value = false
+    }
+    */
+    
+  } catch (error) {
+    console.error('Error importing data:', error)
+    showError(`Lỗi khi import dữ liệu: ${error.message}`)
+    uploading.value = false
+  }
+}
+
+// Xóa file khỏi danh sách chọn
+const removeFile = (index) => {
+  selectedFiles.value.splice(index, 1)
+}
+
+// Lấy icon tương ứng với loại file
+const getFileIcon = (fileName) => {
+  const extension = fileName.split('.').pop()?.toLowerCase() || ''
+  
+  const icons = {
+    'pdf': '📄',
+    'doc': '📝',
+    'docx': '📝',
+    'xls': '📊',
+    'xlsx': '📊',
+    'csv': '📋',
+    'txt': '📄',
+    'zip': '📦',
+    'rar': '📦',
+    '7z': '📦',
+    'png': '🖼️',
+    'jpg': '🖼️',
+    'jpeg': '🖼️',
+    'gif': '🖼️'
+  }
+  
+  return icons[extension] || '📄'
+}
+
+// Lấy icon trạng thái upload
+const getUploadStatusIcon = () => {
+  if (uploadProgress.value === 0) return '⏳'
+  if (uploadProgress.value < 20) return '📤'
+  if (uploadProgress.value < 50) return '📤'
+  if (uploadProgress.value < 90) return '🔄'
+  if (uploadProgress.value < 100) return '🔄'
+  return '✅'
 }
 
 // Hàm kiểm tra nếu file là file nén
@@ -1320,11 +1532,18 @@ const formatRecordCount = (count) => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0,0,0,0.6);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  backdrop-filter: blur(3px);
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .modal-content {
@@ -1334,10 +1553,22 @@ const formatRecordCount = (count) => {
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+  animation: slideDown 0.3s ease;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+.import-modal {
+  max-width: 600px;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 .modal-header {
-  background: #8B1538;
+  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
   color: white;
   padding: 20px;
   border-radius: 12px 12px 0 0;
@@ -1346,8 +1577,19 @@ const formatRecordCount = (count) => {
   align-items: center;
 }
 
+.modal-header-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-icon {
+  font-size: 24px;
+}
+
 .modal-header h3 {
   margin: 0;
+  font-size: 1.3rem;
 }
 
 .modal-close {
@@ -1356,19 +1598,213 @@ const formatRecordCount = (count) => {
   color: white;
   font-size: 24px;
   cursor: pointer;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.modal-close:hover {
+  background: rgba(255,255,255,0.2);
 }
 
 .modal-body {
+  padding: 25px;
+}
+
+.modal-footer {
   padding: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  border-top: 1px solid #eee;
+}
+
+/* Form styling */
+.import-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.95rem;
+}
+
+.file-input-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.file-input {
+  display: none;
+}
+
+.file-input-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #8B1538;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.file-input-label:hover {
+  background: #a91d42;
+  transform: translateY(-2px);
+}
+
+.file-selected-text {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.selected-files {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+
+.selected-files h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.files-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 10px 15px;
+  border-radius: 6px;
+  border: 1px solid #eee;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-icon {
+  font-size: 1.2rem;
+}
+
+.file-name {
+  font-weight: 500;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.file-size {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.btn-remove {
+  background: none;
+  border: none;
+  color: #dc3545;
+  font-size: 18px;
+  cursor: pointer;
+  width: 25px;
+  height: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.btn-remove:hover {
+  background: #ffeeee;
+}
+
+.password-input-container {
+  position: relative;
+}
+
+.password-input {
+  width: 100%;
+  padding: 10px 15px;
+  padding-right: 40px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.password-input:focus {
+  outline: none;
+  border-color: #8B1538;
+}
+
+.input-icon {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #666;
 }
 
 /* Upload progress styles */
 .upload-progress-container {
-  margin: 15px 0;
-  padding: 15px;
-  background: #f5f5f5;
+  background: #f8f9fa;
+  padding: 20px;
   border-radius: 8px;
-  border: 1px solid #ddd;
+  border: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.upload-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.upload-status-icon {
+  font-size: 1.2rem;
+}
+
+.upload-status-text {
+  font-weight: 600;
+  color: #333;
 }
 
 .progress-bar-wrapper {
@@ -1377,6 +1813,7 @@ const formatRecordCount = (count) => {
   border-radius: 6px;
   overflow: hidden;
   margin-bottom: 8px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
 }
 
 .progress-bar {
@@ -1384,18 +1821,114 @@ const formatRecordCount = (count) => {
   background: linear-gradient(90deg, #8B1538 0%, #C41E3A 100%);
   border-radius: 6px;
   transition: width 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 0.2) 25%,
+    transparent 25%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.2) 75%,
+    transparent 75%
+  );
+  background-size: 30px 30px;
+  animation: progressStripes 1s linear infinite;
+  z-index: 1;
+}
+
+@keyframes progressStripes {
+  0% { background-position: 0 0; }
+  100% { background-position: 30px 0; }
 }
 
 .progress-details {
   display: flex;
   justify-content: space-between;
-  font-size: 12px;
+  font-size: 0.85rem;
   color: #666;
 }
 
 .progress-percentage {
   font-weight: bold;
   color: #8B1538;
+}
+
+.progress-file-info {
+  font-style: italic;
+  max-width: 70%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notes-input {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  resize: vertical;
+}
+
+.notes-input:focus {
+  outline: none;
+  border-color: #8B1538;
+}
+
+/* Button styles */
+.btn-cancel,
+.btn-submit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-cancel {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.btn-cancel:hover {
+  background: #e0e0e0;
+}
+
+.btn-submit {
+  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
+  color: white;
+}
+
+.btn-submit:hover:not(:disabled) {
+  background: linear-gradient(135deg, #7a1230 0%, #b31a33 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.btn-submit:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-icon {
+  font-size: 1.1rem;
 }
 
 /* Agribank import styling */
