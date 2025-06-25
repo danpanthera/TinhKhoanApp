@@ -17,9 +17,9 @@ namespace TinhKhoanApp.Api.Filters
         {
             var exception = context.Exception;
             var requestId = Guid.NewGuid().ToString();
-            
+
             // Log the exception with context
-            _logger.LogError(exception, 
+            _logger.LogError(exception,
                 "🔥 Global Exception Handler - RequestId: {RequestId}, Method: {Method}, Path: {Path}, User: {User}",
                 requestId,
                 context.HttpContext.Request.Method,
