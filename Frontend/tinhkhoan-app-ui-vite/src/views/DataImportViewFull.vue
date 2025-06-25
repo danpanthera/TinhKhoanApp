@@ -875,11 +875,6 @@ const confirmDelete = async (importId, fileName) => {
 }
 
 // Các phương thức tiện ích cho view đã được nhắc đến trong template
-const getCategoryName = (dataType) => {
-  // Lấy tên category từ định nghĩa data type
-  return dataTypeDefinitions[dataType]?.category || 'Chưa phân loại'
-}
-
 const formatDateTime = (dateTimeString) => {
   if (!dateTimeString) return 'N/A'
   
