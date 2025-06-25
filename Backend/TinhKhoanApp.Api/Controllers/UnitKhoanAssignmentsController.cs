@@ -1,3 +1,4 @@
+#pragma warning disable CS8602 // Dereference of a possibly null reference
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
@@ -135,7 +136,7 @@ namespace TinhKhoanApp.Api.Controllers
             }
 
             assignmentDetail.ActualValue = request.ActualValue;
-            
+
             // Calculate score based on target vs actual
             if (request.ActualValue.HasValue && assignmentDetail.TargetValue > 0)
             {
@@ -166,7 +167,7 @@ namespace TinhKhoanApp.Api.Controllers
                 // Get first CNL1 unit (Lai Chau)
                 var laiChauUnit = await _context.Units
                     .FirstOrDefaultAsync(u => u.Code == "CNLAICHAU" && u.Type == "CNL1");
-                
+
                 // Get first active period
                 var activePeriod = await _context.KhoanPeriods
                     .FirstOrDefaultAsync(p => p.Status == PeriodStatus.OPEN);
@@ -237,9 +238,9 @@ namespace TinhKhoanApp.Api.Controllers
                 _context.UnitKhoanAssignmentDetails.AddRange(details);
                 await _context.SaveChangesAsync();
 
-                return Ok(new 
-                { 
-                    message = "Test data created successfully", 
+                return Ok(new
+                {
+                    message = "Test data created successfully",
                     assignmentId = assignment.Id,
                     unitName = laiChauUnit.Name,
                     periodName = activePeriod.Name,
