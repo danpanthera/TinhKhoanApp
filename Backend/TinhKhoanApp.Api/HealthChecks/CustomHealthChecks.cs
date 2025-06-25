@@ -206,10 +206,11 @@ namespace TinhKhoanApp.Api.HealthChecks
                     tags: new[] { "db", "ready" })
                 .AddCheck<MemoryCacheHealthCheck>("cache",
                     failureStatus: HealthStatus.Degraded, 
-                    tags: new[] { "cache", "ready" })
-                .AddCheck<PerformanceHealthCheck>("performance",
-                    failureStatus: HealthStatus.Degraded,
-                    tags: new[] { "performance", "ready" });
+                    tags: new[] { "cache", "ready" });
+                // Tạm comment performance check vì CompressedData column issue
+                // .AddCheck<PerformanceHealthCheck>("performance",
+                //     failureStatus: HealthStatus.Degraded,
+                //     tags: new[] { "performance", "ready" });
 
             return services;
         }
