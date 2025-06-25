@@ -19,26 +19,26 @@ namespace TinhKhoanApp.Api.Models.Temporal
         
         [Required]
         [StringLength(10)]
-        public string BranchCode { get; set; }
+        public string BranchCode { get; set; } = "";
         
         [Required]
         [StringLength(10)]
-        public string DepartmentCode { get; set; }
+        public string DepartmentCode { get; set; } = "";
         
         [Required]
         [StringLength(20)]
-        public string EmployeeCode { get; set; }
+        public string EmployeeCode { get; set; } = "";
         
         [Required]
         [StringLength(20)]
-        public string KpiCode { get; set; }
+        public string KpiCode { get; set; } = "";
         
         [Required]
         [Column(TypeName = "decimal(18,4)")]
         public decimal KpiValue { get; set; }
         
         [StringLength(10)]
-        public string Unit { get; set; }
+        public string? Unit { get; set; }
         
         [Column(TypeName = "decimal(18,4)")]
         public decimal? Target { get; set; }
@@ -50,7 +50,7 @@ namespace TinhKhoanApp.Api.Models.Temporal
         public decimal? Score { get; set; }
         
         [StringLength(500)]
-        public string Note { get; set; }
+        public string? Note { get; set; }
         
         [Required]
         public Guid ImportBatchId { get; set; }

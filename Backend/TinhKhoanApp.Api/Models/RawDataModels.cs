@@ -89,28 +89,28 @@ namespace TinhKhoanApp.Api.Models
         public string? Notes { get; set; } // Ghi chú
     }
     
-    // 📊 DTO cho kết quả import
+    // 📊 DTO cho kết quả import  
     public class RawDataImportResult
     {
         public bool Success { get; set; }
-        public string FileName { get; set; }
-        public string DataType { get; set; } // ➕ Loại dữ liệu (ZIP, XLSX, CSV, v.v.)
+        public string FileName { get; set; } = "";
+        public string DataType { get; set; } = ""; // ➕ Loại dữ liệu (XLSX, CSV, v.v.)
         public int RecordsProcessed { get; set; }
-        public string Message { get; set; }
+        public string Message { get; set; } = "";
         public DateTime? StatementDate { get; set; }
-        public string TableName { get; set; } // Tên table được tạo
-        public bool IsArchiveDeleted { get; set; } = false; // ➕ Flag để báo file nén đã bị xóa
+        public string TableName { get; set; } = ""; // Tên table được tạo
+        public bool IsArchiveDeleted { get; set; } = false; // ➕ Flag để báo file đã bị xóa
     }
     
     // 📋 DTO cho preview dữ liệu
     public class RawDataPreviewResponse
     {
         public int Id { get; set; }
-        public string FileName { get; set; }
-        public string DataType { get; set; }
+        public string FileName { get; set; } = "";
+        public string DataType { get; set; } = "";
         public DateTime ImportDate { get; set; }
         public DateTime StatementDate { get; set; }
-        public string ImportedBy { get; set; }
+        public string ImportedBy { get; set; } = "";
         public List<string> Columns { get; set; } = new List<string>();
         public List<Dictionary<string, object>> Records { get; set; } = new List<Dictionary<string, object>>();
     }
