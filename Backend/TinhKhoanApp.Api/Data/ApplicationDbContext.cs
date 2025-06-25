@@ -194,6 +194,75 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
             modelBuilder.Entity<KPIDefinition>()
                 .Ignore(k => k.KpiIndicators);
 
+            // === DECIMAL PRECISION CONFIGURATION ===
+            // Fix all decimal property precision warnings
+            
+            // EmployeeKhoanAssignmentDetail
+            modelBuilder.Entity<EmployeeKhoanAssignmentDetail>(entity =>
+            {
+                entity.Property(e => e.ActualValue).HasPrecision(18, 2);
+                entity.Property(e => e.Score).HasPrecision(18, 2);
+                entity.Property(e => e.TargetValue).HasPrecision(18, 2);
+            });
+
+            // EmployeeKpiTarget
+            modelBuilder.Entity<EmployeeKpiTarget>(entity =>
+            {
+                entity.Property(e => e.ActualValue).HasPrecision(18, 2);
+                entity.Property(e => e.Score).HasPrecision(18, 2);
+                entity.Property(e => e.TargetValue).HasPrecision(18, 2);
+            });
+
+            // FinalPayout
+            modelBuilder.Entity<FinalPayout>(entity =>
+            {
+                entity.Property(e => e.CompletionFactor).HasPrecision(18, 4);
+                entity.Property(e => e.TotalAmount).HasPrecision(18, 2);
+                entity.Property(e => e.V1).HasPrecision(18, 2);
+                entity.Property(e => e.V2).HasPrecision(18, 2);
+            });
+
+            // KPIDefinition
+            modelBuilder.Entity<KPIDefinition>(entity =>
+            {
+                entity.Property(e => e.MaxScore).HasPrecision(18, 2);
+            });
+
+            // KpiIndicator
+            modelBuilder.Entity<KpiIndicator>(entity =>
+            {
+                entity.Property(e => e.MaxScore).HasPrecision(18, 2);
+            });
+
+            // KpiScoringRule
+            modelBuilder.Entity<KpiScoringRule>(entity =>
+            {
+                entity.Property(e => e.BonusPoints).HasPrecision(18, 2);
+                entity.Property(e => e.MaxValue).HasPrecision(18, 2);
+                entity.Property(e => e.MinValue).HasPrecision(18, 2);
+                entity.Property(e => e.PenaltyPoints).HasPrecision(18, 2);
+            });
+
+            // SalaryParameter
+            modelBuilder.Entity<SalaryParameter>(entity =>
+            {
+                entity.Property(e => e.Value).HasPrecision(18, 2);
+            });
+
+            // TransactionAdjustmentFactor
+            modelBuilder.Entity<TransactionAdjustmentFactor>(entity =>
+            {
+                entity.Property(e => e.Factor).HasPrecision(18, 4);
+            });
+
+            // UnitKhoanAssignmentDetail
+            modelBuilder.Entity<UnitKhoanAssignmentDetail>(entity =>
+            {
+                entity.Property(e => e.ActualValue).HasPrecision(18, 2);
+                entity.Property(e => e.Score).HasPrecision(18, 2);
+                entity.Property(e => e.TargetValue).HasPrecision(18, 2);
+            });
+
             // === DASHBOARD CONFIGURATION ===
             
             // Cấu hình DashboardIndicator
