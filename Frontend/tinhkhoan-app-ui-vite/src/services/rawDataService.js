@@ -127,6 +127,9 @@ class RawDataService {
   // 📤 Import dữ liệu theo loại với progress tracking và audio notification
   async importData(dataType, files, options = {}) {
     try {
+      console.log(`📤 Starting import for dataType: ${dataType}, files:`, 
+        files.map(f => ({ name: f.name, size: f.size, type: f.type })));
+      
       const formData = new FormData();
       
       // Thêm files vào FormData
@@ -142,6 +145,11 @@ class RawDataService {
       if (options.notes) {
         formData.append('Notes', options.notes);
       }
+      
+      // Thêm statement date nếu có
+      if (options.statementDate) {
+        formData.append('StatementDate', options.statementDate);
+      }
 
       // Tính tổng file size để track progress
       const totalSize = files.reduce((sum, file) => sum + file.size, 0);
@@ -152,10 +160,19 @@ class RawDataService {
       // Store this context for callback
       const self = this;
 
-      // ✅ FIX: Gọi đúng endpoint DataImport/upload với Category parameter
-      formData.append('Category', dataType);
+      // ✅ FIX: Gọi đúng endpoint import/{dataType} với Category parameter
+      const endpoint = `/import/${dataType}`;
+      console.log(`📤 Calling API endpoint: ${this.baseURL}${endpoint}`);
+      console.log('📤 Form data contents:', {
+        files: Array.from(formData.getAll('Files')).map(f => f.name),
+        options: {
+          archivePassword: formData.get('ArchivePassword') ? '***' : undefined,
+          notes: formData.get('Notes'),
+          statementDate: formData.get('StatementDate')
+        }
+      });
       
-      const response = await api.post('/DataImport/upload', formData, {
+      const response = await api.post(`${this.baseURL}${endpoint}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         },
@@ -221,7 +238,10 @@ class RawDataService {
         });
       }
 
-      // 🔧 Parse .NET $values format trong response
+      // Log response để debug
+      console.log(`� Import response:`, response.data);
+
+      // �🔧 Parse .NET $values format trong response
       let data = response.data;
       if (data && data.$values) {
         data = data.$values;
@@ -229,13 +249,26 @@ class RawDataService {
 
       return {
         success: true,
-        data: data
+        data: data,
+        originalResponse: response.data // Lưu response gốc để debug
       };
     } catch (error) {
       console.error(`❌ Lỗi import dữ liệu ${dataType}:`, error);
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response,
+        data: error.response?.data,
+        status: error.response?.status
+      });
+      
       return {
         success: false,
-        error: error.response?.data?.message || 'Lỗi kết nối server'
+        error: error.response?.data?.message || error.message || 'Lỗi kết nối server',
+        errorDetails: {
+          status: error.response?.status,
+          data: error.response?.data,
+          code: error.code
+        }
       };
     }
   }

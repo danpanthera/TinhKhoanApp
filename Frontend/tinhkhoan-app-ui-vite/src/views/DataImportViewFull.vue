@@ -443,9 +443,40 @@ const clearMessage = () => {
 
 const showError = (message) => {
   errorMessage.value = message
+  console.error('❌ Error message:', message)
   setTimeout(() => {
     errorMessage.value = ''
   }, 5000)
+}
+
+const showDetailedError = (mainMessage, error) => {
+  // Hiển thị thông báo lỗi chi tiết hơn để dễ dàng debug
+  console.error('❌ Detailed Error:', {
+    mainMessage,
+    error,
+    errorMessage: error?.message,
+    errorResponse: error?.response,
+    errorData: error?.response?.data
+  })
+  
+  let detailedMessage = mainMessage
+  
+  // Thêm chi tiết lỗi nếu có
+  if (error?.response?.data?.message) {
+    detailedMessage += `: ${error.response.data.message}`
+  } else if (error?.message) {
+    detailedMessage += `: ${error.message}`
+  }
+  
+  // Thêm thông tin debug nếu cần
+  if (process.env.NODE_ENV === 'development') {
+    detailedMessage += ` (Status: ${error?.response?.status || 'unknown'})`
+  }
+  
+  errorMessage.value = detailedMessage
+  setTimeout(() => {
+    errorMessage.value = ''
+  }, 8000) // Hiển thị lâu hơn để người dùng có thể đọc
 }
 
 const showSuccess = (message, timeout = 3000) => {
@@ -552,7 +583,7 @@ const clearDateFilter = () => {
 }
 
 // Data management methods
-const refreshAllData = async () => {
+const refreshAllData = async (skipSuccessMessage = false) => {
   try {
     loading.value = true
     loadingMessage.value = 'Đang tải lại dữ liệu...'
@@ -566,9 +597,16 @@ const refreshAllData = async () => {
       allImports.value = result.data || []
       console.log('✅ Loaded imports:', allImports.value.length, 'items')
       
+      // Debug log để kiểm tra dữ liệu
+      if (allImports.value.length > 0) {
+        console.log('📊 Sample import data:', allImports.value[0])
+      }
+      
       calculateDataTypeStats()
       
-      showSuccess(`✅ Đã tải lại dữ liệu thành công (${allImports.value.length} imports)`)
+      if (!skipSuccessMessage) {
+        showSuccess(`✅ Đã tải lại dữ liệu thành công (${allImports.value.length} imports)`)
+      }
     } else {
       const errorMsg = result.error || 'Không thể tải dữ liệu'
       console.error('🔥 Chi tiết lỗi:', {
@@ -590,7 +628,7 @@ const refreshAllData = async () => {
     
   } catch (error) {
     console.error('Error refreshing data:', error)
-    showError('Có lỗi xảy ra khi tải dữ liệu')
+    showDetailedError('Có lỗi xảy ra khi tải dữ liệu', error)
   } finally {
     loading.value = false
     loadingMessage.value = ''
@@ -991,30 +1029,22 @@ const performImport = async () => {
   uploadedFiles.value = 0
   
   try {
-    // Tạo form data
-    const formData = new FormData()
-    
-    // Thêm các file vào form data
-    selectedFiles.value.forEach(file => {
-      formData.append('files', file)
+    // Log thông tin trước khi gọi API
+    console.log(`📤 Importing data for ${selectedDataType.value} with ${selectedFiles.value.length} files...`, {
+      dataType: selectedDataType.value,
+      files: selectedFiles.value.map(f => ({ name: f.name, size: f.size })),
+      archivePassword: archivePassword.value ? '***' : undefined,
+      notes: importNotes.value,
+      statementDate: selectedFromDate.value
     })
     
-    // Thêm các thông tin khác
-    formData.append('dataType', selectedDataType.value)
-    if (archivePassword.value) {
-      formData.append('archivePassword', archivePassword.value)
-    }
-    if (importNotes.value) {
-      formData.append('notes', importNotes.value)
-    }
-    if (selectedFromDate.value) {
-      formData.append('statementDate', selectedFromDate.value)
-    }
+    currentUploadingFile.value = selectedFiles.value[0].name
     
     // Chuẩn bị options cho API call
     const options = {
       archivePassword: archivePassword.value,
       notes: importNotes.value,
+      statementDate: selectedFromDate.value,
       onProgress: (progressInfo) => {
         // Cập nhật thông tin progress
         uploadProgress.value = progressInfo.percentage
@@ -1033,28 +1063,71 @@ const performImport = async () => {
       }
     }
     
-    // Gọi API import data
-    console.log(`📤 Importing data for ${selectedDataType.value} with ${selectedFiles.value.length} files...`)
-    currentUploadingFile.value = selectedFiles.value[0].name
-    
     // Gọi API thực tế thay vì mô phỏng
     const response = await rawDataService.importData(selectedDataType.value, selectedFiles.value, options)
     
     if (response.success) {
       uploadProgress.value = 100
-      setTimeout(() => {
+      setTimeout(async () => {
         uploading.value = false
         showSuccess(`Import dữ liệu ${selectedDataType.value} thành công!`)
+        
+        // Đóng modal import
         closeImportModal()
-        refreshAllData() // Làm mới dữ liệu sau khi import
+        
+        // Làm mới dữ liệu (không hiển thị thông báo để tránh gây rối)
+        await refreshAllData(true)
+        
+        // Tự động hiển thị dữ liệu vừa import
+        setTimeout(() => {
+          // Nếu có chọn ngày, tự động hiển thị dữ liệu ngày đó
+          if (selectedFromDate.value) {
+            viewDataType(selectedDataType.value)
+          } else {
+            // Nếu không có ngày, hiển thị tất cả dữ liệu của loại đó
+            const dataTypeResults = allImports.value.filter(imp => 
+              imp.dataType === selectedDataType.value || 
+              imp.category === selectedDataType.value || 
+              imp.fileType === selectedDataType.value
+            )
+            filteredResults.value = dataTypeResults
+            
+            if (dataTypeResults.length > 0) {
+              showSuccess(`Hiển thị ${dataTypeResults.length} import(s) cho loại ${selectedDataType.value}`)
+              showDataViewModal.value = true
+            } else {
+              // Nếu không tìm thấy dữ liệu, kiểm tra lại với API
+              loading.value = true
+              loadingMessage.value = `Đang tải dữ liệu ${selectedDataType.value}...`
+              
+              try {
+                // Gọi API trực tiếp để lấy dữ liệu mới nhất
+                const result = await rawDataService.getByStatementDate(selectedDataType.value, '')
+                if (result.success && result.data && result.data.length > 0) {
+                  filteredResults.value = result.data
+                  showSuccess(`Hiển thị ${filteredResults.value.length} import(s) cho loại ${selectedDataType.value}`)
+                  showDataViewModal.value = true
+                } else {
+                  showError(`Không thể tìm thấy dữ liệu sau khi import. Vui lòng thử lại hoặc kiểm tra với quản trị viên.`)
+                }
+              } catch (error) {
+                console.error('Error fetching data after import:', error)
+                showError(`Lỗi khi tải dữ liệu sau khi import: ${error.message}`)
+              } finally {
+                loading.value = false
+                loadingMessage.value = ''
+              }
+            }
+          }
+        }, 500)
       }, 1000)
     } else {
-      showError(`Lỗi khi import dữ liệu: ${response.error}`)
+      showDetailedError(`Lỗi khi import dữ liệu`, response)
       uploading.value = false
     }
   } catch (error) {
     console.error('Error importing data:', error)
-    showError(`Lỗi khi import dữ liệu: ${error.message}`)
+    showDetailedError(`Lỗi khi import dữ liệu`, error)
     uploading.value = false
   }
 }
