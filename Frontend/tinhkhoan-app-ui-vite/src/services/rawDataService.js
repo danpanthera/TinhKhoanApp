@@ -276,6 +276,7 @@ class RawDataService {
   // 👁️ Xem trước dữ liệu đã import
   async previewData(importId) {
     try {
+      console.log(`🔍 Getting preview data for import ID: ${importId}`);
       const response = await api.get(`${this.baseURL}/${importId}/preview`);
       
       // 🔧 Parse .NET $values format
@@ -284,54 +285,49 @@ class RawDataService {
         data = data.$values;
       }
       
-      // 🔧 Check for previewData field specifically - fix issue where frontend can't find preview data
+      console.log('📊 Backend response:', data);
+      
+      // 🔧 Check for previewData field specifically
       if (data && data.previewData) {
         console.log('📋 Found previewData field in response, using it directly');
         return {
           success: true,
           data: {
             ...data,
-            previewRows: data.previewData // Create alias for frontend mapping
+            previewRows: data.previewData
           }
         };
       }
       
-      // Handle different response formats from backend
-      if (data && data.importInfo && !data.previewRows && !data.previewData) {
-        console.log('🔧 No previewRows or previewData found, extracting from importInfo');
-        // Mock some data based on the importInfo
-        const mockPreviewRows = [];
-        const recordsToGenerate = Math.min(10, data.importInfo.RecordsCount || 10);
-        
-        for (let i = 0; i < recordsToGenerate; i++) {
-          // Create a mock record based on the data type
-          const mockRecord = this.createMockRecordForDataType(
-            data.importInfo.DataType || 'UNKNOWN', 
-            i + 1
-          );
-          mockPreviewRows.push(mockRecord);
-        }
-        
-        console.log(`📊 Generated ${mockPreviewRows.length} mock preview rows`);
-        
+      // ✅ FIX: Sử dụng PreviewData từ backend thay vì tạo mock
+      if (data && data.PreviewData && Array.isArray(data.PreviewData)) {
+        console.log(`� Found ${data.PreviewData.length} real records from backend`);
         return {
           success: true,
           data: {
             ...data,
-            previewRows: mockPreviewRows
+            previewRows: data.PreviewData,
+            importInfo: {
+              DataType: data.Category || 'UNKNOWN',
+              RecordsCount: data.PreviewData.length,
+              FileName: data.FileName
+            }
           }
         };
       }
       
+      // Nếu không có dữ liệu thực, trả về lỗi thay vì mock
+      console.warn('⚠️ No real preview data found in backend response');
       return {
-        success: true,
-        data: data
+        success: false,
+        error: 'Không tìm thấy dữ liệu preview từ backend. Có thể file chưa được import đúng cách.'
       };
+      
     } catch (error) {
       console.error('❌ Lỗi xem trước dữ liệu:', error);
       return {
         success: false,
-        error: error.response?.data?.message || 'Lỗi kết nối server'
+        error: error.response?.data?.message || error.message || 'Lỗi kết nối server'
       };
     }
   }

@@ -14,6 +14,8 @@ using System.IO.Compression;
 using System.Text.RegularExpressions;
 using System.Globalization;
 using TinhKhoanApp.Api.Services;
+using System.Text.Json;
+using System.Text;
 
 namespace TinhKhoanApp.Api.Controllers
 {
@@ -108,14 +110,62 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
+                _logger.LogInformation("🔍 Getting data preview for record ID: {RecordId}", id);
+                
                 var record = await _context.ImportedDataRecords
                     .Include(r => r.ImportedDataItems)
                     .FirstOrDefaultAsync(r => r.Id == id);
 
                 if (record == null)
                 {
+                    _logger.LogWarning("⚠️ Import record with ID {RecordId} not found", id);
                     return NotFound(new { message = "Import record not found" });
                 }
+
+                _logger.LogInformation("📊 Found record: {FileName}, Items count: {ItemsCount}", 
+                    record.FileName, record.ImportedDataItems.Count);
+
+                // ✅ FIX: Luôn lấy đúng 20 bản ghi đầu tiên từ ImportedDataItems
+                var dataItems = record.ImportedDataItems.Take(20).ToList();
+                var previewData = new List<Dictionary<string, object>>();
+                int parsedCount = 0;
+                int errorCount = 0;
+                
+                foreach (var item in dataItems)
+                {
+                    try
+                    {
+                        if (!string.IsNullOrEmpty(item.RawData))
+                        {
+                            var parsedData = ParseJsonDataSafely(item.RawData);
+                            if (parsedData != null && parsedData.Count > 0)
+                            {
+                                previewData.Add(parsedData);
+                                parsedCount++;
+                            }
+                            else
+                            {
+                                // Nếu không parse được JSON, thử parse như CSV hoặc text thuần
+                                var fallbackData = ParseRawDataAsFallback(item.RawData, (int)item.Id);
+                                if (fallbackData != null && fallbackData.Count > 0)
+                                {
+                                    previewData.Add(fallbackData);
+                                    parsedCount++;
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception parseEx)
+                    {
+                        errorCount++;
+                        _logger.LogWarning("⚠️ Failed to parse item {ItemId}: {Error}", item.Id, parseEx.Message);
+                        _logger.LogDebug("Raw data content: {RawData}", item.RawData?.Length > 200 ? 
+                            item.RawData.Substring(0, 200) + "..." : item.RawData);
+                    }
+                }
+
+                // ✅ FIX: Đảm bảo luôn có RecordsCount chính xác từ database
+                var actualRecordsCount = record.ImportedDataItems.Count;
 
                 var preview = new DataPreviewResponse
                 {
@@ -124,34 +174,26 @@ namespace TinhKhoanApp.Api.Controllers
                     Category = record.Category,
                     ImportDate = record.ImportDate,
                     ImportedBy = record.ImportedBy,
-                    Columns = GetColumnsFromData(record.ImportedDataItems.FirstOrDefault()?.RawData ?? "{}"),
-                    PreviewData = record.ImportedDataItems.Take(100).Select(item => ParseJsonData(item.RawData)).ToList()
+                    RecordsCount = actualRecordsCount, // Số lượng thực tế từ database
+                    Columns = GetColumnsFromPreviewData(previewData),
+                    PreviewData = previewData
                 };
 
+                _logger.LogInformation("✅ Preview created: {DataCount}/{TotalCount} records parsed successfully, {ErrorCount} errors, Total records in DB: {ActualCount}", 
+                    parsedCount, dataItems.Count, errorCount, actualRecordsCount);
+                
                 return Ok(preview);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error getting data preview for record {RecordId}: {ErrorMessage}", id, ex.Message);
                 
-                // Trả về dữ liệu mock để tránh crash frontend
-                var mockPreview = new DataPreviewResponse
-                {
-                    Id = id,
-                    FileName = $"mock_data_{id}.csv",
-                    Category = "UNKNOWN",
-                    ImportDate = DateTime.Now,
-                    ImportedBy = "SYSTEM",
-                    Columns = new List<string> { "Column1", "Column2", "Column3", "Value" },
-                    PreviewData = new List<Dictionary<string, object>>
-                    {
-                        new() { { "Column1", "Sample Data 1" }, { "Column2", "100" }, { "Column3", "Type A" }, { "Value", "1000.50" } },
-                        new() { { "Column1", "Sample Data 2" }, { "Column2", "200" }, { "Column3", "Type B" }, { "Value", "2000.75" } },
-                        new() { { "Column1", "Sample Data 3" }, { "Column2", "150" }, { "Column3", "Type C" }, { "Value", "1500.25" } }
-                    }
-                };
-                
-                return Ok(mockPreview);
+                // ✅ FIX: Không trả về mock data nữa, trả về lỗi thực tế
+                return StatusCode(500, new { 
+                    message = "Failed to load preview data", 
+                    error = ex.Message,
+                    details = "Check server logs for more information"
+                });
             }
         }
 
@@ -480,71 +522,323 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
-        private async Task<List<ImportedDataItem>> ProcessExcelFile(IFormFile file)
+        private Task<List<ImportedDataItem>> ProcessExcelFile(IFormFile file)
         {
-            var items = new List<ImportedDataItem>();
-            
-            using var stream = file.OpenReadStream();
-            using var workbook = new XLWorkbook(stream);
-            var worksheet = workbook.Worksheet(1);
-            
-            var headers = new List<string>();
-            var headerRow = worksheet.Row(1);
-            for (int col = 1; col <= worksheet.ColumnsUsed().Count(); col++)
+            return Task.Run(() =>
             {
-                headers.Add(headerRow.Cell(col).GetString());
-            }
-
-            for (int row = 2; row <= worksheet.RowsUsed().Count(); row++)
-            {
-                var data = new Dictionary<string, object>();
-                for (int col = 1; col <= headers.Count; col++)
+                var items = new List<ImportedDataItem>();
+                
+                _logger.LogInformation("🔍 Processing Excel file: {FileName}, Size: {FileSize} bytes", file.FileName, file.Length);
+                
+                using var stream = file.OpenReadStream();
+                using var workbook = new XLWorkbook(stream);
+                var worksheet = workbook.Worksheet(1);
+                
+                var headers = new List<string>();
+                var headerRow = worksheet.Row(1);
+                var lastColumn = worksheet.ColumnsUsed().Count();
+                
+                for (int col = 1; col <= lastColumn; col++)
                 {
-                    var cellValue = worksheet.Row(row).Cell(col).Value;
-                    data[headers[col - 1]] = cellValue;
+                    var headerValue = headerRow.Cell(col).GetString().Trim();
+                    headers.Add(headerValue);
+                }
+                
+                _logger.LogInformation("📋 Excel Headers found: {HeaderCount} columns - {Headers}", headers.Count, string.Join(", ", headers.Take(5)));
+
+                var lastRow = worksheet.RowsUsed().Count();
+                int addedRecords = 0;
+                int skippedEmptyRows = 0;
+                int skippedSampleDataRows = 0;
+                int totalRowsInFile = lastRow - 1; // Trừ header
+                
+                for (int row = 2; row <= lastRow; row++) // Bắt đầu từ hàng 2 (bỏ header)
+                {
+                    var data = new Dictionary<string, object>();
+                    var values = new List<string>();
+                    bool hasData = false;
+                    
+                    // ✅ SIÊU FIX: Lấy tất cả giá trị trong hàng trước
+                    for (int col = 1; col <= headers.Count; col++)
+                    {
+                        var cellValue = worksheet.Row(row).Cell(col).Value;
+                        string stringValue = cellValue.ToString().Trim() ?? "";
+                        values.Add(stringValue);
+                        
+                        data[headers[col - 1]] = stringValue;
+                        
+                        if (!string.IsNullOrWhiteSpace(stringValue))
+                        {
+                            hasData = true;
+                        }
+                    }
+
+                    // ✅ SIÊU FIX: Bỏ qua hàng rỗng hoàn toàn
+                    if (!hasData)
+                    {
+                        skippedEmptyRows++;
+                        _logger.LogDebug("⏭️ Skipped completely empty row {RowNumber}", row);
+                        continue;
+                    }
+                    
+                    // ✅ SIÊU FIX: Bỏ qua hàng mẫu (sample data)
+                    if (IsSampleDataLine(values, headers))
+                    {
+                        skippedSampleDataRows++;
+                        _logger.LogDebug("⏭️ Skipped sample data row {RowNumber}: {SampleValues}", row, string.Join(", ", values.Take(3)));
+                        continue;
+                    }
+
+                    // ✅ SIÊU FIX: Chỉ thêm hàng có dữ liệu có nghĩa
+                    if (HasMeaningfulData(data))
+                    {
+                        items.Add(new ImportedDataItem
+                        {
+                            RawData = System.Text.Json.JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = false }),
+                            ProcessedDate = DateTime.UtcNow
+                        });
+                        addedRecords++;
+                        
+                        if (addedRecords <= 3) // Log 3 bản ghi đầu để debug
+                        {
+                            _logger.LogDebug("✅ Added record {RecordNumber}: {RecordData}", addedRecords, 
+                                System.Text.Json.JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = false }));
+                        }
+                    }
+                    else
+                    {
+                        skippedEmptyRows++;
+                        _logger.LogDebug("⏭️ Skipped row {RowNumber} - no meaningful data", row);
+                    }
                 }
 
-                items.Add(new ImportedDataItem
-                {
-                    RawData = System.Text.Json.JsonSerializer.Serialize(data),
-                    ProcessedDate = DateTime.UtcNow
-                });
-            }
+                _logger.LogInformation("✅ Excel Processing SIÊU CHÍNH XÁC completed: {FileName}" +
+                    "\n📊 Total rows in file: {TotalRows}" +
+                    "\n✅ Added valid records: {AddedRecords}" + 
+                    "\n⏭️ Skipped empty rows: {SkippedEmpty}" +
+                    "\n⏭️ Skipped sample data: {SkippedSample}" +
+                    "\n🎯 SUCCESS RATE: {SuccessRate:F1}%", 
+                    file.FileName, totalRowsInFile, addedRecords, skippedEmptyRows, skippedSampleDataRows,
+                    totalRowsInFile > 0 ? (double)addedRecords / totalRowsInFile * 100 : 0);
 
-            return items;
+                return items;
+            });
         }
 
         private async Task<List<ImportedDataItem>> ProcessCsvFile(IFormFile file)
         {
             var items = new List<ImportedDataItem>();
             
-            using var reader = new StreamReader(file.OpenReadStream());
-            var headers = (await reader.ReadLineAsync())?.Split(',').Select(h => h.Trim('"')).ToList();
+            _logger.LogInformation("🔍 Processing CSV file: {FileName}, Size: {FileSize} bytes", file.FileName, file.Length);
             
-            if (headers == null) return items;
-
-            string? line;
-            while ((line = await reader.ReadLineAsync()) != null)
+            using var reader = new StreamReader(file.OpenReadStream(), System.Text.Encoding.UTF8);
+            var allContent = await reader.ReadToEndAsync();
+            var lines = allContent.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+            
+            if (lines.Length == 0 || string.IsNullOrWhiteSpace(lines[0]))
             {
-                var values = line.Split(',').Select(v => v.Trim('"')).ToList();
+                _logger.LogWarning("⚠️ Empty or missing header line in CSV file: {FileName}", file.FileName);
+                return items;
+            }
+            
+            // ✅ SIÊU FIX: Parse header chính xác với RFC 4180 CSV standard
+            var headers = ParseCsvLine(lines[0]);
+            _logger.LogInformation("📋 CSV Headers found: {HeaderCount} columns - {Headers}", headers.Count, string.Join(", ", headers.Take(5)));
+
+            int addedRecords = 0;
+            int skippedEmptyLines = 0;
+            int skippedInvalidLines = 0;
+            int skippedSampleDataLines = 0;
+            int totalLinesInFile = lines.Length - 1; // Trừ header
+            
+            for (int i = 1; i < lines.Length; i++) // Bắt đầu từ dòng 2 (index 1)
+            {
+                var line = lines[i];
+                int lineNumber = i + 1; // Line number bắt đầu từ 1
+                
+                // ✅ SIÊU FIX: Bỏ qua dòng rỗng hoàn toàn
+                if (string.IsNullOrWhiteSpace(line) || line.Trim() == "")
+                {
+                    skippedEmptyLines++;
+                    _logger.LogDebug("⏭️ Skipped completely empty line {LineNumber}", lineNumber);
+                    continue;
+                }
+                
+                // ✅ SIÊU FIX: Parse line với RFC 4180 chuẩn (xử lý dấu ngoặc kép, dấu phẩy trong giá trị)
+                var values = ParseCsvLine(line);
+                
+                // ✅ SIÊU FIX: Bỏ qua dòng có tất cả giá trị rỗng
+                if (values.All(v => string.IsNullOrWhiteSpace(v)))
+                {
+                    skippedEmptyLines++;
+                    _logger.LogDebug("⏭️ Skipped line {LineNumber} - all values empty after parsing", lineNumber);
+                    continue;
+                }
+                
+                // ✅ SIÊU FIX: Bỏ qua dòng mẫu (sample data) thường có trong file
+                if (IsSampleDataLine(values, headers))
+                {
+                    skippedSampleDataLines++;
+                    _logger.LogDebug("⏭️ Skipped sample data line {LineNumber}: {SampleValues}", lineNumber, string.Join(", ", values.Take(3)));
+                    continue;
+                }
+                
+                // ✅ SIÊU FIX: Đảm bảo số cột đúng, thêm cột rỗng nếu thiếu, cắt bỏ nếu thừa
+                while (values.Count < headers.Count)
+                {
+                    values.Add("");
+                }
+                if (values.Count > headers.Count)
+                {
+                    values = values.Take(headers.Count).ToList();
+                }
+                
                 var data = new Dictionary<string, object>();
                 
-                for (int i = 0; i < Math.Min(headers.Count, values.Count); i++)
+                // ✅ SIÊU FIX: Map chính xác từng cột với header
+                for (int j = 0; j < headers.Count; j++)
                 {
-                    data[headers[i]] = values[i];
+                    string cleanHeader = headers[j].Trim();
+                    string cleanValue = values[j].Trim();
+                    data[cleanHeader] = cleanValue;
                 }
 
-                items.Add(new ImportedDataItem
+                // ✅ SIÊU FIX: Chỉ thêm bản ghi có dữ liệu thực (ít nhất 1 trường có giá trị có nghĩa)
+                if (HasMeaningfulData(data))
                 {
-                    RawData = System.Text.Json.JsonSerializer.Serialize(data),
-                    ProcessedDate = DateTime.UtcNow
-                });
+                    items.Add(new ImportedDataItem
+                    {
+                        RawData = System.Text.Json.JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = false }),
+                        ProcessedDate = DateTime.UtcNow
+                    });
+                    addedRecords++;
+                    
+                    if (addedRecords <= 3) // Log 3 bản ghi đầu để debug
+                    {
+                        _logger.LogDebug("✅ Added record {RecordNumber}: {RecordData}", addedRecords, 
+                            System.Text.Json.JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = false }));
+                    }
+                }
+                else
+                {
+                    skippedInvalidLines++;
+                    _logger.LogDebug("⏭️ Skipped line {LineNumber} - no meaningful data", lineNumber);
+                }
             }
+
+            _logger.LogInformation("✅ CSV Processing SIÊU CHÍNH XÁC completed: {FileName}" +
+                "\n📊 Total lines in file: {TotalLines}" +
+                "\n✅ Added valid records: {AddedRecords}" + 
+                "\n⏭️ Skipped empty lines: {SkippedEmpty}" +
+                "\n⏭️ Skipped invalid lines: {SkippedInvalid}" +
+                "\n⏭️ Skipped sample data: {SkippedSample}" +
+                "\n🎯 SUCCESS RATE: {SuccessRate:F1}%", 
+                file.FileName, totalLinesInFile, addedRecords, skippedEmptyLines, skippedInvalidLines, skippedSampleDataLines,
+                totalLinesInFile > 0 ? (double)addedRecords / totalLinesInFile * 100 : 0);
 
             return items;
         }
+        
+        // ✅ SIÊU HELPER: Parse CSV line theo chuẩn RFC 4180 (xử lý dấu ngoặc kép, dấu phẩy trong giá trị)
+        private List<string> ParseCsvLine(string line)
+        {
+            var values = new List<string>();
+            var currentValue = new StringBuilder();
+            bool insideQuotes = false;
+            bool nextCharIsEscaped = false;
+            
+            for (int i = 0; i < line.Length; i++)
+            {
+                char c = line[i];
+                
+                if (nextCharIsEscaped)
+                {
+                    currentValue.Append(c);
+                    nextCharIsEscaped = false;
+                    continue;
+                }
+                
+                if (c == '"')
+                {
+                    if (insideQuotes && i + 1 < line.Length && line[i + 1] == '"')
+                    {
+                        // Double quote escape: "" -> "
+                        currentValue.Append('"');
+                        i++; // Skip next quote
+                    }
+                    else
+                    {
+                        // Toggle quote state
+                        insideQuotes = !insideQuotes;
+                    }
+                }
+                else if (c == ',' && !insideQuotes)
+                {
+                    // End of field
+                    values.Add(currentValue.ToString());
+                    currentValue.Clear();
+                }
+                else
+                {
+                    currentValue.Append(c);
+                }
+            }
+            
+            // Add last field
+            values.Add(currentValue.ToString());
+            
+            return values;
+        }
+        
+        // ✅ SIÊU HELPER: Kiểm tra xem có phải dòng mẫu (sample data) không
+        private bool IsSampleDataLine(List<string> values, List<string> headers)
+        {
+            if (values.Count == 0) return false;
+            
+            var firstValue = values[0].ToLower().Trim();
+            
+            // Kiểm tra các pattern thường gặp của dòng mẫu
+            var samplePatterns = new[]
+            {
+                "example", "sample", "test", "mẫu", "ví dụ", "demo",
+                "xxx", "abc", "123", "n/a", "tbd", "pending",
+                "column", "field", "data", "value", "giá trị",
+                "header", "title", "tên cột", "dữ liệu mẫu"
+            };
+            
+            return samplePatterns.Any(pattern => firstValue.Contains(pattern));
+        }
+        
+        // ✅ SIÊU HELPER: Kiểm tra xem bản ghi có dữ liệu có nghĩa không
+        private bool HasMeaningfulData(Dictionary<string, object> data)
+        {
+            if (data == null || data.Count == 0) return false;
+            
+            foreach (var kvp in data)
+            {
+                var value = kvp.Value?.ToString()?.Trim();
+                if (!string.IsNullOrWhiteSpace(value) && 
+                    value.Length > 0 && 
+                    value != "0" && 
+                    value != "-" && 
+                    value != "N/A" && 
+                    value != "null" &&
+                    !IsOnlySpecialChars(value))
+                {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
+        // ✅ SIÊU HELPER: Kiểm tra chuỗi chỉ có ký tự đặc biệt
+        private bool IsOnlySpecialChars(string value)
+        {
+            return value.All(c => !char.IsLetterOrDigit(c));
+        }
 
-        private async Task<List<ImportedDataItem>> ProcessPdfFile(IFormFile file)
+        private Task<List<ImportedDataItem>> ProcessPdfFile(IFormFile file)
         {
             // PDF processing would require additional libraries like iTextSharp
             // For now, return empty list with a note
@@ -562,8 +856,10 @@ namespace TinhKhoanApp.Api.Controllers
                 }
             };
 
-            return items;
+            return Task.FromResult(items);
         }
+
+        // ✅ Parse JSON data safely
 
         private List<string> GetColumnsFromData(string rawData)
         {
@@ -580,19 +876,92 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
-        private Dictionary<string, object> ParseJsonData(string rawData)
+        // ✅ Safe JSON parsing method
+        private Dictionary<string, object>? ParseJsonDataSafely(string rawData)
         {
-            if (string.IsNullOrEmpty(rawData)) return new Dictionary<string, object>();
+            if (string.IsNullOrEmpty(rawData)) return null;
             
             try
             {
-                return System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(rawData) 
-                    ?? new Dictionary<string, object>();
+                var result = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(rawData);
+                return result?.Count > 0 ? result : null;
             }
-            catch
+            catch (Exception ex)
             {
-                return new Dictionary<string, object>();
+                _logger.LogDebug("Failed to parse as JSON: {Error}", ex.Message);
+                return null;
             }
+        }
+
+        // ✅ Fallback parsing for non-JSON data
+        private Dictionary<string, object>? ParseRawDataAsFallback(string rawData, int itemId)
+        {
+            if (string.IsNullOrEmpty(rawData)) return null;
+            
+            try
+            {
+                // Try parsing as CSV or delimited data
+                var lines = rawData.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                if (lines.Length > 0)
+                {
+                    var firstLine = lines[0].Trim();
+                    
+                    // Check if it looks like CSV
+                    if (firstLine.Contains(',') || firstLine.Contains(';') || firstLine.Contains('\t'))
+                    {
+                        var delimiter = firstLine.Contains('\t') ? '\t' : 
+                                       firstLine.Contains(';') ? ';' : ',';
+                        
+                        var values = firstLine.Split(delimiter);
+                        var result = new Dictionary<string, object>();
+                        
+                        for (int i = 0; i < values.Length && i < 10; i++) // Limit to 10 columns
+                        {
+                            result[$"Column{i + 1}"] = values[i].Trim().Trim('"');
+                        }
+                        
+                        return result.Count > 0 ? result : null;
+                    }
+                    
+                    // Fallback: treat as single text value
+                    return new Dictionary<string, object>
+                    {
+                        ["RawData"] = rawData.Length > 100 ? rawData.Substring(0, 100) + "..." : rawData,
+                        ["ItemId"] = itemId,
+                        ["DataType"] = "Text"
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug("Failed fallback parsing for item {ItemId}: {Error}", itemId, ex.Message);
+            }
+            
+            return null;
+        }
+
+        // ✅ Get columns from preview data
+        private List<string> GetColumnsFromPreviewData(List<Dictionary<string, object>> previewData)
+        {
+            if (previewData == null || previewData.Count == 0)
+                return new List<string>();
+            
+            var allColumns = new HashSet<string>();
+            foreach (var row in previewData.Take(5)) // Check first 5 rows for all possible columns
+            {
+                foreach (var key in row.Keys)
+                {
+                    allColumns.Add(key);
+                }
+            }
+            
+            return allColumns.OrderBy(c => c).ToList();
+        }
+
+        // ✅ Update existing ParseJsonData method
+        private Dictionary<string, object> ParseJsonData(string rawData)
+        {
+            return ParseJsonDataSafely(rawData) ?? new Dictionary<string, object>();
         }
 
         // POST: api/DataImport/upload-advanced - Enhanced upload with ZIP support and auto-categorization
