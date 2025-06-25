@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <!-- Tạm thời tắt một số nullable warnings để tập trung vào logic -->
-    <NoWarn>CS8618;CS8604;CS8601;CS8629;CS0219;CS1998</NoWarn>
+    <NoWarn>CS8618;CS8604;CS8601;CS8602;CS8629;CS0219;CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
