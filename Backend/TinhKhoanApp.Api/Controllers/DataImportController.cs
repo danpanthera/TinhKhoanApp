@@ -125,11 +125,20 @@ namespace TinhKhoanApp.Api.Controllers
                 _logger.LogInformation("📊 Found record: {FileName}, Items count: {ItemsCount}", 
                     record.FileName, record.ImportedDataItems.Count);
 
-                // ✅ FIX: Luôn lấy đúng 20 bản ghi đầu tiên từ ImportedDataItems
-                var dataItems = record.ImportedDataItems.Take(20).ToList();
+                // ✅ ULTRA PRECISION: Load ALL records hoặc lấy tối đa 1000 bản ghi đầu tiên để xem chi tiết
+                var maxPreviewItems = Request.Query.ContainsKey("all") ? int.MaxValue : 1000;
+                var dataItems = record.ImportedDataItems
+                    .OrderBy(i => i.Id) // Đảm bảo theo thứ tự tăng dần của ID để giữ đúng thứ tự file gốc 
+                    .Take(maxPreviewItems)
+                    .ToList();
+                
+                _logger.LogInformation("📝 Loading preview with {PreviewCount}/{TotalCount} records for detailed viewing", 
+                    dataItems.Count, record.ImportedDataItems.Count);
+                
                 var previewData = new List<Dictionary<string, object>>();
                 int parsedCount = 0;
                 int errorCount = 0;
+                int emptyCount = 0;
                 
                 foreach (var item in dataItems)
                 {
@@ -140,7 +149,26 @@ namespace TinhKhoanApp.Api.Controllers
                             var parsedData = ParseJsonDataSafely(item.RawData);
                             if (parsedData != null && parsedData.Count > 0)
                             {
+                                // Đánh dấu rõ record có dữ liệu
+                                parsedData["_hasData"] = true;
                                 previewData.Add(parsedData);
+                                parsedCount++;
+                            }
+                            else if (item.RawData == "{}" || item.RawData == "[]" || IsEmptyJsonObject(item.RawData))
+                            {
+                                // Xử lý dòng trống (thêm bản ghi rỗng vào preview)
+                                var emptyRecord = new Dictionary<string, object>();
+                                emptyRecord["_isEmpty"] = true;
+                                emptyRecord["_rowId"] = item.Id;
+                                // Thêm các key rỗng từ header nếu có
+                                if (previewData.Count > 0 && previewData[0].Count > 0)
+                                {
+                                    foreach (var key in previewData[0].Keys.Where(k => !k.StartsWith("_")))
+                                    {
+                                        emptyRecord[key] = "";
+                                    }
+                                }
+                                previewData.Add(emptyRecord);
                                 parsedCount++;
                             }
                             else
@@ -149,10 +177,19 @@ namespace TinhKhoanApp.Api.Controllers
                                 var fallbackData = ParseRawDataAsFallback(item.RawData, (int)item.Id);
                                 if (fallbackData != null && fallbackData.Count > 0)
                                 {
+                                    fallbackData["_fallback"] = true;
                                     previewData.Add(fallbackData);
                                     parsedCount++;
                                 }
                             }
+                        }
+                        else
+                        {
+                            // Xử lý dòng trống
+                            var emptyRecord = new Dictionary<string, object>();
+                            emptyRecord["_isEmpty"] = true;
+                            emptyRecord["_rowId"] = item.Id;
+                            previewData.Add(emptyRecord);
                         }
                     }
                     catch (Exception parseEx)
@@ -181,6 +218,21 @@ namespace TinhKhoanApp.Api.Controllers
 
                 _logger.LogInformation("✅ Preview created: {DataCount}/{TotalCount} records parsed successfully, {ErrorCount} errors, Total records in DB: {ActualCount}", 
                     parsedCount, dataItems.Count, errorCount, actualRecordsCount);
+                
+                // Thêm thông tin trạng thái hiển thị
+                preview.Status = new
+                {
+                    TotalDbRecords = actualRecordsCount,
+                    LoadedForPreview = dataItems.Count,
+                    ParsedSuccessfully = parsedCount,
+                    Errors = errorCount,
+                    IsComplete = dataItems.Count >= actualRecordsCount
+                };
+                
+                // Thêm hiển thị chi tiết về số lượng và pagination
+                preview.SummaryText = dataItems.Count >= actualRecordsCount
+                    ? $"Hiển thị tất cả {actualRecordsCount} bản ghi (100%)"
+                    : $"Hiển thị {dataItems.Count}/{actualRecordsCount} bản ghi ({(int)(dataItems.Count * 100.0 / actualRecordsCount)}%)";
                 
                 return Ok(preview);
             }
@@ -548,17 +600,17 @@ namespace TinhKhoanApp.Api.Controllers
 
                 var lastRow = worksheet.RowsUsed().Count();
                 int addedRecords = 0;
-                int skippedEmptyRows = 0;
-                int skippedSampleDataRows = 0;
-                int totalRowsInFile = lastRow - 1; // Trừ header
+                int processedEmptyAsNull = 0;
+                int totalDataRowsInFile = lastRow - 1; // Trừ header
                 
+                // ✅ ULTRA PRECISION: Process EVERY row after header, including empty ones
                 for (int row = 2; row <= lastRow; row++) // Bắt đầu từ hàng 2 (bỏ header)
                 {
                     var data = new Dictionary<string, object>();
                     var values = new List<string>();
                     bool hasData = false;
                     
-                    // ✅ SIÊU FIX: Lấy tất cả giá trị trong hàng trước
+                    // ✅ SIÊU FIX: Lấy tất cả giá trị trong hàng
                     for (int col = 1; col <= headers.Count; col++)
                     {
                         var cellValue = worksheet.Row(row).Cell(col).Value;
@@ -573,18 +625,13 @@ namespace TinhKhoanApp.Api.Controllers
                         }
                     }
 
-                    // ✅ SIÊU FIX: Chỉ bỏ qua hàng rỗng hoàn toàn để đảm bảo số bản ghi đúng với file gốc
                     if (!hasData)
                     {
-                        skippedEmptyRows++;
-                        _logger.LogDebug("⏭️ Skipped completely empty row {RowNumber}", row);
-                        continue;
+                        processedEmptyAsNull++;
+                        _logger.LogDebug("📝 Processed empty row {RowNumber} as null record", row);
                     }
                     
-                    // ✅ ULTRA FIXED: KHÔNG bỏ qua bất kỳ dòng nào khác
-                    // kể cả dòng mẫu, để đảm bảo số bản ghi chính xác 100% với file gốc
-                    
-                    // ✅ SIÊU FIX: Lưu mọi dòng có ít nhất 1 giá trị không rỗng
+                    // ✅ ULTRA PRECISION: Lưu MỌI hàng (kể cả rỗng) để đảm bảo số lượng chính xác
                     items.Add(new ImportedDataItem
                     {
                         RawData = System.Text.Json.JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = false }),
@@ -592,21 +639,20 @@ namespace TinhKhoanApp.Api.Controllers
                     });
                     addedRecords++;
                     
-                    if (addedRecords <= 3) // Log 3 bản ghi đầu để debug
+                    if (addedRecords <= 5) // Log 5 bản ghi đầu để debug
                     {
                         _logger.LogDebug("✅ Added record {RecordNumber}: {RecordData}", addedRecords, 
                             System.Text.Json.JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = false }));
                     }
                 }
 
-                _logger.LogInformation("✅ Excel Processing SIÊU CHÍNH XÁC completed: {FileName}" +
-                    "\n📊 Total rows in file: {TotalRows}" +
-                    "\n✅ Added valid records: {AddedRecords}" + 
-                    "\n⏭️ Skipped empty rows: {SkippedEmpty}" +
-                    "\n⏭️ Skipped sample data: {SkippedSample}" +
-                    "\n🎯 SUCCESS RATE: {SuccessRate:F1}%", 
-                    file.FileName, totalRowsInFile, addedRecords, skippedEmptyRows, skippedSampleDataRows,
-                    totalRowsInFile > 0 ? (double)addedRecords / totalRowsInFile * 100 : 0);
+                _logger.LogInformation("✅ Excel Processing ULTRA PRECISION completed: {FileName}" +
+                    "\n📊 Total data rows in file: {TotalDataRows}" +
+                    "\n✅ Added ALL records: {AddedRecords}" + 
+                    "\n📝 Empty rows processed as null: {ProcessedEmpty}" +
+                    "\n🎯 EXACT MATCH: {ExactMatch}% (should be 100%)", 
+                    file.FileName, totalDataRowsInFile, addedRecords, processedEmptyAsNull,
+                    totalDataRowsInFile == addedRecords ? 100.0 : 0.0);
 
                 return items;
             });
@@ -633,46 +679,43 @@ namespace TinhKhoanApp.Api.Controllers
             _logger.LogInformation("📋 CSV Headers found: {HeaderCount} columns - {Headers}", headers.Count, string.Join(", ", headers.Take(5)));
 
             int addedRecords = 0;
-            int skippedEmptyLines = 0;
-            int skippedInvalidLines = 0;
-            int skippedSampleDataLines = 0;
-            int totalLinesInFile = lines.Length - 1; // Trừ header
+            int processedEmptyAsNull = 0;
+            int totalDataLinesInFile = lines.Length - 1; // Trừ header
             
+            // ✅ ULTRA PRECISION: Process EVERY line after header, including empty ones
             for (int i = 1; i < lines.Length; i++) // Bắt đầu từ dòng 2 (index 1)
             {
                 var line = lines[i];
                 int lineNumber = i + 1; // Line number bắt đầu từ 1
                 
-                // ✅ SIÊU FIX: Chỉ bỏ qua dòng rỗng hoàn toàn để đảm bảo số bản ghi đúng với file gốc
+                // ✅ SIÊU FIX: Xử lý mọi dòng, kể cả dòng trống
+                List<string> values;
+                
                 if (string.IsNullOrWhiteSpace(line) || line.Trim() == "")
                 {
-                    skippedEmptyLines++;
-                    _logger.LogDebug("⏭️ Skipped completely empty line {LineNumber}", lineNumber);
-                    continue;
+                    // Tạo một record rỗng cho dòng trống để đảm bảo đếm đúng
+                    values = new List<string>();
+                    for (int j = 0; j < headers.Count; j++)
+                    {
+                        values.Add(""); // Thêm giá trị rỗng cho mỗi cột
+                    }
+                    processedEmptyAsNull++;
+                    _logger.LogDebug("📝 Processed empty line {LineNumber} as null record", lineNumber);
                 }
-                
-                // ✅ SIÊU FIX: Parse line với RFC 4180 chuẩn (xử lý dấu ngoặc kép, dấu phẩy trong giá trị)
-                var values = ParseCsvLine(line);
-                
-                // ✅ SIÊU FIX: Chỉ bỏ qua dòng có tất cả giá trị rỗng
-                if (values.Count == 0 || values.All(v => string.IsNullOrWhiteSpace(v)))
+                else
                 {
-                    skippedEmptyLines++;
-                    _logger.LogDebug("⏭️ Skipped line {LineNumber} - all values empty after parsing", lineNumber);
-                    continue;
-                }
-                
-                // ✅ ULTRA FIXED: KHÔNG bỏ qua bất kỳ dòng nào khác (kể cả dòng mẫu)
-                // để đảm bảo số bản ghi chính xác 100% với file gốc
-                
-                // ✅ SIÊU FIX: Đảm bảo số cột đúng, thêm cột rỗng nếu thiếu, cắt bỏ nếu thừa
-                while (values.Count < headers.Count)
-                {
-                    values.Add("");
-                }
-                if (values.Count > headers.Count)
-                {
-                    values = values.Take(headers.Count).ToList();
+                    // ✅ SIÊU FIX: Parse line với RFC 4180 chuẩn
+                    values = ParseCsvLine(line);
+                    
+                    // ✅ SIÊU FIX: Đảm bảo số cột đúng, thêm cột rỗng nếu thiếu, cắt bỏ nếu thừa
+                    while (values.Count < headers.Count)
+                    {
+                        values.Add("");
+                    }
+                    if (values.Count > headers.Count)
+                    {
+                        values = values.Take(headers.Count).ToList();
+                    }
                 }
                 
                 var data = new Dictionary<string, object>();
@@ -685,38 +728,28 @@ namespace TinhKhoanApp.Api.Controllers
                     data[cleanHeader] = cleanValue;
                 }
 
-                // ✅ SIÊU FIX: Chỉ thêm bản ghi có dữ liệu thực (ít nhất 1 trường có giá trị có nghĩa)
-                if (HasMeaningfulData(data))
+                // ✅ ULTRA PRECISION: Thêm MỌI record (kể cả rỗng) để đảm bảo số lượng chính xác
+                items.Add(new ImportedDataItem
                 {
-                    items.Add(new ImportedDataItem
-                    {
-                        RawData = System.Text.Json.JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = false }),
-                        ProcessedDate = DateTime.UtcNow
-                    });
-                    addedRecords++;
-                    
-                    if (addedRecords <= 3) // Log 3 bản ghi đầu để debug
-                    {
-                        _logger.LogDebug("✅ Added record {RecordNumber}: {RecordData}", addedRecords, 
-                            System.Text.Json.JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = false }));
-                    }
-                }
-                else
+                    RawData = System.Text.Json.JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = false }),
+                    ProcessedDate = DateTime.UtcNow
+                });
+                addedRecords++;
+                
+                if (addedRecords <= 5) // Log 5 bản ghi đầu để debug
                 {
-                    skippedInvalidLines++;
-                    _logger.LogDebug("⏭️ Skipped line {LineNumber} - no meaningful data", lineNumber);
+                    _logger.LogDebug("✅ Added record {RecordNumber}: {RecordData}", addedRecords, 
+                        System.Text.Json.JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = false }));
                 }
             }
 
-            _logger.LogInformation("✅ CSV Processing SIÊU CHÍNH XÁC completed: {FileName}" +
-                "\n📊 Total lines in file: {TotalLines}" +
-                "\n✅ Added valid records: {AddedRecords}" + 
-                "\n⏭️ Skipped empty lines: {SkippedEmpty}" +
-                "\n⏭️ Skipped invalid lines: {SkippedInvalid}" +
-                "\n⏭️ Skipped sample data: {SkippedSample}" +
-                "\n🎯 SUCCESS RATE: {SuccessRate:F1}%", 
-                file.FileName, totalLinesInFile, addedRecords, skippedEmptyLines, skippedInvalidLines, skippedSampleDataLines,
-                totalLinesInFile > 0 ? (double)addedRecords / totalLinesInFile * 100 : 0);
+            _logger.LogInformation("✅ CSV Processing ULTRA PRECISION completed: {FileName}" +
+                "\n📊 Total data lines in file: {TotalDataLines}" +
+                "\n✅ Added ALL records: {AddedRecords}" + 
+                "\n📝 Empty lines processed as null: {ProcessedEmpty}" +
+                "\n🎯 EXACT MATCH: {ExactMatch}% (should be 100%)", 
+                file.FileName, totalDataLinesInFile, addedRecords, processedEmptyAsNull,
+                totalDataLinesInFile == addedRecords ? 100.0 : 0.0);
 
             return items;
         }
@@ -1654,6 +1687,51 @@ namespace TinhKhoanApp.Api.Controllers
                 throw;
             }
         }
+
+        // Helper method to check if JSON is empty
+        private bool IsEmptyJsonObject(string json)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+                return true;
+            
+            try
+            {
+                // Thử parse thành Dictionary
+                var dict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(json);
+                if (dict == null || dict.Count == 0)
+                    return true;
+                
+                // Kiểm tra nếu tất cả giá trị đều null hoặc rỗng
+                bool allEmpty = true;
+                foreach (var value in dict.Values)
+                {
+                    if (value != null && value.ToString() != "")
+                    {
+                        allEmpty = false;
+                        break;
+                    }
+                }
+                
+                return allEmpty;
+            }
+            catch
+            {
+                // Thử parse thành List
+                try 
+                {
+                    var list = System.Text.Json.JsonSerializer.Deserialize<List<object>>(json);
+                    return list == null || list.Count == 0;
+                }
+                catch
+                {
+                    // Nếu không parse được, kiểm tra nếu chỉ có { }, [ ] hoặc whitespace
+                    json = json.Trim();
+                    return json == "{}" || json == "[]" ||
+                           (json.StartsWith("{") && json.EndsWith("}") && json.Length <= 4) ||
+                           (json.StartsWith("[") && json.EndsWith("]") && json.Length <= 4);
+                }
+            }
+        }
     }
 
     // 📊 Data Transfer Objects và Models
@@ -1706,5 +1784,9 @@ namespace TinhKhoanApp.Api.Controllers
         public int RecordsCount { get; set; }
         public List<Dictionary<string, object>> PreviewData { get; set; } = new();
         public List<string> Columns { get; set; } = new();
+        
+        // Thêm thông tin chi tiết về trạng thái hiển thị
+        public object? Status { get; set; }
+        public string? SummaryText { get; set; }
     }
 }
