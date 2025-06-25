@@ -1018,9 +1018,17 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 // Đọc dữ liệu từ file
                 var fileContent = await System.IO.File.ReadAllTextAsync(filePath);
-                var lines = fileContent.Split('\n');
+                // 🚨 FIX: Split chính xác và loại bỏ dòng trống không cần thiết ở đầu/cuối
+                var lines = fileContent.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
                 
-                if (lines.Length <= 1)
+                // 🚨 FIX: Loại bỏ dòng trống cuối file nếu có
+                var validLines = lines.Where((line, index) => 
+                    index == 0 || // Giữ header
+                    !string.IsNullOrEmpty(line) || // Giữ dòng có dữ liệu 
+                    index < lines.Length - 1 // Loại bỏ dòng trống cuối cùng
+                ).ToArray();
+                
+                if (validLines.Length <= 1)
                 {
                     return new RawDataImportResult
                     {
@@ -1031,7 +1039,7 @@ namespace TinhKhoanApp.Api.Controllers
                 }
                 
                 // Phân tích header
-                var headers = lines[0].Split(',').Select(h => h.Trim('"').Trim()).ToList();
+                var headers = validLines[0].Split(',').Select(h => h.Trim('"').Trim()).ToList();
                 
                 // Trích xuất ngày từ tên file
                 var statementDate = ExtractStatementDate(fileName);
@@ -1048,14 +1056,28 @@ namespace TinhKhoanApp.Api.Controllers
                 // Trích xuất mã chi nhánh từ tên file
                 var branchCode = ExtractBranchCode(fileName) ?? "7800";
                 
-                // Tạo records
+                // 🚨 FIX CRITICAL: Tạo records từ TỪNG DÒNG dữ liệu (không bỏ qua dòng nào)
                 var records = new List<RawDataRecord>();
-                for (int i = 1; i < lines.Length; i++)
+                for (int i = 1; i < validLines.Length; i++)
                 {
-                    var line = lines[i].Trim();
-                    if (string.IsNullOrEmpty(line)) continue;
+                    var line = validLines[i].Trim();
                     
-                    var values = line.Split(',').Select(v => v.Trim('"').Trim()).ToList();
+                    // 🚨 FIX: Xử lý MỌI dòng, kể cả dòng trống để đảm bảo số lượng CHÍNH XÁC
+                    List<string> values;
+                    if (string.IsNullOrEmpty(line))
+                    {
+                        // Tạo dòng rỗng với số cột đúng
+                        values = new List<string>();
+                        for (int k = 0; k < headers.Count; k++)
+                        {
+                            values.Add("");
+                        }
+                    }
+                    else
+                    {
+                        values = line.Split(',').Select(v => v.Trim('"').Trim()).ToList();
+                    }
+                    
                     var data = new Dictionary<string, object>();
                     
                     for (int j = 0; j < Math.Min(headers.Count, values.Count); j++)
@@ -1068,6 +1090,7 @@ namespace TinhKhoanApp.Api.Controllers
                     data["StatementDate"] = statementDate.Value.ToString("yyyy-MM-dd");
                     data["ImportDate"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                     data["ImportedBy"] = "System";
+                    data["RowNumber"] = i; // 🚨 THÊM: Số thứ tự dòng để tracking
                     
                     // Format data
                     var formattedData = FormatDataValues(data);
@@ -1128,12 +1151,21 @@ namespace TinhKhoanApp.Api.Controllers
                 
                 var tableName = CreateDynamicTable(dataType, statementDate.Value, branchCode, recordDicts);
                 
+                // 🚨 LOG CRITICAL INFO để debug
+                _logger.LogInformation("🚨 IMPORT SUMMARY - File: {FileName}" +
+                    "\n📁 Original file lines: {OriginalLines}" +
+                    "\n📋 Valid lines after cleanup: {ValidLines}" + 
+                    "\n📊 Data lines (excluding header): {DataLines}" +
+                    "\n✅ Records processed: {RecordsProcessed}" +
+                    "\n🎯 Expected count: {ExpectedCount} (should match file records)",
+                    fileName, lines.Length, validLines.Length, validLines.Length - 1, records.Count, validLines.Length - 1);
+                
                 return new RawDataImportResult
                 {
                     Success = true,
                     FileName = fileName,
                     RecordsProcessed = records.Count,
-                    Message = $"Đã import {records.Count} bản ghi thành công - Branch: {branchCode}",
+                    Message = $"✅ Đã import {records.Count} bản ghi thành công (File gốc: {validLines.Length - 1} dòng dữ liệu) - Branch: {branchCode}",
                     StatementDate = statementDate,
                     TableName = tableName,
                     DataType = dataType

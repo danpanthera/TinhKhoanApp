@@ -122,8 +122,14 @@ namespace TinhKhoanApp.Api.Controllers
                 _logger.LogInformation("📊 Found record: {FileName}, Items count: {ItemsCount}", 
                     record.FileName, record.ImportedDataItems.Count);
 
-                // ✅ ULTRA PRECISION: Load ALL records hoặc lấy tối đa 1000 bản ghi đầu tiên để xem chi tiết
-                var maxPreviewItems = Request.Query.ContainsKey("all") ? int.MaxValue : 1000;
+                // 🚨 FIX CRITICAL: Load ALL records không giới hạn để hiển thị ĐÚNG số lượng
+                // Chỉ giới hạn khi query param "limit" được truyền vào
+                var maxPreviewItems = int.MaxValue; // Mặc định lấy tất cả
+                if (Request.Query.ContainsKey("limit") && int.TryParse(Request.Query["limit"], out int customLimit))
+                {
+                    maxPreviewItems = customLimit;
+                }
+                
                 var dataItems = record.ImportedDataItems
                     .OrderBy(i => i.Id) // Đảm bảo theo thứ tự tăng dần của ID để giữ đúng thứ tự file gốc 
                     .Take(maxPreviewItems)
