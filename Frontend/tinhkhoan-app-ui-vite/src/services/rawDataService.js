@@ -85,44 +85,13 @@ class RawDataService {
         error: errorMessage,
         errorCode: error.code,
         errorStatus: error.response?.status,
-        // Fallback data để demo vẫn hoạt động
-        fallbackData: this.getMockData()
+        // Removed mock fallback data - throw error instead
+        data: []
       };
     }
   }
 
-  // 🔄 Mock data cho demo khi server không có
-  getMockData() {
-    return [
-      {
-        id: 'demo-1',
-        dataType: 'excel',
-        fileName: 'demo-data-lai-chau.xlsx',
-        uploadDate: '2025-06-21T10:30:00Z',
-        status: 'Completed',
-        recordCount: 1250,
-        fileSize: 2048576
-      },
-      {
-        id: 'demo-2', 
-        dataType: 'csv',
-        fileName: 'agribank-branches.csv',
-        uploadDate: '2025-06-20T15:45:00Z',
-        status: 'Completed',
-        recordCount: 23,
-        fileSize: 524288
-      },
-      {
-        id: 'demo-3',
-        dataType: 'archive',
-        fileName: 'kpi-data-2025.zip',
-        uploadDate: '2025-06-19T09:15:00Z', 
-        status: 'Processing',
-        recordCount: 0,
-        fileSize: 10485760
-      }
-    ];
-  }
+  // Removed mock data method - only use real API data
 
   // 📤 Import dữ liệu theo loại với progress tracking và audio notification
   async importData(dataType, files, options = {}) {
@@ -332,45 +301,7 @@ class RawDataService {
     }
   }
   
-  // Helper method to create mock records for different data types
-  createMockRecordForDataType(dataType, index) {
-    const baseRecord = {
-      id: 1000 + index,
-      recordIndex: index
-    };
-    
-    switch (dataType) {
-      case 'LN01':
-        return {
-          ...baseRecord,
-          soTaiKhoan: `LN${10000 + index}`,
-          tenKhachHang: `Khách hàng vay ${index}`,
-          soTien: 100000000 + (index * 10000000),
-          laiSuat: 7.5 + (index * 0.1),
-          ngayGiaiNgan: new Date(2023, 0, index + 1).toISOString().split('T')[0],
-          trangThai: 'Đang vay'
-        };
-      case 'DP01':
-        return {
-          ...baseRecord,
-          soTaiKhoan: `DP${20000 + index}`,
-          tenKhachHang: `Khách hàng gửi tiền ${index}`,
-          soTien: 50000000 + (index * 5000000),
-          laiSuat: 3.2 + (index * 0.05),
-          ngayMoTK: new Date(2023, 0, index + 1).toISOString().split('T')[0],
-          kyHan: index % 3 === 0 ? '3 tháng' : (index % 3 === 1 ? '6 tháng' : '12 tháng')
-        };
-      default:
-        return {
-          ...baseRecord,
-          column1: `Giá trị 1-${index}`,
-          column2: `Giá trị 2-${index}`,
-          column3: index * 1000,
-          column4: new Date(2023, 0, index + 1).toISOString().split('T')[0],
-          column5: index % 2 === 0 ? 'Có' : 'Không'
-        };
-    }
-  }
+  // Removed mock record creation - only use real API data
 
   // 🗑️ Xóa dữ liệu import
   async deleteImport(importId) {

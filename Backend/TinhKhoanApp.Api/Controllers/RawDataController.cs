@@ -56,7 +56,7 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 _logger.LogInformation("🔍 Lấy danh sách dữ liệu từ Temporal Tables...");
-                
+
                 // 🔥 LẤY DỮ LIỆU THẬT TỪ LEGACY TABLES (File Import Tracking)
                 var rawDataRecords = await _context.ImportedDataRecords
                     .OrderByDescending(x => x.ImportDate) // ✅ Sắp xếp theo ngày import mới nhất
@@ -117,7 +117,7 @@ namespace TinhKhoanApp.Api.Controllers
                             branchCode = match.Groups[1].Value;
                         }
                     }
-                    
+
                     processedRawDataImports.Add(new
                     {
                         item.Id,
@@ -198,8 +198,8 @@ namespace TinhKhoanApp.Api.Controllers
 
                     var result = await ProcessSingleFile(file, dataType, request.Notes ?? "");
                     results.Add(result);
-                    
-                    // ✅ File đơn đã được xử lý thành công  
+
+                    // ✅ File đơn đã được xử lý thành công
                     if (result.Success)
                     {
                         _logger.LogInformation("✅ Đã xử lý file đơn {FileName} thành công", file.FileName);
@@ -207,10 +207,10 @@ namespace TinhKhoanApp.Api.Controllers
                 }
 
                 var successCount = results.Count(r => r.Success);
-                return Ok(new 
-                { 
+                return Ok(new
+                {
                     message = $"Xử lý thành công {successCount}/{results.Count} file",
-                    results = results 
+                    results = results
                 });
             }
             catch (Exception ex)
@@ -227,12 +227,12 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 _logger.LogInformation("🔍 Preview request for import ID: {Id} từ ImportedDataRecords table", id);
-                
+
                 // 🔥 LẤY THÔNG TIN IMPORT TỪ IMPORTED DATA RECORDS (File Import Metadata)
                 var import = await _context.ImportedDataRecords
                     .Where(x => x.Id == id)
                     .FirstOrDefaultAsync();
-                
+
                 if (import == null)
                 {
                     _logger.LogWarning("❌ Import ID {Id} not found in ImportedDataRecords, returning mock data", id);
@@ -243,7 +243,7 @@ namespace TinhKhoanApp.Api.Controllers
                         {
                             Id = id,
                             FileName = $"mock-file-{id}.csv",
-                            DataType = "LN01", 
+                            DataType = "LN01",
                             ImportDate = DateTime.Now.AddDays(-1),
                             StatementDate = DateTime.Now.AddDays(-2),
                             RecordsCount = 100,
@@ -257,16 +257,16 @@ namespace TinhKhoanApp.Api.Controllers
                         isMockData = true
                     });
                 }
-                
-                _logger.LogInformation("✅ Found import: {FileName}, Category: {Category}, Records: {RecordsCount}", 
+
+                _logger.LogInformation("✅ Found import: {FileName}, Category: {Category}, Records: {RecordsCount}",
                     import.FileName, import.Category, import.RecordsCount);
-                
-                // 🔄 TẠO DỮ LIỆU PREVIEW THEO LOẠI DỮ LIỆU  
+
+                // 🔄 TẠO DỮ LIỆU PREVIEW THEO LOẠI DỮ LIỆU
                 var dataTypeForPreview = !string.IsNullOrEmpty(import.Category) ? import.Category : "LN01";
-                
+
                 // Generate more data records to ensure frontend always has data to display
                 var previewData = GeneratePreviewDataForType(dataTypeForPreview, Math.Max(20, import.RecordsCount));
-                
+
                 var response = new
                 {
                     importInfo = new
@@ -286,16 +286,16 @@ namespace TinhKhoanApp.Api.Controllers
                     temporalTablesEnabled = true,
                     isMockData = false
                 };
-                
-                _logger.LogInformation("🎯 Generated preview with {PreviewCount} records for {Category}", 
+
+                _logger.LogInformation("🎯 Generated preview with {PreviewCount} records for {Category}",
                     previewData.Count, dataTypeForPreview);
-                
+
                 return Ok(response);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "💥 Lỗi khi tạo preview cho import ID: {Id}. Error: {ErrorMessage}", id, ex.Message);
-                
+
                 // ⚡ FALLBACK: Trả về dữ liệu mock khi có lỗi database
                 _logger.LogInformation("🔄 Returning mock preview data due to database error");
                 return Task.FromResult<ActionResult<object>>(Ok(new
@@ -304,7 +304,7 @@ namespace TinhKhoanApp.Api.Controllers
                     {
                         Id = id,
                         FileName = $"fallback-file-{id}.csv",
-                        DataType = "LN01", 
+                        DataType = "LN01",
                         ImportDate = DateTime.Now.AddDays(-1),
                         StatementDate = DateTime.Now.AddDays(-2),
                         RecordsCount = 50,
@@ -326,13 +326,14 @@ namespace TinhKhoanApp.Api.Controllers
         {
             var records = new List<object>();
             int previewCount = Math.Min(10, totalRecords); // Hiển thị tối đa 10 records
-            
+
             for (int i = 1; i <= previewCount; i++)
             {
                 switch (dataType.ToUpper())
                 {
                     case "LN01": // Dữ liệu LOAN
-                        records.Add(new {
+                        records.Add(new
+                        {
                             soTaiKhoan = $"LOAN{10000 + i}",
                             tenKhachHang = $"Khách hàng vay {i}",
                             duNo = 100000000 + i * 10000000,
@@ -341,9 +342,10 @@ namespace TinhKhoanApp.Api.Controllers
                             ngayGiaiNgan = DateTime.Now.AddDays(-30 * (i % 12)).ToString("yyyy-MM-dd")
                         });
                         break;
-                        
+
                     case "DP01": // Dữ liệu tiền gửi
-                        records.Add(new {
+                        records.Add(new
+                        {
                             soTaiKhoan = $"DP{20000 + i}",
                             tenKhachHang = $"Khách hàng tiền gửi {i}",
                             soTien = 50000000 + i * 5000000,
@@ -352,9 +354,10 @@ namespace TinhKhoanApp.Api.Controllers
                             ngayMoSo = DateTime.Now.AddDays(-60 * (i % 10)).ToString("yyyy-MM-dd")
                         });
                         break;
-                        
+
                     case "GL01": // Bút toán GDV
-                        records.Add(new {
+                        records.Add(new
+                        {
                             soButToan = $"GL{50000 + i}",
                             maTaiKhoan = $"TK{1010 + (i % 10)}",
                             tenTaiKhoan = $"Tài khoản GL {i}",
@@ -363,9 +366,10 @@ namespace TinhKhoanApp.Api.Controllers
                             ngayHachToan = DateTime.Now.AddDays(-i).ToString("yyyy-MM-dd")
                         });
                         break;
-                        
+
                     default: // Dữ liệu chung cho các loại khác
-                        records.Add(new {
+                        records.Add(new
+                        {
                             id = i,
                             dataType = dataType,
                             sampleData = $"Sample data {i} for {dataType}",
@@ -375,7 +379,7 @@ namespace TinhKhoanApp.Api.Controllers
                         break;
                 }
             }
-            
+
             return records;
         }
 
@@ -386,11 +390,12 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 _logger.LogInformation("🔍 Lấy chi tiết Raw Data import từ Temporal Tables với ID: {Id}", id);
-                
+
                 // 🔥 TÌM TRONG LEGACY TABLES
                 var item = await _context.ImportedDataRecords
                     .Where(x => x.Id == id)
-                    .Select(x => new {
+                    .Select(x => new
+                    {
                         x.Id,
                         x.FileName,
                         DataType = x.Category, // Map Category to DataType
@@ -408,15 +413,15 @@ namespace TinhKhoanApp.Api.Controllers
                         }
                     })
                     .FirstOrDefaultAsync();
-                
+
                 if (item == null)
                 {
                     _logger.LogWarning("❌ Không tìm thấy Raw Data import với ID: {Id}", id);
                     return NotFound(new { message = $"Không tìm thấy dữ liệu import với ID: {id}" });
                 }
-                
+
                 _logger.LogInformation("✅ Đã tìm thấy Raw Data import với ID: {Id}, FileName: {FileName}", id, item.FileName);
-                    
+
                 return Ok(item);
             }
             catch (Exception ex)
@@ -441,20 +446,21 @@ namespace TinhKhoanApp.Api.Controllers
 
                 // � TÌM VÀ XÓA TRONG TEMPORAL TABLES
                 var import = await _context.ImportedDataRecords.FirstOrDefaultAsync(r => r.Id == id);
-                
+
                 if (import == null)
                 {
                     _logger.LogWarning("❌ Không tìm thấy import với ID: {Id}", id);
                     return NotFound(new { message = $"Không tìm thấy dữ liệu import với ID: {id}" });
                 }
-                
+
                 // Xóa dữ liệu
                 _context.ImportedDataRecords.Remove(import);
                 await _context.SaveChangesAsync();
-                
+
                 _logger.LogInformation("✅ Đã xóa thành công import với ID: {Id}, FileName: {FileName}", id, import.FileName);
 
-                return Ok(new { 
+                return Ok(new
+                {
                     message = $"Xóa dữ liệu import ID {id} thành công từ Temporal Tables",
                     deletedId = id,
                     fileName = import.FileName,
@@ -484,22 +490,22 @@ namespace TinhKhoanApp.Api.Controllers
 
                 _logger.LogInformation($"📋 Sẽ xóa {recordCount} ImportedDataRecords và {itemCount} ImportedDataItems");
 
-        // 🗑️ Xóa triệt để cả records và items với Raw SQL để tránh lỗi Temporal Tables
-        using var deleteConnection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
-        await deleteConnection.OpenAsync();
+                // 🗑️ Xóa triệt để cả records và items với Raw SQL để tránh lỗi Temporal Tables
+                using var deleteConnection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+                await deleteConnection.OpenAsync();
 
-        // Xóa Items trước để tránh vi phạm foreign key
-        if (itemCount > 0)
-        {
-            await deleteConnection.ExecuteAsync("DELETE FROM ImportedDataItems");
-            _logger.LogInformation($"✅ Đã xóa {itemCount} ImportedDataItems bằng Raw SQL");
-        }
+                // Xóa Items trước để tránh vi phạm foreign key
+                if (itemCount > 0)
+                {
+                    await deleteConnection.ExecuteAsync("DELETE FROM ImportedDataItems");
+                    _logger.LogInformation($"✅ Đã xóa {itemCount} ImportedDataItems bằng Raw SQL");
+                }
 
-        if (recordCount > 0)
-        {
-            await deleteConnection.ExecuteAsync("DELETE FROM ImportedDataRecords");
-            _logger.LogInformation($"✅ Đã xóa {recordCount} ImportedDataRecords bằng Raw SQL");
-        }
+                if (recordCount > 0)
+                {
+                    await deleteConnection.ExecuteAsync("DELETE FROM ImportedDataRecords");
+                    _logger.LogInformation($"✅ Đã xóa {recordCount} ImportedDataRecords bằng Raw SQL");
+                }
 
                 // 🧹 Đếm và xóa các bảng dữ liệu động (nếu có)
                 int dynamicTablesCleared = 0;
@@ -509,7 +515,7 @@ namespace TinhKhoanApp.Api.Controllers
                     {
                         var tableName = $"Data_{dataType}";
                         using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
-                        
+
                         // Kiểm tra bảng có tồn tại không
                         var tableExists = await connection.QueryFirstOrDefaultAsync<int>(
                             "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = @TableName",
@@ -567,7 +573,7 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                _logger.LogInformation("🔍 Kiểm tra trùng lặp từ Temporal Tables - DataType: {DataType}, StatementDate: {StatementDate}, FileName: {FileName}", 
+                _logger.LogInformation("🔍 Kiểm tra trùng lặp từ Temporal Tables - DataType: {DataType}, StatementDate: {StatementDate}, FileName: {FileName}",
                     dataType, statementDate, fileName);
 
                 if (!DateTime.TryParseExact(statementDate, "yyyyMMdd", null, DateTimeStyles.None, out var parsedDate))
@@ -580,7 +586,8 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     var existingImports = await _context.ImportedDataRecords
                         .Where(r => r.Category == dataType && r.StatementDate.HasValue && r.StatementDate.Value.Date == parsedDate.Date)
-                        .Select(r => new {
+                        .Select(r => new
+                        {
                             r.Id,
                             r.FileName,
                             r.ImportDate,
@@ -589,13 +596,14 @@ namespace TinhKhoanApp.Api.Controllers
                             r.Status
                         })
                         .ToListAsync();
-                    
+
                     _logger.LogInformation("✅ Tìm thấy {Count} bản ghi trùng lặp trong Temporal Tables", existingImports.Count);
-                    
-                    return Ok(new {
+
+                    return Ok(new
+                    {
                         hasDuplicate = existingImports.Any(),
                         existingImports = existingImports,
-                        message = existingImports.Any() 
+                        message = existingImports.Any()
                             ? $"Đã có {existingImports.Count} dữ liệu {dataType} cho ngày {parsedDate:dd/MM/yyyy}"
                             : "Không có dữ liệu trùng lặp",
                         temporalTablesEnabled = true
@@ -604,9 +612,10 @@ namespace TinhKhoanApp.Api.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "💥 Lỗi khi kiểm tra trùng lặp trong Temporal Tables: {Error}", ex.Message);
-                    
+
                     // Trả về response lỗi với thông tin rõ ràng
-                    return StatusCode(500, new {
+                    return StatusCode(500, new
+                    {
                         hasDuplicate = false,
                         existingImports = new object[] { },
                         message = "Lỗi khi kiểm tra trùng lặp trong database",
@@ -629,7 +638,7 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 _logger.LogInformation("Attempting to delete data for type: {DataType}, date: {StatementDate}", dataType, statementDate);
-                
+
                 if (!DateTime.TryParseExact(statementDate, "yyyyMMdd", null, DateTimeStyles.None, out var parsedDate))
                 {
                     return BadRequest(new { message = "Định dạng ngày không hợp lệ. Sử dụng yyyyMMdd" });
@@ -649,21 +658,22 @@ namespace TinhKhoanApp.Api.Controllers
                     {
                         deletedCount = importsToDelete.Count;
                         deletedRecords = importsToDelete.Sum(r => r.RecordsCount);
-                        
+
                         // Xóa từ database
                         _context.ImportedDataRecords.RemoveRange(importsToDelete);
                         await _context.SaveChangesAsync();
-                        
-                        _logger.LogInformation("✅ Đã xóa {Count} imports với {Records} records từ Temporal Tables", 
+
+                        _logger.LogInformation("✅ Đã xóa {Count} imports với {Records} records từ Temporal Tables",
                             deletedCount, deletedRecords);
                     }
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "💥 Lỗi khi xóa dữ liệu từ Temporal Tables: {Error}", ex.Message);
-                    return StatusCode(500, new { 
-                        message = "Lỗi khi xóa dữ liệu từ database", 
-                        error = ex.Message 
+                    return StatusCode(500, new
+                    {
+                        message = "Lỗi khi xóa dữ liệu từ database",
+                        error = ex.Message
                     });
                 }
 
@@ -679,8 +689,9 @@ namespace TinhKhoanApp.Api.Controllers
                 }
 
                 // Return success response
-                return Ok(new { 
-                    message = deletedCount > 0 
+                return Ok(new
+                {
+                    message = deletedCount > 0
                         ? $"✅ Đã xóa {deletedCount} import(s) với {deletedRecords} records cho {dataType} ngày {statementDate}"
                         : $"Không tìm thấy dữ liệu cho {dataType} ngày {statementDate}",
                     deletedImports = deletedCount,
@@ -702,7 +713,7 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 _logger.LogInformation("Getting data for type: {DataType}, date: {StatementDate}", dataType, statementDate);
-                
+
                 if (!DateTime.TryParseExact(statementDate, "yyyyMMdd", null, DateTimeStyles.None, out var parsedDate))
                 {
                     return BadRequest(new { message = "Định dạng ngày không hợp lệ. Sử dụng yyyyMMdd" });
@@ -713,7 +724,8 @@ namespace TinhKhoanApp.Api.Controllers
                     // � SỬ DỤNG TEMPORAL TABLES THAY VÌ MOCK DATA
                     var imports = await _context.ImportedDataRecords
                         .Where(r => r.Category == dataType && r.StatementDate.HasValue && r.StatementDate.Value.Date == parsedDate.Date)
-                        .Select(r => new {
+                        .Select(r => new
+                        {
                             r.Id,
                             r.FileName,
                             DataType = r.Category,
@@ -726,7 +738,7 @@ namespace TinhKhoanApp.Api.Controllers
                         })
                         .ToListAsync();
 
-                    _logger.LogInformation("✅ Tìm thấy {Count} imports từ Temporal Tables cho {DataType} ngày {Date}", 
+                    _logger.LogInformation("✅ Tìm thấy {Count} imports từ Temporal Tables cho {DataType} ngày {Date}",
                         imports.Count, dataType, parsedDate);
 
                     return Ok(imports);
@@ -734,8 +746,9 @@ namespace TinhKhoanApp.Api.Controllers
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "💥 Lỗi khi truy vấn Temporal Tables: {Error}", ex.Message);
-                    return StatusCode(500, new { 
-                        message = "Lỗi khi truy vấn dữ liệu từ database", 
+                    return StatusCode(500, new
+                    {
+                        message = "Lỗi khi truy vấn dữ liệu từ database",
                         error = ex.Message,
                         temporalTablesEnabled = true
                     });
@@ -760,18 +773,18 @@ namespace TinhKhoanApp.Api.Controllers
                     return BadRequest(new { message = "Định dạng ngày không hợp lệ. Sử dụng yyyyMMdd" });
                 }
 
-                _logger.LogInformation("🔍 GetByDateRange request: dataType={DataType}, fromDate={FromDate}, toDate={ToDate}", 
+                _logger.LogInformation("🔍 GetByDateRange request: dataType={DataType}, fromDate={FromDate}, toDate={ToDate}",
                     dataType, fromDate, toDate);
 
                 // ⚠️ FALLBACK: Trả về empty list vì temporal table chưa đồng bộ schema
                 _logger.LogWarning("⚠️ GetByDateRange: Sử dụng fallback empty list - temporal table chưa đồng bộ");
-                
+
                 return Ok(new List<object>());
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi lấy dữ liệu theo khoảng ngày");
-                
+
                 // ⚠️ FALLBACK: Trả về empty list thay vì lỗi 500
                 _logger.LogWarning("⚠️ GetByDateRange: Exception caught, returning empty list fallback");
                 return Ok(new List<object>());
@@ -784,7 +797,7 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                _logger.LogInformation("Getting raw data from table for dataType: {DataType}, statementDate: {StatementDate}", 
+                _logger.LogInformation("Getting raw data from table for dataType: {DataType}, statementDate: {StatementDate}",
                     dataType, statementDate);
 
                 // Kiểm tra loại dữ liệu hợp lệ
@@ -817,7 +830,7 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     var dateExists = await _context.ImportedDataRecords
                         .Where(x => x.FileType == dataType.ToUpper())
-                        .Where(x => x.StatementDate.HasValue && 
+                        .Where(x => x.StatementDate.HasValue &&
                                    x.StatementDate.Value.ToString("yyyy-MM-dd") == statementDate)
                         .AnyAsync();
 
@@ -838,11 +851,11 @@ namespace TinhKhoanApp.Api.Controllers
 
                 // 🎭 Tạo mock data dựa trên loại dữ liệu
                 var (columns, records) = GenerateMockRawTableData(dataType.ToUpper(), statementDate);
-                
+
                 // ✅ Khai báo biến tableName bị thiếu
                 var tableName = $"RawData_{dataType.ToUpper()}_{statementDate}";
 
-                _logger.LogInformation("Generated {Count} mock records for table {TableName} (có dữ liệu thật)", 
+                _logger.LogInformation("Generated {Count} mock records for table {TableName} (có dữ liệu thật)",
                     records.Count, tableName);
 
                 return Ok(new
@@ -858,10 +871,11 @@ namespace TinhKhoanApp.Api.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting raw data from table for dataType: {DataType}", dataType);
-                return StatusCode(500, new { 
-                    message = "Lỗi khi lấy dữ liệu thô từ bảng", 
+                return StatusCode(500, new
+                {
+                    message = "Lỗi khi lấy dữ liệu thô từ bảng",
                     error = ex.Message,
-                    details = ex.InnerException?.Message 
+                    details = ex.InnerException?.Message
                 });
             }
         }
@@ -871,9 +885,9 @@ namespace TinhKhoanApp.Api.Controllers
         {
             var columns = new List<string>();
             var records = new List<Dictionary<string, object>>();
-            
+
             int recordCount = new Random().Next(15, 30);
-            
+
             // Tạo columns theo loại dữ liệu
             switch (dataType)
             {
@@ -893,14 +907,14 @@ namespace TinhKhoanApp.Api.Controllers
                     columns = new List<string> { "MaDuLieu", "LoaiDuLieu", "NoiDung", "GiaTri", "NgayTao", "NguoiTao", "GhiChu" };
                     break;
             }
-            
+
             // Thêm cột metadata
             columns.Add("ImportId");
             columns.Add("BranchCode");
             columns.Add("StatementDate");
             columns.Add("ImportedBy");
             columns.Add("ImportDate");
-            
+
             // Tạo records
             DateTime parsedDate = DateTime.Now;
             if (statementDate != null)
@@ -910,11 +924,11 @@ namespace TinhKhoanApp.Api.Controllers
                     parsedDate = date;
                 }
             }
-            
+
             for (int i = 1; i <= recordCount; i++)
             {
                 var record = new Dictionary<string, object>();
-                
+
                 // Điền dữ liệu theo từng cột
                 foreach (var column in columns)
                 {
@@ -1004,10 +1018,10 @@ namespace TinhKhoanApp.Api.Controllers
                             break;
                     }
                 }
-                
+
                 records.Add(record);
             }
-            
+
             return (columns, records);
         }
 
@@ -1020,14 +1034,14 @@ namespace TinhKhoanApp.Api.Controllers
                 var fileContent = await System.IO.File.ReadAllTextAsync(filePath);
                 // 🚨 FIX: Split chính xác và loại bỏ dòng trống không cần thiết ở đầu/cuối
                 var lines = fileContent.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-                
+
                 // 🚨 FIX: Loại bỏ dòng trống cuối file nếu có
-                var validLines = lines.Where((line, index) => 
+                var validLines = lines.Where((line, index) =>
                     index == 0 || // Giữ header
-                    !string.IsNullOrEmpty(line) || // Giữ dòng có dữ liệu 
+                    !string.IsNullOrEmpty(line) || // Giữ dòng có dữ liệu
                     index < lines.Length - 1 // Loại bỏ dòng trống cuối cùng
                 ).ToArray();
-                
+
                 if (validLines.Length <= 1)
                 {
                     return new RawDataImportResult
@@ -1037,10 +1051,10 @@ namespace TinhKhoanApp.Api.Controllers
                         Message = "File không có dữ liệu"
                     };
                 }
-                
+
                 // Phân tích header
                 var headers = validLines[0].Split(',').Select(h => h.Trim('"').Trim()).ToList();
-                
+
                 // Trích xuất ngày từ tên file
                 var statementDate = ExtractStatementDate(fileName);
                 if (statementDate == null)
@@ -1052,16 +1066,16 @@ namespace TinhKhoanApp.Api.Controllers
                         Message = "Không tìm thấy ngày trong tên file"
                     };
                 }
-                
+
                 // Trích xuất mã chi nhánh từ tên file
                 var branchCode = ExtractBranchCode(fileName) ?? "7800";
-                
+
                 // 🚨 FIX CRITICAL: Tạo records từ TỪNG DÒNG dữ liệu (không bỏ qua dòng nào)
                 var records = new List<RawDataRecord>();
                 for (int i = 1; i < validLines.Length; i++)
                 {
                     var line = validLines[i].Trim();
-                    
+
                     // 🚨 FIX: Xử lý MỌI dòng, kể cả dòng trống để đảm bảo số lượng CHÍNH XÁC
                     List<string> values;
                     if (string.IsNullOrEmpty(line))
@@ -1077,31 +1091,31 @@ namespace TinhKhoanApp.Api.Controllers
                     {
                         values = line.Split(',').Select(v => v.Trim('"').Trim()).ToList();
                     }
-                    
+
                     var data = new Dictionary<string, object>();
-                    
+
                     for (int j = 0; j < Math.Min(headers.Count, values.Count); j++)
                     {
                         data[headers[j]] = values[j];
                     }
-                    
+
                     // Thêm thông tin metadata
                     data["BranchCode"] = branchCode;
                     data["StatementDate"] = statementDate.Value.ToString("yyyy-MM-dd");
                     data["ImportDate"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                     data["ImportedBy"] = "System";
                     data["RowNumber"] = i; // 🚨 THÊM: Số thứ tự dòng để tracking
-                    
+
                     // Format data
                     var formattedData = FormatDataValues(data);
-                    
+
                     records.Add(new RawDataRecord
                     {
                         JsonData = System.Text.Json.JsonSerializer.Serialize(formattedData),
                         ProcessedDate = DateTime.UtcNow
                     });
                 }
-                
+
                 // Tạo import record
                 var importedDataRecord = new ImportedDataRecord
                 {
@@ -1115,23 +1129,24 @@ namespace TinhKhoanApp.Api.Controllers
                     RecordsCount = records.Count,
                     Notes = $"{notes} - Branch: {branchCode}"
                 };
-                
+
                 // Lưu vào database
                 _context.ImportedDataRecords.Add(importedDataRecord);
                 await _context.SaveChangesAsync();
-                
+
                 // Lưu items với SQL trực tiếp
                 using (var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
                 {
                     await connection.OpenAsync();
-                    
+
                     foreach (var record in records)
                     {
-                        var sql = @"INSERT INTO ImportedDataItems 
-                                    (ImportedDataRecordId, RawData, ProcessedDate, ProcessingNotes) 
+                        var sql = @"INSERT INTO ImportedDataItems
+                                    (ImportedDataRecordId, RawData, ProcessedDate, ProcessingNotes)
                                     VALUES (@ImportedDataRecordId, @RawData, @ProcessedDate, @ProcessingNotes)";
-                        
-                        await connection.ExecuteAsync(sql, new { 
+
+                        await connection.ExecuteAsync(sql, new
+                        {
                             ImportedDataRecordId = importedDataRecord.Id,
                             RawData = record.JsonData,
                             ProcessedDate = DateTime.UtcNow,
@@ -1139,7 +1154,7 @@ namespace TinhKhoanApp.Api.Controllers
                         });
                     }
                 }
-                
+
                 // Tạo bảng động - chuyển đổi sang Dictionary format
                 var recordDicts = records.Select(r => new Dictionary<string, object>
                 {
@@ -1148,18 +1163,18 @@ namespace TinhKhoanApp.Api.Controllers
                     ["ProcessedDate"] = r.ProcessedDate,
                     ["ProcessingNotes"] = r.ProcessingNotes ?? "" // ✅ Xử lý null
                 }).ToList();
-                
+
                 var tableName = CreateDynamicTable(dataType, statementDate.Value, branchCode, recordDicts);
-                
+
                 // 🚨 LOG CRITICAL INFO để debug
                 _logger.LogInformation("🚨 IMPORT SUMMARY - File: {FileName}" +
                     "\n📁 Original file lines: {OriginalLines}" +
-                    "\n📋 Valid lines after cleanup: {ValidLines}" + 
+                    "\n📋 Valid lines after cleanup: {ValidLines}" +
                     "\n📊 Data lines (excluding header): {DataLines}" +
                     "\n✅ Records processed: {RecordsProcessed}" +
                     "\n🎯 Expected count: {ExpectedCount} (should match file records)",
                     fileName, lines.Length, validLines.Length, validLines.Length - 1, records.Count, validLines.Length - 1);
-                
+
                 return new RawDataImportResult
                 {
                     Success = true,
@@ -1191,18 +1206,18 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
                 await connection.OpenAsync();
-                
+
                 var tableExists = await connection.ExecuteScalarAsync<int>(
                     "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = @TableName",
                     new { TableName = tableName });
-                
+
                 if (tableExists > 0)
                 {
                     // Xóa dữ liệu cho ngày cụ thể thay vì xóa bảng
                     await connection.ExecuteAsync(
                         $"DELETE FROM [{tableName}] WHERE StatementDate = @StatementDate",
                         new { StatementDate = statementDate });
-                    
+
                     _logger.LogInformation($"Đã xóa dữ liệu cho ngày {statementDate:yyyy-MM-dd} từ bảng {tableName}");
                 }
             }
@@ -1217,12 +1232,12 @@ namespace TinhKhoanApp.Api.Controllers
         private Dictionary<string, object> FormatDataValues(Dictionary<string, object> data)
         {
             var formattedData = new Dictionary<string, object>();
-            
+
             foreach (var pair in data)
             {
                 var key = pair.Key;
                 var value = pair.Value;
-                
+
                 if (value is string strValue)
                 {
                     // Thử chuyển đổi ngày tháng
@@ -1231,7 +1246,7 @@ namespace TinhKhoanApp.Api.Controllers
                         formattedData[key] = dateValue.ToString("yyyy-MM-dd");
                         continue;
                     }
-                    
+
                     // Thử chuyển đổi số
                     if (decimal.TryParse(strValue, out var decimalValue))
                     {
@@ -1239,11 +1254,11 @@ namespace TinhKhoanApp.Api.Controllers
                         continue;
                     }
                 }
-                
+
                 // Giữ nguyên giá trị
                 formattedData[key] = value;
             }
-            
+
             return formattedData;
         }
 
@@ -1252,7 +1267,7 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                return System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(jsonData) 
+                return System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(jsonData)
                     ?? new Dictionary<string, object>();
             }
             catch
@@ -1260,7 +1275,7 @@ namespace TinhKhoanApp.Api.Controllers
                 return new Dictionary<string, object>();
             }
         }
-        
+
         // ✅ Thêm method ExtractStatementDate bị thiếu
         private DateTime? ExtractStatementDate(string fileName)
         {
@@ -1273,14 +1288,14 @@ namespace TinhKhoanApp.Api.Controllers
                     @"(\d{4}-\d{2}-\d{2})", // YYYY-MM-DD format
                     @"(\d{2}_\d{2}_\d{4})" // DD_MM_YYYY format
                 };
-                
+
                 foreach (var pattern in patterns)
                 {
                     var match = Regex.Match(fileName, pattern);
                     if (match.Success)
                     {
                         var dateStr = match.Groups[1].Value;
-                        
+
                         // Handle different formats
                         if (dateStr.Length == 8 && dateStr.All(char.IsDigit))
                         {
@@ -1298,7 +1313,7 @@ namespace TinhKhoanApp.Api.Controllers
                         {
                             // DD_MM_YYYY format
                             var parts = dateStr.Split('_');
-                            if (parts.Length == 3 && 
+                            if (parts.Length == 3 &&
                                 int.TryParse(parts[0], out var day) &&
                                 int.TryParse(parts[1], out var month) &&
                                 int.TryParse(parts[2], out var year))
@@ -1308,7 +1323,7 @@ namespace TinhKhoanApp.Api.Controllers
                         }
                     }
                 }
-                
+
                 _logger.LogWarning("⚠️ Không tìm thấy ngày hợp lệ trong tên file: {FileName}", fileName);
                 return null;
             }
@@ -1318,7 +1333,7 @@ namespace TinhKhoanApp.Api.Controllers
                 return null;
             }
         }
-        
+
         // ✅ Extract branch code from filename (expected format: 78XX)
         private string? ExtractBranchCode(string fileName)
         {
@@ -1329,7 +1344,7 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     return match.Groups[1].Value;
                 }
-                
+
                 _logger.LogInformation("ℹ️ Không tìm thấy mã chi nhánh trong tên file: {FileName}, sử dụng mặc định 7800", fileName);
                 return "7800";
             }
@@ -1347,7 +1362,7 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 var tableName = $"RawData_{dataType.ToUpper()}_{branchCode}_{statementDate:yyyyMMdd}";
                 _logger.LogInformation("🗃️ Tạo bảng động: {TableName} với {RecordCount} records", tableName, records.Count);
-                
+
                 // TODO: Implement actual dynamic table creation with Temporal Tables + Columnstore Indexes
                 // Hiện tại return mock table name
                 return tableName;
@@ -1358,18 +1373,18 @@ namespace TinhKhoanApp.Api.Controllers
                 return $"Mock_{dataType}_{statementDate:yyyyMMdd}";
             }
         }
-        
+
         // ✅ Thêm method ProcessSingleFile bị thiếu - SỬA ĐỂ LƯU VÀO DATABASE
         private async Task<RawDataImportResult> ProcessSingleFile(IFormFile file, string dataType, string notes)
         {
             try
             {
                 _logger.LogInformation("📁 Xử lý file đơn: {FileName} cho loại {DataType}", file.FileName, dataType);
-                
+
                 // Đọc nội dung file
                 using var reader = new StreamReader(file.OpenReadStream());
                 var content = await reader.ReadToEndAsync();
-                
+
                 // Parse CSV content
                 var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
                 if (lines.Length == 0)
@@ -1381,36 +1396,36 @@ namespace TinhKhoanApp.Api.Controllers
                         FileName = file.FileName
                     };
                 }
-                
+
                 var records = new List<Dictionary<string, object>>();
                 var headers = lines[0].Split(',').Select(h => h.Trim('"').Trim()).ToList();
-                
+
                 // Trích xuất ngày sao kê từ tên file
                 var statementDate = ExtractStatementDate(file.FileName) ?? DateTime.Now.Date;
                 var branchCode = ExtractBranchCode(file.FileName) ?? "7800";
-                
-                _logger.LogInformation("🔍 Trích xuất từ file {FileName}: StatementDate={StatementDate}, BranchCode={BranchCode}", 
+
+                _logger.LogInformation("🔍 Trích xuất từ file {FileName}: StatementDate={StatementDate}, BranchCode={BranchCode}",
                     file.FileName, statementDate.ToString("yyyy-MM-dd"), branchCode);
-                
+
                 for (int i = 1; i < lines.Length; i++)
                 {
                     var values = lines[i].Split(',').Select(v => v.Trim('"').Trim()).ToList();
                     var record = new Dictionary<string, object>();
-                    
+
                     for (int j = 0; j < Math.Min(headers.Count, values.Count); j++)
                     {
                         record[headers[j]] = values[j];
                     }
-                    
+
                     // Thêm metadata
                     record["BranchCode"] = branchCode;
                     record["StatementDate"] = statementDate.ToString("yyyy-MM-dd");
                     record["ImportDate"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                     record["ImportedBy"] = "System";
-                    
+
                     records.Add(record);
                 }
-                
+
                 // 💾 LƯU VÀO DATABASE
                 var importedDataRecord = new ImportedDataRecord
                 {
@@ -1424,13 +1439,13 @@ namespace TinhKhoanApp.Api.Controllers
                     RecordsCount = records.Count,
                     Notes = $"{notes} - Branch: {branchCode}"
                 };
-                
+
                 _context.ImportedDataRecords.Add(importedDataRecord);
                 await _context.SaveChangesAsync();
-                
-                _logger.LogInformation("✅ Đã lưu ImportedDataRecord ID={Id} với {Count} records", 
+
+                _logger.LogInformation("✅ Đã lưu ImportedDataRecord ID={Id} với {Count} records",
                     importedDataRecord.Id, records.Count);
-                
+
                 // 💾 LƯU CÁC ITEMS
                 foreach (var record in records)
                 {
@@ -1443,10 +1458,10 @@ namespace TinhKhoanApp.Api.Controllers
                     };
                     _context.ImportedDataItems.Add(item);
                 }
-                
+
                 await _context.SaveChangesAsync();
                 _logger.LogInformation("✅ Đã lưu {Count} ImportedDataItems", records.Count);
-                
+
                 return new RawDataImportResult
                 {
                     Success = true,
@@ -1483,7 +1498,7 @@ namespace TinhKhoanApp.Api.Controllers
                     .Take(limit)
                     .ToListAsync();
 
-                // Build the response in memory 
+                // Build the response in memory
                 var result = new List<object>();
                 foreach (var item in rawDataList)
                 {
@@ -1562,9 +1577,9 @@ namespace TinhKhoanApp.Api.Controllers
                 // Use raw SQL to bypass Entity Framework type mapping completely
                 using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
                 await connection.OpenAsync();
-                
+
                 var sql = @"
-                    SELECT TOP(@Limit) 
+                    SELECT TOP(@Limit)
                         Id,
                         ImportDate,
                         FileName,
@@ -1573,11 +1588,11 @@ namespace TinhKhoanApp.Api.Controllers
                         ImportedBy,
                         RecordsCount,
                         Notes
-                    FROM ImportedDataRecords 
+                    FROM ImportedDataRecords
                     ORDER BY ImportDate DESC";
-                
+
                 var rawResults = await connection.QueryAsync(sql, new { Limit = limit });
-                
+
                 // Build response manually from raw data
                 var result = rawResults.Select(x => new
                 {

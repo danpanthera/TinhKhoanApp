@@ -28,7 +28,7 @@ namespace TinhKhoanApp.Api.Controllers
         private readonly IStatementDateService _statementDateService;
 
         public DataImportController(
-            ApplicationDbContext context, 
+            ApplicationDbContext context,
             ILogger<DataImportController> logger,
             IStatementDateService statementDateService)
         {
@@ -45,7 +45,7 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 var importedData = await _context.ImportedDataRecords
                     .OrderByDescending(r => r.ImportDate)
-                    .Select(r => new 
+                    .Select(r => new
                     {
                         r.Id,
                         r.FileName,
@@ -89,9 +89,10 @@ namespace TinhKhoanApp.Api.Controllers
                     results.Add(result);
                 }
 
-                return Ok(new { 
+                return Ok(new
+                {
                     message = $"Successfully processed {results.Count(r => r.Success)} out of {results.Count} files",
-                    results = results 
+                    results = results
                 });
             }
             catch (Exception ex)
@@ -108,7 +109,7 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 _logger.LogInformation("🔍 Getting data preview for record ID: {RecordId}", id);
-                
+
                 var record = await _context.ImportedDataRecords
                     .Include(r => r.ImportedDataItems)
                     .FirstOrDefaultAsync(r => r.Id == id);
@@ -119,7 +120,7 @@ namespace TinhKhoanApp.Api.Controllers
                     return NotFound(new { message = "Import record not found" });
                 }
 
-                _logger.LogInformation("📊 Found record: {FileName}, Items count: {ItemsCount}", 
+                _logger.LogInformation("📊 Found record: {FileName}, Items count: {ItemsCount}",
                     record.FileName, record.ImportedDataItems.Count);
 
                 // 🚨 FIX CRITICAL: Load ALL records không giới hạn để hiển thị ĐÚNG số lượng
@@ -129,20 +130,20 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     maxPreviewItems = customLimit;
                 }
-                
+
                 var dataItems = record.ImportedDataItems
-                    .OrderBy(i => i.Id) // Đảm bảo theo thứ tự tăng dần của ID để giữ đúng thứ tự file gốc 
+                    .OrderBy(i => i.Id) // Đảm bảo theo thứ tự tăng dần của ID để giữ đúng thứ tự file gốc
                     .Take(maxPreviewItems)
                     .ToList();
-                
-                _logger.LogInformation("📝 Loading preview with {PreviewCount}/{TotalCount} records for detailed viewing", 
+
+                _logger.LogInformation("📝 Loading preview with {PreviewCount}/{TotalCount} records for detailed viewing",
                     dataItems.Count, record.ImportedDataItems.Count);
-                
+
                 var previewData = new List<Dictionary<string, object>>();
                 int parsedCount = 0;
                 int errorCount = 0;
                 int emptyCount = 0;
-                
+
                 foreach (var item in dataItems)
                 {
                     try
@@ -199,7 +200,7 @@ namespace TinhKhoanApp.Api.Controllers
                     {
                         errorCount++;
                         _logger.LogWarning("⚠️ Failed to parse item {ItemId}: {Error}", item.Id, parseEx.Message);
-                        _logger.LogDebug("Raw data content: {RawData}", item.RawData?.Length > 200 ? 
+                        _logger.LogDebug("Raw data content: {RawData}", item.RawData?.Length > 200 ?
                             item.RawData.Substring(0, 200) + "..." : item.RawData);
                     }
                 }
@@ -219,9 +220,9 @@ namespace TinhKhoanApp.Api.Controllers
                     PreviewData = previewData
                 };
 
-                _logger.LogInformation("✅ Preview created: {DataCount}/{TotalCount} records parsed successfully, {ErrorCount} errors, Total records in DB: {ActualCount}", 
+                _logger.LogInformation("✅ Preview created: {DataCount}/{TotalCount} records parsed successfully, {ErrorCount} errors, Total records in DB: {ActualCount}",
                     parsedCount, dataItems.Count, errorCount, actualRecordsCount);
-                
+
                 // Thêm thông tin trạng thái hiển thị
                 preview.Status = new
                 {
@@ -231,21 +232,22 @@ namespace TinhKhoanApp.Api.Controllers
                     Errors = errorCount,
                     IsComplete = dataItems.Count >= actualRecordsCount
                 };
-                
+
                 // Thêm hiển thị chi tiết về số lượng và pagination
                 preview.SummaryText = dataItems.Count >= actualRecordsCount
                     ? $"Hiển thị tất cả {actualRecordsCount} bản ghi (100%)"
                     : $"Hiển thị {dataItems.Count}/{actualRecordsCount} bản ghi ({(int)(dataItems.Count * 100.0 / actualRecordsCount)}%)";
-                
+
                 return Ok(preview);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error getting data preview for record {RecordId}: {ErrorMessage}", id, ex.Message);
-                
+
                 // ✅ FIX: Không trả về mock data nữa, trả về lỗi thực tế
-                return StatusCode(500, new { 
-                    message = "Failed to load preview data", 
+                return StatusCode(500, new
+                {
+                    message = "Failed to load preview data",
                     error = ex.Message,
                     details = "Check server logs for more information"
                 });
@@ -285,44 +287,45 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 _logger.LogInformation($"🗑️ Attempting to delete import record with ID: {id}");
-                
+
                 // Parse ID as integer if possible
                 if (!int.TryParse(id, out int recordId))
                 {
                     _logger.LogWarning($"❌ Invalid ID format: {id}");
                     return BadRequest(new { message = $"ID không hợp lệ: {id}" });
                 }
-                
+
                 // Tìm bản ghi cần xóa
                 var record = await _context.ImportedDataRecords
                     .Include(r => r.ImportedDataItems)
                     .FirstOrDefaultAsync(r => r.Id == recordId);
-                
+
                 if (record == null)
                 {
                     _logger.LogWarning($"❌ Import record with ID {recordId} not found");
                     return NotFound(new { message = $"Không tìm thấy bản ghi với ID {recordId}" });
                 }
-                
+
                 // Lưu thông tin để trả về
                 var fileName = record.FileName;
                 var category = record.Category;
                 var recordsCount = record.RecordsCount;
-                
+
                 // Xóa các ImportedDataItem liên quan trước
                 if (record.ImportedDataItems != null && record.ImportedDataItems.Any())
                 {
                     _logger.LogInformation($"🗑️ Deleting {record.ImportedDataItems.Count} related data items");
                     _context.ImportedDataItems.RemoveRange(record.ImportedDataItems);
                 }
-                
+
                 // Xóa bản ghi chính
                 _context.ImportedDataRecords.Remove(record);
                 await _context.SaveChangesAsync();
-                
+
                 _logger.LogInformation($"✅ Successfully deleted import record {recordId}: {fileName}");
-                
-                return Ok(new { 
+
+                return Ok(new
+                {
                     message = $"Đã xóa thành công bản ghi {fileName}",
                     id = recordId,
                     fileName = fileName,
@@ -349,7 +352,7 @@ namespace TinhKhoanApp.Api.Controllers
                     .ToListAsync();
 
                 using var workbook = new XLWorkbook();
-                
+
                 // Summary sheet
                 var summarySheet = workbook.Worksheets.Add("Summary");
                 summarySheet.Cell(1, 1).Value = "Import Summary";
@@ -376,18 +379,18 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     var sheet = workbook.Worksheets.Add(categoryGroup.Key);
                     var categoryRecords = categoryGroup.SelectMany(r => r.ImportedDataItems).ToList();
-                    
+
                     if (categoryRecords.Any())
                     {
                         var firstRecord = ParseJsonData(categoryRecords.First().RawData);
                         var columns = firstRecord.Keys.ToList();
-                        
+
                         // Headers
                         for (int i = 0; i < columns.Count; i++)
                         {
                             sheet.Cell(1, i + 1).Value = columns[i];
                         }
-                        
+
                         // Data
                         int dataRow = 2;
                         foreach (var item in categoryRecords)
@@ -409,7 +412,7 @@ namespace TinhKhoanApp.Api.Controllers
                 workbook.SaveAs(stream);
                 var content = stream.ToArray();
 
-                return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+                return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     $"KPI_Data_Export_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx");
             }
             catch (Exception ex)
@@ -435,7 +438,7 @@ namespace TinhKhoanApp.Api.Controllers
                 }
 
                 using var workbook = new XLWorkbook();
-                
+
                 // Create sheet with record name
                 var sheetName = $"{record.Category}_{record.Id}";
                 var worksheet = workbook.Worksheets.Add(sheetName);
@@ -445,7 +448,7 @@ namespace TinhKhoanApp.Api.Controllers
                     // Get columns from first item
                     var firstItem = record.ImportedDataItems.First();
                     var columns = GetColumnsFromData(firstItem.RawData);
-                    
+
                     // Add headers
                     for (int i = 0; i < columns.Count; i++)
                     {
@@ -478,7 +481,7 @@ namespace TinhKhoanApp.Api.Controllers
                 workbook.SaveAs(stream);
                 stream.Position = 0;
 
-                return File(stream.ToArray(), 
+                return File(stream.ToArray(),
                     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     $"{record.FileName.Replace('.', '_')}_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx");
             }
@@ -496,7 +499,7 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 // Extract statement date from filename
                 var statementDate = _statementDateService.ExtractStatementDateFromFileName(file.FileName);
-                
+
                 var record = new ImportedDataRecord
                 {
                     FileName = file.FileName,
@@ -536,10 +539,10 @@ namespace TinhKhoanApp.Api.Controllers
                     // Tạm thời comment out compression để tránh lỗi database schema
                     // var dataToCompress = items.Select(item => new { item.RawData, item.ProcessingNotes }).ToList();
                     // var (compressedData, compressionRatio) = await _compressionService.CompressDataAsync(dataToCompress);
-                    
+
                     // record.CompressedData = compressedData;
                     // record.CompressionRatio = compressionRatio;
-                    
+
                     // _logger.LogInformation($"Compressed {items.Count} records with ratio {compressionRatio:P2} for file {file.FileName}");
                 }
 
@@ -555,7 +558,7 @@ namespace TinhKhoanApp.Api.Controllers
                     Success = true,
                     FileName = file.FileName,
                     RecordsProcessed = items.Count,
-                    Message = $"Successfully processed {items.Count} records" + 
+                    Message = $"Successfully processed {items.Count} records" +
                              (statementDate.HasValue ? $" for statement date {statementDate:yyyy-MM-dd}" : "")
                 };
             }
@@ -577,46 +580,46 @@ namespace TinhKhoanApp.Api.Controllers
             return Task.Run(() =>
             {
                 var items = new List<ImportedDataItem>();
-                
+
                 _logger.LogInformation("🔍 Processing Excel file: {FileName}, Size: {FileSize} bytes", file.FileName, file.Length);
-                
+
                 using var stream = file.OpenReadStream();
                 using var workbook = new XLWorkbook(stream);
                 var worksheet = workbook.Worksheet(1);
-                
+
                 var headers = new List<string>();
                 var headerRow = worksheet.Row(1);
                 var lastColumn = worksheet.ColumnsUsed().Count();
-                
+
                 for (int col = 1; col <= lastColumn; col++)
                 {
                     var headerValue = headerRow.Cell(col).GetString().Trim();
                     headers.Add(headerValue);
                 }
-                
+
                 _logger.LogInformation("📋 Excel Headers found: {HeaderCount} columns - {Headers}", headers.Count, string.Join(", ", headers.Take(5)));
 
                 var lastRow = worksheet.RowsUsed().Count();
                 int addedRecords = 0;
                 int processedEmptyAsNull = 0;
                 int totalDataRowsInFile = lastRow - 1; // Trừ header
-                
+
                 // ✅ ULTRA PRECISION: Process EVERY row after header, including empty ones
                 for (int row = 2; row <= lastRow; row++) // Bắt đầu từ hàng 2 (bỏ header)
                 {
                     var data = new Dictionary<string, object>();
                     var values = new List<string>();
                     bool hasData = false;
-                    
+
                     // ✅ SIÊU FIX: Lấy tất cả giá trị trong hàng
                     for (int col = 1; col <= headers.Count; col++)
                     {
                         var cellValue = worksheet.Row(row).Cell(col).Value;
                         string stringValue = cellValue.ToString().Trim() ?? "";
                         values.Add(stringValue);
-                        
+
                         data[headers[col - 1]] = stringValue;
-                        
+
                         if (!string.IsNullOrWhiteSpace(stringValue))
                         {
                             hasData = true;
@@ -628,7 +631,7 @@ namespace TinhKhoanApp.Api.Controllers
                         processedEmptyAsNull++;
                         _logger.LogDebug("📝 Processed empty row {RowNumber} as null record", row);
                     }
-                    
+
                     // ✅ ULTRA PRECISION: Lưu MỌI hàng (kể cả rỗng) để đảm bảo số lượng chính xác
                     items.Add(new ImportedDataItem
                     {
@@ -636,19 +639,19 @@ namespace TinhKhoanApp.Api.Controllers
                         ProcessedDate = DateTime.UtcNow
                     });
                     addedRecords++;
-                    
+
                     if (addedRecords <= 5) // Log 5 bản ghi đầu để debug
                     {
-                        _logger.LogDebug("✅ Added record {RecordNumber}: {RecordData}", addedRecords, 
+                        _logger.LogDebug("✅ Added record {RecordNumber}: {RecordData}", addedRecords,
                             System.Text.Json.JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = false }));
                     }
                 }
 
                 _logger.LogInformation("✅ Excel Processing ULTRA PRECISION completed: {FileName}" +
                     "\n📊 Total data rows in file: {TotalDataRows}" +
-                    "\n✅ Added ALL records: {AddedRecords}" + 
+                    "\n✅ Added ALL records: {AddedRecords}" +
                     "\n📝 Empty rows processed as null: {ProcessedEmpty}" +
-                    "\n🎯 EXACT MATCH: {ExactMatch}% (should be 100%)", 
+                    "\n🎯 EXACT MATCH: {ExactMatch}% (should be 100%)",
                     file.FileName, totalDataRowsInFile, addedRecords, processedEmptyAsNull,
                     totalDataRowsInFile == addedRecords ? 100.0 : 0.0);
 
@@ -659,19 +662,19 @@ namespace TinhKhoanApp.Api.Controllers
         private async Task<List<ImportedDataItem>> ProcessCsvFile(IFormFile file)
         {
             var items = new List<ImportedDataItem>();
-            
+
             _logger.LogInformation("🔍 Processing CSV file: {FileName}, Size: {FileSize} bytes", file.FileName, file.Length);
-            
+
             using var reader = new StreamReader(file.OpenReadStream(), System.Text.Encoding.UTF8);
             var allContent = await reader.ReadToEndAsync();
             var lines = allContent.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-            
+
             if (lines.Length == 0 || string.IsNullOrWhiteSpace(lines[0]))
             {
                 _logger.LogWarning("⚠️ Empty or missing header line in CSV file: {FileName}", file.FileName);
                 return items;
             }
-            
+
             // ✅ SIÊU FIX: Parse header chính xác với RFC 4180 CSV standard
             var headers = ParseCsvLine(lines[0]);
             _logger.LogInformation("📋 CSV Headers found: {HeaderCount} columns - {Headers}", headers.Count, string.Join(", ", headers.Take(5)));
@@ -679,16 +682,16 @@ namespace TinhKhoanApp.Api.Controllers
             int addedRecords = 0;
             int processedEmptyAsNull = 0;
             int totalDataLinesInFile = lines.Length - 1; // Trừ header
-            
+
             // ✅ ULTRA PRECISION: Process EVERY line after header, including empty ones
             for (int i = 1; i < lines.Length; i++) // Bắt đầu từ dòng 2 (index 1)
             {
                 var line = lines[i];
                 int lineNumber = i + 1; // Line number bắt đầu từ 1
-                
+
                 // ✅ SIÊU FIX: Xử lý mọi dòng, kể cả dòng trống
                 List<string> values;
-                
+
                 if (string.IsNullOrWhiteSpace(line) || line.Trim() == "")
                 {
                     // Tạo một record rỗng cho dòng trống để đảm bảo đếm đúng
@@ -704,7 +707,7 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     // ✅ SIÊU FIX: Parse line với RFC 4180 chuẩn
                     values = ParseCsvLine(line);
-                    
+
                     // ✅ SIÊU FIX: Đảm bảo số cột đúng, thêm cột rỗng nếu thiếu, cắt bỏ nếu thừa
                     while (values.Count < headers.Count)
                     {
@@ -715,9 +718,9 @@ namespace TinhKhoanApp.Api.Controllers
                         values = values.Take(headers.Count).ToList();
                     }
                 }
-                
+
                 var data = new Dictionary<string, object>();
-                
+
                 // ✅ SIÊU FIX: Map chính xác từng cột với header
                 for (int j = 0; j < headers.Count; j++)
                 {
@@ -733,25 +736,25 @@ namespace TinhKhoanApp.Api.Controllers
                     ProcessedDate = DateTime.UtcNow
                 });
                 addedRecords++;
-                
+
                 if (addedRecords <= 5) // Log 5 bản ghi đầu để debug
                 {
-                    _logger.LogDebug("✅ Added record {RecordNumber}: {RecordData}", addedRecords, 
+                    _logger.LogDebug("✅ Added record {RecordNumber}: {RecordData}", addedRecords,
                         System.Text.Json.JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = false }));
                 }
             }
 
             _logger.LogInformation("✅ CSV Processing ULTRA PRECISION completed: {FileName}" +
                 "\n📊 Total data lines in file: {TotalDataLines}" +
-                "\n✅ Added ALL records: {AddedRecords}" + 
+                "\n✅ Added ALL records: {AddedRecords}" +
                 "\n📝 Empty lines processed as null: {ProcessedEmpty}" +
-                "\n🎯 EXACT MATCH: {ExactMatch}% (should be 100%)", 
+                "\n🎯 EXACT MATCH: {ExactMatch}% (should be 100%)",
                 file.FileName, totalDataLinesInFile, addedRecords, processedEmptyAsNull,
                 totalDataLinesInFile == addedRecords ? 100.0 : 0.0);
 
             return items;
         }
-        
+
         // ✅ SIÊU HELPER: Parse CSV line theo chuẩn RFC 4180 (xử lý dấu ngoặc kép, dấu phẩy trong giá trị)
         private List<string> ParseCsvLine(string line)
         {
@@ -759,18 +762,18 @@ namespace TinhKhoanApp.Api.Controllers
             var currentValue = new StringBuilder();
             bool insideQuotes = false;
             bool nextCharIsEscaped = false;
-            
+
             for (int i = 0; i < line.Length; i++)
             {
                 char c = line[i];
-                
+
                 if (nextCharIsEscaped)
                 {
                     currentValue.Append(c);
                     nextCharIsEscaped = false;
                     continue;
                 }
-                
+
                 if (c == '"')
                 {
                     if (insideQuotes && i + 1 < line.Length && line[i + 1] == '"')
@@ -796,13 +799,13 @@ namespace TinhKhoanApp.Api.Controllers
                     currentValue.Append(c);
                 }
             }
-            
+
             // Add last field
             values.Add(currentValue.ToString());
-            
+
             return values;
         }
-        
+
         // ✅ SIÊU HELPER: Kiểm tra xem có phải dòng mẫu (sample data) không
         // ⚠️ SIÊU IMPORTANT: Vô hiệu hóa hoàn toàn việc kiểm tra dòng mẫu
         // để đảm bảo giữ nguyên số lượng bản ghi từ file gốc. Tất cả dòng
@@ -813,7 +816,7 @@ namespace TinhKhoanApp.Api.Controllers
             // KHÔNG LỌC bất kỳ dòng nào khác kể cả dòng mẫu/dòng test để đảm bảo số lượng bản ghi chính xác
             return values.Count == 0 || values.All(v => string.IsNullOrWhiteSpace(v));
         }
-        
+
         // ✅ SIÊU HELPER: Kiểm tra xem bản ghi có dữ liệu không trống không
         // ⚠️ ULTRA FIXED: Giờ chỉ kiểm tra dòng có hoàn toàn trống không
         // Chấp nhận MỌI dòng có ít nhất 1 giá trị bất kỳ (kể cả "0", "-", "N/A", và các ký tự đặc biệt)
@@ -821,12 +824,12 @@ namespace TinhKhoanApp.Api.Controllers
         private bool HasMeaningfulData(Dictionary<string, object> data)
         {
             if (data == null || data.Count == 0) return false;
-            
+
             // Chấp nhận MỌI dòng có ít nhất 1 giá trị không trống hoàn toàn
             // KHÔNG lọc bất kỳ nội dung nào, kể cả dòng có ký tự đặc biệt hoặc dòng mẫu
             return data.Any(kvp => !string.IsNullOrWhiteSpace(kvp.Value?.ToString()));
         }
-        
+
         // ✅ SIÊU HELPER: Kiểm tra chuỗi chỉ có ký tự đặc biệt
         private bool IsOnlySpecialChars(string value)
         {
@@ -859,7 +862,7 @@ namespace TinhKhoanApp.Api.Controllers
         private List<string> GetColumnsFromData(string rawData)
         {
             if (string.IsNullOrEmpty(rawData)) return new List<string>();
-            
+
             try
             {
                 var data = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(rawData);
@@ -875,7 +878,7 @@ namespace TinhKhoanApp.Api.Controllers
         private Dictionary<string, object>? ParseJsonDataSafely(string rawData)
         {
             if (string.IsNullOrEmpty(rawData)) return null;
-            
+
             try
             {
                 var result = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(rawData);
@@ -892,7 +895,7 @@ namespace TinhKhoanApp.Api.Controllers
         private Dictionary<string, object>? ParseRawDataAsFallback(string rawData, int itemId)
         {
             if (string.IsNullOrEmpty(rawData)) return null;
-            
+
             try
             {
                 // Try parsing as CSV or delimited data
@@ -900,24 +903,24 @@ namespace TinhKhoanApp.Api.Controllers
                 if (lines.Length > 0)
                 {
                     var firstLine = lines[0].Trim();
-                    
+
                     // Check if it looks like CSV
                     if (firstLine.Contains(',') || firstLine.Contains(';') || firstLine.Contains('\t'))
                     {
-                        var delimiter = firstLine.Contains('\t') ? '\t' : 
+                        var delimiter = firstLine.Contains('\t') ? '\t' :
                                        firstLine.Contains(';') ? ';' : ',';
-                        
+
                         var values = firstLine.Split(delimiter);
                         var result = new Dictionary<string, object>();
-                        
+
                         for (int i = 0; i < values.Length && i < 10; i++) // Limit to 10 columns
                         {
                             result[$"Column{i + 1}"] = values[i].Trim().Trim('"');
                         }
-                        
+
                         return result.Count > 0 ? result : null;
                     }
-                    
+
                     // Fallback: treat as single text value
                     return new Dictionary<string, object>
                     {
@@ -931,7 +934,7 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 _logger.LogDebug("Failed fallback parsing for item {ItemId}: {Error}", itemId, ex.Message);
             }
-            
+
             return null;
         }
 
@@ -940,7 +943,7 @@ namespace TinhKhoanApp.Api.Controllers
         {
             if (previewData == null || previewData.Count == 0)
                 return new List<string>();
-            
+
             var allColumns = new HashSet<string>();
             foreach (var row in previewData.Take(5)) // Check first 5 rows for all possible columns
             {
@@ -949,7 +952,7 @@ namespace TinhKhoanApp.Api.Controllers
                     allColumns.Add(key);
                 }
             }
-            
+
             return allColumns.OrderBy(c => c).ToList();
         }
 
@@ -977,7 +980,7 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     var fileInfo = AnalyzeFile(file.FileName);
                     processedFiles.Add(fileInfo);
-                    
+
                     var result = await ProcessSingleFile(file, fileInfo);
                     allResults.Add(result);
                 }
@@ -985,7 +988,8 @@ namespace TinhKhoanApp.Api.Controllers
                 // Sort results by branch code ascending (7800 -> 7801 -> 7802...)
                 var sortedResults = allResults.OrderBy(r => r.BranchCode).ToList();
 
-                return Ok(new { 
+                return Ok(new
+                {
                     message = $"Successfully processed {sortedResults.Count(r => r.Success)} out of {sortedResults.Count} files",
                     results = sortedResults,
                     processedFiles = processedFiles
@@ -1051,7 +1055,7 @@ namespace TinhKhoanApp.Api.Controllers
         {
             var branchName = GetBranchName(branchCode);
             var reportType = GetReportType(reportCode);
-            
+
             return $"{branchName}_{reportType}";
         }
 
@@ -1060,7 +1064,7 @@ namespace TinhKhoanApp.Api.Controllers
             return branchCode switch
             {
                 "7800" => "CnLaiChau",
-                "7801" => "CnTamDuong", 
+                "7801" => "CnTamDuong",
                 "7802" => "CnPhongTho",
                 "7803" => "CnSinHo",
                 "7804" => "CnMuongTe",
@@ -1068,7 +1072,7 @@ namespace TinhKhoanApp.Api.Controllers
                 "7806" => "CnThanhPho",
                 "7807" => "CnTanUyen",
                 "7808" => "CnNamNhun",
-                
+
                 _ => $"Chi_nhanh_{branchCode}"
             };
         }
@@ -1173,10 +1177,10 @@ namespace TinhKhoanApp.Api.Controllers
         private Task<List<ImportedDataItem>> ProcessExcelStream(Stream stream, ProcessedFileInfo fileInfo)
         {
             var items = new List<ImportedDataItem>();
-            
+
             using var workbook = new XLWorkbook(stream);
             var worksheet = workbook.Worksheet(1);
-            
+
             var headers = new List<string>();
             var headerRow = worksheet.Row(1);
             for (int col = 1; col <= worksheet.ColumnsUsed().Count(); col++)
@@ -1184,7 +1188,7 @@ namespace TinhKhoanApp.Api.Controllers
                 headers.Add(headerRow.Cell(col).GetString());
             }
 
-            for (int row = 2; row <= worksheet.RowsUsed().Count(); row++)  
+            for (int row = 2; row <= worksheet.RowsUsed().Count(); row++)
             {
                 var rowData = new Dictionary<string, object>();
                 for (int col = 1; col <= headers.Count; col++)
@@ -1209,11 +1213,11 @@ namespace TinhKhoanApp.Api.Controllers
             return Task.FromResult(items);
         }
 
-        // 📝 Xử lý CSV stream  
+        // 📝 Xử lý CSV stream
         private async Task<List<ImportedDataItem>> ProcessCsvStream(Stream stream, ProcessedFileInfo fileInfo)
         {
             var items = new List<ImportedDataItem>();
-            
+
             using var reader = new StreamReader(stream);
             var firstLine = await reader.ReadLineAsync();
             if (firstLine == null) return items;
@@ -1278,7 +1282,7 @@ namespace TinhKhoanApp.Api.Controllers
 
                 if (fromDate.HasValue)
                     query = query.Where(r => r.ImportDate >= fromDate.Value);
-                
+
                 if (toDate.HasValue)
                     query = query.Where(r => r.ImportDate <= toDate.Value);
 
@@ -1386,7 +1390,7 @@ namespace TinhKhoanApp.Api.Controllers
 
                 if (statementDate.HasValue)
                 {
-                    query = query.Where(r => r.StatementDate.HasValue && 
+                    query = query.Where(r => r.StatementDate.HasValue &&
                                            r.StatementDate.Value.Date == statementDate.Value.Date);
                 }
 
@@ -1429,8 +1433,8 @@ namespace TinhKhoanApp.Api.Controllers
                 }
 
                 var decompressedData = await _compressionService.DecompressDataAsync<List<object>>(record.CompressedData);
-                
-                return Ok(new 
+
+                return Ok(new
                 {
                     Id = record.Id,
                     FileName = record.FileName,
@@ -1453,14 +1457,14 @@ namespace TinhKhoanApp.Api.Controllers
         {
             if (string.IsNullOrWhiteSpace(json))
                 return true;
-            
+
             try
             {
                 // Thử parse thành Dictionary
                 var dict = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(json);
                 if (dict == null || dict.Count == 0)
                     return true;
-                
+
                 // Kiểm tra nếu tất cả giá trị đều null hoặc rỗng
                 bool allEmpty = true;
                 foreach (var value in dict.Values)
@@ -1471,13 +1475,13 @@ namespace TinhKhoanApp.Api.Controllers
                         break;
                     }
                 }
-                
+
                 return allEmpty;
             }
             catch
             {
                 // Thử parse thành List
-                try 
+                try
                 {
                     var list = System.Text.Json.JsonSerializer.Deserialize<List<object>>(json);
                     return list == null || list.Count == 0;
@@ -1525,7 +1529,7 @@ namespace TinhKhoanApp.Api.Controllers
         public int RecordsProcessed { get; set; }
         public required string Message { get; set; }
         public string? BranchCode { get; set; } // Added BranchCode
-        public string? ReportCode { get; set; } // Added ReportCode  
+        public string? ReportCode { get; set; } // Added ReportCode
         public DateTime? StatementDate { get; set; } // Added StatementDate
         public string? Category { get; set; } // Added Category
     }
@@ -1540,7 +1544,7 @@ namespace TinhKhoanApp.Api.Controllers
         public int RecordsCount { get; set; }
         public List<Dictionary<string, object>> PreviewData { get; set; } = new();
         public List<string> Columns { get; set; } = new();
-        
+
         // Thêm thông tin chi tiết về trạng thái hiển thị
         public object? Status { get; set; }
         public string? SummaryText { get; set; }
