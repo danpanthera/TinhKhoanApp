@@ -568,7 +568,7 @@ onUnmounted(() => {
   font-size: clamp(1.2rem, 4vw, 2.6rem);
   font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
   margin-bottom: 0;
-  margin-top: -10px; /* Giảm từ -5px xuống -10px để dịch lên gần dòng trên hơn */
+  margin-top: -30px; /* Giảm từ -10px xuống -30px để dịch lên sát gần dòng trên hơn */
   font-weight: 700;
   font-style: normal;
   letter-spacing: 0.05em;
