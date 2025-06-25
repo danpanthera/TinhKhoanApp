@@ -2,25 +2,25 @@
   <div class="app-container">
     <!-- Dynamic Background -->
     <div class="dynamic-background">
-      <div 
-        v-for="(image, index) in backgroundImages" 
+      <div
+        v-for="(image, index) in backgroundImages"
         :key="index"
         :class="['background-slide', { active: currentImageIndex === index }]"
         :style="{ backgroundImage: `url(${image})` }"
       ></div>
       <div class="background-overlay"></div>
-      
+
       <!-- Background indicators -->
       <div class="background-indicators">
-        <div 
-          v-for="(image, index) in backgroundImages" 
+        <div
+          v-for="(image, index) in backgroundImages"
           :key="`indicator-${index}`"
           :class="['indicator', { active: currentImageIndex === index }]"
           @click="currentImageIndex = index"
           :title="backgroundNames[index]"
         ></div>
       </div>
-      
+
       <!-- Background name display - HIDDEN -->
       <!-- <div class="background-name">
         {{ backgroundNames[currentImageIndex] }}
@@ -33,7 +33,7 @@
         <router-link to="/" class="nav-logo">
           <img src="/Logo-Agribank-2.png" alt="Agribank Logo" class="nav-logo-img" />
         </router-link>
-        
+
         <!-- HR Information Dropdown Menu -->
         <div class="nav-dropdown" @mouseenter="handleHRMouseEnter" @mouseleave="handleHRMouseLeave">
           <a href="#" class="nav-dropdown-trigger" :class="{ active: isHRSectionActive }">
@@ -176,27 +176,27 @@
       <div class="content-container">
         <router-view />
       </div>
-      
+
       <!-- App Footer - Chân trang với thông tin user -->
       <AppFooter />
     </div>
-    
+
     <!-- PWA Install Prompt và các thông báo PWA -->
     <PWAInstallPrompt />
-    
+
     <!-- Offline Indicator and Sync Status -->
     <OfflineIndicator />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
-import { isAuthenticated, logout } from '@/services/auth';
-import ThemeSwitcher from '@/components/ThemeSwitcher.vue';
-import PWAInstallPrompt from '@/components/PWAInstallPrompt.vue';
-import OfflineIndicator from '@/components/OfflineIndicator.vue';
 import AppFooter from '@/components/AppFooter.vue';
+import OfflineIndicator from '@/components/OfflineIndicator.vue';
+import PWAInstallPrompt from '@/components/PWAInstallPrompt.vue';
+import ThemeSwitcher from '@/components/ThemeSwitcher.vue';
+import { isAuthenticated, logout } from '@/services/auth';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
 const router = useRouter();
 const route = useRoute();
@@ -290,7 +290,7 @@ const hideAllMenus = () => {
   showKPIMenu.value = false;
   showDashboardMenu.value = false;
   showAboutMenu.value = false;
-  
+
   // Clear any pending timeouts
   if (hrMenuTimeout.value) {
     clearTimeout(hrMenuTimeout.value);
@@ -314,13 +314,13 @@ const hideAllMenus = () => {
 const handleDocumentClick = (event) => {
   const dropdownElements = document.querySelectorAll('.nav-dropdown');
   let clickedInsideDropdown = false;
-  
+
   dropdownElements.forEach(dropdown => {
     if (dropdown.contains(event.target)) {
       clickedInsideDropdown = true;
     }
   });
-  
+
   if (!clickedInsideDropdown) {
     hideAllMenus();
   }
@@ -367,7 +367,7 @@ const loadBackgroundImages = async () => {
   try {
     const backgroundPath = '/images/backgrounds/';
     const supportedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
-    
+
     // 📝 Danh sách tên file có thể có trong thư mục (bao gồm file hiện có + 2 ảnh mới từ Pexels)
     const potentialFileNames = [
       // ⭐ 2 Ảnh thiên nhiên siêu đẹp mới từ Pexels.com
@@ -387,19 +387,19 @@ const loadBackgroundImages = async () => {
       'wallpaper-1', 'wallpaper-2', 'wallpaper-3', 'nature-1', 'nature-2',
       'scenery-1', 'scenery-2', 'landscape-1', 'landscape-2'
     ];
-    
+
     const loadedImages = [];
     const loadedNames = [];
-    
+
     // 🔍 Kiểm tra từng combination tên file + extension
-    console.log('🔍 Đang quét thư mục backgrounds...');
+    // console.log('🔍 Đang quét thư mục backgrounds...');
     let totalChecked = 0;
-    
+
     for (const fileName of potentialFileNames) {
       for (const ext of supportedExtensions) {
         const fullPath = `${backgroundPath}${fileName}${ext}`;
         totalChecked++;
-        
+
         try {
           // Test ảnh có load được không
           const img = new Image();
@@ -415,10 +415,10 @@ const loadBackgroundImages = async () => {
             };
             img.src = fullPath;
           });
-          
+
           // ✅ Ảnh load thành công
           loadedImages.push(fullPath);
-          
+
           // 🏷️ Tạo tên hiển thị đẹp cho các ảnh
           const displayName = fileName === 'epic-mountain-canyon'
             ? '🏔️ Grand Canyon hùng vĩ (Pexels)'
@@ -441,21 +441,21 @@ const loadBackgroundImages = async () => {
             : fileName.includes('File_')
             ? `📄 Ảnh ${fileName.split('_').pop()}`
             : `🎨 ${fileName}`;
-            
+
           loadedNames.push(displayName);
-          console.log(`✅ Tìm thấy: ${fullPath} -> ${displayName}`);
-          
+          // console.log(`✅ Tìm thấy: ${fullPath} -> ${displayName}`);
+
         } catch (error) {
           // Ảnh không tồn tại hoặc lỗi, bỏ qua im lặng
         }
       }
     }
-    
-    console.log(`📊 Đã kiểm tra ${totalChecked} file possibilities, tìm thấy ${loadedImages.length} ảnh`);
-    
+
+    // console.log(`📊 Đã kiểm tra ${totalChecked} file possibilities, tìm thấy ${loadedImages.length} ảnh`);
+
     // 🎯 Xử lý kết quả
     if (loadedImages.length === 0) {
-      console.log('⚠️ Không tìm thấy ảnh nền local, sử dụng ảnh online');
+      // console.log('⚠️ Không tìm thấy ảnh nền local, sử dụng ảnh online');
       backgroundImages.value = [
         // � 2 ảnh nền hiện đại mới tuyệt đẹp cho Homepage (SVG vector)
         '/images/backgrounds/modern-tech-city-night.svg', // Thành phố công nghệ đêm xanh
@@ -476,10 +476,10 @@ const loadBackgroundImages = async () => {
         name: loadedNames[index],
         sortKey: img.toLowerCase()
       })).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
-      
+
       backgroundImages.value = sortedData.map(item => item.image);
       backgroundNames.value = sortedData.map(item => item.name);
-      
+
       // Nếu có ít hơn 7 ảnh local, thêm ảnh online để đủ
       if (backgroundImages.value.length < 7) {
         const additionalImages = [
@@ -497,16 +497,16 @@ const loadBackgroundImages = async () => {
           'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80'
         ];
         const additionalNames = ['🏙️ Thành phố công nghệ', '💰 Tài chính hiện đại', '🌍 Trái Đất vũ trụ 1', '🌍 Trái Đất vũ trụ 2', '🌌 Nebula hồng', '💙 Tinh vân xanh', '🏔️ Núi tuyết', '🌅 Bình minh', '🌾 Cánh đồng'];
-        
+
         const needed = Math.min(7 - backgroundImages.value.length, additionalImages.length);
         backgroundImages.value.push(...additionalImages.slice(0, needed));
         backgroundNames.value.push(...additionalNames.slice(0, needed));
       }
-      
+
       console.log(`🎉 Đã load ${backgroundImages.value.length} ảnh nền (${loadedImages.length} local + ${backgroundImages.value.length - loadedImages.length} online)!`);
       console.log('📋 Danh sách ảnh:', backgroundNames.value);
     }
-    
+
   } catch (error) {
     console.error('❌ Lỗi nghiêm trọng khi load ảnh nền:', error);
     // Fallback cuối cùng
@@ -529,7 +529,7 @@ const preloadImages = () => {
 const getTimeBasedImageIndex = () => {
   const imageCount = backgroundImages.value.length;
   if (imageCount === 0) return 0;
-  
+
   const hour = new Date().getHours();
   if (hour >= 6 && hour < 12) return 0;  // Sáng - Ảnh đầu tiên
   if (hour >= 12 && hour < 17) return Math.min(1, imageCount - 1); // Trưa - Ảnh thứ 2
@@ -540,7 +540,7 @@ const getTimeBasedImageIndex = () => {
 const startBackgroundRotation = () => {
   // Set initial background based on time
   currentImageIndex.value = getTimeBasedImageIndex();
-  
+
   backgroundInterval = setInterval(() => {
     currentImageIndex.value = (currentImageIndex.value + 1) % backgroundImages.value.length;
   }, 12000); // Change image every 12 seconds
@@ -551,10 +551,10 @@ onMounted(async () => {
   await loadBackgroundImages();
   preloadImages();
   startBackgroundRotation();
-  
+
   // Add document click listener for dropdown auto-hide
   document.addEventListener('click', handleDocumentClick);
-  
+
   // Watch for route changes to hide menus
   router.afterEach(handleRouteChange);
 });
@@ -563,10 +563,10 @@ onUnmounted(() => {
   if (backgroundInterval) {
     clearInterval(backgroundInterval);
   }
-  
+
   // Remove event listeners
   document.removeEventListener('click', handleDocumentClick);
-  
+
   // Clear any pending timeouts
   hideAllMenus();
 });
@@ -583,30 +583,30 @@ onUnmounted(() => {
   --danger-color: #dc3545;
   --warning-color: #ffc107;
   --info-color: #17a2b8;
-  
+
   /* Background Colors */
   --bg-primary: #ffffff;
   --bg-secondary: #f8f9fa;
   --bg-tertiary: #e9ecef;
   --bg-hover: #f5f5f5;
   --bg-card: #ffffff;
-  
+
   /* Text Colors */
   --text-primary: #212529;
   --text-secondary: #6c757d;
   --text-muted: #adb5bd;
   --text-inverse: #ffffff;
-  
+
   /* Border Colors */
   --border-color: #dee2e6;
   --border-light: #e9ecef;
   --border-dark: #adb5bd;
-  
+
   /* Shadow */
   --shadow-light: rgba(0, 0, 0, 0.1);
   --shadow-medium: rgba(0, 0, 0, 0.15);
   --shadow-heavy: rgba(0, 0, 0, 0.3);
-  
+
   /* Agribank Colors */
   --agribank-green: #00b14f;
   --agribank-blue: #0066cc;
@@ -622,30 +622,30 @@ onUnmounted(() => {
   --danger-color: #ff6b6b;
   --warning-color: #ffd43b;
   --info-color: #339af0;
-  
+
   /* Background Colors */
   --bg-primary: #1a1a1a;
   --bg-secondary: #2d2d2d;
   --bg-tertiary: #404040;
   --bg-hover: #3a3a3a;
   --bg-card: #262626;
-  
+
   /* Text Colors */
   --text-primary: #f8f9fa;
   --text-secondary: #adb5bd;
   --text-muted: #6c757d;
   --text-inverse: #212529;
-  
+
   /* Border Colors */
   --border-color: #404040;
   --border-light: #353535;
   --border-dark: #555555;
-  
+
   /* Shadow */
   --shadow-light: rgba(0, 0, 0, 0.3);
   --shadow-medium: rgba(0, 0, 0, 0.4);
   --shadow-heavy: rgba(0, 0, 0, 0.6);
-  
+
   /* Agribank Colors - Darker variants */
   --agribank-green: #00d662;
   --agribank-blue: #4a9eff;
@@ -659,14 +659,14 @@ onUnmounted(() => {
 
 /* Thêm hiệu ứng text shadow mạnh hơn cho chế độ trong suốt */
 .transparent-theme .hero-title {
-  text-shadow: 
+  text-shadow:
     0 3px 6px rgba(0, 0, 0, 0.8),
     0 0 15px rgba(255, 255, 255, 1),
     0 0 30px rgba(255, 255, 255, 0.8) !important;
 }
 
 .transparent-theme .hero-subtitle {
-  text-shadow: 
+  text-shadow:
     0 2px 4px rgba(0, 0, 0, 0.8),
     0 0 10px rgba(255, 255, 255, 1),
     0 0 20px rgba(255, 255, 255, 0.7) !important;
@@ -963,7 +963,7 @@ body, html {
   .nav-compact-controls {
     gap: 6px;
   }
-  
+
   .logout-btn {
     min-width: 75px !important;
     height: 40px !important;
@@ -971,18 +971,18 @@ body, html {
     font-size: 11px !important;
     gap: 4px;
   }
-  
+
   .nav-compact-controls .theme-switcher {
     min-width: 40px !important;
     height: 40px !important;
     padding: 4px 6px !important;
   }
-  
+
   .logout-icon,
   .nav-compact-controls .theme-switcher .theme-icon {
     font-size: 14px !important;
   }
-  
+
   .indicator {
     width: 6px;
     height: 6px;
@@ -1104,7 +1104,7 @@ body, html {
     right: 10px;
     min-width: auto;
   }
-  
+
   .dropdown-item {
     padding: 10px 16px;
   }
@@ -1258,43 +1258,43 @@ input:focus, textarea:focus, select:focus {
     height: 56px;
     flex-wrap: wrap;
   }
-  
+
   .main-nav .nav-logo {
     font-size: 18px;
     margin-right: 12px;
   }
-  
+
   .nav-logo-img {
     height: 35px;
   }
-  
+
   .main-nav a {
     padding: 6px 12px;
     font-size: 14px;
   }
-  
+
   .main-content > .content-container {
     margin: 10px;
     padding: 20px;
   }
-  
+
   .background-indicators {
     bottom: 20px;
     right: 20px;
   }
-  
+
   .background-name {
     bottom: 50px;
     right: 20px;
     font-size: 12px;
     padding: 6px 12px;
   }
-  
+
   .indicator {
     width: 6px;
     height: 6px;
   }
-  
+
   .content-container h1 {
     font-size: 24px;
   }
@@ -1306,30 +1306,30 @@ input:focus, textarea:focus, select:focus {
     padding: 8px;
     min-height: 50px;
   }
-  
+
   .nav-logo-img {
     height: 30px;
   }
-  
+
   .main-nav a {
     padding: 4px 8px;
     font-size: 12px;
   }
-  
+
   .content-container {
     padding: 16px;
   }
-  
+
   .content-container h1 {
     font-size: 20px;
   }
-  
+
   .background-indicators {
     bottom: 15px;
     right: 15px;
     gap: 6px;
   }
-  
+
   .background-name {
     bottom: 40px;
     right: 15px;
