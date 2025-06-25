@@ -1079,7 +1079,7 @@ const performImport = async () => {
         await refreshAllData(true)
         
         // Tự động hiển thị dữ liệu vừa import
-        setTimeout(() => {
+        setTimeout(async () => {
           // Nếu có chọn ngày, tự động hiển thị dữ liệu ngày đó
           if (selectedFromDate.value) {
             viewDataType(selectedDataType.value)
@@ -1101,12 +1101,23 @@ const performImport = async () => {
               loadingMessage.value = `Đang tải dữ liệu ${selectedDataType.value}...`
               
               try {
-                // Gọi API trực tiếp để lấy dữ liệu mới nhất
-                const result = await rawDataService.getByStatementDate(selectedDataType.value, '')
+                // Gọi API lấy tất cả dữ liệu thay vì lọc theo ngày
+                const result = await rawDataService.getAllData()
                 if (result.success && result.data && result.data.length > 0) {
-                  filteredResults.value = result.data
-                  showSuccess(`Hiển thị ${filteredResults.value.length} import(s) cho loại ${selectedDataType.value}`)
-                  showDataViewModal.value = true
+                  // Lọc theo loại dữ liệu
+                  const filteredData = result.data.filter(item => 
+                    item.dataType === selectedDataType.value || 
+                    item.category === selectedDataType.value || 
+                    item.fileType === selectedDataType.value
+                  )
+                  
+                  if (filteredData.length > 0) {
+                    filteredResults.value = filteredData
+                    showSuccess(`Hiển thị ${filteredData.length} import(s) cho loại ${selectedDataType.value}`)
+                    showDataViewModal.value = true
+                  } else {
+                    showError(`Không tìm thấy dữ liệu ${selectedDataType.value} sau khi import. Vui lòng thử lại.`)
+                  }
                 } else {
                   showError(`Không thể tìm thấy dữ liệu sau khi import. Vui lòng thử lại hoặc kiểm tra với quản trị viên.`)
                 }

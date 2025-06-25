@@ -587,9 +587,39 @@ class RawDataService {
     }
   }
 
+  // 📋 Lấy danh sách tất cả dữ liệu thô đã import
+  async getAllData() {
+    try {
+      // Gọi API endpoint tổng quan (DataImport), nơi lưu trữ tất cả bản ghi import
+      const response = await api.get('/DataImport');
+      
+      console.log('📊 All data API response:', typeof response.data, response.data ? response.data.length : 'No data');
+      
+      // Normalize data
+      const data = Array.isArray(response.data) ? response.data : [];
+      
+      return {
+        success: true,
+        data: data
+      };
+    } catch (error) {
+      console.error('❌ Lỗi lấy tất cả dữ liệu:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Lỗi kết nối server'
+      };
+    }
+  }
+
   // 📋 Lấy dữ liệu theo ngày sao kê
   async getByStatementDate(dataType, statementDate) {
     try {
+      // Nếu không có ngày, lấy tất cả dữ liệu
+      if (!statementDate) {
+        console.log('📊 No statement date provided, getting all data for type:', dataType);
+        return await this.getAllData();
+      }
+      
       const response = await api.get(`${this.baseURL}/by-date/${dataType}/${statementDate}`);
       return {
         success: true,
