@@ -60,13 +60,22 @@ const applyTextEffects = () => {
   // Add current effect class
   textElement.classList.add(`text-effect-${textEffectState.value}`);
   
-  // Toggle effect every 10 seconds (tăng từ 6 lên 10 giây để chậm hơn)
+  // Toggle effect với tỷ lệ 30% thời gian đỏ bordeaux, 70% thời gian trắng ngọc trai
   setTimeout(() => {
-    textEffectState.value = textEffectState.value === 'classic' ? 'pearl' : 'classic';
-    applyTextEffects();
-  }, 10000);
+    if (textEffectState.value === 'classic') {
+      textEffectState.value = 'pearl'; // Chuyển sang trắng ngọc trai
+      setTimeout(() => {
+        applyTextEffects(); // Gọi lại hàm này sẽ chuyển về classic sau khoảng thời gian dài hơn
+      }, 21000); // 70% thời gian (70% của 30s = 21s) hiển thị trắng ngọc trai
+    } else {
+      textEffectState.value = 'classic'; // Chuyển về đỏ bordeaux
+      setTimeout(() => {
+        applyTextEffects(); // Gọi lại hàm này sẽ chuyển về pearl sau khoảng thời gian ngắn hơn
+      }, 9000); // 30% thời gian (30% của 30s = 9s) hiển thị đỏ bordeaux
+    }
+  }, 100); // Đợi 100ms để đảm bảo DOM đã cập nhật
   
-  console.log('🎨 Applied simple text effect:', textEffectState.value);
+  console.log('🎨 Applied text effect:', textEffectState.value, 'with 30/70 timing ratio');
 };
 
 // 🎯 SIÊU PERFECT: Hàm tính toán và áp dụng scale cho từng dòng text để fit cửa sổ HOÀN TOÀN
@@ -332,7 +341,7 @@ onUnmounted(() => {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 8vh; /* Tăng padding-top từ 5vh lên 8vh để dịch cả content xuống thêm */
+  padding-top: 0cm; /* Giảm từ 1cm xuống 0cm để dịch logo và chữ lên trên thêm 1cm nữa */
   width: 100%;
   overflow-x: hidden;
   box-sizing: border-box;
@@ -421,7 +430,7 @@ onUnmounted(() => {
     0 4px 8px rgba(139, 21, 56, 0.5),
     0 2px 4px rgba(0, 0, 0, 0.4);
   animation: agribank-classic-glow 4s ease-in-out infinite;
-  transition: color 3s ease-in-out, text-shadow 3s ease-in-out; /* Thêm transition mượt hơn */
+  transition: color 5s ease-in-out, text-shadow 5s ease-in-out; /* Transition chậm hơn */
 }
 
 /* 🎨 HIỆU ỨNG PEARL - TRẮNG NGỌC TRAI */
@@ -433,7 +442,7 @@ onUnmounted(() => {
     0 4px 8px rgba(200, 200, 200, 0.5),
     0 2px 4px rgba(100, 100, 100, 0.4);
   animation: pearl-shimmer 5s ease-in-out infinite;
-  transition: color 3s ease-in-out, text-shadow 3s ease-in-out; /* Thêm transition mượt hơn */
+  transition: color 5s ease-in-out, text-shadow 5s ease-in-out; /* Transition chậm hơn */
 }
 
 @keyframes agribank-classic-glow {
@@ -543,8 +552,8 @@ onUnmounted(() => {
 .hero-logo {
   height: 90px;
   width: auto;
-  margin-top: 25px; /* Tăng margin-top từ 15px lên 25px để dịch logo xuống thêm */
-  margin-bottom: 20px;
+  margin-top: 10px; /* Giảm từ 25px xuống 10px để dịch logo lên */
+  margin-bottom: 15px; /* Giảm từ 20px xuống 15px để gần với chữ hơn */
   filter: drop-shadow(0 8px 16px rgba(139, 21, 56, 0.5));
   animation: gentle-sway 4s ease-in-out infinite;
   transform: scale(1.1);
@@ -559,7 +568,7 @@ onUnmounted(() => {
   font-size: clamp(1.2rem, 4vw, 2.6rem);
   font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
   margin-bottom: 0;
-  margin-top: -5px; /* Đổi từ 5px xuống -5px để dịch lên gần dòng trên */
+  margin-top: -10px; /* Giảm từ -5px xuống -10px để dịch lên gần dòng trên hơn */
   font-weight: 700;
   font-style: normal;
   letter-spacing: 0.05em;
