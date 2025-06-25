@@ -573,7 +573,7 @@ namespace TinhKhoanApp.Api.Controllers
                         }
                     }
 
-                    // ✅ SIÊU FIX: Bỏ qua hàng rỗng hoàn toàn
+                    // ✅ SIÊU FIX: Chỉ bỏ qua hàng rỗng hoàn toàn để đảm bảo số bản ghi đúng với file gốc
                     if (!hasData)
                     {
                         skippedEmptyRows++;
@@ -581,34 +581,21 @@ namespace TinhKhoanApp.Api.Controllers
                         continue;
                     }
                     
-                    // ✅ SIÊU FIX: Bỏ qua hàng mẫu (sample data)
-                    if (IsSampleDataLine(values, headers))
+                    // ✅ ULTRA FIXED: KHÔNG bỏ qua bất kỳ dòng nào khác
+                    // kể cả dòng mẫu, để đảm bảo số bản ghi chính xác 100% với file gốc
+                    
+                    // ✅ SIÊU FIX: Lưu mọi dòng có ít nhất 1 giá trị không rỗng
+                    items.Add(new ImportedDataItem
                     {
-                        skippedSampleDataRows++;
-                        _logger.LogDebug("⏭️ Skipped sample data row {RowNumber}: {SampleValues}", row, string.Join(", ", values.Take(3)));
-                        continue;
-                    }
-
-                    // ✅ SIÊU FIX: Chỉ thêm hàng có dữ liệu có nghĩa
-                    if (HasMeaningfulData(data))
+                        RawData = System.Text.Json.JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = false }),
+                        ProcessedDate = DateTime.UtcNow
+                    });
+                    addedRecords++;
+                    
+                    if (addedRecords <= 3) // Log 3 bản ghi đầu để debug
                     {
-                        items.Add(new ImportedDataItem
-                        {
-                            RawData = System.Text.Json.JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = false }),
-                            ProcessedDate = DateTime.UtcNow
-                        });
-                        addedRecords++;
-                        
-                        if (addedRecords <= 3) // Log 3 bản ghi đầu để debug
-                        {
-                            _logger.LogDebug("✅ Added record {RecordNumber}: {RecordData}", addedRecords, 
-                                System.Text.Json.JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = false }));
-                        }
-                    }
-                    else
-                    {
-                        skippedEmptyRows++;
-                        _logger.LogDebug("⏭️ Skipped row {RowNumber} - no meaningful data", row);
+                        _logger.LogDebug("✅ Added record {RecordNumber}: {RecordData}", addedRecords, 
+                            System.Text.Json.JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = false }));
                     }
                 }
 
@@ -656,7 +643,7 @@ namespace TinhKhoanApp.Api.Controllers
                 var line = lines[i];
                 int lineNumber = i + 1; // Line number bắt đầu từ 1
                 
-                // ✅ SIÊU FIX: Bỏ qua dòng rỗng hoàn toàn
+                // ✅ SIÊU FIX: Chỉ bỏ qua dòng rỗng hoàn toàn để đảm bảo số bản ghi đúng với file gốc
                 if (string.IsNullOrWhiteSpace(line) || line.Trim() == "")
                 {
                     skippedEmptyLines++;
@@ -667,21 +654,16 @@ namespace TinhKhoanApp.Api.Controllers
                 // ✅ SIÊU FIX: Parse line với RFC 4180 chuẩn (xử lý dấu ngoặc kép, dấu phẩy trong giá trị)
                 var values = ParseCsvLine(line);
                 
-                // ✅ SIÊU FIX: Bỏ qua dòng có tất cả giá trị rỗng
-                if (values.All(v => string.IsNullOrWhiteSpace(v)))
+                // ✅ SIÊU FIX: Chỉ bỏ qua dòng có tất cả giá trị rỗng
+                if (values.Count == 0 || values.All(v => string.IsNullOrWhiteSpace(v)))
                 {
                     skippedEmptyLines++;
                     _logger.LogDebug("⏭️ Skipped line {LineNumber} - all values empty after parsing", lineNumber);
                     continue;
                 }
                 
-                // ✅ SIÊU FIX: Bỏ qua dòng mẫu (sample data) thường có trong file
-                if (IsSampleDataLine(values, headers))
-                {
-                    skippedSampleDataLines++;
-                    _logger.LogDebug("⏭️ Skipped sample data line {LineNumber}: {SampleValues}", lineNumber, string.Join(", ", values.Take(3)));
-                    continue;
-                }
+                // ✅ ULTRA FIXED: KHÔNG bỏ qua bất kỳ dòng nào khác (kể cả dòng mẫu)
+                // để đảm bảo số bản ghi chính xác 100% với file gốc
                 
                 // ✅ SIÊU FIX: Đảm bảo số cột đúng, thêm cột rỗng nếu thiếu, cắt bỏ nếu thừa
                 while (values.Count < headers.Count)
@@ -791,45 +773,27 @@ namespace TinhKhoanApp.Api.Controllers
         }
         
         // ✅ SIÊU HELPER: Kiểm tra xem có phải dòng mẫu (sample data) không
+        // ⚠️ SIÊU IMPORTANT: Vô hiệu hóa hoàn toàn việc kiểm tra dòng mẫu
+        // để đảm bảo giữ nguyên số lượng bản ghi từ file gốc. Tất cả dòng
+        // không rỗng hoàn toàn sẽ được lưu vào DB.
         private bool IsSampleDataLine(List<string> values, List<string> headers)
         {
-            if (values.Count == 0) return false;
-            
-            var firstValue = values[0].ToLower().Trim();
-            
-            // Kiểm tra các pattern thường gặp của dòng mẫu
-            var samplePatterns = new[]
-            {
-                "example", "sample", "test", "mẫu", "ví dụ", "demo",
-                "xxx", "abc", "123", "n/a", "tbd", "pending",
-                "column", "field", "data", "value", "giá trị",
-                "header", "title", "tên cột", "dữ liệu mẫu"
-            };
-            
-            return samplePatterns.Any(pattern => firstValue.Contains(pattern));
+            // Chỉ trả về true cho dòng hoàn toàn trống
+            // KHÔNG LỌC bất kỳ dòng nào khác kể cả dòng mẫu/dòng test để đảm bảo số lượng bản ghi chính xác
+            return values.Count == 0 || values.All(v => string.IsNullOrWhiteSpace(v));
         }
         
-        // ✅ SIÊU HELPER: Kiểm tra xem bản ghi có dữ liệu có nghĩa không
+        // ✅ SIÊU HELPER: Kiểm tra xem bản ghi có dữ liệu không trống không
+        // ⚠️ ULTRA FIXED: Giờ chỉ kiểm tra dòng có hoàn toàn trống không
+        // Chấp nhận MỌI dòng có ít nhất 1 giá trị bất kỳ (kể cả "0", "-", "N/A", và các ký tự đặc biệt)
+        // để đảm bảo số lượng bản ghi đúng 100% với file gốc
         private bool HasMeaningfulData(Dictionary<string, object> data)
         {
             if (data == null || data.Count == 0) return false;
             
-            foreach (var kvp in data)
-            {
-                var value = kvp.Value?.ToString()?.Trim();
-                if (!string.IsNullOrWhiteSpace(value) && 
-                    value.Length > 0 && 
-                    value != "0" && 
-                    value != "-" && 
-                    value != "N/A" && 
-                    value != "null" &&
-                    !IsOnlySpecialChars(value))
-                {
-                    return true;
-                }
-            }
-            
-            return false;
+            // Chấp nhận MỌI dòng có ít nhất 1 giá trị không trống hoàn toàn
+            // KHÔNG lọc bất kỳ nội dung nào, kể cả dòng có ký tự đặc biệt hoặc dòng mẫu
+            return data.Any(kvp => !string.IsNullOrWhiteSpace(kvp.Value?.ToString()));
         }
         
         // ✅ SIÊU HELPER: Kiểm tra chuỗi chỉ có ký tự đặc biệt

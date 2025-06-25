@@ -332,7 +332,7 @@ onUnmounted(() => {
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding-top: 2vh;
+  padding-top: 8vh; /* Tăng padding-top từ 5vh lên 8vh để dịch cả content xuống thêm */
   width: 100%;
   overflow-x: hidden;
   box-sizing: border-box;
@@ -505,6 +505,7 @@ onUnmounted(() => {
 .hero-logo {
   height: 90px;
   width: auto;
+  margin-top: 25px; /* Tăng margin-top từ 15px lên 25px để dịch logo xuống thêm */
   margin-bottom: 20px;
   filter: drop-shadow(0 8px 16px rgba(139, 21, 56, 0.5));
   animation: gentle-sway 4s ease-in-out infinite;
