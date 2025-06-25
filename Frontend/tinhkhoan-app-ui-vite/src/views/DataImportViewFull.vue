@@ -1080,57 +1080,90 @@ const performImport = async () => {
         
         // Tự động hiển thị dữ liệu vừa import
         setTimeout(async () => {
-          // Nếu có chọn ngày, tự động hiển thị dữ liệu ngày đó
-          if (selectedFromDate.value) {
-            viewDataType(selectedDataType.value)
-          } else {
-            // Nếu không có ngày, hiển thị tất cả dữ liệu của loại đó
-            const dataTypeResults = allImports.value.filter(imp => 
-              imp.dataType === selectedDataType.value || 
-              imp.category === selectedDataType.value || 
-              imp.fileType === selectedDataType.value
-            )
-            filteredResults.value = dataTypeResults
+          console.log('🔍 Hiển thị dữ liệu sau khi import thành công cho loại:', selectedDataType.value);
+          
+          try {
+            // Tải lại tất cả dữ liệu từ server
+            loading.value = true
+            loadingMessage.value = `Đang tải dữ liệu mới nhất...`
+            
+            // Refresh lại toàn bộ dữ liệu từ server
+            await refreshAllData(true)
+            
+            console.log('📊 Dữ liệu sau khi refresh:', {
+              totalImports: allImports.value.length,
+              dataTypes: allImports.value.map(imp => imp.dataType || imp.category || imp.fileType).filter((v, i, a) => a.indexOf(v) === i)
+            });
+            
+            // Lọc dữ liệu theo loại đã import
+            const dataTypeResults = allImports.value.filter(imp => {
+              const typeMatches = 
+                (imp.dataType && imp.dataType.includes(selectedDataType.value)) || 
+                (imp.category && imp.category.includes(selectedDataType.value)) || 
+                (imp.fileType && imp.fileType.includes(selectedDataType.value));
+              
+              console.log(`🔍 Checking item ${imp.fileName || imp.id}: ${typeMatches}`, {
+                itemDataType: imp.dataType,
+                itemCategory: imp.category,
+                itemFileType: imp.fileType,
+                selectedType: selectedDataType.value
+              });
+              
+              return typeMatches;
+            });
+            
+            console.log(`🔍 Filtered results for ${selectedDataType.value}:`, dataTypeResults.length);
             
             if (dataTypeResults.length > 0) {
-              showSuccess(`Hiển thị ${dataTypeResults.length} import(s) cho loại ${selectedDataType.value}`)
-              showDataViewModal.value = true
+              filteredResults.value = dataTypeResults;
+              showSuccess(`Hiển thị ${dataTypeResults.length} import(s) cho loại ${selectedDataType.value}`);
+              showDataViewModal.value = true;
             } else {
-              // Nếu không tìm thấy dữ liệu, kiểm tra lại với API
-              loading.value = true
-              loadingMessage.value = `Đang tải dữ liệu ${selectedDataType.value}...`
+              console.log('⚠️ Không tìm thấy dữ liệu khi lọc theo allImports, thử gọi API trực tiếp...');
               
-              try {
-                // Gọi API lấy tất cả dữ liệu thay vì lọc theo ngày
-                const result = await rawDataService.getAllData()
-                if (result.success && result.data && result.data.length > 0) {
-                  // Lọc theo loại dữ liệu
-                  const filteredData = result.data.filter(item => 
-                    item.dataType === selectedDataType.value || 
-                    item.category === selectedDataType.value || 
-                    item.fileType === selectedDataType.value
-                  )
-                  
-                  if (filteredData.length > 0) {
-                    filteredResults.value = filteredData
-                    showSuccess(`Hiển thị ${filteredData.length} import(s) cho loại ${selectedDataType.value}`)
-                    showDataViewModal.value = true
-                  } else {
-                    showError(`Không tìm thấy dữ liệu ${selectedDataType.value} sau khi import. Vui lòng thử lại.`)
-                  }
+              // Thử gọi API trực tiếp để lấy dữ liệu
+              const result = await rawDataService.getAllData();
+              
+              if (result.success && result.data && result.data.length > 0) {
+                console.log(`📊 API trả về ${result.data.length} bản ghi, lọc theo loại ${selectedDataType.value}`);
+                
+                // Lọc theo loại dữ liệu (sử dụng includes thay vì === để linh hoạt hơn)
+                const filteredData = result.data.filter(item => 
+                  (item.dataType && item.dataType.includes(selectedDataType.value)) || 
+                  (item.category && item.category.includes(selectedDataType.value)) || 
+                  (item.fileType && item.fileType.includes(selectedDataType.value))
+                );
+                
+                console.log(`🔍 Số bản ghi sau khi lọc: ${filteredData.length}`);
+                
+                if (filteredData.length > 0) {
+                  filteredResults.value = filteredData;
+                  showSuccess(`Hiển thị ${filteredData.length} import(s) cho loại ${selectedDataType.value}`);
+                  showDataViewModal.value = true;
                 } else {
-                  showError(`Không thể tìm thấy dữ liệu sau khi import. Vui lòng thử lại hoặc kiểm tra với quản trị viên.`)
+                  // Nếu vẫn không có dữ liệu, thử hiển thị tất cả dữ liệu vừa import
+                  console.log('⚠️ Không tìm thấy dữ liệu khi lọc, hiển thị tất cả dữ liệu mới nhất');
+                  
+                  if (result.data.length > 0) {
+                    filteredResults.value = result.data;
+                    showSuccess(`Hiển thị ${result.data.length} bản ghi import mới nhất`);
+                    showDataViewModal.value = true;
+                  } else {
+                    showError(`Không tìm thấy dữ liệu ${selectedDataType.value} sau khi import. Vui lòng thử lại.`);
+                  }
                 }
-              } catch (error) {
-                console.error('Error fetching data after import:', error)
-                showError(`Lỗi khi tải dữ liệu sau khi import: ${error.message}`)
-              } finally {
-                loading.value = false
-                loadingMessage.value = ''
+              } else {
+                showDetailedError(`Không thể tìm thấy dữ liệu sau khi import.`, result);
               }
             }
+          } catch (error) {
+            console.error('Error fetching data after import:', error);
+            showDetailedError(`Lỗi khi tải dữ liệu sau khi import:`, error);
+          } finally {
+            loading.value = false;
+            loadingMessage.value = '';
           }
-        }, 500)
+        }, 1000);
       }, 1000)
     } else {
       showDetailedError(`Lỗi khi import dữ liệu`, response)

@@ -591,16 +591,52 @@ class RawDataService {
   async getAllData() {
     try {
       // Gọi API endpoint tổng quan (DataImport), nơi lưu trữ tất cả bản ghi import
+      console.log('📊 Calling getAllData API endpoint: /DataImport');
       const response = await api.get('/DataImport');
       
-      console.log('📊 All data API response:', typeof response.data, response.data ? response.data.length : 'No data');
+      console.log('📊 getAllData API response:', {
+        status: response.status,
+        dataType: typeof response.data, 
+        isArray: Array.isArray(response.data),
+        length: Array.isArray(response.data) ? response.data.length : 'N/A',
+        sample: Array.isArray(response.data) && response.data.length > 0 ? response.data[0] : 'No data'
+      });
       
       // Normalize data
-      const data = Array.isArray(response.data) ? response.data : [];
+      let data = response.data || [];
+      
+      // Nếu không phải array, thử kiểm tra $values (format .NET)
+      if (!Array.isArray(data) && data.$values) {
+        console.log('🔧 Found $values array in getAllData response');
+        data = data.$values;
+      }
+      
+      // Đảm bảo data luôn là array
+      if (!Array.isArray(data)) {
+        console.warn('⚠️ API returned non-array data for getAllData:', data);
+        data = [];
+      }
+      
+      // Map dữ liệu để chuẩn hóa các trường
+      const mappedData = data.map(item => ({
+        ...item,
+        // ✅ Normalize dataType/category/fileType để trùng khớp khi lọc
+        dataType: item.dataType || item.category || item.fileType || 'UNKNOWN',
+        category: item.category || item.dataType || '',
+        fileType: item.fileType || item.dataType || '',
+        // Đảm bảo các trường khác đúng định dạng
+        recordsCount: parseInt(item.recordsCount || 0),
+        fileName: item.fileName || item.name || 'Unknown File'
+      }));
+      
+      console.log('✅ Mapped getAllData:', {
+        resultCount: mappedData.length,
+        sample: mappedData.length > 0 ? mappedData[0] : 'No data'
+      });
       
       return {
         success: true,
-        data: data
+        data: mappedData
       };
     } catch (error) {
       console.error('❌ Lỗi lấy tất cả dữ liệu:', error);
