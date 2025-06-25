@@ -109,13 +109,13 @@ const routes = [
     meta: { public: true }, // Temporarily allow access without authentication for debugging
   },
   {
-    path: "/kpi-scoring", 
+    path: "/kpi-scoring",
     name: "kpi-scoring",
     component: () =>
       import(/* webpackChunkName: "kpi" */ "../views/KpiScoringView.vue"),
   },
   {
-    path: "/unit-kpi-scoring", 
+    path: "/unit-kpi-scoring",
     name: "unit-kpi-scoring",
     component: () =>
       import(/* webpackChunkName: "kpi" */ "../views/UnitKpiScoringView.vue"),
@@ -123,14 +123,14 @@ const routes = [
   },
   {
     path: "/data-import",
-    name: "data-import", 
+    name: "data-import",
     component: DataImportView,
     meta: { requiresAuth: true }
   },
   {
     path: "/payroll-report",
     name: "PayrollReport",
-    component: () => 
+    component: () =>
       import(/* webpackChunkName: "reports" */ '../views/PayrollReportView.vue'),
     meta: { requiresAuth: true }
   },
@@ -186,20 +186,20 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   // Tạm thời bypass authentication để debug - kiểm tra xem vấn đề có ở đây không
   const bypassAuth = process.env.NODE_ENV === 'development'; // Chỉ bypass trong development
-  
+
   if (!to.meta.public && !bypassAuth && !isAuthenticated()) {
-    console.log('Router guard: redirecting to login', { 
-      route: to.path, 
-      isAuth: isAuthenticated(), 
-      token: localStorage.getItem('token') ? 'exists' : 'missing' 
+    console.log('Router guard: redirecting to login', {
+      route: to.path,
+      isAuth: isAuthenticated(),
+      token: localStorage.getItem('token') ? 'exists' : 'missing'
     });
     next({ name: "login" });
   } else {
-    console.log('Router guard: allowing access', { 
-      route: to.path, 
-      isAuth: isAuthenticated(), 
+    console.log('Router guard: allowing access', {
+      route: to.path,
+      isAuth: isAuthenticated(),
       bypassAuth,
-      public: to.meta.public 
+      public: to.meta.public
     });
     next();
   }
