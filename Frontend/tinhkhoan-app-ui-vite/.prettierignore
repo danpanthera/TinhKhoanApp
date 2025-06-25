@@ -1,0 +1,14 @@
+node_modules
+dist
+.vscode
+.env
+*.log
+coverage
+.nyc_output
+.cache
+build
+*.tgz
+*.tar.gz
+*.bak
+*.swp
+*.tmp

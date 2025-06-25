@@ -25,18 +25,15 @@ namespace TinhKhoanApp.Api.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<DataImportController> _logger;
-        private readonly ICompressionService _compressionService;
         private readonly IStatementDateService _statementDateService;
 
         public DataImportController(
             ApplicationDbContext context, 
             ILogger<DataImportController> logger,
-            ICompressionService compressionService,
             IStatementDateService statementDateService)
         {
             _context = context;
             _logger = logger;
-            _compressionService = compressionService;
             _statementDateService = statementDateService;
         }
 
@@ -512,12 +509,7 @@ namespace TinhKhoanApp.Api.Controllers
 
                 // Process file based on type
                 var items = new List<ImportedDataItem>();
-                if (file.ContentType == "application/zip" || file.FileName.EndsWith(".zip"))
-                {
-                    // 📦 Xử lý file ZIP - Tự động giải nén và import các CSV
-                    items = await ProcessZipFile(file, category, statementDate);
-                }
-                else if (file.ContentType == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+                if (file.ContentType == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
                     file.ContentType == "application/vnd.ms-excel" ||
                     file.FileName.EndsWith(".xlsx") || file.FileName.EndsWith(".xls"))
                 {
@@ -980,16 +972,8 @@ namespace TinhKhoanApp.Api.Controllers
                     var fileInfo = AnalyzeFile(file.FileName);
                     processedFiles.Add(fileInfo);
                     
-                    if (IsArchiveFile(file.FileName))
-                    {
-                        var archiveResults = await ProcessArchiveFile(file, request.Password ?? "", fileInfo);
-                        allResults.AddRange(archiveResults);
-                    }
-                    else
-                    {
-                        var result = await ProcessSingleFile(file, fileInfo);
-                        allResults.Add(result);
-                    }
+                    var result = await ProcessSingleFile(file, fileInfo);
+                    allResults.Add(result);
                 }
 
                 // Sort results by branch code ascending (7800 -> 7801 -> 7802...)
@@ -998,9 +982,7 @@ namespace TinhKhoanApp.Api.Controllers
                 return Ok(new { 
                     message = $"Successfully processed {sortedResults.Count(r => r.Success)} out of {sortedResults.Count} files",
                     results = sortedResults,
-                    processedFiles = processedFiles,
-                    totalArchivesProcessed = processedFiles.Count(f => f.IsArchive),
-                    totalRegularFilesProcessed = processedFiles.Count(f => !f.IsArchive)
+                    processedFiles = processedFiles
                 });
             }
             catch (Exception ex)
@@ -1015,12 +997,11 @@ namespace TinhKhoanApp.Api.Controllers
         {
             var fileInfo = new ProcessedFileInfo
             {
-                OriginalFileName = fileName,
-                IsArchive = IsArchiveFile(fileName)
+                OriginalFileName = fileName
             };
 
             // Pattern: MaCN_MaBC_NamThangNgay.extension
-            // Example: 7800_GL01_20250531.zip, 7800_LN01_20250531.csv
+            // Example: 7800_GL01_20250531.csv
             var pattern = @"^(\d{4})_([A-Za-z0-9]+)_(\d{8})\.(.+)$";
             var match = Regex.Match(fileName, pattern);
 
@@ -1099,119 +1080,7 @@ namespace TinhKhoanApp.Api.Controllers
             };
         }
 
-        // 🗜️ Kiểm tra file có phải archive không
-        private bool IsArchiveFile(string fileName)
-        {
-            var extension = Path.GetExtension(fileName).ToLower();
-            return new[] { ".zip", ".7z", ".rar", ".tar", ".gz" }.Contains(extension);
-        }
-
-        // 📦 Xử lý file nén
-        private async Task<List<ImportResult>> ProcessArchiveFile(IFormFile archiveFile, string password, ProcessedFileInfo fileInfo)
-        {
-            var results = new List<ImportResult>();
-
-            try
-            {
-                using var archiveStream = archiveFile.OpenReadStream();
-                using var memoryStream = new MemoryStream();
-                await archiveStream.CopyToAsync(memoryStream);
-                memoryStream.Position = 0;
-
-                // Xử lý file ZIP
-                if (fileInfo.Extension == "zip")
-                {
-                    using var archive = new ZipArchive(memoryStream, ZipArchiveMode.Read);
-                    
-                    var entries = archive.Entries
-                        .Where(e => !e.FullName.EndsWith("/") && !string.IsNullOrEmpty(e.Name))
-                        .Where(e => IsSupportedFileType(e.Name))
-                        .OrderBy(e => e.Name) // Sắp xếp theo tên file
-                        .ToList();
-
-                    foreach (var entry in entries)
-                    {
-                        try
-                        {
-                            var extractedFileInfo = AnalyzeFile(entry.Name);
-                            extractedFileInfo.IsFromArchive = true;
-                            extractedFileInfo.ArchiveFileName = archiveFile.FileName;
-
-                            using var entryStream = entry.Open();
-                            
-                            // Kiểm tra nếu entry bị bảo vệ bằng mật khẩu
-                            try
-                            {
-                                // Thử đọc một số byte đầu để kiểm tra password
-                                var buffer = new byte[10];
-                                await entryStream.ReadAsync(buffer, 0, buffer.Length);
-                                entryStream.Position = 0; // Reset position
-                            }
-                            catch (InvalidDataException)
-                            {
-                                // Có thể file bị password protect hoặc corrupted
-                                if (!string.IsNullOrEmpty(password))
-                                {
-                                    // TODO: Implement password-protected ZIP extraction
-                                    // Hiện tại .NET ZipArchive không hỗ trợ password, cần thư viện khác như SharpCompress
-                                    results.Add(new ImportResult
-                                    {
-                                        Success = false,
-                                        FileName = entry.Name,
-                                        Message = "Password-protected ZIP files require additional library support",
-                                        BranchCode = fileInfo.BranchCode
-                                    });
-                                    continue;
-                                }
-                                else
-                                {
-                                    results.Add(new ImportResult
-                                    {
-                                        Success = false,
-                                        FileName = entry.Name,
-                                        Message = "File may be password-protected or corrupted",
-                                        BranchCode = fileInfo.BranchCode
-                                    });
-                                    continue;
-                                }
-                            }
-
-                            var result = await ProcessStreamAsFile(entryStream, entry.Name, extractedFileInfo);
-                            results.Add(result);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "Error processing archive entry {EntryName}", entry.Name);
-                            results.Add(new ImportResult
-                            {
-                                Success = false,
-                                FileName = entry.Name,
-                                Message = $"Error processing archive entry: {ex.Message}",
-                                BranchCode = fileInfo.BranchCode
-                            });
-                        }
-                    }
-                }
-
-                return results;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error processing archive file {FileName}", archiveFile.FileName);
-                return new List<ImportResult>
-                {
-                    new ImportResult
-                    {
-                        Success = false,
-                        FileName = archiveFile.FileName,
-                        Message = $"Error processing archive: {ex.Message}",
-                        BranchCode = fileInfo.BranchCode
-                    }
-                };
-            }
-        }
-
-        // 📄 Xử lý file đơn lẻ
+        //  Xử lý file đơn lẻ
         private async Task<ImportResult> ProcessSingleFile(IFormFile file, ProcessedFileInfo fileInfo)
         {
             try
@@ -1573,121 +1442,6 @@ namespace TinhKhoanApp.Api.Controllers
         }
         */
 
-        /// <summary>
-        /// 📦 Xử lý file ZIP - Tự động giải nén và import các CSV
-        /// </summary>
-        private async Task<List<ImportedDataItem>> ProcessZipFile(IFormFile zipFile, string? category, DateTime? defaultStatementDate)
-        {
-            var allItems = new List<ImportedDataItem>();
-            
-            try
-            {
-                using var zipStream = zipFile.OpenReadStream();
-                using var archive = new System.IO.Compression.ZipArchive(zipStream, System.IO.Compression.ZipArchiveMode.Read);
-                
-                foreach (var entry in archive.Entries)
-                {
-                    if (entry.FullName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
-                    {
-                        Console.WriteLine($"📋 Processing CSV from ZIP: {entry.FullName}");
-                        
-                        // Trích xuất ngày từ tên file CSV
-                        var fileName = Path.GetFileNameWithoutExtension(entry.Name);
-                        var dateMatch = System.Text.RegularExpressions.Regex.Match(fileName, @"(\d{8})");
-                        var statementDate = defaultStatementDate;
-                        
-                        if (dateMatch.Success && DateTime.TryParseExact(dateMatch.Value, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out DateTime extractedDate))
-                        {
-                            statementDate = extractedDate;
-                        }
-                        
-                        // Đọc và xử lý CSV từ ZIP entry
-                        using var entryStream = entry.Open();
-                        using var reader = new StreamReader(entryStream);
-                        
-                        var csvContent = await reader.ReadToEndAsync();
-                        var csvItems = await ProcessCsvContent(csvContent, entry.Name);
-                        
-                        // Add metadata to processing notes
-                        foreach (var item in csvItems)
-                        {
-                            var metadata = new Dictionary<string, object>
-                            {
-                                ["sourceFileName"] = entry.Name,
-                                ["statementDate"] = statementDate?.ToString("yyyy-MM-dd") ?? "N/A",
-                                ["category"] = category ?? "Unknown",
-                                ["extractedFromZip"] = zipFile.FileName
-                            };
-                            
-                            item.ProcessingNotes = System.Text.Json.JsonSerializer.Serialize(metadata);
-                        }
-                        
-                        allItems.AddRange(csvItems);
-                        Console.WriteLine($"✅ Processed {csvItems.Count} records from {entry.Name}");
-                    }
-                }
-                
-                Console.WriteLine($"📦 ZIP processing complete. Total records: {allItems.Count}");
-                return allItems;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"❌ Error processing ZIP file: {ex.Message}");
-                throw new Exception($"Không thể xử lý file ZIP: {ex.Message}", ex);
-            }
-        }
-        
-        /// <summary>
-        /// Xử lý nội dung CSV từ string
-        /// </summary>
-        private async Task<List<ImportedDataItem>> ProcessCsvContent(string csvContent, string sourceFileName)
-        {
-            var items = new List<ImportedDataItem>();
-            
-            try
-            {
-                using var reader = new StringReader(csvContent);
-                var firstLine = await reader.ReadLineAsync();
-                if (string.IsNullOrEmpty(firstLine)) return items;
-                
-                var headers = firstLine.Split(',').Select(h => h.Trim('"')).ToList();
-                
-                string? line;
-                int rowIndex = 1;
-                while ((line = await reader.ReadLineAsync()) != null)
-                {
-                    rowIndex++;
-                    if (string.IsNullOrWhiteSpace(line)) continue;
-                    
-                    var values = line.Split(',').Select(v => v.Trim('"')).ToList();
-                    var data = new Dictionary<string, object>();
-                    
-                    for (int i = 0; i < Math.Min(headers.Count, values.Count); i++)
-                    {
-                        data[headers[i]] = values[i];
-                    }
-                    
-                    // Add metadata to the data
-                    data["_sourceFileName"] = sourceFileName;
-                    data["_rowIndex"] = rowIndex;
-                    
-                    items.Add(new ImportedDataItem
-                    {
-                        RawData = System.Text.Json.JsonSerializer.Serialize(data),
-                        ProcessedDate = DateTime.UtcNow,
-                        ProcessingNotes = $"Extracted from {sourceFileName}, row {rowIndex}"
-                    });
-                }
-                
-                return items;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"❌ Error processing CSV content from {sourceFileName}: {ex.Message}");
-                throw;
-            }
-        }
-
         // Helper method to check if JSON is empty
         private bool IsEmptyJsonObject(string json)
         {
@@ -1738,7 +1492,6 @@ namespace TinhKhoanApp.Api.Controllers
     public class AdvancedDataImportRequest
     {
         public required IFormFileCollection Files { get; set; }
-        public string? Password { get; set; } // For encrypted archives
     }
 
     public class ProcessedFileInfo
@@ -1751,9 +1504,6 @@ namespace TinhKhoanApp.Api.Controllers
         public DateTime? StatementDate { get; set; }
         public string Category { get; set; } = "General";
         public bool IsValidFormat { get; set; }
-        public bool IsArchive { get; set; }
-        public bool IsFromArchive { get; set; }
-        public string? ArchiveFileName { get; set; }
     }
 
     public class DataImportRequest

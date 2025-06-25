@@ -11,7 +11,7 @@ namespace TinhKhoanApp.Api.Models
     public class ImportedDataItem
     {
         [Key]
-        public long Id { get; set; }
+        public int Id { get; set; }
 
         // 🔗 Foreign key tới ImportedDataRecord
         [Required]

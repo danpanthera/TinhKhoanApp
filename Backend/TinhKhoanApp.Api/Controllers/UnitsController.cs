@@ -19,24 +19,80 @@ namespace TinhKhoanApp.Api.Controllers
             _context = context;
         }
 
-        // SỬA PHƯƠNG THỨC NÀY
         // GET: api/Units 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<UnitListItemDto>>> GetUnits() // Thay đổi kiểu trả về
+        public async Task<ActionResult<IEnumerable<UnitListItemDto>>> GetUnits()
         {
-            return await _context.Units
-                                 .OrderBy(u => u.Name) // Sort by Name since SortOrder is removed
-                                 .Select(u => new UnitListItemDto // Sử dụng Select để map sang DTO
-                                 {
-                                     Id = u.Id,
-                                     Code = u.Code,
-                                     Name = u.Name,
-                                     Type = u.Type,
-                                     ParentUnitId = u.ParentUnitId,
-                                     // Sử dụng LEFT JOIN thông qua DefaultIfEmpty()
-                                     ParentUnitName = u.ParentUnit != null ? u.ParentUnit.Name : null
-                                 })
-                                 .ToListAsync();
+            var units = await _context.Units
+                                     .Select(u => new UnitListItemDto
+                                     {
+                                         Id = u.Id,
+                                         Code = u.Code,
+                                         Name = u.Name,
+                                         Type = u.Type,
+                                         ParentUnitId = u.ParentUnitId,
+                                         ParentUnitName = u.ParentUnit != null ? u.ParentUnit.Name : null
+                                     })
+                                     .ToListAsync();
+
+            // Sắp xếp theo thứ tự yêu cầu
+            return units.OrderBy(u => GetBranchSortOrder(u.Code))
+                       .ThenBy(u => GetDepartmentSortOrder(u.Name))
+                       .ToList();
+        }
+
+        private int GetBranchSortOrder(string code)
+        {
+            return code switch
+            {
+                "CnLaiChau" => 1,
+                "CnTamDuong" => 2,
+                "CnPhongTho" => 3,
+                "CnSinHo" => 4,
+                "CnMuongTe" => 5,
+                "CnThanUyen" => 6,
+                "CnThanhPho" => 7,
+                "CnTanUyen" => 8,
+                "CnNamNhun" => 9,
+                _ => 999 // Các units khác sẽ được sắp xếp cuối
+            };
+        }
+
+        // GET: api/Units/departments-by-branch/{branchId}
+        [HttpGet("departments-by-branch/{branchId}")]
+        public async Task<ActionResult<IEnumerable<UnitListItemDto>>> GetDepartmentsByBranch(int branchId)
+        {
+            var departments = await _context.Units
+                                          .Where(u => u.ParentUnitId == branchId)
+                                          .Where(u => u.Type != null && (u.Type.Contains("PNVL") || u.Type == "PGD"))
+                                          .Select(u => new UnitListItemDto
+                                          {
+                                              Id = u.Id,
+                                              Code = u.Code,
+                                              Name = u.Name,
+                                              Type = u.Type,
+                                              ParentUnitId = u.ParentUnitId,
+                                              ParentUnitName = u.ParentUnit != null ? u.ParentUnit.Name : null
+                                          })
+                                          .ToListAsync();
+
+            // Sắp xếp theo thứ tự yêu cầu
+            return departments.OrderBy(d => GetDepartmentSortOrder(d.Name))
+                            .ToList();
+        }
+
+        private int GetDepartmentSortOrder(string name)
+        {
+            return name switch
+            {
+                "Ban Giám đốc" => 1,
+                "Phòng Khách hàng" => 2,
+                "Phòng Khách hàng cá nhân" => 2,
+                "Phòng Khách hàng doanh nghiệp" => 3,
+                "Phòng Kế toán & Ngân quỹ" => 4,
+                "Phòng giao dịch" => 5,
+                _ => 999 // Các phòng ban khác sẽ được sắp xếp cuối
+            };
         }
 
         // ... (các phương thức GetUnit(id), PostUnit, PutUnit, DeleteUnit giữ nguyên, chúng vẫn làm việc với model Unit đầy đủ) ...

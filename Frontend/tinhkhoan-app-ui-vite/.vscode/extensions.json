@@ -1,3 +1,26 @@
 {
-  "recommendations": ["Vue.volar"]
+  "recommendations": [
+    "Vue.volar",
+    "Vue.vscode-typescript-vue-plugin",
+    "bradlc.vscode-tailwindcss",
+    "esbenp.prettier-vscode",
+    "formulahendry.auto-rename-tag",
+    "ms-vscode.vscode-json",
+    "ms-vscode.vscode-typescript-next",
+    "GitHub.copilot",
+    "GitHub.copilot-chat",
+    "ms-vscode.live-server",
+    "christian-kohler.path-intellisense",
+    "zignd.html-css-class-completion",
+    "ms-edgedevtools.vscode-edge-devtools",
+    "humao.rest-client",
+    "gruntfuggly.todo-tree",
+    "alefragnani.bookmarks",
+    "streetsidesoftware.code-spell-checker",
+    "usernamehw.errorlens",
+    "ms-vscode.vscode-typescript-next"
+  ],
+  "unwantedRecommendations": [
+    "ms-vscode.vscode-eslint"
+  ]
 }

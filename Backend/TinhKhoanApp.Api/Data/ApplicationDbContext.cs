@@ -325,17 +325,22 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
             // 🚀 === TEMPORAL TABLES + COLUMNSTORE INDEXES CONFIGURATION ===
             
             // 📊 Cấu hình Temporal Tables cho ImportedDataRecord với history tracking
+            // ✅ Đã fix các vấn đề compression columns, bật lại temporal tables
             modelBuilder.Entity<ImportedDataRecord>(entity =>
             {
-                // Enable Temporal Table for full audit trail
+                // Bật Temporal Table với shadow properties để tracking lịch sử thay đổi
                 entity.ToTable(tb => tb.IsTemporal(ttb =>
                 {
                     ttb.UseHistoryTable("ImportedDataRecords_History");
-                    ttb.HasPeriodStart("SysStartTime");
-                    ttb.HasPeriodEnd("SysEndTime");
+                    ttb.HasPeriodStart("SysStartTime").HasColumnName("SysStartTime");
+                    ttb.HasPeriodEnd("SysEndTime").HasColumnName("SysEndTime");
                 }));
                 
-                // Indexes for performance
+                // ⚠️ QUAN TRỌNG: Định nghĩa shadow properties cho temporal columns
+                entity.Property<DateTime>("SysStartTime").HasColumnName("SysStartTime");
+                entity.Property<DateTime>("SysEndTime").HasColumnName("SysEndTime");
+                
+                // Indexes for performance theo chuẩn Columnstore
                 entity.HasIndex(e => e.StatementDate)
                       .HasDatabaseName("IX_ImportedDataRecords_StatementDate");
                       
@@ -345,14 +350,15 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
                 entity.HasIndex(e => e.Status)
                       .HasDatabaseName("IX_ImportedDataRecords_Status");
                       
-                // Cấu hình CompressionRatio như float (double trong C#) để match với database
-                entity.Property(e => e.CompressionRatio).HasColumnType("float");
+                // Bổ sung index cho temporal table queries
+                entity.HasIndex(e => e.ImportDate)
+                      .HasDatabaseName("IX_ImportedDataRecords_ImportDate");
             });
 
             // 📈 Cấu hình Temporal Tables cho ImportedDataItem với Columnstore Index
             modelBuilder.Entity<ImportedDataItem>(entity =>
             {
-                // Enable Temporal Table với shadow properties
+                // Enable Temporal Table với shadow properties cho Big Data Analytics
                 entity.ToTable(tb => tb.IsTemporal(ttb =>
                 {
                     ttb.UseHistoryTable("ImportedDataItems_History");
@@ -364,23 +370,36 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
                 entity.Property<DateTime>("SysStartTime").HasColumnName("SysStartTime");
                 entity.Property<DateTime>("SysEndTime").HasColumnName("SysEndTime");
                 
-                // Indexes cho analytics performance
+                // Indexes cho analytics performance với Columnstore optimization
                 entity.HasIndex(e => e.ProcessedDate)
                       .HasDatabaseName("IX_ImportedDataItems_ProcessedDate");
                       
                 entity.HasIndex(e => e.ImportedDataRecordId)
                       .HasDatabaseName("IX_ImportedDataItems_RecordId");
                       
-                // JSON indexing (SQL Server 2016+)
+                // Index kết hợp cho temporal queries
+                entity.HasIndex(e => new { e.ImportedDataRecordId, e.ProcessedDate })
+                      .HasDatabaseName("IX_ImportedDataItems_Record_Date");
+                      
+                // JSON indexing (SQL Server 2016+) cho RawData
                 entity.Property(e => e.RawData)
                       .HasColumnType("nvarchar(max)");
             });
             
             // 🎯 Custom SQL để tạo Columnstore Index (sẽ chạy qua migration)
-            // Columnstore Index cho analytics performance trên ImportedDataItems
-            // CREATE NONCLUSTERED COLUMNSTORE INDEX IX_ImportedDataItems_Columnstore
-            // ON ImportedDataItems (ImportedDataRecordId, ProcessedDate, RawData)
-            // WHERE ProcessedDate >= '2024-01-01'
+            // Columnstore Index cho analytics performance trên ImportedDataItems và History
+            // Em sẽ tạo migration riêng để:
+            // 1. CREATE NONCLUSTERED COLUMNSTORE INDEX IX_ImportedDataItems_Columnstore
+            //    ON ImportedDataItems (ImportedDataRecordId, ProcessedDate, RawData)
+            //    WHERE ProcessedDate >= '2024-01-01'
+            // 
+            // 2. CREATE NONCLUSTERED COLUMNSTORE INDEX IX_ImportedDataItems_History_Columnstore  
+            //    ON ImportedDataItems_History (ImportedDataRecordId, ProcessedDate, RawData, SysStartTime, SysEndTime)
+            //    WHERE ProcessedDate >= '2024-01-01'
+            //
+            // 3. CREATE NONCLUSTERED COLUMNSTORE INDEX IX_ImportedDataRecords_History_Columnstore
+            //    ON ImportedDataRecords_History (Category, ImportDate, StatementDate, Status, SysStartTime, SysEndTime)
+            //    WHERE ImportDate >= '2024-01-01'
         }
     }
 }

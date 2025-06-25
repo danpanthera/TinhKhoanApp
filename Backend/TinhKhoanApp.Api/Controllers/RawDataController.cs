@@ -5,9 +5,6 @@ using TinhKhoanApp.Api.Models;
 using TinhKhoanApp.Api.Models.Validation;
 using TinhKhoanApp.Api.Services;
 using ClosedXML.Excel;
-using SharpCompress.Archives;
-using SharpCompress.Common;
-using SharpCompress.Readers;
 using System.Text.RegularExpressions;
 using System.Globalization;
 using System.Data;
@@ -80,10 +77,6 @@ namespace TinhKhoanApp.Api.Controllers
                         x.RecordsCount,
                         x.Notes,
                         BranchCode = "7800", // Default branch code - will be extracted later
-                        IsArchiveFile = false, // Default value since not in ImportedDataRecord
-                        ArchiveType = (string?)null, // Default value
-                        RequiresPassword = false, // Default value
-                        ExtractedFilesCount = 0, // Default value
                         // Tạo RecordsPreview từ imported data items
                         RecordsPreview = new List<object>
                         {
@@ -106,10 +99,6 @@ namespace TinhKhoanApp.Api.Controllers
                         x.RecordsCount,
                         x.Notes,
                         BranchCode = "7800", // Default branch code - will be extracted later
-                        x.IsArchiveFile,
-                        x.ArchiveType,
-                        x.RequiresPassword,
-                        x.ExtractedFilesCount,
                         x.RecordsPreview
                     })
                     .ToList();
@@ -143,10 +132,6 @@ namespace TinhKhoanApp.Api.Controllers
                         item.RecordsCount,
                         item.Notes,
                         BranchCode = branchCode,
-                        item.IsArchiveFile,
-                        item.ArchiveType,
-                        item.RequiresPassword,
-                        item.ExtractedFilesCount,
                         item.RecordsPreview
                     });
                 }
@@ -172,7 +157,7 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 _logger.LogInformation($"🔄 Bắt đầu import dữ liệu với dataType: '{dataType}'");
-                _logger.LogInformation($"📋 Request - Files: {request.Files?.Count ?? 0}, ArchivePassword: {!string.IsNullOrEmpty(request.ArchivePassword)}, Notes: '{request.Notes}'");
+                _logger.LogInformation($"📋 Request - Files: {request.Files?.Count ?? 0}, Notes: '{request.Notes}'");
 
                 // ✅ Kiểm tra Model State
                 if (!ModelState.IsValid)
@@ -199,40 +184,25 @@ namespace TinhKhoanApp.Api.Controllers
 
                 foreach (var file in request.Files)
                 {
-                    // 🔍 Kiểm tra file nén
-                    if (IsArchiveFile(file.FileName))
+                    // 🔍 Kiểm tra tên file chứa mã loại dữ liệu
+                    if (!file.FileName.Contains(dataType, StringComparison.OrdinalIgnoreCase))
                     {
-                        var archiveResults = await ProcessArchiveFile(file, dataType, request.ArchivePassword ?? "", request.Notes ?? "");
-                        results.AddRange(archiveResults);
-                        
-                        // ✅ File nén đã được xử lý thành công
-                        if (archiveResults.Any(r => r.Success))
+                        results.Add(new RawDataImportResult
                         {
-                            _logger.LogInformation("✅ Đã xử lý file nén {FileName} thành công", file.FileName);
-                        }
+                            Success = false,
+                            FileName = file.FileName,
+                            Message = $"❌ Tên file phải chứa mã '{dataType}'"
+                        });
+                        continue;
                     }
-                    else
-                    {
-                        // 🔍 Kiểm tra tên file chứa mã loại dữ liệu
-                        if (!file.FileName.Contains(dataType, StringComparison.OrdinalIgnoreCase))
-                        {
-                            results.Add(new RawDataImportResult
-                            {
-                                Success = false,
-                                FileName = file.FileName,
-                                Message = $"❌ Tên file phải chứa mã '{dataType}'"
-                            });
-                            continue;
-                        }
 
-                        var result = await ProcessSingleFile(file, dataType, request.Notes ?? "");
-                        results.Add(result);
-                        
-                        // ✅ File đơn đã được xử lý thành công  
-                        if (result.Success)
-                        {
-                            _logger.LogInformation("✅ Đã xử lý file đơn {FileName} thành công", file.FileName);
-                        }
+                    var result = await ProcessSingleFile(file, dataType, request.Notes ?? "");
+                    results.Add(result);
+                    
+                    // ✅ File đơn đã được xử lý thành công  
+                    if (result.Success)
+                    {
+                        _logger.LogInformation("✅ Đã xử lý file đơn {FileName} thành công", file.FileName);
                     }
                 }
 
@@ -430,10 +400,6 @@ namespace TinhKhoanApp.Api.Controllers
                         x.Status,
                         x.RecordsCount,
                         x.Notes,
-                        IsArchiveFile = false, // Default value since not in ImportedDataRecord
-                        ArchiveType = (string?)null, // Default value
-                        RequiresPassword = false, // Default value
-                        ExtractedFilesCount = 0, // Default value
                         // Tạo RecordsPreview mẫu
                         RecordsPreview = new List<object>
                         {
@@ -756,11 +722,7 @@ namespace TinhKhoanApp.Api.Controllers
                             r.ImportedBy,
                             r.Status,
                             r.RecordsCount,
-                            r.Notes,
-                            IsArchiveFile = false, // Default value since not in ImportedDataRecord
-                            ArchiveType = (string?)null, // Default value
-                            RequiresPassword = false, // Default value
-                            ExtractedFilesCount = 0 // Default value
+                            r.Notes
                         })
                         .ToListAsync();
 
@@ -1189,133 +1151,7 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
-        // 🔍 Kiểm tra xem file có phải là file nén hay không
-        private bool IsArchiveFile(string fileName)
-        {
-            var extension = Path.GetExtension(fileName).ToLower();
-            return extension == ".zip" || extension == ".rar" || extension == ".7z";
-        }
-
-        // 📦 Xử lý file nén
-        private async Task<List<RawDataImportResult>> ProcessArchiveFile(IFormFile file, string dataType, string password, string notes)
-        {
-            var results = new List<RawDataImportResult>();
-            var tempPath = Path.GetTempPath();
-            var archiveFileName = Path.Combine(tempPath, Path.GetRandomFileName() + Path.GetExtension(file.FileName));
-            var extractPath = Path.Combine(tempPath, Path.GetRandomFileName());
-            
-            try
-            {
-                // Tạo thư mục giải nén
-                Directory.CreateDirectory(extractPath);
-                
-                // Lưu file nén tạm thời
-                using (var stream = new FileStream(archiveFileName, FileMode.Create))
-                {
-                    await file.CopyToAsync(stream);
-                }
-                
-                // Giải nén file
-                var extractedFiles = new Dictionary<string, string>();
-                bool archiveActuallyDeleted = false;
-                
-                try
-                {
-                    using (var archive = SharpCompress.Archives.ArchiveFactory.Open(archiveFileName))
-                    {
-                        var reader = archive.ExtractAllEntries();
-                        // SharpCompress không hỗ trợ reader.Password trực tiếp trong IReader
-                        // Nếu cần mật khẩu, sử dụng thông qua options trong một context cụ thể
-                        // Ví dụ: với ZipArchive cần thiết lập thông qua đối tượng ZipArchiveOptions
-                        
-                        while (reader.MoveToNextEntry())
-                        {
-                            if (reader.Entry.IsDirectory) continue;
-                            
-                            var entryFileName = reader.Entry.Key;
-                                 // Kiểm tra tên file có chứa mã loại dữ liệu không
-                        if (entryFileName != null && !entryFileName.Contains(dataType, StringComparison.OrdinalIgnoreCase))
-                            {
-                                results.Add(new RawDataImportResult
-                                {
-                                    Success = false,
-                                    FileName = entryFileName,
-                                    Message = $"❌ Tên file trong archive không chứa mã '{dataType}'"
-                                });
-                                continue;
-                            }
-                            
-                            var outputPath = Path.Combine(extractPath, entryFileName ?? "unknown");
-                            reader.WriteEntryToFile(outputPath);
-                            
-                            extractedFiles.Add(entryFileName ?? $"unknown_{Guid.NewGuid()}", outputPath);
-                        }
-                    }
-                    
-                    // Xóa file nén tạm thời
-                    System.IO.File.Delete(archiveFileName);
-                    archiveActuallyDeleted = true;
-                }
-                catch (Exception ex)
-                {
-                    results.Add(new RawDataImportResult
-                    {
-                        Success = false,
-                        FileName = file.FileName,
-                        Message = $"❌ Lỗi khi giải nén: {ex.Message}",
-                        IsArchiveDeleted = archiveActuallyDeleted,
-                        DataType = dataType
-                    });
-                    return results;
-                }
-                
-                // Xử lý từng file đã giải nén
-                foreach (var entry in extractedFiles)
-                {
-                    var tempFilePath = entry.Value;
-                    try
-                    {
-                        var importResult = await ImportCsvToDatabase(tempFilePath, entry.Key ?? "unknown_file", dataType, notes);
-                        results.Add(importResult);
-                    }
-                    catch (Exception ex)
-                    {
-                        results.Add(new RawDataImportResult
-                        {
-                            Success = false,
-                            FileName = entry.Key,
-                            Message = $"❌ Lỗi khi xử lý file từ archive: {ex.Message}",
-                            DataType = dataType
-                        });
-                    }
-                    finally
-                    {
-                        // Xóa file tạm
-                        if (System.IO.File.Exists(tempFilePath))
-                        {
-                            System.IO.File.Delete(tempFilePath);
-                        }
-                    }
-                }
-                
-                return results;
-            }
-            finally
-            {
-                // Dọn dẹp
-                if (System.IO.File.Exists(archiveFileName))
-                {
-                    System.IO.File.Delete(archiveFileName);
-                }
-                
-                if (Directory.Exists(extractPath))
-                {
-                    Directory.Delete(extractPath, true);
-                }
-            }
-        }
-
-        // 💧 Xóa bảng động nếu tồn tại
+        //  Xóa bảng động nếu tồn tại
         private async Task DropDynamicTableIfExists(string dataType, DateTime statementDate)
         {
             var tableName = $"Data_{dataType}";
@@ -1644,10 +1480,6 @@ namespace TinhKhoanApp.Api.Controllers
                         item.RecordsCount,
                         item.Notes,
                         BranchCode = branchCode,
-                        IsArchiveFile = false,
-                        ArchiveType = (string?)null,
-                        RequiresPassword = false,
-                        ExtractedFilesCount = 0,
                         RecordsPreview = new List<object>()
                     });
                 }

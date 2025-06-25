@@ -886,8 +886,8 @@ class RawDataService {
       }
     }
     
-    // Check if filename contains data type (for non-archive files)
-    if (!this.isArchiveFile(fileName) && !fileName.includes(dataType.toLowerCase())) {
+    // Check if filename contains data type
+    if (!fileName.includes(dataType.toLowerCase())) {
       return { 
         valid: false, 
         error: `Tên file phải chứa mã loại dữ liệu '${dataType}'` 
@@ -895,13 +895,6 @@ class RawDataService {
     }
     
     return { valid: true }
-  }
-
-  // 🗂️ Kiểm tra file nén
-  isArchiveFile(fileName) {
-    const archiveExtensions = ['.zip', '.7z', '.rar', '.tar', '.gz'];
-    const extension = '.' + fileName.split('.').pop().toLowerCase();
-    return archiveExtensions.includes(extension);
   }
 
   // 📅 Trích xuất ngày từ tên file (yyyymmdd)

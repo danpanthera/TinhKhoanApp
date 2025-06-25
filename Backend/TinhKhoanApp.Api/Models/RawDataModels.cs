@@ -38,16 +38,7 @@ namespace TinhKhoanApp.Api.Models
         [StringLength(500)]
         public string? Notes { get; set; } // Ghi chú
         
-        // 🗂️ Thuộc tính cho file nén
-        public bool IsArchiveFile { get; set; } = false;
-        [StringLength(20)]
-        public string? ArchiveType { get; set; } // ZIP, 7Z, RAR
-        public bool RequiresPassword { get; set; } = false;
-        public int ExtractedFilesCount { get; set; } = 0;
-        [StringLength(2000)]
-        public string? ExtractedFilesList { get; set; } // JSON list file đã giải nén
-        
-        // 🔗 Quan hệ với dữ liệu chi tiết
+        //  Quan hệ với dữ liệu chi tiết
         public virtual ICollection<RawDataRecord> RawDataRecords { get; set; } = new List<RawDataRecord>();
     }
     
@@ -95,7 +86,6 @@ namespace TinhKhoanApp.Api.Models
         public IFormFileCollection? Files { get; set; }
         
         public string? DataType { get; set; } // Loại dữ liệu (LN01, LN03, ...)
-        public string? ArchivePassword { get; set; } // Mật khẩu file nén
         public string? Notes { get; set; } // Ghi chú
     }
     

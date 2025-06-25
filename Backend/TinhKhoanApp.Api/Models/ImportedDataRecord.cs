@@ -45,12 +45,6 @@ namespace TinhKhoanApp.Api.Models
         // 💾 Store original file as binary data
         public byte[]? OriginalFileData { get; set; }
 
-        // 🗜️ Store compressed data using optimized compression
-        public byte[]? CompressedData { get; set; }
-        
-        // 📊 Compression ratio for statistics
-        public double CompressionRatio { get; set; } = 0.0;
-
         [StringLength(1000)]
         public string? Notes { get; set; }
 

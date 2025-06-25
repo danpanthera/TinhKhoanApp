@@ -511,28 +511,44 @@ const editingUnitActualValue = ref('');
 const savingUnitActual = ref(false);
 
 // Computed properties
-// Updated branchOptions: Use SortOrder from backend instead of hardcoded sorting
+// Updated branchOptions: Custom ordering as requested
 const branchOptions = computed(() => {
   if (!units.value || units.value.length === 0) return [];
   
-  const branchUnits = units.value.filter(unit => {
-    const type = (unit.type || '').toUpperCase();
-    return type === 'CNL1' || type === 'CNL2';
-  });
-  
-  // Sort by SortOrder (from backend), then by Name as fallback
-  return branchUnits.sort((a, b) => {
-    // Primary sort: SortOrder (nulls last)
-    const sortOrderA = a.sortOrder ?? Number.MAX_SAFE_INTEGER;
-    const sortOrderB = b.sortOrder ?? Number.MAX_SAFE_INTEGER;
-    
-    if (sortOrderA !== sortOrderB) {
-      return sortOrderA - sortOrderB;
-    }
-    
-    // Secondary sort: Name
-    return (a.name || '').localeCompare(b.name || '');
-  });
+  // Định nghĩa thứ tự theo yêu cầu: CnLaiChau, CnTamDuong, CnPhongTho, CnSinHo, CnMuongTe, CnThanUyen, CnThanhPho, CnTanUyen, CnNamNhun
+  const customOrder = [
+    'CnLaiChau',     // Chi nhánh tỉnh Lai Châu
+    'CnTamDuong',    // Chi nhánh Tam Đường
+    'CnPhongTho',    // Chi nhánh Phong Thổ  
+    'CnSinHo',       // Chi nhánh Sìn Hồ
+    'CnMuongTe',     // Chi nhánh Mường Tè
+    'CnThanUyen',    // Chi nhánh Than Uyên
+    'CnThanhPho',    // Chi nhánh Thành Phố
+    'CnTanUyen',     // Chi nhánh Tân Uyên
+    'CnNamNhun'      // Chi nhánh Nậm Nhùn
+  ];
+
+  return units.value
+    .filter(unit => {
+      const type = (unit.type || '').toUpperCase();
+      return type === 'CNL1' || type === 'CNL2';
+    })
+    .sort((a, b) => {
+      const indexA = customOrder.indexOf(a.code);
+      const indexB = customOrder.indexOf(b.code);
+      
+      // Nếu cả hai đều có trong custom order, sắp xếp theo thứ tự đó
+      if (indexA !== -1 && indexB !== -1) {
+        return indexA - indexB;
+      }
+      
+      // Nếu chỉ có một trong hai có trong custom order, ưu tiên cái đó
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      
+      // Nếu cả hai đều không có trong custom order, sắp xếp theo tên
+      return (a.name || '').localeCompare(b.name || '');
+    });
 });
 
 const departmentOptions = computed(() => {
@@ -543,31 +559,24 @@ const departmentOptions = computed(() => {
   if (!branch) return [];
   
   const children = units.value.filter(u => u.parentUnitId === branchId);
-  const branchType = (branch.type || '').toUpperCase();
   
-  if (branchType === 'CNL1') {
-    // Lấy tất cả các phòng nghiệp vụ PNVL1 trực thuộc CNL1 - khớp với EmployeesView.vue
-    const allowedCodes = [
-      'PHONGKHDN',    // Phòng Khách hàng Doanh nghiệp
-      'PHONGKHCN',    // Phòng Khách hàng Cá nhân  
-      'PHONGKTNQ',    // Phòng Kế toán & Ngân quỹ
-      'PHONGKTGS',    // Phòng Kiểm tra giám sát
-      'PHONGTH',      // Phòng Tổng hợp
-      'PHONGKHQLRR'   // Phòng Kế hoạch & QLRR
-    ];
-    return children.filter(u => {
-      const unitType = (u.type || '').toUpperCase();
-      const unitCode = (u.code || '').toUpperCase();
-      return unitType === 'PNVL1' && allowedCodes.includes(unitCode);
-    }).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-  } else if (branchType === 'CNL2') {
-    return children.filter(u => {
-      const unitType = (u.type || '').toUpperCase();
-      return unitType === 'PNVL2' || unitType === 'PGDL2';
-    }).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-  }
+  // Lọc chỉ lấy các phòng nghiệp vụ (PNVL1, PNVL2) và phòng giao dịch (PGD), loại bỏ các chi nhánh con (CNL2)
+  const departments = children.filter(u => {
+    const unitType = (u.type || '').toUpperCase();
+    return unitType.includes('PNVL') || unitType === 'PGD';
+  });
   
-  return children.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  // Sắp xếp theo thứ tự: Ban Giám đốc, Phòng Khách hàng, Phòng Kế toán & Ngân quỹ, Phòng giao dịch
+  const getDepartmentSortOrder = (name) => {
+    const lowerName = (name || '').toLowerCase();
+    if (lowerName.includes('ban giám đốc')) return 1;
+    if (lowerName.includes('phòng khách hàng')) return 2;
+    if (lowerName.includes('phòng kế toán')) return 3;
+    if (lowerName.includes('phòng giao dịch')) return 4;
+    return 999;
+  };
+  
+  return departments.sort((a, b) => getDepartmentSortOrder(a.name) - getDepartmentSortOrder(b.name));
 });
 
 const filteredEmployees = computed(() => {

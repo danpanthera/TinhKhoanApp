@@ -1,0 +1,438 @@
+{
+  "folders": [
+    {
+      "name": "Backend API",
+      "path": "./Backend/TinhKhoanApp.Api"
+    },
+    {
+      "name": "Frontend Vue",
+      "path": "./Frontend/tinhkhoan-app-ui-vite"
+    }
+  ],
+  "settings": {
+    // File & Search Exclusions
+    "files.exclude": {
+      "**/node_modules": true,
+      "**/bin": true,
+      "**/obj": true,
+      "**/.vs": true,
+      "**/.vscode": false,
+      "**/dist": true,
+      "**/coverage": true,
+      "**/.nyc_output": true,
+      "**/logs": true,
+      "**/.cache": true,
+      "**/tmp": true,
+      "**/temp": true,
+      "**/*.log": true,
+      "**/.DS_Store": true,
+      "**/Thumbs.db": true
+    },
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/bin": true,
+      "**/obj": true,
+      "**/dist": true,
+      "**/coverage": true,
+      "**/.nyc_output": true,
+      "**/logs": true,
+      "**/.cache": true
+    },
+    
+    // Editor Configuration
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
+    },
+    "editor.minimap.enabled": true,
+    "editor.minimap.maxColumn": 120,
+    "editor.rulers": [80, 120],
+    "editor.wordWrap": "on",
+    "editor.wordWrapColumn": 120,
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "editor.detectIndentation": true,
+    "editor.renderWhitespace": "boundary",
+    "editor.trimAutoWhitespace": true,
+    
+    // File Configuration
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "files.eol": "\n",
+    
+    // Prettier Configuration
+    "prettier.enable": true,
+    "prettier.singleQuote": true,
+    "prettier.semi": false,
+    "prettier.trailingComma": "es5",
+    "prettier.tabWidth": 2,
+    "prettier.useTabs": false,
+    
+    // Language-specific settings
+    "typescript.preferences.quotemark": "single",
+    "[vue]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[json]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[html]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[css]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    
+    // Vue.js Configuration
+    "vue.codeActions.enabled": true,
+    "vue.complete.casing.tags": "kebab",
+    "vue.complete.casing.props": "camel",
+    
+    // .NET Configuration
+    "dotnet.completion.showCompletionItemsFromUnimportedNamespaces": true,
+    "omnisharp.enableRoslynAnalyzers": true,
+    "csharp.semanticHighlighting.enabled": true,
+    
+    // UI & UX
+    "workbench.iconTheme": "material-icon-theme",
+    "workbench.tree.indent": 20,
+    "breadcrumbs.enabled": true,
+    "explorer.confirmDragAndDrop": false,
+    "explorer.confirmDelete": false,
+    
+    // Terminal
+    "terminal.integrated.defaultProfile.osx": "zsh",
+    
+    // Git Configuration
+    "git.autofetch": true,
+    "git.enableSmartCommit": true,
+    "git.confirmSync": false,
+    
+    // Extension-specific
+    "errorLens.enabledDiagnosticLevels": ["error", "warning", "info"],
+    "errorLens.excludeBySource": ["csharp", "ts"],
+    "better-comments.tags": [
+      {
+        "tag": "!",
+        "color": "#FF2D00",
+        "strikethrough": false,
+        "underline": false,
+        "backgroundColor": "transparent",
+        "bold": false,
+        "italic": false
+      },
+      {
+        "tag": "?",
+        "color": "#3498DB",
+        "strikethrough": false,
+        "underline": false,
+        "backgroundColor": "transparent",
+        "bold": false,
+        "italic": false
+      },
+      {
+        "tag": "//",
+        "color": "#474747",
+        "strikethrough": true,
+        "underline": false,
+        "backgroundColor": "transparent",
+        "bold": false,
+        "italic": false
+      },
+      {
+        "tag": "todo",
+        "color": "#FF8C00",
+        "strikethrough": false,
+        "underline": false,
+        "backgroundColor": "transparent",
+        "bold": false,
+        "italic": false
+      },
+      {
+        "tag": "*",
+        "color": "#98C379",
+        "strikethrough": false,
+        "underline": false,
+        "backgroundColor": "transparent",
+        "bold": false,
+        "italic": false
+      }
+    ]
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-dotnettools.csharp",
+      "ms-dotnettools.csdevkit",
+      "Vue.volar",
+      "Vue.vscode-typescript-vue-plugin",
+      "bradlc.vscode-tailwindcss",
+      "esbenp.prettier-vscode",
+      "formulahendry.auto-rename-tag",
+      "GitHub.copilot",
+      "GitHub.copilot-chat",
+      "christian-kohler.path-intellisense",
+      "humao.rest-client",
+      "gruntfuggly.todo-tree",
+      "alefragnani.bookmarks",
+      "usernamehw.errorlens",
+      "aaron-bond.better-comments",
+      "ritwickdey.liveserver",
+      "pkief.material-icon-theme"
+    ],
+    "unwantedRecommendations": [
+      "ms-vscode.vscode-eslint",
+      "ms-vscode.powershell",
+      "ms-vscode.live-server",
+      "zignd.html-css-class-completion",
+      "ms-edgedevtools.vscode-edge-devtools",
+      "ms-vscode.vscode-thunder-client",
+      "streetsidesoftware.code-spell-checker",
+      "ms-vscode.vscode-json",
+      "ms-vscode.vscode-typescript-next"
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "🚀 Start Backend",
+        "type": "shell",
+        "command": "dotnet",
+        "args": ["run", "--urls=http://localhost:5055"],
+        "options": {
+          "cwd": "${workspaceFolder}/Backend/TinhKhoanApp.Api"
+        },
+        "group": "build",
+        "isBackground": true,
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared",
+          "showReuseMessage": true,
+          "clear": false
+        },
+        "problemMatcher": "$msCompile"
+      },
+      {
+        "label": "🎨 Start Frontend",
+        "type": "shell", 
+        "command": "npm",
+        "args": ["run", "dev"],
+        "options": {
+          "cwd": "${workspaceFolder}/Frontend/tinhkhoan-app-ui-vite"
+        },
+        "group": "build",
+        "isBackground": true,
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared",
+          "showReuseMessage": true,
+          "clear": false
+        }
+      },
+      {
+        "label": "🔨 Build Backend",
+        "type": "shell",
+        "command": "dotnet",
+        "args": ["build"],
+        "options": {
+          "cwd": "${workspaceFolder}/Backend/TinhKhoanApp.Api"
+        },
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        },
+        "problemMatcher": "$msCompile"
+      },
+      {
+        "label": "📦 Build Frontend",
+        "type": "shell",
+        "command": "npm",
+        "args": ["run", "build"],
+        "options": {
+          "cwd": "${workspaceFolder}/Frontend/tinhkhoan-app-ui-vite"
+        },
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "🗄️ Database Migration",
+        "type": "shell",
+        "command": "dotnet",
+        "args": ["ef", "database", "update"],
+        "options": {
+          "cwd": "${workspaceFolder}/Backend/TinhKhoanApp.Api"
+        },
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "🧹 Clean All",
+        "type": "shell",
+        "command": "dotnet",
+        "args": ["clean"],
+        "options": {
+          "cwd": "${workspaceFolder}/Backend/TinhKhoanApp.Api"
+        },
+        "group": "build",
+        "dependsOrder": "sequence",
+        "dependsOn": ["Clean Frontend"],
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "Clean Frontend",
+        "type": "shell",
+        "command": "npm",
+        "args": ["run", "clean"],
+        "options": {
+          "cwd": "${workspaceFolder}/Frontend/tinhkhoan-app-ui-vite"
+        },
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always", 
+          "focus": false,
+          "panel": "shared"
+        }
+      },
+      {
+        "label": "⚡ Quick Commit",
+        "type": "shell",
+        "command": "./quick-commit.sh",
+        "args": ["${input:commitMessage}"],
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared",
+          "showReuseMessage": false,
+          "clear": true
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "🔄 Auto Commit",
+        "type": "shell", 
+        "command": "./quick-commit.sh",
+        "args": ["auto"],
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared",
+          "showReuseMessage": false,
+          "clear": true
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "📊 Git Status",
+        "type": "shell",
+        "command": "git",
+        "args": ["status", "--short"],
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        },
+        "options": {
+          "cwd": "${workspaceFolder}"
+        }
+      }
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "🚀 Launch Backend API",
+        "type": "coreclr",
+        "request": "launch",
+        "preLaunchTask": "🔨 Build Backend",
+        "program": "${workspaceFolder}/Backend/TinhKhoanApp.Api/bin/Debug/net8.0/TinhKhoanApp.Api.dll",
+        "args": [],
+        "cwd": "${workspaceFolder}/Backend/TinhKhoanApp.Api",
+        "stopAtEntry": false,
+        "serverReadyAction": {
+          "action": "openExternally",
+          "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+          "uriFormat": "%s/swagger"
+        },
+        "env": {
+          "ASPNETCORE_ENVIRONMENT": "Development"
+        },
+        "sourceFileMap": {
+          "/Views": "${workspaceFolder}/Views"
+        }
+      },
+      {
+        "name": "🎨 Launch Frontend (Chrome)",
+        "type": "node",
+        "request": "launch",
+        "program": "${workspaceFolder}/Frontend/tinhkhoan-app-ui-vite/node_modules/.bin/vite",
+        "args": ["--host"],
+        "cwd": "${workspaceFolder}/Frontend/tinhkhoan-app-ui-vite",
+        "env": {
+          "NODE_ENV": "development"
+        },
+        "console": "integratedTerminal",
+        "internalConsoleOptions": "neverOpen"
+      }
+    ],
+    "compounds": [
+      {
+        "name": "🚀 Launch Full Stack",
+        "configurations": ["🚀 Launch Backend API", "🎨 Launch Frontend (Chrome)"],
+        "preLaunchTask": "🔨 Build Backend",
+        "stopAll": true
+      }
+    ]
+  },
+  "inputs": [
+    {
+      "id": "commitMessage",
+      "description": "Nhập commit message",
+      "default": "🔄 Update code",
+      "type": "promptString"
+    }
+  ]
+}

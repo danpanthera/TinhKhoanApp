@@ -365,16 +365,25 @@ const departmentOptions = computed(() => {
   const children = units.value.filter(u => u.parentUnitId === branch.id)
   const branchType = (branch.type || '').toUpperCase()
   
+  const getDepartmentSortOrder = (name) => {
+    const lowerName = (name || '').toLowerCase()
+    if (lowerName.includes('ban giám đốc')) return 1
+    if (lowerName.includes('phòng khách hàng')) return 2
+    if (lowerName.includes('phòng kế toán')) return 3
+    if (lowerName.includes('phòng giao dịch')) return 4
+    return 999
+  }
+  
   if (branchType === 'CNL1') {
     return children.filter(u => {
       const unitType = (u.type || '').toUpperCase()
       return unitType === 'PNVL1'
-    }).sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+    }).sort((a, b) => getDepartmentSortOrder(a.name) - getDepartmentSortOrder(b.name))
   } else if (branchType === 'CNL2') {
     return children.filter(u => {
       const unitType = (u.type || '').toUpperCase()
       return unitType === 'PNVL2' || unitType === 'PGDL2'
-    }).sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+    }).sort((a, b) => getDepartmentSortOrder(a.name) - getDepartmentSortOrder(b.name))
   }
   
   return []

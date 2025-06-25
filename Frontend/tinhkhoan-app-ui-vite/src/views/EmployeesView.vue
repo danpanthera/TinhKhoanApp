@@ -475,44 +475,34 @@ const branchOptions = computed(() => {
     });
 });
 
-// Sửa departmentOptions: lọc phòng nghiệp vụ theo loại chi nhánh đã chọn
+// Sửa departmentOptions: lọc phòng nghiệp vụ theo loại chi nhánh đã chọn với sắp xếp theo thứ tự yêu cầu
 const departmentOptions = computed(() => {
   if (!selectedBranchId.value) return [];
   const branch = unitStore.allUnits.find(u => u.id === Number(selectedBranchId.value));
   if (!branch) return [];
-  const branchType = (branch.type || '').toUpperCase();
   
   // Lấy các phòng nghiệp vụ con của chi nhánh đã chọn
   const children = unitStore.allUnits.filter(u => u.parentUnitId === branch.id);
   
-  // --- LỌC PHÒNG NGHIỆP VỤ CHO CNL1 ---
-  if (branchType === 'CNL1') {
-    // Lấy tất cả các phòng nghiệp vụ PNVL1 trực thuộc CNL1
-    // Danh sách code thực tế từ cơ cấu tổ chức mới (45 đơn vị cố định)
-    const allowedCodes = [
-      'CNLAICHAUBGD',     // Ban Giám đốc
-      'CNLAICHAUKHDN',    // Phòng Khách hàng Doanh nghiệp
-      'CNLAICHAUKHCN',    // Phòng Khách hàng Cá nhân  
-      'CNLAICHAUKTNQ',    // Phòng Kế toán & Ngân quỹ
-      'CNLAICHAUTONGHOP', // Phòng Tổng hợp
-      'CNLAICHAUKHQLRR',  // Phòng Kế hoạch & Quản lý rủi ro
-      'CNLAICHAUKTGS'     // Phòng Kiểm tra giám sát
-    ];
-    return children.filter(u => {
-      const unitType = (u.type || '').toUpperCase();
-      const unitCode = (u.code || '').toUpperCase();
-      // Chỉ lấy các phòng nghiệp vụ PNVL1 có code trong danh sách cho phép
-      return unitType === 'PNVL1' && allowedCodes.includes(unitCode);
-    });
-  } else if (branchType === 'CNL2') {
-    // CNL2: lấy tất cả phòng nghiệp vụ con (PNVL2, PGDL2)
-    return children.filter(u => {
-      const unitType = (u.type || '').toUpperCase();
-      return unitType === 'PNVL2' || unitType === 'PGDL2';
-    });
-  }
+  // Lọc chỉ lấy các phòng nghiệp vụ (PNVL1, PNVL2) và phòng giao dịch (PGD), loại bỏ các chi nhánh con (CNL2)
+  const departments = children.filter(u => {
+    const unitType = (u.type || '').toUpperCase();
+    return unitType.includes('PNVL') || unitType === 'PGD';
+  });
   
-  return children; // Fallback: trả về tất cả children
+  // Sắp xếp theo thứ tự: Ban Giám đốc, Phòng Khách hàng, Phòng Kế toán & Ngân quỹ, Phòng giao dịch
+  return departments.sort((a, b) => {
+    const getOrder = (name) => {
+      const lowerName = (name || '').toLowerCase();
+      if (lowerName.includes('ban giám đốc')) return 1;
+      if (lowerName.includes('phòng khách hàng')) return 2;
+      if (lowerName.includes('phòng kế toán')) return 3;
+      if (lowerName.includes('phòng giao dịch')) return 4;
+      return 999;
+    };
+    
+    return getOrder(a.name) - getOrder(b.name);
+  });
 });
 
 // Thêm biến selectedBranchId để điều khiển chọn branch

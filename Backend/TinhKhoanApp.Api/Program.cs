@@ -48,7 +48,6 @@ internal class Program
             });        // 3.5. Đăng ký các business services        builder.Services.AddScoped<IKpiScoringService, KpiScoringService>();
         builder.Services.AddScoped<IEmployeeKpiAssignmentService, EmployeeKpiAssignmentService>();
         builder.Services.AddScoped<UnitKpiScoringService>();
-        builder.Services.AddScoped<ICompressionService, CompressionService>();
         builder.Services.AddScoped<IStatementDateService, StatementDateService>();
         builder.Services.AddScoped<DashboardCalculationService>();
 

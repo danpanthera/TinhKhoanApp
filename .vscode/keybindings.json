@@ -1,0 +1,32 @@
+[
+  {
+    "key": "ctrl+shift+c",
+    "command": "workbench.action.tasks.runTask",
+    "args": "⚡ Quick Commit",
+    "when": "!terminalFocus"
+  },
+  {
+    "key": "ctrl+shift+a", 
+    "command": "workbench.action.tasks.runTask",
+    "args": "🔄 Auto Commit",
+    "when": "!terminalFocus"
+  },
+  {
+    "key": "ctrl+shift+s",
+    "command": "workbench.action.tasks.runTask", 
+    "args": "📊 Git Status",
+    "when": "!terminalFocus"
+  },
+  {
+    "key": "ctrl+shift+l",
+    "command": "workbench.action.tasks.runTask",
+    "args": "📜 Git Log", 
+    "when": "!terminalFocus"
+  },
+  {
+    "key": "ctrl+shift+u",
+    "command": "workbench.action.tasks.runTask",
+    "args": "↩️ Undo Last Commit",
+    "when": "!terminalFocus"
+  }
+]

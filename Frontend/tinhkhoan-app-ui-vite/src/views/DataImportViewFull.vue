@@ -212,20 +212,6 @@
               </ul>
             </div>
             
-            <!-- Phần nhập mật khẩu cho file nén nếu cần -->
-            <div v-if="hasArchiveFile" class="form-group">
-              <label class="form-label">Mật khẩu file nén (nếu có):</label>
-              <div class="password-input-container">
-                <input 
-                  type="password" 
-                  v-model="archivePassword" 
-                  class="password-input" 
-                  placeholder="Nhập mật khẩu file nén..." 
-                />
-                <span class="input-icon">🔑</span>
-              </div>
-            </div>
-            
             <!-- Upload progress indicator -->
             <div v-if="uploading" class="upload-progress-container">
               <div class="upload-status">
@@ -410,7 +396,6 @@ const showDataViewModal = ref(false)
 const showRawDataModal = ref(false)
 const selectedDataType = ref(null)
 const selectedFiles = ref([])
-const archivePassword = ref('')
 const importNotes = ref('')
 const uploading = ref(false)
 const uploadProgress = ref(0)
@@ -433,10 +418,6 @@ const sortedDataTypeDefinitions = computed(() => {
     sorted[key] = dataTypeDefinitions[key]
   })
   return sorted
-})
-
-const hasArchiveFile = computed(() => {
-  return selectedFiles.value.some(file => isArchiveFile(file.name))
 })
 
 // Methods
@@ -1119,7 +1100,6 @@ const getDataTypeColor = (dataType) => {
 const openImportModal = (dataType) => {
   selectedDataType.value = dataType
   selectedFiles.value = []
-  archivePassword.value = ''
   importNotes.value = ''
   uploading.value = false
   uploadProgress.value = 0
@@ -1141,7 +1121,6 @@ const closeImportModal = () => {
   
   showImportModal.value = false
   selectedFiles.value = []
-  archivePassword.value = ''
   importNotes.value = ''
   uploading.value = false
   uploadProgress.value = 0
@@ -1164,7 +1143,6 @@ const performImport = async () => {
     console.log(`📤 Importing data for ${selectedDataType.value} with ${selectedFiles.value.length} files...`, {
       dataType: selectedDataType.value,
       files: selectedFiles.value.map(f => ({ name: f.name, size: f.size })),
-      archivePassword: archivePassword.value ? '***' : undefined,
       notes: importNotes.value,
       statementDate: selectedFromDate.value
     })
@@ -1173,7 +1151,6 @@ const performImport = async () => {
     
     // Chuẩn bị options cho API call
     const options = {
-      archivePassword: archivePassword.value,
       notes: importNotes.value,
       statementDate: selectedFromDate.value,
       onProgress: (progressInfo) => {
@@ -1324,11 +1301,6 @@ const getUploadStatusIcon = () => {
 }
 
 // Hàm kiểm tra nếu file là file nén
-const isArchiveFile = (fileName) => {
-  const archiveExtensions = ['.zip', '.rar', '.7z', '.tar', '.gz']
-  return archiveExtensions.some(ext => fileName.toLowerCase().endsWith(ext))
-}
-
 // Hàm định dạng kích thước file
 const formatFileSize = (bytes) => {
   if (bytes === 0) return '0 Bytes'
@@ -1996,32 +1968,6 @@ const formatCellValue = (value) => {
 
 .btn-remove:hover {
   background: #ffeeee;
-}
-
-.password-input-container {
-  position: relative;
-}
-
-.password-input {
-  width: 100%;
-  padding: 10px 15px;
-  padding-right: 40px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 0.95rem;
-}
-
-.password-input:focus {
-  outline: none;
-  border-color: #8B1538;
-}
-
-.input-icon {
-  position: absolute;
-  right: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #666;
 }
 
 /* Upload progress styles */

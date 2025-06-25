@@ -8,7 +8,12 @@
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf node_modules/.vite dist",
-    "clean-all": "rm -rf node_modules dist && npm install"
+    "clean-all": "rm -rf node_modules dist && npm install",
+    "format": "prettier --write \"src/**/*.{vue,js,ts,json,css,md}\"",
+    "format:check": "prettier --check \"src/**/*.{vue,js,ts,json,css,md}\"",
+    "type-check": "vue-tsc --noEmit",
+    "serve": "vite preview",
+    "analyze": "vite build --mode analyze"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
