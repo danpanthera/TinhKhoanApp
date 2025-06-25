@@ -60,11 +60,11 @@ const applyTextEffects = () => {
   // Add current effect class
   textElement.classList.add(`text-effect-${textEffectState.value}`);
   
-  // Toggle effect every 6 seconds
+  // Toggle effect every 10 seconds (tăng từ 6 lên 10 giây để chậm hơn)
   setTimeout(() => {
     textEffectState.value = textEffectState.value === 'classic' ? 'pearl' : 'classic';
     applyTextEffects();
-  }, 6000);
+  }, 10000);
   
   console.log('🎨 Applied simple text effect:', textEffectState.value);
 };
@@ -421,6 +421,7 @@ onUnmounted(() => {
     0 4px 8px rgba(139, 21, 56, 0.5),
     0 2px 4px rgba(0, 0, 0, 0.4);
   animation: agribank-classic-glow 4s ease-in-out infinite;
+  transition: color 3s ease-in-out, text-shadow 3s ease-in-out; /* Thêm transition mượt hơn */
 }
 
 /* 🎨 HIỆU ỨNG PEARL - TRẮNG NGỌC TRAI */
@@ -432,6 +433,7 @@ onUnmounted(() => {
     0 4px 8px rgba(200, 200, 200, 0.5),
     0 2px 4px rgba(100, 100, 100, 0.4);
   animation: pearl-shimmer 5s ease-in-out infinite;
+  transition: color 3s ease-in-out, text-shadow 3s ease-in-out; /* Thêm transition mượt hơn */
 }
 
 @keyframes agribank-classic-glow {
@@ -453,7 +455,7 @@ onUnmounted(() => {
   0%, 100% { 
     text-shadow: 
       0 0 25px rgba(248, 248, 255, 0.8),
-      0 0 15px rgba(220, 220, 220, 0.6),
+      0 0 15px rgba(220, 220, 255, 0.6),
       0 4px 8px rgba(200, 200, 200, 0.4),
       0 2px 4px rgba(100, 100, 100, 0.3);
   }
@@ -466,19 +468,19 @@ onUnmounted(() => {
   }
 }
 
-/* Dòng 2: HỆ THỐNG QUẢN LÝ KHOÁN */
+/* Dòng 2: HỆ THỐNG QUẢN LÝ KHOÁN | HỆ THỐNG BÁO CÁO */
 .adaptive-text-line-2 {
   font-size: clamp(1rem, 4vw, 2.5rem);
   letter-spacing: clamp(0.01em, 0.3vw, 0.05em);
   transform: scale(1);
   font-family: 'Montserrat', 'Roboto', sans-serif;
   font-weight: 600;
-  color: #666666;
+  color: #8B1538; /* Đổi màu từ xám sang đỏ bordeaux giống màu dòng 1 */
   text-shadow: 
-    0 0 15px rgba(102, 102, 102, 0.5),
-    0 2px 4px rgba(102, 102, 102, 0.3),
+    0 0 15px rgba(139, 21, 56, 0.5),
+    0 2px 4px rgba(139, 21, 56, 0.3),
     0 1px 2px rgba(0, 0, 0, 0.2);
-  animation: subtitle-glow 3s ease-in-out infinite;
+  animation: subtitle-glow 3s ease-in-out infinite, star-light 5s linear infinite; /* Thêm hiệu ứng tia sáng ngôi sao */
   position: relative;
   max-width: 100%;
   width: fit-content;
@@ -489,15 +491,51 @@ onUnmounted(() => {
 @keyframes subtitle-glow {
   0%, 100% { 
     text-shadow: 
-      0 0 10px rgba(102, 102, 102, 0.4),
-      0 2px 4px rgba(102, 102, 102, 0.2),
+      0 0 10px rgba(139, 21, 56, 0.4),
+      0 2px 4px rgba(139, 21, 56, 0.2),
       0 1px 2px rgba(0, 0, 0, 0.2);
   }
   50% { 
     text-shadow: 
-      0 0 20px rgba(102, 102, 102, 0.6),
-      0 2px 6px rgba(102, 102, 102, 0.4),
+      0 0 20px rgba(139, 21, 56, 0.6),
+      0 2px 6px rgba(139, 21, 56, 0.4),
       0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Hiệu ứng tia sáng ngôi sao chạy từ trái qua phải */
+@keyframes star-light {
+  0% {
+    background-image: linear-gradient(90deg, transparent 0%, transparent 0%);
+    background-position: 0% 50%;
+    background-size: 200% 100%;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+  5% {
+    background-image: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.8) 50%, transparent 100%);
+    background-position: 0% 50%;
+    background-size: 200% 100%;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+  15% {
+    background-image: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.8) 50%, transparent 100%);
+    background-position: 100% 50%;
+    background-size: 200% 100%;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+  20%, 100% {
+    background-image: linear-gradient(90deg, transparent 0%, transparent 0%);
+    background-position: 100% 50%;
+    background-size: 200% 100%;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
   }
 }
 
@@ -521,7 +559,7 @@ onUnmounted(() => {
   font-size: clamp(1.2rem, 4vw, 2.6rem);
   font-family: 'Inter', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
   margin-bottom: 0;
-  margin-top: 5px;
+  margin-top: -5px; /* Đổi từ 5px xuống -5px để dịch lên gần dòng trên */
   font-weight: 700;
   font-style: normal;
   letter-spacing: 0.05em;
