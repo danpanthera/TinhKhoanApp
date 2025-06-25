@@ -875,27 +875,6 @@ const confirmDelete = async (importId, fileName) => {
 }
 
 // Các phương thức tiện ích cho view đã được nhắc đến trong template
-const formatDateTime = (dateTimeString) => {
-  if (!dateTimeString) return 'N/A'
-  
-  try {
-    const date = new Date(dateTimeString)
-    if (isNaN(date.getTime())) {
-      return 'Thời gian không hợp lệ'
-    }
-    
-    const day = String(date.getDate()).padStart(2, '0')
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const year = date.getFullYear()
-    const hours = String(date.getHours()).padStart(2, '0')
-    const minutes = String(date.getMinutes()).padStart(2, '0')
-    
-    return `${day}/${month}/${year} ${hours}:${minutes}`
-  } catch (error) {
-    console.error('Error formatting datetime:', error)
-    return 'Lỗi format thời gian'
-  }
-}
 
 const getDataTypeColor = (dataType) => {
   // Màu sắc tương ứng với loại dữ liệu
