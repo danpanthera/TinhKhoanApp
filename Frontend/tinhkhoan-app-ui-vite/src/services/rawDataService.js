@@ -13,23 +13,23 @@ class RawDataService {
       // ✅ FIX: Gọi đúng endpoint RawData
       console.log('📊 Calling API endpoint:', this.baseURL);
       const response = await api.get(this.baseURL);
-      
+
       // Debug response data structure
       console.log('📊 Raw API response:', typeof response.data, response.data ? Object.keys(response.data) : 'No data');
-      
+
       // 🔧 Parse .NET $values format và map fields đúng
       let data = response.data;
       if (data && data.$values) {
         console.log('🔧 Found $values array in response');
         data = data.$values;
       }
-      
+
       // Handle empty or null data gracefully
       if (!data || !Array.isArray(data)) {
         console.warn('⚠️ API returned empty or invalid data:', data);
         data = [];
       }
-      
+
       // 🔧 ĐỒNG BỘ FIELD MAPPING để fix vấn đề backend trả category, frontend dùng dataType
       const mappedData = data.map(item => ({
         ...item,
@@ -43,10 +43,10 @@ class RawDataService {
         importDate: item.importDate ? new Date(item.importDate) : new Date(),
         // Đảm bảo recordsCount luôn là số nguyên
         recordsCount: parseInt(item.recordsCount || 0),
-        // Normalize fileName 
+        // Normalize fileName
         fileName: item.fileName || item.name || 'Unknown File'
       }));
-      
+
       console.log('✅ Mapped getAllImports data:', mappedData.length, 'items');
       if (mappedData.length > 0) {
         console.log('� First import data sample:', {
@@ -60,14 +60,14 @@ class RawDataService {
       } else {
         console.log('ℹ️ No import data returned from API');
       }
-      
+
       return {
         success: true,
         data: mappedData
       };
     } catch (error) {
       console.error('❌ Lỗi lấy danh sách import:', error);
-      
+
       // Xử lý các loại lỗi cụ thể
       let errorMessage = 'Lỗi kết nối server';
       if (error.code === 'ERR_NETWORK' || error.code === 'ERR_CONNECTION_REFUSED') {
@@ -79,7 +79,7 @@ class RawDataService {
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       }
-      
+
       return {
         success: false,
         error: errorMessage,
@@ -96,11 +96,11 @@ class RawDataService {
   // 📤 Import dữ liệu theo loại với progress tracking và audio notification
   async importData(dataType, files, options = {}) {
     try {
-      console.log(`📤 Starting import for dataType: ${dataType}, files:`, 
+      console.log(`📤 Starting import for dataType: ${dataType}, files:`,
         files.map(f => ({ name: f.name, size: f.size, type: f.type })));
-      
+
       const formData = new FormData();
-      
+
       // Thêm files vào FormData
       files.forEach(file => {
         formData.append('Files', file);
@@ -110,11 +110,11 @@ class RawDataService {
       if (options.archivePassword) {
         formData.append('ArchivePassword', options.archivePassword);
       }
-      
+
       if (options.notes) {
         formData.append('Notes', options.notes);
       }
-      
+
       // Thêm statement date nếu có
       if (options.statementDate) {
         formData.append('StatementDate', options.statementDate);
@@ -140,7 +140,7 @@ class RawDataService {
           statementDate: formData.get('StatementDate')
         }
       });
-      
+
       const response = await api.post(`${this.baseURL}${endpoint}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
@@ -152,25 +152,25 @@ class RawDataService {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           const currentTime = Date.now();
           const elapsed = currentTime - startTime;
-          
+
           // Tính tốc độ upload hiện tại (smoothing với exponential moving average)
           const timeDelta = currentTime - lastTime;
           const loadedDelta = progressEvent.loaded - lastLoadedAmount;
-          
+
           if (timeDelta > 0) {
             const currentSpeed = loadedDelta / timeDelta * 1000; // bytes per second
             const remainingBytes = progressEvent.total - progressEvent.loaded;
-            
+
             // Ước tính thời gian còn lại dựa trên tốc độ hiện tại
             let remainingTime = remainingBytes > 0 && currentSpeed > 0 ? (remainingBytes / currentSpeed * 1000) : 0;
-            
+
             // Nếu gần xong (> 95%) thì ước tính thời gian còn lại ngắn hơn
             if (percentCompleted > 95) {
               remainingTime = Math.min(remainingTime, 5000); // tối đa 5 giây
             }
-            
+
             console.log(`📊 Tiến độ upload ${dataType}: ${percentCompleted}%`);
-            
+
             // Gọi callback progress nếu có
             if (options.onProgress) {
               console.log(`📊 Progress update: ${percentCompleted}%, Speed: ${self.formatFileSize(currentSpeed)}/s, Remaining: ${self.formatTime(remainingTime)}`);
@@ -188,7 +188,7 @@ class RawDataService {
                 isNearCompletion: percentCompleted > 95
               });
             }
-            
+
             lastLoadedAmount = progressEvent.loaded;
             lastTime = currentTime;
           }
@@ -197,7 +197,7 @@ class RawDataService {
 
       // 🔊 Phát âm thanh thông báo hoàn thành với notification
       this.playCompletionSound();
-      
+
       // Hiển thị browser notification nếu được phép
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification('🎉 Đã upload xong!', {
@@ -229,7 +229,7 @@ class RawDataService {
         data: error.response?.data,
         status: error.response?.status
       });
-      
+
       return {
         success: false,
         error: error.response?.data?.message || error.message || 'Lỗi kết nối server',
@@ -247,15 +247,15 @@ class RawDataService {
     try {
       console.log(`🔍 Getting preview data for import ID: ${importId}`);
       const response = await api.get(`${this.baseURL}/${importId}/preview`);
-      
+
       // 🔧 Parse .NET $values format
       let data = response.data;
       if (data && data.$values) {
         data = data.$values;
       }
-      
+
       console.log('📊 Backend response:', data);
-      
+
       // 🔧 Check for previewData field specifically
       if (data && data.previewData) {
         console.log('📋 Found previewData field in response, using it directly');
@@ -267,7 +267,7 @@ class RawDataService {
           }
         };
       }
-      
+
       // ✅ FIX: Sử dụng PreviewData từ backend thay vì tạo mock
       if (data && data.PreviewData && Array.isArray(data.PreviewData)) {
         console.log(`� Found ${data.PreviewData.length} real records from backend`);
@@ -284,14 +284,14 @@ class RawDataService {
           }
         };
       }
-      
+
       // Nếu không có dữ liệu thực, trả về lỗi thay vì mock
       console.warn('⚠️ No real preview data found in backend response');
       return {
         success: false,
         error: 'Không tìm thấy dữ liệu preview từ backend. Có thể file chưa được import đúng cách.'
       };
-      
+
     } catch (error) {
       console.error('❌ Lỗi xem trước dữ liệu:', error);
       return {
@@ -300,7 +300,7 @@ class RawDataService {
       };
     }
   }
-  
+
   // Removed mock record creation - only use real API data
 
   // 🗑️ Xóa dữ liệu import
@@ -324,7 +324,7 @@ class RawDataService {
   async deleteImportRecord(id) {
     try {
       const response = await api.delete(`/DataImport/${id}`);
-      
+
       if (response.status === 200 || response.status === 204) {
         return {
           success: true,
@@ -339,7 +339,7 @@ class RawDataService {
       }
     } catch (error) {
       console.error('❌ Lỗi xóa bản ghi:', error);
-      
+
       return {
         success: false,
         error: error.response?.data?.message || error.message || 'Lỗi khi xóa bản ghi',
@@ -359,7 +359,7 @@ class RawDataService {
       if (fileType) {
         params.append('fileType', fileType);
       }
-      
+
       const response = await api.get(`/DataImport/by-statement-date?${params.toString()}`);
       return {
         success: true,
@@ -395,7 +395,7 @@ class RawDataService {
   async importDataNew(files, category = 'General') {
     try {
       const formData = new FormData();
-      
+
       // Thêm files vào FormData
       files.forEach(file => {
         formData.append('Files', file);
@@ -445,11 +445,11 @@ class RawDataService {
   async clearAllData() {
     try {
       console.log('🗑️ Bắt đầu xóa TOÀN BỘ dữ liệu...');
-      
+
       const response = await api.delete(`${this.baseURL}/clear-all`);
-      
+
       console.log('✅ Kết quả xóa dữ liệu:', response.data);
-      
+
       return {
         success: true,
         data: response.data,
@@ -460,14 +460,14 @@ class RawDataService {
       };
     } catch (error) {
       console.error('❌ Lỗi khi xóa toàn bộ dữ liệu:', error);
-      
+
       let errorMessage = 'Lỗi khi xóa dữ liệu';
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.code === 'ERR_NETWORK') {
         errorMessage = 'Không thể kết nối đến server để xóa dữ liệu';
       }
-      
+
       return {
         success: false,
         message: errorMessage,
@@ -520,30 +520,30 @@ class RawDataService {
       // Gọi API endpoint tổng quan (DataImport), nơi lưu trữ tất cả bản ghi import
       console.log('📊 Calling getAllData API endpoint: /DataImport');
       const response = await api.get('/DataImport');
-      
+
       console.log('📊 getAllData API response:', {
         status: response.status,
-        dataType: typeof response.data, 
+        dataType: typeof response.data,
         isArray: Array.isArray(response.data),
         length: Array.isArray(response.data) ? response.data.length : 'N/A',
         sample: Array.isArray(response.data) && response.data.length > 0 ? response.data[0] : 'No data'
       });
-      
+
       // Normalize data
       let data = response.data || [];
-      
+
       // Nếu không phải array, thử kiểm tra $values (format .NET)
       if (!Array.isArray(data) && data.$values) {
         console.log('🔧 Found $values array in getAllData response');
         data = data.$values;
       }
-      
+
       // Đảm bảo data luôn là array
       if (!Array.isArray(data)) {
         console.warn('⚠️ API returned non-array data for getAllData:', data);
         data = [];
       }
-      
+
       // Map dữ liệu để chuẩn hóa các trường
       const mappedData = data.map(item => ({
         ...item,
@@ -555,12 +555,12 @@ class RawDataService {
         recordsCount: parseInt(item.recordsCount || 0),
         fileName: item.fileName || item.name || 'Unknown File'
       }));
-      
+
       console.log('✅ Mapped getAllData:', {
         resultCount: mappedData.length,
         sample: mappedData.length > 0 ? mappedData[0] : 'No data'
       });
-      
+
       return {
         success: true,
         data: mappedData
@@ -582,7 +582,7 @@ class RawDataService {
         console.log('📊 No statement date provided, getting all data for type:', dataType);
         return await this.getAllData();
       }
-      
+
       const response = await api.get(`${this.baseURL}/by-date/${dataType}/${statementDate}`);
       return {
         success: true,
@@ -621,10 +621,10 @@ class RawDataService {
       if (statementDate) {
         params.append('statementDate', statementDate);
       }
-      
+
       const url = `${this.baseURL}/table/${dataType}${params.toString() ? '?' + params.toString() : ''}`;
       const response = await api.get(url);
-      
+
       return {
         success: true,
         data: response.data
@@ -644,16 +644,16 @@ class RawDataService {
     try {
       console.log('📊 Getting recent imports with limit:', limit);
       const response = await api.get(`${this.baseURL}/recent?limit=${limit}`);
-      
+
       let data = response.data;
       if (data && data.$values) {
         data = data.$values;
       }
-      
+
       if (!Array.isArray(data)) {
         data = [];
       }
-      
+
       const mappedData = data.map(item => ({
         ...item,
         dataType: item.category || item.dataType || item.fileType || 'UNKNOWN',
@@ -662,9 +662,9 @@ class RawDataService {
         recordsCount: parseInt(item.recordsCount || 0),
         fileName: item.fileName || 'Unknown File'
       }));
-      
+
       console.log('✅ Recent imports loaded:', mappedData.length, 'items');
-      
+
       return {
         success: true,
         data: mappedData
@@ -698,7 +698,7 @@ class RawDataService {
         requiredKeyword: 'LN02'
       },
       'LN03': {
-        name: 'LN03', 
+        name: 'LN03',
         description: 'Dữ liệu Nợ XLRR',
         icon: '📊',
         acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
@@ -796,35 +796,35 @@ class RawDataService {
     if (!file) {
       return { valid: false, error: 'File không hợp lệ' }
     }
-    
+
     if (!dataType) {
       return { valid: false, error: 'Chưa chọn loại dữ liệu' }
     }
-    
+
     const dataTypeDef = this.getDataTypeDefinitions()[dataType]
     if (!dataTypeDef) {
       return { valid: false, error: 'Loại dữ liệu không được hỗ trợ' }
     }
-    
+
     const fileName = file.name.toLowerCase()
     const validExtensions = [...dataTypeDef.acceptedFormats, '.zip', '.7z', '.rar']
     const hasValidExtension = validExtensions.some(ext => fileName.endsWith(ext.toLowerCase()))
-    
+
     if (!hasValidExtension) {
-      return { 
-        valid: false, 
-        error: `File phải có định dạng: ${validExtensions.join(', ')}` 
+      return {
+        valid: false,
+        error: `File phải có định dạng: ${validExtensions.join(', ')}`
       }
     }
-    
+
     // Check if filename contains data type
     if (!fileName.includes(dataType.toLowerCase())) {
-      return { 
-        valid: false, 
-        error: `Tên file phải chứa mã loại dữ liệu '${dataType}'` 
+      return {
+        valid: false,
+        error: `Tên file phải chứa mã loại dữ liệu '${dataType}'`
       }
     }
-    
+
     return { valid: true }
   }
 
@@ -836,7 +836,7 @@ class RawDataService {
       const year = dateStr.substring(0, 4);
       const month = dateStr.substring(4, 6);
       const day = dateStr.substring(6, 8);
-      
+
       try {
         const date = new Date(year, month - 1, day);
         if (!isNaN(date.getTime())) {
@@ -853,9 +853,9 @@ class RawDataService {
   // 🎨 Lấy màu sắc cho từng loại dữ liệu theo nhóm chữ cái đầu
   getDataTypeColor(dataType) {
     if (!dataType) return '#6B7280'; // gray default
-    
+
     const firstChar = dataType.charAt(0).toUpperCase();
-    
+
     // Phân nhóm màu theo chữ cái đầu
     if (firstChar === 'D') {
       // Loại dữ liệu bắt đầu bằng "D" - màu xanh lá
@@ -882,10 +882,10 @@ class RawDataService {
   // 📊 Format số lượng records with thousand separators (#,###)
   formatRecordCount(count) {
     if (!count && count !== 0) return '0';
-    
+
     // Convert to number if it's a string
     const num = typeof count === 'string' ? parseInt(count) : count;
-    
+
     // Add thousand separators using Vietnamese locale for #,### format
     return new Intl.NumberFormat('en-US').format(num);
   }
@@ -893,11 +893,11 @@ class RawDataService {
   // 📅 Format ngày
   formatDate(date) {
     if (!date) return 'N/A';
-    
+
     if (typeof date === 'string') {
       date = new Date(date);
     }
-    
+
     return date.toLocaleDateString('vi-VN', {
       year: 'numeric',
       month: '2-digit',
@@ -912,40 +912,40 @@ class RawDataService {
     try {
       // Tạo AudioContext để phát âm thanh
       const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      
+
       // Tạo âm thanh thông báo dạng melody (3 nốt nhạc)
       const notes = [
         { freq: 523.25, duration: 0.2 }, // C5
-        { freq: 659.25, duration: 0.2 }, // E5  
+        { freq: 659.25, duration: 0.2 }, // E5
         { freq: 783.99, duration: 0.4 }  // G5
       ];
-      
+
       let startTime = audioContext.currentTime;
-      
+
       notes.forEach((note, index) => {
         const oscillator = audioContext.createOscillator();
         const gainNode = audioContext.createGain();
-        
+
         // Kết nối audio nodes
         oscillator.connect(gainNode);
         gainNode.connect(audioContext.destination);
-        
+
         // Thiết lập tần số và âm lượng
         oscillator.frequency.setValueAtTime(note.freq, startTime);
         oscillator.type = 'sine'; // Âm thanh mềm mại
-        
+
         // Envelope cho âm thanh mượt mà - TĂNG VOLUME LÊN GẤP ĐÔI
         gainNode.gain.setValueAtTime(0, startTime);
         gainNode.gain.linearRampToValueAtTime(0.6, startTime + 0.05); // 0.3 -> 0.6 (tăng gấp đôi)
         gainNode.gain.exponentialRampToValueAtTime(0.02, startTime + note.duration);
-        
+
         // Phát âm thanh
         oscillator.start(startTime);
         oscillator.stop(startTime + note.duration);
-        
+
         startTime += note.duration + 0.1; // Gap giữa các nốt
       });
-      
+
       console.log('🔊 Đã phát âm thanh thông báo "Đã upload xong"');
     } catch (error) {
       console.warn('⚠️ Không thể phát âm thanh:', error);
@@ -963,22 +963,22 @@ class RawDataService {
   // ⏰ Format thời gian từ milliseconds sang mm:ss
   formatTime(milliseconds) {
     if (!milliseconds || milliseconds <= 0) return '00:00';
-    
+
     const totalSeconds = Math.floor(milliseconds / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
-    
+
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }
 
   // 📁 Format file size to human readable format
   formatFileSize(bytes) {
     if (!bytes || bytes === 0) return '0 Bytes';
-    
+
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    
+
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
@@ -1000,7 +1000,7 @@ class RawDataService {
 
     imports.forEach(imp => {
       stats.totalRecords += imp.recordsCount || 0;
-      
+
       // Đếm theo loại dữ liệu
       if (!stats.dataTypes[imp.dataType]) {
         stats.dataTypes[imp.dataType] = {
@@ -1028,7 +1028,7 @@ class RawDataService {
   }
 
   // ⚡ Temporal Table APIs (Migrated from SCD Type 2)
-  
+
   // 📋 Lấy danh sách imports với temporal data
   async getOptimizedImports(page = 1, pageSize = 50, searchTerm = '', sortBy = 'ImportDate', sortOrder = 'desc') {
     try {
@@ -1166,7 +1166,7 @@ class RawDataService {
   }
 
   // 🎨 Performance utility methods
-  
+
   // 📊 Format performance metrics
   formatPerformanceMetric(value, unit = 'ms') {
     if (value < 1000 && unit === 'ms') {
@@ -1195,7 +1195,7 @@ class RawDataService {
   // 🔍 Format search highlight
   formatSearchHighlight(text, searchTerm) {
     if (!searchTerm || !text) return text;
-    
+
     const regex = new RegExp(`(${searchTerm})`, 'gi');
     return text.replace(regex, '<mark>$1</mark>');
   }

@@ -122,12 +122,6 @@ const routes = [
     meta: { public: true }, // Temporarily allow access for debugging
   },
   {
-    path: "/kpi-scoring-demo", 
-    name: "kpi-scoring-demo",
-    component: () =>
-      import(/* webpackChunkName: "kpi" */ "../views/KpiScoringViewDemo.vue"),
-  },
-  {
     path: "/data-import",
     name: "data-import", 
     component: DataImportView,
@@ -151,13 +145,6 @@ const routes = [
     name: "performance-dashboard",
     component: () =>
       import(/* webpackChunkName: "admin" */ "../components/PerformanceDashboard.vue"),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: "/streaming-export-demo",
-    name: "streaming-export-demo", 
-    component: () =>
-      import(/* webpackChunkName: "demo" */ "../components/StreamingExportDemo.vue"),
     meta: { requiresAuth: true }
   },
   // === DASHBOARD ROUTES ===
