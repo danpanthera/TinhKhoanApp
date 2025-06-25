@@ -237,35 +237,47 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     _logger.LogWarning("❌ Import ID {Id} not found in ImportedDataRecords, returning mock data", id);
                     // ⚡ FALLBACK: Trả về dữ liệu mock nếu không tìm thấy
-                    return Ok(new
-                    {
-                        importInfo = new
-                        {
-                            Id = id,
-                            FileName = $"mock-file-{id}.csv",
-                            DataType = "LN01",
-                            ImportDate = DateTime.Now.AddDays(-1),
-                            StatementDate = DateTime.Now.AddDays(-2),
-                            RecordsCount = 100,
-                            Status = "Completed",
-                            ImportedBy = "System"
-                        },
-                        previewData = GeneratePreviewDataForType("LN01", 100),
-                        totalRecords = 100,
-                        previewRecords = 10,
-                        temporalTablesEnabled = true,
-                        isMockData = true
-                    });
+                // 🚨 XÓA MOCK DATA: Không trả về mock data, trả về error thực tế
+                _logger.LogWarning("❌ Import record {ImportId} not found in database", id);
+                return NotFound(new { message = $"Không tìm thấy bản ghi import với ID {id}" });
                 }
 
                 _logger.LogInformation("✅ Found import: {FileName}, Category: {Category}, Records: {RecordsCount}",
                     import.FileName, import.Category, import.RecordsCount);
 
-                // 🔄 TẠO DỮ LIỆU PREVIEW THEO LOẠI DỮ LIỆU
-                var dataTypeForPreview = !string.IsNullOrEmpty(import.Category) ? import.Category : "LN01";
+                // � CRITICAL FIX: Lấy dữ liệu THỰC từ database thay vì mock data
+                var importedItems = await _context.ImportedDataItems
+                    .Where(item => item.ImportedDataRecordId == import.Id)
+                    .OrderBy(item => item.Id)
+                    .ToListAsync();
 
-                // Generate more data records to ensure frontend always has data to display
-                var previewData = GeneratePreviewDataForType(dataTypeForPreview, Math.Max(20, import.RecordsCount));
+                _logger.LogInformation("📊 Loading {ItemCount} real data items from database", importedItems.Count);
+
+                // Parse dữ liệu thực từ database
+                var realPreviewData = new List<object>();
+                foreach (var item in importedItems)
+                {
+                    try
+                    {
+                        if (!string.IsNullOrEmpty(item.RawData))
+                        {
+                            var data = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, object>>(item.RawData);
+                            if (data != null && data.Count > 0)
+                            {
+                                realPreviewData.Add(data);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning("⚠️ Failed to parse item {ItemId}: {Error}", item.Id, ex.Message);
+                    }
+                }
+
+                _logger.LogInformation("✅ Parsed {ParsedCount}/{TotalCount} real data records successfully", 
+                    realPreviewData.Count, importedItems.Count);
+
+                var dataTypeForPreview = !string.IsNullOrEmpty(import.Category) ? import.Category : "LN01";
 
                 var response = new
                 {
@@ -280,15 +292,16 @@ namespace TinhKhoanApp.Api.Controllers
                         import.Status,
                         import.ImportedBy
                     },
-                    previewData = previewData,
+                    previewData = realPreviewData, // 🚨 DÙNG DỮ LIỆU THỰC thay vì mock
                     totalRecords = import.RecordsCount,
-                    previewRecords = previewData.Count,
+                    previewRecords = realPreviewData.Count, // Đếm số records thực tế
                     temporalTablesEnabled = true,
-                    isMockData = false
+                    isMockData = false,
+                    dataSource = "REAL_DATABASE" // Đánh dấu là dữ liệu thực
                 };
 
-                _logger.LogInformation("🎯 Generated preview with {PreviewCount} records for {Category}",
-                    previewData.Count, dataTypeForPreview);
+                _logger.LogInformation("🎯 Generated preview with {PreviewCount} REAL records for {Category}",
+                    realPreviewData.Count, import.Category);
 
                 return Ok(response);
             }
@@ -296,32 +309,19 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 _logger.LogError(ex, "💥 Lỗi khi tạo preview cho import ID: {Id}. Error: {ErrorMessage}", id, ex.Message);
 
-                // ⚡ FALLBACK: Trả về dữ liệu mock khi có lỗi database
-                _logger.LogInformation("🔄 Returning mock preview data due to database error");
-                return Task.FromResult<ActionResult<object>>(Ok(new
-                {
-                    importInfo = new
-                    {
-                        Id = id,
-                        FileName = $"fallback-file-{id}.csv",
-                        DataType = "LN01",
-                        ImportDate = DateTime.Now.AddDays(-1),
-                        StatementDate = DateTime.Now.AddDays(-2),
-                        RecordsCount = 50,
-                        Status = "Completed",
-                        ImportedBy = "System"
-                    },
-                    previewData = GeneratePreviewDataForType("LN01", 50).Take(10).ToList(),
-                    totalRecords = 50,
-                    previewRecords = 10,
-                    temporalTablesEnabled = false,
-                    isMockData = true,
-                    errorMessage = "Database connection issue - showing mock data"
-                }));
+                // 🚨 XÓA MOCK DATA: Không trả về mock data, trả về lỗi thực tế
+                return StatusCode(500, new 
+                { 
+                    message = "Lỗi khi lấy preview dữ liệu từ database",
+                    error = ex.Message,
+                    importId = id
+                });
             }
         }
 
-        // 🔄 Helper method để tạo dữ liệu preview theo loại
+        // � XÓA MOCK DATA: Comment out method tạo mock data LOAN10001-LOAN10010
+        /*
+        // �🔄 Helper method để tạo dữ liệu preview theo loại
         private List<object> GeneratePreviewDataForType(string dataType, int totalRecords)
         {
             var records = new List<object>();
@@ -382,6 +382,7 @@ namespace TinhKhoanApp.Api.Controllers
 
             return records;
         }
+        */
 
         // 👁️ GET: api/RawData/{id} - Lấy chi tiết một mẫu dữ liệu thô từ Temporal Tables
         [HttpGet("{id:int}")]
