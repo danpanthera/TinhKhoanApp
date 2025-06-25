@@ -1011,63 +1011,47 @@ const performImport = async () => {
       formData.append('statementDate', selectedFromDate.value)
     }
     
-    // Mô phỏng tiến trình upload (thay đổi này sau khi có API thực tế)
-    const simulateUpload = () => {
-      let progress = 0
-      const interval = setInterval(() => {
-        progress += Math.random() * 5
-        if (progress >= 100) {
-          progress = 100
-          clearInterval(interval)
-          
-          // Cập nhật thông tin sau khi upload hoàn tất
-          uploadProgress.value = 100
-          setTimeout(() => {
-            uploading.value = false
-            showSuccess(`Import dữ liệu ${selectedDataType.value} thành công!`)
-            closeImportModal()
-            refreshAllData() // Làm mới dữ liệu
-          }, 1000)
-        }
-        
+    // Chuẩn bị options cho API call
+    const options = {
+      archivePassword: archivePassword.value,
+      notes: importNotes.value,
+      onProgress: (progressInfo) => {
         // Cập nhật thông tin progress
-        uploadProgress.value = Math.floor(progress)
+        uploadProgress.value = progressInfo.percentage
         
-        // Mô phỏng thay đổi file đang upload
-        if (progress > 30 && progress < 60 && selectedFiles.value.length > 1) {
+        // Cập nhật thông tin file đang upload
+        if (progressInfo.percentage > 30 && progressInfo.percentage < 60 && selectedFiles.value.length > 1) {
           currentUploadingFile.value = selectedFiles.value[1].name
           uploadedFiles.value = 1
-        } else if (progress >= 60 && selectedFiles.value.length > 2) {
+        } else if (progressInfo.percentage >= 60 && selectedFiles.value.length > 2) {
           currentUploadingFile.value = selectedFiles.value[2].name
           uploadedFiles.value = 2
         } else {
           currentUploadingFile.value = selectedFiles.value[0].name
-          uploadedFiles.value = progress >= 95 ? selectedFiles.value.length : 0
+          uploadedFiles.value = progressInfo.percentage >= 95 ? selectedFiles.value.length : 0
         }
-      }, 200)
+      }
     }
     
-    // TODO: Thay thế bằng API call thực tế
+    // Gọi API import data
+    console.log(`📤 Importing data for ${selectedDataType.value} with ${selectedFiles.value.length} files...`)
     currentUploadingFile.value = selectedFiles.value[0].name
-    simulateUpload()
     
-    // API call thực tế sẽ như sau (đã comment lại)
-    /*
-    const response = await rawDataService.importData(formData, (progressEvent) => {
-      const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-      uploadProgress.value = percentCompleted
-    })
+    // Gọi API thực tế thay vì mô phỏng
+    const response = await rawDataService.importData(selectedDataType.value, selectedFiles.value, options)
     
     if (response.success) {
-      showSuccess(`Import dữ liệu ${selectedDataType.value} thành công!`)
-      closeImportModal()
-      refreshAllData() // Làm mới dữ liệu
+      uploadProgress.value = 100
+      setTimeout(() => {
+        uploading.value = false
+        showSuccess(`Import dữ liệu ${selectedDataType.value} thành công!`)
+        closeImportModal()
+        refreshAllData() // Làm mới dữ liệu sau khi import
+      }, 1000)
     } else {
       showError(`Lỗi khi import dữ liệu: ${response.error}`)
       uploading.value = false
     }
-    */
-    
   } catch (error) {
     console.error('Error importing data:', error)
     showError(`Lỗi khi import dữ liệu: ${error.message}`)
@@ -1166,12 +1150,14 @@ const formatRecordCount = (count) => {
   font-size: 2.5rem;
   font-weight: bold;
   text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  color: #f5f5f1; /* Màu trắng ngọc trai */
 }
 
 .subtitle {
   font-size: 1.1rem;
   opacity: 0.9;
   margin: 0;
+  color: #f5f5f1; /* Màu trắng ngọc trai */
 }
 
 /* Alert styles */
@@ -1387,11 +1373,13 @@ const formatRecordCount = (count) => {
 .header-text h2 {
   margin: 0 0 8px 0;
   font-size: 1.8rem;
+  color: #f5f5f1; /* Màu trắng ngọc trai */
 }
 
 .header-text p {
   margin: 0;
   opacity: 0.9;
+  color: #f5f5f1; /* Màu trắng ngọc trai */
 }
 
 .agribank-brand-line {
