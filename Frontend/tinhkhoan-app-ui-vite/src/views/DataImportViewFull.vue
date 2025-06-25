@@ -331,34 +331,37 @@
     <div v-if="showRawDataModal" class="modal-overlay" @click="closeRawDataModal">
       <div class="modal-content raw-data-modal" @click.stop>
         <div class="modal-header">
-          <h3>Dữ liệu thô {{ selectedDataType }} {{ statementDateFormatted }}</h3>
+          <h3>📊 Chi tiết dữ liệu {{ selectedDataType }}</h3>
           <button @click="closeRawDataModal" class="modal-close">×</button>
         </div>
         <div class="modal-body">
           <div v-if="rawDataRecords.length > 0" class="raw-data-table-container">
             <div class="table-summary">
-              <p>Hiển thị {{ rawDataRecords.length }} bản ghi dữ liệu thô</p>
+              <p><strong>📋 Hiển thị {{ rawDataRecords.length }} bản ghi đầu tiên</strong> 
+                (tối đa 20 bản ghi để đảm bảo hiệu năng)</p>
             </div>
             <div class="responsive-table-wrapper">
               <table class="raw-data-table enhanced-table">
                 <thead class="agribank-thead">
                   <tr>
-                    <th v-for="(column, index) in Object.keys(rawDataRecords[0]).slice(0, 10)" :key="index">
+                    <th style="width: 50px; text-align: center;">#</th>
+                    <th v-for="(column, index) in Object.keys(rawDataRecords[0]).slice(0, 12)" :key="index">
                       {{ column }}
                     </th>
                   </tr>
                 </thead>
                 <tbody class="agribank-tbody">
                   <tr v-for="(record, recordIndex) in rawDataRecords" :key="recordIndex">
-                    <td v-for="(column, columnIndex) in Object.keys(record).slice(0, 10)" :key="columnIndex">
-                      {{ record[column] }}
+                    <td style="text-align: center; font-weight: bold; color: #8B1538;">{{ recordIndex + 1 }}</td>
+                    <td v-for="(column, columnIndex) in Object.keys(record).slice(0, 12)" :key="columnIndex">
+                      <span :title="record[column]">{{ formatCellValue(record[column]) }}</span>
                     </td>
                   </tr>
                 </tbody>
               </table>
             </div>
             <div class="table-note">
-              <p><i>Lưu ý: Bảng hiển thị tối đa 10 cột đầu tiên để dễ đọc</i></p>
+              <p><i>💡 Lưu ý: Hiển thị tối đa 12 cột đầu tiên. Hover vào ô để xem đầy đủ nội dung.</i></p>
             </div>
           </div>
           <div v-else class="no-data-message">
@@ -1009,9 +1012,22 @@ const previewData = async (importId) => {
     const result = await rawDataService.previewData(importId)
     
     if (result.success && result.data) {
-      // TODO: Implement preview modal
-      const recordsCount = result.data.previewRows?.length || 0
-      showSuccess(`Đã tải ${recordsCount} bản ghi chi tiết. Tính năng đang phát triển...`)
+      // ✅ FIX: Hiển thị modal với dữ liệu thay vì chỉ báo "tính năng đang phát triển"
+      const previewRows = result.data.previewRows || result.data.PreviewData || result.data.previewData || []
+      
+      if (previewRows && previewRows.length > 0) {
+        // Hiển thị tối đa 20 bản ghi đầu như yêu cầu
+        const recordsToShow = previewRows.slice(0, 20)
+        
+        // Cập nhật state để hiển thị modal
+        rawDataRecords.value = recordsToShow
+        selectedDataType.value = result.data.importInfo?.DataType || result.data.dataType || 'Dữ liệu chi tiết'
+        
+        showSuccess(`✅ Đã tải ${recordsToShow.length} bản ghi chi tiết đầu tiên`)
+        showRawDataModal.value = true
+      } else {
+        showError('Không tìm thấy dữ liệu chi tiết trong bản ghi này')
+      }
     } else {
       showError(`Lỗi khi tải dữ liệu chi tiết: ${result.error || 'Không tìm thấy dữ liệu'}`)
     }
@@ -1339,6 +1355,37 @@ const formatRecordCount = (count) => {
   
   // Định dạng số với dấu phân cách hàng nghìn
   return new Intl.NumberFormat('vi-VN').format(count)
+}
+
+// ✅ THÊM MỚI: Hàm format giá trị trong cell để hiển thị đẹp hơn
+const formatCellValue = (value) => {
+  if (value === null || value === undefined) return '—'
+  if (value === '') return '(trống)'
+  
+  // Nếu là string dài, cắt ngắn
+  if (typeof value === 'string') {
+    if (value.length > 50) {
+      return value.substring(0, 47) + '...'
+    }
+    return value
+  }
+  
+  // Nếu là số, format với dấu phân cách
+  if (typeof value === 'number') {
+    return new Intl.NumberFormat('vi-VN').format(value)
+  }
+  
+  // Nếu là date, format ngày
+  if (value instanceof Date || (typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}/))) {
+    try {
+      const date = new Date(value)
+      return date.toLocaleDateString('vi-VN')
+    } catch (e) {
+      return value
+    }
+  }
+  
+  return String(value)
 }
 </script>
 
@@ -2158,7 +2205,7 @@ const formatRecordCount = (count) => {
 .raw-data-modal {
   max-width: 90%;
   width: 1000px;
-  max-height: 80vh;
+  max-height:   80vh;
 }
 
 .data-table-container,

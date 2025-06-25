@@ -193,80 +193,56 @@ onUnmounted(() => {
   text-overflow: clip;
 }
 
-/* Dòng 1: AGRIBANK LAI CHAU CENTER - HIỆU ỨNG CHUYỂN MÀU ĐUỆT ĐỜI */
+/* Dòng 1: AGRIBANK LAI CHAU CENTER - MÀU CỐ ĐỊNH ĐỎ BORDEAUX VỚI HIỆU ỨNG */
 .adaptive-text-line-1 {
   font-size: clamp(1.8rem, 8vw, 6.5rem);
   letter-spacing: clamp(0.02em, 0.5vw, 0.08em);
   transform: scale(1);
   font-family: 'Montserrat', 'Roboto', sans-serif;
   font-weight: 800;
-  /* Gradient chuyển màu từ đỏ bordeaux sang trắng ngọc trai */
-  background: linear-gradient(45deg, 
-    #8B1538 0%,     /* Đỏ bordeaux đậm */
-    #C41E3A 25%,    /* Đỏ bordeaux sáng */
-    #f5f5f1 50%,    /* Trắng ngọc trai */
-    #C41E3A 75%,    /* Đỏ bordeaux sáng */
-    #8B1538 100%    /* Đỏ bordeaux đậm */
-  );
-  background-size: 400% 400%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  /* Animation chuyển màu mượt mà */
-  animation: agribank-gradient-flow 4s ease-in-out infinite;
-  /* Hiệu ứng đổ bóng để tạo độ sâu */
-  filter: drop-shadow(0 4px 8px rgba(139, 21, 56, 0.3))
-          drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
-  will-change: transform, background-position;
+  /* Màu cố định đỏ bordeaux */
+  color: #8B1538;
+  /* Hiệu ứng đổ bóng đẹp với màu gradient */
+  text-shadow: 
+    0 0 20px rgba(139, 21, 56, 0.6),
+    0 4px 8px rgba(139, 21, 56, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    0 8px 16px rgba(196, 30, 58, 0.3);
+  /* Animation hiệu ứng glow nhẹ nhàng */
+  animation: agribank-glow-pulse 3s ease-in-out infinite;
+  will-change: transform, text-shadow;
   word-spacing: clamp(-0.05em, 0vw, 0.02em);
-  /* Thêm hiệu ứng shimmer nhẹ */
   position: relative;
 }
 
-/* Keyframes cho hiệu ứng chuyển màu gradient */
-@keyframes agribank-gradient-flow {
+/* Keyframes cho hiệu ứng glow pulse thay thế gradient flow */
+@keyframes agribank-glow-pulse {
   0% {
-    background-position: 0% 50%;
+    text-shadow: 
+      0 0 20px rgba(139, 21, 56, 0.6),
+      0 4px 8px rgba(139, 21, 56, 0.4),
+      0 2px 4px rgba(0, 0, 0, 0.3),
+      0 8px 16px rgba(196, 30, 58, 0.3);
   }
   50% {
-    background-position: 100% 50%;
+    text-shadow: 
+      0 0 30px rgba(139, 21, 56, 0.8),
+      0 4px 8px rgba(139, 21, 56, 0.6),
+      0 2px 4px rgba(0, 0, 0, 0.3),
+      0 8px 16px rgba(196, 30, 58, 0.5);
   }
   100% {
-    background-position: 0% 50%;
+    text-shadow: 
+      0 0 20px rgba(139, 21, 56, 0.6),
+      0 4px 8px rgba(139, 21, 56, 0.4),
+      0 2px 4px rgba(0, 0, 0, 0.3),
+      0 8px 16px rgba(196, 30, 58, 0.3);
   }
 }
 
-/* Hiệu ứng shimmer overlay cho dòng chữ chính */
-.adaptive-text-line-1::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(245, 245, 241, 0.6) 50%, 
-    transparent 100%
-  );
-  animation: shimmer 3s ease-in-out infinite;
-  pointer-events: none;
-}
+/* Xóa hiệu ứng shimmer không cần thiết */
 
-/* Keyframes cho hiệu ứng shimmer */
-@keyframes shimmer {
-  0% {
-    left: -100%;
-  }
-  50% {
-    left: 100%;
-  }
-  100% {
-    left: 100%;
-  }
-}
-
-/* Dòng 2: HỆ THỐNG QUẢN LÝ KHOÁN - HIỆU ỨNG BỔ TRỢ */
+/* Dòng 2: HỆ THỐNG QUẢN LÝ KHOÁN - MÀU CỐ ĐỊNH ĐỎ BORDEAUX */
 .adaptive-text-line-2 {
   font-size: clamp(1rem, 4vw, 2.8rem);
   letter-spacing: clamp(0.01em, 0.3vw, 0.05em);
@@ -274,30 +250,18 @@ onUnmounted(() => {
   will-change: transform;
   font-family: 'Roboto Condensed', 'Arial', sans-serif;
   font-weight: 500;
-  /* Gradient nhẹ nhàng hơn cho dòng phụ */
-  background: linear-gradient(45deg, 
-    #8B1538 0%,     /* Đỏ bordeaux */
-    #A91B47 50%,    /* Đỏ bordeaux nhạt */
-    #8B1538 100%    /* Đỏ bordeaux */
-  );
-  background-size: 200% 200%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: subtitle-gradient 5s ease-in-out infinite;
+  /* Màu cố định đỏ bordeaux */
+  color: #8B1538;
+  /* Hiệu ứng đổ bóng nhẹ nhàng */
+  text-shadow: 
+    0 0 15px rgba(139, 21, 56, 0.4),
+    0 2px 6px rgba(139, 21, 56, 0.3),
+    0 1px 3px rgba(0, 0, 0, 0.2);
   opacity: 0.9;
   word-spacing: clamp(-0.03em, 0vw, 0.01em);
 }
 
-/* Keyframes cho dòng phụ */
-@keyframes subtitle-gradient {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
+/* Keyframes cho dòng phụ - xóa không cần thiết */
 
 /* Media queries cho font size */
 @media (max-width: 1200px) {
