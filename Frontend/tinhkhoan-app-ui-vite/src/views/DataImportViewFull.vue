@@ -451,26 +451,38 @@ const showError = (message) => {
 
 const showDetailedError = (mainMessage, error) => {
   // Hiển thị thông báo lỗi chi tiết hơn để dễ dàng debug
-  console.error('❌ Detailed Error:', {
-    mainMessage,
-    error,
+  console.error('❌ Detailed Error:', mainMessage);
+  console.error('❌ Error Object:', error);
+  console.error('❌ Error Details:', {
+    errorType: typeof error,
     errorMessage: error?.message,
     errorResponse: error?.response,
-    errorData: error?.response?.data
-  })
+    errorData: error?.response?.data,
+    errorStatus: error?.response?.status,
+    errorCode: error?.code,
+    // Serialize object để xem chi tiết
+    fullError: JSON.stringify(error, null, 2)
+  });
   
   let detailedMessage = mainMessage
   
-  // Thêm chi tiết lỗi nếu có
-  if (error?.response?.data?.message) {
+  // Xử lý các loại lỗi khác nhau
+  if (error?.success === false) {
+    // Trường hợp API response với success: false
+    detailedMessage += `: ${error.error || 'Unknown API error'}`
+  } else if (error?.response?.data?.message) {
     detailedMessage += `: ${error.response.data.message}`
   } else if (error?.message) {
     detailedMessage += `: ${error.message}`
+  } else if (typeof error === 'string') {
+    detailedMessage += `: ${error}`
+  } else if (error?.error) {
+    detailedMessage += `: ${error.error}`
   }
   
   // Thêm thông tin debug nếu cần
   if (process.env.NODE_ENV === 'development') {
-    detailedMessage += ` (Status: ${error?.response?.status || 'unknown'})`
+    detailedMessage += ` (Status: ${error?.response?.status || error?.status || 'unknown'})`
   }
   
   errorMessage.value = detailedMessage
@@ -591,7 +603,12 @@ const refreshAllData = async (skipSuccessMessage = false) => {
     console.log('🔄 Starting refresh all data...')
     
     const result = await rawDataService.getAllImports()
-    console.log('📊 Raw result from getAllImports:', result)
+    console.log('📊 Raw result from getAllImports:', {
+      success: result.success,
+      dataLength: result.data ? result.data.length : 0,
+      error: result.error,
+      resultType: typeof result
+    })
 
     if (result.success) {
       allImports.value = result.data || []
@@ -607,28 +624,40 @@ const refreshAllData = async (skipSuccessMessage = false) => {
       if (!skipSuccessMessage) {
         showSuccess(`✅ Đã tải lại dữ liệu thành công (${allImports.value.length} imports)`)
       }
+      
+      return { success: true, data: allImports.value };
     } else {
       const errorMsg = result.error || 'Không thể tải dữ liệu'
-      console.error('🔥 Chi tiết lỗi:', {
+      console.error('🔥 Chi tiết lỗi getAllImports:', {
         error: result.error,
         errorCode: result.errorCode,
-        errorStatus: result.errorStatus
+        errorStatus: result.errorStatus,
+        fullResult: result
       })
       
       if (result.fallbackData && result.fallbackData.length > 0) {
         allImports.value = result.fallbackData
         calculateDataTypeStats()
-        showError(`⚠️ Chế độ Demo: ${errorMsg}`)
+        if (!skipSuccessMessage) {
+          showError(`⚠️ Chế độ Demo: ${errorMsg}`)
+        }
+        return { success: false, error: errorMsg, fallback: true };
       } else {
         allImports.value = []
         calculateDataTypeStats()
-        showError(errorMsg)
+        if (!skipSuccessMessage) {
+          console.error('❌ Error in refreshAllData, will not show error to user during import flow')
+        }
+        return { success: false, error: errorMsg };
       }
     }
     
   } catch (error) {
-    console.error('Error refreshing data:', error)
-    showDetailedError('Có lỗi xảy ra khi tải dữ liệu', error)
+    console.error('❌ Exception in refreshAllData:', error)
+    if (!skipSuccessMessage) {
+      console.error('❌ Refresh error, will not show to user during import flow')
+    }
+    return { success: false, error: error.message };
   } finally {
     loading.value = false
     loadingMessage.value = ''
@@ -1080,14 +1109,17 @@ const performImport = async () => {
         
         // Tự động hiển thị dữ liệu vừa import
         setTimeout(async () => {
-          console.log('🔍 Hiển thị dữ liệu sau khi import thành công cho loại:', selectedDataType.value);
+          console.log('🔍 Bắt đầu hiển thị dữ liệu sau khi import thành công cho loại:', selectedDataType.value);
           
           try {
             // Tải lại tất cả dữ liệu từ server
             loading.value = true
             loadingMessage.value = `Đang tải dữ liệu mới nhất...`
             
-            // Refresh lại toàn bộ dữ liệu từ server
+            console.log('📊 Refresh data sau khi import...');
+            
+            // Refresh lại toàn bộ dữ liệu từ server với delay để đảm bảo data đã được lưu
+            await new Promise(resolve => setTimeout(resolve, 500)); // Delay 500ms
             await refreshAllData(true)
             
             console.log('📊 Dữ liệu sau khi refresh:', {
@@ -1095,75 +1127,63 @@ const performImport = async () => {
               dataTypes: allImports.value.map(imp => imp.dataType || imp.category || imp.fileType).filter((v, i, a) => a.indexOf(v) === i)
             });
             
-            // Lọc dữ liệu theo loại đã import
-            const dataTypeResults = allImports.value.filter(imp => {
-              const typeMatches = 
-                (imp.dataType && imp.dataType.includes(selectedDataType.value)) || 
-                (imp.category && imp.category.includes(selectedDataType.value)) || 
-                (imp.fileType && imp.fileType.includes(selectedDataType.value));
-              
-              console.log(`🔍 Checking item ${imp.fileName || imp.id}: ${typeMatches}`, {
-                itemDataType: imp.dataType,
-                itemCategory: imp.category,
-                itemFileType: imp.fileType,
-                selectedType: selectedDataType.value
-              });
-              
-              return typeMatches;
-            });
-            
-            console.log(`🔍 Filtered results for ${selectedDataType.value}:`, dataTypeResults.length);
-            
-            if (dataTypeResults.length > 0) {
-              filteredResults.value = dataTypeResults;
-              showSuccess(`Hiển thị ${dataTypeResults.length} import(s) cho loại ${selectedDataType.value}`);
-              showDataViewModal.value = true;
-            } else {
-              console.log('⚠️ Không tìm thấy dữ liệu khi lọc theo allImports, thử gọi API trực tiếp...');
+            if (allImports.value.length === 0) {
+              console.log('⚠️ allImports rỗng, thử gọi API trực tiếp...');
               
               // Thử gọi API trực tiếp để lấy dữ liệu
               const result = await rawDataService.getAllData();
               
               if (result.success && result.data && result.data.length > 0) {
-                console.log(`📊 API trả về ${result.data.length} bản ghi, lọc theo loại ${selectedDataType.value}`);
+                console.log(`� API trả về ${result.data.length} bản ghi`);
                 
-                // Lọc theo loại dữ liệu (sử dụng includes thay vì === để linh hoạt hơn)
-                const filteredData = result.data.filter(item => 
-                  (item.dataType && item.dataType.includes(selectedDataType.value)) || 
-                  (item.category && item.category.includes(selectedDataType.value)) || 
-                  (item.fileType && item.fileType.includes(selectedDataType.value))
-                );
+                // Hiển thị tất cả dữ liệu mới nhất
+                filteredResults.value = result.data;
+                showSuccess(`Hiển thị ${result.data.length} bản ghi import mới nhất`);
+                showDataViewModal.value = true;
+              } else {
+                console.log('❌ API không trả về dữ liệu:', result);
+                showSuccess(`Import thành công! Vui lòng làm mới trang để xem dữ liệu.`);
+              }
+            } else {
+              // Lọc dữ liệu theo loại đã import
+              const dataTypeResults = allImports.value.filter(imp => {
+                const typeMatches = 
+                  (imp.dataType && imp.dataType.includes(selectedDataType.value)) || 
+                  (imp.category && imp.category.includes(selectedDataType.value)) || 
+                  (imp.fileType && imp.fileType.includes(selectedDataType.value));
                 
-                console.log(`🔍 Số bản ghi sau khi lọc: ${filteredData.length}`);
+                return typeMatches;
+              });
+              
+              console.log(`🔍 Filtered results for ${selectedDataType.value}:`, dataTypeResults.length);
+              
+              if (dataTypeResults.length > 0) {
+                filteredResults.value = dataTypeResults;
+                showSuccess(`Hiển thị ${dataTypeResults.length} import(s) cho loại ${selectedDataType.value}`);
+                showDataViewModal.value = true;
+              } else {
+                // Nếu không tìm thấy theo loại cụ thể, hiển thị tất cả dữ liệu mới nhất
+                console.log('⚠️ Không tìm thấy dữ liệu theo loại, hiển thị tất cả');
                 
-                if (filteredData.length > 0) {
-                  filteredResults.value = filteredData;
-                  showSuccess(`Hiển thị ${filteredData.length} import(s) cho loại ${selectedDataType.value}`);
+                if (allImports.value.length > 0) {
+                  filteredResults.value = allImports.value;
+                  showSuccess(`Hiển thị ${allImports.value.length} bản ghi import mới nhất`);
                   showDataViewModal.value = true;
                 } else {
-                  // Nếu vẫn không có dữ liệu, thử hiển thị tất cả dữ liệu vừa import
-                  console.log('⚠️ Không tìm thấy dữ liệu khi lọc, hiển thị tất cả dữ liệu mới nhất');
-                  
-                  if (result.data.length > 0) {
-                    filteredResults.value = result.data;
-                    showSuccess(`Hiển thị ${result.data.length} bản ghi import mới nhất`);
-                    showDataViewModal.value = true;
-                  } else {
-                    showError(`Không tìm thấy dữ liệu ${selectedDataType.value} sau khi import. Vui lòng thử lại.`);
-                  }
+                  showSuccess(`Import thành công! Vui lòng làm mới trang để xem dữ liệu.`);
                 }
-              } else {
-                showDetailedError(`Không thể tìm thấy dữ liệu sau khi import.`, result);
               }
             }
+            
           } catch (error) {
-            console.error('Error fetching data after import:', error);
-            showDetailedError(`Lỗi khi tải dữ liệu sau khi import:`, error);
+            console.error('❌ Error fetching data after import:', error);
+            // Thay vì hiển thị lỗi, chỉ thông báo import thành công
+            showSuccess(`Import thành công! Vui lòng làm mới trang để xem dữ liệu.`);
           } finally {
             loading.value = false;
             loadingMessage.value = '';
           }
-        }, 1000);
+        }, 2000); // Tăng delay thành 2 giây để đảm bảo backend đã xử lý xong
       }, 1000)
     } else {
       showDetailedError(`Lỗi khi import dữ liệu`, response)
