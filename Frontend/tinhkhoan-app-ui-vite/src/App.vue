@@ -99,7 +99,7 @@
               <span class="item-icon">🏢</span>
               <span>Chấm điểm KPI Chi nhánh</span>
             </router-link>
-            <router-link to="/kpi-scoring-demo" class="dropdown-item">
+            <router-link to="/kpi-scoring" class="dropdown-item">
               <span class="item-icon">🎮</span>
               <span>Demo Chấm điểm KPI</span>
             </router-link>
@@ -339,7 +339,7 @@ const isHRSectionActive = computed(() => {
 
 // Check if current route is in KPI section
 const isKPISectionActive = computed(() => {
-  const kpiRoutes = ['/khoan-periods', '/kpi-definitions', '/employee-kpi-assignment', '/unit-kpi-assignment', '/kpi-actual-values', '/kpi-input', '/kpi-score', '/kpi-scoring', '/kpi-scoring-demo', '/payroll-report'];
+  const kpiRoutes = ['/khoan-periods', '/kpi-definitions', '/employee-kpi-assignment', '/unit-kpi-assignment', '/kpi-actual-values', '/kpi-input', '/kpi-score', '/kpi-scoring', '/payroll-report'];
   return kpiRoutes.includes(route.path);
 });
 
