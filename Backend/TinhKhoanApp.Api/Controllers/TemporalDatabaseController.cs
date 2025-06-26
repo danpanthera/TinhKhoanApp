@@ -284,7 +284,8 @@ namespace TinhKhoanApp.Api.Controllers
                     .SqlQueryRaw<string>(simpleQuery)
                     .ToListAsync();
 
-                return Ok(new {
+                return Ok(new
+                {
                     message = "✅ Database connection working",
                     tables = tableNames,
                     timestamp = DateTime.UtcNow
@@ -466,6 +467,76 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
+        // GET: api/TemporalDatabase/scan-all - Rà soát toàn bộ database
+        [HttpGet("scan-all")]
+        public async Task<IActionResult> ScanAllDatabase()
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Rà soát toàn bộ database");
+
+                // 1. Lấy tất cả user tables
+                var allTablesQuery = @"
+                    SELECT
+                        t.name AS TableName,
+                        t.temporal_type AS TemporalType,
+                        h.name AS HistoryTableName
+                    FROM sys.tables t
+                    LEFT JOIN sys.tables h ON t.history_table_id = h.object_id
+                    WHERE t.type = 'U'
+                      AND t.name NOT LIKE '__EF%'
+                      AND t.name NOT LIKE 'sysdiagrams'
+                    ORDER BY t.name";
+
+                var allTables = await _context.Database
+                    .SqlQueryRaw<TableScanInfo>(allTablesQuery)
+                    .ToListAsync();
+
+                // 2. Lấy tất cả columnstore indexes
+                var columnstoreQuery = @"
+                    SELECT
+                        t.name AS TableName,
+                        i.name AS IndexName,
+                        i.type AS IndexType
+                    FROM sys.tables t
+                    INNER JOIN sys.indexes i ON t.object_id = i.object_id
+                    WHERE i.type IN (5, 6)
+                      AND t.type = 'U'
+                    ORDER BY t.name";
+
+                var columnstoreIndexes = await _context.Database
+                    .SqlQueryRaw<ColumnstoreIndexSimple>(columnstoreQuery)
+                    .ToListAsync();
+
+                // 3. Phân tích
+                var nonTemporalTables = allTables.Where(t => t.TemporalType == 0 && !t.TableName.EndsWith("_History")).ToList();
+                var tablesWithoutColumnstore = allTables.Where(t =>
+                    (t.TableName.EndsWith("_History") || t.TableName.Contains("Import") || t.TableName.Contains("Data"))
+                    && !columnstoreIndexes.Any(c => c.TableName == t.TableName)).ToList();
+
+                return Ok(new
+                {
+                    message = "✅ Rà soát database thành công",
+                    totalTables = allTables.Count,
+                    temporalTables = allTables.Count(t => t.TemporalType == 2),
+                    historyTables = allTables.Count(t => t.TemporalType == 1),
+                    columnstoreIndexes = columnstoreIndexes.Count,
+                    allTables = allTables,
+                    columnstoreList = columnstoreIndexes,
+                    recommendations = new
+                    {
+                        needTemporal = nonTemporalTables.Take(10).Select(t => t.TableName).ToList(),
+                        needColumnstore = tablesWithoutColumnstore.Take(10).Select(t => t.TableName).ToList()
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Lỗi rà soát database");
+                return BadRequest(new { message = "Lỗi rà soát database", error = ex.Message });
+            }
+        }
+
         private static List<string> GenerateRecommendations(
             List<TemporalTableInfo> temporalTables,
             List<ColumnstoreIndexInfo> columnstoreIndexes,
@@ -587,5 +658,12 @@ namespace TinhKhoanApp.Api.Controllers
         public string TableName { get; set; } = "";
         public string ColumnName { get; set; } = "";
         public string DataType { get; set; } = "";
+    }
+
+    public class TableScanInfo
+    {
+        public string TableName { get; set; } = "";
+        public byte TemporalType { get; set; }
+        public string? HistoryTableName { get; set; }
     }
 }
