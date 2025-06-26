@@ -636,19 +636,11 @@ const sixMainIndicators = ref([
   }
 ]);
 
-// Options - Thêm debug log để kiểm tra
+// Options
 const yearOptions = ref(dashboardService.getYearOptions());
 const quarterOptions = ref(dashboardService.getQuarterOptions());
 const monthOptions = ref(dashboardService.getMonthOptions());
 const periodTypeOptions = ref(dashboardService.getPeriodTypeOptions());
-
-// Debug log để kiểm tra options
-console.log('🔍 Debug CalculationDashboard options:');
-console.log('yearOptions:', yearOptions.value);
-console.log('quarterOptions:', quarterOptions.value);
-console.log('monthOptions:', monthOptions.value);
-console.log('periodTypeOptions:', periodTypeOptions.value);
-console.log('units:', units.value);
 
 // Reactive variables
 const showCalculationResults = ref(false);
