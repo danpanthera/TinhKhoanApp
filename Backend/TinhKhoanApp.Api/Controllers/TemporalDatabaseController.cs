@@ -271,6 +271,231 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
+        // POST: api/TemporalDatabase/create-all-columnstore - Tạo Columnstore cho tất cả bảng lịch sử
+        [HttpPost("create-all-columnstore")]
+        public async Task<IActionResult> CreateAllColumnstoreIndexes()
+        {
+            try
+            {
+                _logger.LogInformation("📊 Tạo Columnstore Indexes cho tất cả bảng lịch sử và bảng lớn");
+
+                var sql = @"
+                    DECLARE @results TABLE (TableName NVARCHAR(128), IndexName NVARCHAR(128), Status NVARCHAR(50), Message NVARCHAR(500));
+
+                    -- Danh sách bảng cần tạo Columnstore Index
+                    DECLARE @tables TABLE (TableName NVARCHAR(128), IndexName NVARCHAR(128));
+                    INSERT INTO @tables VALUES
+                        ('BC57_History', 'CCI_BC57_History'),
+                        ('DB01_History', 'CCI_DB01_History'),
+                        ('DPDA_History', 'CCI_DPDA_History'),
+                        ('EI01_History', 'CCI_EI01_History'),
+                        ('GL01_History', 'CCI_GL01_History'),
+                        ('LN01_History', 'CCI_LN01_History'),
+                        ('LN03_History', 'CCI_LN03_History'),
+                        ('KH03_History', 'CCI_KH03_History'),
+                        ('RawDataImports_History', 'CCI_RawDataImports_History'),
+                        ('ImportedDataItems', 'CCI_ImportedDataItems_Main'),
+                        ('ImportedDataRecords', 'CCI_ImportedDataRecords_Main'),
+                        ('LegacyRawDataImports', 'CCI_LegacyRawDataImports'),
+                        ('ImportLogs', 'CCI_ImportLogs'),
+                        ('BusinessPlanTargets_History', 'CCI_BusinessPlanTargets_History'),
+                        ('Employees_History', 'CCI_Employees_History'),
+                        ('EmployeeKpiAssignments_History', 'CCI_EmployeeKpiAssignments_History'),
+                        ('FinalPayouts_History', 'CCI_FinalPayouts_History'),
+                        ('KPIDefinitions_History', 'CCI_KPIDefinitions_History');
+
+                    DECLARE @tableName NVARCHAR(128);
+                    DECLARE @indexName NVARCHAR(128);
+                    DECLARE @sql NVARCHAR(MAX);
+
+                    DECLARE table_cursor CURSOR FOR
+                    SELECT TableName, IndexName FROM @tables;
+
+                    OPEN table_cursor;
+                    FETCH NEXT FROM table_cursor INTO @tableName, @indexName;
+
+                    WHILE @@FETCH_STATUS = 0
+                    BEGIN
+                        BEGIN TRY
+                            -- Kiểm tra bảng có tồn tại không
+                            IF EXISTS (SELECT 1 FROM sys.tables WHERE name = @tableName)
+                            BEGIN
+                                -- Kiểm tra index đã tồn tại chưa
+                                IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = @indexName AND object_id = OBJECT_ID(@tableName))
+                                BEGIN
+                                    -- Tạo Clustered Columnstore Index
+                                    SET @sql = 'CREATE CLUSTERED COLUMNSTORE INDEX [' + @indexName + '] ON [dbo].[' + @tableName + ']';
+                                    EXEC sp_executesql @sql;
+
+                                    INSERT INTO @results VALUES (@tableName, @indexName, 'SUCCESS', 'Columnstore index created successfully');
+                                END
+                                ELSE
+                                BEGIN
+                                    INSERT INTO @results VALUES (@tableName, @indexName, 'ALREADY_EXISTS', 'Index already exists');
+                                END
+                            END
+                            ELSE
+                            BEGIN
+                                INSERT INTO @results VALUES (@tableName, @indexName, 'TABLE_NOT_FOUND', 'Table does not exist');
+                            END
+                        END TRY
+                        BEGIN CATCH
+                            INSERT INTO @results VALUES (@tableName, @indexName, 'ERROR', ERROR_MESSAGE());
+                        END CATCH
+
+                        FETCH NEXT FROM table_cursor INTO @tableName, @indexName;
+                    END
+
+                    CLOSE table_cursor;
+                    DEALLOCATE table_cursor;
+
+                    SELECT * FROM @results;";
+
+                var results = await _context.Database
+                    .SqlQueryRaw<ColumnstoreCreationResult>(sql)
+                    .ToListAsync();
+
+                var successCount = results.Count(r => r.Status == "SUCCESS");
+                var alreadyExistsCount = results.Count(r => r.Status == "ALREADY_EXISTS");
+
+                return Ok(new
+                {
+                    message = $"✅ Hoàn thành tạo Columnstore Indexes: {successCount} mới, {alreadyExistsCount} đã có",
+                    timestamp = DateTime.UtcNow,
+                    results = results,
+                    summary = new
+                    {
+                        newlyCreated = successCount,
+                        alreadyExists = alreadyExistsCount,
+                        errors = results.Count(r => r.Status == "ERROR"),
+                        tableNotFound = results.Count(r => r.Status == "TABLE_NOT_FOUND")
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Lỗi tạo Columnstore Indexes");
+                return StatusCode(500, new { message = "Lỗi tạo Columnstore Indexes", error = ex.Message });
+            }
+        }
+
+        // POST: api/TemporalDatabase/smart-columnstore - Tạo Columnstore Index thông minh
+        [HttpPost("smart-columnstore")]
+        public async Task<IActionResult> CreateSmartColumnstoreIndexes()
+        {
+            try
+            {
+                _logger.LogInformation("🧠 Smart Columnstore: Chỉ tạo index cho bảng có đủ dữ liệu");
+
+                var results = new List<ColumnstoreIndexSimple>();
+                var summary = new { created = 0, existing = 0, skipped = 0, errors = 0, total = 0 };
+
+                // 1. Kiểm tra bảng nào có đủ dữ liệu (>= 10,000 rows) và chưa có Columnstore
+                var candidateTablesQuery = @"
+                    SELECT
+                        t.name AS TableName,
+                        p.rows AS RowCount,
+                        CASE WHEN EXISTS (
+                            SELECT 1 FROM sys.indexes i
+                            WHERE i.object_id = t.object_id AND i.type IN (5, 6)
+                        ) THEN 1 ELSE 0 END AS HasColumnstore
+                    FROM sys.tables t
+                    JOIN sys.partitions p ON t.object_id = p.object_id
+                    WHERE p.index_id IN (0, 1) -- Heap or Clustered
+                      AND p.rows >= 10000 -- Tối thiểu 10K rows
+                      AND (t.name LIKE '%History' OR t.name IN ('ImportedDataItems', 'ImportedDataRecords', 'LegacyRawDataImports'))
+                    ORDER BY p.rows DESC";
+
+                var candidateTables = await _context.Database
+                    .SqlQueryRaw<CandidateTableInfo>(candidateTablesQuery)
+                    .ToListAsync();
+
+                var created = 0;
+                var existing = 0;
+                var skipped = 0;
+                var errors = 0;
+
+                foreach (var table in candidateTables)
+                {
+                    var tableName = table.TableName;
+                    var rowCount = table.RowCount;
+                    var hasColumnstore = table.HasColumnstore;
+
+                    if (hasColumnstore)
+                    {
+                        results.Add(new ColumnstoreIndexSimple
+                        {
+                            TableName = tableName,
+                            IndexName = $"CCI_{tableName}",
+                            Status = "Existing"
+                        });
+                        existing++;
+                        continue;
+                    }
+
+                    if (rowCount < 10000)
+                    {
+                        results.Add(new ColumnstoreIndexSimple
+                        {
+                            TableName = tableName,
+                            IndexName = $"CCI_{tableName}",
+                            Status = "Skipped (insufficient data)"
+                        });
+                        skipped++;
+                        continue;
+                    }
+
+                    // Tạo Columnstore Index
+                    try
+                    {
+                        var indexName = $"CCI_{tableName}";
+                        var createIndexSql = $@"
+                            CREATE CLUSTERED COLUMNSTORE INDEX [{indexName}]
+                            ON [dbo].[{tableName}]
+                            WITH (MAXDOP = 4, COMPRESSION_DELAY = 0)";
+
+                        await _context.Database.ExecuteSqlRawAsync(createIndexSql);
+
+                        results.Add(new ColumnstoreIndexSimple
+                        {
+                            TableName = tableName,
+                            IndexName = indexName,
+                            Status = "Created"
+                        });
+                        created++;
+
+                        _logger.LogInformation($"✅ Created Columnstore: {indexName} for {tableName} ({rowCount:N0} rows)");
+                    }
+                    catch (Exception ex)
+                    {
+                        results.Add(new ColumnstoreIndexSimple
+                        {
+                            TableName = tableName,
+                            IndexName = $"CCI_{tableName}",
+                            Status = "Error: " + ex.Message.Substring(0, Math.Min(100, ex.Message.Length))
+                        });
+                        errors++;
+                        _logger.LogWarning($"❌ Failed to create Columnstore for {tableName}: {ex.Message}");
+                    }
+                }
+
+                summary = new { created, existing, skipped, errors, total = results.Count };
+
+                return Ok(new
+                {
+                    message = $"🧠 Smart Columnstore: {created} tạo mới, {existing} đã có, {skipped} bỏ qua, {errors} lỗi",
+                    results,
+                    summary,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Lỗi smart columnstore creation");
+                return StatusCode(500, new { error = "Smart columnstore creation failed", details = ex.Message });
+            }
+        }
+
         // GET: api/TemporalDatabase/test - Test API đơn giản
         [HttpGet("test")]
         public async Task<IActionResult> TestConnection()
@@ -537,6 +762,183 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
+        // POST: api/TemporalDatabase/enable-all-temporal - Kích hoạt Temporal cho tất cả bảng quan trọng
+        [HttpPost("enable-all-temporal")]
+        public async Task<IActionResult> EnableAllTemporalTables()
+        {
+            try
+            {
+                _logger.LogInformation("🚀 Kích hoạt Temporal Tables cho tất cả bảng nghiệp vụ quan trọng");
+
+                var sql = @"
+                    DECLARE @results TABLE (TableName NVARCHAR(128), Status NVARCHAR(50), Message NVARCHAR(500));
+
+                    -- Danh sách bảng cần kích hoạt Temporal
+                    DECLARE @tables TABLE (TableName NVARCHAR(128));
+                    INSERT INTO @tables VALUES
+                        ('BusinessPlanTargets'),
+                        ('DashboardCalculations'),
+                        ('EmployeeKhoanAssignments'),
+                        ('EmployeeKpiAssignments'),
+                        ('EmployeeKpiTargets'),
+                        ('Employees'),
+                        ('FinalPayouts'),
+                        ('KPIDefinitions'),
+                        ('KpiScoringRules'),
+                        ('UnitKpiScorings');
+
+                    DECLARE @tableName NVARCHAR(128);
+                    DECLARE @historyTableName NVARCHAR(128);
+                    DECLARE @sql NVARCHAR(MAX);
+
+                    DECLARE table_cursor CURSOR FOR
+                    SELECT TableName FROM @tables;
+
+                    OPEN table_cursor;
+                    FETCH NEXT FROM table_cursor INTO @tableName;
+
+                    WHILE @@FETCH_STATUS = 0
+                    BEGIN
+                        SET @historyTableName = @tableName + '_History';
+
+                        BEGIN TRY
+                            -- Kiểm tra bảng có tồn tại không
+                            IF EXISTS (SELECT 1 FROM sys.tables WHERE name = @tableName)
+                            BEGIN
+                                -- Kiểm tra đã là temporal chưa
+                                IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = @tableName AND temporal_type = 2)
+                                BEGIN
+                                    -- Thêm temporal columns nếu chưa có
+                                    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE name = 'SysStartTime' AND object_id = OBJECT_ID(@tableName))
+                                    BEGIN
+                                        SET @sql = 'ALTER TABLE [' + @tableName + '] ADD
+                                            [SysStartTime] datetime2 GENERATED ALWAYS AS ROW START NOT NULL DEFAULT SYSUTCDATETIME(),
+                                            [SysEndTime] datetime2 GENERATED ALWAYS AS ROW END NOT NULL DEFAULT CONVERT(datetime2, ''9999-12-31 23:59:59.9999999''),
+                                            PERIOD FOR SYSTEM_TIME ([SysStartTime], [SysEndTime])';
+                                        EXEC sp_executesql @sql;
+                                    END
+
+                                    -- Kích hoạt system versioning
+                                    SET @sql = 'ALTER TABLE [' + @tableName + ']
+                                        SET (SYSTEM_VERSIONING = ON (HISTORY_TABLE = [dbo].[' + @historyTableName + ']))';
+                                    EXEC sp_executesql @sql;
+
+                                    INSERT INTO @results VALUES (@tableName, 'SUCCESS', 'Temporal enabled successfully');
+                                END
+                                ELSE
+                                BEGIN
+                                    INSERT INTO @results VALUES (@tableName, 'ALREADY_ENABLED', 'Already temporal table');
+                                END
+                            END
+                            ELSE
+                            BEGIN
+                                INSERT INTO @results VALUES (@tableName, 'NOT_FOUND', 'Table does not exist');
+                            END
+                        END TRY
+                        BEGIN CATCH
+                            INSERT INTO @results VALUES (@tableName, 'ERROR', ERROR_MESSAGE());
+                        END CATCH
+
+                        FETCH NEXT FROM table_cursor INTO @tableName;
+                    END
+
+                    CLOSE table_cursor;
+                    DEALLOCATE table_cursor;
+
+                    SELECT * FROM @results;";
+
+                var results = await _context.Database
+                    .SqlQueryRaw<TemporalEnableResult>(sql)
+                    .ToListAsync();
+
+                var successCount = results.Count(r => r.Status == "SUCCESS");
+                var alreadyEnabledCount = results.Count(r => r.Status == "ALREADY_ENABLED");
+
+                return Ok(new
+                {
+                    message = $"✅ Hoàn thành kích hoạt Temporal Tables: {successCount} mới, {alreadyEnabledCount} đã có",
+                    timestamp = DateTime.UtcNow,
+                    results = results,
+                    summary = new
+                    {
+                        newlyEnabled = successCount,
+                        alreadyEnabled = alreadyEnabledCount,
+                        errors = results.Count(r => r.Status == "ERROR"),
+                        notFound = results.Count(r => r.Status == "NOT_FOUND")
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Lỗi kích hoạt Temporal Tables");
+                return StatusCode(500, new { message = "Lỗi kích hoạt Temporal Tables", error = ex.Message });
+            }
+        }
+
+        // POST: api/TemporalDatabase/optimize-all - Thực hiện tất cả tối ưu hóa một lần
+        [HttpPost("optimize-all")]
+        public async Task<IActionResult> OptimizeAllDatabase()
+        {
+            try
+            {
+                _logger.LogInformation("🎯 BẮT ĐẦU TỐI ƯU HOÁ TOÀN BỘ DATABASE - Temporal Tables + Columnstore Indexes");
+
+                var startTime = DateTime.UtcNow;
+                var results = new List<string>();
+
+                // BƯỚC 1: Kích hoạt Temporal Tables
+                _logger.LogInformation("🕐 BƯỚC 1: Kích hoạt Temporal Tables cho bảng nghiệp vụ...");
+                var temporalResult = await EnableAllTemporalTablesInternal();
+                results.Add($"✅ Temporal Tables: {temporalResult.NewlyEnabled} mới, {temporalResult.AlreadyEnabled} đã có");
+
+                // BƯỚC 2: Tạo Columnstore Indexes
+                _logger.LogInformation("📊 BƯỚC 2: Tạo Columnstore Indexes cho bảng lịch sử...");
+                var columnstoreResult = await CreateAllColumnstoreIndexesInternal();
+                results.Add($"✅ Columnstore Indexes: {columnstoreResult.NewlyCreated} mới, {columnstoreResult.AlreadyExists} đã có");
+
+                // BƯỚC 3: Cập nhật statistics
+                _logger.LogInformation("📈 BƯỚC 3: Cập nhật statistics cho tất cả bảng...");
+                await UpdateAllStatistics();
+                results.Add("✅ Statistics: Đã cập nhật cho tất cả bảng");
+
+                var endTime = DateTime.UtcNow;
+                var duration = endTime - startTime;
+
+                var summary = new
+                {
+                    totalDuration = $"{duration.TotalSeconds:F2} giây",
+                    temporalTables = new
+                    {
+                        newlyEnabled = temporalResult.NewlyEnabled,
+                        alreadyEnabled = temporalResult.AlreadyEnabled,
+                        errors = temporalResult.Errors
+                    },
+                    columnstoreIndexes = new
+                    {
+                        newlyCreated = columnstoreResult.NewlyCreated,
+                        alreadyExists = columnstoreResult.AlreadyExists,
+                        errors = columnstoreResult.Errors
+                    }
+                };
+
+                _logger.LogInformation("🎉 HOÀN THÀNH TỐI ƯU HOÁ DATABASE trong {Duration} giây", duration.TotalSeconds);
+
+                return Ok(new
+                {
+                    message = "🎉 HOÀN THÀNH TỐI ƯU HOÁ TOÀN BỘ DATABASE!",
+                    timestamp = DateTime.UtcNow,
+                    duration = duration.TotalSeconds,
+                    results = results,
+                    summary = summary
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Lỗi tối ưu hóa database");
+                return StatusCode(500, new { message = "Lỗi tối ưu hóa database", error = ex.Message });
+            }
+        }
+
         private static List<string> GenerateRecommendations(
             List<TemporalTableInfo> temporalTables,
             List<ColumnstoreIndexInfo> columnstoreIndexes,
@@ -573,6 +975,185 @@ namespace TinhKhoanApp.Api.Controllers
             }
 
             return recommendations;
+        }
+
+        private async Task<(int NewlyEnabled, int AlreadyEnabled, int Errors)> EnableAllTemporalTablesInternal()
+        {
+            var sql = @"
+                DECLARE @newlyEnabled INT = 0;
+                DECLARE @alreadyEnabled INT = 0;
+                DECLARE @errors INT = 0;
+
+                -- Danh sách bảng cần kích hoạt Temporal
+                DECLARE @tables TABLE (TableName NVARCHAR(128));
+                INSERT INTO @tables VALUES
+                    ('BusinessPlanTargets'),
+                    ('DashboardCalculations'),
+                    ('EmployeeKhoanAssignments'),
+                    ('EmployeeKpiAssignments'),
+                    ('EmployeeKpiTargets'),
+                    ('Employees'),
+                    ('FinalPayouts'),
+                    ('KPIDefinitions'),
+                    ('KpiScoringRules'),
+                    ('UnitKpiScorings');
+
+                DECLARE @tableName NVARCHAR(128);
+                DECLARE @historyTableName NVARCHAR(128);
+                DECLARE @sql NVARCHAR(MAX);
+
+                DECLARE table_cursor CURSOR FOR
+                SELECT TableName FROM @tables;
+
+                OPEN table_cursor;
+                FETCH NEXT FROM table_cursor INTO @tableName;
+
+                WHILE @@FETCH_STATUS = 0
+                BEGIN
+                    SET @historyTableName = @tableName + '_History';
+
+                    BEGIN TRY
+                        -- Kiểm tra bảng có tồn tại không
+                        IF EXISTS (SELECT 1 FROM sys.tables WHERE name = @tableName)
+                        BEGIN
+                            -- Kiểm tra đã là temporal chưa
+                            IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = @tableName AND temporal_type = 2)
+                            BEGIN
+                                -- Thêm temporal columns nếu chưa có
+                                IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE name = 'SysStartTime' AND object_id = OBJECT_ID(@tableName))
+                                BEGIN
+                                    SET @sql = 'ALTER TABLE [' + @tableName + '] ADD
+                                        [SysStartTime] datetime2 GENERATED ALWAYS AS ROW START NOT NULL DEFAULT SYSUTCDATETIME(),
+                                        [SysEndTime] datetime2 GENERATED ALWAYS AS ROW END NOT NULL DEFAULT CONVERT(datetime2, ''9999-12-31 23:59:59.9999999''),
+                                        PERIOD FOR SYSTEM_TIME ([SysStartTime], [SysEndTime])';
+                                    EXEC sp_executesql @sql;
+                                END
+
+                                -- Kích hoạt system versioning
+                                SET @sql = 'ALTER TABLE [' + @tableName + ']
+                                    SET (SYSTEM_VERSIONING = ON (HISTORY_TABLE = [dbo].[' + @historyTableName + ']))';
+                                EXEC sp_executesql @sql;
+
+                                SET @newlyEnabled = @newlyEnabled + 1;
+                            END
+                            ELSE
+                            BEGIN
+                                SET @alreadyEnabled = @alreadyEnabled + 1;
+                            END
+                        END
+                        ELSE
+                        BEGIN
+                            SET @errors = @errors + 1;
+                        END
+                    END TRY
+                    BEGIN CATCH
+                        SET @errors = @errors + 1;
+                    END CATCH
+
+                    FETCH NEXT FROM table_cursor INTO @tableName;
+                END
+
+                CLOSE table_cursor;
+                DEALLOCATE table_cursor;
+
+                SELECT @newlyEnabled AS NewlyEnabled, @alreadyEnabled AS AlreadyEnabled, @errors AS Errors;";
+
+            var result = await _context.Database
+                .SqlQueryRaw<(int NewlyEnabled, int AlreadyEnabled, int Errors)>(sql)
+                .FirstOrDefaultAsync();
+
+            return result;
+        }
+
+        private async Task<(int NewlyCreated, int AlreadyExists, int Errors)> CreateAllColumnstoreIndexesInternal()
+        {
+            var sql = @"
+                DECLARE @newlyCreated INT = 0;
+                DECLARE @alreadyExists INT = 0;
+                DECLARE @errors INT = 0;
+
+                -- Danh sách bảng cần tạo Columnstore Index
+                DECLARE @tables TABLE (TableName NVARCHAR(128), IndexName NVARCHAR(128));
+                INSERT INTO @tables VALUES
+                    ('BC57_History', 'CCI_BC57_History'),
+                    ('DB01_History', 'CCI_DB01_History'),
+                    ('DPDA_History', 'CCI_DPDA_History'),
+                    ('EI01_History', 'CCI_EI01_History'),
+                    ('GL01_History', 'CCI_GL01_History'),
+                    ('LN01_History', 'CCI_LN01_History'),
+                    ('LN03_History', 'CCI_LN03_History'),
+                    ('KH03_History', 'CCI_KH03_History'),
+                    ('RawDataImports_History', 'CCI_RawDataImports_History'),
+                    ('ImportedDataItems', 'CCI_ImportedDataItems_Main'),
+                    ('ImportedDataRecords', 'CCI_ImportedDataRecords_Main'),
+                    ('LegacyRawDataImports', 'CCI_LegacyRawDataImports'),
+                    ('ImportLogs', 'CCI_ImportLogs'),
+                    ('BusinessPlanTargets_History', 'CCI_BusinessPlanTargets_History'),
+                    ('Employees_History', 'CCI_Employees_History'),
+                    ('EmployeeKpiAssignments_History', 'CCI_EmployeeKpiAssignments_History'),
+                    ('FinalPayouts_History', 'CCI_FinalPayouts_History'),
+                    ('KPIDefinitions_History', 'CCI_KPIDefinitions_History');
+
+                DECLARE @tableName NVARCHAR(128);
+                DECLARE @indexName NVARCHAR(128);
+                DECLARE @sql NVARCHAR(MAX);
+
+                DECLARE table_cursor CURSOR FOR
+                SELECT TableName, IndexName FROM @tables;
+
+                OPEN table_cursor;
+                FETCH NEXT FROM table_cursor INTO @tableName, @indexName;
+
+                WHILE @@FETCH_STATUS = 0
+                BEGIN
+                    BEGIN TRY
+                        -- Kiểm tra bảng có tồn tại không
+                        IF EXISTS (SELECT 1 FROM sys.tables WHERE name = @tableName)
+                        BEGIN
+                            -- Kiểm tra index đã tồn tại chưa
+                            IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = @indexName AND object_id = OBJECT_ID(@tableName))
+                            BEGIN
+                                -- Tạo Clustered Columnstore Index
+                                SET @sql = 'CREATE CLUSTERED COLUMNSTORE INDEX [' + @indexName + '] ON [dbo].[' + @tableName + ']';
+                                EXEC sp_executesql @sql;
+
+                                SET @newlyCreated = @newlyCreated + 1;
+                            END
+                            ELSE
+                            BEGIN
+                                SET @alreadyExists = @alreadyExists + 1;
+                            END
+                        END
+                        ELSE
+                        BEGIN
+                            SET @errors = @errors + 1;
+                        END
+                    END TRY
+                    BEGIN CATCH
+                        SET @errors = @errors + 1;
+                    END CATCH
+
+                    FETCH NEXT FROM table_cursor INTO @tableName, @indexName;
+                END
+
+                CLOSE table_cursor;
+                DEALLOCATE table_cursor;
+
+                SELECT @newlyCreated AS NewlyCreated, @alreadyExists AS AlreadyExists, @errors AS Errors;";
+
+            var result = await _context.Database
+                .SqlQueryRaw<(int NewlyCreated, int AlreadyExists, int Errors)>(sql)
+                .FirstOrDefaultAsync();
+
+            return result;
+        }
+
+        private async Task UpdateAllStatistics()
+        {
+            var sql = @"
+                EXEC sp_MSforeachtable 'UPDATE STATISTICS ? WITH FULLSCAN'";
+
+            await _context.Database.ExecuteSqlRawAsync(sql);
         }
     }
 
@@ -630,6 +1211,7 @@ namespace TinhKhoanApp.Api.Controllers
         public string TableName { get; set; } = "";
         public string IndexName { get; set; } = "";
         public byte IndexType { get; set; }
+        public string Status { get; set; } = "";
     }
 
     public class ImportedDataRecordHistory
@@ -665,5 +1247,19 @@ namespace TinhKhoanApp.Api.Controllers
         public string TableName { get; set; } = "";
         public byte TemporalType { get; set; }
         public string? HistoryTableName { get; set; }
+    }
+
+    public class TemporalEnableResult
+    {
+        public string TableName { get; set; } = "";
+        public string Status { get; set; } = "";
+        public string Message { get; set; } = "";
+    }
+
+    public class CandidateTableInfo
+    {
+        public string TableName { get; set; } = "";
+        public long RowCount { get; set; }
+        public bool HasColumnstore { get; set; }
     }
 }
