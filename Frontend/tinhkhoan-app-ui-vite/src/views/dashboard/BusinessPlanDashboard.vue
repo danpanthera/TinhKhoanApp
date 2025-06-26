@@ -27,15 +27,15 @@
             </div>
           </div>
         </div>
-        
+
         <div class="header-right">
           <!-- Bộ lọc nâng cao -->
           <div class="filter-panel">
             <div class="filter-group">
               <label for="branch-selector" class="filter-label">Chi nhánh</label>
-              <el-select 
+              <el-select
                 id="branch-selector"
-                v-model="selectedBranch" 
+                v-model="selectedBranch"
                 placeholder="Chọn chi nhánh"
                 @change="handleBranchChange"
                 @focus="isUserInteraction = true"
@@ -60,7 +60,7 @@
                 </el-option>
               </el-select>
             </div>
-            
+
             <div class="filter-group">
               <label for="date-range-picker" class="filter-label">Thời gian</label>
               <el-date-picker
@@ -84,9 +84,9 @@
     </div>
 
     <!-- Loading Overlay hiện đại -->
-    <LoadingOverlay 
-      :show="loading" 
-      title="Đang tải Dashboard" 
+    <LoadingOverlay
+      :show="loading"
+      title="Đang tải Dashboard"
       message="Đang cập nhật dữ liệu chỉ tiêu mới nhất..."
       icon="📊"
     />
@@ -123,8 +123,8 @@
 
       <!-- 6 Cards chỉ tiêu với animation -->
       <div class="indicators-grid">
-        <div 
-          v-for="(indicator, index) in indicators" 
+        <div
+          v-for="(indicator, index) in indicators"
           :key="indicator.id"
           class="indicator-card-modern"
           :class="[indicator.class, { 'loading-pulse': loading }]"
@@ -149,7 +149,7 @@
           <!-- Giá trị chính với animated counter -->
           <div class="value-section">
             <div class="main-value">
-              <span 
+              <span
                 :ref="`counter-${indicator.id}`"
                 class="value-number animated-counter"
                 :data-target="indicator.currentValue"
@@ -159,7 +159,7 @@
               </span>
               <span class="value-unit">{{ indicator.unit }}</span>
             </div>
-            
+
             <!-- Tăng giảm so với đầu năm -->
             <div class="change-indicator" :class="getChangeClass(indicator.changeFromYearStartPercent, indicator.id)">
               <span class="change-arrow">{{ getChangeArrow(indicator.changeFromYearStartPercent, indicator.id) }}</span>
@@ -185,7 +185,7 @@
                 </template>
               </el-progress>
             </div>
-            
+
             <!-- Target vs Actual -->
             <div class="target-actual">
               <div class="target-row">
@@ -211,8 +211,8 @@
         <div class="charts-header">
           <h3>📈 Phân tích chi tiết</h3>
           <div class="chart-tabs">
-            <div 
-              v-for="tab in chartTabs" 
+            <div
+              v-for="tab in chartTabs"
               :key="tab.key"
               class="chart-tab"
               :class="{ active: activeChartTab === tab.key }"
@@ -223,7 +223,7 @@
             </div>
           </div>
         </div>
-        
+
         <div class="charts-content">
           <!-- Biểu đồ cột so sánh -->
           <div v-if="activeChartTab === 'comparison'" class="chart-panel">
@@ -231,14 +231,14 @@
               <div id="comparison-chart" class="chart-container-large"></div>
             </div>
           </div>
-          
+
           <!-- Biểu đồ xu hướng -->
           <div v-if="activeChartTab === 'trend'" class="chart-panel">
             <div class="chart-wrapper">
               <div id="trend-chart" class="chart-container-large"></div>
             </div>
           </div>
-          
+
           <!-- Biểu đồ tỷ lệ hoàn thành -->
           <div v-if="activeChartTab === 'completion'" class="chart-panel">
             <div class="chart-wrapper">
@@ -388,7 +388,7 @@ const overviewStats = computed(() => {
   const total = indicators.value.length;
   const completed = indicators.value.filter(i => i.completionRate >= 100).length;
   const avgCompletion = indicators.value.reduce((sum, i) => sum + i.completionRate, 0) / total;
-  
+
   return {
     totalTargets: total,
     completedTargets: completed,
@@ -407,25 +407,25 @@ const chartTabs = ref([
 const animateCounter = (indicatorId, targetValue, duration = 2000) => {
   const startValue = animatedValues.value[indicatorId] || 0;
   const startTime = Date.now();
-  
+
   const animate = () => {
     const currentTime = Date.now();
     const elapsed = currentTime - startTime;
     const progress = Math.min(elapsed / duration, 1);
-    
+
     // Sử dụng easing function cho animation mượt
     const easeOutQuart = 1 - Math.pow(1 - progress, 4);
     const currentValue = startValue + (targetValue - startValue) * easeOutQuart;
-    
+
     animatedValues.value[indicatorId] = Math.round(currentValue * 10) / 10;
-    
+
     if (progress < 1) {
       requestAnimationFrame(animate);
     } else {
       animatedValues.value[indicatorId] = targetValue;
     }
   };
-  
+
   animate();
 };
 
@@ -457,7 +457,7 @@ const initAudio = () => {
 
 const createSounds = () => {
   if (!audioContext.value) return;
-  
+
   sounds.value.hover = createTone(800, 0.1, 0.05);
   sounds.value.click = createTone(1200, 0.15, 0.1);
   sounds.value.success = createTone(600, 0.3, 0.2);
@@ -467,20 +467,20 @@ const createSounds = () => {
 const createTone = (frequency, duration, volume) => {
   return () => {
     if (!audioContext.value) return;
-    
+
     const oscillator = audioContext.value.createOscillator();
     const gainNode = audioContext.value.createGain();
-    
+
     oscillator.connect(gainNode);
     gainNode.connect(audioContext.value.destination);
-    
+
     oscillator.frequency.setValueAtTime(frequency, audioContext.value.currentTime);
     oscillator.type = 'sine';
-    
+
     gainNode.gain.setValueAtTime(0, audioContext.value.currentTime);
     gainNode.gain.linearRampToValueAtTime(volume, audioContext.value.currentTime + 0.01);
     gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.value.currentTime + duration);
-    
+
     oscillator.start(audioContext.value.currentTime);
     oscillator.stop(audioContext.value.currentTime + duration);
   };
@@ -511,13 +511,13 @@ const getCurrentPeriodLabel = () => {
 };
 
 const formatCurrentTime = () => {
-  return currentTime.value.toLocaleString('vi-VN', { 
-    year: 'numeric', 
-    month: '2-digit', 
+  return currentTime.value.toLocaleString('vi-VN', {
+    year: 'numeric',
+    month: '2-digit',
     day: '2-digit',
-    hour: '2-digit', 
-    minute: '2-digit', 
-    second: '2-digit' 
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
   });
 };
 
@@ -562,13 +562,13 @@ const getChangeArrow = (percent, indicatorId = null) => {
 
 const getProgressColor = (percentage) => {
   // Thống nhất màu sắc theo yêu cầu:
-  // < 25%: màu đỏ đậm (bordeaux) 
+  // < 25%: màu đỏ đậm (bordeaux)
   // 26-50%: màu cam nhạt
-  // 51-75%: màu xanh dương nhạt  
+  // 51-75%: màu xanh dương nhạt
   // > 75%: màu xanh lá cây
   if (percentage >= 75) return '#52c41a'; // Xanh lá cây
   if (percentage >= 51) return '#1890ff'; // Xanh dương nhạt
-  if (percentage >= 26) return '#faad14'; // Cam nhạt  
+  if (percentage >= 26) return '#faad14'; // Cam nhạt
   return '#8B1538'; // Đỏ đậm bordeaux (< 25%)
 };
 
@@ -576,7 +576,7 @@ const getProgressColor = (percentage) => {
 const isUserInteraction = ref(false);
 
 const handleBranchChange = async () => {
-  // Chỉ phát âm thanh khi user chủ động thay đổi qua UI  
+  // Chỉ phát âm thanh khi user chủ động thay đổi qua UI
   if (isUserInteraction.value) {
     playClickSound();
     isUserInteraction.value = false; // Reset flag
@@ -603,23 +603,23 @@ const loadDashboardData = async () => {
   try {
     // Gọi API để lấy dữ liệu thực tế
     const data = await dashboardService.getGeneralDashboardData(selectedBranch.value);
-    
+
     if (data && data.indicators) {
       // Cập nhật dữ liệu từ API
       indicators.value = data.indicators;
     }
-    
+
     // Khởi động animation cho counters
     setTimeout(() => {
       startAllCounterAnimations();
     }, 300);
-    
+
     // Tạo biểu đồ sau khi có dữ liệu với delay để đảm bảo DOM
     await nextTick();
     setTimeout(() => {
       createCharts();
     }, 200);
-    
+
     playSuccessSound();
     ElMessage.success({
       message: 'Dữ liệu đã được cập nhật thành công',
@@ -627,7 +627,7 @@ const loadDashboardData = async () => {
       duration: 2000,
       showClose: true
     });
-    
+
   } catch (error) {
     console.error('Error loading dashboard data:', error);
     ElMessage.error({
@@ -646,7 +646,7 @@ const createCharts = async () => {
   try {
     // Đợi DOM render hoàn toàn
     await nextTick();
-    
+
     // Thêm delay nhỏ để đảm bảo tất cả element đã sẵn sàng
     setTimeout(() => {
       createComparisonChart();
@@ -654,7 +654,7 @@ const createCharts = async () => {
       createCompletionChart();
       createMiniCharts();
     }, 100);
-    
+
   } catch (error) {
     console.warn('Error creating charts:', error);
   }
@@ -667,13 +667,13 @@ const createComparisonChart = () => {
       console.log('⚠️ Comparison chart container not ready, skipping...');
       return;
     }
-    
+
     // Dispose existing chart instance nếu có
     const existingChart = echarts.getInstanceByDom(chartDom);
     if (existingChart) {
       existingChart.dispose();
     }
-    
+
     const myChart = echarts.init(chartDom);
     const option = {
       title: {
@@ -710,7 +710,7 @@ const createComparisonChart = () => {
         }
       ]
     };
-    
+
     myChart.setOption(option);
   } catch (error) {
     console.warn('Error creating comparison chart:', error);
@@ -724,17 +724,17 @@ const createTrendChart = () => {
       // Bỏ log để tránh spam console
       return;
     }
-    
+
     // Dispose existing chart instance nếu có
     const existingChart = echarts.getInstanceByDom(chartDom);
     if (existingChart) {
       existingChart.dispose();
     }
-    
+
     const myChart = echarts.init(chartDom);
     // Mock dữ liệu xu hướng 6 tháng
     const months = ['T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
-    
+
     const option = {
       title: {
         text: 'Xu hướng 6 tháng gần nhất',
@@ -760,7 +760,7 @@ const createTrendChart = () => {
         lineStyle: { width: 3 }
       }))
     };
-    
+
     myChart.setOption(option);
   } catch (error) {
     // Chỉ log lỗi thực sự, bỏ warning để tránh spam console
@@ -775,13 +775,13 @@ const createCompletionChart = () => {
       console.log('⚠️ Completion chart container not ready, skipping...');
       return;
     }
-    
+
     // Dispose existing chart instance nếu có
     const existingChart = echarts.getInstanceByDom(chartDom);
     if (existingChart) {
       existingChart.dispose();
     }
-    
+
     const myChart = echarts.init(chartDom);
     const option = {
       title: {
@@ -828,7 +828,7 @@ const createCompletionChart = () => {
         }
       ]
     };
-    
+
     myChart.setOption(option);
   } catch (error) {
     console.warn('Error creating completion chart:', error);
@@ -843,17 +843,17 @@ const createMiniCharts = () => {
         console.log(`⚠️ Mini chart container not ready for ${indicator.id}, skipping...`);
         return;
       }
-      
+
       // Dispose existing chart instance nếu có
       const existingChart = echarts.getInstanceByDom(chartDom);
       if (existingChart) {
         existingChart.dispose();
       }
-      
+
       const myChart = echarts.init(chartDom);
       // Mock dữ liệu mini chart
       const data = Array.from({length: 7}, () => Math.random() * 100);
-      
+
       const option = {
         grid: { top: 5, left: 5, right: 5, bottom: 5 },
         xAxis: { type: 'category', show: false, data: ['', '', '', '', '', '', ''] },
@@ -863,18 +863,18 @@ const createMiniCharts = () => {
             type: 'line',
             smooth: true,
             symbol: 'none',
-            lineStyle: { color: indicator.id === 'nguon_von' ? '#52c41a' : 
+            lineStyle: { color: indicator.id === 'nguon_von' ? '#52c41a' :
                                indicator.id === 'du_no' ? '#1890ff' :
                                indicator.id === 'no_xau' ? '#fa541c' :
                                indicator.id === 'thu_no_xlrr' ? '#722ed1' :
-                               indicator.id === 'thu_dich_vu' ? '#13c2c2' : '#faad14', 
+                               indicator.id === 'thu_dich_vu' ? '#13c2c2' : '#faad14',
                         width: 2 },
             areaStyle: { opacity: 0.3 },
             data: data
           }
         ]
       };
-      
+
       myChart.setOption(option);
     });
   } catch (error) {
@@ -886,21 +886,21 @@ const createMiniCharts = () => {
 onMounted(async () => {
   // Khởi tạo âm thanh
   initAudio();
-  
+
   // Cập nhật thời gian real-time
   updateTime();
   setInterval(updateTime, 1000);
-  
+
   // Tải dữ liệu ban đầu
   await loadDashboardData();
-  
+
   // Phát âm thanh chào mừng
   setTimeout(() => {
     if (sounds.value.notification) {
       sounds.value.notification();
     }
   }, 1000);
-  
+
   // Window resize handler cho charts
   window.addEventListener('resize', handleWindowResize);
 });
@@ -908,7 +908,7 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   // Cleanup window resize listener
   window.removeEventListener('resize', handleWindowResize);
-  
+
   // Dispose all chart instances
   try {
     ['comparison-chart', 'trend-chart', 'completion-chart'].forEach(id => {
@@ -920,7 +920,7 @@ onBeforeUnmount(() => {
         }
       }
     });
-    
+
     indicators.value.forEach(indicator => {
       const chartDom = document.getElementById(`mini-chart-${indicator.id}`);
       if (chartDom) {
@@ -949,7 +949,7 @@ const handleWindowResize = () => {
           }
         }
       });
-      
+
       indicators.value.forEach(indicator => {
         const chartDom = document.getElementById(`mini-chart-${indicator.id}`);
         if (chartDom) {
@@ -1020,7 +1020,7 @@ watch(activeChartTab, (newTab, oldTab) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: 
+  background:
     radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
     radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
     radial-gradient(circle at 40% 80%, rgba(255, 255, 255, 0.06) 0%, transparent 50%);
@@ -1678,41 +1678,41 @@ watch(activeChartTab, (newTab, oldTab) => {
     gap: 20px;
     align-items: stretch;
   }
-  
+
   .filter-panel {
     flex-direction: column;
     gap: 16px;
   }
-  
+
   .dashboard-content {
     padding: 20px 16px;
   }
-  
+
   .indicators-grid {
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
   .overview-stats {
     flex-direction: column;
     gap: 16px;
   }
-  
+
   .stat-divider {
     width: 40px;
     height: 1px;
   }
-  
+
   .dashboard-title {
     font-size: 28px;
   }
-  
+
   .charts-header {
     flex-direction: column;
     gap: 16px;
     align-items: stretch;
   }
-  
+
   .chart-tabs {
     justify-content: center;
   }
@@ -1723,15 +1723,15 @@ watch(activeChartTab, (newTab, oldTab) => {
     padding: 8px 12px;
     font-size: 12px;
   }
-  
+
   .tab-text {
     display: none;
   }
-  
+
   .indicator-card-modern {
     padding: 16px;
   }
-  
+
   .value-number {
     font-size: 24px;
   }
