@@ -24,19 +24,19 @@
     <!-- Tabs Navigation -->
     <div v-if="!loading" class="tabs-container">
       <div class="tab-navigation">
-        <button 
+        <button
           :class="['tab-button', { active: activeTab === 'employee' }]"
           @click="switchTab('employee')"
         >
           👥 Dành cho Cán bộ
         </button>
-        <button 
+        <button
           :class="['tab-button', { active: activeTab === 'branch' }]"
           @click="switchTab('branch')"
         >
           🏢 Dành cho Chi nhánh
         </button>
-        <button 
+        <button
           :class="['tab-button', { active: activeTab === 'scoring' }]"
           @click="switchTab('scoring')"
         >
@@ -52,38 +52,38 @@
         <div class="table-selector-container">
           <h2 v-if="activeTab === 'employee'">📋 Chọn Bảng KPI Cán bộ</h2>
           <h2 v-if="activeTab === 'branch'">🏢 Chọn Bảng KPI Chi nhánh</h2>
-          
+
           <div v-if="filteredKpiTables.length === 0" class="no-data">
             <p v-if="activeTab === 'employee'">Chưa có bảng giao khoán KPI nào cho cán bộ.</p>
             <p v-if="activeTab === 'branch'">Chưa có bảng giao khoán KPI nào cho chi nhánh.</p>
           </div>
-          
+
           <div v-else class="table-dropdown-section">
             <!-- Dropdown chọn bảng -->
             <div class="dropdown-group">
               <label for="tableSelect">Bảng giao khoán KPI:</label>
-              <select 
+              <select
                 id="tableSelect"
-                v-model="selectedTableId" 
+                v-model="selectedTableId"
                 @change="onTableChange"
                 class="table-dropdown"
               >
                 <option value="">-- Chọn bảng KPI --</option>
-                <option 
-                  v-for="table in filteredKpiTables" 
+                <option
+                  v-for="table in filteredKpiTables"
                   :key="table.id"
                   :value="table.id"
                 >
-                  {{ table.tableName }} ({{ getIndicatorCount(table.id) }} chỉ tiêu) 
+                  {{ table.tableName }} ({{ getIndicatorCount(table.id) }} chỉ tiêu)
                   <span class="table-code">{{ table.tableType }}</span>
                 </option>
               </select>
             </div>
-            
+
             <!-- Thông tin bảng đã chọn -->
             <div v-if="selectedTable" class="selected-table-info">
               <h3>{{ selectedTable.tableName }}</h3>
-              
+
               <div class="table-details">
                 <div class="detail-item">
                   <span class="label">Loại:</span>
@@ -107,15 +107,15 @@
                   <span class="value">{{ formatDate(selectedTable.createdDate) }}</span>
                 </div>
               </div>
-              
+
               <div class="description-box">
                 <label>Mô tả:</label>
                 <p>{{ selectedTable.description }}</p>
               </div>
-              
+
               <!-- Nút refresh -->
-              <button 
-                @click="loadTableDetails" 
+              <button
+                @click="loadTableDetails"
                 :disabled="loadingDetails"
                 class="refresh-button"
               >
@@ -125,7 +125,7 @@
           </div>
         </div>
       </div>
-      
+
       <!-- Right Panel - Form chỉ tiêu KPI -->
       <div class="right-panel">
         <div v-if="!selectedTable" class="no-selection">
@@ -135,18 +135,18 @@
             <p>Vui lòng chọn một bảng giao khoán KPI từ dropdown bên trái để xem và chỉnh sửa các chỉ tiêu.</p>
           </div>
         </div>
-        
+
         <div v-else class="indicators-panel">
           <div class="indicators-header">
             <h2>⚡ Chỉ tiêu KPI - {{ selectedTable.tableName }}</h2>
-            <button 
-              @click="openAddIndicatorModal" 
+            <button
+              @click="openAddIndicatorModal"
               class="action-button add-btn"
             >
               ➕ Thêm chỉ tiêu
             </button>
           </div>
-          
+
           <!-- Có chỉ tiêu -->
           <div v-if="indicators.length > 0" class="indicators-content">
             <div class="indicators-table">
@@ -175,21 +175,21 @@
                       </span>
                     </td>
                     <td class="actions">
-                      <button 
-                        @click="openEditIndicatorModal(indicator)" 
+                      <button
+                        @click="openEditIndicatorModal(indicator)"
                         class="action-btn edit-btn"
                         title="Chỉnh sửa"
                       >
                         ✏️
                       </button>
-                      <button 
-                        @click="deleteIndicator(indicator)" 
+                      <button
+                        @click="deleteIndicator(indicator)"
                         class="action-btn delete-btn"
                         title="Xóa"
                       >
                         🗑️
                       </button>
-                      <button 
+                      <button
                         @click="moveIndicatorUp(indicator)"
                         :disabled="indicator.orderIndex === 1"
                         class="action-btn move-btn"
@@ -197,7 +197,7 @@
                       >
                         ⬆️
                       </button>
-                      <button 
+                      <button
                         @click="moveIndicatorDown(indicator)"
                         :disabled="indicator.orderIndex === indicators.length"
                         class="action-btn move-btn"
@@ -235,7 +235,7 @@
                 <div class="validation-warning">
                   <span class="warning-icon">⚠️</span>
                   <span class="warning-text">
-                    Tổng điểm cần bằng 100. Hiện tại: {{ totalMaxScore }}/100 
+                    Tổng điểm cần bằng 100. Hiện tại: {{ totalMaxScore }}/100
                     ({{ totalMaxScore > 100 ? 'thừa' : 'thiếu' }} {{ Math.abs(100 - totalMaxScore) }} điểm)
                   </span>
                 </div>
@@ -248,22 +248,22 @@
               </div>
             </div>
           </div>
-          
+
           <!-- Chưa có chỉ tiêu -->
           <div v-else-if="!loadingDetails" class="no-indicators">
             <div class="empty-state">
               <div class="empty-icon">📊</div>
               <h3>Chưa có chỉ tiêu KPI</h3>
               <p>Bảng này chưa có chỉ tiêu KPI nào được định nghĩa.</p>
-              <button 
-                @click="openAddIndicatorModal" 
+              <button
+                @click="openAddIndicatorModal"
                 class="action-button add-btn"
               >
                 ➕ Thêm chỉ tiêu đầu tiên
               </button>
             </div>
           </div>
-          
+
           <!-- Loading state -->
           <div v-if="loadingDetails" class="loading-indicators">
             <div class="loading-spinner"></div>
@@ -278,7 +278,7 @@
       <div class="scoring-rules-header">
         <h2>⚡ Cấu hình Điểm tăng giảm Chỉ tiêu Chi nhánh</h2>
         <p class="subtitle">Quản lý quy tắc tính điểm dựa trên tỷ lệ hoàn thành chỉ tiêu</p>
-        
+
         <div class="scoring-actions">
           <button @click="openAddScoringRuleModal" class="action-button add-btn">
             ➕ Thêm quy tắc tính điểm
@@ -378,12 +378,12 @@
           <h3>{{ isEditMode ? 'Chỉnh sửa chỉ tiêu KPI' : 'Thêm chỉ tiêu KPI mới' }}</h3>
           <button @click="closeIndicatorModal" class="close-btn">✕</button>
         </div>
-        
+
         <form @submit.prevent="saveIndicator" class="modal-form">
           <div class="form-group">
             <label for="indicatorName">Tên chỉ tiêu *</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               id="indicatorName"
               v-model="indicatorForm.indicatorName"
               required
@@ -395,8 +395,8 @@
           <div class="form-row">
             <div class="form-group">
               <label for="maxScore">Điểm tối đa *</label>
-              <input 
-                type="number" 
+              <input
+                type="number"
                 id="maxScore"
                 v-model.number="indicatorForm.maxScore"
                 required
@@ -409,8 +409,8 @@
 
             <div class="form-group">
               <label for="unit">Đơn vị tính *</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 id="unit"
                 v-model="indicatorForm.unit"
                 required
@@ -423,7 +423,7 @@
           <div class="form-row">
             <div class="form-group">
               <label for="valueType">Loại dữ liệu</label>
-              <select 
+              <select
                 id="valueType"
                 v-model="indicatorForm.valueTypeString"
                 class="form-input"
@@ -437,7 +437,7 @@
 
             <div class="form-group" v-if="isEditMode">
               <label for="isActive">Trạng thái</label>
-              <select 
+              <select
                 id="isActive"
                 v-model="indicatorForm.isActive"
                 class="form-input"
@@ -461,9 +461,9 @@
     </div>
 
     <!-- Scoring Rules Modal -->
-    <div 
-      v-if="showScoringRuleModal" 
-      class="modal-overlay" 
+    <div
+      v-if="showScoringRuleModal"
+      class="modal-overlay"
       @click="handleModalClick"
       @keydown.esc="closeScoringRuleModal"
     >
@@ -478,15 +478,15 @@
             <div class="form-row">
               <div class="form-group">
                 <label for="kpiIndicatorName">Tên chỉ tiêu KPI <span class="required">*</span></label>
-                <select 
+                <select
                   id="kpiIndicatorName"
                   v-model="scoringRuleForm.kpiIndicatorName"
                   class="form-input"
                   required
                 >
                   <option value="">-- Chọn chỉ tiêu KPI --</option>
-                  <option 
-                    v-for="indicator in branchKpiIndicators" 
+                  <option
+                    v-for="indicator in branchKpiIndicators"
                     :key="indicator.name"
                     :value="indicator.name"
                   >
@@ -499,7 +499,7 @@
 
               <div class="form-group">
                 <label for="scoringMethod">Phương pháp tính điểm <span class="required">*</span></label>
-                <select 
+                <select
                   id="scoringMethod"
                   v-model="scoringRuleForm.scoringMethod"
                   class="form-input"
@@ -517,7 +517,7 @@
             <div class="form-row">
               <div class="form-group">
                 <label for="percentageStep">Bước % thay đổi <span class="required">*</span></label>
-                <input 
+                <input
                   id="percentageStep"
                   type="number"
                   step="0.1"
@@ -533,7 +533,7 @@
 
               <div class="form-group">
                 <label for="scorePerStep">Điểm mỗi bước <span class="required">*</span></label>
-                <input 
+                <input
                   id="scorePerStep"
                   type="number"
                   step="0.1"
@@ -550,7 +550,7 @@
             <div class="form-row">
               <div class="form-group">
                 <label for="maxScore">Điểm tối đa</label>
-                <input 
+                <input
                   id="maxScore"
                   type="number"
                   step="0.1"
@@ -562,7 +562,7 @@
 
               <div class="form-group">
                 <label for="minScore">Điểm tối thiểu</label>
-                <input 
+                <input
                   id="minScore"
                   type="number"
                   step="0.1"
@@ -575,7 +575,7 @@
 
             <div class="form-group">
               <label for="applicableUnitType">Áp dụng cho loại chi nhánh</label>
-              <select 
+              <select
                 id="applicableUnitType"
                 v-model="scoringRuleForm.applicableUnitType"
                 class="form-input"
@@ -588,7 +588,7 @@
 
             <div class="form-group">
               <label for="description">Mô tả</label>
-              <textarea 
+              <textarea
                 id="description"
                 v-model="scoringRuleForm.description"
                 class="form-input"
@@ -632,7 +632,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
+import { computed, nextTick, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { isAuthenticated } from '../services/auth';
 import { kpiAssignmentService } from '../services/kpiAssignmentService';
@@ -686,12 +686,12 @@ const selectedTable = computed(() => {
 const filteredKpiTables = computed(() => {
   if (activeTab.value === 'employee') {
     // Filter for employee tables using Category field
-    return kpiTables.value.filter(table => 
+    return kpiTables.value.filter(table =>
       table.category === 'Vai trò cán bộ'
     );
   } else if (activeTab.value === 'branch') {
     // Filter for branch tables using Category field
-    return kpiTables.value.filter(table => 
+    return kpiTables.value.filter(table =>
       table.category === 'Chi nhánh'
     );
   }
@@ -721,10 +721,10 @@ const getScoreValidationIcon = (score) => {
 
 // Computed property để lấy danh sách tên chỉ tiêu từ bảng KPI chi nhánh
 const branchKpiIndicators = computed(() => {
-  const branchTables = kpiTables.value.filter(table => 
+  const branchTables = kpiTables.value.filter(table =>
     table.category === 'Chi nhánh'
   );
-  
+
   const allIndicators = [];
   branchTables.forEach(table => {
     if (table.indicators && Array.isArray(table.indicators)) {
@@ -741,7 +741,7 @@ const branchKpiIndicators = computed(() => {
       });
     }
   });
-  
+
   // Remove duplicates based on indicator name, keep the one with lowest orderIndex
   const uniqueIndicators = allIndicators.filter((indicator, index, self) => {
     const firstIndex = self.findIndex(i => i.name === indicator.name);
@@ -749,7 +749,7 @@ const branchKpiIndicators = computed(() => {
     // If duplicate, keep the one with lower orderIndex
     return indicator.orderIndex < self[firstIndex].orderIndex;
   });
-  
+
   // Sort by table order first, then by orderIndex within table
   return uniqueIndicators.sort((a, b) => {
     // If same table, sort by orderIndex
@@ -792,7 +792,7 @@ const switchTab = (tab) => {
   indicators.value = []; // Clear indicators
   scoringRules.value = []; // Clear scoring rules
   clearMessages();
-  
+
   // Load scoring rules when switching to scoring tab
   if (tab === 'scoring') {
     loadScoringRules();
@@ -847,12 +847,12 @@ const fetchKpiTables = async () => {
   try {
     loading.value = true;
     clearMessages();
-    
+
     const tablesData = await kpiAssignmentService.getTables();
     kpiTables.value = tablesData;
-    
+
     console.log('KPI Tables loaded:', kpiTables.value.length);
-    
+
     if (kpiTables.value.length > 0) {
       showSuccess(`Đã tải ${kpiTables.value.length} bảng giao khoán KPI.`);
     }
@@ -871,19 +871,19 @@ const selectTable = (tableId) => {
 
 const loadTableDetails = async () => {
   if (!selectedTableId.value) return;
-  
+
   try {
     loadingDetails.value = true;
     clearMessages();
-    
+
     const tableData = await kpiAssignmentService.getTableDetails(selectedTableId.value);
-    
+
     if (tableData.indicators) {
       indicators.value = tableData.indicators;
     } else {
       indicators.value = [];
     }
-    
+
     console.log('Table details loaded:', indicators.value.length, 'indicators');
   } catch (error) {
     console.error('Error loading table details:', error);
@@ -899,13 +899,13 @@ const loadScoringRules = async () => {
     loadingScoringRules.value = true;
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://localhost:7297/api';
     const token = localStorage.getItem('authToken');
-    
+
     const response = await fetch(`${API_BASE_URL}/KpiScoringRules`, {
       headers: {
         'Authorization': token ? `Bearer ${token}` : ''
       }
     });
-    
+
     if (response.ok) {
       scoringRules.value = await response.json();
     } else {
@@ -921,11 +921,11 @@ const loadScoringRules = async () => {
 
 const onTableChange = () => {
   console.log('Table selection changed:', selectedTableId.value);
-  
+
   // Reset indicators và scoring rules khi thay đổi bảng
   indicators.value = [];
   scoringRules.value = [];
-  
+
   // Load chi tiết bảng được chọn
   if (selectedTableId.value) {
     loadTableDetails();
@@ -943,9 +943,9 @@ const openAddIndicatorModal = () => {
     isActive: true
   };
   showIndicatorModal.value = true;
-  
+
   console.log('🚀 Opening add modal...');
-  
+
   nextTick(() => {
     const modalOverlay = document.querySelector('.modal-overlay');
     if (modalOverlay) {
@@ -965,7 +965,7 @@ const openAddIndicatorModal = () => {
         z-index: 99999 !important;
         backdrop-filter: blur(2px) !important;
       `;
-      
+
       console.log('✅ ADD Modal positioned (fixed center)');
     }
   });
@@ -975,9 +975,9 @@ const openEditIndicatorModal = (indicator) => {
   isEditMode.value = true;
   indicatorForm.value = { ...indicator };
   showIndicatorModal.value = true;
-  
+
   console.log('🚀 Opening edit modal for:', indicator.indicatorName);
-  
+
   nextTick(() => {
     const modalOverlay = document.querySelector('.modal-overlay');
     if (modalOverlay) {
@@ -997,7 +997,7 @@ const openEditIndicatorModal = (indicator) => {
         z-index: 99999 !important;
         backdrop-filter: blur(2px) !important;
       `;
-      
+
       console.log('✅ EDIT Modal positioned (fixed center) for:', indicator.indicatorName);
     } else {
       console.error('❌ Modal overlay element NOT FOUND after nextTick!');
@@ -1007,17 +1007,17 @@ const openEditIndicatorModal = (indicator) => {
 
 const closeIndicatorModal = () => {
   console.log('🔒 Closing modal and cleaning up...');
-  
+
   // Cleanup modal positioning BEFORE closing
   const modalOverlay = document.querySelector('.modal-overlay');
   if (modalOverlay) {
     // Reset tất cả attributes và styles
     modalOverlay.removeAttribute('style');
     modalOverlay.className = 'modal-overlay'; // Reset về class gốc
-    
+
     console.log('🧹 Modal styles reset to default');
   }
-  
+
   showIndicatorModal.value = false;
 };
 
@@ -1025,7 +1025,7 @@ const saveIndicator = async () => {
   try {
     savingIndicator.value = true;
     clearMessages();
-    
+
     const payload = {
       indicatorName: indicatorForm.value.indicatorName,
       maxScore: indicatorForm.value.maxScore,
@@ -1033,12 +1033,12 @@ const saveIndicator = async () => {
       valueTypeString: indicatorForm.value.valueTypeString,
       isActive: indicatorForm.value.isActive
     };
-    
+
     if (isEditMode.value) {
       // Update existing indicator
       console.log('🔄 Updating indicator:', indicatorForm.value.id, payload);
       const result = await kpiAssignmentService.updateIndicator(indicatorForm.value.id, payload);
-      
+
       if (result.success) {
         showSuccess(result.message || 'Cập nhật chỉ tiêu thành công!');
       } else {
@@ -1050,7 +1050,7 @@ const saveIndicator = async () => {
       payload.kpiAssignmentTableId = selectedTableId.value;
       console.log('➕ Creating new indicator:', payload);
       const result = await kpiAssignmentService.createIndicator(payload);
-      
+
       if (result.success) {
         showSuccess(result.message || 'Thêm chỉ tiêu mới thành công!');
       } else {
@@ -1058,11 +1058,11 @@ const saveIndicator = async () => {
         return;
       }
     }
-    
+
     // Close modal and refresh data
     closeIndicatorModal();
     await loadTableDetails();
-    
+
   } catch (error) {
     console.error('Error saving indicator:', error);
     if (error.response && error.response.data && error.response.data.message) {
@@ -1079,13 +1079,13 @@ const deleteIndicator = async (indicator) => {
   if (!confirm(`Bạn có chắc muốn xóa chỉ tiêu "${indicator.indicatorName}"?`)) {
     return;
   }
-  
+
   try {
     clearMessages();
     console.log('🗑️ Deleting indicator:', indicator.id);
-    
+
     const result = await kpiAssignmentService.deleteIndicator(indicator.id);
-    
+
     if (result.success) {
       showSuccess(result.message || 'Xóa chỉ tiêu thành công!');
       await loadTableDetails();
@@ -1104,14 +1104,14 @@ const deleteIndicator = async (indicator) => {
 
 const moveIndicatorUp = async (indicator) => {
   if (indicator.orderIndex <= 1) return;
-  
+
   try {
     clearMessages();
     const newOrderIndex = indicator.orderIndex - 1;
     console.log('⬆️ Moving indicator up:', indicator.id, 'to order:', newOrderIndex);
-    
+
     const result = await kpiAssignmentService.reorderIndicator(indicator.id, newOrderIndex);
-    
+
     if (result.success) {
       await loadTableDetails();
     } else {
@@ -1125,14 +1125,14 @@ const moveIndicatorUp = async (indicator) => {
 
 const moveIndicatorDown = async (indicator) => {
   if (indicator.orderIndex >= indicators.value.length) return;
-  
+
   try {
     clearMessages();
     const newOrderIndex = indicator.orderIndex + 1;
     console.log('⬇️ Moving indicator down:', indicator.id, 'to order:', newOrderIndex);
-    
+
     const result = await kpiAssignmentService.reorderIndicator(indicator.id, newOrderIndex);
-    
+
     if (result.success) {
       await loadTableDetails();
     } else {
@@ -1246,7 +1246,7 @@ const saveScoringRule = async () => {
   try {
     savingScoringRule.value = true;
     clearMessages();
-    
+
     const payload = {
       kpiIndicatorName: scoringRuleForm.value.kpiIndicatorName,
       scoringMethod: scoringRuleForm.value.scoringMethod,
@@ -1257,10 +1257,10 @@ const saveScoringRule = async () => {
       applicableUnitType: scoringRuleForm.value.applicableUnitType,
       description: scoringRuleForm.value.description
     };
-    
+
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://localhost:7297/api';
     const token = localStorage.getItem('authToken');
-    
+
     const requestConfig = {
       method: isEditScoringRuleMode.value ? 'PUT' : 'POST',
       headers: {
@@ -1269,17 +1269,17 @@ const saveScoringRule = async () => {
       },
       body: JSON.stringify(payload)
     };
-    
-    const url = isEditScoringRuleMode.value 
+
+    const url = isEditScoringRuleMode.value
       ? `${API_BASE_URL}/KpiScoringRules/${scoringRuleForm.value.id}`
       : `${API_BASE_URL}/KpiScoringRules`;
-    
+
     const response = await fetch(url, requestConfig);
-    
+
     if (!response.ok) {
       throw new Error(`API Error: ${response.status}`);
     }
-    
+
     showSuccess(isEditScoringRuleMode.value ? 'Cập nhật quy tắc tính điểm thành công.' : 'Thêm quy tắc tính điểm mới thành công.');
     closeScoringRuleModal();
     await loadScoringRules(); // Reload to get updated list
@@ -1295,24 +1295,24 @@ const deleteScoringRule = async (ruleId) => {
   if (!confirm('Bạn có chắc chắn muốn xóa quy tắc này?')) {
     return;
   }
-  
+
   try {
     clearMessages();
-    
+
     const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://localhost:7297/api';
     const token = localStorage.getItem('authToken');
-    
+
     const response = await fetch(`${API_BASE_URL}/KpiScoringRules/${ruleId}`, {
       method: 'DELETE',
       headers: {
         'Authorization': token ? `Bearer ${token}` : ''
       }
     });
-    
+
     if (!response.ok) {
       throw new Error(`API Error: ${response.status}`);
     }
-    
+
     showSuccess('Xóa quy tắc tính điểm thành công.');
     await loadScoringRules();
   } catch (error) {
@@ -1328,10 +1328,10 @@ onMounted(async () => {
     router.push('/login');
     return;
   }
-  
+
   // Load KPI tables khi component được mount
   await fetchKpiTables();
-  
+
   // Load indicators cho dropdown scoring rules
   await loadAllBranchIndicators();
 });
@@ -1340,10 +1340,10 @@ onMounted(async () => {
 const loadAllBranchIndicators = async () => {
   try {
     // Get all branch tables
-    const branchTables = kpiTables.value.filter(table => 
+    const branchTables = kpiTables.value.filter(table =>
       table.category === 'Chi nhánh'
     );
-    
+
     // Load indicators for each branch table
     for (const table of branchTables) {
       try {
@@ -1356,7 +1356,7 @@ const loadAllBranchIndicators = async () => {
         console.error(`Error loading indicators for table ${table.id}:`, error);
       }
     }
-    
+
     console.log('Loaded indicators for branch tables');
   } catch (error) {
     console.error('Error loading branch indicators:', error);
@@ -2390,83 +2390,83 @@ const loadAllBranchIndicators = async () => {
     flex-direction: column;
     gap: 20px;
   }
-  
+
   .left-panel {
     flex: none;
     position: relative;
     top: 0;
   }
-  
+
   .scoring-rules-header {
     padding: 20px;
     text-align: center;
   }
-  
+
   .scoring-rules-header h2 {
     font-size: 1.8rem;
   }
-  
+
   .scoring-actions {
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .action-button.add-btn,
   .action-button.refresh-btn {
     width: 100%;
     justify-content: center;
   }
-  
+
   .scoring-rule-modal {
     max-width: 95%;
     margin: 10px;
   }
-  
+
   .modal-body {
     padding: 20px;
   }
-  
+
   .modal-footer {
     padding: 20px;
     flex-direction: column-reverse;
   }
-  
+
   .btn-primary,
   .btn-secondary {
     width: 100%;
     justify-content: center;
   }
-  
+
   .form-row {
     flex-direction: column;
     gap: 15px;
   }
-  
+
   .example-grid {
     gap: 8px;
   }
-  
+
   .example-item {
     flex-direction: column;
     align-items: flex-start;
     gap: 5px;
     text-align: left;
   }
-  
+
   .scoring-rules-table {
     font-size: 0.85rem;
   }
-  
+
   .scoring-rules-table th,
   .scoring-rules-table td {
     padding: 12px 8px;
   }
-  
+
   .summary-stats {
     grid-template-columns: 1fr;
     gap: 12px;
   }
-  
+
   .stat-item {
     padding: 12px 16px;
   }

@@ -77,13 +77,13 @@ namespace TinhKhoanApp.Api.Models
         GL01,         // Dữ liệu bút toán GDV
         EI01,         // Dữ liệu mobile banking
         BC57,         // Sao kê Lãi dự thu - Dữ liệu lãi suất
-        
+
         // Additional banking data types
         DPDA,         // Dữ liệu sao kê phát hành thẻ
         KH03,         // Sao kê Khách hàng pháp nhân
         RR01,         // Sao kê dư nợ gốc, lãi XLRR
         GLCB41,       // Bảng cân đối kế toán
-        
+
         // Business planning data
         _7800_DT_KHKD1 // Báo cáo KHKD (DT) - Dữ liệu kế hoạch kinh doanh
     }
