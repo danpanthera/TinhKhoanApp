@@ -14,15 +14,15 @@
               <h1 class="dashboard-title">DASHBOARD CÁC CHỈ TIÊU KHKD</h1>
               <p class="dashboard-subtitle">
                 <span class="subtitle-icon">📅</span>
-                {{ getCurrentPeriodLabel() }}
+                <span class="time-white">{{ getCurrentPeriodLabel() }}</span>
                 <span class="live-indicator">
                   <span class="pulse-dot"></span>
-                  Real-time
+                  <span class="realtime-white">Real-time</span>
                 </span>
               </p>
               <p class="current-time">
                 <span class="time-icon">⏰</span>
-                {{ formatCurrentTime() }}
+                <span class="time-white">{{ formatCurrentTime() }}</span>
               </p>
             </div>
           </div>
@@ -32,17 +32,20 @@
           <!-- Bộ lọc nâng cao -->
           <div class="filter-panel">
             <div class="filter-group">
-              <label for="branch-selector" class="filter-label">Chi nhánh</label>
+              <label for="branch-selector" class="filter-label-enhanced">
+                <span class="label-icon">🏢</span>
+                <span class="label-text">Chi nhánh</span>
+              </label>
               <el-select
                 id="branch-selector"
                 v-model="selectedBranch"
-                placeholder="Chọn chi nhánh"
+                placeholder="Chọn chi nhánh để phân tích"
                 @change="handleBranchChange"
                 @focus="isUserInteraction = true"
                 :loading="loading"
                 filterable
                 clearable
-                class="branch-selector"
+                class="branch-selector-enhanced"
                 size="large"
                 autocomplete="organization"
                 aria-label="Chọn chi nhánh"
@@ -53,16 +56,20 @@
                   :label="branch.name"
                   :value="branch.id"
                 >
-                  <div class="option-item">
+                  <div class="option-item-enhanced">
                     <span class="option-icon">🏢</span>
                     <span class="option-text">{{ branch.name }}</span>
+                    <span class="option-badge">{{ getBranchStatus(branch.id) }}</span>
                   </div>
                 </el-option>
               </el-select>
             </div>
 
             <div class="filter-group">
-              <label for="date-range-picker" class="filter-label">Thời gian</label>
+              <label for="date-range-picker" class="filter-label-enhanced">
+                <span class="label-icon">📅</span>
+                <span class="label-text">Thời gian</span>
+              </label>
               <el-date-picker
                 id="date-range-picker"
                 v-model="dateRange"
@@ -72,7 +79,7 @@
                 format="MM/YYYY"
                 value-format="YYYY-MM"
                 @change="handleDateRangeChange"
-                class="date-picker"
+                class="date-picker-enhanced"
                 autocomplete="off"
                 aria-label="Chọn khoảng thời gian"
                 size="large"
@@ -160,42 +167,66 @@
               <span class="value-unit">{{ indicator.unit }}</span>
             </div>
 
-            <!-- Tăng giảm so với đầu năm -->
-            <div class="change-indicator" :class="getChangeClass(indicator.changeFromYearStartPercent, indicator.id)">
-              <span class="change-arrow">{{ getChangeArrow(indicator.changeFromYearStartPercent, indicator.id) }}</span>
-              <span class="change-text">
-                {{ formatChangePercent(indicator.changeFromYearStartPercent) }} so với đầu năm
-              </span>
+            <!-- Tăng giảm so với đầu năm và đầu tháng -->
+            <div class="changes-container">
+              <!-- So với đầu năm -->
+              <div class="change-indicator" :class="getChangeClass(indicator.changeFromYearStartPercent, indicator.id)">
+                <span class="change-arrow">{{ getChangeArrow(indicator.changeFromYearStartPercent, indicator.id) }}</span>
+                <span class="change-text">
+                  {{ formatChangePercent(indicator.changeFromYearStartPercent) }} so với đầu năm
+                </span>
+              </div>
+
+              <!-- So với đầu tháng (mới thêm) -->
+              <div class="change-indicator" :class="getChangeClass(indicator.changeFromMonthStart || 0, indicator.id)">
+                <span class="change-arrow">{{ getChangeArrow(indicator.changeFromMonthStart || 0, indicator.id) }}</span>
+                <span class="change-text">
+                  {{ formatChangePercent(indicator.changeFromMonthStart || 0) }} so với đầu tháng
+                </span>
+              </div>
             </div>
           </div>
 
-          <!-- Progress circular -->
-          <div class="progress-section">
-            <div class="circular-progress">
+          <!-- Progress section với dual charts -->
+          <div class="progress-section-dual">
+            <!-- So với kế hoạch năm -->
+            <div class="progress-item">
+              <div class="progress-header">
+                <span class="progress-label">Kế hoạch năm</span>
+                <span class="progress-percentage">{{ Math.round(indicator.completionRate) }}%</span>
+              </div>
               <el-progress
                 type="circle"
                 :percentage="Math.min(indicator.completionRate, 100)"
-                :width="80"
-                :stroke-width="8"
+                :width="65"
+                :stroke-width="6"
                 :color="getProgressColor(indicator.completionRate)"
-                class="progress-chart"
+                class="progress-chart-small"
               >
                 <template #default="{ percentage }">
-                  <span class="progress-text">{{ Math.round(percentage) }}%</span>
+                  <span class="progress-text-small">{{ Math.round(percentage) }}%</span>
                 </template>
               </el-progress>
             </div>
 
-            <!-- Target vs Actual -->
-            <div class="target-actual">
-              <div class="target-row">
-                <span class="label">Kế hoạch:</span>
-                <span class="value">{{ formatNumber(indicator.targetValue) }}</span>
+            <!-- So với kế hoạch quý (mới thêm) -->
+            <div class="progress-item">
+              <div class="progress-header">
+                <span class="progress-label">Kế hoạch quý</span>
+                <span class="progress-percentage">{{ Math.round(indicator.quarterCompletionRate || 0) }}%</span>
               </div>
-              <div class="actual-row">
-                <span class="label">Thực hiện:</span>
-                <span class="value">{{ formatNumber(indicator.currentValue) }}</span>
-              </div>
+              <el-progress
+                type="circle"
+                :percentage="Math.min(indicator.quarterCompletionRate || 0, 100)"
+                :width="65"
+                :stroke-width="6"
+                :color="getProgressColor(indicator.quarterCompletionRate || 0)"
+                class="progress-chart-small"
+              >
+                <template #default="{ percentage }">
+                  <span class="progress-text-small">{{ Math.round(percentage) }}%</span>
+                </template>
+              </el-progress>
             </div>
           </div>
 
@@ -249,26 +280,134 @@
       </div>
     </div>
 
-    <!-- Modal chi tiết chỉ tiêu -->
+    <!-- Modal chi tiết chỉ tiêu với popup overlay -->
     <el-dialog
       v-model="showDetailModal"
-      :title="selectedIndicator?.name"
-      width="60%"
-      class="indicator-detail-modal"
+      :title="`Chi tiết chỉ tiêu: ${selectedIndicator?.name}`"
+      width="80%"
+      class="indicator-detail-modal-enhanced"
+      :show-close="false"
+      :close-on-click-modal="true"
+      center
     >
-      <div v-if="selectedIndicator" class="detail-content">
-        <!-- Nội dung chi tiết sẽ được thêm sau -->
-        <p>Chi tiết cho {{ selectedIndicator.name }}</p>
+      <div v-if="selectedIndicator" class="detail-content-enhanced">
+        <!-- Header với icon và tổng quan -->
+        <div class="detail-header">
+          <div class="detail-title-section">
+            <span class="detail-icon">{{ selectedIndicator.icon }}</span>
+            <div class="detail-title-text">
+              <h2>{{ selectedIndicator.name }}</h2>
+              <p class="detail-subtitle">Phân tích chi tiết tăng giảm và xu hướng</p>
+            </div>
+          </div>
+          <button @click="showDetailModal = false" class="close-btn-enhanced">
+            <i class="close-icon">✕</i>
+          </button>
+        </div>
+
+        <!-- Tổng quan số liệu chính -->
+        <div class="detail-overview">
+          <div class="overview-card-detail">
+            <div class="overview-label">Thực hiện</div>
+            <div class="overview-value current">{{ formatNumber(selectedIndicator.currentValue) }} {{ selectedIndicator.unit }}</div>
+          </div>
+          <div class="overview-card-detail">
+            <div class="overview-label">Kế hoạch năm</div>
+            <div class="overview-value target">{{ formatNumber(selectedIndicator.targetValue) }} {{ selectedIndicator.unit }}</div>
+          </div>
+          <div class="overview-card-detail">
+            <div class="overview-label">Hoàn thành</div>
+            <div class="overview-value completion" :class="getCompletionClass(selectedIndicator.completionRate)">
+              {{ selectedIndicator.completionRate.toFixed(1) }}%
+            </div>
+          </div>
+          <div class="overview-card-detail">
+            <div class="overview-label">Kế hoạch quý</div>
+            <div class="overview-value quarter" :class="getCompletionClass(selectedIndicator.quarterCompletionRate || 0)">
+              {{ (selectedIndicator.quarterCompletionRate || 0).toFixed(1) }}%
+            </div>
+          </div>
+        </div>
+
+        <!-- Phân tích tăng giảm chi tiết -->
+        <div class="detail-analysis">
+          <div class="analysis-section">
+            <h3 class="analysis-title">📈 Phân tích tăng giảm so với đầu năm</h3>
+            <div class="analysis-content">
+              <div class="change-detail-card positive">
+                <div class="change-header">
+                  <span class="change-icon">{{ getChangeArrow(selectedIndicator.changeFromYearStartPercent, selectedIndicator.id) }}</span>
+                  <span class="change-title">So với đầu năm</span>
+                </div>
+                <div class="change-stats">
+                  <div class="change-percentage">{{ formatChangePercent(selectedIndicator.changeFromYearStartPercent) }}</div>
+                  <div class="change-description">{{ getChangeDescription(selectedIndicator.changeFromYearStartPercent, 'năm') }}</div>
+                </div>
+
+                <!-- Danh sách khách hàng/cán bộ góp phần -->
+                <div class="contributors-section">
+                  <h4>🏆 Đóng góp tích cực:</h4>
+                  <div class="contributors-list">
+                    <div v-for="contributor in getTopContributors(selectedIndicator.id, 'year')" :key="contributor.id" class="contributor-item positive">
+                      <span class="contributor-name">{{ contributor.name }}</span>
+                      <span class="contributor-value">+{{ formatNumber(contributor.contribution) }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="change-detail-card neutral">
+                <div class="change-header">
+                  <span class="change-icon">{{ getChangeArrow(selectedIndicator.changeFromMonthStart || 0, selectedIndicator.id) }}</span>
+                  <span class="change-title">So với đầu tháng</span>
+                </div>
+                <div class="change-stats">
+                  <div class="change-percentage">{{ formatChangePercent(selectedIndicator.changeFromMonthStart || 0) }}</div>
+                  <div class="change-description">{{ getChangeDescription(selectedIndicator.changeFromMonthStart || 0, 'tháng') }}</div>
+                </div>
+
+                <!-- Danh sách khách hàng/cán bộ góp phần -->
+                <div class="contributors-section">
+                  <h4>📊 Đóng góp trong tháng:</h4>
+                  <div class="contributors-list">
+                    <div v-for="contributor in getTopContributors(selectedIndicator.id, 'month')" :key="contributor.id" class="contributor-item neutral">
+                      <span class="contributor-name">{{ contributor.name }}</span>
+                      <span class="contributor-value">{{ contributor.contribution > 0 ? '+' : '' }}{{ formatNumber(contributor.contribution) }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Biểu đồ xu hướng trong modal -->
+          <div class="detail-chart-section">
+            <h3 class="chart-title">📈 Xu hướng 12 tháng gần nhất</h3>
+            <div class="detail-chart-container">
+              <div id="detail-trend-chart" style="height: 300px;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="detail-actions">
+          <el-button @click="exportIndicatorDetail" type="primary" size="large">
+            📊 Xuất báo cáo chi tiết
+          </el-button>
+          <el-button @click="showDetailModal = false" size="large">
+            Đóng
+          </el-button>
+        </div>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
-import { ElMessage, ElDialog } from 'element-plus';
-import * as echarts from 'echarts';
 import dayjs from 'dayjs';
+import * as echarts from 'echarts';
+import { ElDialog, ElMessage } from 'element-plus';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import LoadingOverlay from '../../components/dashboard/LoadingOverlay.vue';
 import { dashboardService } from '../../services/dashboardService.js';
 
@@ -301,7 +440,7 @@ const branches = ref([
   { id: 'CnTanUyenPgdso3', name: 'CN Tân Uyên - PGD số 3' }
 ]);
 
-// 6 chỉ tiêu dashboard chính
+// 6 chỉ tiêu dashboard chính với dữ liệu đầy đủ
 const indicators = ref([
   {
     id: 'nguon_von',
@@ -312,9 +451,13 @@ const indicators = ref([
     format: 'currency',
     currentValue: 1250.5,
     targetValue: 1200.0,
+    quarterTargetValue: 300.0,
     completionRate: 104.2,
+    quarterCompletionRate: 112.5,
     changeFromYearStart: 125.3,
-    changeFromYearStartPercent: 11.2
+    changeFromYearStartPercent: 11.2,
+    changeFromMonthStart: 35.7,
+    changeFromMonthStartPercent: 2.9
   },
   {
     id: 'du_no',
@@ -325,9 +468,13 @@ const indicators = ref([
     format: 'currency',
     currentValue: 980.3,
     targetValue: 1000.0,
+    quarterTargetValue: 250.0,
     completionRate: 98.0,
+    quarterCompletionRate: 105.2,
     changeFromYearStart: 45.8,
-    changeFromYearStartPercent: 4.9
+    changeFromYearStartPercent: 4.9,
+    changeFromMonthStart: 12.4,
+    changeFromMonthStartPercent: 1.3
   },
   {
     id: 'no_xau',
@@ -338,9 +485,13 @@ const indicators = ref([
     format: 'percent',
     currentValue: 1.8,
     targetValue: 2.0,
+    quarterTargetValue: 1.9,
     completionRate: 90.0,
+    quarterCompletionRate: 94.7,
     changeFromYearStart: -0.3,
-    changeFromYearStartPercent: -14.3
+    changeFromYearStartPercent: -14.3,
+    changeFromMonthStart: -0.1,
+    changeFromMonthStartPercent: -5.3
   },
   {
     id: 'thu_no_xlrr',
@@ -351,9 +502,13 @@ const indicators = ref([
     format: 'currency',
     currentValue: 45.7,
     targetValue: 50.0,
+    quarterTargetValue: 12.5,
     completionRate: 91.4,
+    quarterCompletionRate: 109.8,
     changeFromYearStart: 8.2,
-    changeFromYearStartPercent: 21.9
+    changeFromYearStartPercent: 21.9,
+    changeFromMonthStart: 2.8,
+    changeFromMonthStartPercent: 6.5
   },
   {
     id: 'thu_dich_vu',
@@ -364,9 +519,13 @@ const indicators = ref([
     format: 'currency',
     currentValue: 28.9,
     targetValue: 30.0,
+    quarterTargetValue: 7.5,
     completionRate: 96.3,
+    quarterCompletionRate: 115.7,
     changeFromYearStart: 3.1,
-    changeFromYearStartPercent: 12.0
+    changeFromYearStartPercent: 12.0,
+    changeFromMonthStart: 1.2,
+    changeFromMonthStartPercent: 4.3
   },
   {
     id: 'tai_chinh',
@@ -377,9 +536,13 @@ const indicators = ref([
     format: 'currency',
     currentValue: 156.4,
     targetValue: 160.0,
+    quarterTargetValue: 40.0,
     completionRate: 97.8,
+    quarterCompletionRate: 117.3,
     changeFromYearStart: 18.6,
-    changeFromYearStartPercent: 13.5
+    changeFromYearStartPercent: 13.5,
+    changeFromMonthStart: 4.9,
+    changeFromMonthStartPercent: 3.2
   }
 ]);
 
@@ -882,6 +1045,270 @@ const createMiniCharts = () => {
   }
 };
 
+// ==================== CÁC FUNCTION CHO POPUP CHI TIẾT ====================
+
+// Mock dữ liệu contributors cho từng chỉ tiêu
+const contributorsData = ref({
+  nguon_von: {
+    year: [
+      { id: 1, name: 'Nguyễn Văn A - CN Lai Châu', contribution: 85.2 },
+      { id: 2, name: 'Trần Thị B - CN Tam Đường', contribution: 67.5 },
+      { id: 3, name: 'Lê Văn C - Hội Sở', contribution: 54.8 },
+      { id: 4, name: 'Phạm Thị D - CN Phong Thổ', contribution: 43.2 },
+      { id: 5, name: 'Hoàng Văn E - CN Sin Hồ', contribution: 38.7 }
+    ],
+    month: [
+      { id: 1, name: 'Nguyễn Văn A - CN Lai Châu', contribution: 12.5 },
+      { id: 2, name: 'Trần Thị B - CN Tam Đường', contribution: 8.7 },
+      { id: 3, name: 'Lê Văn C - Hội Sở', contribution: 6.9 },
+      { id: 4, name: 'Phạm Thị D - CN Phong Thổ', contribution: 5.2 },
+      { id: 5, name: 'Hoàng Văn E - CN Sin Hồ', contribution: 2.4 }
+    ]
+  },
+  du_no: {
+    year: [
+      { id: 1, name: 'KH Công ty TNHH ABC', contribution: 25.3 },
+      { id: 2, name: 'KH Doanh nghiệp XYZ', contribution: 18.7 },
+      { id: 3, name: 'KH Cá nhân Nguyễn Văn M', contribution: 12.4 },
+      { id: 4, name: 'KH HTX Nông nghiệp DEF', contribution: 9.8 },
+      { id: 5, name: 'KH Cửa hàng GHI', contribution: 7.2 }
+    ],
+    month: [
+      { id: 1, name: 'KH Công ty TNHH ABC', contribution: 4.2 },
+      { id: 2, name: 'KH Doanh nghiệp XYZ', contribution: 3.1 },
+      { id: 3, name: 'KH Cá nhân Nguyễn Văn M', contribution: 2.8 },
+      { id: 4, name: 'KH HTX Nông nghiệp DEF', contribution: 1.5 },
+      { id: 5, name: 'KH Cửa hàng GHI', contribution: 0.8 }
+    ]
+  },
+  no_xau: {
+    year: [
+      { id: 1, name: 'Giảm nợ nhóm 3-4-5 (KH ABC)', contribution: -0.12 },
+      { id: 2, name: 'Thu hồi nợ quá hạn (KH XYZ)', contribution: -0.08 },
+      { id: 3, name: 'Xử lý tài sản đảm bảo', contribution: -0.06 },
+      { id: 4, name: 'Tái cơ cấu thành công', contribution: -0.04 },
+      { id: 5, name: 'Thanh toán trước hạn', contribution: -0.03 }
+    ],
+    month: [
+      { id: 1, name: 'Giảm nợ nhóm 3-4-5 (KH ABC)', contribution: -0.04 },
+      { id: 2, name: 'Thu hồi nợ quá hạn (KH XYZ)', contribution: -0.03 },
+      { id: 3, name: 'Xử lý tài sản đảm bảo', contribution: -0.02 },
+      { id: 4, name: 'Tái cơ cấu thành công', contribution: -0.01 },
+      { id: 5, name: 'Thanh toán trước hạn', contribution: -0.01 }
+    ]
+  },
+  thu_no_xlrr: {
+    year: [
+      { id: 1, name: 'Bán đấu giá TS bảo đảm KH ABC', contribution: 3.2 },
+      { id: 2, name: 'Thu từ bảo lãnh KH XYZ', contribution: 2.8 },
+      { id: 3, name: 'Thanh lý hợp đồng bảo hiểm', contribution: 1.5 },
+      { id: 4, name: 'Thu từ người thứ ba', contribution: 0.7 },
+      { id: 5, name: 'Thu hồi từ tài khoản phong tỏa', contribution: 0.5 }
+    ],
+    month: [
+      { id: 1, name: 'Bán đấu giá TS bảo đảm KH ABC', contribution: 1.1 },
+      { id: 2, name: 'Thu từ bảo lãnh KH XYZ', contribution: 0.9 },
+      { id: 3, name: 'Thanh lý hợp đồng bảo hiểm', contribution: 0.5 },
+      { id: 4, name: 'Thu từ người thứ ba', contribution: 0.2 },
+      { id: 5, name: 'Thu hồi từ tài khoản phong tỏa', contribution: 0.1 }
+    ]
+  },
+  thu_dich_vu: {
+    year: [
+      { id: 1, name: 'Phí giao dịch chuyển tiền', contribution: 1.2 },
+      { id: 2, name: 'Phí dịch vụ thẻ', contribution: 0.9 },
+      { id: 3, name: 'Phí bảo hiểm ngân hàng', contribution: 0.6 },
+      { id: 4, name: 'Phí tư vấn tài chính', contribution: 0.3 },
+      { id: 5, name: 'Phí dịch vụ khác', contribution: 0.1 }
+    ],
+    month: [
+      { id: 1, name: 'Phí giao dịch chuyển tiền', contribution: 0.4 },
+      { id: 2, name: 'Phí dịch vụ thẻ', contribution: 0.3 },
+      { id: 3, name: 'Phí bảo hiểm ngân hàng', contribution: 0.2 },
+      { id: 4, name: 'Phí tư vấn tài chính', contribution: 0.2 },
+      { id: 5, name: 'Phí dịch vụ khác', contribution: 0.1 }
+    ]
+  },
+  tai_chinh: {
+    year: [
+      { id: 1, name: 'Lãi từ cho vay khách hàng', contribution: 12.8 },
+      { id: 2, name: 'Lãi từ đầu tư trái phiếu', contribution: 3.2 },
+      { id: 3, name: 'Lãi tiền gửi ngân hàng khác', contribution: 1.8 },
+      { id: 4, name: 'Thu nhập từ hoạt động khác', contribution: 0.8 },
+      { id: 5, name: 'Lãi từ đầu tư cổ phiếu', contribution: 0.6 }
+    ],
+    month: [
+      { id: 1, name: 'Lãi từ cho vay khách hàng', contribution: 3.2 },
+      { id: 2, name: 'Lãi từ đầu tư trái phiếu', contribution: 0.8 },
+      { id: 3, name: 'Lãi tiền gửi ngân hàng khác', contribution: 0.5 },
+      { id: 4, name: 'Thu nhập từ hoạt động khác', contribution: 0.3 },
+      { id: 5, name: 'Lãi từ đầu tư cổ phiếu', contribution: 0.1 }
+    ]
+  }
+});
+
+// Function lấy top contributors cho modal
+const getTopContributors = (indicatorId, period = 'year') => {
+  const data = contributorsData.value[indicatorId];
+  if (!data) return [];
+
+  return (data[period] || []).slice(0, 5); // Top 5 contributors
+};
+
+// Function mô tả thay đổi
+const getChangeDescription = (changePercent, period) => {
+  const absChange = Math.abs(changePercent);
+  let level = '';
+
+  if (absChange >= 20) level = 'mạnh';
+  else if (absChange >= 10) level = 'vừa phải';
+  else if (absChange >= 5) level = 'nhẹ';
+  else level = 'ít';
+
+  const direction = changePercent >= 0 ? 'tăng' : 'giảm';
+  return `${direction.toUpperCase()} ${level} so với đầu ${period}`;
+};
+
+// Function lấy class completion
+const getCompletionClass = (rate) => {
+  if (rate >= 100) return 'excellent';
+  if (rate >= 90) return 'good';
+  if (rate >= 70) return 'average';
+  return 'poor';
+};
+
+// Function lấy status branch (mặc định)
+const getBranchStatus = (branchId) => {
+  // Mock status cho demo
+  const statuses = ['Hoạt động', 'Tốt', 'Khá tốt', 'Cần cải thiện'];
+  return statuses[Math.floor(Math.random() * statuses.length)];
+};
+
+// Function export báo cáo chi tiết (có thể mở rộng sau)
+const exportIndicatorDetail = () => {
+  ElMessage.success({
+    message: `Đang xuất báo cáo chi tiết cho "${selectedIndicator.value?.name}"...`,
+    type: 'success',
+    duration: 2000
+  });
+
+  // TODO: Implement actual export logic
+  console.log('Exporting detail for:', selectedIndicator.value);
+};
+
+// Function tạo biểu đồ xu hướng trong modal
+const createDetailTrendChart = () => {
+  try {
+    const chartDom = document.getElementById('detail-trend-chart');
+    if (!chartDom || !selectedIndicator.value) return;
+
+    const existingChart = echarts.getInstanceByDom(chartDom);
+    if (existingChart) {
+      existingChart.dispose();
+    }
+
+    const myChart = echarts.init(chartDom);
+
+    // Mock data xu hướng 12 tháng
+    const months = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+    const currentValue = selectedIndicator.value.currentValue;
+    const trendData = months.map((_, index) => {
+      const variation = (Math.random() - 0.5) * 0.3; // ±15% variation
+      return currentValue * (0.85 + (index * 0.02) + variation);
+    });
+
+    const option = {
+      title: {
+        text: `Xu hướng 12 tháng - ${selectedIndicator.value.name}`,
+        left: 'center',
+        textStyle: { fontSize: 16, fontWeight: 'bold', color: '#722f37' }
+      },
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'cross' },
+        formatter: function (params) {
+          return `${params[0].name}: ${params[0].value.toFixed(2)} ${selectedIndicator.value.unit}`;
+        }
+      },
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        top: '15%',
+        containLabel: true
+      },
+      xAxis: {
+        type: 'category',
+        boundaryGap: false,
+        data: months,
+        axisLine: { lineStyle: { color: '#722f37' } }
+      },
+      yAxis: {
+        type: 'value',
+        axisLine: { lineStyle: { color: '#722f37' } },
+        axisLabel: {
+          formatter: function (value) {
+            return `${value.toFixed(1)}${selectedIndicator.value.unit}`;
+          }
+        }
+      },
+      series: [
+        {
+          name: selectedIndicator.value.name,
+          type: 'line',
+          smooth: true,
+          symbol: 'circle',
+          symbolSize: 6,
+          data: trendData,
+          lineStyle: {
+            color: '#722f37',
+            width: 3
+          },
+          areaStyle: {
+            color: {
+              type: 'linear',
+              x: 0, y: 0, x2: 0, y2: 1,
+              colorStops: [
+                { offset: 0, color: 'rgba(114, 47, 55, 0.3)' },
+                { offset: 1, color: 'rgba(114, 47, 55, 0.05)' }
+              ]
+            }
+          },
+          markLine: {
+            data: [
+              {
+                yAxis: selectedIndicator.value.targetValue,
+                name: 'Kế hoạch năm',
+                lineStyle: { color: '#ff4d4f', type: 'dashed', width: 2 }
+              }
+            ],
+            label: {
+              formatter: 'Kế hoạch: {c}' + selectedIndicator.value.unit
+            }
+          }
+        }
+      ]
+    };
+
+    myChart.setOption(option);
+  } catch (error) {
+    console.error('Error creating detail trend chart:', error);
+  }
+};
+
+// Watch cho modal để tạo biểu đồ khi mở
+watch(showDetailModal, (newValue) => {
+  if (newValue && selectedIndicator.value) {
+    nextTick(() => {
+      setTimeout(() => {
+        createDetailTrendChart();
+      }, 300); // Delay để đảm bảo modal đã render
+    });
+  }
+});
+
+// ==================== KẾT THÚC POPUP CHI TIẾT ====================
+
 // Lifecycle
 onMounted(async () => {
   // Khởi tạo âm thanh
@@ -1144,47 +1571,117 @@ watch(activeChartTab, (newTab, oldTab) => {
   margin: 0;
 }
 
-/* Bộ lọc header */
+/* Bộ lọc header - Enhanced */
 .filter-panel {
   display: flex;
-  gap: 20px;
+  gap: 25px;
   align-items: end;
 }
 
 .filter-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
-.filter-label {
-  font-size: 14px;
-  font-weight: 500;
-  opacity: 0.9;
-}
-
-.branch-selector,
-.date-picker {
-  min-width: 250px;
-}
-
-.branch-selector :deep(.el-input__wrapper),
-.date-picker :deep(.el-input__wrapper) {
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.option-item {
+/* Enhanced filter labels */
+.filter-label-enhanced {
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 6px 12px;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.filter-label-enhanced:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.label-icon {
+  font-size: 16px;
+  filter: brightness(1.2);
+}
+
+.label-text {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.time-white, .realtime-white {
+  color: white !important;
+  font-weight: 700 !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  filter: brightness(1.1);
+}
+
+.subtitle-icon, .time-icon {
+  filter: brightness(1.3) contrast(1.2);
+}
+
+/* Enhanced selectors */
+.branch-selector-enhanced,
+.date-picker-enhanced {
+  min-width: 280px;
+}
+
+.branch-selector-enhanced :deep(.el-input__wrapper),
+.date-picker-enhanced :deep(.el-input__wrapper) {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 15px;
+  backdrop-filter: blur(15px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.branch-selector-enhanced :deep(.el-input__wrapper):hover,
+.date-picker-enhanced :deep(.el-input__wrapper):hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+.branch-selector-enhanced :deep(.el-input__wrapper):focus-within,
+.date-picker-enhanced :deep(.el-input__wrapper):focus-within {
+  border-color: white;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+}
+
+/* Enhanced option items */
+.option-item-enhanced {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
 }
 
 .option-icon {
   font-size: 16px;
+  width: 20px;
+  text-align: center;
+}
+
+.option-text {
+  flex: 1;
+  font-weight: 500;
+}
+
+.option-badge {
+  background: linear-gradient(135deg, #722f37 0%, #8b1538 100%);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 600;
 }
 
 /* Dashboard content */
@@ -1638,20 +2135,351 @@ watch(activeChartTab, (newTab, oldTab) => {
   height: 100%;
 }
 
-/* Modal styles */
-.indicator-detail-modal :deep(.el-dialog) {
-  border-radius: 16px;
+/* Modal styles - Enhanced popup overlay */
+.indicator-detail-modal-enhanced :deep(.el-dialog) {
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+}
+
+.indicator-detail-modal-enhanced :deep(.el-dialog__header) {
+  background: linear-gradient(135deg, #722f37 0%, #8b1538 50%, #a91b60 100%);
+  color: white;
+  padding: 0;
+  border: none;
+}
+
+.indicator-detail-modal-enhanced :deep(.el-dialog__body) {
+  padding: 0;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+}
+
+/* Detail content styles */
+.detail-content-enhanced {
+  min-height: 500px;
+}
+
+.detail-header {
+  background: linear-gradient(135deg, #722f37 0%, #8b1538 50%, #a91b60 100%);
+  color: white;
+  padding: 25px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
   overflow: hidden;
 }
 
-.indicator-detail-modal :deep(.el-dialog__header) {
-  background: linear-gradient(135deg, #722f37 0%, #8b1538 100%);
-  color: white;
-  padding: 20px 24px;
+.detail-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+  pointer-events: none;
 }
 
-.detail-content {
-  padding: 24px;
+.detail-title-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  position: relative;
+  z-index: 2;
+}
+
+.detail-icon {
+  font-size: 32px;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 12px;
+  border-radius: 50%;
+  backdrop-filter: blur(10px);
+}
+
+.detail-title-text h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+}
+
+.detail-subtitle {
+  margin: 5px 0 0 0;
+  font-size: 14px;
+  opacity: 0.9;
+  color: white;
+}
+
+.close-btn-enhanced {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 2;
+}
+
+.close-btn-enhanced:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.1);
+}
+
+.close-icon {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* Overview cards trong modal */
+.detail-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  padding: 30px;
+  background: white;
+}
+
+.overview-card-detail {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 20px;
+  border-radius: 15px;
+  text-align: center;
+  border: 1px solid #e2e8f0;
+  transition: all 0.3s ease;
+}
+
+.overview-card-detail:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.overview-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+.overview-value {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.overview-value.current { color: #1e40af; }
+.overview-value.target { color: #7c3aed; }
+.overview-value.completion.excellent { color: #059669; }
+.overview-value.completion.good { color: #0891b2; }
+.overview-value.completion.average { color: #d97706; }
+.overview-value.completion.poor { color: #dc2626; }
+.overview-value.quarter { color: #8b5cf6; }
+
+/* Analysis section */
+.detail-analysis {
+  padding: 30px;
+  background: white;
+}
+
+.analysis-title {
+  color: #722f37;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 25px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.analysis-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  margin-bottom: 30px;
+}
+
+.change-detail-card {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  border-radius: 15px;
+  padding: 25px;
+  border-left: 5px solid;
+  transition: all 0.3s ease;
+}
+
+.change-detail-card.positive { border-left-color: #059669; }
+.change-detail-card.negative { border-left-color: #dc2626; }
+.change-detail-card.neutral { border-left-color: #0891b2; }
+
+.change-detail-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.change-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.change-icon {
+  font-size: 24px;
+}
+
+.change-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.change-stats {
+  margin-bottom: 20px;
+}
+
+.change-percentage {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.change-detail-card.positive .change-percentage { color: #059669; }
+.change-detail-card.negative .change-percentage { color: #dc2626; }
+.change-detail-card.neutral .change-percentage { color: #0891b2; }
+
+.change-description {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* Contributors section */
+.contributors-section h4 {
+  color: #374151;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 15px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.contributors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.contributor-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background: white;
+  border-radius: 8px;
+  border-left: 3px solid;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.contributor-item.positive { border-left-color: #059669; }
+.contributor-item.negative { border-left-color: #dc2626; }
+.contributor-item.neutral { border-left-color: #0891b2; }
+
+.contributor-item:hover {
+  background: #f1f5f9;
+  transform: translateX(5px);
+}
+
+.contributor-name {
+  flex: 1;
+  font-weight: 500;
+  color: #374151;
+}
+
+.contributor-value {
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+.contributor-item.positive .contributor-value { color: #059669; }
+.contributor-item.negative .contributor-value { color: #dc2626; }
+.contributor-item.neutral .contributor-value { color: #0891b2; }
+
+/* Chart section trong modal */
+.detail-chart-section {
+  margin-top: 30px;
+  padding-top: 30px;
+  border-top: 2px solid #e2e8f0;
+}
+
+.chart-title {
+  color: #722f37;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.detail-chart-container {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+}
+
+/* Action buttons */
+.detail-actions {
+  background: #f8fafc;
+  padding: 25px 30px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.detail-actions .el-button {
+  min-width: 120px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+/* Responsive cho modal */
+@media (max-width: 768px) {
+  .indicator-detail-modal-enhanced {
+    width: 95% !important;
+  }
+
+  .analysis-content {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .detail-overview {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    padding: 20px;
+  }
+
+  .detail-analysis {
+    padding: 20px;
+  }
+
+  .detail-actions {
+    padding: 20px;
+    flex-direction: column;
+  }
 }
 
 /* Animations */
