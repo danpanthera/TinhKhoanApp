@@ -636,11 +636,19 @@ const sixMainIndicators = ref([
   }
 ]);
 
-// Options
+// Options - Thêm debug log để kiểm tra
 const yearOptions = ref(dashboardService.getYearOptions());
 const quarterOptions = ref(dashboardService.getQuarterOptions());
 const monthOptions = ref(dashboardService.getMonthOptions());
 const periodTypeOptions = ref(dashboardService.getPeriodTypeOptions());
+
+// Debug log để kiểm tra options
+console.log('🔍 Debug CalculationDashboard options:');
+console.log('yearOptions:', yearOptions.value);
+console.log('quarterOptions:', quarterOptions.value);
+console.log('monthOptions:', monthOptions.value);
+console.log('periodTypeOptions:', periodTypeOptions.value);
+console.log('units:', units.value);
 
 // Reactive variables
 const showCalculationResults = ref(false);
@@ -673,15 +681,16 @@ const getSelectedUnitName = () => {
 };
 
 // Methods
-const loadUnits = async () => {
-  try {
-    const response = await dashboardService.getUnits();
-    units.value = response || [];
-  } catch (error) {
-    console.error('Error loading units:', error);
-    errorMessage.value = 'Không thể tải danh sách đơn vị';
-  }
-};
+// Comment loadUnits để chỉ sử dụng 15 chi nhánh/PGD đã định nghĩa thay vì load từ API
+// const loadUnits = async () => {
+//   try {
+//     const response = await dashboardService.getUnits();
+//     units.value = response || [];
+//   } catch (error) {
+//     console.error('Error loading units:', error);
+//     errorMessage.value = 'Không thể tải danh sách đơn vị';
+//   }
+// };
 
 const loadData = async () => {
   if (!selectedYear.value) return;
@@ -1190,7 +1199,8 @@ onMounted(async () => {
     return;
   }
 
-  await loadUnits();
+  // Comment loadUnits() để chỉ sử dụng 15 chi nhánh/PGD đã định nghĩa sẵn
+  // await loadUnits();
   await loadData();
   await loadTrendData(trendPeriod.value);
 });
