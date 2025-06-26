@@ -17,7 +17,14 @@
         <!-- Time filters với accessibility -->
         <div class="filter-group">
           <label for="year-select" class="filter-label">Năm:</label>
-          <select id="year-select" v-model="selectedYear" @change="loadData" class="form-select" autocomplete="off" aria-label="Chọn năm">
+          <select 
+            id="year-select" 
+            v-model="selectedYear" 
+            @change="loadData" 
+            @click="console.log('📅 Year dropdown clicked')"
+            class="form-select" 
+            autocomplete="off" 
+            aria-label="Chọn năm">
             <option value="">Chọn năm</option>
             <option v-for="year in yearOptions" :key="year" :value="year">
               {{ year }}
@@ -27,7 +34,14 @@
 
         <div class="filter-group">
           <label for="period-type-select" class="filter-label">Loại kỳ:</label>
-          <select id="period-type-select" v-model="periodType" @change="onPeriodTypeChange" class="form-select" autocomplete="off" aria-label="Chọn loại kỳ">
+          <select 
+            id="period-type-select" 
+            v-model="periodType" 
+            @change="onPeriodTypeChange" 
+            @click="console.log('📆 Period type dropdown clicked')"
+            class="form-select" 
+            autocomplete="off" 
+            aria-label="Chọn loại kỳ">
             <option value="">Chọn loại kỳ</option>
             <option v-for="period in periodTypeOptions" :key="period.value" :value="period.value">
               {{ period.label }}
@@ -62,7 +76,14 @@
 
         <div class="filter-group">
           <label for="unit-select" class="filter-label">Chi nhánh:</label>
-          <select id="unit-select" v-model="selectedUnitId" @change="loadData" class="form-select" autocomplete="organization" aria-label="Chọn chi nhánh">
+          <select 
+            id="unit-select" 
+            v-model="selectedUnitId" 
+            @change="loadData" 
+            @click="console.log('🏢 Unit dropdown clicked')"
+            class="form-select" 
+            autocomplete="organization" 
+            aria-label="Chọn chi nhánh">
             <option value="">Tất cả đơn vị (Toàn tỉnh)</option>
             <option v-for="unit in units" :key="unit.id" :value="unit.id">
               {{ unit.name }}
@@ -636,11 +657,21 @@ const sixMainIndicators = ref([
   }
 ]);
 
-// Options
-const yearOptions = ref(dashboardService.getYearOptions());
-const quarterOptions = ref(dashboardService.getQuarterOptions());
-const monthOptions = ref(dashboardService.getMonthOptions());
-const periodTypeOptions = ref(dashboardService.getPeriodTypeOptions());
+// Options - Debug để kiểm tra
+const yearOptions = computed(() => dashboardService.getYearOptions());
+const quarterOptions = computed(() => dashboardService.getQuarterOptions());
+const monthOptions = computed(() => dashboardService.getMonthOptions());
+const periodTypeOptions = computed(() => dashboardService.getPeriodTypeOptions());
+
+// Debug log để kiểm tra options đã load
+console.log('🔍 CalculationDashboard Debug Options:');
+console.log('yearOptions:', yearOptions.value);
+console.log('quarterOptions:', quarterOptions.value);
+console.log('monthOptions:', monthOptions.value);
+console.log('periodTypeOptions:', periodTypeOptions.value);
+console.log('selectedYear:', selectedYear.value);
+console.log('periodType:', periodType.value);
+console.log('selectedUnitId:', selectedUnitId.value);
 
 // Reactive variables
 const showCalculationResults = ref(false);
@@ -685,6 +716,8 @@ const getSelectedUnitName = () => {
 // };
 
 const loadData = async () => {
+  console.log('🔧 loadData called with:', { selectedYear: selectedYear.value, periodType: periodType.value, selectedUnitId: selectedUnitId.value });
+  
   if (!selectedYear.value) return;
 
   loading.value = true;
@@ -698,6 +731,8 @@ const loadData = async () => {
     if (periodType.value) params.periodType = periodType.value;
     if (selectedPeriod.value && periodType.value !== 'YEAR') params.period = selectedPeriod.value;
     if (selectedUnitId.value) params.unitId = selectedUnitId.value;
+
+    console.log('📊 API params:', params);
 
     // Load dashboard data
     const dashboardData = await dashboardService.getDashboardData(params);
@@ -1081,6 +1116,7 @@ const calculateTaiChinh = async () => {
 // ===============================
 
 const onPeriodTypeChange = () => {
+  console.log('🔧 onPeriodTypeChange called:', periodType.value);
   selectedPeriod.value = '';
   selectedDate.value = ''; // Reset ngày cụ thể khi thay đổi loại kỳ
   loadData();
@@ -1184,6 +1220,19 @@ watch([errorMessage, successMessage], () => {
   }, 5000);
 });
 
+// Debug watch để theo dõi thay đổi dropdown
+watch(selectedYear, (newVal, oldVal) => {
+  console.log('👀 selectedYear changed:', oldVal, '->', newVal);
+});
+
+watch(periodType, (newVal, oldVal) => {
+  console.log('👀 periodType changed:', oldVal, '->', newVal);
+});
+
+watch(selectedUnitId, (newVal, oldVal) => {
+  console.log('👀 selectedUnitId changed:', oldVal, '->', newVal);
+});
+
 // Lifecycle
 onMounted(async () => {
   if (!isAuthenticated()) {
@@ -1276,6 +1325,9 @@ onMounted(async () => {
   flex-wrap: wrap;
   gap: 16px;
   align-items: end;
+  position: relative;
+  z-index: 2;
+  pointer-events: auto; /* Đảm bảo events hoạt động */
 }
 
 .filter-group {
@@ -1283,6 +1335,8 @@ onMounted(async () => {
   flex-direction: column;
   gap: 4px;
   min-width: 150px;
+  position: relative;
+  z-index: 10; /* Cao hơn để không bị che */
 }
 
 .filter-label {
@@ -1303,6 +1357,9 @@ onMounted(async () => {
   color: #333;
   cursor: pointer;
   transition: all 0.3s ease;
+  position: relative;
+  z-index: 10; /* Đảm bảo dropdown có thể click */
+  pointer-events: auto; /* Đảm bảo events hoạt động */
 }
 
 .form-select:focus {
