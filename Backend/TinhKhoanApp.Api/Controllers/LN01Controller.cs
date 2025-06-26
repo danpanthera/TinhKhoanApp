@@ -81,7 +81,7 @@ namespace TinhKhoanApp.Api.Controllers
                         Category = record.Category,
                         FileType = record.FileType,
                         Notes = record.Notes,
-                        BranchCode = ExtractBranchCode(record.FileName),
+                        BranchCode = "7808",
                         SampleData = sampleItems,
                         ChangeType = record.StatementDate.HasValue && record.StatementDate.Value.Date == new DateTime(2025, 4, 30).Date 
                             ? "Dữ liệu đầu kỳ" 
@@ -131,7 +131,7 @@ namespace TinhKhoanApp.Api.Controllers
         /// <summary>
         /// Trích xuất mã chi nhánh từ SourceId
         /// </summary>
-        private string ExtractBranchCode(string sourceId)
+        private static string ExtractBranchCode(string sourceId)
         {
             // Tìm mã chi nhánh 4 số trong SourceId
             var match = System.Text.RegularExpressions.Regex.Match(sourceId, @"\d{4}");
@@ -196,7 +196,7 @@ namespace TinhKhoanApp.Api.Controllers
                         IsCurrent = r.IsCurrent,
                         VersionNumber = r.VersionNumber,
                         CreatedDate = r.CreatedDate.ToString("dd/MM/yyyy HH:mm:ss"),
-                        BranchCode = ExtractBranchCode(r.SourceID),
+                        BranchCode = "N/A",
                         MANDT = r.MANDT,
                         BUKRS = r.BUKRS,
                         LAND1 = r.LAND1,
@@ -305,27 +305,28 @@ namespace TinhKhoanApp.Api.Controllers
                 var allLN01Files = await _context.ImportedDataRecords
                     .Where(x => x.Category == "LN01" && x.FileName.Contains("7808"))
                     .OrderByDescending(x => x.ImportDate)
-                    .Select(x => new
-                    {
-                        Id = x.Id,
-                        FileName = x.FileName,
-                        StatementDate = x.StatementDate.HasValue ? x.StatementDate.Value.ToString("dd/MM/yyyy") : "NULL",
-                        ImportDate = x.ImportDate.ToString("dd/MM/yyyy HH:mm:ss"),
-                        RecordsCount = x.RecordsCount,
-                        Status = x.Status,
-                        ImportedBy = x.ImportedBy,
-                        BranchCode = ExtractBranchCode(x.FileName)
-                    })
                     .ToListAsync();
+
+                var result = allLN01Files.Select(x => new
+                {
+                    Id = x.Id,
+                    FileName = x.FileName,
+                    StatementDate = x.StatementDate?.ToString("dd/MM/yyyy") ?? "NULL",
+                    ImportDate = x.ImportDate.ToString("dd/MM/yyyy HH:mm:ss"),
+                    RecordsCount = x.RecordsCount,
+                    Status = x.Status,
+                    ImportedBy = x.ImportedBy,
+                    BranchCode = "7808"
+                }).ToList();
 
                 return Ok(new
                 {
-                    Message = $"Tìm thấy {allLN01Files.Count} file LN01 của chi nhánh 7808",
-                    Files = allLN01Files,
+                    Message = $"Tìm thấy {result.Count} file LN01 của chi nhánh 7808",
+                    Files = result,
                     FilterInfo = new
                     {
                         RequestedDateRange = "30/04/2025 - 31/05/2025",
-                        ActualDatesFound = allLN01Files.Select(f => f.StatementDate).Distinct().ToList()
+                        ActualDatesFound = result.Select(f => f.StatementDate).Distinct().ToList()
                     }
                 });
             }
@@ -334,6 +335,215 @@ namespace TinhKhoanApp.Api.Controllers
                 return BadRequest(new
                 {
                     Error = "Lỗi khi debug files",
+                    Message = ex.Message
+                });
+            }
+        }
+
+        /// <summary>
+        /// Đơn giản: Lấy tất cả file LN01 chi nhánh 7808
+        /// </summary>
+        [HttpGet("simple-files")]
+        public async Task<IActionResult> GetSimpleFiles()
+        {
+            try
+            {
+                var files = await _context.ImportedDataRecords
+                    .Where(x => x.Category == "LN01" && x.FileName.Contains("7808"))
+                    .ToListAsync();
+
+                return Ok(files);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// So sánh chi tiết dữ liệu LN01 giữa hai ngày cho chi nhánh 7808
+        /// </summary>
+        [HttpGet("detailed-comparison/branch-7808")]
+        public async Task<IActionResult> GetDetailedComparison()
+        {
+            try
+            {
+                // Lấy dữ liệu từ file ngày 30/4/2025
+                var april30Record = await _context.ImportedDataRecords
+                    .Where(x => x.Category == "LN01" && 
+                               x.FileName.Contains("7808") &&
+                               x.StatementDate.HasValue &&
+                               x.StatementDate.Value.Date == new DateTime(2025, 4, 30).Date)
+                    .FirstOrDefaultAsync();
+
+                // Lấy dữ liệu từ file ngày 31/5/2025
+                var may31Record = await _context.ImportedDataRecords
+                    .Where(x => x.Category == "LN01" && 
+                               x.FileName.Contains("7808") &&
+                               x.StatementDate.HasValue &&
+                               x.StatementDate.Value.Date == new DateTime(2025, 5, 31).Date)
+                    .FirstOrDefaultAsync();
+
+                if (april30Record == null && may31Record == null)
+                {
+                    return Ok(new
+                    {
+                        Summary = new
+                        {
+                            Status = "NoData",
+                            Message = "Không tìm thấy dữ liệu cho cả hai ngày",
+                            QueryTime = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")
+                        }
+                    });
+                }
+
+                var comparison = new
+                {
+                    Summary = new
+                    {
+                        BranchCode = "7808",
+                        ComparisonDate = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"),
+                        April30File = april30Record?.FileName ?? "Không có",
+                        May31File = may31Record?.FileName ?? "Không có",
+                        April30Records = april30Record?.RecordsCount ?? 0,
+                        May31Records = may31Record?.RecordsCount ?? 0,
+                        RecordsDifference = (may31Record?.RecordsCount ?? 0) - (april30Record?.RecordsCount ?? 0),
+                        HasBothFiles = april30Record != null && may31Record != null
+                    },
+                    Files = new
+                    {
+                        April30 = april30Record != null ? new
+                        {
+                            Id = april30Record.Id,
+                            FileName = april30Record.FileName,
+                            StatementDate = april30Record.StatementDate?.ToString("dd/MM/yyyy"),
+                            ImportDate = april30Record.ImportDate.ToString("dd/MM/yyyy HH:mm:ss"),
+                            RecordsCount = april30Record.RecordsCount,
+                            Status = april30Record.Status,
+                            ImportedBy = april30Record.ImportedBy
+                        } : null,
+                        May31 = may31Record != null ? new
+                        {
+                            Id = may31Record.Id,
+                            FileName = may31Record.FileName,
+                            StatementDate = may31Record.StatementDate?.ToString("dd/MM/yyyy"),
+                            ImportDate = may31Record.ImportDate.ToString("dd/MM/yyyy HH:mm:ss"),
+                            RecordsCount = may31Record.RecordsCount,
+                            Status = may31Record.Status,
+                            ImportedBy = may31Record.ImportedBy
+                        } : null
+                    }
+                };
+
+                // Nếu có cả hai file, lấy sample data để so sánh
+                if (april30Record != null && may31Record != null)
+                {
+                    var april30Data = await _context.ImportedDataItems
+                        .Where(x => x.ImportedDataRecordId == april30Record.Id)
+                        .Take(20)
+                        .Select(x => new
+                        {
+                            Id = x.Id,
+                            RawData = x.RawData,
+                            ProcessedDate = x.ProcessedDate.ToString("dd/MM/yyyy HH:mm:ss")
+                        })
+                        .ToListAsync();
+
+                    var may31Data = await _context.ImportedDataItems
+                        .Where(x => x.ImportedDataRecordId == may31Record.Id)
+                        .Take(20)
+                        .Select(x => new
+                        {
+                            Id = x.Id,
+                            RawData = x.RawData,
+                            ProcessedDate = x.ProcessedDate.ToString("dd/MM/yyyy HH:mm:ss")
+                        })
+                        .ToListAsync();
+
+                    return Ok(new
+                    {
+                        Summary = comparison.Summary,
+                        Files = comparison.Files,
+                        SampleComparison = new
+                        {
+                            April30Sample = april30Data,
+                            May31Sample = may31Data,
+                            ComparisonNote = "Hiển thị 20 bản ghi đầu tiên từ mỗi file để so sánh"
+                        }
+                    });
+                }
+
+                return Ok(comparison);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    Error = "Lỗi khi so sánh dữ liệu chi tiết",
+                    Message = ex.Message,
+                    Details = ex.InnerException?.Message
+                });
+            }
+        }
+
+        /// <summary>
+        /// Lấy tất cả thay đổi LN01 chi nhánh 7808 với định dạng đơn giản
+        /// </summary>
+        [HttpGet("all-changes/branch-7808")]
+        public async Task<IActionResult> GetAllBranch7808Changes()
+        {
+            try
+            {
+                // Lấy tất cả file LN01 của chi nhánh 7808
+                var allFiles = await _context.ImportedDataRecords
+                    .Where(x => x.Category == "LN01" && x.FileName.Contains("7808"))
+                    .OrderBy(x => x.StatementDate)
+                    .ToListAsync();
+
+                var changes = new List<object>();
+
+                foreach (var file in allFiles)
+                {
+                    // Lấy một vài bản ghi mẫu từ mỗi file
+                    var sampleData = await _context.ImportedDataItems
+                        .Where(x => x.ImportedDataRecordId == file.Id)
+                        .Take(5)
+                        .Select(x => new
+                        {
+                            RawData = x.RawData.Length > 100 ? x.RawData.Substring(0, 100) + "..." : x.RawData,
+                            ProcessedDate = x.ProcessedDate.ToString("dd/MM/yyyy HH:mm:ss")
+                        })
+                        .ToListAsync();
+
+                    changes.Add(new
+                    {
+                        FileName = file.FileName,
+                        StatementDate = file.StatementDate?.ToString("dd/MM/yyyy") ?? "N/A",
+                        ImportDate = file.ImportDate.ToString("dd/MM/yyyy HH:mm:ss"),
+                        RecordsCount = file.RecordsCount,
+                        Status = file.Status,
+                        ImportedBy = file.ImportedBy ?? "System",
+                        SampleRecords = sampleData
+                    });
+                }
+
+                return Ok(new
+                {
+                    BranchCode = "7808",
+                    TotalFiles = allFiles.Count,
+                    TotalRecords = allFiles.Sum(x => x.RecordsCount),
+                    TimeRange = allFiles.Any() ? 
+                        $"{allFiles.Min(x => x.StatementDate)?.ToString("dd/MM/yyyy")} - {allFiles.Max(x => x.StatementDate)?.ToString("dd/MM/yyyy")}" : 
+                        "N/A",
+                    QueryTime = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"),
+                    Changes = changes
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    Error = "Lỗi khi lấy tất cả thay đổi",
                     Message = ex.Message
                 });
             }
