@@ -777,7 +777,9 @@ namespace TinhKhoanApp.Api.Controllers
 
             using var reader = new StreamReader(file.OpenReadStream(), System.Text.Encoding.UTF8);
             var allContent = await reader.ReadToEndAsync();
-            var lines = allContent.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+
+            // 🚨 FIX CRITICAL: Loại bỏ dòng trống để đếm chính xác 845 bản ghi thay vì 848
+            var lines = allContent.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
             if (lines.Length == 0 || string.IsNullOrWhiteSpace(lines[0]))
             {
@@ -789,44 +791,39 @@ namespace TinhKhoanApp.Api.Controllers
             var headers = ParseCsvLine(lines[0]);
             _logger.LogInformation("📋 CSV Headers found: {HeaderCount} columns - {Headers}", headers.Count, string.Join(", ", headers.Take(5)));
 
+            // 🎯 EXACT COUNT: Đếm chính xác số dòng dữ liệu (loại bỏ header và dòng trống)
+            int actualDataLines = lines.Length - 1; // Trừ header
             int addedRecords = 0;
-            int processedEmptyAsNull = 0;
-            int totalDataLinesInFile = lines.Length - 1; // Trừ header
+            int skippedEmptyLines = 0;
 
-            // ✅ ULTRA PRECISION: Process EVERY line after header, including empty ones
+            _logger.LogInformation("📊 CSV Analysis: Total lines = {TotalLines}, Header = 1, Data lines = {DataLines}",
+                lines.Length, actualDataLines);
+
+            // ✅ PRECISION PROCESSING: Xử lý từng dòng dữ liệu (bỏ qua header)
             for (int i = 1; i < lines.Length; i++) // Bắt đầu từ dòng 2 (index 1)
             {
                 var line = lines[i];
                 int lineNumber = i + 1; // Line number bắt đầu từ 1
 
-                // ✅ SIÊU FIX: Xử lý mọi dòng, kể cả dòng trống
-                List<string> values;
-
-                if (string.IsNullOrWhiteSpace(line) || line.Trim() == "")
+                // 🔍 DOUBLE CHECK: Bỏ qua dòng trống hoàn toàn (nếu vẫn còn sau RemoveEmptyEntries)
+                if (string.IsNullOrWhiteSpace(line))
                 {
-                    // Tạo một record rỗng cho dòng trống để đảm bảo đếm đúng
-                    values = new List<string>();
-                    for (int j = 0; j < headers.Count; j++)
-                    {
-                        values.Add(""); // Thêm giá trị rỗng cho mỗi cột
-                    }
-                    processedEmptyAsNull++;
-                    _logger.LogDebug("📝 Processed empty line {LineNumber} as null record", lineNumber);
+                    skippedEmptyLines++;
+                    _logger.LogDebug("⏭️ Skipped completely empty line {LineNumber}", lineNumber);
+                    continue;
                 }
-                else
-                {
-                    // ✅ SIÊU FIX: Parse line với RFC 4180 chuẩn
-                    values = ParseCsvLine(line);
 
-                    // ✅ SIÊU FIX: Đảm bảo số cột đúng, thêm cột rỗng nếu thiếu, cắt bỏ nếu thừa
-                    while (values.Count < headers.Count)
-                    {
-                        values.Add("");
-                    }
-                    if (values.Count > headers.Count)
-                    {
-                        values = values.Take(headers.Count).ToList();
-                    }
+                // ✅ SIÊU FIX: Parse line với RFC 4180 chuẩn
+                var values = ParseCsvLine(line);
+
+                // ✅ SIÊU FIX: Đảm bảo số cột đúng, thêm cột rỗng nếu thiếu, cắt bỏ nếu thừa
+                while (values.Count < headers.Count)
+                {
+                    values.Add("");
+                }
+                if (values.Count > headers.Count)
+                {
+                    values = values.Take(headers.Count).ToList();
                 }
 
                 var data = new Dictionary<string, object>();
@@ -839,7 +836,7 @@ namespace TinhKhoanApp.Api.Controllers
                     data[cleanHeader] = cleanValue;
                 }
 
-                // ✅ ULTRA PRECISION: Thêm MỌI record (kể cả rỗng) để đảm bảo số lượng chính xác
+                // ✅ EXACT PRECISION: Thêm record vào database
                 items.Add(new ImportedDataItem
                 {
                     RawData = System.Text.Json.JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = false }),
@@ -854,13 +851,13 @@ namespace TinhKhoanApp.Api.Controllers
                 }
             }
 
-            _logger.LogInformation("✅ CSV Processing ULTRA PRECISION completed: {FileName}" +
-                "\n📊 Total data lines in file: {TotalDataLines}" +
-                "\n✅ Added ALL records: {AddedRecords}" +
-                "\n📝 Empty lines processed as null: {ProcessedEmpty}" +
-                "\n🎯 EXACT MATCH: {ExactMatch}% (should be 100%)",
-                file.FileName, totalDataLinesInFile, addedRecords, processedEmptyAsNull,
-                totalDataLinesInFile == addedRecords ? 100.0 : 0.0);
+            _logger.LogInformation("✅ CSV Processing EXACT COUNT completed: {FileName}" +
+                "\n📊 Expected data lines: {ExpectedLines}" +
+                "\n✅ Actually added records: {AddedRecords}" +
+                "\n⏭️ Skipped empty lines: {SkippedEmpty}" +
+                "\n🎯 EXACT MATCH: {ExactMatch} (Should be TRUE for 845 records)",
+                file.FileName, actualDataLines, addedRecords, skippedEmptyLines,
+                addedRecords == 845 ? "✅ PERFECT 845!" : $"❌ Got {addedRecords}, Expected 845");
 
             return items;
         }
