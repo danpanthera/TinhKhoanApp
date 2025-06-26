@@ -118,3 +118,33 @@ workbox-*.js
 
 # Vite
 dev-dist/
+
+# Performance optimization - exclude large/temp files
+*.log
+*.tmp
+*.temp
+*.cache
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+**/bin/
+**/obj/
+**/dist/
+**/build/
+
+# IDE files
+.vscode/settings.json
+.vs/
+*.user
+*.suo
+
+# Node.js
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+
+# Database files (if any)
+*.db-shm
+*.db-wal
+
