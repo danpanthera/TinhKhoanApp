@@ -362,6 +362,112 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
+        /// <summary>
+        /// Lấy kết quả tính toán dashboard theo năm và các filter khác
+        /// Endpoint này được gọi từ frontend CalculationDashboard.vue
+        /// </summary>
+        [HttpGet("calculation-results")]
+        [AllowAnonymous] // Cho phép truy cập không cần auth để test
+        public async Task<ActionResult> GetCalculationResults(
+            [FromQuery] int year,
+            [FromQuery] int? quarter = null,
+            [FromQuery] int? month = null,
+            [FromQuery] int? unitId = null,
+            [FromQuery] string? periodType = null)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Getting calculation results for year {Year}, quarter {Quarter}, month {Month}, unitId {UnitId}, periodType {PeriodType}", 
+                    year, quarter, month, unitId, periodType);
+
+                // Lấy tất cả calculations theo filter
+                var calculationsQuery = _context.DashboardCalculations
+                    .Include(c => c.DashboardIndicator)
+                    .Include(c => c.Unit)
+                    .Where(c => !c.IsDeleted && c.Year == year);
+
+                // Áp dụng filter theo loại kỳ
+                if (quarter.HasValue)
+                    calculationsQuery = calculationsQuery.Where(c => c.Quarter == quarter.Value);
+
+                if (month.HasValue)
+                    calculationsQuery = calculationsQuery.Where(c => c.Month == month.Value);
+
+                if (unitId.HasValue)
+                    calculationsQuery = calculationsQuery.Where(c => c.UnitId == unitId.Value);
+
+                var calculations = await calculationsQuery
+                    .OrderByDescending(c => c.CalculationDate)
+                    .ToListAsync();
+
+                // Lấy targets tương ứng để so sánh
+                var targetsQuery = _context.BusinessPlanTargets
+                    .Include(t => t.DashboardIndicator)
+                    .Include(t => t.Unit)
+                    .Where(t => !t.IsDeleted && t.Year == year);
+
+                if (quarter.HasValue)
+                    targetsQuery = targetsQuery.Where(t => t.Quarter == quarter.Value);
+
+                if (month.HasValue)
+                    targetsQuery = targetsQuery.Where(t => t.Month == month.Value);
+
+                if (unitId.HasValue)
+                    targetsQuery = targetsQuery.Where(t => t.UnitId == unitId.Value);
+
+                var targets = await targetsQuery.ToListAsync();
+
+                // Tạo response data
+                var result = new
+                {
+                    year = year,
+                    quarter = quarter,
+                    month = month,
+                    unitId = unitId,
+                    periodType = periodType,
+                    totalCalculations = calculations.Count,
+                    totalTargets = targets.Count,
+                    calculationResults = calculations.GroupBy(c => c.DashboardIndicatorId)
+                        .Select(g => new
+                        {
+                            indicatorId = g.Key,
+                            indicatorName = g.First().DashboardIndicator?.Name,
+                            indicatorCode = g.First().DashboardIndicator?.Code,
+                            calculations = g.Select(c => new
+                            {
+                                id = c.Id,
+                                unitId = c.UnitId,
+                                unitName = c.Unit?.Name,
+                                actualValue = c.ActualValue,
+                                targetValue = targets.FirstOrDefault(t => t.DashboardIndicatorId == c.DashboardIndicatorId && t.UnitId == c.UnitId)?.TargetValue,
+                                calculationDate = c.CalculationDate,
+                                status = c.Status,
+                                dataSource = c.DataSource,
+                                executionTime = c.ExecutionTime,
+                                errorMessage = c.ErrorMessage
+                            }).ToList(),
+                            summary = new
+                            {
+                                totalActual = g.Sum(c => c.ActualValue ?? 0),
+                                totalTarget = targets.Where(t => t.DashboardIndicatorId == g.Key).Sum(t => t.TargetValue),
+                                achievementRate = targets.Where(t => t.DashboardIndicatorId == g.Key).Sum(t => t.TargetValue) > 0 
+                                    ? (g.Sum(c => c.ActualValue ?? 0) / targets.Where(t => t.DashboardIndicatorId == g.Key).Sum(t => t.TargetValue) * 100) 
+                                    : 0,
+                                unitsCount = g.Select(c => c.UnitId).Distinct().Count()
+                            }
+                        }).ToList()
+                };
+
+                _logger.LogInformation("✅ Successfully retrieved {Count} calculation results", calculations.Count);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error retrieving calculation results for year {Year}", year);
+                return StatusCode(500, new { error = "Internal server error", message = ex.Message });
+            }
+        }
+
         private async Task<List<dynamic>> GetPeriodData(int year, int? quarter, int? month, int? unitId)
         {
             var targetsQuery = _context.BusinessPlanTargets
