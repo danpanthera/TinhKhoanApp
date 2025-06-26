@@ -121,20 +121,38 @@ namespace TinhKhoanApp.Api.Controllers
                 }
 
                 _logger.LogInformation("📊 Found record: {FileName}, Items count: {ItemsCount}",
-                    record.FileName, record.ImportedDataItems.Count);
+                    record.FileName, record.ImportedDataItems.Count);                // 🎯 ENHANCED PREVIEW: Hiển thị 10 bản ghi đầu + 10 bản ghi cuối (tổng cộng 20 bản ghi)
+                // Hoặc theo limit tùy chỉnh nếu có query param
+                var totalRecords = record.ImportedDataItems.Count;
+                var allItems = record.ImportedDataItems.OrderBy(i => i.Id).ToList();
 
-                // 🚨 FIX CRITICAL: Load ALL records không giới hạn để hiển thị ĐÚNG số lượng
-                // Chỉ giới hạn khi query param "limit" được truyền vào
-                var maxPreviewItems = int.MaxValue; // Mặc định lấy tất cả
+                List<ImportedDataItem> dataItems;
+                bool isPreviewMode = false; // Flag để biết có đang ở chế độ preview hay không
+
+                _logger.LogInformation("🔍 Preview Logic Debug: TotalRecords={Total}, HasLimit={HasLimit}",
+                    totalRecords, Request.Query.ContainsKey("limit"));
+
                 if (Request.Query.ContainsKey("limit") && int.TryParse(Request.Query["limit"], out int customLimit))
                 {
-                    maxPreviewItems = customLimit;
+                    // Nếu có limit tùy chỉnh, chỉ lấy số lượng đó từ đầu
+                    dataItems = allItems.Take(customLimit).ToList();
+                    _logger.LogInformation("🔍 Using custom limit: {Limit}", customLimit);
                 }
-
-                var dataItems = record.ImportedDataItems
-                    .OrderBy(i => i.Id) // Đảm bảo theo thứ tự tăng dần của ID để giữ đúng thứ tự file gốc
-                    .Take(maxPreviewItems)
-                    .ToList();
+                else if (totalRecords > 20)
+                {
+                    // Chế độ preview: 10 đầu + 10 cuối
+                    isPreviewMode = true;
+                    var firstTen = allItems.Take(10).ToList();
+                    var lastTen = allItems.Skip(totalRecords - 10).Take(10).ToList();
+                    dataItems = firstTen.Concat(lastTen).ToList();
+                    _logger.LogInformation("🎯 PREVIEW MODE ACTIVATED: First 10 + Last 10 records. Total: {Total}", totalRecords);
+                }
+                else
+                {
+                    // Nếu ít hơn hoặc bằng 20 bản ghi, hiển thị tất cả
+                    dataItems = allItems;
+                    _logger.LogInformation("🔍 Showing all records (≤20): {Count}", totalRecords);
+                }
 
                 _logger.LogInformation("📝 Loading preview with {PreviewCount}/{TotalCount} records for detailed viewing",
                     dataItems.Count, record.ImportedDataItems.Count);
@@ -144,8 +162,10 @@ namespace TinhKhoanApp.Api.Controllers
                 int errorCount = 0;
                 int emptyCount = 0;
 
-                foreach (var item in dataItems)
+                // Thêm thông tin để phân biệt bản ghi đầu và cuối trong chế độ preview
+                for (int index = 0; index < dataItems.Count; index++)
                 {
+                    var item = dataItems[index];
                     try
                     {
                         if (!string.IsNullOrEmpty(item.RawData))
@@ -155,6 +175,26 @@ namespace TinhKhoanApp.Api.Controllers
                             {
                                 // Đánh dấu rõ record có dữ liệu
                                 parsedData["_hasData"] = true;
+
+                                // Thêm thông tin vị trí trong chế độ preview
+                                if (isPreviewMode && totalRecords > 20)
+                                {
+                                    if (index < 10)
+                                    {
+                                        parsedData["_previewSection"] = "TOP"; // 10 bản ghi đầu
+                                        parsedData["_originalIndex"] = index + 1; // Vị trí thực tế trong file (bắt đầu từ 1)
+                                    }
+                                    else
+                                    {
+                                        parsedData["_previewSection"] = "BOTTOM"; // 10 bản ghi cuối
+                                        parsedData["_originalIndex"] = totalRecords - (dataItems.Count - index) + 1; // Vị trí thực tế
+                                    }
+                                }
+                                else
+                                {
+                                    parsedData["_originalIndex"] = index + 1; // Vị trí bình thường
+                                }
+
                                 previewData.Add(parsedData);
                                 parsedCount++;
                             }
@@ -164,6 +204,26 @@ namespace TinhKhoanApp.Api.Controllers
                                 var emptyRecord = new Dictionary<string, object>();
                                 emptyRecord["_isEmpty"] = true;
                                 emptyRecord["_rowId"] = item.Id;
+
+                                // Thêm thông tin vị trí cho bản ghi trống
+                                if (isPreviewMode && totalRecords > 20)
+                                {
+                                    if (index < 10)
+                                    {
+                                        emptyRecord["_previewSection"] = "TOP";
+                                        emptyRecord["_originalIndex"] = index + 1;
+                                    }
+                                    else
+                                    {
+                                        emptyRecord["_previewSection"] = "BOTTOM";
+                                        emptyRecord["_originalIndex"] = totalRecords - (dataItems.Count - index) + 1;
+                                    }
+                                }
+                                else
+                                {
+                                    emptyRecord["_originalIndex"] = index + 1;
+                                }
+
                                 // Thêm các key rỗng từ header nếu có
                                 if (previewData.Count > 0 && previewData[0].Count > 0)
                                 {
@@ -182,6 +242,26 @@ namespace TinhKhoanApp.Api.Controllers
                                 if (fallbackData != null && fallbackData.Count > 0)
                                 {
                                     fallbackData["_fallback"] = true;
+
+                                    // Thêm thông tin vị trí cho fallback data
+                                    if (isPreviewMode && totalRecords > 20)
+                                    {
+                                        if (index < 10)
+                                        {
+                                            fallbackData["_previewSection"] = "TOP";
+                                            fallbackData["_originalIndex"] = index + 1;
+                                        }
+                                        else
+                                        {
+                                            fallbackData["_previewSection"] = "BOTTOM";
+                                            fallbackData["_originalIndex"] = totalRecords - (dataItems.Count - index) + 1;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        fallbackData["_originalIndex"] = index + 1;
+                                    }
+
                                     previewData.Add(fallbackData);
                                     parsedCount++;
                                 }
@@ -193,6 +273,26 @@ namespace TinhKhoanApp.Api.Controllers
                             var emptyRecord = new Dictionary<string, object>();
                             emptyRecord["_isEmpty"] = true;
                             emptyRecord["_rowId"] = item.Id;
+
+                            // Thêm thông tin vị trí cho dòng trống
+                            if (isPreviewMode && totalRecords > 20)
+                            {
+                                if (index < 10)
+                                {
+                                    emptyRecord["_previewSection"] = "TOP";
+                                    emptyRecord["_originalIndex"] = index + 1;
+                                }
+                                else
+                                {
+                                    emptyRecord["_previewSection"] = "BOTTOM";
+                                    emptyRecord["_originalIndex"] = totalRecords - (dataItems.Count - index) + 1;
+                                }
+                            }
+                            else
+                            {
+                                emptyRecord["_originalIndex"] = index + 1;
+                            }
+
                             previewData.Add(emptyRecord);
                         }
                     }
@@ -223,20 +323,30 @@ namespace TinhKhoanApp.Api.Controllers
                 _logger.LogInformation("✅ Preview created: {DataCount}/{TotalCount} records parsed successfully, {ErrorCount} errors, Total records in DB: {ActualCount}",
                     parsedCount, dataItems.Count, errorCount, actualRecordsCount);
 
-                // Thêm thông tin trạng thái hiển thị
+                // Cập nhật thông tin trạng thái hiển thị với logic preview mới
                 preview.Status = new
                 {
                     TotalDbRecords = actualRecordsCount,
                     LoadedForPreview = dataItems.Count,
                     ParsedSuccessfully = parsedCount,
                     Errors = errorCount,
-                    IsComplete = dataItems.Count >= actualRecordsCount
+                    IsComplete = dataItems.Count >= actualRecordsCount,
+                    IsPreviewMode = isPreviewMode // Thêm flag để frontend biết đang ở chế độ preview
                 };
 
-                // Thêm hiển thị chi tiết về số lượng và pagination
-                preview.SummaryText = dataItems.Count >= actualRecordsCount
-                    ? $"Hiển thị tất cả {actualRecordsCount} bản ghi (100%)"
-                    : $"Hiển thị {dataItems.Count}/{actualRecordsCount} bản ghi ({(int)(dataItems.Count * 100.0 / actualRecordsCount)}%)";
+                // Cập nhật summary text để phản ánh đúng logic hiển thị
+                if (Request.Query.ContainsKey("limit") && int.TryParse(Request.Query["limit"], out int limitValue))
+                {
+                    preview.SummaryText = $"Hiển thị {dataItems.Count}/{actualRecordsCount} bản ghi đầu tiên ({(int)(dataItems.Count * 100.0 / actualRecordsCount)}%)";
+                }
+                else if (isPreviewMode)
+                {
+                    preview.SummaryText = $"Hiển thị 10 bản ghi đầu + 10 bản ghi cuối (20/{actualRecordsCount} bản ghi)";
+                }
+                else
+                {
+                    preview.SummaryText = $"Hiển thị tất cả {actualRecordsCount} bản ghi (100%)";
+                }
 
                 return Ok(preview);
             }

@@ -274,7 +274,7 @@ namespace TinhKhoanApp.Api.Controllers
                     }
                 }
 
-                _logger.LogInformation("✅ Parsed {ParsedCount}/{TotalCount} real data records successfully", 
+                _logger.LogInformation("✅ Parsed {ParsedCount}/{TotalCount} real data records successfully",
                     realPreviewData.Count, importedItems.Count);
 
                 var dataTypeForPreview = !string.IsNullOrEmpty(import.Category) ? import.Category : "LN01";
@@ -310,8 +310,8 @@ namespace TinhKhoanApp.Api.Controllers
                 _logger.LogError(ex, "💥 Lỗi khi tạo preview cho import ID: {Id}. Error: {ErrorMessage}", id, ex.Message);
 
                 // 🚨 XÓA MOCK DATA: Không trả về mock data, trả về lỗi thực tế
-                return StatusCode(500, new 
-                { 
+                return StatusCode(500, new
+                {
                     message = "Lỗi khi lấy preview dữ liệu từ database",
                     error = ex.Message,
                     importId = id
