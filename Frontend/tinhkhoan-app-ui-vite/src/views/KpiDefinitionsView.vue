@@ -1365,6 +1365,9 @@ const loadAllBranchIndicators = async () => {
 </script>
 
 <style scoped>
+/* Import Google Fonts for better typography */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
 .kpi-definitions {
   max-width: 1400px;
   margin: 0 auto;
@@ -1724,9 +1727,6 @@ const loadAllBranchIndicators = async () => {
 /* =========================
    SCORING RULES CONTENT STYLES
    ========================= */
-
-/* Import Google Fonts for better typography */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 .scoring-rules-content {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;

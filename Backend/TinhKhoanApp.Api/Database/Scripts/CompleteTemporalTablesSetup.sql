@@ -18,12 +18,12 @@ PRINT '=========================================================================
 
 -- Danh sách các loại dữ liệu thô cần tạo Temporal Tables
 DECLARE @RawDataTypes TABLE (
-    DataType NVARCHAR(20), 
+    DataType NVARCHAR(20),
     TableName NVARCHAR(50),
     Description NVARCHAR(200)
 );
 
-INSERT INTO @RawDataTypes VALUES 
+INSERT INTO @RawDataTypes VALUES
     ('7800_DT_KHKD1', '7800_DT_KHKD1_RawData', 'Báo cáo KHKD (DT) - Dữ liệu kế hoạch kinh doanh'),
     ('BC57', 'BC57_RawData', 'Sao kê Lãi dự thu - Dữ liệu lãi suất'),
     ('DPDA', 'DPDA_RawData', 'Dữ liệu sao kê phát hành thẻ'),
@@ -50,12 +50,12 @@ FETCH NEXT FROM raw_data_cursor INTO @DataType, @TableName, @Description;
 WHILE @@FETCH_STATUS = 0
 BEGIN
     SET @HistoryTableName = @TableName + '_History';
-    
+
     PRINT '';
     PRINT '📊 Đang xử lý: ' + @DataType + ' - ' + @Description;
     PRINT '   ↳ Bảng chính: ' + @TableName;
     PRINT '   ↳ Bảng lịch sử: ' + @HistoryTableName;
-    
+
     -- Kiểm tra xem bảng đã tồn tại chưa
     IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = @TableName)
     BEGIN
@@ -70,30 +70,30 @@ BEGIN
                 [RawDataLine] NVARCHAR(MAX) NOT NULL,
                 [ParsedData] NVARCHAR(MAX) NULL,
                 [DataType] NVARCHAR(20) NOT NULL DEFAULT ''' + @DataType + ''',
-                
+
                 -- Thông tin ngày tháng
                 [StatementDate] DATE NOT NULL,
                 [ImportDate] DATETIME2(7) NOT NULL DEFAULT SYSUTCDATETIME(),
                 [ProcessedDate] DATETIME2(7) NULL,
-                
+
                 -- Thông tin cơ cấu tổ chức
                 [BranchCode] NVARCHAR(10) NULL,
                 [DepartmentCode] NVARCHAR(10) NULL,
                 [EmployeeCode] NVARCHAR(20) NULL,
                 [UnitCode] NVARCHAR(10) NULL,
-                
+
                 -- Dữ liệu số liệu
                 [Amount] DECIMAL(18,4) NULL,
                 [Quantity] INT NULL,
                 [Rate] DECIMAL(10,6) NULL,
                 [Ratio] DECIMAL(10,6) NULL,
-                
+
                 -- Trạng thái xử lý
                 [IsProcessed] BIT NOT NULL DEFAULT 0,
                 [IsValid] BIT NOT NULL DEFAULT 1,
                 [ValidationErrors] NVARCHAR(1000) NULL,
                 [ProcessingNotes] NVARCHAR(500) NULL,
-                
+
                 -- Metadata
                 [SourceFileName] NVARCHAR(255) NULL,
                 [FileSize] BIGINT NULL,
@@ -103,11 +103,11 @@ BEGIN
                 [LastModifiedBy] NVARCHAR(100) NOT NULL DEFAULT ''SYSTEM'',
                 [LastModifiedDate] DATETIME2(7) NOT NULL DEFAULT SYSUTCDATETIME(),
                 [IsDeleted] BIT NOT NULL DEFAULT 0,
-                
+
                 -- 🕰️ Temporal Table Columns (System-versioned)
                 [ValidFrom] DATETIME2(7) GENERATED ALWAYS AS ROW START HIDDEN NOT NULL,
                 [ValidTo] DATETIME2(7) GENERATED ALWAYS AS ROW END HIDDEN NOT NULL,
-                
+
                 CONSTRAINT [PK_' + @TableName + '] PRIMARY KEY CLUSTERED ([Id]),
                 PERIOD FOR SYSTEM_TIME ([ValidFrom], [ValidTo])
             )
@@ -118,10 +118,10 @@ BEGIN
                     HISTORY_RETENTION_PERIOD = 7 YEARS
                 )
             );';
-            
+
             EXEC sp_executesql @SQL;
             PRINT '   ✅ Đã tạo Temporal Table: ' + @TableName;
-            
+
             -- Tạo Clustered Columnstore Index cho bảng chính (cho analytics)
             IF @DataType IN ('7800_DT_KHKD1', 'BC57', 'GL01', 'LN01') -- Bảng lớn cần columnstore
             BEGIN
@@ -133,20 +133,20 @@ BEGIN
             ELSE
             BEGIN
                 -- Tạo Nonclustered Columnstore Index cho bảng nhỏ hơn
-                SET @SQL = 'CREATE NONCLUSTERED COLUMNSTORE INDEX [NCCI_' + @TableName + '_Analytics] 
+                SET @SQL = 'CREATE NONCLUSTERED COLUMNSTORE INDEX [NCCI_' + @TableName + '_Analytics]
                            ON [dbo].[' + @TableName + '] ([StatementDate], [BranchCode], [Amount], [Quantity])
                            WITH (COMPRESSION_DELAY = 0);';
                 EXEC sp_executesql @SQL;
                 PRINT '   ✅ Đã tạo Nonclustered Columnstore Index cho: ' + @TableName;
             END
-            
+
             -- Tạo Clustered Columnstore Index cho History Table (luôn dùng columnstore)
-            SET @SQL = 'CREATE CLUSTERED COLUMNSTORE INDEX [CCI_' + @HistoryTableName + '] 
+            SET @SQL = 'CREATE CLUSTERED COLUMNSTORE INDEX [CCI_' + @HistoryTableName + ']
                        ON [dbo].[' + @HistoryTableName + ']
                        WITH (COMPRESSION_DELAY = 0, MAXDOP = 4);';
             EXEC sp_executesql @SQL;
             PRINT '   ✅ Đã tạo Clustered Columnstore Index cho: ' + @HistoryTableName;
-            
+
         END TRY
         BEGIN CATCH
             PRINT '   ❌ Lỗi khi tạo ' + @TableName + ': ' + ERROR_MESSAGE();
@@ -155,7 +155,7 @@ BEGIN
     ELSE
     BEGIN
         PRINT '   ⚠️ Bảng ' + @TableName + ' đã tồn tại, kiểm tra cấu hình temporal...';
-        
+
         -- Kiểm tra xem đã là temporal table chưa
         IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = @TableName AND temporal_type = 2)
         BEGIN
@@ -167,7 +167,7 @@ BEGIN
             PRINT '   ✅ Đã là Temporal Table';
         END
     END
-    
+
     FETCH NEXT FROM raw_data_cursor INTO @DataType, @TableName, @Description;
 END
 
@@ -193,7 +193,7 @@ FETCH NEXT FROM index_cursor INTO @IndexTableName;
 WHILE @@FETCH_STATUS = 0
 BEGIN
     PRINT '🔧 Tạo indexes cho: ' + @IndexTableName;
-    
+
     BEGIN TRY
         -- Index 1: Theo ngày và chi nhánh (cho báo cáo)
         SET @SQL = 'IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = ''IX_' + @IndexTableName + '_StatementDate_Branch'' AND object_id = OBJECT_ID(''' + @IndexTableName + '''))
@@ -202,7 +202,7 @@ BEGIN
                    INCLUDE ([DepartmentCode], [EmployeeCode], [Amount], [Quantity])
                    WITH (DATA_COMPRESSION = PAGE, FILLFACTOR = 90);';
         EXEC sp_executesql @SQL;
-        
+
         -- Index 2: Theo batch import (cho xử lý batch)
         SET @SQL = 'IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = ''IX_' + @IndexTableName + '_ImportBatch'' AND object_id = OBJECT_ID(''' + @IndexTableName + '''))
                    CREATE NONCLUSTERED INDEX [IX_' + @IndexTableName + '_ImportBatch]
@@ -210,7 +210,7 @@ BEGIN
                    INCLUDE ([RowNumber], [ProcessedDate])
                    WITH (DATA_COMPRESSION = PAGE);';
         EXEC sp_executesql @SQL;
-        
+
         -- Index 3: Theo nhân viên (cho phân tích cá nhân)
         SET @SQL = 'IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = ''IX_' + @IndexTableName + '_Employee'' AND object_id = OBJECT_ID(''' + @IndexTableName + '''))
                    CREATE NONCLUSTERED INDEX [IX_' + @IndexTableName + '_Employee]
@@ -219,7 +219,7 @@ BEGIN
                    WHERE [EmployeeCode] IS NOT NULL AND [IsDeleted] = 0
                    WITH (DATA_COMPRESSION = PAGE);';
         EXEC sp_executesql @SQL;
-        
+
         -- Index 4: Filtered index cho dữ liệu chưa xử lý
         SET @SQL = 'IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = ''IX_' + @IndexTableName + '_Unprocessed'' AND object_id = OBJECT_ID(''' + @IndexTableName + '''))
                    CREATE NONCLUSTERED INDEX [IX_' + @IndexTableName + '_Unprocessed]
@@ -228,14 +228,14 @@ BEGIN
                    WHERE [IsProcessed] = 0 AND [IsDeleted] = 0
                    WITH (DATA_COMPRESSION = PAGE);';
         EXEC sp_executesql @SQL;
-        
+
         PRINT '   ✅ Đã tạo indexes cho: ' + @IndexTableName;
-        
+
     END TRY
     BEGIN CATCH
         PRINT '   ❌ Lỗi tạo indexes cho ' + @IndexTableName + ': ' + ERROR_MESSAGE();
     END CATCH
-    
+
     FETCH NEXT FROM index_cursor INTO @IndexTableName;
 END
 
@@ -261,28 +261,28 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_ImportRawData]
 AS
 BEGIN
     SET NOCOUNT ON;
-    
+
     DECLARE @TableName NVARCHAR(50) = @DataType + '_RawData';
     DECLARE @ImportBatchId UNIQUEIDENTIFIER = NEWID();
     DECLARE @SQL NVARCHAR(MAX);
     DECLARE @RowCount INT = 0;
-    
+
     BEGIN TRY
         BEGIN TRANSACTION;
-        
+
         -- Validate table exists
         IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = @TableName)
         BEGIN
             RAISERROR('Bảng %s không tồn tại', 16, 1, @TableName);
             RETURN;
         END
-        
+
         -- Insert raw data với dynamic SQL
         SET @SQL = '
-        INSERT INTO [dbo].[' + @TableName + '] 
-        (ImportBatchId, RowNumber, RawDataLine, DataType, StatementDate, BranchCode, 
+        INSERT INTO [dbo].[' + @TableName + ']
+        (ImportBatchId, RowNumber, RawDataLine, DataType, StatementDate, BranchCode,
          SourceFileName, CreatedBy, CreatedDate, LastModifiedBy, LastModifiedDate)
-        SELECT 
+        SELECT
             @ImportBatchId,
             ROW_NUMBER() OVER (ORDER BY (SELECT NULL)),
             value,
@@ -295,23 +295,23 @@ BEGIN
             @CreatedBy,
             SYSUTCDATETIME()
         FROM OPENJSON(@RawDataLines)';
-        
-        EXEC sp_executesql @SQL, 
-            N'@ImportBatchId UNIQUEIDENTIFIER, @DataType NVARCHAR(20), @StatementDate DATE, 
+
+        EXEC sp_executesql @SQL,
+            N'@ImportBatchId UNIQUEIDENTIFIER, @DataType NVARCHAR(20), @StatementDate DATE,
               @BranchCode NVARCHAR(10), @SourceFileName NVARCHAR(255), @CreatedBy NVARCHAR(100), @RawDataLines NVARCHAR(MAX)',
             @ImportBatchId, @DataType, @StatementDate, @BranchCode, @SourceFileName, @CreatedBy, @RawDataLines;
-        
+
         SET @RowCount = @@ROWCOUNT;
-        
+
         COMMIT TRANSACTION;
-        
+
         PRINT 'Đã import ' + CAST(@RowCount AS NVARCHAR) + ' dòng dữ liệu vào ' + @TableName;
         PRINT 'Import Batch ID: ' + CAST(@ImportBatchId AS NVARCHAR(36));
-        
+
     END TRY
     BEGIN CATCH
         IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        
+
         DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
         PRINT 'Lỗi import dữ liệu: ' + @ErrorMessage;
         RAISERROR(@ErrorMessage, 16, 1);
@@ -324,14 +324,14 @@ CREATE OR ALTER PROCEDURE [dbo].[sp_CheckTemporalTablesPerformance]
 AS
 BEGIN
     SET NOCOUNT ON;
-    
+
     PRINT '📊 BÁO CÁO HIỆU NĂNG TEMPORAL TABLES';
     PRINT '===============================================================================';
-    
+
     -- Báo cáo trạng thái temporal tables
-    SELECT 
+    SELECT
         t.name AS TableName,
-        CASE t.temporal_type 
+        CASE t.temporal_type
             WHEN 0 THEN 'Non-temporal'
             WHEN 1 THEN 'History table'
             WHEN 2 THEN 'System-versioned temporal'
@@ -346,9 +346,9 @@ BEGIN
     LEFT JOIN sys.partitions ph ON h.object_id = ph.object_id AND ph.index_id IN (0,1)
     WHERE t.name LIKE '%_RawData'
     ORDER BY t.name;
-    
+
     -- Báo cáo columnstore indexes
-    SELECT 
+    SELECT
         t.name AS TableName,
         i.name AS IndexName,
         i.type_desc AS IndexType,
@@ -376,40 +376,40 @@ PRINT '=========================================================================
 
 -- View tổng hợp tất cả dữ liệu thô hiện tại
 CREATE OR ALTER VIEW [dbo].[vw_AllRawDataCurrent] AS
-SELECT 
-    'BC57' AS DataType, StatementDate, BranchCode, EmployeeCode, Amount, Quantity, 
+SELECT
+    'BC57' AS DataType, StatementDate, BranchCode, EmployeeCode, Amount, Quantity,
     IsProcessed, CreatedDate FROM [dbo].[BC57_RawData]
 UNION ALL
-SELECT 
-    'DPDA' AS DataType, StatementDate, BranchCode, EmployeeCode, Amount, Quantity, 
+SELECT
+    'DPDA' AS DataType, StatementDate, BranchCode, EmployeeCode, Amount, Quantity,
     IsProcessed, CreatedDate FROM [dbo].[DPDA_RawData]
 UNION ALL
-SELECT 
-    'LN01' AS DataType, StatementDate, BranchCode, EmployeeCode, Amount, Quantity, 
+SELECT
+    'LN01' AS DataType, StatementDate, BranchCode, EmployeeCode, Amount, Quantity,
     IsProcessed, CreatedDate FROM [dbo].[LN01_RawData]
 UNION ALL
-SELECT 
-    'GL01' AS DataType, StatementDate, BranchCode, EmployeeCode, Amount, Quantity, 
+SELECT
+    'GL01' AS DataType, StatementDate, BranchCode, EmployeeCode, Amount, Quantity,
     IsProcessed, CreatedDate FROM [dbo].[GL01_RawData]
 UNION ALL
-SELECT 
-    'EI01' AS DataType, StatementDate, BranchCode, EmployeeCode, Amount, Quantity, 
+SELECT
+    'EI01' AS DataType, StatementDate, BranchCode, EmployeeCode, Amount, Quantity,
     IsProcessed, CreatedDate FROM [dbo].[EI01_RawData]
 UNION ALL
-SELECT 
-    '7800_DT_KHKD1' AS DataType, StatementDate, BranchCode, EmployeeCode, Amount, Quantity, 
+SELECT
+    '7800_DT_KHKD1' AS DataType, StatementDate, BranchCode, EmployeeCode, Amount, Quantity,
     IsProcessed, CreatedDate FROM [dbo].[7800_DT_KHKD1_RawData];
 GO
 
 -- View tổng hợp dữ liệu lịch sử (temporal queries)
 CREATE OR ALTER VIEW [dbo].[vw_AllRawDataHistory] AS
-SELECT 
-    'BC57' AS DataType, StatementDate, BranchCode, EmployeeCode, Amount, 
+SELECT
+    'BC57' AS DataType, StatementDate, BranchCode, EmployeeCode, Amount,
     ValidFrom, ValidTo, 'Current' AS RecordType
 FROM [dbo].[BC57_RawData]
 UNION ALL
-SELECT 
-    'BC57' AS DataType, StatementDate, BranchCode, EmployeeCode, Amount, 
+SELECT
+    'BC57' AS DataType, StatementDate, BranchCode, EmployeeCode, Amount,
     ValidFrom, ValidTo, 'History' AS RecordType
 FROM [dbo].[BC57_RawData_History];
 GO
