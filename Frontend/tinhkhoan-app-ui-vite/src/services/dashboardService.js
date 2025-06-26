@@ -5,7 +5,7 @@ import api from './api';
  */
 export const dashboardService = {
   // ===== BUSINESS PLAN TARGETS =====
-  
+
   /**
    * Get all business plan targets
    */
@@ -193,7 +193,7 @@ export const dashboardService = {
       throw error;
     }
   },
-  
+
   /**
    * Sort units in the correct order for KPI display
    * Order: Hội sở (CnLaiChau) -> Branches in specific order
@@ -211,23 +211,23 @@ export const dashboardService = {
       'Chi nhánh Mường Tè',
       'Chi nhánh Nậm Nhùn'
     ];
-    
+
     return [...units].sort((a, b) => {
       const nameA = a.unitName || a.name || '';
       const nameB = b.unitName || b.name || '';
-      
+
       const indexA = branchOrder.indexOf(nameA);
       const indexB = branchOrder.indexOf(nameB);
-      
+
       // If both names are in the predefined order, sort by that order
       if (indexA !== -1 && indexB !== -1) {
         return indexA - indexB;
       }
-      
+
       // If only one name is in the order, prioritize it
       if (indexA !== -1) return -1;
       if (indexB !== -1) return 1;
-      
+
       // For other units, maintain alphabetical sorting
       return nameA.localeCompare(nameB);
     });
@@ -278,13 +278,14 @@ export const dashboardService = {
   },
 
   /**
-   * Get period type options
+   * Get period type options - Updated with specific date option
    */
   getPeriodTypeOptions() {
     return [
       { value: 'YEAR', label: 'Năm' },
       { value: 'QUARTER', label: 'Quý' },
-      { value: 'MONTH', label: 'Tháng' }
+      { value: 'MONTH', label: 'Tháng' },
+      { value: 'DATE', label: 'Ngày cụ thể' }
     ];
   },
 

@@ -33,17 +33,17 @@
           <div class="date-range-group">
             <div class="date-input-group">
               <label>Từ ngày:</label>
-              <input 
-                v-model="selectedFromDate" 
-                type="date" 
+              <input
+                v-model="selectedFromDate"
+                type="date"
                 class="date-input agribank-date-input"
               />
             </div>
             <div class="date-input-group">
               <label>Đến ngày:</label>
-              <input 
-                v-model="selectedToDate" 
-                type="date" 
+              <input
+                v-model="selectedToDate"
+                type="date"
                 class="date-input agribank-date-input"
               />
             </div>
@@ -123,32 +123,32 @@
                 <span class="update-text">{{ formatDateTime(getDataTypeStats(key).lastUpdate) }}</span>
               </td>
               <td class="actions-cell">
-                <button 
-                  @click="viewDataType(key)" 
+                <button
+                  @click="viewDataType(key)"
                   class="btn-action btn-view btn-icon-only"
                   title="Xem dữ liệu import"
                   :disabled="false"
                 >
                   👁️
                 </button>
-                <button 
-                  @click="viewRawDataFromTable(key)" 
+                <button
+                  @click="viewRawDataFromTable(key)"
                   class="btn-action btn-raw-view btn-icon-only"
                   title="Xem dữ liệu thô từ bảng"
                   :disabled="!selectedFromDate"
                 >
                   📊
                 </button>
-                <button 
-                  @click="openImportModal(key)" 
+                <button
+                  @click="openImportModal(key)"
                   class="btn-action btn-import btn-icon-only"
                   :style="{ backgroundColor: getDataTypeColor(key) }"
                   title="Import dữ liệu"
                 >
                   📤
                 </button>
-                <button 
-                  @click="deleteDataTypeByDate(key)" 
+                <button
+                  @click="deleteDataTypeByDate(key)"
                   class="btn-action btn-delete btn-icon-only"
                   title="Xóa theo ngày đã chọn"
                   :disabled="!selectedFromDate || getDataTypeStats(key).totalRecords === 0"
@@ -180,11 +180,11 @@
             <div class="form-group">
               <label class="form-label">Chọn file để import:</label>
               <div class="file-input-container">
-                <input 
-                  type="file" 
+                <input
+                  type="file"
                   ref="fileInput"
-                  multiple 
-                  @change="handleFileSelect" 
+                  multiple
+                  @change="handleFileSelect"
                   class="file-input"
                   id="file-upload"
                 />
@@ -192,11 +192,11 @@
                   <span class="file-icon">📎</span>
                   <span>Chọn tệp</span>
                 </label>
-                <span class="file-selected-text">{{ selectedFiles.length > 0 ? 
+                <span class="file-selected-text">{{ selectedFiles.length > 0 ?
                   `Đã chọn ${selectedFiles.length} tệp` : 'Chưa có tệp nào được chọn' }}</span>
               </div>
             </div>
-            
+
             <!-- Danh sách file đã chọn -->
             <div v-if="selectedFiles.length > 0" class="selected-files">
               <h4>Files đã chọn:</h4>
@@ -211,7 +211,7 @@
                 </li>
               </ul>
             </div>
-            
+
             <!-- Upload progress indicator -->
             <div v-if="uploading" class="upload-progress-container">
               <div class="upload-status">
@@ -228,26 +228,26 @@
                 </span>
               </div>
             </div>
-            
+
             <!-- Ghi chú -->
             <div class="form-group">
               <label class="form-label">Ghi chú:</label>
-              <textarea 
-                v-model="importNotes" 
-                class="notes-input" 
+              <textarea
+                v-model="importNotes"
+                class="notes-input"
                 placeholder="Thêm ghi chú cho lần import này..."
               ></textarea>
             </div>
           </div>
         </div>
-        
+
         <div class="modal-footer">
           <button @click="closeImportModal" class="btn-cancel">
             <span class="btn-icon">✖️</span>
             <span>Hủy</span>
           </button>
-          <button 
-            @click="performImport" 
+          <button
+            @click="performImport"
             class="btn-submit"
             :disabled="selectedFiles.length === 0 || uploading"
           >
@@ -284,15 +284,15 @@
                   <td class="agribank-number">{{ formatRecordCount(item.recordsCount) }}</td>
                   <td>{{ item.status }}</td>
                   <td>
-                    <button 
-                      @click="previewData(item.id)" 
+                    <button
+                      @click="previewData(item.id)"
                       class="btn-action btn-view"
                       title="Xem chi tiết"
                     >
                       👁️
                     </button>
-                    <button 
-                      @click="confirmDelete(item.id, item.fileName)" 
+                    <button
+                      @click="confirmDelete(item.id, item.fileName)"
                       class="btn-action btn-delete"
                       title="Xóa bản ghi"
                     >
@@ -323,7 +323,7 @@
         <div class="modal-body">
           <div v-if="rawDataRecords.length > 0" class="raw-data-table-container">
             <div class="table-summary">
-              <p><strong>📋 Hiển thị {{ rawDataRecords.length }} bản ghi đầu tiên</strong> 
+              <p><strong>📋 Hiển thị {{ rawDataRecords.length }} bản ghi đầu tiên</strong>
                 (tối đa 20 bản ghi để đảm bảo hiệu năng)</p>
             </div>
             <div class="responsive-table-wrapper">
@@ -356,9 +356,9 @@
         </div>
         <div class="modal-footer">
           <button @click="closeRawDataModal" class="btn-cancel">Đóng</button>
-          <button 
-            v-if="rawDataRecords.length > 0" 
-            @click="exportRawData" 
+          <button
+            v-if="rawDataRecords.length > 0"
+            @click="exportRawData"
             class="btn-export"
           >
             📥 Xuất dữ liệu
@@ -370,9 +370,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import rawDataService from '@/services/rawDataService'
-import api from '@/services/api' // ✅ Import api để sử dụng trong fallback strategy
+import api from '@/services/api'; // ✅ Import api để sử dụng trong fallback strategy
+import rawDataService from '@/services/rawDataService';
+import { computed, ref } from 'vue';
 
 // Reactive state
 const loading = ref(false)
@@ -448,9 +448,9 @@ const showDetailedError = (mainMessage, error) => {
     // Serialize object để xem chi tiết
     fullError: JSON.stringify(error, null, 2)
   });
-  
+
   let detailedMessage = mainMessage
-  
+
   // Xử lý các loại lỗi khác nhau
   if (error?.success === false) {
     // Trường hợp API response với success: false
@@ -464,12 +464,12 @@ const showDetailedError = (mainMessage, error) => {
   } else if (error?.error) {
     detailedMessage += `: ${error.error}`
   }
-  
+
   // Thêm thông tin debug nếu cần
   if (process.env.NODE_ENV === 'development') {
     detailedMessage += ` (Status: ${error?.response?.status || error?.status || 'unknown'})`
   }
-  
+
   errorMessage.value = detailedMessage
   setTimeout(() => {
     errorMessage.value = ''
@@ -496,17 +496,17 @@ const getUploadStatusText = () => {
 // Format date từ chuỗi ISO
 const formatDate = (dateString) => {
   if (!dateString) return 'N/A'
-  
+
   try {
     const date = new Date(dateString)
     if (isNaN(date.getTime())) {
       return 'Ngày không hợp lệ'
     }
-    
+
     const day = String(date.getDate()).padStart(2, '0')
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const year = date.getFullYear()
-    
+
     return `${day}/${month}/${year}`
   } catch (error) {
     console.error('Error formatting date:', error)
@@ -517,43 +517,45 @@ const formatDate = (dateString) => {
 // Data type statistics
 const getDataTypeStats = (dataType) => {
   const stats = dataTypeStats.value[dataType] || { totalRecords: 0, lastUpdate: null }
+  // Fix NaN issue: ensure totalRecords is always a valid number
+  const totalRecords = parseInt(stats.totalRecords) || 0
   return {
     ...stats,
-    totalRecords: rawDataService.formatRecordCount(stats.totalRecords)
+    totalRecords: formatRecordCount(totalRecords) // Use local formatRecordCount instead
   }
 }
 
 const calculateDataTypeStats = () => {
   console.log('🔧 Calculating data type stats from imports:', allImports.value.length)
   const stats = {}
-  
+
   // Initialize all data types để hiển thị 0 nếu không có dữ liệu
   Object.keys(dataTypeDefinitions).forEach(key => {
     stats[key] = { totalRecords: 0, lastUpdate: null, count: 0 }
   })
-  
+
   // Calculate from imports
   allImports.value.forEach(imp => {
     const dataType = imp.category || imp.dataType || imp.fileType || 'UNKNOWN'
-    
+
     if (!stats[dataType]) {
       stats[dataType] = { totalRecords: 0, lastUpdate: null, count: 0 }
     }
-    
+
     stats[dataType].count++
     const recordCount = parseInt(imp.recordsCount) || 0
     stats[dataType].totalRecords += recordCount
-    
+
     const importDate = imp.importDate;
     if (importDate && importDate !== "0001-01-01T00:00:00") {
       const importDateTime = new Date(importDate)
-      if (!stats[dataType].lastUpdate || 
+      if (!stats[dataType].lastUpdate ||
           importDateTime > new Date(stats[dataType].lastUpdate)) {
         stats[dataType].lastUpdate = importDate
       }
     }
   })
-  
+
   dataTypeStats.value = stats
 }
 
@@ -584,9 +586,9 @@ const refreshAllData = async (skipSuccessMessage = false) => {
   try {
     loading.value = true
     loadingMessage.value = 'Đang tải lại dữ liệu...'
-    
+
     console.log('🔄 Starting refresh all data...')
-    
+
     const result = await rawDataService.getAllImports()
     console.log('📊 Raw result from getAllImports:', {
       success: result.success,
@@ -598,18 +600,18 @@ const refreshAllData = async (skipSuccessMessage = false) => {
     if (result.success) {
       allImports.value = result.data || []
       console.log('✅ Loaded imports:', allImports.value.length, 'items')
-      
+
       // Debug log để kiểm tra dữ liệu
       if (allImports.value.length > 0) {
         console.log('📊 Sample import data:', allImports.value[0])
       }
-      
+
       calculateDataTypeStats()
-      
+
       if (!skipSuccessMessage) {
         showSuccess(`✅ Đã tải lại dữ liệu thành công (${allImports.value.length} imports)`)
       }
-      
+
       return { success: true, data: allImports.value };
     } else {
       const errorMsg = result.error || 'Không thể tải dữ liệu'
@@ -619,7 +621,7 @@ const refreshAllData = async (skipSuccessMessage = false) => {
         errorStatus: result.errorStatus,
         fullResult: result
       })
-      
+
       if (result.fallbackData && result.fallbackData.length > 0) {
         allImports.value = result.fallbackData
         calculateDataTypeStats()
@@ -636,7 +638,7 @@ const refreshAllData = async (skipSuccessMessage = false) => {
         return { success: false, error: errorMsg };
       }
     }
-    
+
   } catch (error) {
     console.error('❌ Exception in refreshAllData:', error)
     if (!skipSuccessMessage) {
@@ -649,48 +651,48 @@ const refreshAllData = async (skipSuccessMessage = false) => {
   }
 }
 
-// ✅ Thêm hàm refresh dữ liệu với nhiều cách fallback khác nhau  
+// ✅ Thêm hàm refresh dữ liệu với nhiều cách fallback khác nhau
 const refreshDataWithFallback = async () => {
   console.log('🔄 Refresh data with multiple fallback strategies...');
-  
+
   try {
     // Chiến thuật 1: Gọi getRecentImports (nhanh nhất)
     console.log('📊 Strategy 1: getRecentImports');
     const recentResult = await rawDataService.getRecentImports(50);
-    
+
     if (recentResult.success && recentResult.data && recentResult.data.length > 0) {
       console.log('✅ Strategy 1 success:', recentResult.data.length, 'items');
       allImports.value = recentResult.data;
       calculateDataTypeStats();
       return { success: true, data: recentResult.data, strategy: 'getRecentImports' };
     }
-    
+
     // Chiến thuật 2: Gọi getAllImports
     console.log('📊 Strategy 2: getAllImports');
     const importResult = await rawDataService.getAllImports();
-    
+
     if (importResult.success && importResult.data && importResult.data.length > 0) {
       console.log('✅ Strategy 2 success:', importResult.data.length, 'items');
       allImports.value = importResult.data;
       calculateDataTypeStats();
       return { success: true, data: importResult.data, strategy: 'getAllImports' };
     }
-    
-    // Chiến thuật 3: Gọi getAllData  
+
+    // Chiến thuật 3: Gọi getAllData
     console.log('📊 Strategy 3: getAllData');
     const dataResult = await rawDataService.getAllData();
-    
+
     if (dataResult.success && dataResult.data && dataResult.data.length > 0) {
       console.log('✅ Strategy 3 success:', dataResult.data.length, 'items');
       allImports.value = dataResult.data;
       calculateDataTypeStats();
       return { success: true, data: dataResult.data, strategy: 'getAllData' };
     }
-    
+
     // Chiến thuật 4: Gọi trực tiếp API endpoint recent
     console.log('📊 Strategy 4: Direct API recent call');
     const directRecentResult = await api.get('/RawData/recent?limit=50');
-    
+
     if (directRecentResult.data && Array.isArray(directRecentResult.data)) {
       const mappedData = directRecentResult.data.map(item => ({
         ...item,
@@ -699,17 +701,17 @@ const refreshDataWithFallback = async () => {
         recordsCount: parseInt(item.recordsCount || 0),
         fileName: item.fileName || 'Unknown File'
       }));
-      
+
       console.log('✅ Strategy 4 success:', mappedData.length, 'items');
       allImports.value = mappedData;
       calculateDataTypeStats();
       return { success: true, data: mappedData, strategy: 'directRecentAPI' };
     }
-    
+
     // Chiến thuật 5: Gọi trực tiếp API endpoint chính
     console.log('📊 Strategy 5: Direct API call');
     const directResult = await api.get('/RawData');
-    
+
     if (directResult.data && Array.isArray(directResult.data)) {
       const mappedData = directResult.data.map(item => ({
         ...item,
@@ -718,16 +720,16 @@ const refreshDataWithFallback = async () => {
         recordsCount: parseInt(item.recordsCount || 0),
         fileName: item.fileName || 'Unknown File'
       }));
-      
+
       console.log('✅ Strategy 5 success:', mappedData.length, 'items');
       allImports.value = mappedData;
       calculateDataTypeStats();
       return { success: true, data: mappedData, strategy: 'directAPI' };
     }
-    
+
     console.log('❌ All strategies failed');
     return { success: false, error: 'All refresh strategies failed' };
-    
+
   } catch (error) {
     console.error('❌ Error in refreshDataWithFallback:', error);
     return { success: false, error: error.message };
@@ -738,29 +740,29 @@ const clearAllData = async () => {
   if (!confirm('⚠️ BẠN CÓ CHẮC CHẮN MUỐN XÓA TOÀN BỘ DỮ LIỆU?\n\nThao tác này sẽ xóa tất cả dữ liệu đã import và KHÔNG THỂ KHÔI PHỤC!')) {
     return
   }
-  
+
   try {
     loading.value = true
     loadingMessage.value = 'Đang xóa toàn bộ dữ liệu...'
-    
+
     const result = await rawDataService.clearAllData()
     if (result.success) {
       allImports.value = []
       dataTypeStats.value = {}
-      
+
       const data = result.data || result
       const message = `✅ Đã xóa thành công ${data.recordsCleared || 0} bản ghi import`
       showSuccess(message, 5000)
-      
+
       setTimeout(async () => {
         await refreshAllData()
         calculateDataTypeStats()
       }, 1500)
-      
+
     } else {
       showError(result.message || result.error || 'Không thể xóa dữ liệu')
     }
-    
+
   } catch (error) {
     console.error('❌ Error clearing all data:', error)
     showError('Có lỗi xảy ra khi xóa dữ liệu: ' + error.message)
@@ -778,15 +780,15 @@ const viewDataType = async (dataType) => {
     loading.value = true
     loadingMessage.value = `Đang tải dữ liệu ${dataType}...`
     selectedDataType.value = dataType
-    
+
     // If a date is selected, fetch data by date
     if (selectedFromDate.value) {
       const dateStr = selectedFromDate.value.replace(/-/g, '')
       const result = await rawDataService.getByStatementDate(dataType, dateStr)
-      
+
       if (result.success) {
         filteredResults.value = result.data || []
-        
+
         if (filteredResults.value.length === 0) {
           showError(`Không có dữ liệu ${dataType} cho ngày ${formatDate(selectedFromDate.value)}`)
         } else {
@@ -799,18 +801,18 @@ const viewDataType = async (dataType) => {
       }
     } else {
       // Filter current results by data type
-      const dataTypeResults = allImports.value.filter(imp => 
-        imp.dataType === dataType || 
-        imp.category === dataType || 
+      const dataTypeResults = allImports.value.filter(imp =>
+        imp.dataType === dataType ||
+        imp.category === dataType ||
         imp.fileType === dataType
       )
       filteredResults.value = dataTypeResults
-      
+
       if (dataTypeResults.length === 0) {
         showError(`Chưa có dữ liệu import nào cho loại ${dataType}`)
         return
       }
-      
+
       showSuccess(`Hiển thị ${dataTypeResults.length} import(s) cho loại ${dataType}`)
       showDataViewModal.value = true
     }
@@ -828,9 +830,9 @@ const deleteDataTypeByDate = async (dataType) => {
     showError('Vui lòng chọn ngày để xóa dữ liệu')
     return
   }
-  
+
   const dateStr = selectedFromDate.value.replace(/-/g, '')
-  
+
   // Check if data exists for this date
   try {
     const checkResult = await rawDataService.checkDuplicateData(dataType, dateStr)
@@ -838,7 +840,7 @@ const deleteDataTypeByDate = async (dataType) => {
       showError(`Không có dữ liệu ${dataType} cho ngày ${formatDate(selectedFromDate.value)}`)
       return
     }
-    
+
     // Hiển thị xác nhận
     if (confirm(`Bạn có chắc chắn muốn xóa tất cả dữ liệu ${dataType} cho ngày ${formatDate(selectedFromDate.value)}?`)) {
       performDeleteByDate(dataType, dateStr)
@@ -853,16 +855,16 @@ const performDeleteByDate = async (dataType, dateStr) => {
   try {
     loading.value = true
     loadingMessage.value = 'Đang xóa dữ liệu...'
-    
+
     const result = await rawDataService.deleteByStatementDate(dataType, dateStr)
     if (result.success) {
       showSuccess(`✅ ${result.data.message}`)
       await refreshAllData()
-      
+
       // Remove from filtered results if they exist
-      filteredResults.value = filteredResults.value.filter(item => 
-        !(item.dataType === dataType && 
-          item.statementDate && 
+      filteredResults.value = filteredResults.value.filter(item =>
+        !(item.dataType === dataType &&
+          item.statementDate &&
           new Date(item.statementDate).toISOString().slice(0, 10).replace(/-/g, '') === dateStr)
       )
     } else {
@@ -889,10 +891,10 @@ const viewRawDataFromTable = async (dataType) => {
     loading.value = true
     loadingMessage.value = `Đang tải dữ liệu thô ${dataType}...`
     selectedDataType.value = dataType
-    
+
     console.log('🗄️ Viewing raw data from table:', dataType)
     console.log('Selected date:', selectedFromDate.value)
-    
+
     // Check if date is selected
     if (!selectedFromDate.value) {
       showError('Vui lòng chọn ngày để xem dữ liệu thô')
@@ -900,10 +902,10 @@ const viewRawDataFromTable = async (dataType) => {
       loadingMessage.value = ''
       return
     }
-    
+
     const result = await rawDataService.getRawDataFromTable(dataType, selectedFromDate.value)
     console.log('🗄️ Raw data result:', result)
-    
+
     if (result.success && result.data) {
       // Helper function để convert $values format nếu cần
       const convertDotNetArray = (data) => {
@@ -913,10 +915,10 @@ const viewRawDataFromTable = async (dataType) => {
         }
         return data;
       };
-      
+
       // Xử lý dữ liệu records từ backend
       const records = result.data.records || [];
-      
+
       if (records && records.length > 0) {
         rawDataRecords.value = records;
         showSuccess(`Đã tải ${records.length} bản ghi dữ liệu thô ${dataType}`);
@@ -945,28 +947,28 @@ const exportRawData = () => {
   try {
     // Create CSV content
     let csvContent = "";
-    
+
     // Get all unique headers
     const headers = new Set();
     rawDataRecords.value.forEach(record => {
       Object.keys(record).forEach(key => headers.add(key));
     });
-    
+
     // Add headers
     csvContent += Array.from(headers).join(',') + '\n';
-    
+
     // Add data rows
     rawDataRecords.value.forEach(record => {
       const row = Array.from(headers).map(header => {
         const value = record[header] || '';
         // Handle values with commas by wrapping in quotes
-        return typeof value === 'string' && value.includes(',') 
-          ? `"${value}"` 
+        return typeof value === 'string' && value.includes(',')
+          ? `"${value}"`
           : value;
       });
       csvContent += row.join(',') + '\n';
     });
-    
+
     // Create download link
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
@@ -976,7 +978,7 @@ const exportRawData = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     showSuccess('Đã xuất dữ liệu thành công');
   } catch (error) {
     console.error('Error exporting data:', error);
@@ -989,21 +991,21 @@ const previewData = async (importId) => {
   try {
     loading.value = true
     loadingMessage.value = 'Đang tải dữ liệu chi tiết...'
-    
+
     const result = await rawDataService.previewData(importId)
-    
+
     if (result.success && result.data) {
       // ✅ FIX: Hiển thị modal với dữ liệu thay vì chỉ báo "tính năng đang phát triển"
       const previewRows = result.data.previewRows || result.data.PreviewData || result.data.previewData || []
-      
+
       if (previewRows && previewRows.length > 0) {
         // Hiển thị tối đa 20 bản ghi đầu như yêu cầu
         const recordsToShow = previewRows.slice(0, 20)
-        
+
         // Cập nhật state để hiển thị modal
         rawDataRecords.value = recordsToShow
         selectedDataType.value = result.data.importInfo?.DataType || result.data.dataType || 'Dữ liệu chi tiết'
-        
+
         showSuccess(`✅ Đã tải ${recordsToShow.length} bản ghi chi tiết đầu tiên`)
         showRawDataModal.value = true
       } else {
@@ -1029,19 +1031,19 @@ const getCategoryName = (dataType) => {
 
 const formatDateTime = (dateTimeString) => {
   if (!dateTimeString) return 'N/A'
-  
+
   try {
     const date = new Date(dateTimeString)
     if (isNaN(date.getTime())) {
       return 'Thời gian không hợp lệ'
     }
-    
+
     const day = String(date.getDate()).padStart(2, '0')
     const month = String(date.getMonth() + 1).padStart(2, '0')
     const year = date.getFullYear()
     const hours = String(date.getHours()).padStart(2, '0')
     const minutes = String(date.getMinutes()).padStart(2, '0')
-    
+
     return `${day}/${month}/${year} ${hours}:${minutes}`
   } catch (error) {
     console.error('Error formatting datetime:', error)
@@ -1055,15 +1057,15 @@ const confirmDelete = async (importId, fileName) => {
     try {
       loading.value = true
       loadingMessage.value = 'Đang xóa dữ liệu...'
-      
+
       const result = await rawDataService.deleteImport(importId)
-      
+
       if (result.success) {
         showSuccess(`Đã xóa thành công bản ghi "${fileName}"`)
-        
+
         // Remove from filtered results
         filteredResults.value = filteredResults.value.filter(item => item.id !== importId)
-        
+
         // Refresh all data
         await refreshAllData()
       } else {
@@ -1093,7 +1095,7 @@ const getDataTypeColor = (dataType) => {
     'PHICHUYENTIEN': '#795548', // Nâu
     'LAMVIEC': '#00BCD4'     // Xanh ngọc
   }
-  
+
   return colors[dataType] || '#8B1538' // Màu mặc định là màu Agribank
 }
 
@@ -1118,7 +1120,7 @@ const closeImportModal = () => {
     }
     // TODO: Hủy quá trình upload nếu cần
   }
-  
+
   showImportModal.value = false
   selectedFiles.value = []
   importNotes.value = ''
@@ -1132,12 +1134,12 @@ const performImport = async () => {
     showError('Vui lòng chọn ít nhất một file để import')
     return
   }
-  
+
   uploading.value = true
   uploadProgress.value = 0
   totalFiles.value = selectedFiles.value.length
   uploadedFiles.value = 0
-  
+
   try {
     // Log thông tin trước khi gọi API
     console.log(`📤 Importing data for ${selectedDataType.value} with ${selectedFiles.value.length} files...`, {
@@ -1146,9 +1148,9 @@ const performImport = async () => {
       notes: importNotes.value,
       statementDate: selectedFromDate.value
     })
-    
+
     currentUploadingFile.value = selectedFiles.value[0].name
-    
+
     // Chuẩn bị options cho API call
     const options = {
       notes: importNotes.value,
@@ -1156,7 +1158,7 @@ const performImport = async () => {
       onProgress: (progressInfo) => {
         // Cập nhật thông tin progress
         uploadProgress.value = progressInfo.percentage
-        
+
         // Cập nhật thông tin file đang upload
         if (progressInfo.percentage > 30 && progressInfo.percentage < 60 && selectedFiles.value.length > 1) {
           currentUploadingFile.value = selectedFiles.value[1].name
@@ -1170,50 +1172,50 @@ const performImport = async () => {
         }
       }
     }
-    
+
     // Gọi API thực tế thay vì mô phỏng
     const response = await rawDataService.importData(selectedDataType.value, selectedFiles.value, options)
-    
+
     if (response.success) {
       uploadProgress.value = 100
       setTimeout(async () => {
         uploading.value = false
         showSuccess(`Import dữ liệu ${selectedDataType.value} thành công!`)
-        
+
         // Đóng modal import
         closeImportModal()
-        
+
         // ✅ FIX: Làm mới dữ liệu với độ trễ đủ để backend xử lý xong
         setTimeout(async () => {
           console.log('� Refresh data sau khi import thành công...');
-          
+
           try {
             loading.value = true
             loadingMessage.value = `Đang tải dữ liệu mới nhất...`
-            
+
             // ✅ FIX: Sử dụng hàm refresh với fallback strategies
             const refreshResult = await refreshDataWithFallback()
-            
+
             console.log('📊 Dữ liệu sau khi refresh:', {
               success: refreshResult.success,
               strategy: refreshResult.strategy,
               totalImports: allImports.value.length,
               dataTypes: allImports.value.map(imp => imp.dataType || imp.category || imp.fileType).filter((v, i, a) => a.indexOf(v) === i)
             });
-            
+
             if (refreshResult.success && allImports.value.length > 0) {
               // ✅ Lọc và hiển thị dữ liệu theo loại đã import
               const dataTypeResults = allImports.value.filter(imp => {
-                const typeMatches = 
-                  (imp.dataType && imp.dataType.includes(selectedDataType.value)) || 
-                  (imp.category && imp.category.includes(selectedDataType.value)) || 
+                const typeMatches =
+                  (imp.dataType && imp.dataType.includes(selectedDataType.value)) ||
+                  (imp.category && imp.category.includes(selectedDataType.value)) ||
                   (imp.fileType && imp.fileType.includes(selectedDataType.value));
-                
+
                 return typeMatches;
               });
-              
+
               console.log(`🔍 Filtered results for ${selectedDataType.value}:`, dataTypeResults.length);
-              
+
               if (dataTypeResults.length > 0) {
                 filteredResults.value = dataTypeResults;
                 showSuccess(`✅ Hiển thị ${dataTypeResults.length} import(s) cho loại ${selectedDataType.value}`);
@@ -1226,13 +1228,13 @@ const performImport = async () => {
               }
             } else {
               console.log('⚠️ Không có dữ liệu sau khi refresh, thử gọi API trực tiếp...');
-              
+
               // Thử gọi API trực tiếp để lấy dữ liệu
               const directResult = await rawDataService.getAllData();
-              
+
               if (directResult.success && directResult.data && directResult.data.length > 0) {
                 console.log(`✅ API trực tiếp trả về ${directResult.data.length} bản ghi`);
-                
+
                 filteredResults.value = directResult.data.slice(0, 10); // Hiển thị 10 bản ghi mới nhất
                 showSuccess(`✅ Hiển thị ${filteredResults.value.length} bản ghi import mới nhất`);
                 showDataViewModal.value = true;
@@ -1240,7 +1242,7 @@ const performImport = async () => {
                 showSuccess(`✅ Import thành công! Vui lòng nhấn "🔄 Tải lại dữ liệu" để xem kết quả.`);
               }
             }
-            
+
           } catch (error) {
             console.error('❌ Error fetching data after import:', error);
             showSuccess(`✅ Import thành công! Vui lòng nhấn "🔄 Tải lại dữ liệu" để xem kết quả.`);
@@ -1269,7 +1271,7 @@ const removeFile = (index) => {
 // Lấy icon tương ứng với loại file
 const getFileIcon = (fileName) => {
   const extension = fileName.split('.').pop()?.toLowerCase() || ''
-  
+
   const icons = {
     'pdf': '📄',
     'doc': '📝',
@@ -1286,7 +1288,7 @@ const getFileIcon = (fileName) => {
     'jpeg': '🖼️',
     'gif': '🖼️'
   }
-  
+
   return icons[extension] || '📄'
 }
 
@@ -1304,11 +1306,11 @@ const getUploadStatusIcon = () => {
 // Hàm định dạng kích thước file
 const formatFileSize = (bytes) => {
   if (bytes === 0) return '0 Bytes'
-  
+
   const k = 1024
   const sizes = ['Bytes', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  
+
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
@@ -1316,24 +1318,27 @@ const formatFileSize = (bytes) => {
 const handleFileSelect = (event) => {
   const files = event.target.files
   if (files.length === 0) return
-  
+
   selectedFiles.value = Array.from(files)
 }
 
 // Hàm định dạng số lượng bản ghi
 const formatRecordCount = (count) => {
-  // Nếu count không phải là số, trả về giá trị ban đầu
-  if (isNaN(parseInt(count))) return count || 0
-  
-  // Định dạng số với dấu phân cách hàng nghìn
-  return new Intl.NumberFormat('vi-VN').format(count)
+  // Fix NaN issue - ensure proper type checking and conversion
+  if (count === null || count === undefined || count === '' || isNaN(Number(count))) {
+    return '0'
+  }
+
+  // Convert to number and format with thousands separator
+  const numericCount = Number(count)
+  return new Intl.NumberFormat('vi-VN').format(numericCount)
 }
 
 // ✅ THÊM MỚI: Hàm format giá trị trong cell để hiển thị đẹp hơn
 const formatCellValue = (value) => {
   if (value === null || value === undefined) return '—'
   if (value === '') return '(trống)'
-  
+
   // Nếu là string dài, cắt ngắn
   if (typeof value === 'string') {
     if (value.length > 50) {
@@ -1341,12 +1346,12 @@ const formatCellValue = (value) => {
     }
     return value
   }
-  
+
   // Nếu là số, format với dấu phân cách
   if (typeof value === 'number') {
     return new Intl.NumberFormat('vi-VN').format(value)
   }
-  
+
   // Nếu là date, format ngày
   if (value instanceof Date || (typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}/))) {
     try {
@@ -1356,7 +1361,7 @@ const formatCellValue = (value) => {
       return value
     }
   }
-  
+
   return String(value)
 }
 </script>

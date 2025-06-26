@@ -12,7 +12,7 @@
           Tính toán và cập nhật tình hình thực hiện các chỉ tiêu kinh doanh theo từng chi nhánh/phòng ban
         </p>
       </div>
-      
+
       <div class="header-controls">
         <!-- Time filters với accessibility -->
         <div class="filter-group">
@@ -24,7 +24,7 @@
             </option>
           </select>
         </div>
-        
+
         <div class="filter-group">
           <label for="period-type-select" class="filter-label">Loại kỳ:</label>
           <select id="period-type-select" v-model="periodType" @change="onPeriodTypeChange" class="form-select" autocomplete="off" aria-label="Chọn loại kỳ">
@@ -34,7 +34,7 @@
             </option>
           </select>
         </div>
-        
+
         <div class="filter-group" v-if="periodType === 'QUARTER'">
           <label for="quarter-select" class="filter-label">Quý:</label>
           <select id="quarter-select" v-model="selectedPeriod" @change="loadData" class="form-select" autocomplete="off" aria-label="Chọn quý">
@@ -44,7 +44,7 @@
             </option>
           </select>
         </div>
-        
+
         <div class="filter-group" v-if="periodType === 'MONTH'">
           <label for="month-select" class="filter-label">Tháng:</label>
           <select id="month-select" v-model="selectedPeriod" @change="loadData" class="form-select" autocomplete="off" aria-label="Chọn tháng">
@@ -54,7 +54,12 @@
             </option>
           </select>
         </div>
-        
+
+        <div class="filter-group" v-if="periodType === 'DATE'">
+          <label for="date-select" class="filter-label">Ngày cụ thể:</label>
+          <input id="date-select" v-model="selectedDate" @change="loadData" type="date" class="form-select" aria-label="Chọn ngày cụ thể">
+        </div>
+
         <div class="filter-group">
           <label for="unit-select" class="filter-label">Chi nhánh:</label>
           <select id="unit-select" v-model="selectedUnitId" @change="loadData" class="form-select" autocomplete="organization" aria-label="Chọn chi nhánh">
@@ -64,38 +69,38 @@
             </option>
           </select>
         </div>
-        
+
         <!-- 7 nút chức năng chính -->
         <div class="calculation-buttons">
           <button @click="calculateAll" :disabled="calculating || !selectedUnitId" class="btn btn-primary">
             {{ calculating ? 'Đang tính...' : '⚡ Tính toán' }}
           </button>
-          
+
           <button @click="calculateNguonVon" :disabled="calculating || !selectedUnitId" class="btn btn-warning">
             💰 Nguồn vốn
           </button>
-          
+
           <button @click="calculateDuNo" :disabled="calculating || !selectedUnitId" class="btn btn-info">
             📊 Dư nợ
           </button>
-          
+
           <button @click="calculateNoXau" :disabled="calculating || !selectedUnitId" class="btn btn-danger">
             ⚠️ Nợ xấu
           </button>
-          
+
           <button @click="calculateThuNoXLRR" :disabled="calculating || !selectedUnitId" class="btn btn-success">
             💵 Thu nợ XLRR
           </button>
-          
+
           <button @click="calculateThuDichVu" :disabled="calculating || !selectedUnitId" class="btn btn-purple">
             🎯 Thu dịch vụ
           </button>
-          
+
           <button @click="calculateTaiChinh" :disabled="calculating || !selectedUnitId" class="btn btn-gradient">
             💼 Tài chính
           </button>
         </div>
-        
+
         <!-- Thông báo khi chưa chọn đơn vị -->
         <div v-if="!selectedUnitId" class="unit-warning">
           <i class="mdi mdi-information-outline"></i>
@@ -105,16 +110,16 @@
     </div>
 
     <!-- Enhanced Loading Overlays -->
-    <LoadingOverlay 
-      :show="loading" 
-      title="Đang tải dữ liệu" 
+    <LoadingOverlay
+      :show="loading"
+      title="Đang tải dữ liệu"
       message="Đang truy xuất dữ liệu từ hệ thống..."
       icon="📊"
     />
-    
-    <LoadingOverlay 
-      :show="calculating" 
-      title="Đang tính toán" 
+
+    <LoadingOverlay
+      :show="calculating"
+      title="Đang tính toán"
       message="Vui lòng chờ trong khi hệ thống tính toán các chỉ tiêu..."
       icon="⚡"
     />
@@ -131,7 +136,7 @@
 
     <!-- Dashboard Content -->
     <div v-if="!loading" class="dashboard-content">
-      
+
       <!-- 6 chỉ tiêu chính với trạng thái cập nhật -->
       <div class="overview-section">
         <div class="section-header">
@@ -143,10 +148,10 @@
             Nhấp vào từng card để xem chi tiết chi nhánh đã/chưa cập nhật dữ liệu
           </p>
         </div>
-        
+
         <div class="kpi-cards-grid">
-          <div 
-            v-for="(indicator, index) in sixMainIndicators" 
+          <div
+            v-for="(indicator, index) in sixMainIndicators"
             :key="indicator.id"
             class="kpi-card clickable"
             :class="[indicator.class, { 'has-updates': indicator.hasUpdates }]"
@@ -161,7 +166,7 @@
                 <i v-else class="mdi mdi-alert-circle status-warning"></i>
               </div>
             </div>
-            
+
             <div class="card-body">
               <div class="update-summary">
                 <div class="updated-units">
@@ -173,20 +178,20 @@
                   <span class="label">Chưa cập nhật</span>
                 </div>
               </div>
-              
+
               <div class="progress-bar">
-                <div 
-                  class="progress-fill" 
+                <div
+                  class="progress-fill"
                   :style="{ width: indicator.updateProgress + '%' }"
                   :class="getProgressClass(indicator.updateProgress)"
                 ></div>
               </div>
-              
+
               <div class="progress-text">
                 {{ Math.round(indicator.updateProgress) }}% chi nhánh đã cập nhật
               </div>
             </div>
-            
+
             <div class="card-footer">
               <span class="last-update">
                 Cập nhật lần cuối: {{ indicator.lastUpdate || 'Chưa có' }}
@@ -220,8 +225,8 @@
                 <td class="number-cell">
                   <div class="progress-container">
                     <div class="progress-bar">
-                      <div 
-                        class="progress-fill" 
+                      <div
+                        class="progress-fill"
                         :style="{ width: unit.completionRate + '%' }"
                         :class="getProgressClass(unit.completionRate)"
                       ></div>
@@ -239,7 +244,7 @@
               </tr>
             </tbody>
           </table>
-          
+
           <div v-else class="no-data">
             <p>Không có dữ liệu hiệu suất cho kỳ đã chọn.</p>
           </div>
@@ -284,7 +289,7 @@
               </tbody>
             </table>
           </div>
-          
+
           <div v-else class="no-data">
             <p>Chưa có kết quả tính toán nào. Nhấn nút "Tính toán" để bắt đầu.</p>
           </div>
@@ -318,8 +323,8 @@
 
         <!-- Grid hiển thị 6 chỉ tiêu -->
         <div class="indicators-results-grid">
-          <div 
-            v-for="(indicator, index) in calculatedIndicators" 
+          <div
+            v-for="(indicator, index) in calculatedIndicators"
             :key="indicator.id"
             class="result-card"
             :class="[indicator.class, { 'calculated': indicator.calculated, 'missing': !indicator.calculated }]"
@@ -333,13 +338,13 @@
                 <i v-else class="mdi mdi-alert-circle status-warning"></i>
               </div>
             </div>
-            
+
             <div class="result-body">
               <div class="result-value">
                 <span class="value-number">{{ formatNumber(indicator.value) }}</span>
                 <span class="value-unit">{{ indicator.unit }}</span>
               </div>
-              
+
               <div class="result-status-text">
                 <span v-if="indicator.calculated" class="calculated-text">✅ Đã tính toán</span>
                 <span v-else class="missing-text">❌ Chưa có dữ liệu</span>
@@ -353,34 +358,34 @@
       <div class="trend-section">
         <h3>📈 Phân tích xu hướng</h3>
         <div class="trend-controls">
-          <button 
-            @click="loadTrendData('MONTH')" 
+          <button
+            @click="loadTrendData('MONTH')"
             :class="['trend-btn', { active: trendPeriod === 'MONTH' }]"
           >
             Theo tháng
           </button>
-          <button 
-            @click="loadTrendData('QUARTER')" 
+          <button
+            @click="loadTrendData('QUARTER')"
             :class="['trend-btn', { active: trendPeriod === 'QUARTER' }]"
           >
             Theo quý
           </button>
-          <button 
-            @click="loadTrendData('YEAR')" 
+          <button
+            @click="loadTrendData('YEAR')"
             :class="['trend-btn', { active: trendPeriod === 'YEAR' }]"
           >
             Theo năm
           </button>
         </div>
-        
+
         <div v-if="trendData.length > 0" class="trend-chart">
           <!-- Simple trend visualization -->
           <div class="chart-container">
             <div v-for="(point, index) in trendData" :key="index" class="trend-point">
               <div class="point-value">{{ formatPercentage(point.achievementRate) }}</div>
               <div class="point-bar">
-                <div 
-                  class="bar-fill" 
+                <div
+                  class="bar-fill"
                   :style="{ height: (point.achievementRate || 0) + '%' }"
                   :class="getPerformanceClass(point.achievementRate)"
                 ></div>
@@ -389,7 +394,7 @@
             </div>
           </div>
         </div>
-        
+
         <div v-else class="no-data">
           <p>Chưa có dữ liệu xu hướng.</p>
         </div>
@@ -419,7 +424,7 @@
             <i class="mdi mdi-close"></i>
           </button>
         </div>
-        
+
         <div class="modal-body">
           <div class="indicator-summary">
             <div class="summary-stats">
@@ -437,34 +442,34 @@
               </div>
             </div>
           </div>
-          
+
           <div class="units-status">
             <h4>Trạng thái cập nhật theo chi nhánh:</h4>
-            
+
             <div class="status-filter">
-              <button 
+              <button
                 :class="['filter-btn', { active: statusFilter === 'all' }]"
                 @click="statusFilter = 'all'"
               >
                 Tất cả
               </button>
-              <button 
+              <button
                 :class="['filter-btn', { active: statusFilter === 'updated' }]"
                 @click="statusFilter = 'updated'"
               >
                 Đã cập nhật
               </button>
-              <button 
+              <button
                 :class="['filter-btn', { active: statusFilter === 'pending' }]"
                 @click="statusFilter = 'pending'"
               >
                 Chưa cập nhật
               </button>
             </div>
-            
+
             <div class="units-list">
-              <div 
-                v-for="unit in filteredUnitsStatus" 
+              <div
+                v-for="unit in filteredUnitsStatus"
                 :key="unit.id"
                 class="unit-item"
                 :class="{ 'updated': unit.isUpdated, 'pending': !unit.isUpdated }"
@@ -487,7 +492,7 @@
             </div>
           </div>
         </div>
-        
+
         <div class="modal-footer">
           <button @click="closeDetailModal" class="btn btn-secondary">
             Đóng
@@ -502,11 +507,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import LoadingOverlay from '../../components/dashboard/LoadingOverlay.vue';
 import { isAuthenticated } from '../../services/auth';
 import { dashboardService } from '../../services/dashboardService';
-import LoadingOverlay from '../../components/dashboard/LoadingOverlay.vue';
 
 const router = useRouter();
 
@@ -523,26 +528,27 @@ const statusFilter = ref('all');
 const selectedYear = ref(new Date().getFullYear());
 const periodType = ref('');
 const selectedPeriod = ref('');
+const selectedDate = ref(''); // Thêm biến cho ngày cụ thể
 const selectedUnitId = ref('');
 const trendPeriod = ref('MONTH');
 
 // Data
 const units = ref([
-  { id: 'CnLaiChau', name: 'CN Lai Châu', code: '7800' },
-  { id: 'HoiSo', name: 'Hội Sở', code: '7801' },
-  { id: 'CnTamDuong', name: 'CN Tam Đường', code: '7802' },
-  { id: 'CnPhongTho', name: 'CN Phong Thổ', code: '7803' },
-  { id: 'CnSinHo', name: 'CN Sin Hồ', code: '7804' },
-  { id: 'CnMuongTe', name: 'CN Mường Tè', code: '7805' },
-  { id: 'CnThanUyen', name: 'CN Than Uyên', code: '7806' },
-  { id: 'CnThanhPho', name: 'CN Thành Phố', code: '7807' },
-  { id: 'CnTanUyen', name: 'CN Tân Uyên', code: '7808' },
-  { id: 'CnNamNhun', name: 'CN Nậm Nhùn', code: '7809' },
-  { id: 'CnPhongThoPgdMuongSo', name: 'CN Phong Thổ - PGD Mường So', code: '7803-01' },
-  { id: 'CnThanUyenPgdMuongThan', name: 'CN Than Uyên - PGD Mường Than', code: '7806-01' },
-  { id: 'CnThanhPhoPgdso1', name: 'CN Thành Phố - PGD số 1', code: '7807-01' },
-  { id: 'CnThanhPhoPgdso2', name: 'CN Thành Phố - PGD số 2', code: '7807-02' },
-  { id: 'CnTanUyenPgdso3', name: 'CN Tân Uyên - PGD số 3', code: '7808-01' }
+  { id: 'CnLaiChau', name: 'Chi nhánh Lai Châu', code: '7800' },
+  { id: 'HoiSo', name: 'Hội Sở', code: '7800' },
+  { id: 'CnTamDuong', name: 'CN Tam đường', code: '7801' },
+  { id: 'CnPhongTho', name: 'CN Phong Thổ', code: '7802' },
+  { id: 'CnSinHo', name: 'CN Sìn Hồ', code: '7803' },
+  { id: 'CnMuongTe', name: 'CN Mường Tè', code: '7804' },
+  { id: 'CnThanUyen', name: 'CN Than Uyên', code: '7805' },
+  { id: 'CnThanhPho', name: 'CN Thành Phố', code: '7806' },
+  { id: 'CnTanUyen', name: 'CN Tân Uyên', code: '7807' },
+  { id: 'CnNamNhun', name: 'CN Nậm Nhùn', code: '7808' },
+  { id: 'CnPhongThoPgdMuongSo', name: 'CN Phong Thổ - PGD Mường So', code: '7802', pgdCode: '01' },
+  { id: 'CnThanUyenPgdMuongThan', name: 'CN Than Uyên - PGD Mường Than', code: '7805', pgdCode: '01' },
+  { id: 'CnThanhPhoPgdSo1', name: 'CN Thành Phố - PGD Số 1', code: '7806', pgdCode: '01' },
+  { id: 'CnThanhPhoPgdSo2', name: 'CN Thành Phố - PGD Số 2', code: '7806', pgdCode: '02' },
+  { id: 'CnTanUyenPgdSo3', name: 'CN Tân Uyên - PGD Số 3', code: '7807', pgdCode: '01' }
 ]);
 const overview = ref({
   totalTargets: 0,
@@ -642,15 +648,15 @@ const showCalculationResults = ref(false);
 // Computed properties
 const filteredUnitsStatus = computed(() => {
   if (!selectedIndicator.value?.unitsStatus) return [];
-  
+
   const units = selectedIndicator.value.unitsStatus;
-  
+
   if (statusFilter.value === 'updated') {
     return units.filter(unit => unit.isUpdated);
   } else if (statusFilter.value === 'pending') {
     return units.filter(unit => !unit.isUpdated);
   }
-  
+
   return units;
 });
 
@@ -679,26 +685,26 @@ const loadUnits = async () => {
 
 const loadData = async () => {
   if (!selectedYear.value) return;
-  
+
   loading.value = true;
   errorMessage.value = '';
-  
+
   try {
     const params = {
       year: selectedYear.value
     };
-    
+
     if (periodType.value) params.periodType = periodType.value;
     if (selectedPeriod.value && periodType.value !== 'YEAR') params.period = selectedPeriod.value;
     if (selectedUnitId.value) params.unitId = selectedUnitId.value;
-    
+
     // Load dashboard data
     const dashboardData = await dashboardService.getDashboardData(params);
     if (dashboardData) {
       overview.value = dashboardData.overview || overview.value;
       performanceData.value = dashboardData.performanceByUnit || [];
     }
-    
+
     // Load calculation results - Sửa lỗi 404 bằng cách bỏ qua lỗi hoặc dùng mock data
     try {
       const calculationData = await dashboardService.getCalculationResults(params);
@@ -707,10 +713,10 @@ const loadData = async () => {
       console.warn('⚠️ Calculation results endpoint not available, using mock data');
       calculationResults.value = generateMockCalculationResults();
     }
-    
+
     // Load indicator status for 6 main indicators
     await loadIndicatorStatus(params);
-    
+
   } catch (error) {
     console.error('Error loading dashboard data:', error);
     errorMessage.value = 'Không thể tải dữ liệu dashboard';
@@ -750,7 +756,7 @@ const loadIndicatorStatus = async (params) => {
   try {
     // Mock data cho trạng thái cập nhật - sau này sẽ thay bằng API thực
     const allUnits = units.value;
-    
+
     sixMainIndicators.value.forEach((indicator, index) => {
       // Simulate random update status
       const updatedCount = Math.floor(Math.random() * allUnits.length);
@@ -761,7 +767,7 @@ const loadIndicatorStatus = async (params) => {
         isUpdated: unitIndex < updatedCount,
         lastUpdate: unitIndex < updatedCount ? new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString() : null
       }));
-      
+
       indicator.updatedUnits = updatedCount;
       indicator.pendingUnits = allUnits.length - updatedCount;
       indicator.updateProgress = allUnits.length > 0 ? (updatedCount / allUnits.length) * 100 : 0;
@@ -776,15 +782,15 @@ const loadIndicatorStatus = async (params) => {
 
 const loadTrendData = async (period) => {
   trendPeriod.value = period;
-  
+
   try {
     const params = {
       year: selectedYear.value,
       periodType: period
     };
-    
+
     if (selectedUnitId.value) params.unitId = selectedUnitId.value;
-    
+
     const response = await dashboardService.getTrendData(params);
     trendData.value = response || [];
   } catch (error) {
@@ -798,21 +804,21 @@ const triggerCalculation = async () => {
     errorMessage.value = 'Vui lòng chọn năm để tính toán';
     return;
   }
-  
+
   calculating.value = true;
   errorMessage.value = '';
   successMessage.value = '';
   showCalculationResults.value = false;
-  
+
   try {
     const params = {
       year: selectedYear.value
     };
-    
+
     if (periodType.value) params.periodType = periodType.value;
     if (selectedPeriod.value && periodType.value !== 'YEAR') params.period = selectedPeriod.value;
     if (selectedUnitId.value) params.unitId = selectedUnitId.value;
-    
+
     // Tính toán theo chi nhánh được chọn
     let unitCodes = [];
     if (selectedUnitId.value) {
@@ -822,39 +828,39 @@ const triggerCalculation = async () => {
       // Tất cả đơn vị: từ 7800 -> 7808
       unitCodes = ['7800', '7801', '7802', '7803', '7804', '7805', '7806', '7807', '7808'];
     }
-    
+
     params.unitCodes = unitCodes;
-    
+
     await dashboardService.triggerCalculations(params);
-    
+
     // Mock dữ liệu tính toán 6 chỉ tiêu (sau này sẽ thay bằng API thực)
     setTimeout(() => {
       // Simulate calculation results
       calculatedIndicators.value[0].value = 1250.5;
       calculatedIndicators.value[0].calculated = true;
-      
+
       calculatedIndicators.value[1].value = 980.3;
       calculatedIndicators.value[1].calculated = true;
-      
+
       calculatedIndicators.value[2].value = 1.8;
       calculatedIndicators.value[2].calculated = true;
-      
+
       calculatedIndicators.value[3].value = 45.7;
       calculatedIndicators.value[3].calculated = true;
-      
+
       calculatedIndicators.value[4].value = 28.9;
       calculatedIndicators.value[4].calculated = true;
-      
+
       calculatedIndicators.value[5].value = 156.4;
       calculatedIndicators.value[5].calculated = true;
-      
+
       showCalculationResults.value = true;
       successMessage.value = 'Tính toán hoàn thành thành công cho ' + (selectedUnitId.value ? getSelectedUnitName() : 'toàn tỉnh');
     }, 1000);
-    
+
     // Reload data after calculation
     await loadData();
-    
+
   } catch (error) {
     console.error('Error triggering calculation:', error);
     errorMessage.value = 'Có lỗi xảy ra khi thực hiện tính toán: ' + (error.response?.data?.message || error.message);
@@ -872,30 +878,53 @@ const calculateAll = async () => {
   await triggerCalculation();
 };
 
-// 2. Tính Nguồn vốn
+// 2. Tính Nguồn vốn - Gọi API thực tế
 const calculateNguonVon = async () => {
   if (!selectedUnitId.value) {
     errorMessage.value = 'Vui lòng chọn Chi nhánh/Phòng ban trước khi tính toán';
     return;
   }
-  
+
   calculating.value = true;
   errorMessage.value = '';
   successMessage.value = '';
-  
+
   try {
-    // TODO: Implement API call khi có công thức từ anh
-    console.log('🔧 Tính Nguồn vốn cho:', getSelectedUnitName());
-    
-    // Mock data tạm thời
-    setTimeout(() => {
-      calculatedIndicators.value[0].value = Math.floor(Math.random() * 1000) + 500; // 500-1500 tỷ
-      calculatedIndicators.value[0].calculated = true;
-      showCalculationResults.value = true;
-      successMessage.value = `✅ Đã tính Nguồn vốn cho ${getSelectedUnitName()}: ${formatNumber(calculatedIndicators.value[0].value)} tỷ`;
-      calculating.value = false;
-    }, 800);
-    
+    const selectedUnit = units.value.find(u => u.id === selectedUnitId.value);
+    if (!selectedUnit) {
+      throw new Error('Không tìm thấy thông tin chi nhánh được chọn');
+    }
+
+    console.log('🔧 Tính Nguồn vốn cho:', selectedUnit.name);
+
+    // Gọi API tính toán Nguồn vốn
+    let apiUrl = `/api/NguonVonCalculation/calculate/${selectedUnit.code}`;
+    if (selectedUnit.pgdCode) {
+      apiUrl += `?pgdCode=${selectedUnit.pgdCode}`;
+    }
+
+    const response = await fetch(apiUrl);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    // Cập nhật kết quả
+    calculatedIndicators.value[0].value = result.totalNguonVon;
+    calculatedIndicators.value[0].calculated = true;
+    calculatedIndicators.value[0].details = {
+      formula: result.calculationFormula,
+      totalRecords: result.totalRecords,
+      validAccountsCount: result.validAccountsCount,
+      excludedAccountsCount: result.excludedAccountsCount,
+      calculationTime: result.calculationTime
+    };
+
+    showCalculationResults.value = true;
+    successMessage.value = `✅ Đã tính Nguồn vốn cho ${selectedUnit.name}: ${formatNumber(result.totalNguonVon)} tỷ đồng`;
+    calculating.value = false;
+
   } catch (error) {
     console.error('Error calculating Nguồn vốn:', error);
     errorMessage.value = 'Có lỗi khi tính Nguồn vốn: ' + error.message;
@@ -909,14 +938,14 @@ const calculateDuNo = async () => {
     errorMessage.value = 'Vui lòng chọn Chi nhánh/Phòng ban trước khi tính toán';
     return;
   }
-  
+
   calculating.value = true;
   errorMessage.value = '';
   successMessage.value = '';
-  
+
   try {
     console.log('🔧 Tính Dư nợ cho:', getSelectedUnitName());
-    
+
     setTimeout(() => {
       calculatedIndicators.value[1].value = Math.floor(Math.random() * 1000) + 800; // 800-1800 tỷ
       calculatedIndicators.value[1].calculated = true;
@@ -924,7 +953,7 @@ const calculateDuNo = async () => {
       successMessage.value = `✅ Đã tính Dư nợ cho ${getSelectedUnitName()}: ${formatNumber(calculatedIndicators.value[1].value)} tỷ`;
       calculating.value = false;
     }, 800);
-    
+
   } catch (error) {
     console.error('Error calculating Dư nợ:', error);
     errorMessage.value = 'Có lỗi khi tính Dư nợ: ' + error.message;
@@ -938,14 +967,14 @@ const calculateNoXau = async () => {
     errorMessage.value = 'Vui lòng chọn Chi nhánh/Phòng ban trước khi tính toán';
     return;
   }
-  
+
   calculating.value = true;
   errorMessage.value = '';
   successMessage.value = '';
-  
+
   try {
     console.log('🔧 Tính Nợ xấu cho:', getSelectedUnitName());
-    
+
     setTimeout(() => {
       calculatedIndicators.value[2].value = (Math.random() * 3).toFixed(2); // 0-3%
       calculatedIndicators.value[2].calculated = true;
@@ -953,7 +982,7 @@ const calculateNoXau = async () => {
       successMessage.value = `✅ Đã tính Nợ xấu cho ${getSelectedUnitName()}: ${calculatedIndicators.value[2].value}% (càng thấp càng tốt)`;
       calculating.value = false;
     }, 800);
-    
+
   } catch (error) {
     console.error('Error calculating Nợ xấu:', error);
     errorMessage.value = 'Có lỗi khi tính Nợ xấu: ' + error.message;
@@ -967,14 +996,14 @@ const calculateThuNoXLRR = async () => {
     errorMessage.value = 'Vui lòng chọn Chi nhánh/Phòng ban trước khi tính toán';
     return;
   }
-  
+
   calculating.value = true;
   errorMessage.value = '';
   successMessage.value = '';
-  
+
   try {
     console.log('🔧 Tính Thu nợ XLRR cho:', getSelectedUnitName());
-    
+
     setTimeout(() => {
       calculatedIndicators.value[3].value = Math.floor(Math.random() * 100) + 20; // 20-120 tỷ
       calculatedIndicators.value[3].calculated = true;
@@ -982,7 +1011,7 @@ const calculateThuNoXLRR = async () => {
       successMessage.value = `✅ Đã tính Thu nợ XLRR cho ${getSelectedUnitName()}: ${formatNumber(calculatedIndicators.value[3].value)} tỷ`;
       calculating.value = false;
     }, 800);
-    
+
   } catch (error) {
     console.error('Error calculating Thu nợ XLRR:', error);
     errorMessage.value = 'Có lỗi khi tính Thu nợ XLRR: ' + error.message;
@@ -996,14 +1025,14 @@ const calculateThuDichVu = async () => {
     errorMessage.value = 'Vui lòng chọn Chi nhánh/Phòng ban trước khi tính toán';
     return;
   }
-  
+
   calculating.value = true;
   errorMessage.value = '';
   successMessage.value = '';
-  
+
   try {
     console.log('🔧 Tính Thu dịch vụ cho:', getSelectedUnitName());
-    
+
     setTimeout(() => {
       calculatedIndicators.value[4].value = Math.floor(Math.random() * 50) + 10; // 10-60 tỷ
       calculatedIndicators.value[4].calculated = true;
@@ -1011,7 +1040,7 @@ const calculateThuDichVu = async () => {
       successMessage.value = `✅ Đã tính Thu dịch vụ cho ${getSelectedUnitName()}: ${formatNumber(calculatedIndicators.value[4].value)} tỷ`;
       calculating.value = false;
     }, 800);
-    
+
   } catch (error) {
     console.error('Error calculating Thu dịch vụ:', error);
     errorMessage.value = 'Có lỗi khi tính Thu dịch vụ: ' + error.message;
@@ -1025,14 +1054,14 @@ const calculateTaiChinh = async () => {
     errorMessage.value = 'Vui lòng chọn Chi nhánh/Phòng ban trước khi tính toán';
     return;
   }
-  
+
   calculating.value = true;
   errorMessage.value = '';
   successMessage.value = '';
-  
+
   try {
     console.log('🔧 Tính Lợi nhuận khoán tài chính cho:', getSelectedUnitName());
-    
+
     setTimeout(() => {
       calculatedIndicators.value[5].value = Math.floor(Math.random() * 200) + 50; // 50-250 tỷ
       calculatedIndicators.value[5].calculated = true;
@@ -1040,7 +1069,7 @@ const calculateTaiChinh = async () => {
       successMessage.value = `✅ Đã tính Lợi nhuận khoán tài chính cho ${getSelectedUnitName()}: ${formatNumber(calculatedIndicators.value[5].value)} tỷ`;
       calculating.value = false;
     }, 800);
-    
+
   } catch (error) {
     console.error('Error calculating Tài chính:', error);
     errorMessage.value = 'Có lỗi khi tính Lợi nhuận khoán tài chính: ' + error.message;
@@ -1052,6 +1081,7 @@ const calculateTaiChinh = async () => {
 
 const onPeriodTypeChange = () => {
   selectedPeriod.value = '';
+  selectedDate.value = ''; // Reset ngày cụ thể khi thay đổi loại kỳ
   loadData();
 };
 
@@ -1084,11 +1114,11 @@ const refreshIndicatorData = async () => {
       year: selectedYear.value,
       indicatorId: selectedIndicator.value.id
     };
-    
+
     if (periodType.value) params.periodType = periodType.value;
     if (selectedPeriod.value && periodType.value !== 'YEAR') params.period = selectedPeriod.value;
     if (selectedUnitId.value) params.unitId = selectedUnitId.value;
-    
+
     await loadIndicatorStatus(params);
     successMessage.value = `Đã làm mới dữ liệu cho chỉ tiêu ${selectedIndicator.value.name}`;
   }
@@ -1159,7 +1189,7 @@ onMounted(async () => {
     router.push('/login');
     return;
   }
-  
+
   await loadUnits();
   await loadData();
   await loadTrendData(trendPeriod.value);
@@ -1256,7 +1286,7 @@ onMounted(async () => {
 .filter-label {
   font-size: 12px;
   font-weight: 600;
-  color: #666;
+  color: white; /* Changed from #666 to white as requested */
   margin-bottom: 4px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -1541,7 +1571,7 @@ onMounted(async () => {
 }
 
 /* ================================
-  CSS CHO 7 NÚT CHỨC NĂNG MỚI 
+  CSS CHO 7 NÚT CHỨC NĂNG MỚI
 ================================ */
 
 .calculation-buttons {
@@ -1879,33 +1909,33 @@ onMounted(async () => {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .kpi-cards {
     grid-template-columns: 1fr;
   }
-  
+
   .kpi-card {
     text-align: center;
   }
-  
+
   .card-icon {
     margin-right: 0;
     margin-bottom: 8px;
   }
-  
+
   .trend-controls {
     flex-direction: column;
   }
-  
+
   .chart-container {
     height: 150px;
     padding: 10px 0;
   }
-  
+
   .point-bar {
     height: 80px;
   }
-  
+
   .action-section {
     flex-direction: column;
   }
