@@ -566,7 +566,7 @@ namespace TinhKhoanApp.Api.Controllers
                     .ToListAsync();
 
                 var csvData = new StringBuilder();
-                
+
                 // Header cho CSV
                 csvData.AppendLine("STT,FileName,StatementDate,ImportDate,RecordsCount,Status,ImportedBy,CustomerSeq,CustomerName,AccountNumber,Currency,DebtAmount,LoanType,InterestRate,OfficerName,NextRepayDate,Province,District,LastRepayDate");
 
@@ -650,7 +650,7 @@ namespace TinhKhoanApp.Api.Controllers
                     .ToListAsync();
 
                 var csvData = new StringBuilder();
-                
+
                 // Header cho CSV tóm tắt
                 csvData.AppendLine("STT,FileName,StatementDate,ImportDate,RecordsCount,Status,ImportedBy,FileType,Category,Notes");
 
@@ -712,7 +712,7 @@ namespace TinhKhoanApp.Api.Controllers
                 }
 
                 var csvData = new StringBuilder();
-                
+
                 // Header cho CSV so sánh
                 csvData.AppendLine("Type,FileName,StatementDate,CustomerSeq,CustomerName,AccountNumber,Currency,DebtAmount,LoanType,InterestRate,OfficerName,Province,District,LastRepayDate");
 
