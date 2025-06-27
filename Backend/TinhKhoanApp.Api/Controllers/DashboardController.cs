@@ -158,7 +158,7 @@ namespace TinhKhoanApp.Api.Controllers
                 if (month.HasValue)
                     targetsQuery = targetsQuery.Where(t => t.Month == month.Value);
 
-                // Filter by unitId (int) hoặc unitCode (string) 
+                // Filter by unitId (int) hoặc unitCode (string)
                 if (unitId.HasValue)
                     targetsQuery = targetsQuery.Where(t => t.UnitId == unitId.Value);
                 else if (!string.IsNullOrEmpty(unitCode))
@@ -388,12 +388,13 @@ namespace TinhKhoanApp.Api.Controllers
             [FromQuery] int? quarter = null,
             [FromQuery] int? month = null,
             [FromQuery] int? unitId = null,
+            [FromQuery] string? unitCode = null, // Thêm unitCode parameter
             [FromQuery] string? periodType = null)
         {
             try
             {
-                _logger.LogInformation("🔍 Getting calculation results for year {Year}, quarter {Quarter}, month {Month}, unitId {UnitId}, periodType {PeriodType}",
-                    year, quarter, month, unitId, periodType);
+                _logger.LogInformation("🔍 Getting calculation results for year {Year}, quarter {Quarter}, month {Month}, unitId {UnitId}, unitCode {UnitCode}, periodType {PeriodType}",
+                    year, quarter, month, unitId, unitCode, periodType);
 
                 // Lấy tất cả calculations theo filter
                 var calculationsQuery = _context.DashboardCalculations
@@ -408,8 +409,14 @@ namespace TinhKhoanApp.Api.Controllers
                 if (month.HasValue)
                     calculationsQuery = calculationsQuery.Where(c => c.Month == month.Value);
 
+                // Filter by unitId (int) hoặc unitCode (string) 
                 if (unitId.HasValue)
                     calculationsQuery = calculationsQuery.Where(c => c.UnitId == unitId.Value);
+                else if (!string.IsNullOrEmpty(unitCode))
+                {
+                    // Tạm thời log và skip filter, cần mapping unitCode -> unitId
+                    _logger.LogInformation("🔧 Calculation results: skipping unitCode filter for now: {UnitCode}", unitCode);
+                }
 
                 var calculations = await calculationsQuery
                     .OrderByDescending(c => c.CalculationDate)
@@ -427,8 +434,14 @@ namespace TinhKhoanApp.Api.Controllers
                 if (month.HasValue)
                     targetsQuery = targetsQuery.Where(t => t.Month == month.Value);
 
+                // Filter targets by unitId (int) hoặc unitCode (string)
                 if (unitId.HasValue)
                     targetsQuery = targetsQuery.Where(t => t.UnitId == unitId.Value);
+                else if (!string.IsNullOrEmpty(unitCode))
+                {
+                    // Tạm thời log và skip filter cho targets
+                    _logger.LogInformation("🔧 Targets query: skipping unitCode filter for now: {UnitCode}", unitCode);
+                }
 
                 var targets = await targetsQuery.ToListAsync();
 

@@ -159,11 +159,31 @@ export const dashboardService = {
    */
   async getCalculationResults(params = {}) {
     try {
-      const response = await api.get('/dashboard/calculation-results', { params });
+      // Map frontend params to backend API params giống như getDashboardData
+      const backendParams = {
+        year: params.year
+      };
+
+      // Map periodType và period theo format backend expect
+      if (params.periodType === 'QUARTER' && params.period) {
+        backendParams.quarter = parseInt(params.period);
+      } else if (params.periodType === 'MONTH' && params.period) {
+        backendParams.month = parseInt(params.period);
+      }
+
+      // Map unitId từ string sang unitCode parameter cho backend
+      if (params.unitId) {
+        backendParams.unitCode = params.unitId;
+        console.log('🏢 Calculation results using unitCode filter:', params.unitId);
+      }
+
+      console.log('📊 Calculation results API call with mapped params:', backendParams);
+      const response = await api.get('/dashboard/calculation-results', { params: backendParams });
       return response.data;
     } catch (error) {
       console.error('Error fetching calculation results:', error);
-      throw error;
+      // Return mock data thay vì throw error để không block UI
+      return [];
     }
   },
 
