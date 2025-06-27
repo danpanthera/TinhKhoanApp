@@ -69,10 +69,11 @@ namespace TinhKhoanApp.Api.Controllers
                     }
                 }
 
-                return Ok(new { 
+                return Ok(new
+                {
                     Message = "Calculation completed",
                     Results = results,
-                    CalculatedCount = results.Count 
+                    CalculatedCount = results.Count
                 });
             }
             catch (Exception ex)
@@ -190,7 +191,7 @@ namespace TinhKhoanApp.Api.Controllers
                         TotalActual = calculations.Where(c => c.DashboardIndicatorId == indicator.Id).Sum(c => c.ActualValue ?? 0),
                         Achievement = calculations.Where(c => c.DashboardIndicatorId == indicator.Id).Sum(c => c.ActualValue ?? 0) /
                                     Math.Max(targets.Where(t => t.DashboardIndicatorId == indicator.Id).Sum(t => t.TargetValue), 1) * 100,
-                        UnitsCount = unitId.HasValue ? 1 : 
+                        UnitsCount = unitId.HasValue ? 1 :
                                    targets.Where(t => t.DashboardIndicatorId == indicator.Id).Select(t => t.UnitId).Distinct().Count()
                     }
                 }).ToList();
@@ -218,12 +219,12 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 // Current period data
                 var currentData = await GetPeriodData(year, quarter, month, unitId);
-                
+
                 // Comparison period data
                 var compareData = await GetPeriodData(
-                    compareYear ?? year - 1, 
-                    compareQuarter ?? quarter, 
-                    compareMonth ?? month, 
+                    compareYear ?? year - 1,
+                    compareQuarter ?? quarter,
+                    compareMonth ?? month,
                     unitId);
 
                 var comparison = currentData.Select(current => new
@@ -279,7 +280,7 @@ namespace TinhKhoanApp.Api.Controllers
                     {
                         var yearData = await GetPeriodData(year, null, null, unitId);
                         var indicatorData = yearData.FirstOrDefault(d => d.IndicatorId == indicatorId);
-                        
+
                         trendData.Add(new
                         {
                             Period = year.ToString(),
@@ -297,7 +298,7 @@ namespace TinhKhoanApp.Api.Controllers
                         {
                             var quarterData = await GetPeriodData(year, quarter, null, unitId);
                             var indicatorData = quarterData.FirstOrDefault(d => d.IndicatorId == indicatorId);
-                            
+
                             trendData.Add(new
                             {
                                 Period = $"Q{quarter}/{year}",
@@ -316,7 +317,7 @@ namespace TinhKhoanApp.Api.Controllers
                         {
                             var monthData = await GetPeriodData(year, null, month, unitId);
                             var indicatorData = monthData.FirstOrDefault(d => d.IndicatorId == indicatorId);
-                            
+
                             trendData.Add(new
                             {
                                 Period = $"{month:D2}/{year}",
@@ -377,7 +378,7 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                _logger.LogInformation("🔍 Getting calculation results for year {Year}, quarter {Quarter}, month {Month}, unitId {UnitId}, periodType {PeriodType}", 
+                _logger.LogInformation("🔍 Getting calculation results for year {Year}, quarter {Quarter}, month {Month}, unitId {UnitId}, periodType {PeriodType}",
                     year, quarter, month, unitId, periodType);
 
                 // Lấy tất cả calculations theo filter
@@ -450,8 +451,8 @@ namespace TinhKhoanApp.Api.Controllers
                             {
                                 totalActual = g.Sum(c => c.ActualValue ?? 0),
                                 totalTarget = targets.Where(t => t.DashboardIndicatorId == g.Key).Sum(t => t.TargetValue),
-                                achievementRate = targets.Where(t => t.DashboardIndicatorId == g.Key).Sum(t => t.TargetValue) > 0 
-                                    ? (g.Sum(c => c.ActualValue ?? 0) / targets.Where(t => t.DashboardIndicatorId == g.Key).Sum(t => t.TargetValue) * 100) 
+                                achievementRate = targets.Where(t => t.DashboardIndicatorId == g.Key).Sum(t => t.TargetValue) > 0
+                                    ? (g.Sum(c => c.ActualValue ?? 0) / targets.Where(t => t.DashboardIndicatorId == g.Key).Sum(t => t.TargetValue) * 100)
                                     : 0,
                                 unitsCount = g.Select(c => c.UnitId).Distinct().Count()
                             }

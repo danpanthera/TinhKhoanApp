@@ -17,13 +17,13 @@
         <!-- Time filters với accessibility -->
         <div class="filter-group">
           <label for="year-select" class="filter-label">Năm:</label>
-          <select 
-            id="year-select" 
-            v-model="selectedYear" 
-            @change="loadData" 
+          <select
+            id="year-select"
+            v-model="selectedYear"
+            @change="loadData"
             @click="console.log('📅 Year dropdown clicked')"
-            class="form-select" 
-            autocomplete="off" 
+            class="form-select"
+            autocomplete="off"
             aria-label="Chọn năm">
             <option value="">Chọn năm</option>
             <option v-for="year in yearOptions" :key="year" :value="year">
@@ -34,13 +34,13 @@
 
         <div class="filter-group">
           <label for="period-type-select" class="filter-label">Loại kỳ:</label>
-          <select 
-            id="period-type-select" 
-            v-model="periodType" 
-            @change="onPeriodTypeChange" 
+          <select
+            id="period-type-select"
+            v-model="periodType"
+            @change="onPeriodTypeChange"
             @click="console.log('📆 Period type dropdown clicked')"
-            class="form-select" 
-            autocomplete="off" 
+            class="form-select"
+            autocomplete="off"
             aria-label="Chọn loại kỳ">
             <option value="">Chọn loại kỳ</option>
             <option v-for="period in periodTypeOptions" :key="period.value" :value="period.value">
@@ -76,13 +76,13 @@
 
         <div class="filter-group">
           <label for="unit-select" class="filter-label">Chi nhánh:</label>
-          <select 
-            id="unit-select" 
-            v-model="selectedUnitId" 
-            @change="loadData" 
+          <select
+            id="unit-select"
+            v-model="selectedUnitId"
+            @change="loadData"
             @click="console.log('🏢 Unit dropdown clicked')"
-            class="form-select" 
-            autocomplete="organization" 
+            class="form-select"
+            autocomplete="organization"
             aria-label="Chọn chi nhánh">
             <option value="">Tất cả đơn vị (Toàn tỉnh)</option>
             <option v-for="unit in units" :key="unit.id" :value="unit.id">
@@ -533,6 +533,7 @@ import { useRouter } from 'vue-router';
 import LoadingOverlay from '../../components/dashboard/LoadingOverlay.vue';
 import { isAuthenticated } from '../../services/auth';
 import { dashboardService } from '../../services/dashboardService';
+import apiClient from '../../services/api'; // Import default apiClient để gọi API
 
 const router = useRouter();
 
@@ -676,6 +677,16 @@ console.log('selectedUnitId:', selectedUnitId.value);
 // Reactive variables
 const showCalculationResults = ref(false);
 
+// Khai báo calculatedIndicators để lưu kết quả tính toán của 6 chỉ tiêu chính
+const calculatedIndicators = ref([
+  { id: 'nguon_von', name: 'Nguồn vốn', value: 0, calculated: false, details: null },
+  { id: 'du_no', name: 'Dư nợ', value: 0, calculated: false, details: null },
+  { id: 'no_xau', name: 'Nợ Xấu', value: 0, calculated: false, details: null },
+  { id: 'thu_no_xlrr', name: 'Thu nợ đã XLRR', value: 0, calculated: false, details: null },
+  { id: 'thu_dich_vu', name: 'Thu dịch vụ', value: 0, calculated: false, details: null },
+  { id: 'tai_chinh', name: 'Tài chính', value: 0, calculated: false, details: null }
+]);
+
 // Computed properties
 const filteredUnitsStatus = computed(() => {
   if (!selectedIndicator.value?.unitsStatus) return [];
@@ -717,7 +728,7 @@ const getSelectedUnitName = () => {
 
 const loadData = async () => {
   console.log('🔧 loadData called with:', { selectedYear: selectedYear.value, periodType: periodType.value, selectedUnitId: selectedUnitId.value });
-  
+
   if (!selectedYear.value) return;
 
   loading.value = true;
@@ -933,18 +944,14 @@ const calculateNguonVon = async () => {
 
     console.log('🔧 Tính Nguồn vốn cho:', selectedUnit.name);
 
-    // Gọi API tính toán Nguồn vốn
-    let apiUrl = `/api/NguonVonCalculation/calculate/${selectedUnit.code}`;
+    // Gọi API tính toán Nguồn vốn sử dụng apiClient thay vì fetch
+    let apiUrl = `NguonVonCalculation/calculate/${selectedUnit.code}`;
     if (selectedUnit.pgdCode) {
       apiUrl += `?pgdCode=${selectedUnit.pgdCode}`;
     }
 
-    const response = await fetch(apiUrl);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
+    const response = await apiClient.get(apiUrl);
+    const result = response.data; // Với axios, dữ liệu ở response.data
 
     // Cập nhật kết quả
     calculatedIndicators.value[0].value = result.totalNguonVon;
