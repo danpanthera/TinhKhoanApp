@@ -678,6 +678,39 @@ class RawDataService {
     }
   }
 
+  // 📊 Get processed data from history tables
+  async getProcessedData(importId) {
+    try {
+      console.log(`📊 Getting processed data for import ID: ${importId}`);
+      const response = await api.get(`${this.baseURL}/${importId}/processed`);
+
+      if (response.data) {
+        console.log('✅ Processed data response:', {
+          totalRecords: response.data.totalRecords,
+          tableName: response.data.tableName,
+          dataSource: response.data.dataSource
+        });
+
+        return {
+          success: true,
+          data: response.data
+        };
+      } else {
+        console.warn('⚠️ No processed data returned');
+        return {
+          success: false,
+          error: 'No processed data available'
+        };
+      }
+    } catch (error) {
+      console.error('❌ Error getting processed data:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message
+      };
+    }
+  }
+
   // 🔧 Utility methods
 
   // 📋 Định nghĩa các loại dữ liệu và mô tả

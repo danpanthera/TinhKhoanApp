@@ -26,15 +26,18 @@ namespace TinhKhoanApp.Api.Controllers
         private readonly ApplicationDbContext _context;
         private readonly ILogger<DataImportController> _logger;
         private readonly IStatementDateService _statementDateService;
+        private readonly IRawDataProcessingService _rawDataProcessingService;
 
         public DataImportController(
             ApplicationDbContext context,
             ILogger<DataImportController> logger,
-            IStatementDateService statementDateService)
+            IStatementDateService statementDateService,
+            IRawDataProcessingService rawDataProcessingService)
         {
             _context = context;
             _logger = logger;
             _statementDateService = statementDateService;
+            _rawDataProcessingService = rawDataProcessingService;
         }
 
         // GET: api/DataImport - Get all imported data records
@@ -600,6 +603,84 @@ namespace TinhKhoanApp.Api.Controllers
                 _logger.LogError(ex, "Error exporting record {id}", id);
                 return StatusCode(500, new { message = "Error exporting record", error = ex.Message });
             }
+        }
+
+        // POST: api/DataImport/{id}/process - Process imported CSV data to History models
+        [HttpPost("{id}/process")]
+        public async Task<IActionResult> ProcessImportedDataToHistory(int id, [FromBody] ProcessDataRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("🔄 Processing imported data to history. RecordId: {RecordId}, Category: {Category}",
+                    id, request.Category);
+
+                if (string.IsNullOrWhiteSpace(request.Category))
+                {
+                    return BadRequest(new { message = "Category is required" });
+                }
+
+                // Verify the import record exists
+                var importRecord = await _context.ImportedDataRecords.FindAsync(id);
+                if (importRecord == null)
+                {
+                    return NotFound(new { message = $"Import record with ID {id} not found" });
+                }
+
+                // First validate the data
+                var validationResult = await _rawDataProcessingService.ValidateImportedDataForCategoryAsync(id, request.Category);
+                if (!validationResult.IsValid)
+                {
+                    return BadRequest(new
+                    {
+                        message = $"Data validation failed: {validationResult.Message}",
+                        invalidHeaders = validationResult.InvalidHeaders,
+                        validHeaders = validationResult.ValidHeaders,
+                        totalRecords = validationResult.TotalRecords
+                    });
+                }
+
+                // Process the data using the service
+                var processingResult = await _rawDataProcessingService.ProcessImportedDataToHistoryAsync(
+                    id, request.Category, request.StatementDate);
+
+                if (processingResult.Success)
+                {
+                    return Ok(new
+                    {
+                        success = true,
+                        message = processingResult.Message,
+                        batchId = processingResult.BatchId,
+                        processedRecords = processingResult.ProcessedRecords,
+                        category = request.Category,
+                        tableName = processingResult.TableName,
+                        statementDate = request.StatementDate ?? importRecord.StatementDate,
+                        validHeaders = validationResult.ValidHeaders,
+                        totalDataItems = validationResult.TotalRecords,
+                        errors = processingResult.Errors
+                    });
+                }
+                else
+                {
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = processingResult.Message,
+                        errors = processingResult.Errors,
+                        processedRecords = processingResult.ProcessedRecords
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error processing imported data to history for record {RecordId}", id);
+                return StatusCode(500, new { message = "Error processing data", error = ex.Message });
+            }
+        }
+
+        public class ProcessDataRequest
+        {
+            public string Category { get; set; } = string.Empty;
+            public DateTime? StatementDate { get; set; }
         }
 
         // Private helper methods

@@ -11,6 +11,7 @@ using TinhKhoanApp.Api.HealthChecks; // Thêm namespace cho HealthChecks
 using TinhKhoanApp.Api.Repositories; // Thêm namespace cho Repositories
 using System.Text.Json.Serialization;
 using BCrypt.Net;
+using Microsoft.AspNetCore.Http.Features; // For FormOptions
 
 internal class Program
 {
@@ -28,7 +29,7 @@ internal class Program
         // Định nghĩa URL của Vue app dev server (Sếp thay 8080 bằng port thực tế của Vue app nếu khác)
         // var vueAppDevServerUrl = "http://localhost:8080";        // 1. Lấy connection string cho SQL Server
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-        
+
         if (string.IsNullOrEmpty(connectionString))
         {
             throw new InvalidOperationException("SQL Server connection string is not configured.");
@@ -45,7 +46,21 @@ internal class Program
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 // --- KẾT THÚC PHẦN THÊM ---
                 options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-            });        // 3.5. Đăng ký các business services        builder.Services.AddScoped<IKpiScoringService, KpiScoringService>();
+            });
+
+        // 🔧 Cấu hình cho file upload lớn
+        builder.Services.Configure<FormOptions>(options =>
+        {
+            options.MultipartBodyLengthLimit = 500_000_000; // 500MB
+            options.ValueLengthLimit = int.MaxValue;
+            options.ValueCountLimit = int.MaxValue;
+            options.KeyLengthLimit = int.MaxValue;
+        });
+
+        builder.WebHost.ConfigureKestrel(options =>
+        {
+            options.Limits.MaxRequestBodySize = 500_000_000; // 500MB
+        });        // 3.5. Đăng ký các business services        builder.Services.AddScoped<IKpiScoringService, KpiScoringService>();
         builder.Services.AddScoped<IEmployeeKpiAssignmentService, EmployeeKpiAssignmentService>();
         builder.Services.AddScoped<UnitKpiScoringService>();
         builder.Services.AddScoped<IStatementDateService, StatementDateService>();
@@ -84,12 +99,16 @@ internal class Program
         });        // Register services        // KPI services removed during cleanup        // 🗄️ Đăng ký Raw Data Import Service
         builder.Services.AddScoped<IRawDataImportService, RawDataImportService>();
         builder.Services.AddScoped<IExtendedRawDataImportService, ExtendedRawDataImportService>();
-          // 🗄️ Đăng ký Temporal Data Service cho high-performance import
+
+        // 🔄 Đăng ký Raw Data Processing Service - để xử lý dữ liệu CSV thành History models
+        builder.Services.AddScoped<IRawDataProcessingService, RawDataProcessingService>();
+
+        // 🗄️ Đăng ký Temporal Data Service cho high-performance import
         builder.Services.AddScoped<ITemporalDataService, TemporalDataService>();
-        
+
         // 🕒 Đăng ký Temporal Table Service cho SQL Server Temporal Tables
         builder.Services.AddScoped<ITemporalTableService, TemporalTableService>();
-        
+
         // Add optimized memory caching
         builder.Services.AddMemoryCache(options =>
         {
@@ -110,21 +129,22 @@ internal class Program
         {
             options.EnableForHttps = true;
             options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.BrotliCompressionProvider>();
-            options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();        });
-        
+            options.Providers.Add<Microsoft.AspNetCore.ResponseCompression.GzipCompressionProvider>();
+        });
+
         // Register cache service based on configuration
         var useRedis = builder.Configuration.GetValue<bool>("UseRedis", false);
-        
+
         // Always register MemoryCacheService
         builder.Services.AddScoped<MemoryCacheService>();
-        
+
         if (useRedis)
         {
             // Add Redis connection first
             var redisConnection = builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379";
             builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(sp =>
                 StackExchange.Redis.ConnectionMultiplexer.Connect(redisConnection));
-            
+
             // Then register Redis-dependent services
             builder.Services.AddSingleton<RedisCacheService>();
             builder.Services.AddScoped<HybridCacheService>();
@@ -134,7 +154,7 @@ internal class Program
         {
             builder.Services.AddScoped<ICacheService, MemoryCacheService>();
         }
-          builder.Services.AddScoped<IPerformanceMonitorService, PerformanceMonitorService>();
+        builder.Services.AddScoped<IPerformanceMonitorService, PerformanceMonitorService>();
         builder.Services.AddScoped<IStreamingExportService, StreamingExportService>(); // ⚡ NEW: Streaming Export Service          // Register optimized repositories
         builder.Services.AddScoped<OptimizedEmployeeRepository>();
 
@@ -150,26 +170,27 @@ internal class Program
             });
         });        // Add Health Checks
         builder.Services.AddCustomHealthChecks();
-        
+
         // Connection pooling is handled by the existing AddDbContext registration above
 
         // ... (AddDbContext, AddControllers, AddSwaggerGen, etc.) ...
         var app = builder.Build();
-        
+
         // Cấu hình HTTP request pipeline.
         if (app.Environment.IsDevelopment())
-        {            app.UseSwagger();
+        {
+            app.UseSwagger();
             app.UseSwaggerUI();
         }
-        
+
         // ⚡ OPTIMIZED MIDDLEWARE PIPELINE
-        
+
         // Add Response Compression (early in pipeline)
         app.UseResponseCompression();
-        
+
         // Add Response Caching
         app.UseResponseCaching();
-        
+
         // Add Performance Monitoring
         app.UsePerformanceMiddleware();        // Thêm CORS middleware
         app.UseCors("AllowAll");
@@ -184,13 +205,13 @@ internal class Program
         {
             ResponseWriter = HealthCheckExtensions.WriteResponse
         });
-        
+
         app.MapHealthChecks("/health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
         {
             Predicate = check => check.Tags.Contains("ready"),
             ResponseWriter = HealthCheckExtensions.WriteResponse
         });
-        
+
         app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
         {
             Predicate = _ => false,
@@ -227,7 +248,7 @@ internal class Program
         using (var scope = app.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-              // Seed Units trước với cấu trúc phân cấp đúng            
+              // Seed Units trước với cấu trúc phân cấp đúng
             // COMMENTED OUT DUE TO TRIGGER ISSUES
             if (!db.Units.Any())
             {                // Tạo CNL1 (chi nhánh cấp 1 - root)
@@ -320,7 +341,7 @@ internal class Program
                 {
                     // Use raw SQL to insert positions without explicit IDs to avoid identity conflicts
                     db.Database.ExecuteSqlRaw(@"
-                        INSERT INTO Positions (Name, Description) VALUES 
+                        INSERT INTO Positions (Name, Description) VALUES
                         ('Giamdoc', 'Giám đốc'),
                         ('Phogiamdoc', 'Phó Giám đốc'),
                         ('Truongphong', 'Trưởng phòng'),
@@ -349,9 +370,9 @@ internal class Program
             }if (!db.Employees.Any(e => e.Username == "admin"))
             {
                 // Find a basic position like "Nhanvien" (Nhân viên) for admin
-                var basicPosition = db.Positions.FirstOrDefault(p => p.Name == "Nhanvien") ?? 
+                var basicPosition = db.Positions.FirstOrDefault(p => p.Name == "Nhanvien") ??
                                    db.Positions.FirstOrDefault();
-                
+
                 db.Employees.Add(new Employee
                 {
                     EmployeeCode = "ADMIN",
@@ -365,16 +386,16 @@ internal class Program
                 });
                 db.SaveChanges();            }// Seed dữ liệu vai trò (roles) cho 23 KPI table types
             RoleSeeder.SeedRoles(db);
-            
+
             // Seed dữ liệu định nghĩa KPI cho 23 vai trò (QUAN TRỌNG: phải gọi trước KpiAssignmentTableSeeder)
             SeedKPIDefinitionMaxScore.SeedKPIDefinitions(db);
-            
-            // Seed dữ liệu cho 23 bảng giao khoán KPI chuẩn cho cán bộ  
+
+            // Seed dữ liệu cho 23 bảng giao khoán KPI chuẩn cho cán bộ
             KpiAssignmentTableSeeder.SeedKpiAssignmentTables(db);
-            
+
             // Seed dữ liệu kỳ khoán mẫu
             // KhoanPeriodSeeder.SeedKhoanPeriods(db); // Tạm comment để test import
-            
+
             // Seed dữ liệu nhân viên mẫu
             // await EmployeeSeeder.SeedEmployees(db); // Tạm comment để test import
         }
@@ -382,20 +403,22 @@ internal class Program
         */
         // END OF COMMENTED SEEDING SECTION
 
-        app.Run();    }    private static async Task RunSeedOnly(string[] args)
+        app.Run();
+    }
+    private static async Task RunSeedOnly(string[] args)
     {
         Console.WriteLine("Chạy seeding dữ liệu...");
-        
+
         var builder = WebApplication.CreateBuilder(args);
-        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");        builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection"); builder.Services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(connectionString));
-            
+
         var app = builder.Build();
-        
+
         using (var scope = app.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            
+
             // Nếu có args reseed thì xóa dữ liệu cũ trước
             if (args.Length > 0 && args[0] == "reseed")
             {
@@ -414,7 +437,7 @@ internal class Program
                 db.Units.AddRange(cnl1Units);
                 db.SaveChanges();
 
-                var cnl1 = db.Units.First(u => u.Code == "CnLaiChau");                var cnl2Units = new[]
+                var cnl1 = db.Units.First(u => u.Code == "CnLaiChau"); var cnl2Units = new[]
                 {
                     new Unit { Code = "CnTamDuong", Name = "Chi nhánh Tam Đường", Type = "CNL2", ParentUnitId = cnl1.Id },
                     new Unit { Code = "CnPhongTho", Name = "Chi nhánh Phong Thổ", Type = "CNL2", ParentUnitId = cnl1.Id },
@@ -426,14 +449,15 @@ internal class Program
                     new Unit { Code = "CnNamNhun", Name = "Chi nhánh Nậm Nhùn", Type = "CNL2", ParentUnitId = cnl1.Id }
                 };
                 db.Units.AddRange(cnl2Units);
-                db.SaveChanges();                var cnTamDuong = db.Units.First(u => u.Code == "CnTamDuong");
+                db.SaveChanges(); var cnTamDuong = db.Units.First(u => u.Code == "CnTamDuong");
                 var cnPhongTho = db.Units.First(u => u.Code == "CnPhongTho");
                 var cnSinHo = db.Units.First(u => u.Code == "CnSinHo");
                 var cnMuongTe = db.Units.First(u => u.Code == "CnMuongTe");
                 var cnThanUyen = db.Units.First(u => u.Code == "CnThanUyen");
                 var cnThanhPho = db.Units.First(u => u.Code == "CnThanhPho");
                 var cnTanUyen = db.Units.First(u => u.Code == "CnTanUyen");
-                var cnNamNhun = db.Units.First(u => u.Code == "CnNamNhun");var cnl1Departments = new[]
+                var cnNamNhun = db.Units.First(u => u.Code == "CnNamNhun");// Tạo các phòng nghiệp vụ trực thuộc CNL1
+                var cnl1Departments = new[]
                 {
                     new Unit { Code = "Khdn", Name = "Phòng Khách hàng doanh nghiệp", Type = "Khdn", ParentUnitId = cnl1.Id },
                     new Unit { Code = "Khcn", Name = "Phòng Khách hàng cá nhân", Type = "Khcn", ParentUnitId = cnl1.Id },
@@ -442,7 +466,8 @@ internal class Program
                     new Unit { Code = "Ktgs", Name = "Phòng Kiểm tra giám sát", Type = "Ktgs", ParentUnitId = cnl1.Id },
                     new Unit { Code = "Tonghop", Name = "Phòng Tổng hợp", Type = "Tonghop", ParentUnitId = cnl1.Id }
                 };
-                db.Units.AddRange(cnl1Departments);                var cnl2Departments = new[]
+                db.Units.AddRange(cnl1Departments);                // Tạo các phòng nghiệp vụ trực thuộc CNL2
+                var cnl2Departments = new[]
                 {
                     // Chi nhánh Tam Đường
                     new Unit { Code = "KhCnTamDuong", Name = "Phòng Khách hàng", Type = "Kh", ParentUnitId = cnTamDuong.Id },
@@ -483,7 +508,8 @@ internal class Program
                 };
                 db.Units.AddRange(cnl2Departments);
                 db.SaveChanges();
-            }            Console.WriteLine("Đang seed dữ liệu Positions...");
+            }
+            Console.WriteLine("Đang seed dữ liệu Positions...");
             if (!db.Positions.Any())
             {
                 db.Positions.AddRange(new[]
@@ -504,23 +530,24 @@ internal class Program
                     // new Position { Name = "ThuQuy", Description = "Thủ quỹ" },
                     // new Position { Name = "Truongpho", Description = "Trưởng/Phó phòng" }
                 });
-                db.SaveChanges();            }
-              Console.WriteLine("Đang seed dữ liệu vai trò...");
+                db.SaveChanges();
+            }
+            Console.WriteLine("Đang seed dữ liệu vai trò...");
             RoleSeeder.SeedRoles(db);
             Console.WriteLine("Hoàn thành seeding dữ liệu vai trò!");
-            
+
             Console.WriteLine("Đang seed dữ liệu định nghĩa KPI...");
             SeedKPIDefinitionMaxScore.SeedKPIDefinitions(db);
             Console.WriteLine("Hoàn thành seeding dữ liệu định nghĩa KPI!");
-              
+
             Console.WriteLine("Đang seed dữ liệu KPI...");
             KpiAssignmentTableSeeder.SeedKpiAssignmentTables(db);
             Console.WriteLine("Hoàn thành seeding dữ liệu KPI!");
-            
+
             Console.WriteLine("Đang seed dữ liệu kỳ khoán...");
             KhoanPeriodSeeder.SeedKhoanPeriods(db);
             Console.WriteLine("Hoàn thành seeding dữ liệu kỳ khoán!");
-            
+
             Console.WriteLine("Đang seed dữ liệu nhân viên...");
             await EmployeeSeeder.SeedEmployees(db);
             Console.WriteLine("Hoàn thành seeding dữ liệu nhân viên!");

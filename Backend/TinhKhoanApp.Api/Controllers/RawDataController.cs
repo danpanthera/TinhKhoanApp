@@ -165,6 +165,29 @@ namespace TinhKhoanApp.Api.Controllers
                     var errors = ModelState.SelectMany(x => x.Value?.Errors ?? new Microsoft.AspNetCore.Mvc.ModelBinding.ModelErrorCollection())
                                           .Select(x => x.ErrorMessage);
                     _logger.LogWarning($"❌ Model validation failed: {string.Join(", ", errors)}");
+
+                    // 🔍 Debug đặc biệt cho GL01 với file lớn
+                    if (dataType.ToUpper() == "GL01")
+                    {
+                        _logger.LogError($"🔍 GL01 Import Debug - Model State Invalid");
+                        _logger.LogError($"🔍 File Count: {request.Files?.Count ?? 0}");
+                        if (request.Files != null)
+                        {
+                            foreach (var file in request.Files)
+                            {
+                                _logger.LogError($"🔍 File: {file.FileName}, Size: {file.Length} bytes");
+                            }
+                        }
+                        _logger.LogError($"🔍 Detailed Model State Errors:");
+                        foreach (var kvp in ModelState)
+                        {
+                            foreach (var error in kvp.Value?.Errors ?? new Microsoft.AspNetCore.Mvc.ModelBinding.ModelErrorCollection())
+                            {
+                                _logger.LogError($"🔍 Key: {kvp.Key}, Error: {error.ErrorMessage}");
+                            }
+                        }
+                    }
+
                     return BadRequest(new { message = "Validation failed", errors = errors });
                 }
 
@@ -180,20 +203,51 @@ namespace TinhKhoanApp.Api.Controllers
                     return BadRequest(new { message = "Không có file nào được chọn" });
                 }
 
+                // 🔍 Debug file size cho GL01
+                if (dataType.ToUpper() == "GL01")
+                {
+                    _logger.LogInformation($"🔍 GL01 Upload Debug - Processing {request.Files.Count} files");
+                    foreach (var file in request.Files)
+                    {
+                        _logger.LogInformation($"🔍 GL01 File: {file.FileName}, Size: {file.Length} bytes ({file.Length / 1024.0 / 1024.0:F2} MB)");
+                        _logger.LogInformation($"🔍 GL01 Content Type: {file.ContentType}");
+                    }
+                }
+
                 var results = new List<RawDataImportResult>();
 
                 foreach (var file in request.Files)
                 {
-                    // 🔍 Kiểm tra tên file chứa mã loại dữ liệu
-                    if (!file.FileName.Contains(dataType, StringComparison.OrdinalIgnoreCase))
+                    // 🔍 Special handling for GL01 - relax filename validation
+                    if (dataType.ToUpper() == "GL01")
                     {
-                        results.Add(new RawDataImportResult
+                        _logger.LogInformation($"🔍 GL01 File validation - FileName: {file.FileName}, DataType: {dataType}");
+                        // For GL01, just check that it's a CSV file, don't require GL01 in filename
+                        if (!file.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
                         {
-                            Success = false,
-                            FileName = file.FileName,
-                            Message = $"❌ Tên file phải chứa mã '{dataType}'"
-                        });
-                        continue;
+                            _logger.LogWarning($"❌ GL01 file must be CSV format: {file.FileName}");
+                            results.Add(new RawDataImportResult
+                            {
+                                Success = false,
+                                FileName = file.FileName,
+                                Message = $"❌ GL01 file phải có định dạng .csv"
+                            });
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        // 🔍 Kiểm tra tên file chứa mã loại dữ liệu cho các loại khác
+                        if (!file.FileName.Contains(dataType, StringComparison.OrdinalIgnoreCase))
+                        {
+                            results.Add(new RawDataImportResult
+                            {
+                                Success = false,
+                                FileName = file.FileName,
+                                Message = $"❌ Tên file phải chứa mã '{dataType}'"
+                            });
+                            continue;
+                        }
                     }
 
                     var result = await ProcessSingleFile(file, dataType, request.Notes ?? "");
@@ -237,9 +291,9 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     _logger.LogWarning("❌ Import ID {Id} not found in ImportedDataRecords, returning mock data", id);
                     // ⚡ FALLBACK: Trả về dữ liệu mock nếu không tìm thấy
-                // 🚨 XÓA MOCK DATA: Không trả về mock data, trả về error thực tế
-                _logger.LogWarning("❌ Import record {ImportId} not found in database", id);
-                return NotFound(new { message = $"Không tìm thấy bản ghi import với ID {id}" });
+                    // 🚨 XÓA MOCK DATA: Không trả về mock data, trả về error thực tế
+                    _logger.LogWarning("❌ Import record {ImportId} not found in database", id);
+                    return NotFound(new { message = $"Không tìm thấy bản ghi import với ID {id}" });
                 }
 
                 _logger.LogInformation("✅ Found import: {FileName}, Category: {Category}, Records: {RecordsCount}",
@@ -1380,26 +1434,14 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                _logger.LogInformation("📁 Xử lý file đơn: {FileName} cho loại {DataType}", file.FileName, dataType);
+                _logger.LogInformation("📁 Xử lý file đơn: {FileName} cho loại {DataType}, Size: {FileSize} bytes",
+                    file.FileName, dataType, file.Length);
 
-                // Đọc nội dung file
-                using var reader = new StreamReader(file.OpenReadStream());
-                var content = await reader.ReadToEndAsync();
-
-                // Parse CSV content
-                var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-                if (lines.Length == 0)
-                {
-                    return new RawDataImportResult
-                    {
-                        Success = false,
-                        Message = "File rỗng",
-                        FileName = file.FileName
-                    };
-                }
-
+                // ⚡ Streaming processing cho file lớn
                 var records = new List<Dictionary<string, object>>();
-                var headers = lines[0].Split(',').Select(h => h.Trim('"').Trim()).ToList();
+                List<string> headers = null;
+                int lineCount = 0;
+                const int batchSize = 1000; // Process in batches
 
                 // Trích xuất ngày sao kê từ tên file
                 var statementDate = ExtractStatementDate(file.FileName) ?? DateTime.Now.Date;
@@ -1408,9 +1450,77 @@ namespace TinhKhoanApp.Api.Controllers
                 _logger.LogInformation("🔍 Trích xuất từ file {FileName}: StatementDate={StatementDate}, BranchCode={BranchCode}",
                     file.FileName, statementDate.ToString("yyyy-MM-dd"), branchCode);
 
-                for (int i = 1; i < lines.Length; i++)
+                // 💾 Tạo ImportedDataRecord trước
+                var importedDataRecord = new ImportedDataRecord
                 {
-                    var values = lines[i].Split(',').Select(v => v.Trim('"').Trim()).ToList();
+                    FileName = file.FileName,
+                    FileType = dataType,
+                    Category = dataType,
+                    ImportDate = DateTime.UtcNow,
+                    StatementDate = statementDate,
+                    ImportedBy = "System",
+                    Status = "Processing",
+                    RecordsCount = 0,
+                    Notes = $"{notes} - Branch: {branchCode}"
+                };
+
+                _context.ImportedDataRecords.Add(importedDataRecord);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("✅ Tạo ImportedDataRecord ID={Id} để xử lý streaming", importedDataRecord.Id);
+
+                int totalProcessed = 0;                // ⚡ Stream processing line by line
+                using var reader = new StreamReader(file.OpenReadStream(), System.Text.Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+
+                string line;
+                var headerLines = new List<string>(); // Lưu trữ header cho 7800_DT_KHKD1
+                bool isSpecialHeaderFile = dataType.Contains("7800_DT_KHKD1");
+
+                while ((line = await reader.ReadLineAsync()) != null)
+                {
+                    if (string.IsNullOrWhiteSpace(line)) continue;
+
+                    lineCount++;
+
+                    // 🔥 Xử lý đặc biệt cho file 7800_DT_KHKD1
+                    if (isSpecialHeaderFile)
+                    {
+                        // Dòng 10, 11, 12 là header (merge), dữ liệu bắt đầu từ dòng 13
+                        if (lineCount >= 10 && lineCount <= 12)
+                        {
+                            headerLines.Add(line);
+                            continue;
+                        }
+
+                        // Sau khi đọc dòng 12, tạo header gộp
+                        if (lineCount == 12 && headerLines.Count == 3)
+                        {
+                            headers = ProcessSpecialHeader(headerLines);
+                            _logger.LogInformation("🔥 7800_DT_KHKD1 Special Headers created: {Headers}", string.Join(", ", headers.Take(5)));
+                            continue;
+                        }
+
+                        // Bỏ qua các dòng trước dòng 10 và dòng 12+ nhưng chưa phải data
+                        if (lineCount < 13)
+                        {
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        // Header row thông thường
+                        if (lineCount == 1)
+                        {
+                            headers = line.Split(',').Select(h => h.Trim('"').Trim()).ToList();
+                            _logger.LogInformation("📋 Headers found: {Headers}", string.Join(", ", headers.Take(5)));
+                            continue;
+                        }
+                    }
+
+                    if (headers == null) continue;
+
+                    // Data row
+                    var values = line.Split(',').Select(v => v.Trim('"').Trim()).ToList();
                     var record = new Dictionary<string, object>();
 
                     for (int j = 0; j < Math.Min(headers.Count, values.Count); j++)
@@ -1425,50 +1535,42 @@ namespace TinhKhoanApp.Api.Controllers
                     record["ImportedBy"] = "System";
 
                     records.Add(record);
-                }
 
-                // 💾 LƯU VÀO DATABASE
-                var importedDataRecord = new ImportedDataRecord
-                {
-                    FileName = file.FileName,
-                    FileType = dataType,
-                    Category = dataType,
-                    ImportDate = DateTime.UtcNow,
-                    StatementDate = statementDate,
-                    ImportedBy = "System",
-                    Status = "Completed",
-                    RecordsCount = records.Count,
-                    Notes = $"{notes} - Branch: {branchCode}"
-                };
-
-                _context.ImportedDataRecords.Add(importedDataRecord);
-                await _context.SaveChangesAsync();
-
-                _logger.LogInformation("✅ Đã lưu ImportedDataRecord ID={Id} với {Count} records",
-                    importedDataRecord.Id, records.Count);
-
-                // 💾 LƯU CÁC ITEMS
-                foreach (var record in records)
-                {
-                    var item = new ImportedDataItem
+                    // ⚡ Batch processing để tránh memory overflow
+                    if (records.Count >= batchSize)
                     {
-                        ImportedDataRecordId = importedDataRecord.Id,
-                        RawData = System.Text.Json.JsonSerializer.Serialize(record),
-                        ProcessedDate = DateTime.UtcNow,
-                        ProcessingNotes = $"Processed successfully - Branch: {branchCode}"
-                    };
-                    _context.ImportedDataItems.Add(item);
+                        await SaveBatchToDatabase(records, importedDataRecord.Id, branchCode);
+                        totalProcessed += records.Count;
+                        records.Clear();
+
+                        if (totalProcessed % 5000 == 0)
+                        {
+                            _logger.LogInformation("⚡ Đã xử lý {Processed} records...", totalProcessed);
+                        }
+                    }
                 }
 
+                // 💾 Lưu batch cuối cùng
+                if (records.Any())
+                {
+                    await SaveBatchToDatabase(records, importedDataRecord.Id, branchCode);
+                    totalProcessed += records.Count;
+                }
+
+                // ✅ Cập nhật status và count
+                importedDataRecord.Status = "Completed";
+                importedDataRecord.RecordsCount = totalProcessed;
                 await _context.SaveChangesAsync();
-                _logger.LogInformation("✅ Đã lưu {Count} ImportedDataItems", records.Count);
+
+                _logger.LogInformation("✅ Hoàn thành xử lý file {FileName}: {Total} records",
+                    file.FileName, totalProcessed);
 
                 return new RawDataImportResult
                 {
                     Success = true,
-                    Message = $"Đã import thành công {records.Count} records vào database",
+                    Message = $"Đã import thành công {totalProcessed} records vào database",
                     FileName = file.FileName,
-                    RecordsProcessed = records.Count,
+                    RecordsProcessed = totalProcessed,
                     DataType = dataType,
                     StatementDate = statementDate
                 };
@@ -1483,6 +1585,24 @@ namespace TinhKhoanApp.Api.Controllers
                     FileName = file.FileName
                 };
             }
+        }
+
+        // ⚡ Helper method để lưu batch vào database
+        private async Task SaveBatchToDatabase(List<Dictionary<string, object>> records, int importedDataRecordId, string branchCode)
+        {
+            foreach (var record in records)
+            {
+                var item = new ImportedDataItem
+                {
+                    ImportedDataRecordId = importedDataRecordId,
+                    RawData = System.Text.Json.JsonSerializer.Serialize(record),
+                    ProcessedDate = DateTime.UtcNow,
+                    ProcessingNotes = $"Batch processed - Branch: {branchCode}"
+                };
+                _context.ImportedDataItems.Add(item);
+            }
+
+            await _context.SaveChangesAsync();
         }
 
         // ✅ API mới: Lấy danh sách import gần đây nhất (để hiển thị ngay sau khi upload)
@@ -1615,6 +1735,272 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 _logger.LogError(ex, "💥 Error in raw SQL GetLatestImports implementation");
                 return StatusCode(500, new { message = "Error getting latest imports", error = ex.Message });
+            }
+        }
+
+        // 📊 GET: api/RawData/{id}/processed - Lấy dữ liệu đã xử lý từ bảng History
+        [HttpGet("{id:int}/processed")]
+        public async Task<ActionResult<object>> GetProcessedDataByImportId(int id)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Getting processed data for import ID: {Id}", id);
+
+                // Get import record to determine data type
+                var import = await _context.ImportedDataRecords
+                    .Where(x => x.Id == id)
+                    .FirstOrDefaultAsync();
+
+                if (import == null)
+                {
+                    _logger.LogWarning("❌ Import record {ImportId} not found", id);
+                    return NotFound(new { message = $"Không tìm thấy bản ghi import với ID {id}" });
+                }
+
+                var dataType = import.Category?.ToUpper() ?? import.FileType?.ToUpper();
+                _logger.LogInformation("📊 Looking for processed data of type: {DataType} for import: {ImportId}", dataType, id);
+
+                var response = new
+                {
+                    importInfo = new
+                    {
+                        import.Id,
+                        import.FileName,
+                        DataType = dataType,
+                        import.ImportDate,
+                        import.StatementDate,
+                        import.RecordsCount,
+                        import.Status,
+                        import.ImportedBy
+                    },
+                    processedData = new List<object>(),
+                    totalRecords = 0,
+                    tableName = "",
+                    dataSource = "PROCESSED_HISTORY_TABLE"
+                };
+
+                // Get processed data based on data type
+                switch (dataType)
+                {
+                    case "BC57":
+                        var bc57Data = await _context.BC57History
+                            .Where(h => import.StatementDate.HasValue && h.StatementDate.Date == import.StatementDate.Value.Date)
+                            .OrderByDescending(h => h.ProcessedDate)
+                            .Take(100) // Limit to 100 records for performance
+                            .Select(h => new
+                            {
+                                h.Id,
+                                h.MaKhachHang,
+                                h.TenKhachHang,
+                                h.SoTaiKhoan,
+                                h.MaHopDong,
+                                h.LoaiSanPham,
+                                h.SoTienGoc,
+                                h.LaiSuat,
+                                h.SoNgayTinhLai,
+                                h.TienLaiDuThu,
+                                h.TienLaiQuaHan,
+                                h.NgayBatDau,
+                                h.NgayKetThuc,
+                                h.TrangThai,
+                                h.MaChiNhanh,
+                                h.TenChiNhanh,
+                                h.NgayTinhLai,
+                                h.StatementDate,
+                                h.ProcessedDate,
+                                h.ImportId
+                            })
+                            .ToListAsync();
+
+                        return Ok(new
+                        {
+                            response.importInfo,
+                            processedData = bc57Data.Cast<object>().ToList(),
+                            totalRecords = bc57Data.Count,
+                            tableName = "BC57History",
+                            dataSource = "PROCESSED_HISTORY_TABLE"
+                        });
+
+                    case "DPDA":
+                        var dpdaData = await _context.DPDAHistory
+                            .Where(h => import.StatementDate.HasValue && h.StatementDate.Date == import.StatementDate.Value.Date)
+                            .OrderByDescending(h => h.ProcessedDate)
+                            .Take(100)
+                            .Select(h => new
+                            {
+                                h.Id,
+                                h.MaKhachHang,
+                                h.TenKhachHang,
+                                h.SoThe,
+                                h.LoaiThe,
+                                HanMuc = h.HanMucThe,
+                                SoDu = h.SoDuHienTai,
+                                NgayMoThe = h.NgayPhatHanh,
+                                h.NgayHetHan,
+                                TrangThai = h.TrangThaiThe,
+                                h.StatementDate,
+                                h.ProcessedDate,
+                                h.ImportId
+                            })
+                            .ToListAsync();
+
+                        return Ok(new
+                        {
+                            response.importInfo,
+                            processedData = dpdaData.Cast<object>().ToList(),
+                            totalRecords = dpdaData.Count,
+                            tableName = "DPDAHistory",
+                            dataSource = "PROCESSED_HISTORY_TABLE"
+                        });
+
+                    case "LN01":
+                        var ln01Data = await _context.LN01_History
+                            .Where(h => import.StatementDate.HasValue && h.StatementDate.Date == import.StatementDate.Value.Date)
+                            .OrderByDescending(h => h.ProcessedDate)
+                            .Take(100)
+                            .Select(h => new
+                            {
+                                h.Id,
+                                h.BRCD,
+                                h.CUSTSEQ,
+                                h.CUSTNM,
+                                h.TAI_KHOAN,
+                                h.CCY,
+                                h.DU_NO,
+                                h.DSBSSEQ,
+                                h.TRANSACTION_DATE,
+                                h.DSBSDT,
+                                h.DISBUR_CCY,
+                                h.DISBURSEMENT_AMOUNT,
+                                h.StatementDate,
+                                h.ProcessedDate,
+                                h.ImportId
+                            })
+                            .ToListAsync();
+
+                        return Ok(new
+                        {
+                            response.importInfo,
+                            processedData = ln01Data.Cast<object>().ToList(),
+                            totalRecords = ln01Data.Count,
+                            tableName = "LN01_History",
+                            dataSource = "PROCESSED_HISTORY_TABLE"
+                        });
+
+                    case "7800_DT_KHKD1":
+                        var dtKhkd1Data = await _context.DT_KHKD1_History
+                            .Where(h => import.StatementDate.HasValue && h.StatementDate.Date == import.StatementDate.Value.Date)
+                            .OrderByDescending(h => h.ProcessedDate)
+                            .Take(100)
+                            .Select(h => new
+                            {
+                                h.Id,
+                                h.BRCD,
+                                h.BRANCH_NAME,
+                                h.INDICATOR_TYPE,
+                                h.INDICATOR_NAME,
+                                h.PLAN_YEAR,
+                                h.PLAN_QUARTER,
+                                h.PLAN_MONTH,
+                                h.ACTUAL_YEAR,
+                                h.ACTUAL_QUARTER,
+                                h.ACTUAL_MONTH,
+                                h.ACHIEVEMENT_RATE,
+                                h.YEAR,
+                                h.QUARTER,
+                                h.MONTH,
+                                h.CREATED_DATE,
+                                h.UPDATED_DATE,
+                                h.StatementDate,
+                                h.ProcessedDate,
+                                h.ImportId
+                            })
+                            .ToListAsync();
+
+                        return Ok(new
+                        {
+                            response.importInfo,
+                            processedData = dtKhkd1Data.Cast<object>().ToList(),
+                            totalRecords = dtKhkd1Data.Count,
+                            tableName = "DT_KHKD1_History",
+                            dataSource = "PROCESSED_HISTORY_TABLE"
+                        });
+
+                    default:
+                        _logger.LogWarning("⚠️ No processed data handler for data type: {DataType}", dataType);
+                        return Ok(new
+                        {
+                            response.importInfo,
+                            processedData = new List<object>(),
+                            totalRecords = 0,
+                            tableName = $"{dataType}_History",
+                            dataSource = "NO_HANDLER",
+                            message = $"Chưa có handler cho loại dữ liệu {dataType}"
+                        });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Error getting processed data for import ID: {Id}", id);
+                return StatusCode(500, new
+                {
+                    message = "Lỗi khi lấy dữ liệu đã xử lý",
+                    error = ex.Message,
+                    importId = id
+                });
+            }
+        }
+
+        // Helper method to process special headers for 7800_DT_KHKD1
+        private List<string> ProcessSpecialHeader(List<string> headerLines)
+        {
+            try
+            {
+                if (headerLines.Count != 3)
+                {
+                    _logger.LogWarning("⚠️ Expected 3 header lines, got {Count}", headerLines.Count);
+                    return new List<string> { "Column1", "Column2", "Column3" }; // Fallback
+                }
+
+                // Clean and merge headers from the 3 lines
+                var cleanHeaders = new List<string>();
+                var maxColumns = headerLines.Max(line => line.Split(',').Length);
+
+                for (int i = 0; i < maxColumns; i++)
+                {
+                    var columnParts = new List<string>();
+
+                    foreach (var headerLine in headerLines)
+                    {
+                        var parts = headerLine.Split(',');
+                        if (i < parts.Length)
+                        {
+                            var part = parts[i].Trim('"').Trim();
+                            if (!string.IsNullOrWhiteSpace(part))
+                            {
+                                columnParts.Add(part);
+                            }
+                        }
+                    }
+
+                    var columnName = string.Join("_", columnParts.Where(p => !string.IsNullOrWhiteSpace(p)));
+                    if (string.IsNullOrWhiteSpace(columnName))
+                    {
+                        columnName = $"Column{i + 1}";
+                    }
+
+                    // Sanitize column name to remove special characters
+                    columnName = System.Text.RegularExpressions.Regex.Replace(columnName, @"[^\w\-_]", "_");
+                    cleanHeaders.Add(columnName);
+                }
+
+                _logger.LogInformation("✅ Processed special headers: {Headers}", string.Join(", ", cleanHeaders.Take(5)));
+                return cleanHeaders;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error processing special headers");
+                return new List<string> { "Column1", "Column2", "Column3" }; // Fallback
             }
         }
     }

@@ -409,7 +409,7 @@ namespace TinhKhoanApp.Api.Controllers
                 if (month.HasValue)
                     calculationsQuery = calculationsQuery.Where(c => c.Month == month.Value);
 
-                // Filter by unitId (int) hoặc unitCode (string) 
+                // Filter by unitId (int) hoặc unitCode (string)
                 if (unitId.HasValue)
                     calculationsQuery = calculationsQuery.Where(c => c.UnitId == unitId.Value);
                 else if (!string.IsNullOrEmpty(unitCode))

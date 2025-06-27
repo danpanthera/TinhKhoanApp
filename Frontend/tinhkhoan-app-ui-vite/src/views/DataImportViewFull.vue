@@ -81,7 +81,7 @@
         <div class="header-content">
           <div class="agribank-logo-header"></div>
           <div class="header-text">
-            <h2>📊 BẢNG QUẢN LÝ DỮ LIỆU NGHIỆP VỤ</h2>
+            <h2>📊 BẢNG DỮ LIỆU THÔ</h2>
             <p>Theo dõi và quản lý tất cả loại dữ liệu của hệ thống Agribank Lai Châu</p>
           </div>
         </div>
@@ -267,41 +267,78 @@
         </div>
         <div class="modal-body">
           <div v-if="filteredResults.length > 0" class="data-table-container">
-            <table class="data-table enhanced-table">
-              <thead class="agribank-thead">
-                <tr>
-                  <th>Tên file</th>
-                  <th>Ngày import</th>
-                  <th>Số bản ghi</th>
-                  <th>Trạng thái</th>
-                  <th>Thao tác</th>
-                </tr>
-              </thead>
-              <tbody class="agribank-tbody">
-                <tr v-for="(item, index) in filteredResults" :key="index">
-                  <td>{{ item.fileName }}</td>
-                  <td>{{ formatDateTime(item.importDate) }}</td>
-                  <td class="agribank-number">{{ formatRecordCount(item.recordsCount) }}</td>
-                  <td>{{ item.status }}</td>
-                  <td>
-                    <button
-                      @click="previewData(item.id)"
-                      class="btn-action btn-view"
-                      title="Xem chi tiết"
-                    >
-                      👁️
-                    </button>
-                    <button
-                      @click="confirmDelete(item.id, item.fileName)"
-                      class="btn-action btn-delete"
-                      title="Xóa bản ghi"
-                    >
-                      🗑️
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <!-- Show processed data if available -->
+            <div v-if="filteredResults[0]?.isProcessedView && filteredResults[0]?.processedData" class="processed-data-section">
+              <div class="table-summary">
+                <p><strong>📊 Dữ liệu đã xử lý từ {{ filteredResults[0].tableName }}</strong></p>
+                <p>Hiển thị {{ filteredResults[0].processedData.length }} bản ghi đã xử lý</p>
+                <p class="data-source-info">Nguồn: {{ filteredResults[0].dataSource }}</p>
+              </div>
+
+              <div class="responsive-table-wrapper">
+                <table class="data-table enhanced-table">
+                  <thead class="agribank-thead">
+                    <tr>
+                      <th style="width: 50px; text-align: center;">#</th>
+                      <th v-for="(column, index) in Object.keys(filteredResults[0].processedData[0] || {}).slice(0, 10)" :key="index">
+                        {{ column }}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="agribank-tbody">
+                    <tr v-for="(record, recordIndex) in filteredResults[0].processedData.slice(0, 50)" :key="recordIndex">
+                      <td style="text-align: center; font-weight: bold; color: #8B1538;">{{ recordIndex + 1 }}</td>
+                      <td v-for="(column, columnIndex) in Object.keys(record).slice(0, 10)" :key="columnIndex">
+                        <span :title="record[column]">{{ formatCellValue(record[column]) }}</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="table-note">
+                <p><i>💡 Hiển thị 10 cột đầu tiên và tối đa 50 bản ghi. Đây là dữ liệu đã xử lý và lưu trong bảng lịch sử.</i></p>
+              </div>
+            </div>
+
+            <!-- Show import list if no processed data -->
+            <div v-else>
+              <table class="data-table enhanced-table">
+                <thead class="agribank-thead">
+                  <tr>
+                    <th>Tên file</th>
+                    <th>Ngày import</th>
+                    <th>Số bản ghi</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody class="agribank-tbody">
+                  <tr v-for="(item, index) in filteredResults" :key="index">
+                    <td>{{ item.fileName }}</td>
+                    <td>{{ formatDateTime(item.importDate) }}</td>
+                    <td class="agribank-number">{{ formatRecordCount(item.recordsCount) }}</td>
+                    <td>{{ item.status }}</td>
+                    <td>
+                      <button
+                        @click="previewData(item.id)"
+                        class="btn-action btn-view"
+                        title="Xem chi tiết"
+                      >
+                        👁️
+                      </button>
+                      <button
+                        @click="confirmDelete(item.id, item.fileName)"
+                        class="btn-action btn-delete"
+                        title="Xóa bản ghi"
+                      >
+                        🗑️
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
           <div v-else class="no-data-message">
             <p>Không có dữ liệu import nào {{ selectedFromDate ? 'cho ngày đã chọn' : '' }}</p>
@@ -792,7 +829,30 @@ const viewDataType = async (dataType) => {
         if (filteredResults.value.length === 0) {
           showError(`Không có dữ liệu ${dataType} cho ngày ${formatDate(selectedFromDate.value)}`)
         } else {
-          showSuccess(`Hiển thị ${filteredResults.value.length} import(s) cho loại ${dataType} ngày ${formatDate(selectedFromDate.value)}`)
+          // 🔥 ENHANCED: For BC57, DPDA, LN01, and 7800_DT_KHKD1, try to show processed data instead of raw import data
+          if (['BC57', 'DPDA', 'LN01', '7800_DT_KHKD1'].includes(dataType.toUpperCase()) && filteredResults.value.length > 0) {
+            const importId = filteredResults.value[0].id
+            console.log(`🔄 Fetching processed data for ${dataType} import ID: ${importId}`)
+
+            const processedResult = await rawDataService.getProcessedData(importId)
+            if (processedResult.success && processedResult.data.processedData && processedResult.data.processedData.length > 0) {
+              // Replace import list with processed data for better viewing
+              filteredResults.value = [{
+                ...filteredResults.value[0],
+                processedData: processedResult.data.processedData,
+                tableName: processedResult.data.tableName,
+                dataSource: processedResult.data.dataSource,
+                isProcessedView: true
+              }]
+
+              showSuccess(`📊 Hiển thị ${processedResult.data.processedData.length} bản ghi đã xử lý từ ${processedResult.data.tableName}`)
+            } else {
+              showSuccess(`Hiển thị ${filteredResults.value.length} import(s) cho loại ${dataType} ngày ${formatDate(selectedFromDate.value)}`)
+            }
+          } else {
+            showSuccess(`Hiển thị ${filteredResults.value.length} import(s) cho loại ${dataType} ngày ${formatDate(selectedFromDate.value)}`)
+          }
+
           showDataViewModal.value = true
         }
       } else {
@@ -2110,6 +2170,7 @@ const formatCellValue = (value) => {
 }
 
 .btn-submit:hover:not(:disabled) {
+
   background: linear-gradient(135deg, #7a1230 0%, #b31a33 100%);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
@@ -2209,5 +2270,27 @@ const formatCellValue = (value) => {
 
 .btn-export:hover {
   background: #218838;
+}
+
+/* Processed data styles */
+.processed-data-section {
+  margin-bottom: 20px;
+}
+
+.data-source-info {
+  color: #8B1538;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.table-summary p {
+  margin: 5px 0;
+}
+
+.table-summary .data-source-info {
+  background: #f8f9fa;
+  padding: 5px 10px;
+  border-radius: 4px;
+  border-left: 3px solid #8B1538;
 }
 </style>
