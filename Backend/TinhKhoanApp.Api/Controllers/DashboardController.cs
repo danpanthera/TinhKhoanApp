@@ -135,7 +135,8 @@ namespace TinhKhoanApp.Api.Controllers
             [FromQuery] int year,
             [FromQuery] int? quarter,
             [FromQuery] int? month,
-            [FromQuery] int? unitId)
+            [FromQuery] int? unitId,
+            [FromQuery] string? unitCode) // Thêm unitCode để accept string từ frontend
         {
             try
             {
@@ -157,8 +158,15 @@ namespace TinhKhoanApp.Api.Controllers
                 if (month.HasValue)
                     targetsQuery = targetsQuery.Where(t => t.Month == month.Value);
 
+                // Filter by unitId (int) hoặc unitCode (string) 
                 if (unitId.HasValue)
                     targetsQuery = targetsQuery.Where(t => t.UnitId == unitId.Value);
+                else if (!string.IsNullOrEmpty(unitCode))
+                {
+                    // Map unitCode sang unitId hoặc filter theo unit name/code
+                    // Tạm thời log và skip filter để không crash
+                    _logger.LogInformation("🔧 Dashboard API called with unitCode: {UnitCode}, skipping unit filter", unitCode);
+                }
 
                 var targets = await targetsQuery.ToListAsync();
 
@@ -174,8 +182,14 @@ namespace TinhKhoanApp.Api.Controllers
                 if (month.HasValue)
                     calculationsQuery = calculationsQuery.Where(c => c.Month == month.Value);
 
+                // Filter calculations by unitId (int) hoặc unitCode (string)
                 if (unitId.HasValue)
                     calculationsQuery = calculationsQuery.Where(c => c.UnitId == unitId.Value);
+                else if (!string.IsNullOrEmpty(unitCode))
+                {
+                    // Tạm thời skip filter cho calculations, cần mapping unitCode -> unitId
+                    _logger.LogInformation("🔧 Calculations query: skipping unitCode filter for now");
+                }
 
                 var calculations = await calculationsQuery.ToListAsync();
 

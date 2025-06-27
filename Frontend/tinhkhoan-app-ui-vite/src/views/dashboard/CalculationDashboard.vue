@@ -531,9 +531,9 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import LoadingOverlay from '../../components/dashboard/LoadingOverlay.vue';
+import apiClient from '../../services/api'; // Import default apiClient để gọi API
 import { isAuthenticated } from '../../services/auth';
 import { dashboardService } from '../../services/dashboardService';
-import apiClient from '../../services/api'; // Import default apiClient để gọi API
 
 const router = useRouter();
 
