@@ -1469,94 +1469,29 @@ namespace TinhKhoanApp.Api.Controllers
 
                 _logger.LogInformation("✅ Tạo ImportedDataRecord ID={Id} để xử lý streaming", importedDataRecord.Id);
 
-                int totalProcessed = 0;                // ⚡ Stream processing line by line
-                using var reader = new StreamReader(file.OpenReadStream(), System.Text.Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+                int totalProcessed = 0;
 
-                string line;
-                var headerLines = new List<string>(); // Lưu trữ header cho 7800_DT_KHKD1
-                bool isSpecialHeaderFile = dataType.Contains("7800_DT_KHKD1");
+                // 🔤 KIỂM TRA VÀ XỬ LÝ ENCODING ĐÚNG CHO FILE EXCEL VÀ CSV
+                bool isExcelFile = file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase) ||
+                                   file.FileName.EndsWith(".xls", StringComparison.OrdinalIgnoreCase);
 
-                while ((line = await reader.ReadLineAsync()) != null)
+                if (isExcelFile)
                 {
-                    if (string.IsNullOrWhiteSpace(line)) continue;
-
-                    lineCount++;
-
-                    // 🔥 Xử lý đặc biệt cho file 7800_DT_KHKD1
-                    if (isSpecialHeaderFile)
-                    {
-                        // Dòng 10, 11, 12 là header (merge), dữ liệu bắt đầu từ dòng 13
-                        if (lineCount >= 10 && lineCount <= 12)
-                        {
-                            headerLines.Add(line);
-                            continue;
-                        }
-
-                        // Sau khi đọc dòng 12, tạo header gộp
-                        if (lineCount == 12 && headerLines.Count == 3)
-                        {
-                            headers = ProcessSpecialHeader(headerLines);
-                            _logger.LogInformation("🔥 7800_DT_KHKD1 Special Headers created: {Headers}", string.Join(", ", headers.Take(5)));
-                            continue;
-                        }
-
-                        // Bỏ qua các dòng trước dòng 10 và dòng 12+ nhưng chưa phải data
-                        if (lineCount < 13)
-                        {
-                            continue;
-                        }
-                    }
-                    else
-                    {
-                        // Header row thông thường
-                        if (lineCount == 1)
-                        {
-                            headers = line.Split(',').Select(h => h.Trim('"').Trim()).ToList();
-                            _logger.LogInformation("📋 Headers found: {Headers}", string.Join(", ", headers.Take(5)));
-                            continue;
-                        }
-                    }
-
-                    if (headers == null) continue;
-
-                    // Data row
-                    var values = line.Split(',').Select(v => v.Trim('"').Trim()).ToList();
-                    var record = new Dictionary<string, object>();
-
-                    for (int j = 0; j < Math.Min(headers.Count, values.Count); j++)
-                    {
-                        record[headers[j]] = values[j];
-                    }
-
-                    // Thêm metadata
-                    record["BranchCode"] = branchCode;
-                    record["StatementDate"] = statementDate.ToString("yyyy-MM-dd");
-                    record["ImportDate"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                    record["ImportedBy"] = "System";
-
-                    records.Add(record);
-
-                    // ⚡ Batch processing để tránh memory overflow
-                    if (records.Count >= batchSize)
-                    {
-                        await SaveBatchToDatabase(records, importedDataRecord.Id, branchCode);
-                        totalProcessed += records.Count;
-                        records.Clear();
-
-                        if (totalProcessed % 5000 == 0)
-                        {
-                            _logger.LogInformation("⚡ Đã xử lý {Processed} records...", totalProcessed);
-                        }
-                    }
+                    // 📊 XỬ LÝ FILE EXCEL VỚI ClosedXML
+                    totalProcessed = await ProcessExcelFileForEncoding(file, dataType, importedDataRecord.Id,
+                        statementDate, branchCode, batchSize);
                 }
-
-                // 💾 Lưu batch cuối cùng
-                if (records.Any())
+                else
                 {
-                    await SaveBatchToDatabase(records, importedDataRecord.Id, branchCode);
-                    totalProcessed += records.Count;
-                }
+                    // 📄 XỬ LÝ FILE CSV VỚI ENCODING TỐI ƯU
+                    var encoding = DetectCsvFileEncoding(file);
+                    _logger.LogInformation("🔤 Detected encoding for {FileName}: {Encoding}",
+                        file.FileName, encoding.EncodingName);
 
+                    using var reader = new StreamReader(file.OpenReadStream(), encoding, detectEncodingFromByteOrderMarks: true);
+                    totalProcessed = await ProcessCsvFileContent(reader, dataType, importedDataRecord.Id,
+                        statementDate, branchCode, batchSize);
+                }
                 // ✅ Cập nhật status và count
                 importedDataRecord.Status = "Completed";
                 importedDataRecord.RecordsCount = totalProcessed;
@@ -2001,6 +1936,313 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 _logger.LogError(ex, "❌ Error processing special headers");
                 return new List<string> { "Column1", "Column2", "Column3" }; // Fallback
+            }
+        }
+
+        // 🔤 Helper method để phát hiện encoding của file CSV
+        private System.Text.Encoding DetectCsvFileEncoding(IFormFile file)
+        {
+            try
+            {
+                using var stream = file.OpenReadStream();
+                using var reader = new BinaryReader(stream);
+
+                var bom = reader.ReadBytes(4);
+                stream.Position = 0;
+
+                // Kiểm tra BOM để phát hiện encoding
+                if (bom.Length >= 3 && bom[0] == 0xEF && bom[1] == 0xBB && bom[2] == 0xBF)
+                {
+                    return System.Text.Encoding.UTF8;
+                }
+                if (bom.Length >= 2 && bom[0] == 0xFF && bom[1] == 0xFE)
+                {
+                    return System.Text.Encoding.Unicode;
+                }
+                if (bom.Length >= 2 && bom[0] == 0xFE && bom[1] == 0xFF)
+                {
+                    return System.Text.Encoding.BigEndianUnicode;
+                }
+
+                // Nếu không có BOM, thử phát hiện bằng cách đọc vài byte đầu
+                var firstBytes = reader.ReadBytes(1024);
+                stream.Position = 0;
+
+                // Kiểm tra có ký tự không hợp lệ trong UTF-8 không
+                try
+                {
+                    System.Text.Encoding.UTF8.GetString(firstBytes);
+                    return System.Text.Encoding.UTF8;
+                }
+                catch
+                {
+                    // Thử Windows-1252 (Latin-1 với ký tự mở rộng) cho tiếng Việt
+                    return System.Text.Encoding.GetEncoding("Windows-1252");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "❌ Cannot detect encoding for {FileName}, using UTF-8", file.FileName);
+                return System.Text.Encoding.UTF8;
+            }
+        }
+
+        // 📊 Helper method để xử lý file Excel với encoding đúng
+        private async Task<int> ProcessExcelFileForEncoding(IFormFile file, string dataType,
+            int importedDataRecordId, DateTime statementDate, string branchCode, int batchSize)
+        {
+            try
+            {
+                _logger.LogInformation("📊 Processing Excel file: {FileName}", file.FileName);
+
+                int totalProcessed = 0;
+                var records = new List<Dictionary<string, object>>();
+
+                using var stream = file.OpenReadStream();
+                using var workbook = new ClosedXML.Excel.XLWorkbook(stream);
+
+                var worksheet = workbook.Worksheets.First();
+                var rows = worksheet.RowsUsed();
+
+                List<string>? headers = null;
+                int rowIndex = 0;
+
+                foreach (var row in rows)
+                {
+                    rowIndex++;
+
+                    // 🔥 Xử lý header đặc biệt cho từng loại dữ liệu
+                    if (dataType.Contains("7800_DT_KHKD1"))
+                    {
+                        if (rowIndex == 13) // Header ở dòng 13 cho 7800_DT_KHKD1
+                        {
+                            headers = GetExcelRowValuesWithEncoding(row);
+                            continue;
+                        }
+                        if (rowIndex < 14) continue; // Data từ dòng 14
+                    }
+                    else if (dataType.Contains("GLCB41") || dataType.Contains("GAHR26"))
+                    {
+                        if (rowIndex == 1) // Header ở dòng 1 cho GLCB41 và GAHR26
+                        {
+                            headers = GetExcelRowValuesWithEncoding(row);
+                            _logger.LogInformation("📋 {DataType} Headers: {Headers}",
+                                dataType, string.Join(", ", headers.Take(5)));
+                            continue;
+                        }
+                    }
+                    else
+                    {
+                        // Xử lý header thông thường
+                        if (rowIndex == 1)
+                        {
+                            headers = GetExcelRowValuesWithEncoding(row);
+                            continue;
+                        }
+                    }
+
+                    if (headers == null) continue;
+
+                    // Xử lý data row
+                    var values = GetExcelRowValuesWithEncoding(row);
+                    var record = new Dictionary<string, object>();
+
+                    for (int j = 0; j < Math.Min(headers.Count, values.Count); j++)
+                    {
+                        record[headers[j]] = values[j];
+                    }
+
+                    // Thêm metadata
+                    record["BranchCode"] = branchCode;
+                    record["StatementDate"] = statementDate.ToString("yyyy-MM-dd");
+                    record["ImportDate"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    record["ImportedBy"] = "System";
+
+                    records.Add(record);
+
+                    // Batch processing
+                    if (records.Count >= batchSize)
+                    {
+                        await SaveBatchToDatabase(records, importedDataRecordId, branchCode);
+                        totalProcessed += records.Count;
+                        records.Clear();
+
+                        if (totalProcessed % 5000 == 0)
+                        {
+                            _logger.LogInformation("⚡ Excel processed {Processed} records...", totalProcessed);
+                        }
+                    }
+                }
+
+                // Lưu batch cuối cùng
+                if (records.Any())
+                {
+                    await SaveBatchToDatabase(records, importedDataRecordId, branchCode);
+                    totalProcessed += records.Count;
+                }
+
+                _logger.LogInformation("✅ Excel file processing completed: {Records} records", totalProcessed);
+                return totalProcessed;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error processing Excel file: {FileName}", file.FileName);
+                throw;
+            }
+        }
+
+        // 📋 Helper method để lấy giá trị từ Excel row với encoding đúng
+        private List<string> GetExcelRowValuesWithEncoding(ClosedXML.Excel.IXLRow row)
+        {
+            var values = new List<string>();
+
+            foreach (var cell in row.CellsUsed())
+            {
+                var value = cell.GetString().Trim();
+                // 🔤 Đảm bảo encoding đúng cho ký tự tiếng Việt
+                if (!string.IsNullOrEmpty(value))
+                {
+                    value = FixVietnameseEncoding(value);
+                }
+                values.Add(value);
+            }
+
+            return values;
+        }
+
+        // 📄 Helper method để xử lý nội dung file CSV với encoding đúng
+        private async Task<int> ProcessCsvFileContent(StreamReader reader, string dataType,
+            int importedDataRecordId, DateTime statementDate, string branchCode, int batchSize)
+        {
+            try
+            {
+                _logger.LogInformation("📄 Processing CSV content for: {DataType}", dataType);
+
+                int totalProcessed = 0;
+                var records = new List<Dictionary<string, object>>();
+
+                string? line;
+                var headerLines = new List<string>();
+                List<string>? headers = null;
+                int lineCount = 0;
+
+                bool isSpecialHeaderFile = dataType.Contains("7800_DT_KHKD1");
+
+                while ((line = await reader.ReadLineAsync()) != null)
+                {
+                    if (string.IsNullOrWhiteSpace(line)) continue;
+
+                    lineCount++;
+
+                    // 🔥 Xử lý đặc biệt cho file 7800_DT_KHKD1
+                    if (isSpecialHeaderFile)
+                    {
+                        if (lineCount >= 10 && lineCount <= 12)
+                        {
+                            headerLines.Add(line);
+                            continue;
+                        }
+
+                        if (lineCount == 12 && headerLines.Count == 3)
+                        {
+                            headers = ProcessSpecialHeader(headerLines);
+                            _logger.LogInformation("🔥 7800_DT_KHKD1 Special Headers: {Headers}",
+                                string.Join(", ", headers.Take(5)));
+                            continue;
+                        }
+
+                        if (lineCount < 13) continue;
+                    }
+                    else
+                    {
+                        // Header row thông thường
+                        if (lineCount == 1)
+                        {
+                            headers = line.Split(',').Select(h => h.Trim('"').Trim()).ToList();
+                            _logger.LogInformation("📋 CSV Headers: {Headers}",
+                                string.Join(", ", headers.Take(5)));
+                            continue;
+                        }
+                    }
+
+                    if (headers == null) continue;
+
+                    // Data row
+                    var values = line.Split(',').Select(v => v.Trim('"').Trim()).ToList();
+                    var record = new Dictionary<string, object>();
+
+                    for (int j = 0; j < Math.Min(headers.Count, values.Count); j++)
+                    {
+                        // 🔤 Fix encoding for Vietnamese characters
+                        var value = values[j];
+                        if (!string.IsNullOrEmpty(value))
+                        {
+                            value = FixVietnameseEncoding(value);
+                        }
+                        record[headers[j]] = value;
+                    }
+
+                    // Thêm metadata
+                    record["BranchCode"] = branchCode;
+                    record["StatementDate"] = statementDate.ToString("yyyy-MM-dd");
+                    record["ImportDate"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    record["ImportedBy"] = "System";
+
+                    records.Add(record);
+
+                    // Batch processing
+                    if (records.Count >= batchSize)
+                    {
+                        await SaveBatchToDatabase(records, importedDataRecordId, branchCode);
+                        totalProcessed += records.Count;
+                        records.Clear();
+
+                        if (totalProcessed % 5000 == 0)
+                        {
+                            _logger.LogInformation("⚡ CSV processed {Processed} records...", totalProcessed);
+                        }
+                    }
+                }
+
+                // Lưu batch cuối cùng
+                if (records.Any())
+                {
+                    await SaveBatchToDatabase(records, importedDataRecordId, branchCode);
+                    totalProcessed += records.Count;
+                }
+
+                _logger.LogInformation("✅ CSV file processing completed: {Records} records", totalProcessed);
+                return totalProcessed;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error processing CSV content");
+                throw;
+            }
+        }
+
+        // 🔤 Helper method để sửa encoding tiếng Việt
+        private string FixVietnameseEncoding(string input)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(input)) return input;
+
+                // Kiểm tra và fix các ký tự encoding bị lỗi thường gặp
+                if (input.Contains("â€") || input.Contains("Ä") || input.Contains("Ã"))
+                {
+                    // Thử chuyển đổi từ UTF-8 bị lỗi thành Unicode đúng
+                    var bytes = System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes(input);
+                    return System.Text.Encoding.UTF8.GetString(bytes);
+                }
+
+                // Nếu không có vấn đề, trả về nguyên bản
+                return input;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "❌ Error fixing encoding for text: {Input}", input.Substring(0, Math.Min(input.Length, 50)));
+                return input; // Fallback to original
             }
         }
     }
