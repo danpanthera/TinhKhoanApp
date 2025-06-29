@@ -1439,7 +1439,7 @@ namespace TinhKhoanApp.Api.Controllers
 
                 // ⚡ Streaming processing cho file lớn
                 var records = new List<Dictionary<string, object>>();
-                List<string> headers = null;
+                List<string>? headers = null;
                 int lineCount = 0;
                 const int batchSize = 1000; // Process in batches
 
@@ -1858,6 +1858,47 @@ namespace TinhKhoanApp.Api.Controllers
                             processedData = dtKhkd1Data.Cast<object>().ToList(),
                             totalRecords = dtKhkd1Data.Count,
                             tableName = "DT_KHKD1_History",
+                            dataSource = "PROCESSED_HISTORY_TABLE"
+                        });
+
+                    case "GLCB41":
+                        var glcb41Data = await _context.GLCB41_History
+                            .Where(h => import.StatementDate.HasValue && h.StatementDate.Date == import.StatementDate.Value.Date)
+                            .OrderByDescending(h => h.ProcessedDate)
+                            .Take(100)
+                            .Select(h => new
+                            {
+                                h.Id,
+                                h.JOURNAL_NO,
+                                h.ACCOUNT_NO,
+                                h.ACCOUNT_NAME,
+                                h.CUSTOMER_ID,
+                                h.CUSTOMER_NAME,
+                                h.TRANSACTION_DATE,
+                                h.POSTING_DATE,
+                                h.DESCRIPTION,
+                                h.DEBIT_AMOUNT,
+                                h.CREDIT_AMOUNT,
+                                h.DEBIT_BALANCE,
+                                h.CREDIT_BALANCE,
+                                h.BRCD,
+                                h.BRANCH_NAME,
+                                h.TRANSACTION_TYPE,
+                                h.ORIGINAL_TRANS_ID,
+                                h.CREATED_DATE,
+                                h.UPDATED_DATE,
+                                h.StatementDate,
+                                h.ProcessedDate,
+                                h.ImportId
+                            })
+                            .ToListAsync();
+
+                        return Ok(new
+                        {
+                            response.importInfo,
+                            processedData = glcb41Data.Cast<object>().ToList(),
+                            totalRecords = glcb41Data.Count,
+                            tableName = "GLCB41_History",
                             dataSource = "PROCESSED_HISTORY_TABLE"
                         });
 

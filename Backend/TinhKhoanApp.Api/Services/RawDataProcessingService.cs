@@ -124,6 +124,9 @@ namespace TinhKhoanApp.Api.Services
                     case "KH03":
                         await ProcessKH03DataAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result);
                         break;
+                    case "GLCB41":
+                        await ProcessGLCB41DataAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result);
+                        break;
                     // GL01 sẽ được xử lý trong tương lai với model phù hợp
                     // case "GL01":
                     //     await ProcessGL01DataAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result);
@@ -577,6 +580,85 @@ namespace TinhKhoanApp.Api.Services
             result.Success = true;
             result.ProcessedRecords = processedCount;
             result.Message = $"Successfully processed {processedCount} KH03 records (raw data processing)";
+        }
+
+        private async Task ProcessGLCB41DataAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result)
+        {
+            result.TableName = "GLCB41_History";
+            var historyRecords = new List<GLCB41_History>();
+
+            foreach (var item in dataItems)
+            {
+                try
+                {
+                    if (string.IsNullOrWhiteSpace(item.RawData)) continue;
+
+                    var rowData = JsonSerializer.Deserialize<Dictionary<string, object>>(item.RawData);
+                    if (rowData == null || !rowData.Any()) continue;
+
+                    // Tạo business key duy nhất cho GLCB41 record
+                    var businessKey = GenerateBusinessKey("GLCB41", rowData);
+
+                    var historyRecord = new GLCB41_History
+                    {
+                        BusinessKey = businessKey,
+                        EffectiveDate = statementDate,
+                        ProcessedDate = DateTime.UtcNow,
+                        ImportId = batchId,
+                        StatementDate = statementDate,
+                        IsCurrent = true,
+                        DataHash = GenerateDataHash(rowData),
+
+                        // 🏦 GLCB41 specific fields - Mapping theo cột CSV gốc
+                        JOURNAL_NO = GetStringValue(rowData, "JOURNAL_NO") ?? GetStringValue(rowData, "SO_CT"),
+                        ACCOUNT_NO = GetStringValue(rowData, "ACCOUNT_NO") ?? GetStringValue(rowData, "SO_TK"),
+                        ACCOUNT_NAME = GetStringValue(rowData, "ACCOUNT_NAME") ?? GetStringValue(rowData, "TEN_TK"),
+                        CUSTOMER_ID = GetStringValue(rowData, "CUSTOMER_ID") ?? GetStringValue(rowData, "MA_KH"),
+                        CUSTOMER_NAME = GetStringValue(rowData, "CUSTOMER_NAME") ?? GetStringValue(rowData, "TEN_KH"),
+                        TRANSACTION_DATE = GetDateTimeValue(rowData, "TRANSACTION_DATE") ?? GetDateTimeValue(rowData, "NGAY_GD"),
+                        POSTING_DATE = GetDateTimeValue(rowData, "POSTING_DATE") ?? GetDateTimeValue(rowData, "NGAY_HT"),
+                        DESCRIPTION = GetStringValue(rowData, "DESCRIPTION") ?? GetStringValue(rowData, "DIEN_GIAI"),
+                        DEBIT_AMOUNT = GetDecimalValue(rowData, "DEBIT_AMOUNT") ?? GetDecimalValue(rowData, "SO_NO"),
+                        CREDIT_AMOUNT = GetDecimalValue(rowData, "CREDIT_AMOUNT") ?? GetDecimalValue(rowData, "SO_CO"),
+                        DEBIT_BALANCE = GetDecimalValue(rowData, "DEBIT_BALANCE") ?? GetDecimalValue(rowData, "DU_NO"),
+                        CREDIT_BALANCE = GetDecimalValue(rowData, "CREDIT_BALANCE") ?? GetDecimalValue(rowData, "DU_CO"),
+                        BRCD = GetStringValue(rowData, "BRCD") ?? GetStringValue(rowData, "MA_CN"),
+                        BRANCH_NAME = GetStringValue(rowData, "BRANCH_NAME") ?? GetStringValue(rowData, "TEN_CN"),
+                        TRANSACTION_TYPE = GetStringValue(rowData, "TRANSACTION_TYPE") ?? GetStringValue(rowData, "LOAI_GD"),
+                        ORIGINAL_TRANS_ID = GetStringValue(rowData, "ORIGINAL_TRANS_ID") ?? GetStringValue(rowData, "MA_GD_GOC"),
+                        CREATED_DATE = GetDateTimeValue(rowData, "CREATED_DATE"),
+                        UPDATED_DATE = GetDateTimeValue(rowData, "UPDATED_DATE"),
+
+                        // Store complete raw data for reference
+                        RawDataJson = item.RawData,
+                        AdditionalData = item.RawData
+                    };
+
+                    historyRecords.Add(historyRecord);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning("❌ Error processing GLCB41 data item: {Error}", ex.Message);
+                    result.Errors.Add($"Row error: {ex.Message}");
+                }
+            }
+
+            if (historyRecords.Any())
+            {
+                _context.GLCB41_History.AddRange(historyRecords);
+                await _context.SaveChangesAsync();
+
+                result.Success = true;
+                result.ProcessedRecords = historyRecords.Count;
+                result.Message = $"Successfully processed {historyRecords.Count} GLCB41 records to GLCB41_History";
+
+                _logger.LogInformation("✅ GLCB41: Processed {Count} records to GLCB41_History", historyRecords.Count);
+            }
+            else
+            {
+                result.Message = "No valid GLCB41 records to process";
+                _logger.LogWarning("⚠️ GLCB41: No valid records found to process");
+            }
         }
         #endregion
 

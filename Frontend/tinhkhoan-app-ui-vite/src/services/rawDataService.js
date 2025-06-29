@@ -912,15 +912,15 @@ class RawDataService {
     }
   }
 
-  // 📊 Format số lượng records with thousand separators (#,###)
+  // 📊 Format số lượng records with thousand separators (#.###) - Vietnamese style
   formatRecordCount(count) {
     if (!count && count !== 0) return '0';
 
     // Convert to number if it's a string
     const num = typeof count === 'string' ? parseInt(count) : count;
 
-    // Add thousand separators using Vietnamese locale for #,### format
-    return new Intl.NumberFormat('en-US').format(num);
+    // ✅ FIX: Dùng Vietnamese locale để hiển thị đúng format #.### thay vì #,###
+    return new Intl.NumberFormat('vi-VN').format(num);
   }
 
   // 📅 Format ngày
