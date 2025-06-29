@@ -2062,7 +2062,7 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                _logger.LogInformation("📊 Processing Excel file: {FileName}", file.FileName);
+                _logger.LogInformation("📊 Processing Excel file: {FileName} for dataType: {DataType}", file.FileName, dataType);
 
                 int totalProcessed = 0;
                 var records = new List<Dictionary<string, object>>();
@@ -2072,6 +2072,8 @@ namespace TinhKhoanApp.Api.Controllers
 
                 var worksheet = workbook.Worksheets.First();
                 var rows = worksheet.RowsUsed();
+
+                _logger.LogInformation("📊 Excel file has {RowCount} rows used", rows.Count());
 
                 List<string>? headers = null;
                 int rowIndex = 0;
@@ -2092,33 +2094,53 @@ namespace TinhKhoanApp.Api.Controllers
                     }
                     else if (dataType.Contains("GLCB41") || dataType.Contains("GAHR26"))
                     {
-                        // 🔥 GLCB41 có thể có header ở nhiều vị trí khác nhau
-                        if (headers == null && rowIndex <= 5) // Tìm header trong 5 dòng đầu
+                        // 🔥 GLCB41 header detection - Multiple strategies
+                        if (headers == null && rowIndex <= 20) // Mở rộng tìm kiếm đến 20 dòng
                         {
                             var candidateHeaders = GetExcelRowValuesWithEncoding(row);
+                            
+                            // Skip empty rows
+                            if (candidateHeaders.All(h => string.IsNullOrWhiteSpace(h)))
+                                continue;
+                            
+                            _logger.LogInformation("🔍 GLCB41 Row {Row}: [{Headers}]", 
+                                rowIndex, string.Join("] [", candidateHeaders.Take(8)));
 
-                            // Kiểm tra xem có phải header không bằng cách tìm các từ khóa đặc trưng
-                            var headerKeywords = new[] { "MaChiBanh", "TaiKhoan", "TenTaiKhoan", "SoDu", "PhatSinh", "NgayBaoCao", "STT" };
-                            var matchingKeywords = candidateHeaders.Count(h =>
-                                headerKeywords.Any(keyword => h.Contains(keyword, StringComparison.OrdinalIgnoreCase)));
+                            var isHeaderRow = false;
+                            
+                            // Strategy 1: GLCB41 keywords
+                            var keywords = new[] { "STT", "MaChiBanh", "TaiKhoan", "TenTaiKhoan", "SoDu", "PhatSinh", "NgayBaoCao", "So_TK", "Ten_TK", "ACCOUNT", "BALANCE" };
+                            var keywordMatches = candidateHeaders.Count(h => keywords.Any(kw => h.Contains(kw, StringComparison.OrdinalIgnoreCase)));
+                            
+                            // Strategy 2: Fallback - any meaningful structure
+                            var nonEmptyCount = candidateHeaders.Count(h => !string.IsNullOrWhiteSpace(h) && h.Length > 1);
+                            
+                            if (keywordMatches >= 2 || (nonEmptyCount >= 4 && candidateHeaders.Count >= 5 && rowIndex <= 10))
+                            {
+                                isHeaderRow = true;
+                                _logger.LogInformation("✅ GLCB41 Header found: {Keywords} keywords, {NonEmpty} non-empty", keywordMatches, nonEmptyCount);
+                            }
 
-                            if (matchingKeywords >= 2) // Nếu có ít nhất 2 từ khóa match
+                            if (isHeaderRow)
                             {
                                 headers = candidateHeaders;
-                                _logger.LogInformation("📋 {DataType} Headers found at row {Row}: {Headers}",
-                                    dataType, rowIndex, string.Join(", ", headers.Take(5)));
+                                _logger.LogInformation("📋 {DataType} Headers at row {Row}: [{Headers}]",
+                                    dataType, rowIndex, string.Join("] [", headers.Take(10)));
                                 continue;
                             }
                         }
-
-                        // Nếu đã có header thì xử lý data
-                        if (headers != null && rowIndex > headers.Count) // Skip các dòng trống sau header
+                        else if (headers != null)
                         {
-                            // Continue to data processing below
+                            // Process data rows
+                            var rowValues = GetExcelRowValuesWithEncoding(row);
+                            if (rowValues.All(v => string.IsNullOrWhiteSpace(v)))
+                                continue; // Skip empty rows
+                                
+                            _logger.LogInformation("🔍 GLCB41 Data row {Row}: {Values} values", rowIndex, rowValues.Count);
                         }
                         else
                         {
-                            continue; // Skip nếu chưa tìm thấy header hoặc đang ở vùng header
+                            continue; // Skip until header found
                         }
                     }
                     else
@@ -2159,7 +2181,8 @@ namespace TinhKhoanApp.Api.Controllers
 
                         if (totalProcessed % 5000 == 0)
                         {
-                            _logger.LogInformation("⚡ Excel processed {Processed} records...", totalProcessed);
+                            _logger.LogInformation("⚡ Excel processed {Processed} records...",
+                                totalProcessed);
                         }
                     }
                 }
@@ -2378,6 +2401,46 @@ namespace TinhKhoanApp.Api.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Exception trong auto-process cho ImportId: {ImportId}", importedDataRecordId);
+            }
+        }
+
+        // 🔧 DEBUG ENDPOINT: Phân tích cấu trúc file Excel để debug
+        [HttpPost("debug-excel")]
+        public async Task<IActionResult> DebugExcelFile([FromForm] IFormFile file)
+        {
+            try
+            {
+                if (file == null || file.Length == 0)
+                    return BadRequest("No file provided");
+
+                _logger.LogInformation("🔧 DEBUG: Analyzing Excel file {FileName}", file.FileName);
+
+                using var stream = file.OpenReadStream();
+                using var workbook = new ClosedXML.Excel.XLWorkbook(stream);
+
+                var result = new
+                {
+                    FileName = file.FileName,
+                    FileSize = file.Length,
+                    Worksheets = workbook.Worksheets.Select(ws => new
+                    {
+                        Name = ws.Name,
+                        RowsUsed = ws.RowsUsed().Count(),
+                        ColumnsUsed = ws.ColumnsUsed().Count(),
+                        FirstRows = ws.RowsUsed().Take(10).Select((row, index) => new
+                        {
+                            RowNumber = index + 1,
+                            Values = row.CellsUsed().Select(cell => cell.GetString().Trim()).ToArray()
+                        }).ToArray()
+                    }).ToArray()
+                };
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error analyzing Excel file");
+                return StatusCode(500, new { message = "Error analyzing file", error = ex.Message });
             }
         }
     }
