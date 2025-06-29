@@ -26,22 +26,6 @@ bld/
 # Mono auto generated files
 mono_crash.*
 
-# Build results
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-[Ww][Ii][Nn]32/
-[Aa][Rr][Mm]/
-[Aa][Rr][Mm]64/
-bld/
-[Bb]in/
-[Oo]bj/
-[Ll]og/
-[Ll]ogs/
-
 # Database files
 *.db
 *.db-shm
@@ -72,3 +56,39 @@ test-*.cs
 
 # Logs
 *.log
+
+# Performance optimization for faster commits
+.cache/
+*.tsbuildinfo
+*.map
+*.pdb
+*.exe
+*.dll
+packages/
+.nuget/
+.dotnet/
+
+# SQL files that are auto-generated
+*.sql.bak
+*_backup.sql
+*.sqlproj.user
+*.dbmdl
+*.jfm
+
+# Large files that slow down commits
+*.csv
+*.xlsx
+*.json.backup
+export_*.html
+*_AllDetails.csv
+*_Summary.csv
+*_Comparison.csv
+
+# Temporary optimization files
+COMPLETE_*.sql
+DATABASE_OPTIMIZATION_*.md
+FINAL_OPTIMIZATION_*.md
+IMPORT_FIXES_*.md
+ISSUE_FIXES_*.md
+*_IMPLEMENTATION.md
+COMPLETION_*.md

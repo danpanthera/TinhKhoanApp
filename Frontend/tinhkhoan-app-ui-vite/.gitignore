@@ -47,3 +47,33 @@ README_TOASTIFICATION.md
 obj/
 bin/Debug/
 bin/Release/
+
+# Performance optimization for faster commits
+.cache/
+.vite/
+.turbo/
+dev-dist/
+*.tsbuildinfo
+*.map
+.eslintcache
+.stylelintcache
+
+# PWA files - giữ lại nhưng ignore cache
+sw.js.map
+workbox-*.js.map
+*.chunk.js.map
+
+# Large media files
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
+*.mp3
+*.wav
+*.flac
+*.aac
+
+# Database temp files
+*.sqlite-wal
+*.sqlite-shm
