@@ -421,9 +421,8 @@ const selectedIndicator = ref(null);
 const activeChartTab = ref('comparison');
 const animatedValues = ref({}); // Giá trị animated cho counters
 
-// Danh sách 15 chi nhánh chuẩn hóa theo quy ước mới
+// Danh sách 15 chi nhánh chuẩn hóa theo quy ước mới (đã bỏ CnLaiChau vì có "Toàn tỉnh")
 const branches = ref([
-  { id: 'CnLaiChau', name: 'CN Lai Châu' },
   { id: 'HoiSo', name: 'Hội Sở' },
   { id: 'CnTamDuong', name: 'CN Tam Đường' },
   { id: 'CnPhongTho', name: 'CN Phong Thổ' },

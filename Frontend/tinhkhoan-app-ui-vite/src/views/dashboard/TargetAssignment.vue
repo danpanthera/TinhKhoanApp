@@ -9,19 +9,27 @@
         </h2>
         <p class="subtitle">Quản lý và phân bổ chỉ tiêu cho các đơn vị</p>
       </div>
-      
+
       <div class="header-controls">
-        <!-- Chọn đơn vị/phòng ban -->
+        <!-- Chọn đơn vị/phòng ban - 15 chi nhánh chuẩn hóa -->
         <select v-model="selectedUnitId" @change="loadTargets" class="form-select" style="min-width: 200px;">
           <option value="">Chọn đơn vị/phòng ban</option>
-          <option value="HO">Hội sở</option>
-          <option value="CN_HCM">Chi nhánh TP.HCM</option>
-          <option value="CN_HN">Chi nhánh Hà Nội</option>
-          <option value="CN_DN">Chi nhánh Đà Nẵng</option>
-          <option value="CN_CT">Chi nhánh Cần Thơ</option>
-          <option value="CN_HP">Chi nhánh Hải Phòng</option>
+          <option value="HoiSo">Hội Sở</option>
+          <option value="CnTamDuong">CN Tam Đường</option>
+          <option value="CnPhongTho">CN Phong Thổ</option>
+          <option value="CnSinHo">CN Sin Hồ</option>
+          <option value="CnMuongTe">CN Mường Tè</option>
+          <option value="CnThanUyen">CN Than Uyên</option>
+          <option value="CnThanhPho">CN Thành Phố</option>
+          <option value="CnTanUyen">CN Tân Uyên</option>
+          <option value="CnNamNhun">CN Nậm Nhùn</option>
+          <option value="CnPhongThoPgdMuongSo">CN Phong Thổ - PGD Mường So</option>
+          <option value="CnThanUyenPgdMuongThan">CN Than Uyên - PGD Mường Than</option>
+          <option value="CnThanhPhoPgdSo1">CN Thành Phố - PGD Số 1</option>
+          <option value="CnThanhPhoPgdSo2">CN Thành Phố - PGD Số 2</option>
+          <option value="CnTanUyenPgdSo3">CN Tân Uyên - PGD Số 3</option>
         </select>
-        
+
         <!-- Chọn năm -->
         <select v-model="selectedYear" @change="loadTargets" class="form-select">
           <option value="">Chọn năm</option>
@@ -29,7 +37,7 @@
             {{ year }}
           </option>
         </select>
-        
+
         <!-- Chọn kỳ -->
         <select v-model="periodType" @change="onPeriodTypeChange" class="form-select">
           <option value="">Chọn loại kỳ</option>
@@ -37,7 +45,7 @@
             {{ period.label }}
           </option>
         </select>
-        
+
         <!-- Chọn quý/tháng tùy theo loại kỳ -->
         <select v-if="periodType === 'QUARTER'" v-model="selectedPeriod" @change="loadTargets" class="form-select">
           <option value="">Chọn quý</option>
@@ -45,19 +53,19 @@
             {{ quarter.label }}
           </option>
         </select>
-        
+
         <select v-if="periodType === 'MONTH'" v-model="selectedPeriod" @change="loadTargets" class="form-select">
           <option value="">Chọn tháng</option>
           <option v-for="month in monthOptions" :key="month.value" :value="month.value">
             {{ month.label }}
           </option>
         </select>
-        
+
         <!-- Nút actions -->
         <button @click="loadTargets" :disabled="loading" class="btn btn-primary">
           {{ loading ? 'Đang tải...' : '🔄 Tải lại' }}
         </button>
-        
+
         <button @click="showCreateModal = true" class="btn btn-success">
           ➕ Thêm chỉ tiêu
         </button>
@@ -88,7 +96,7 @@
           Chỉ tiêu cho {{ getSelectedUnitName() }}
         </h3>
       </div>
-      
+
       <!-- Bảng chỉ tiêu -->
       <div class="targets-table-container">
         <table v-if="filteredTargets.length > 0" class="targets-table">
@@ -130,7 +138,7 @@
             </tr>
           </tbody>
         </table>
-        
+
         <div v-else class="no-data">
           <div class="no-data-icon">📊</div>
           <h4>Chưa có dữ liệu</h4>
@@ -156,14 +164,14 @@
           <h3>{{ showEditModal ? '✏️ Sửa chỉ tiêu' : '➕ Thêm chỉ tiêu mới' }}</h3>
           <button @click="closeModals" class="close-btn">❌</button>
         </div>
-        
+
         <div class="modal-body">
           <form @submit.prevent="saveTarget">
             <div class="form-group">
               <label>Tên chỉ tiêu *</label>
-              <select 
-                v-model="targetForm.indicatorName" 
-                class="form-select" 
+              <select
+                v-model="targetForm.indicatorName"
+                class="form-select"
                 required
               >
                 <option value="">Chọn chỉ tiêu</option>
@@ -172,20 +180,28 @@
                 </option>
               </select>
             </div>
-            
+
             <div class="form-group">
               <label>Đơn vị/Phòng ban *</label>
               <select v-model="targetForm.unitId" class="form-select" required>
                 <option value="">Chọn đơn vị/phòng ban</option>
-                <option value="HO">Hội sở</option>
-                <option value="CN_HCM">Chi nhánh TP.HCM</option>
-                <option value="CN_HN">Chi nhánh Hà Nội</option>
-                <option value="CN_DN">Chi nhánh Đà Nẵng</option>
-                <option value="CN_CT">Chi nhánh Cần Thơ</option>
-                <option value="CN_HP">Chi nhánh Hải Phòng</option>
+                <option value="HoiSo">Hội Sở</option>
+                <option value="CnTamDuong">CN Tam Đường</option>
+                <option value="CnPhongTho">CN Phong Thổ</option>
+                <option value="CnSinHo">CN Sin Hồ</option>
+                <option value="CnMuongTe">CN Mường Tè</option>
+                <option value="CnThanUyen">CN Than Uyên</option>
+                <option value="CnThanhPho">CN Thành Phố</option>
+                <option value="CnTanUyen">CN Tân Uyên</option>
+                <option value="CnNamNhun">CN Nậm Nhùn</option>
+                <option value="CnPhongThoPgdMuongSo">CN Phong Thổ - PGD Mường So</option>
+                <option value="CnThanUyenPgdMuongThan">CN Than Uyên - PGD Mường Than</option>
+                <option value="CnThanhPhoPgdSo1">CN Thành Phố - PGD Số 1</option>
+                <option value="CnThanhPhoPgdSo2">CN Thành Phố - PGD Số 2</option>
+                <option value="CnTanUyenPgdSo3">CN Tân Uyên - PGD Số 3</option>
               </select>
             </div>
-            
+
             <div class="form-group">
               <label>Năm *</label>
               <select v-model="targetForm.year" class="form-select" required>
@@ -195,7 +211,7 @@
                 </option>
               </select>
             </div>
-            
+
             <div class="form-group">
               <label>Loại kỳ *</label>
               <select v-model="targetForm.periodType" @change="onFormPeriodTypeChange" class="form-select" required>
@@ -205,7 +221,7 @@
                 </option>
               </select>
             </div>
-            
+
             <div v-if="targetForm.periodType === 'QUARTER'" class="form-group">
               <label>Quý *</label>
               <select v-model="targetForm.period" class="form-select" required>
@@ -215,7 +231,7 @@
                 </option>
               </select>
             </div>
-            
+
             <div v-if="targetForm.periodType === 'MONTH'" class="form-group">
               <label>Tháng *</label>
               <select v-model="targetForm.period" class="form-select" required>
@@ -225,42 +241,42 @@
                 </option>
               </select>
             </div>
-            
+
             <div class="form-group">
               <label>Giá trị mục tiêu *</label>
-              <input 
-                v-model="targetForm.targetValueFormatted" 
+              <input
+                v-model="targetForm.targetValueFormatted"
                 @input="onTargetValueInput"
                 @blur="formatTargetValue"
-                type="text" 
-                class="form-input number-input" 
-                required 
+                type="text"
+                class="form-input number-input"
+                required
                 placeholder="Nhập giá trị mục tiêu (VD: 1,000,000,000)"
                 autocomplete="off"
               />
               <small class="form-hint">Số sẽ được tự động định dạng khi nhập (VD: 1,000,000,000)</small>
             </div>
-            
+
             <div class="form-group">
               <label>Đơn vị tính</label>
-              <input 
-                v-model="targetForm.unit" 
-                type="text" 
-                class="form-input" 
+              <input
+                v-model="targetForm.unit"
+                type="text"
+                class="form-input"
                 placeholder="VD: VND, %, lần, ..."
               />
             </div>
-            
+
             <div class="form-group">
               <label class="checkbox-label">
-                <input 
-                  v-model="targetForm.isActive" 
+                <input
+                  v-model="targetForm.isActive"
                   type="checkbox"
                 />
                 Kích hoạt chỉ tiêu
               </label>
             </div>
-            
+
             <div class="form-actions">
               <button type="button" @click="closeModals" class="btn btn-secondary">
                 Hủy
@@ -287,7 +303,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { isAuthenticated } from '../../services/auth';
 import { dashboardService } from '../../services/dashboardService';
@@ -351,22 +367,22 @@ const businessIndicators = ref([
 // Computed
 const filteredTargets = computed(() => {
   if (!selectedUnitId.value) return [];
-  
+
   return targets.value.filter(target => {
     let matches = target.unitId === selectedUnitId.value;
-    
+
     if (selectedYear.value) {
       matches = matches && target.year === selectedYear.value;
     }
-    
+
     if (periodType.value) {
       matches = matches && target.periodType === periodType.value;
     }
-    
+
     if (selectedPeriod.value && periodType.value !== 'YEAR') {
       matches = matches && target.period === selectedPeriod.value;
     }
-    
+
     return matches;
   });
 });
@@ -374,27 +390,27 @@ const filteredTargets = computed(() => {
 // Methods
 const loadTargets = async () => {
   if (!selectedYear.value) return;
-  
+
   loading.value = true;
   errorMessage.value = '';
-  
+
   try {
     const params = {
       year: selectedYear.value
     };
-    
+
     if (periodType.value) {
       params.periodType = periodType.value;
     }
-    
+
     if (selectedPeriod.value && periodType.value !== 'YEAR') {
       params.period = selectedPeriod.value;
     }
-    
+
     if (selectedUnitId.value) {
       params.unitId = selectedUnitId.value;
     }
-    
+
     const response = await dashboardService.getTargets(params);
     targets.value = response || [];
   } catch (error) {
@@ -434,7 +450,7 @@ const onTargetValueInput = (event) => {
   const cleanValue = value.replace(/[^\d,]/g, '');
   event.target.value = cleanValue;
   targetForm.value.targetValueFormatted = cleanValue;
-  
+
   // Lưu giá trị số thuần
   const numericValue = cleanValue.replace(/,/g, '');
   targetForm.value.targetValue = numericValue ? parseFloat(numericValue) : '';
@@ -475,7 +491,7 @@ const saveTarget = async () => {
   saving.value = true;
   errorMessage.value = '';
   successMessage.value = '';
-  
+
   try {
     if (showEditModal.value && editingTarget.value) {
       // Update existing target
@@ -486,7 +502,7 @@ const saveTarget = async () => {
       await dashboardService.createTarget(targetForm.value);
       successMessage.value = 'Tạo chỉ tiêu mới thành công';
     }
-    
+
     closeModals();
     await loadTargets();
   } catch (error) {
@@ -499,7 +515,7 @@ const saveTarget = async () => {
 
 const deleteTarget = async (targetId) => {
   if (!confirm('Bạn có chắc chắn muốn xóa chỉ tiêu này?')) return;
-  
+
   try {
     await dashboardService.deleteTarget(targetId);
     successMessage.value = 'Xóa chỉ tiêu thành công';
@@ -515,7 +531,7 @@ const closeModals = () => {
   showEditModal.value = false;
   showBulkImportModal.value = false;
   editingTarget.value = null;
-  
+
   // Reset form
   targetForm.value = {
     indicatorName: '',
@@ -549,7 +565,7 @@ onMounted(async () => {
     router.push('/login');
     return;
   }
-  
+
   await loadTargets();
 });
 </script>
@@ -984,15 +1000,15 @@ onMounted(async () => {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .tab-navigation {
     flex-direction: column;
   }
-  
+
   .targets-table {
     font-size: 12px;
   }
-  
+
   .modal-content {
     width: 95%;
     margin: 10px;
