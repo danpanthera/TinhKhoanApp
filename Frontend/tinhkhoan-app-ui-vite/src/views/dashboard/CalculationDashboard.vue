@@ -556,7 +556,7 @@ const trendPeriod = ref('MONTH');
 
 // Danh sách 15 chi nhánh chuẩn hóa theo quy ước mới
 const units = ref([
-  { id: 'CnLaiChau', name: 'CN Lai Châu', code: '7800' },
+  { id: 'CnLaiChau', name: 'CN Lai Châu', code: '9999' },
   { id: 'HoiSo', name: 'Hội Sở', code: '7800' },
   { id: 'CnTamDuong', name: 'CN Tam Đường', code: '7801' },
   { id: 'CnPhongTho', name: 'CN Phong Thổ', code: '7802' },
