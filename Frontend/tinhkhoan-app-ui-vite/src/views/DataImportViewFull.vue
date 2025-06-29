@@ -609,7 +609,51 @@ const applyDateFilter = async () => {
     showError('Vui lòng chọn ngày bắt đầu')
     return
   }
-  showSuccess('Chức năng lọc theo ngày đang được phát triển...')
+
+  try {
+    loading.value = true
+    loadingMessage.value = 'Đang lọc dữ liệu theo ngày...'
+
+    // Format dates to yyyyMMdd
+    const fromDateFormatted = selectedFromDate.value.replace(/-/g, '')
+    const toDateFormatted = selectedToDate.value ? selectedToDate.value.replace(/-/g, '') : fromDateFormatted
+
+    // Get data for all data types in date range
+    const allResults = []
+    
+    for (const dataType of Object.keys(dataTypeDefinitions)) {
+      try {
+        if (selectedFromDate.value === selectedToDate.value || !selectedToDate.value) {
+          // Single date filter
+          const result = await rawDataService.getByStatementDate(dataType, fromDateFormatted)
+          if (result.success && result.data.length > 0) {
+            allResults.push(...result.data)
+          }
+        } else {
+          // Date range filter
+          const result = await rawDataService.getByDateRange(dataType, selectedFromDate.value, selectedToDate.value)
+          if (result.success && result.data.length > 0) {
+            allResults.push(...result.data)
+          }
+        }
+      } catch (error) {
+        console.warn(`No data found for ${dataType} in date range`)
+      }
+    }
+
+    if (allResults.length > 0) {
+      filteredResults.value = allResults
+      showSuccess(`✅ Tìm thấy ${allResults.length} bản ghi trong khoảng thời gian đã chọn`)
+    } else {
+      filteredResults.value = []
+      showError('Không tìm thấy dữ liệu trong khoảng thời gian đã chọn')
+    }
+  } catch (error) {
+    console.error('Error filtering by date:', error)
+    showError('Có lỗi xảy ra khi lọc dữ liệu theo ngày')
+  } finally {
+    loading.value = false
+  }
 }
 
 const clearDateFilter = () => {
