@@ -60,9 +60,9 @@
               </optgroup>
             </select>
           </div>
-          
+
           <div class="alert-agribank alert-info" v-if="selectedBranch">
-            <strong>📊 Đã chọn:</strong> 
+            <strong>📊 Đã chọn:</strong>
             Chi nhánh "{{ selectedBranch.name }}" ({{ selectedBranch.code }})
             → <strong>{{ availableKpiIndicators.length }}</strong> chỉ tiêu KPI
           </div>
@@ -78,11 +78,11 @@
             <span class="badge-agribank badge-accent">{{ totalMaxScore }} điểm tối đa</span>
           </div>
         </div>
-        
+
         <div class="card-body">
           <!-- KPI Status Messages -->
           <div v-if="availableKpiIndicators.length === 0" class="alert-agribank alert-info">
-            <strong>ℹ️ Thông tin:</strong> 
+            <strong>ℹ️ Thông tin:</strong>
             <span v-if="loading">Đang tải danh sách chỉ tiêu KPI cho chi nhánh...</span>
             <span v-else>Chưa có chỉ tiêu KPI nào được tải. Vui lòng chọn chi nhánh để xem danh sách KPI.
               <button @click="onBranchChange" class="btn-agribank btn-outline" style="margin-left: 8px; padding: 4px 8px; font-size: 0.75rem;">
@@ -90,7 +90,7 @@
               </button>
             </span>
           </div>
-          
+
           <!-- KPI Table -->
           <table v-if="availableKpiIndicators.length > 0" class="table-agribank">
             <thead>
@@ -114,8 +114,8 @@
                   <span class="badge-agribank badge-accent">{{ indicator.maxScore }}</span>
                 </td>
                 <td>
-                  <input 
-                    type="number" 
+                  <input
+                    type="number"
                     step="0.01"
                     v-model="kpiTargets[indicator.id]"
                     placeholder="Nhập mục tiêu"
@@ -128,8 +128,8 @@
                 </td>
                 <td>
                   <div style="display: flex; gap: 4px; justify-content: center;">
-                    <button 
-                      @click="moveIndicatorUp(index)" 
+                    <button
+                      @click="moveIndicatorUp(index)"
                       :disabled="index === 0"
                       class="btn-agribank btn-outline"
                       style="padding: 4px 8px; font-size: 0.75rem;"
@@ -137,8 +137,8 @@
                     >
                       ↑
                     </button>
-                    <button 
-                      @click="moveIndicatorDown(index)" 
+                    <button
+                      @click="moveIndicatorDown(index)"
                       :disabled="index === availableKpiIndicators.length - 1"
                       class="btn-agribank btn-outline"
                       style="padding: 4px 8px; font-size: 0.75rem;"
@@ -146,16 +146,16 @@
                     >
                       ↓
                     </button>
-                    <button 
-                      @click="editIndicator(indicator)" 
+                    <button
+                      @click="editIndicator(indicator)"
                       class="btn-agribank btn-outline"
                       style="padding: 4px 8px; font-size: 0.75rem;"
                       title="Chỉnh sửa"
                     >
                       ✏️
                     </button>
-                    <button 
-                      @click="clearIndicatorTarget(indicator.id)" 
+                    <button
+                      @click="clearIndicatorTarget(indicator.id)"
                       class="btn-agribank btn-outline"
                       style="padding: 4px 8px; font-size: 0.75rem; color: var(--danger-color); border-color: var(--danger-color);"
                       title="Xóa mục tiêu"
@@ -176,7 +176,7 @@
             </tbody>
           </table>
         </div>
-        
+
         <div v-if="availableKpiIndicators.length > 0" class="card-body" style="text-align: center; padding-top: 0;">
           <button @click="assignKPI" :disabled="isAssigning" class="btn-agribank btn-primary" style="font-size: 1rem; padding: 16px 32px;">
             <span>{{ isAssigning ? '⏳' : '📋' }}</span>
@@ -191,7 +191,7 @@
           <h3 class="card-title">📋 Giao khoán hiện tại</h3>
           <span class="badge-agribank badge-success">{{ currentAssignments.length }} bản ghi</span>
         </div>
-        
+
         <div class="card-body">
           <table class="table-agribank">
             <thead>
@@ -230,9 +230,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from 'vue'
 import api from '@/services/api'
-import { normalizeNetArray, logApiResponse } from '@/utils/apiHelpers'
+import { logApiResponse, normalizeNetArray } from '@/utils/apiHelpers'
+import { computed, onMounted, ref, watch } from 'vue'
 
 // Reactive data
 const loading = ref(false)
@@ -249,7 +249,7 @@ const kpiTargets = ref({})
 const currentAssignments = ref([])
 
 // Computed properties
-// Updated cnl1Units: Use SortOrder from backend instead of hardcoded sorting
+// CNL1: Chỉ có Hội Sở (1 đơn vị)
 const cnl1Units = computed(() => {
   return units.value.filter(unit => {
     const type = (unit.type || '').toUpperCase()
@@ -258,49 +258,33 @@ const cnl1Units = computed(() => {
     // Primary sort: SortOrder (nulls last)
     const sortOrderA = a.sortOrder ?? Number.MAX_SAFE_INTEGER;
     const sortOrderB = b.sortOrder ?? Number.MAX_SAFE_INTEGER;
-    
+
     if (sortOrderA !== sortOrderB) {
       return sortOrderA - sortOrderB;
     }
-    
+
     // Secondary sort: Name
     return (a.name || '').localeCompare(b.name || '');
   })
 })
 
-// Updated cnl2Units: Custom sort order for CNL2 branches as requested
+// CNL2: 8 CN + 5 PGD = 13 đơn vị (sắp xếp theo sortOrder)
 const cnl2Units = computed(() => {
-  // Định nghĩa thứ tự theo yêu cầu: TamDuong, PhongTho, SinHo, MuongTe, ThanUyen, ThanhPho, TanUyen, NamNhun
-  const customOrder = [
-    'CnTamDuong',    // Chi nhánh Tam Đường
-    'CnPhongTho',    // Chi nhánh Phong Thổ  
-    'CnSinHo',       // Chi nhánh Sìn Hồ
-    'CnMuongTe',     // Chi nhánh Mường Tè
-    'CnThanUyen',    // Chi nhánh Than Uyên
-    'CnThanhPho',    // Chi nhánh Thành Phố
-    'CnTanUyen',     // Chi nhánh Tân Uyên
-    'CnNamNhun'      // Chi nhánh Nậm Nhùn
-  ];
-  
   return units.value
     .filter(unit => {
       const type = (unit.type || '').toUpperCase()
       return type === 'CNL2'
     })
     .sort((a, b) => {
-      const indexA = customOrder.indexOf(a.code);
-      const indexB = customOrder.indexOf(b.code);
-      
-      // Nếu cả hai đều có trong custom order, sắp xếp theo thứ tự đó
-      if (indexA !== -1 && indexB !== -1) {
-        return indexA - indexB;
+      // Sắp xếp theo sortOrder
+      const sortOrderA = a.sortOrder ?? Number.MAX_SAFE_INTEGER;
+      const sortOrderB = b.sortOrder ?? Number.MAX_SAFE_INTEGER;
+
+      if (sortOrderA !== sortOrderB) {
+        return sortOrderA - sortOrderB;
       }
-      
-      // Nếu chỉ có một trong hai có trong custom order, ưu tiên cái đó
-      if (indexA !== -1) return -1;
-      if (indexB !== -1) return 1;
-      
-      // Nếu cả hai đều không có trong custom order, sắp xếp theo tên
+
+      // Nếu sortOrder bằng nhau thì sắp xếp theo tên
       return (a.name || '').localeCompare(b.name || '');
     })
 })
@@ -318,15 +302,15 @@ const totalMaxScore = computed(() => {
 async function loadInitialData() {
   loading.value = true
   errorMessage.value = ''
-  
+
   try {
     const [periodsResponse, tablesResponse] = await Promise.all([
       api.get('/KhoanPeriods'),
       api.get('/KpiAssignment/tables')
     ])
-    
+
     khoanPeriods.value = periodsResponse.data || []
-    
+
     // Sử dụng danh sách 15 chi nhánh chuẩn hóa giống CalculationDashboard
     units.value = [
       { id: 1, name: 'Hội Sở', code: 'HoiSo', type: 'CNL1', sortOrder: 1 },
@@ -344,13 +328,13 @@ async function loadInitialData() {
       { id: 13, name: 'CN Thành Phố - PGD Số 2', code: 'CnThanhPhoPgdSo2', type: 'CNL2', sortOrder: 13, parentUnitId: 7 },
       { id: 14, name: 'CN Tân Uyên - PGD Số 3', code: 'CnTanUyenPgdSo3', type: 'CNL2', sortOrder: 14, parentUnitId: 8 }
     ]
-    
+
     kpiTables.value = tablesResponse.data || []
-    
+
     console.log('Loaded periods:', khoanPeriods.value.length)
     console.log('Loaded units:', units.value.length)
     console.log('Loaded KPI tables:', kpiTables.value.length)
-    
+
   } catch (error) {
     console.error('Error loading initial data:', error)
     errorMessage.value = 'Không thể tải dữ liệu: ' + (error.response?.data?.message || error.message)
@@ -384,12 +368,12 @@ async function onBranchChange() {
   kpiTargets.value = {}
   currentAssignments.value = []
   clearMessages()
-  
+
   if (!selectedBranchId.value) {
     console.log('❌ No branch selected, clearing data')
     return
   }
-  
+
   try {
     // Load KPI indicators for branch
     const branch = selectedBranch.value
@@ -397,24 +381,24 @@ async function onBranchChange() {
       console.log('❌ Branch not found in units array')
       return
     }
-    
+
     console.log('📍 Selected branch details:', {
       id: branch.id,
       name: branch.name,
       code: branch.code,
       type: branch.type
     })
-    
+
     // Find appropriate KPI table based on branch type
     let kpiTable = null
     const branchType = (branch.type && typeof branch.type === 'string' ? branch.type : '').toUpperCase()
     console.log('🔍 Branch type:', branchType)
     console.log('📊 Available KPI tables:', kpiTables.value.length)
-    
+
     // Log all available branch tables
-    const branchTables = kpiTables.value.filter(t => 
+    const branchTables = kpiTables.value.filter(t =>
       t && t.category && (
-        t.category === 'Dành cho Chi nhánh' || 
+        t.category === 'Dành cho Chi nhánh' ||
         safeStringIncludes(t.category, 'chi nhánh') ||
         safeStringIncludes(t.category, 'branch') ||
         safeStringIncludes(t.category, 'unit')
@@ -424,48 +408,48 @@ async function onBranchChange() {
     branchTables.forEach(table => {
       console.log(`   📊 ${table.tableName} (ID: ${table.id}, Type: ${table.tableType || 'N/A'}, Category: ${table.category})`)
     })
-    
+
     // Match branch type with KPI table
     if (branchType === 'CNL1') {
       // For CNL1, try multiple matching strategies
-      kpiTable = branchTables.find(t => 
-        safeStringEquals(t.tableType, 'HoiSo') || 
-        safeStringEquals(t.tableType, 'CnTamDuong') || 
+      kpiTable = branchTables.find(t =>
+        safeStringEquals(t.tableType, 'HoiSo') ||
+        safeStringEquals(t.tableType, 'CnTamDuong') ||
         safeStringIncludes(t.tableName, 'hội sở (7800)') ||
         safeStringIncludes(t.tableName, 'cnl1') ||
         safeStringIncludes(t.tableName, 'chi nhánh cấp 1')
       )
       console.log('🎯 Looking for CNL1 table, found:', kpiTable?.tableName || 'None')
     } else if (branchType === 'CNL2') {
-      // For CNL2, try multiple matching strategies  
-      kpiTable = branchTables.find(t => 
+      // For CNL2, try multiple matching strategies
+      kpiTable = branchTables.find(t =>
         safeStringEquals(t.tableType, 'GiamdocCnl2') ||
-        safeStringEquals(t.tableType, 'CnPhongTho') || 
+        safeStringEquals(t.tableType, 'CnPhongTho') ||
         safeStringIncludes(t.tableName, 'giám đốc cnl2') ||
         safeStringIncludes(t.tableName, 'cnl2') ||
         safeStringIncludes(t.tableName, 'chi nhánh cấp 2')
       )
       console.log('🎯 Looking for CNL2 table, found:', kpiTable?.tableName || 'None')
     }
-    
+
     // If still no match, try fallback patterns
     if (!kpiTable) {
       console.log('🔍 No direct match, trying fallback patterns...')
       // Look for any table containing branch-related keywords
-      kpiTable = branchTables.find(t => 
+      kpiTable = branchTables.find(t =>
         safeStringIncludes(t.tableName, 'chi nhánh') ||
         safeStringIncludes(t.tableName, 'cnl') ||
         safeStringIncludes(t.tableType, 'cnl')
       )
       console.log('🎯 Fallback search found:', kpiTable?.tableName || 'None')
     }
-    
+
     // Fallback to first available branch table
     if (!kpiTable && branchTables.length > 0) {
       kpiTable = branchTables[0]
       console.log('⚠️ No specific match, using first branch table as fallback:', kpiTable.tableName)
     }
-    
+
     if (kpiTable) {
       console.log('✅ Selected KPI table:', {
         id: kpiTable.id,
@@ -473,18 +457,18 @@ async function onBranchChange() {
         type: kpiTable.tableType,
         category: kpiTable.category
       })
-      
+
       console.log('🔄 Loading KPI indicators...')
       const response = await api.get(`/KpiAssignment/tables/${kpiTable.id}`)
-      
+
       // Use helper function to log API response
       logApiResponse(`/KpiAssignment/tables/${kpiTable.id}`, response, 'indicators')
-      
+
       if (response.data && response.data.indicators) {
         // Use helper function to normalize .NET array format
         availableKpiIndicators.value = normalizeNetArray(response.data.indicators)
         console.log('✅ Loaded KPI indicators:', availableKpiIndicators.value.length)
-        
+
         // Log sample indicators
         if (availableKpiIndicators.value.length > 0) {
           console.log('📋 Sample indicators:')
@@ -501,10 +485,10 @@ async function onBranchChange() {
       console.log('Available tables:', kpiTables.value.map(t => ({ id: t.id, name: t.tableName, category: t.category, type: t.tableType })))
       errorMessage.value = `Không tìm thấy bảng KPI phù hợp cho chi nhánh loại ${branchType}. Có ${kpiTables.value.length} bảng KPI tổng cộng.`
     }
-    
+
     // Load current assignments
     await loadCurrentAssignments()
-    
+
   } catch (error) {
     console.error('❌ Error loading branch KPI data:', error)
     console.error('Error details:', {
@@ -519,7 +503,7 @@ async function onBranchChange() {
 
 async function loadCurrentAssignments() {
   if (!selectedBranchId.value || !selectedPeriodId.value) return
-  
+
   try {
     // This would be the API call to get current unit KPI assignments
     // For now, we'll show empty as the backend might not have this endpoint yet
@@ -570,12 +554,12 @@ async function assignKPI() {
     errorMessage.value = 'Vui lòng chọn chi nhánh'
     return
   }
-  
+
   if (!selectedPeriodId.value) {
     errorMessage.value = 'Vui lòng chọn kỳ khoán'
     return
   }
-  
+
   const targets = Object.entries(kpiTargets.value)
     .filter(([_, value]) => value !== null && value !== undefined && value !== '')
     .map(([indicatorId, value]) => ({
@@ -583,28 +567,28 @@ async function assignKPI() {
       targetValue: parseFloat(value),
       notes: ''
     }))
-  
+
   if (targets.length === 0) {
     errorMessage.value = 'Vui lòng nhập ít nhất một mục tiêu'
     return
   }
-  
+
   isAssigning.value = true
   clearMessages()
-  
+
   try {
     // This would be the API call to assign KPI to unit/branch
     // For now, we'll simulate success
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
+
     successMessage.value = `Đã giao khoán KPI thành công cho chi nhánh "${selectedBranch.value.name}" với ${targets.length} chỉ tiêu`
-    
+
     // Reset targets
     kpiTargets.value = {}
-    
+
     // Reload current assignments
     await loadCurrentAssignments()
-    
+
   } catch (error) {
     console.error('Error assigning unit KPI:', error)
     errorMessage.value = 'Lỗi khi giao khoán KPI: ' + (error.response?.data?.message || error.message)
@@ -631,7 +615,7 @@ onMounted(() => {
 // Watcher để tự động load KPI khi chọn chi nhánh
 watch([selectedPeriodId, selectedBranchId], ([newPeriodId, newBranchId]) => {
   console.log('👀 Watcher triggered:', { periodId: newPeriodId, branchId: newBranchId })
-  
+
   if (newPeriodId && newBranchId) {
     console.log('✅ Both period and branch selected, loading KPI data...')
     // Force reload KPI data when both are selected
@@ -665,11 +649,11 @@ watch([selectedPeriodId, selectedBranchId], ([newPeriodId, newBranchId]) => {
     align-items: flex-start !important;
     gap: 12px;
   }
-  
+
   .table-agribank {
     font-size: 0.8rem;
   }
-  
+
   .table-agribank th,
   .table-agribank td {
     padding: 8px 4px;
