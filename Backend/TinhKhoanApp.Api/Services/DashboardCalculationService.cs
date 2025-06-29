@@ -23,7 +23,7 @@ namespace TinhKhoanApp.Api.Services
         Task RecalculateAllIndicators(int unitId, DateTime date);
         Task<List<DashboardCalculation>> GetCalculationHistory(int unitId, string? indicatorCode = null, int days = 30);
     }
-    
+
     /// <summary>
     /// Service tính toán các chỉ tiêu Dashboard từ dữ liệu thô
     /// Thực hiện 6 công thức tính chính: Nguồn vốn, Dư nợ, Tỷ lệ nợ xấu, Thu hồi XLRR, Thu dịch vụ, Lợi nhuận
@@ -32,7 +32,7 @@ namespace TinhKhoanApp.Api.Services
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<DashboardCalculationService> _logger;
-        
+
         public DashboardCalculationService(
             ApplicationDbContext context,
             ILogger<DashboardCalculationService> logger)
@@ -40,7 +40,7 @@ namespace TinhKhoanApp.Api.Services
             _context = context;
             _logger = logger;
         }
-        
+
         /// <summary>
         /// Tính toán Nguồn vốn huy động từ dữ liệu DP01
         /// Công thức: Tổng CURRENT_BALANCE trừ các TK bắt đầu bằng "2, 40, 41, 427"
@@ -57,31 +57,31 @@ namespace TinhKhoanApp.Api.Services
                     _logger.LogWarning("Unit {UnitId} không tồn tại", unitId);
                     return 0;
                 }
-                
+
                 // Lấy mã chi nhánh từ Unit Code
                 var branchCode = GetBranchCode(unit.Code);
-                _logger.LogInformation("Tính toán Nguồn vốn cho {UnitName} (Code: {BranchCode}) ngày {Date}", 
+                _logger.LogInformation("Tính toán Nguồn vốn cho {UnitName} (Code: {BranchCode}) ngày {Date}",
                     unit.Name, branchCode, date.ToString("yyyy-MM-dd"));
-                
+
                 // TODO: Khi có bảng DP01 thực tế, thay thế logic này
                 // Hiện tại tạo dữ liệu mẫu để demo
                 var sampleData = GenerateSampleNguonVonData(branchCode, date);
-                
+
                 // Tính tổng CURRENT_BALANCE trừ các TK loại trừ
                 var excludedPrefixes = new[] { "2", "40", "41", "427" };
                 var totalBalance = sampleData
                     .Where(d => !excludedPrefixes.Any(prefix => d.AccountCode.StartsWith(prefix)))
                     .Sum(d => d.CurrentBalance);
-                
+
                 // Tính riêng nguồn vốn KKH và CKH
                 var kkhBalance = sampleData
                     .Where(d => d.AccountCode.StartsWith("421"))
                     .Sum(d => d.CurrentBalance);
-                
+
                 var ckhBalance = sampleData
                     .Where(d => d.AccountCode.StartsWith("423"))
                     .Sum(d => d.CurrentBalance);
-                
+
                 // Tạo chi tiết tính toán
                 var calculationDetails = new
                 {
@@ -99,12 +99,12 @@ namespace TinhKhoanApp.Api.Services
                     UnitInfo = new { unit.Code, unit.Name },
                     BranchCode = branchCode
                 };
-                
+
                 var finalValue = totalBalance / 1_000_000_000m; // Chuyển sang tỷ đồng
-                
+
                 // Lưu kết quả tính toán
                 await SaveCalculation("HuyDong", unitId, date, finalValue, calculationDetails, startTime);
-                
+
                 _logger.LogInformation("Hoàn thành tính Nguồn vốn: {Value} tỷ đồng", finalValue);
                 return finalValue;
             }
@@ -115,7 +115,7 @@ namespace TinhKhoanApp.Api.Services
                 return 0;
             }
         }
-        
+
         /// <summary>
         /// Tính toán Dư nợ cho vay từ dữ liệu LN01
         /// Công thức: Tổng DISBURSEMENT_AMOUNT theo chi nhánh và PGD
@@ -127,16 +127,16 @@ namespace TinhKhoanApp.Api.Services
             {
                 var unit = await _context.Units.FindAsync(unitId);
                 if (unit == null) return 0;
-                
+
                 var branchCode = GetBranchCode(unit.Code);
                 _logger.LogInformation("Tính toán Dư nợ cho {UnitName} ngày {Date}", unit.Name, date.ToString("yyyy-MM-dd"));
-                
+
                 // TODO: Thay bằng query thực từ bảng LN01
                 var sampleData = GenerateSampleDuNoData(branchCode, date);
-                
+
                 // Tính tổng DISBURSEMENT_AMOUNT
                 var totalDisbursement = sampleData.Sum(d => (decimal)d.DisbursementAmount);
-                
+
                 // Phân tích theo nhóm nợ
                 var byGroup = sampleData
                     .GroupBy(d => d.NhomNo)
@@ -147,7 +147,7 @@ namespace TinhKhoanApp.Api.Services
                         Total = g.Sum(d => (decimal)d.DisbursementAmount)
                     })
                     .ToList();
-                
+
                 var calculationDetails = new
                 {
                     Formula = "Tổng DISBURSEMENT_AMOUNT từ LN01",
@@ -158,11 +158,11 @@ namespace TinhKhoanApp.Api.Services
                     UnitInfo = new { unit.Code, unit.Name },
                     BranchCode = branchCode
                 };
-                
+
                 var finalValue = totalDisbursement / 1_000_000_000m; // Chuyển sang tỷ đồng
-                
+
                 await SaveCalculation("DuNo", unitId, date, finalValue, calculationDetails, startTime);
-                
+
                 _logger.LogInformation("Hoàn thành tính Dư nợ: {Value} tỷ đồng", finalValue);
                 return finalValue;
             }
@@ -173,7 +173,7 @@ namespace TinhKhoanApp.Api.Services
                 return 0;
             }
         }
-        
+
         /// <summary>
         /// Tính toán Tỷ lệ nợ xấu từ dữ liệu LN01
         /// Công thức: (Nợ nhóm 3,4,5 / Tổng dư nợ) * 100
@@ -185,24 +185,24 @@ namespace TinhKhoanApp.Api.Services
             {
                 var unit = await _context.Units.FindAsync(unitId);
                 if (unit == null) return 0;
-                
+
                 var branchCode = GetBranchCode(unit.Code);
                 _logger.LogInformation("Tính toán Tỷ lệ nợ xấu cho {UnitName} ngày {Date}", unit.Name, date.ToString("yyyy-MM-dd"));
-                
+
                 // TODO: Thay bằng query thực từ bảng LN01
                 var sampleData = GenerateSampleDuNoData(branchCode, date);
-                
+
                 // Tổng dư nợ
                 var totalDebt = sampleData.Sum(d => (decimal)d.DisbursementAmount);
-                
+
                 // Nợ xấu (nhóm 3, 4, 5)
                 var badDebtGroups = new[] { "03", "04", "05" };
                 var badDebt = sampleData
                     .Where(d => badDebtGroups.Contains((string)d.NhomNo))
                     .Sum(d => (decimal)d.DisbursementAmount);
-                
+
                 var ratio = totalDebt > 0 ? (badDebt / totalDebt * 100) : 0;
-                
+
                 var calculationDetails = new
                 {
                     Formula = "(Nợ nhóm 3,4,5 / Tổng dư nợ) * 100",
@@ -217,9 +217,9 @@ namespace TinhKhoanApp.Api.Services
                     UnitInfo = new { unit.Code, unit.Name },
                     BranchCode = branchCode
                 };
-                
+
                 await SaveCalculation("TyLeNoXau", unitId, date, ratio, calculationDetails, startTime);
-                
+
                 _logger.LogInformation("Hoàn thành tính Tỷ lệ nợ xấu: {Value}%", ratio);
                 return ratio;
             }
@@ -230,7 +230,7 @@ namespace TinhKhoanApp.Api.Services
                 return 0;
             }
         }
-        
+
         /// <summary>
         /// Tính toán Thu hồi nợ đã XLRR
         /// TODO: Chờ anh cung cấp công thức chi tiết
@@ -241,10 +241,10 @@ namespace TinhKhoanApp.Api.Services
             try
             {
                 _logger.LogInformation("Tính toán Thu hồi XLRR - chưa có công thức cụ thể");
-                
+
                 // Tạm thời trả về giá trị mẫu
                 var sampleValue = new Random().Next(10, 100);
-                
+
                 var calculationDetails = new
                 {
                     Formula = "Chờ công thức từ anh",
@@ -252,7 +252,7 @@ namespace TinhKhoanApp.Api.Services
                     SampleValue = sampleValue,
                     CalculationDate = date
                 };
-                
+
                 await SaveCalculation("ThuHoiXLRR", unitId, date, sampleValue, calculationDetails, startTime);
                 return sampleValue;
             }
@@ -263,7 +263,7 @@ namespace TinhKhoanApp.Api.Services
                 return 0;
             }
         }
-        
+
         /// <summary>
         /// Tính toán Thu dịch vụ
         /// TODO: Chờ anh cung cấp công thức chi tiết
@@ -274,10 +274,10 @@ namespace TinhKhoanApp.Api.Services
             try
             {
                 _logger.LogInformation("Tính toán Thu dịch vụ - chờ công thức cụ thể");
-                
+
                 // Tạm thời trả về giá trị mẫu
                 var sampleValue = new Random().Next(50, 200);
-                
+
                 var calculationDetails = new
                 {
                     Formula = "Chờ công thức từ anh",
@@ -285,7 +285,7 @@ namespace TinhKhoanApp.Api.Services
                     SampleValue = sampleValue,
                     CalculationDate = date
                 };
-                
+
                 await SaveCalculation("ThuDichVu", unitId, date, sampleValue, calculationDetails, startTime);
                 return sampleValue;
             }
@@ -296,7 +296,7 @@ namespace TinhKhoanApp.Api.Services
                 return 0;
             }
         }
-        
+
         /// <summary>
         /// Tính toán Lợi nhuận tài chính từ dữ liệu GLCB41
         /// Công thức: (Tài khoản 7 + 790001 + 8511) - (Tài khoản 8 + 882)
@@ -308,27 +308,27 @@ namespace TinhKhoanApp.Api.Services
             {
                 var unit = await _context.Units.FindAsync(unitId);
                 if (unit == null) return 0;
-                
+
                 var branchCode = GetBranchCode(unit.Code);
                 _logger.LogInformation("Tính toán Lợi nhuận cho {UnitName} ngày {Date}", unit.Name, date.ToString("yyyy-MM-dd"));
-                
+
                 // TODO: Thay bằng query thực từ bảng GLCB41
                 var sampleData = GenerateSampleGLCB41Data(branchCode, date);
-                
+
                 // Thu nhập (7 + 790001 + 8511)
                 var revenueAccounts = new[] { "7", "790001", "8511" };
                 var revenue = sampleData
                     .Where(d => revenueAccounts.Any(acc => d.AccountCode.StartsWith(acc)))
                     .Sum(d => (decimal)d.CreditAmount - (decimal)d.DebitAmount); // Credit - Debit cho tài khoản thu
-                
+
                 // Chi phí (8 + 882)
                 var expenseAccounts = new[] { "8", "882" };
                 var expense = sampleData
                     .Where(d => expenseAccounts.Any(acc => d.AccountCode.StartsWith(acc)))
                     .Sum(d => (decimal)d.DebitAmount - (decimal)d.CreditAmount); // Debit - Credit cho tài khoản chi
-                
+
                 var profit = revenue - expense;
-                
+
                 var calculationDetails = new
                 {
                     Formula = "(TK 7+790001+8511) - (TK 8+882)",
@@ -351,11 +351,11 @@ namespace TinhKhoanApp.Api.Services
                     UnitInfo = new { unit.Code, unit.Name },
                     BranchCode = branchCode
                 };
-                
+
                 var finalValue = profit / 1_000_000_000m; // Chuyển sang tỷ đồng
-                
+
                 await SaveCalculation("LoiNhuan", unitId, date, finalValue, calculationDetails, startTime);
-                
+
                 _logger.LogInformation("Hoàn thành tính Lợi nhuận: {Value} tỷ đồng", finalValue);
                 return finalValue;
             }
@@ -366,14 +366,14 @@ namespace TinhKhoanApp.Api.Services
                 return 0;
             }
         }
-        
+
         /// <summary>
         /// Tính toán lại tất cả 6 chỉ tiêu
         /// </summary>
         public async Task RecalculateAllIndicators(int unitId, DateTime date)
         {
             _logger.LogInformation("Bắt đầu tính toán lại tất cả chỉ tiêu cho unit {UnitId} ngày {Date}", unitId, date);
-            
+
             var tasks = new[]
             {
                 CalculateNguonVon(unitId, date),
@@ -383,37 +383,37 @@ namespace TinhKhoanApp.Api.Services
                 CalculateThuDichVu(unitId, date),
                 CalculateLoiNhuan(unitId, date)
             };
-            
+
             await Task.WhenAll(tasks);
-            
+
             _logger.LogInformation("Hoàn thành tính toán tất cả chỉ tiêu cho unit {UnitId}", unitId);
         }
-        
+
         /// <summary>
         /// Lấy lịch sử tính toán
         /// </summary>
         public async Task<List<DashboardCalculation>> GetCalculationHistory(int unitId, string? indicatorCode = null, int days = 30)
         {
             var fromDate = DateTime.Now.AddDays(-days);
-            
+
             var query = _context.DashboardCalculations
                 .Include(c => c.DashboardIndicator)
                 .Include(c => c.Unit)
                 .Where(c => c.UnitId == unitId && c.CalculationDate >= fromDate);
-            
+
             if (!string.IsNullOrEmpty(indicatorCode))
             {
                 query = query.Where(c => c.DashboardIndicator!.Code == indicatorCode);
             }
-            
+
             return await query
                 .OrderByDescending(c => c.CalculationDate)
                 .ThenByDescending(c => c.CreatedDate)
                 .ToListAsync();
         }
-        
+
         // === HELPER METHODS ===
-        
+
         /// <summary>
         /// Chuyển đổi Unit Code thành Branch Code
         /// </summary>
@@ -433,7 +433,7 @@ namespace TinhKhoanApp.Api.Services
                 _ => "ALL"                  // Toàn tỉnh hoặc không xác định
             };
         }
-        
+
         /// <summary>
         /// Lưu kết quả tính toán thành công
         /// </summary>
@@ -441,21 +441,21 @@ namespace TinhKhoanApp.Api.Services
         {
             var indicator = await _context.DashboardIndicators
                 .FirstOrDefaultAsync(i => i.Code == indicatorCode);
-                
+
             if (indicator == null)
             {
                 _logger.LogWarning("Không tìm thấy indicator {IndicatorCode}", indicatorCode);
                 return;
             }
-            
+
             var calculation = await _context.DashboardCalculations
-                .FirstOrDefaultAsync(c => 
-                    c.DashboardIndicatorId == indicator.Id && 
-                    c.UnitId == unitId && 
+                .FirstOrDefaultAsync(c =>
+                    c.DashboardIndicatorId == indicator.Id &&
+                    c.UnitId == unitId &&
                     c.CalculationDate.Date == date.Date);
-                    
+
             var executionTime = DateTime.Now - startTime;
-            
+
             if (calculation == null)
             {
                 calculation = new DashboardCalculation
@@ -467,7 +467,7 @@ namespace TinhKhoanApp.Api.Services
                 };
                 _context.DashboardCalculations.Add(calculation);
             }
-            
+
             calculation.ActualValue = value;
             calculation.CalculationDetails = JsonSerializer.Serialize(details, new JsonSerializerOptions { WriteIndented = true });
             calculation.DataDate = date;
@@ -475,12 +475,12 @@ namespace TinhKhoanApp.Api.Services
             calculation.Status = "Success";
             calculation.ExecutionTime = executionTime;
             calculation.ErrorMessage = null;
-            
+
             await _context.SaveChangesAsync();
-            _logger.LogDebug("Đã lưu kết quả tính toán {IndicatorCode} = {Value} (thời gian: {ExecutionTime}ms)", 
+            _logger.LogDebug("Đã lưu kết quả tính toán {IndicatorCode} = {Value} (thời gian: {ExecutionTime}ms)",
                 indicatorCode, value, executionTime.TotalMilliseconds);
         }
-        
+
         /// <summary>
         /// Lưu lỗi tính toán
         /// </summary>
@@ -488,17 +488,17 @@ namespace TinhKhoanApp.Api.Services
         {
             var indicator = await _context.DashboardIndicators
                 .FirstOrDefaultAsync(i => i.Code == indicatorCode);
-                
+
             if (indicator == null) return;
-            
+
             var calculation = await _context.DashboardCalculations
-                .FirstOrDefaultAsync(c => 
-                    c.DashboardIndicatorId == indicator.Id && 
-                    c.UnitId == unitId && 
+                .FirstOrDefaultAsync(c =>
+                    c.DashboardIndicatorId == indicator.Id &&
+                    c.UnitId == unitId &&
                     c.CalculationDate.Date == date.Date);
-                    
+
             var executionTime = DateTime.Now - startTime;
-            
+
             if (calculation == null)
             {
                 calculation = new DashboardCalculation
@@ -510,16 +510,16 @@ namespace TinhKhoanApp.Api.Services
                 };
                 _context.DashboardCalculations.Add(calculation);
             }
-            
+
             calculation.ActualValue = 0;
             calculation.Status = "Failed";
             calculation.ErrorMessage = errorMessage;
             calculation.ExecutionTime = executionTime;
             calculation.DataSource = GetDataSource(indicatorCode);
-            
+
             await _context.SaveChangesAsync();
         }
-        
+
         /// <summary>
         /// Xác định nguồn dữ liệu cho từng chỉ tiêu
         /// </summary>
@@ -534,23 +534,23 @@ namespace TinhKhoanApp.Api.Services
                 _ => "Unknown"
             };
         }
-        
+
         /// <summary>
         /// Tính toán một chỉ tiêu cụ thể
         /// </summary>
         public async Task<DashboardCalculation?> CalculateIndicatorAsync(
-            int indicatorId, 
-            int? unitId, 
-            int year, 
-            int? quarter, 
-            int? month, 
+            int indicatorId,
+            int? unitId,
+            int year,
+            int? quarter,
+            int? month,
             string userId)
         {
             try
             {
                 var indicator = await _context.DashboardIndicators
                     .FirstOrDefaultAsync(i => i.Id == indicatorId);
-                
+
                 if (indicator == null)
                 {
                     _logger.LogWarning("Indicator {IndicatorId} not found", indicatorId);
@@ -559,10 +559,10 @@ namespace TinhKhoanApp.Api.Services
 
                 // Create calculation date from year/quarter/month
                 var calculationDate = new DateTime(year, month ?? (quarter * 3) ?? 12, 1);
-                
+
                 decimal value = 0;
                 string calculationDetails = "";
-                
+
                 // Calculate based on indicator code
                 switch (indicator.Code)
                 {
@@ -621,7 +621,7 @@ namespace TinhKhoanApp.Api.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error calculating indicator {IndicatorId}", indicatorId);
-                
+
                 // Create failed calculation record
                 var failedCalculation = new DashboardCalculation
                 {
@@ -665,46 +665,46 @@ namespace TinhKhoanApp.Api.Services
             {
                 "HuyDong" => "DP01",
                 "DuNo" => "LN01",
-                "TyLeNoXau" => "LN01", 
+                "TyLeNoXau" => "LN01",
                 "ThuHoiXLRR" => "GLCB41",
                 "ThuDichVu" => "GLCB41",
                 "LoiNhuan" => "GLCB41",
                 _ => "Unknown"
             };
         }
-        
+
         // === SAMPLE DATA GENERATORS (Replace with real data queries) ===
-        
+
         private List<dynamic> GenerateSampleNguonVonData(string branchCode, DateTime date)
         {
             var random = new Random(date.DayOfYear);
             var accounts = new[] { "421001", "421002", "423001", "423002", "111001", "112001", "211001", "401001", "411001", "427001" };
-            
+
             return accounts.Select(acc => new
             {
                 AccountCode = acc,
                 CurrentBalance = random.Next(100_000_000, 2_000_000_000) // 100M - 2B VND
             }).Cast<dynamic>().ToList();
         }
-        
+
         private List<dynamic> GenerateSampleDuNoData(string branchCode, DateTime date)
         {
             var random = new Random(date.DayOfYear);
             var groups = new[] { "01", "02", "03", "04", "05" };
-            
+
             return Enumerable.Range(1, 50).Select(i => new
             {
                 DisbursementAmount = random.Next(50_000_000, 500_000_000), // 50M - 500M VND
                 NhomNo = groups[random.Next(groups.Length)]
             }).Cast<dynamic>().ToList();
         }
-        
+
         private List<dynamic> GenerateSampleGLCB41Data(string branchCode, DateTime date)
         {
             var random = new Random(date.DayOfYear);
             var accounts = new[] { "7", "790001", "8511", "8", "882" };
-            
-            return accounts.SelectMany(acc => 
+
+            return accounts.SelectMany(acc =>
                 Enumerable.Range(1, 10).Select(i => new
                 {
                     AccountCode = acc + (i.ToString().PadLeft(3, '0')),
