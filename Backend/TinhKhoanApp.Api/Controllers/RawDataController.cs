@@ -24,6 +24,7 @@ namespace TinhKhoanApp.Api.Controllers
         private readonly ILogger<RawDataController> _logger;
         private readonly IConfiguration _configuration; // 🔥 Thêm Configuration để lấy connection string
         private readonly IRawDataProcessingService _processingService; // 🔥 Inject processing service
+        private readonly IFileNameParsingService _fileNameParsingService; // 🔧 CHUẨN HÓA: Inject filename parsing service
 
         // 📋 Danh sách định nghĩa loại dữ liệu - ĐỒNG BỘ TẤT CẢ LOẠI
         private static readonly Dictionary<string, string> DataTypeDefinitions = new()
@@ -43,12 +44,13 @@ namespace TinhKhoanApp.Api.Controllers
             { "GLCB41", "Bảng cân đối - Báo cáo tài chính" }
         };
 
-        public RawDataController(ApplicationDbContext context, ILogger<RawDataController> logger, IConfiguration configuration, IRawDataProcessingService processingService)
+        public RawDataController(ApplicationDbContext context, ILogger<RawDataController> logger, IConfiguration configuration, IRawDataProcessingService processingService, IFileNameParsingService fileNameParsingService)
         {
             _context = context;
             _logger = logger;
             _configuration = configuration; // 🔥 Inject configuration để lấy connection string
             _processingService = processingService; // 🔥 Inject processing service
+            _fileNameParsingService = fileNameParsingService; // 🔧 CHUẨN HÓA: Inject filename parsing service
         }
 
         // 📋 GET: api/RawData - Lấy danh sách tất cả dữ liệu thô từ Temporal Tables
@@ -238,7 +240,36 @@ namespace TinhKhoanApp.Api.Controllers
                         continue;
                     }
 
-                    // 🔥 VALIDATION 2: Kiểm tra tên file chứa mã loại dữ liệu
+                    // � CHUẨN HÓA: Validation format filename theo chuẩn MaCN_LoaiFile_Ngay.ext
+                    var parseResult = _fileNameParsingService.ParseFileName(file.FileName);
+                    
+                    // Log kết quả parse filename
+                    _logger.LogInformation("🔍 Filename parse result for {FileName}: Valid={IsValid}, BranchCode={BranchCode}, DataType={DataType}, Date={Date}",
+                        file.FileName, parseResult.IsValid, parseResult.BranchCode, parseResult.DataType, parseResult.StatementDate);
+
+                    // �🔥 VALIDATION 2: Kiểm tra format filename (khuyến nghị format chuẩn)
+                    if (!parseResult.IsValid)
+                    {
+                        _logger.LogWarning("⚠️ Non-standard filename format: {FileName} - {Error}", file.FileName, parseResult.ErrorMessage);
+                        // Không reject, chỉ warning vì vẫn có thể extract được thông tin cơ bản
+                    }
+
+                    // 🔥 VALIDATION 3: Kiểm tra loại dữ liệu từ filename có khớp với dataType không
+                    if (!string.IsNullOrEmpty(parseResult.DataType) && 
+                        !parseResult.DataType.Equals(dataType, StringComparison.OrdinalIgnoreCase))
+                    {
+                        _logger.LogWarning("⚠️ Data type mismatch: URL={URLDataType}, Filename={FilenameDataType}", 
+                            dataType, parseResult.DataType);
+                        results.Add(new RawDataImportResult
+                        {
+                            Success = false,
+                            FileName = file.FileName,
+                            Message = $"❌ Loại dữ liệu không khớp: URL yêu cầu '{dataType}' nhưng filename chứa '{parseResult.DataType}'"
+                        });
+                        continue;
+                    }
+
+                    // 🔥 VALIDATION 4: Kiểm tra tên file chứa mã loại dữ liệu (fallback nếu không parse được)
                     bool isValidFileName = false;
 
                     // Special handling for GL01 - relax filename validation but still check extension
@@ -1354,82 +1385,117 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
-        // ✅ Thêm method ExtractStatementDate bị thiếu
-        private DateTime? ExtractStatementDate(string fileName)
-        {
-            try
-            {
-                // Try multiple patterns for date extraction
-                var patterns = new[]
-                {
-                    @"(\d{8})", // YYYYMMDD anywhere in filename
-                    @"(\d{4}-\d{2}-\d{2})", // YYYY-MM-DD format
-                    @"(\d{2}_\d{2}_\d{4})" // DD_MM_YYYY format
-                };
-
-                foreach (var pattern in patterns)
-                {
-                    var match = Regex.Match(fileName, pattern);
-                    if (match.Success)
-                    {
-                        var dateStr = match.Groups[1].Value;
-
-                        // Handle different formats
-                        if (dateStr.Length == 8 && dateStr.All(char.IsDigit))
-                        {
-                            // YYYYMMDD format
-                            if (DateTime.TryParseExact(dateStr, "yyyyMMdd", null, DateTimeStyles.None, out var date1))
-                                return date1;
-                        }
-                        else if (dateStr.Contains("-"))
-                        {
-                            // YYYY-MM-DD format
-                            if (DateTime.TryParse(dateStr, out var date2))
-                                return date2;
-                        }
-                        else if (dateStr.Contains("_"))
-                        {
-                            // DD_MM_YYYY format
-                            var parts = dateStr.Split('_');
-                            if (parts.Length == 3 &&
-                                int.TryParse(parts[0], out var day) &&
-                                int.TryParse(parts[1], out var month) &&
-                                int.TryParse(parts[2], out var year))
-                            {
-                                return new DateTime(year, month, day);
-                            }
-                        }
-                    }
-                }
-
-                _logger.LogWarning("⚠️ Không tìm thấy ngày hợp lệ trong tên file: {FileName}", fileName);
-                return null;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Lỗi khi trích xuất ngày từ tên file: {FileName}", fileName);
-                return null;
-            }
-        }
-
-        // ✅ Extract branch code from filename (expected format: 78XX)
+        // 🔧 CHUẨN HÓA: Extract thông tin từ filename theo format MaCN_LoaiFile_Ngay.ext
+        // Format: 7800_LN01_20241231.csv hoặc 7801_DP01_20241130.xlsx
         private string? ExtractBranchCode(string fileName)
         {
             try
             {
-                var match = Regex.Match(fileName, @"(78\d{2})");
-                if (match.Success)
+                _logger.LogInformation("🔍 Extracting branch code from filename: {FileName}", fileName);
+
+                // Strategy 1: Format chuẩn MaCN_LoaiFile_Ngay.ext (7800_LN01_20241231.csv)
+                var standardMatch = Regex.Match(fileName, @"^(78\d{2})_[A-Z0-9_]+_\d{8}\.(csv|xlsx?)", RegexOptions.IgnoreCase);
+                if (standardMatch.Success)
                 {
-                    return match.Groups[1].Value;
+                    var branchCode = standardMatch.Groups[1].Value;
+                    _logger.LogInformation("✅ Standard format - Branch code: {BranchCode}", branchCode);
+                    return branchCode;
                 }
 
-                _logger.LogInformation("ℹ️ Không tìm thấy mã chi nhánh trong tên file: {FileName}, sử dụng mặc định 7800", fileName);
+                // Strategy 2: Fallback - tìm mã chi nhánh bất kỳ đâu trong filename
+                var fallbackMatch = Regex.Match(fileName, @"(78\d{2})");
+                if (fallbackMatch.Success)
+                {
+                    var branchCode = fallbackMatch.Groups[1].Value;
+                    _logger.LogWarning("⚠️ Non-standard format but found branch code: {BranchCode}", branchCode);
+                    return branchCode;
+                }
+
+                _logger.LogWarning("❌ Không tìm thấy mã chi nhánh trong: {FileName}, sử dụng default 7800", fileName);
                 return "7800";
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Lỗi khi trích xuất mã chi nhánh từ tên file: {FileName}", fileName);
+                _logger.LogError(ex, "❌ Lỗi extract branch code từ: {FileName}", fileName);
                 return "7800";
+            }
+        }
+
+        // 🔧 CHUẨN HÓA: Extract loại dữ liệu từ filename
+        private string? ExtractDataTypeFromFilename(string fileName)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Extracting data type from filename: {FileName}", fileName);
+
+                // Strategy 1: Format chuẩn MaCN_LoaiFile_Ngay.ext
+                var standardMatch = Regex.Match(fileName, @"^78\d{2}_([A-Z0-9_]+)_\d{8}\.(csv|xlsx?)", RegexOptions.IgnoreCase);
+                if (standardMatch.Success)
+                {
+                    var dataType = standardMatch.Groups[1].Value.ToUpper();
+                    _logger.LogInformation("✅ Standard format - Data type: {DataType}", dataType);
+                    return dataType;
+                }
+
+                // Strategy 2: Fallback - tìm trong các loại đã định nghĩa
+                var definedTypes = DataTypeDefinitions.Keys.ToArray();
+                foreach (var type in definedTypes)
+                {
+                    if (fileName.Contains(type, StringComparison.OrdinalIgnoreCase))
+                    {
+                        _logger.LogWarning("⚠️ Non-standard format but found data type: {DataType}", type);
+                        return type;
+                    }
+                }
+
+                _logger.LogWarning("❌ Không tìm thấy loại dữ liệu trong: {FileName}", fileName);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Lỗi extract data type từ: {FileName}", fileName);
+                return null;
+            }
+        }
+
+        // 🔧 CHUẨN HÓA: Extract ngày từ filename theo format yyyyMMdd
+        private DateTime? ExtractStatementDate(string fileName)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Extracting statement date from filename: {FileName}", fileName);
+
+                // Strategy 1: Format chuẩn MaCN_LoaiFile_Ngay.ext (20241231)
+                var standardMatch = Regex.Match(fileName, @"^78\d{2}_[A-Z0-9_]+_(\d{8})\.(csv|xlsx?)", RegexOptions.IgnoreCase);
+                if (standardMatch.Success)
+                {
+                    var dateStr = standardMatch.Groups[1].Value;
+                    if (DateTime.TryParseExact(dateStr, "yyyyMMdd", null, DateTimeStyles.None, out DateTime date))
+                    {
+                        _logger.LogInformation("✅ Standard format - Statement date: {Date}", date.ToString("yyyy-MM-dd"));
+                        return date;
+                    }
+                }
+
+                // Strategy 2: Fallback - tìm pattern yyyyMMdd bất kỳ đâu
+                var fallbackMatch = Regex.Match(fileName, @"(\d{8})");
+                if (fallbackMatch.Success)
+                {
+                    var dateStr = fallbackMatch.Groups[1].Value;
+                    if (DateTime.TryParseExact(dateStr, "yyyyMMdd", null, DateTimeStyles.None, out DateTime date))
+                    {
+                        _logger.LogWarning("⚠️ Non-standard format but found date: {Date}", date.ToString("yyyy-MM-dd"));
+                        return date;
+                    }
+                }
+
+                _logger.LogWarning("❌ Không tìm thấy ngày hợp lệ trong: {FileName}, sử dụng ngày hiện tại", fileName);
+                return DateTime.Now.Date;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Lỗi extract statement date từ: {FileName}", fileName);
+                return DateTime.Now.Date;
             }
         }
 

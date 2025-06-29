@@ -131,13 +131,36 @@ namespace TinhKhoanApp.Api.Controllers
         }
 
         /// <summary>
-        /// Trích xuất mã chi nhánh từ SourceId
+        /// 🔧 CHUẨN HÓA: Extract mã chi nhánh từ filename theo format MaCN_LoaiFile_Ngay.ext
+        /// Format: 7800_LN01_20241231.csv hoặc 7801_DP01_20241130.xlsx
+        /// Fallback: Tìm mã chi nhánh 4 số bất kỳ đâu trong string
         /// </summary>
-        private static string ExtractBranchCode(string sourceId)
+        private static string ExtractBranchCode(string fileName)
         {
-            // Tìm mã chi nhánh 4 số trong SourceId
-            var match = System.Text.RegularExpressions.Regex.Match(sourceId, @"\d{4}");
-            return match.Success ? match.Value : "N/A";
+            try
+            {
+                // Strategy 1: Format chuẩn MaCN_LoaiFile_Ngay.ext (7800_LN01_20241231.csv)
+                var standardMatch = System.Text.RegularExpressions.Regex.Match(fileName, @"^(78\d{2})_[A-Z0-9_]+_\d{8}\.(csv|xlsx?)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                if (standardMatch.Success)
+                {
+                    return standardMatch.Groups[1].Value;
+                }
+                
+                // Strategy 2: Fallback - tìm mã chi nhánh bất kỳ đâu trong filename
+                var fallbackMatch = System.Text.RegularExpressions.Regex.Match(fileName, @"(78\d{2})");
+                if (fallbackMatch.Success)
+                {
+                    return fallbackMatch.Groups[1].Value;
+                }
+
+                // Strategy 3: Legacy fallback - tìm 4 số bất kỳ
+                var legacyMatch = System.Text.RegularExpressions.Regex.Match(fileName, @"\d{4}");
+                return legacyMatch.Success ? legacyMatch.Value : "7800";
+            }
+            catch
+            {
+                return "7800";
+            }
         }
 
         /// <summary>
