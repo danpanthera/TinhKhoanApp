@@ -251,7 +251,7 @@ const currentAssignments = ref([])
 // Computed properties
 // CNL1: Chỉ có Hội Sở (1 đơn vị)
 const cnl1Units = computed(() => {
-  return units.value.filter(unit => {
+  const filtered = units.value.filter(unit => {
     const type = (unit.type || '').toUpperCase()
     return type === 'CNL1'
   }).sort((a, b) => {
@@ -266,11 +266,14 @@ const cnl1Units = computed(() => {
     // Secondary sort: Name
     return (a.name || '').localeCompare(b.name || '');
   })
+
+  console.log('🏢 CNL1 Units:', filtered.length, filtered.map(u => u.name))
+  return filtered
 })
 
 // CNL2: 8 CN + 5 PGD = 13 đơn vị (sắp xếp theo sortOrder)
 const cnl2Units = computed(() => {
-  return units.value
+  const filtered = units.value
     .filter(unit => {
       const type = (unit.type || '').toUpperCase()
       return type === 'CNL2'
@@ -287,6 +290,9 @@ const cnl2Units = computed(() => {
       // Nếu sortOrder bằng nhau thì sắp xếp theo tên
       return (a.name || '').localeCompare(b.name || '');
     })
+
+  console.log('🏢 CNL2 Units:', filtered.length, filtered.map(u => u.name))
+  return filtered
 })
 
 const selectedBranch = computed(() => {
@@ -331,9 +337,10 @@ async function loadInitialData() {
 
     kpiTables.value = tablesResponse.data || []
 
-    console.log('Loaded periods:', khoanPeriods.value.length)
-    console.log('Loaded units:', units.value.length)
-    console.log('Loaded KPI tables:', kpiTables.value.length)
+    console.log('✅ Loaded periods:', khoanPeriods.value.length)
+    console.log('✅ Loaded units:', units.value.length)
+    console.log('✅ Units detail:', units.value.map(u => `${u.name} (${u.type})`))
+    console.log('✅ Loaded KPI tables:', kpiTables.value.length)
 
   } catch (error) {
     console.error('Error loading initial data:', error)
