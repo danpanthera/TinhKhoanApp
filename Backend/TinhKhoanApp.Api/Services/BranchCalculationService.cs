@@ -48,13 +48,13 @@ namespace TinhKhoanApp.Api.Services
                     // CN Lai Châu = tổng của 9 CN (7800-7808)
                     var totalNguonVon = 0m;
                     var branchCodes = new[] { "7800", "7801", "7802", "7803", "7804", "7805", "7806", "7807", "7808" };
-                    
+
                     foreach (var code in branchCodes)
                     {
                         var branchValue = await CalculateNguonVonForSingleBranch(code, null, date);
                         totalNguonVon += branchValue;
                     }
-                    
+
                     _logger.LogInformation("Tổng Nguồn vốn CN Lai Châu: {Total}", totalNguonVon);
                     return totalNguonVon;
                 }
@@ -63,7 +63,7 @@ namespace TinhKhoanApp.Api.Services
                     // Chi nhánh đơn lẻ hoặc PGD
                     var branchCode = GetBranchCode(branchId);
                     var pgdCode = GetPgdCode(branchId);
-                    
+
                     return await CalculateNguonVonForSingleBranch(branchCode, pgdCode, date);
                 }
             }
@@ -78,7 +78,7 @@ namespace TinhKhoanApp.Api.Services
         {
             // Mock data tạm thời cho demo
             await Task.Delay(100); // Simulate async operation
-            
+
             var mockData = branchCode switch
             {
                 "7800" => pgdCode switch
@@ -97,10 +97,10 @@ namespace TinhKhoanApp.Api.Services
                 "7808" => 42.1m * 1000000000,   // CN Nậm Nhùn
                 _ => 50.0m * 1000000000         // Default
             };
-            
-            _logger.LogInformation("Mock Nguồn vốn chi nhánh {BranchCode} PGD {PgdCode}: {Total}", 
+
+            _logger.LogInformation("Mock Nguồn vốn chi nhánh {BranchCode} PGD {PgdCode}: {Total}",
                 branchCode, pgdCode ?? "ALL", mockData);
-            
+
             return mockData;
         }
 
@@ -118,13 +118,13 @@ namespace TinhKhoanApp.Api.Services
                     // CN Lai Châu = tổng toàn tỉnh
                     var branchCodes = new[] { "7800", "7801", "7802", "7803", "7804", "7805", "7806", "7807", "7808" };
                     var totalDuNo = 0m;
-                    
+
                     foreach (var code in branchCodes)
                     {
                         var branchValue = await CalculateDuNoForSingleBranch(code, null, date);
                         totalDuNo += branchValue;
                     }
-                    
+
                     _logger.LogInformation("Tổng Dư nợ CN Lai Châu: {Total}", totalDuNo);
                     return totalDuNo;
                 }
@@ -132,7 +132,7 @@ namespace TinhKhoanApp.Api.Services
                 {
                     var branchCode = GetBranchCode(branchId);
                     var trctCode = GetTrctCode(branchId);
-                    
+
                     return await CalculateDuNoForSingleBranch(branchCode, trctCode, date);
                 }
             }
@@ -147,7 +147,7 @@ namespace TinhKhoanApp.Api.Services
         {
             // Mock data tạm thời cho demo
             await Task.Delay(100); // Simulate async operation
-            
+
             var mockData = branchCode switch
             {
                 "7800" => trctCode switch
@@ -166,10 +166,10 @@ namespace TinhKhoanApp.Api.Services
                 "7808" => 342.1m * 1000000000,   // CN Nậm Nhùn
                 _ => 400.0m * 1000000000         // Default
             };
-            
-            _logger.LogInformation("Mock Dư nợ chi nhánh {BranchCode} TRCT {TrctCode}: {Total}", 
+
+            _logger.LogInformation("Mock Dư nợ chi nhánh {BranchCode} TRCT {TrctCode}: {Total}",
                 branchCode, trctCode ?? "ALL", mockData);
-            
+
             return mockData;
         }
 
@@ -188,16 +188,16 @@ namespace TinhKhoanApp.Api.Services
                     var branchCodes = new[] { "7800", "7801", "7802", "7803", "7804", "7805", "7806", "7807", "7808" };
                     var totalDuNo = 0m;
                     var totalDuNoXau = 0m;
-                    
+
                     foreach (var code in branchCodes)
                     {
                         var duNo = await CalculateDuNoForSingleBranch(code, null, date);
                         var noXauRate = await CalculateNoXauForSingleBranch(code, null, date);
-                        
+
                         totalDuNo += duNo;
                         totalDuNoXau += duNo * (noXauRate / 100);
                     }
-                    
+
                     var tyLe = totalDuNo > 0 ? (totalDuNoXau / totalDuNo) * 100 : 0;
                     _logger.LogInformation("Tỷ lệ nợ xấu CN Lai Châu: {Rate}%", tyLe);
                     return tyLe;
@@ -206,7 +206,7 @@ namespace TinhKhoanApp.Api.Services
                 {
                     var branchCode = GetBranchCode(branchId);
                     var trctCode = GetTrctCode(branchId);
-                    
+
                     return await CalculateNoXauForSingleBranch(branchCode, trctCode, date);
                 }
             }
@@ -221,7 +221,7 @@ namespace TinhKhoanApp.Api.Services
         {
             // Mock data tạm thời cho demo
             await Task.Delay(100); // Simulate async operation
-            
+
             var mockData = branchCode switch
             {
                 "7800" => trctCode switch
@@ -240,10 +240,10 @@ namespace TinhKhoanApp.Api.Services
                 "7808" => 2.42m,   // CN Nậm Nhùn
                 _ => 1.50m         // Default
             };
-            
-            _logger.LogInformation("Mock Tỷ lệ nợ xấu chi nhánh {BranchCode} TRCT {TrctCode}: {Rate}%", 
+
+            _logger.LogInformation("Mock Tỷ lệ nợ xấu chi nhánh {BranchCode} TRCT {TrctCode}: {Rate}%",
                 branchCode, trctCode ?? "ALL", mockData);
-            
+
             return mockData;
         }
 
