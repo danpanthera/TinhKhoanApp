@@ -630,10 +630,8 @@ namespace TinhKhoanApp.Api.Services
                                 }
                             }
 
-                            // Lọc theo chi nhánh và PGD - xử lý MA_PGD có thể có dấu nháy đơn
-                            var cleanPgd = maPgd?.Trim('\'', '"').Trim();  // Loại bỏ dấu nháy đơn/kép
-                            bool pgdMatch = (pgdCode == null && (cleanPgd == "00" || string.IsNullOrEmpty(cleanPgd))) ||
-                                          (pgdCode != null && cleanPgd == pgdCode);
+                            // Lọc theo chi nhánh và PGD - sử dụng logic đơn giản hơn để khớp với direct calculation
+                            bool pgdMatch = string.IsNullOrEmpty(pgdCode) || maPgd == pgdCode;
 
                             if (maCn == branchCode && pgdMatch && !string.IsNullOrEmpty(taiKhoanHachToan))
                             {
