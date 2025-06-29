@@ -266,7 +266,7 @@ namespace TinhKhoanApp.Api.Controllers
         {
             return new List<UnitInfo>
             {
-                new("CnLaiChau", "Chi nhánh Lai Châu", "7800", null),
+                new("CnLaiChau", "Chi nhánh Lai Châu", "9999", null),
                 new("HoiSo", "Hội Sở", "7800", null),
                 new("CnTamDuong", "CN Tam đường", "7801", null),
                 new("CnPhongTho", "CN Phong Thổ", "7802", null),

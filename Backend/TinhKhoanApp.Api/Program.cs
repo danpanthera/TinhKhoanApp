@@ -292,7 +292,7 @@ internal class Program
             {                // Tạo CNL1 (chi nhánh cấp 1 - root)
                 var cnl1Units = new[]
                 {
-                    new Unit { Code = "CnLaiChau", Name = "Agribank CN Lai Châu (7800)", Type = "CNL1", ParentUnitId = null }
+                    new Unit { Code = "CnLaiChau", Name = "Agribank CN Lai Châu (9999)", Type = "CNL1", ParentUnitId = null }
                 };
                 db.Units.AddRange(cnl1Units);
                 db.SaveChanges();
@@ -470,7 +470,7 @@ internal class Program
             {                // Copy logic seeding Units từ Main method
                 var cnl1Units = new[]
                 {
-                    new Unit { Code = "CnLaiChau", Name = "Agribank CN Lai Châu (7800)", Type = "CNL1", ParentUnitId = null }
+                    new Unit { Code = "CnLaiChau", Name = "Agribank CN Lai Châu (9999)", Type = "CNL1", ParentUnitId = null }
                 };
                 db.Units.AddRange(cnl1Units);
                 db.SaveChanges();

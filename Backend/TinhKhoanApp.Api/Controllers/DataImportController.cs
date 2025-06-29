@@ -1294,7 +1294,7 @@ namespace TinhKhoanApp.Api.Controllers
         {
             return branchCode switch
             {
-                "7800" => "CnLaiChau",
+                "9999" => "CnLaiChau",
                 "7801" => "CnTamDuong",
                 "7802" => "CnPhongTho",
                 "7803" => "CnSinHo",

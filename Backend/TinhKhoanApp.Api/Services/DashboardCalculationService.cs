@@ -421,7 +421,7 @@ namespace TinhKhoanApp.Api.Services
         {
             return unitCode switch
             {
-                "CnLaiChau" => "7800",      // Chi nhánh Lai Châu
+                "CnLaiChau" => "9999",      // Chi nhánh Lai Châu
                 "CnTamDuong" => "7801",     // Chi nhánh Tam Đường
                 "CnPhongTho" => "7802",     // Chi nhánh Phong Thổ
                 "CnSinHo" => "7803",        // Chi nhánh Sin Hồ

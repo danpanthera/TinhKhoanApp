@@ -35,16 +35,16 @@ namespace TinhKhoanApp.Api.Controllers
                 var unitsDeleted = await _context.Database.ExecuteSqlRawAsync(
                     "DELETE FROM Units WHERE Id >= 1026");
                 results["unitsDeleted"] = unitsDeleted;
-                
+
                 _logger.LogInformation("Deleted {Count} units with ID >= 1026", unitsDeleted);
 
                 // 2. Delete all positions and recreate standard ones using raw SQL
                 await _context.Database.ExecuteSqlRawAsync("DELETE FROM Positions");
                 await _context.Database.ExecuteSqlRawAsync("DBCC CHECKIDENT('Positions', RESEED, 0)");
-                
+
                 // Insert standard positions using raw SQL
                 await _context.Database.ExecuteSqlRawAsync(@"
-                    INSERT INTO Positions (Name, Description) VALUES 
+                    INSERT INTO Positions (Name, Description) VALUES
                     ('Giám đốc', 'Giám đốc công ty'),
                     ('Phó Giám đốc', 'Phó Giám đốc công ty'),
                     ('Trưởng phòng', 'Trưởng phòng ban'),
@@ -53,7 +53,7 @@ namespace TinhKhoanApp.Api.Controllers
                     ('Phó giám đốc Phòng giao dịch', 'Phó giám đốc Phòng giao dịch'),
                     ('Nhân viên', 'Nhân viên')
                 ");
-                
+
                 results["positionsCreated"] = 7;
                 _logger.LogInformation("Created 7 standard positions");
 
@@ -61,7 +61,7 @@ namespace TinhKhoanApp.Api.Controllers
                 var rolesWithSpacesDeleted = await _context.Database.ExecuteSqlRawAsync(
                     "DELETE FROM Roles WHERE Name LIKE '% %'");
                 results["rolesWithSpacesDeleted"] = rolesWithSpacesDeleted;
-                
+
                 _logger.LogInformation("Deleted {Count} roles with spaces in name", rolesWithSpacesDeleted);
 
                 // 5. Get verification counts
@@ -104,11 +104,11 @@ namespace TinhKhoanApp.Api.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during database cleanup");
-                return StatusCode(500, new 
-                { 
-                    success = false, 
-                    message = "Database cleanup failed", 
-                    error = ex.Message 
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Database cleanup failed",
+                    error = ex.Message
                 });
             }
         }
