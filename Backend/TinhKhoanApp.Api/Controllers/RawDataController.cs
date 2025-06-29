@@ -2073,10 +2073,12 @@ namespace TinhKhoanApp.Api.Controllers
                 var worksheet = workbook.Worksheets.First();
                 var rows = worksheet.RowsUsed();
 
-                _logger.LogInformation("📊 Excel file has {RowCount} rows used", rows.Count());
+                _logger.LogInformation("📊 Excel file has {RowCount} rows used in worksheet '{WorksheetName}'", 
+                    rows.Count(), worksheet.Name);
 
                 List<string>? headers = null;
                 int rowIndex = 0;
+                int headerRowIndex = -1;
 
                 foreach (var row in rows)
                 {
@@ -2098,23 +2100,23 @@ namespace TinhKhoanApp.Api.Controllers
                         if (headers == null && rowIndex <= 20) // Mở rộng tìm kiếm đến 20 dòng
                         {
                             var candidateHeaders = GetExcelRowValuesWithEncoding(row);
-                            
+
                             // Skip empty rows
                             if (candidateHeaders.All(h => string.IsNullOrWhiteSpace(h)))
                                 continue;
-                            
-                            _logger.LogInformation("🔍 GLCB41 Row {Row}: [{Headers}]", 
+
+                            _logger.LogInformation("🔍 GLCB41 Row {Row}: [{Headers}]",
                                 rowIndex, string.Join("] [", candidateHeaders.Take(8)));
 
                             var isHeaderRow = false;
-                            
+
                             // Strategy 1: GLCB41 keywords
                             var keywords = new[] { "STT", "MaChiBanh", "TaiKhoan", "TenTaiKhoan", "SoDu", "PhatSinh", "NgayBaoCao", "So_TK", "Ten_TK", "ACCOUNT", "BALANCE" };
                             var keywordMatches = candidateHeaders.Count(h => keywords.Any(kw => h.Contains(kw, StringComparison.OrdinalIgnoreCase)));
-                            
+
                             // Strategy 2: Fallback - any meaningful structure
                             var nonEmptyCount = candidateHeaders.Count(h => !string.IsNullOrWhiteSpace(h) && h.Length > 1);
-                            
+
                             if (keywordMatches >= 2 || (nonEmptyCount >= 4 && candidateHeaders.Count >= 5 && rowIndex <= 10))
                             {
                                 isHeaderRow = true;
@@ -2135,7 +2137,7 @@ namespace TinhKhoanApp.Api.Controllers
                             var rowValues = GetExcelRowValuesWithEncoding(row);
                             if (rowValues.All(v => string.IsNullOrWhiteSpace(v)))
                                 continue; // Skip empty rows
-                                
+
                             _logger.LogInformation("🔍 GLCB41 Data row {Row}: {Values} values", rowIndex, rowValues.Count);
                         }
                         else
@@ -2192,6 +2194,69 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     await SaveBatchToDatabase(records, importedDataRecordId, branchCode);
                     totalProcessed += records.Count;
+                }
+
+                // 🔥 FALLBACK: Nếu không tìm thấy header cho GLCB41, thử strategy khác
+                if (totalProcessed == 0 && dataType.Contains("GLCB41"))
+                {
+                    _logger.LogWarning("⚠️ No data processed with smart detection, trying fallback for GLCB41");
+                    
+                    // Reset và thử lại với strategy đơn giản hơn
+                    rowIndex = 0;
+                    headers = null;
+                    records.Clear();
+                    
+                    foreach (var row in rows)
+                    {
+                        rowIndex++;
+                        var candidateHeaders = GetExcelRowValuesWithEncoding(row);
+                        
+                        // Fallback: Chấp nhận dòng đầu tiên có ít nhất 3 columns không rỗng
+                        if (headers == null && candidateHeaders.Count >= 3 && 
+                            candidateHeaders.Count(h => !string.IsNullOrWhiteSpace(h)) >= 3)
+                        {
+                            headers = candidateHeaders;
+                            headerRowIndex = rowIndex;
+                            _logger.LogInformation("📋 FALLBACK: Using row {Row} as headers: [{Headers}]",
+                                rowIndex, string.Join("] [", headers.Take(8)));
+                            continue;
+                        }
+                        
+                        if (headers != null && rowIndex > headerRowIndex)
+                        {
+                            var values = GetExcelRowValuesWithEncoding(row);
+                            if (values.All(v => string.IsNullOrWhiteSpace(v))) continue;
+
+                            var record = new Dictionary<string, object>();
+                            for (int j = 0; j < Math.Min(headers.Count, values.Count); j++)
+                            {
+                                record[headers[j]] = values[j];
+                            }
+
+                            record["BranchCode"] = branchCode;
+                            record["StatementDate"] = statementDate.ToString("yyyy-MM-dd");
+                            record["ImportDate"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                            record["ImportedBy"] = "System";
+
+                            records.Add(record);
+
+                            if (records.Count >= batchSize)
+                            {
+                                await SaveBatchToDatabase(records, importedDataRecordId, branchCode);
+                                totalProcessed += records.Count;
+                                records.Clear();
+                            }
+                        }
+                    }
+                    
+                    // Lưu batch cuối cùng của fallback
+                    if (records.Any())
+                    {
+                        await SaveBatchToDatabase(records, importedDataRecordId, branchCode);
+                        totalProcessed += records.Count;
+                    }
+                    
+                    _logger.LogInformation("🔄 FALLBACK processing result: {Records} records", totalProcessed);
                 }
 
                 _logger.LogInformation("✅ Excel file processing completed: {Records} records", totalProcessed);
