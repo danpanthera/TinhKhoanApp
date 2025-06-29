@@ -144,6 +144,7 @@ namespace TinhKhoanApp.Api.Services
 
         /// <summary>
         /// Validate tất cả các CSV headers có hợp lệ với category không
+        /// Ignore các metadata fields được thêm tự động
         /// </summary>
         public static (bool IsValid, List<string> InvalidHeaders, List<string> ValidHeaders) ValidateCsvHeaders(string category, IEnumerable<string> csvHeaders)
         {
@@ -151,9 +152,22 @@ namespace TinhKhoanApp.Api.Services
             var validHeaders = new List<string>();
             var invalidHeaders = new List<string>();
 
+            // 🔥 Metadata fields được thêm tự động - ignore validation cho những field này
+            var ignoredMetadataFields = new HashSet<string>
+            {
+                "BranchCode", "StatementDate", "ImportDate", "ImportedBy",
+                "ProcessedDate", "BusinessKey", "EffectiveDate", "ExpiryDate", 
+                "IsCurrent", "RowVersion", "ImportId", "DataHash"
+            };
+
             foreach (var header in csvHeaders)
             {
-                if (validColumns.Contains(header))
+                if (ignoredMetadataFields.Contains(header))
+                {
+                    // Skip validation cho metadata fields
+                    continue;
+                }
+                else if (validColumns.Contains(header))
                 {
                     validHeaders.Add(header);
                 }
