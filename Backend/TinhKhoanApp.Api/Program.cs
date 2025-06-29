@@ -103,7 +103,10 @@ internal class Program
         // 🔄 Đăng ký Raw Data Processing Service - để xử lý dữ liệu CSV thành History models
         builder.Services.AddScoped<IRawDataProcessingService, RawDataProcessingService>();
 
-        // 🗄️ Đăng ký Temporal Data Service cho high-performance import
+        // � CHUẨN HÓA: Đăng ký File Name Parsing Service để đồng nhất extract thông tin từ filename
+        builder.Services.AddScoped<IFileNameParsingService, FileNameParsingService>();
+
+        // �🗄️ Đăng ký Temporal Data Service cho high-performance import
         builder.Services.AddScoped<ITemporalDataService, TemporalDataService>();
 
         // 🕒 Đăng ký Temporal Table Service cho SQL Server Temporal Tables

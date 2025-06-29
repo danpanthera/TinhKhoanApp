@@ -14,22 +14,22 @@ namespace TinhKhoanApp.Api.Services
         /// Extract mã chi nhánh từ filename - Format: 7800_LN01_20241231.csv
         /// </summary>
         string? ExtractBranchCode(string fileName);
-        
+
         /// <summary>
         /// Extract loại dữ liệu từ filename - Format: 7800_LN01_20241231.csv → LN01
         /// </summary>
         string? ExtractDataTypeFromFilename(string fileName);
-        
+
         /// <summary>
         /// Extract ngày sao kê từ filename - Format: 7800_LN01_20241231.csv → 2024-12-31
         /// </summary>
         DateTime? ExtractStatementDate(string fileName);
-        
+
         /// <summary>
         /// Validate filename có đúng format chuẩn hay không
         /// </summary>
         bool IsValidFormat(string fileName);
-        
+
         /// <summary>
         /// Parse toàn bộ thông tin từ filename
         /// </summary>
@@ -78,7 +78,7 @@ namespace TinhKhoanApp.Api.Services
             try
             {
                 _logger.LogInformation("🔍 Extracting branch code from filename: {FileName}", fileName);
-                
+
                 // Strategy 1: Format chuẩn MaCN_LoaiFile_Ngay.ext (7800_LN01_20241231.csv)
                 var standardMatch = Regex.Match(fileName, @"^(78\d{2})_[A-Z0-9_]+_\d{8}\.(csv|xlsx?)", RegexOptions.IgnoreCase);
                 if (standardMatch.Success)
@@ -87,7 +87,7 @@ namespace TinhKhoanApp.Api.Services
                     _logger.LogInformation("✅ Standard format - Branch code: {BranchCode}", branchCode);
                     return branchCode;
                 }
-                
+
                 // Strategy 2: Fallback - tìm mã chi nhánh bất kỳ đâu trong filename (78xx)
                 var fallbackMatch = Regex.Match(fileName, @"(78\d{2})");
                 if (fallbackMatch.Success)
@@ -112,7 +112,7 @@ namespace TinhKhoanApp.Api.Services
             try
             {
                 _logger.LogInformation("🔍 Extracting data type from filename: {FileName}", fileName);
-                
+
                 // Strategy 1: Format chuẩn MaCN_LoaiFile_Ngay.ext
                 var standardMatch = Regex.Match(fileName, @"^78\d{2}_([A-Z0-9_]+)_\d{8}\.(csv|xlsx?)", RegexOptions.IgnoreCase);
                 if (standardMatch.Success)
@@ -121,7 +121,7 @@ namespace TinhKhoanApp.Api.Services
                     _logger.LogInformation("✅ Standard format - Data type: {DataType}", dataType);
                     return dataType;
                 }
-                
+
                 // Strategy 2: Fallback - tìm trong các loại đã định nghĩa
                 var definedTypes = DataTypeDefinitions.Keys.ToArray();
                 foreach (var type in definedTypes)
@@ -132,7 +132,7 @@ namespace TinhKhoanApp.Api.Services
                         return type;
                     }
                 }
-                
+
                 _logger.LogWarning("❌ Không tìm thấy loại dữ liệu trong: {FileName}", fileName);
                 return null;
             }
@@ -148,7 +148,7 @@ namespace TinhKhoanApp.Api.Services
             try
             {
                 _logger.LogInformation("🔍 Extracting statement date from filename: {FileName}", fileName);
-                
+
                 // Strategy 1: Format chuẩn MaCN_LoaiFile_Ngay.ext (20241231)
                 var standardMatch = Regex.Match(fileName, @"^78\d{2}_[A-Z0-9_]+_(\d{8})\.(csv|xlsx?)", RegexOptions.IgnoreCase);
                 if (standardMatch.Success)
@@ -160,7 +160,7 @@ namespace TinhKhoanApp.Api.Services
                         return date;
                     }
                 }
-                
+
                 // Strategy 2: Fallback - tìm pattern yyyyMMdd bất kỳ đâu
                 var fallbackMatch = Regex.Match(fileName, @"(\d{8})");
                 if (fallbackMatch.Success)
@@ -172,7 +172,7 @@ namespace TinhKhoanApp.Api.Services
                         return date;
                     }
                 }
-                
+
                 _logger.LogWarning("❌ Không tìm thấy ngày hợp lệ trong: {FileName}, sử dụng ngày hiện tại", fileName);
                 return DateTime.Now.Date;
             }
@@ -190,7 +190,7 @@ namespace TinhKhoanApp.Api.Services
                 // Kiểm tra format chuẩn: MaCN_LoaiFile_Ngay.ext
                 var pattern = @"^(78\d{2})_([A-Z0-9_]+)_(\d{8})\.(csv|xlsx?)$";
                 var match = Regex.Match(fileName, pattern, RegexOptions.IgnoreCase);
-                
+
                 if (match.Success)
                 {
                     // Kiểm tra mã chi nhánh hợp lệ (7800-7808)
@@ -210,7 +210,7 @@ namespace TinhKhoanApp.Api.Services
                         }
                     }
                 }
-                
+
                 return false;
             }
             catch
@@ -222,20 +222,20 @@ namespace TinhKhoanApp.Api.Services
         public FileNameParseResult ParseFileName(string fileName)
         {
             var result = new FileNameParseResult();
-            
+
             try
             {
                 _logger.LogInformation("🔍 Parsing complete filename: {FileName}", fileName);
-                
+
                 // Kiểm tra format chuẩn trước
                 result.IsValid = IsValidFormat(fileName);
-                
+
                 // Extract thông tin dù có hợp lệ hay không
                 result.BranchCode = ExtractBranchCode(fileName);
                 result.DataType = ExtractDataTypeFromFilename(fileName);
                 result.StatementDate = ExtractStatementDate(fileName);
                 result.Extension = Path.GetExtension(fileName).TrimStart('.').ToLower();
-                
+
                 if (!result.IsValid)
                 {
                     result.ErrorMessage = "File name không đúng format chuẩn MaCN_LoaiFile_Ngay.ext";
@@ -245,7 +245,7 @@ namespace TinhKhoanApp.Api.Services
                 {
                     _logger.LogInformation("✅ Valid filename format: {FileName}", fileName);
                 }
-                
+
                 return result;
             }
             catch (Exception ex)

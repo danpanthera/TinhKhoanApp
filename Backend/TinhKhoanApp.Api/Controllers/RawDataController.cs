@@ -242,7 +242,7 @@ namespace TinhKhoanApp.Api.Controllers
 
                     // � CHUẨN HÓA: Validation format filename theo chuẩn MaCN_LoaiFile_Ngay.ext
                     var parseResult = _fileNameParsingService.ParseFileName(file.FileName);
-                    
+
                     // Log kết quả parse filename
                     _logger.LogInformation("🔍 Filename parse result for {FileName}: Valid={IsValid}, BranchCode={BranchCode}, DataType={DataType}, Date={Date}",
                         file.FileName, parseResult.IsValid, parseResult.BranchCode, parseResult.DataType, parseResult.StatementDate);
@@ -255,10 +255,10 @@ namespace TinhKhoanApp.Api.Controllers
                     }
 
                     // 🔥 VALIDATION 3: Kiểm tra loại dữ liệu từ filename có khớp với dataType không
-                    if (!string.IsNullOrEmpty(parseResult.DataType) && 
+                    if (!string.IsNullOrEmpty(parseResult.DataType) &&
                         !parseResult.DataType.Equals(dataType, StringComparison.OrdinalIgnoreCase))
                     {
-                        _logger.LogWarning("⚠️ Data type mismatch: URL={URLDataType}, Filename={FilenameDataType}", 
+                        _logger.LogWarning("⚠️ Data type mismatch: URL={URLDataType}, Filename={FilenameDataType}",
                             dataType, parseResult.DataType);
                         results.Add(new RawDataImportResult
                         {

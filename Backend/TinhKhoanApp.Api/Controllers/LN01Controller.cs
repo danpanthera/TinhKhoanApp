@@ -145,7 +145,7 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     return standardMatch.Groups[1].Value;
                 }
-                
+
                 // Strategy 2: Fallback - tìm mã chi nhánh bất kỳ đâu trong filename
                 var fallbackMatch = System.Text.RegularExpressions.Regex.Match(fileName, @"(78\d{2})");
                 if (fallbackMatch.Success)
