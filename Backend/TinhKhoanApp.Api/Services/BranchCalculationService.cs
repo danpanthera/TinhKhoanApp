@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TinhKhoanApp.Api.Data;
+using System.Text.Json;
 
 namespace TinhKhoanApp.Api.Services
 {
@@ -76,32 +77,50 @@ namespace TinhKhoanApp.Api.Services
 
         private async Task<decimal> CalculateNguonVonForSingleBranch(string branchCode, string? pgdCode, DateTime? date)
         {
-            // Mock data tạm thời cho demo
-            await Task.Delay(100); // Simulate async operation
-
-            var mockData = branchCode switch
+            try
             {
-                "7800" => pgdCode switch
+                // Lấy dữ liệu thực từ bảng DP01 (ImportedDataRecords/ImportedDataItems)
+                var dp01Data = await GetDP01DataForBranch(branchCode, pgdCode);
+
+                if (dp01Data.Any())
                 {
-                    "01" => 45.5m * 1000000000, // 45.5 tỷ
-                    "02" => 38.2m * 1000000000, // 38.2 tỷ
-                    _ => 125.7m * 1000000000    // 125.7 tỷ
-                },
-                "7801" => 89.3m * 1000000000,   // CN Tam Đường
-                "7802" => 76.8m * 1000000000,   // CN Phong Thổ
-                "7803" => 45.2m * 1000000000,   // CN Sin Hồ
-                "7804" => 34.6m * 1000000000,   // CN Mường Tè
-                "7805" => 67.4m * 1000000000,   // CN Than Uyên
-                "7806" => 98.5m * 1000000000,   // CN Thành Phố
-                "7807" => 55.9m * 1000000000,   // CN Tân Uyên
-                "7808" => 42.1m * 1000000000,   // CN Nậm Nhùn
-                _ => 50.0m * 1000000000         // Default
-            };
+                    var totalNguonVon = CalculateNguonVonFromDP01(dp01Data, branchCode, pgdCode);
+                    _logger.LogInformation("Nguồn vốn thực tế từ DP01 - Chi nhánh {BranchCode} PGD {PgdCode}: {Total}",
+                        branchCode, pgdCode ?? "ALL", totalNguonVon);
+                    return totalNguonVon;
+                }
+                else
+                {
+                    // Fallback về mock data nếu không có dữ liệu thực
+                    _logger.LogWarning("Không tìm thấy dữ liệu DP01 thực, sử dụng mock data cho {BranchCode}", branchCode);
 
-            _logger.LogInformation("Mock Nguồn vốn chi nhánh {BranchCode} PGD {PgdCode}: {Total}",
-                branchCode, pgdCode ?? "ALL", mockData);
+                    var mockData = branchCode switch
+                    {
+                        "7800" => pgdCode switch
+                        {
+                            "01" => 45.5m * 1000000000, // 45.5 tỷ
+                            "02" => 38.2m * 1000000000, // 38.2 tỷ
+                            _ => 125.7m * 1000000000    // 125.7 tỷ
+                        },
+                        "7801" => 89.3m * 1000000000,   // CN Tam Đường
+                        "7802" => 76.8m * 1000000000,   // CN Phong Thổ
+                        "7803" => 45.2m * 1000000000,   // CN Sin Hồ
+                        "7804" => 34.6m * 1000000000,   // CN Mường Tè
+                        "7805" => 67.4m * 1000000000,   // CN Than Uyên
+                        "7806" => 98.5m * 1000000000,   // CN Thành Phố
+                        "7807" => 55.9m * 1000000000,   // CN Tân Uyên
+                        "7808" => 42.1m * 1000000000,   // CN Nậm Nhùn
+                        _ => 50.0m * 1000000000         // Default
+                    };
 
-            return mockData;
+                    return mockData;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi tính Nguồn vốn cho chi nhánh {BranchCode}", branchCode);
+                return 0m;
+            }
         }
 
         /// <summary>
@@ -349,5 +368,154 @@ namespace TinhKhoanApp.Api.Services
                 _ => null // Chi nhánh chính, không có TRCTCD
             };
         }
+
+        /// <summary>
+        /// Lấy dữ liệu DP01 từ database theo chi nhánh và PGD
+        /// </summary>
+        private async Task<List<dynamic>> GetDP01DataForBranch(string branchCode, string? pgdCode)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Tìm dữ liệu DP01 cho chi nhánh {BranchCode}, PGD {PgdCode}", branchCode, pgdCode ?? "NULL");
+
+                // Tìm trong ImportedDataRecords có category DP01
+                var dp01Records = await _context.ImportedDataRecords
+                    .Where(x => x.Category == "DP01")
+                    .ToListAsync();
+
+                _logger.LogInformation("📄 Tìm thấy {Count} records DP01 trong database", dp01Records.Count);
+
+                if (!dp01Records.Any())
+                {
+                    _logger.LogWarning("❌ Không tìm thấy records DP01 nào");
+                    return new List<dynamic>();
+                }
+
+                var allItems = new List<dynamic>();
+                int processedRecords = 0;
+                int totalItems = 0;
+                int matchedItems = 0;
+
+                foreach (var record in dp01Records)
+                {
+                    processedRecords++;
+                    _logger.LogInformation("🔧 Xử lý record {Index}/{Total}: {FileName}", processedRecords, dp01Records.Count, record.FileName);
+
+                    var items = await _context.ImportedDataItems
+                        .Where(x => x.ImportedDataRecordId == record.Id)
+                        .Select(x => x.RawData)
+                        .ToListAsync();
+
+                    totalItems += items.Count;
+                    _logger.LogInformation("📊 Record {FileName} có {ItemCount} items", record.FileName, items.Count);
+
+                    foreach (var rawData in items)
+                    {
+                        try
+                        {
+                            var jsonDoc = JsonDocument.Parse(rawData);
+                            var root = jsonDoc.RootElement;
+
+                            // Kiểm tra MA_CN và MA_PGD
+                            var maCn = root.TryGetProperty("MA_CN", out var maCnProp) ? maCnProp.GetString() : "";
+                            var maPgd = root.TryGetProperty("MA_PGD", out var maPgdProp) ? maPgdProp.GetString() : "";
+                            var taiKhoanHachToan = root.TryGetProperty("TAI_KHOAN_HACH_TOAN", out var tkProp) ? tkProp.GetString() : "";
+
+                            // Parse CURRENT_BALANCE - có thể là string hoặc number
+                            decimal currentBalance = 0;
+                            if (root.TryGetProperty("CURRENT_BALANCE", out var balanceProp))
+                            {
+                                if (balanceProp.ValueKind == JsonValueKind.Number)
+                                {
+                                    currentBalance = balanceProp.GetDecimal();
+                                }
+                                else if (balanceProp.ValueKind == JsonValueKind.String)
+                                {
+                                    decimal.TryParse(balanceProp.GetString(), out currentBalance);
+                                }
+                            }
+
+                            // Lọc theo chi nhánh và PGD - xử lý MA_PGD có thể có dấu nháy đơn
+                            var cleanPgd = maPgd?.Trim('\'', '"').Trim();  // Loại bỏ dấu nháy đơn/kép
+                            bool pgdMatch = (pgdCode == null && (cleanPgd == "00" || string.IsNullOrEmpty(cleanPgd))) ||
+                                          (pgdCode != null && cleanPgd == pgdCode);
+
+                            if (maCn == branchCode && pgdMatch && !string.IsNullOrEmpty(taiKhoanHachToan))
+                            {
+                                matchedItems++;
+                                allItems.Add(new
+                                {
+                                    MA_CN = maCn,
+                                    MA_PGD = maPgd,
+                                    TAI_KHOAN_HACH_TOAN = taiKhoanHachToan,
+                                    CURRENT_BALANCE = currentBalance
+                                });
+
+                                // Log 3 items đầu để debug
+                                if (matchedItems <= 3)
+                                {
+                                    _logger.LogInformation("✅ Match #{Index}: MA_CN={MaCn}, MA_PGD={MaPgd}, TK={TK}, Balance={Balance}",
+                                        matchedItems, maCn, maPgd, taiKhoanHachToan, currentBalance);
+                                }
+                            }
+                        }
+                        catch (JsonException ex)
+                        {
+                            _logger.LogWarning("❌ JSON parse error: {Error}", ex.Message);
+                        }
+                    }
+                }
+
+                _logger.LogInformation("📈 Kết quả: Tổng {TotalItems} items, Matched {MatchedItems} items cho {BranchCode}",
+                    totalItems, matchedItems, branchCode);
+
+                return allItems;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 Lỗi khi lấy dữ liệu DP01 cho chi nhánh {BranchCode}", branchCode);
+                return new List<dynamic>();
+            }
+        }
+
+        /// <summary>
+        /// Tính toán Nguồn vốn từ dữ liệu DP01 với điều kiện loại trừ
+        /// Loại trừ: TK có 2 chữ số đầu là "40", "41", có 3 chữ số đầu là "427", và TK "211108"
+        /// </summary>
+        private decimal CalculateNguonVonFromDP01(List<dynamic> dp01Data, string branchCode, string? pgdCode)
+        {
+            decimal totalNguonVon = 0;
+            int excludedCount = 0;
+            int includedCount = 0;
+
+            foreach (var item in dp01Data)
+            {
+                var taiKhoan = Convert.ToString(item.TAI_KHOAN_HACH_TOAN) ?? "";
+                var balance = Convert.ToDecimal(item.CURRENT_BALANCE);
+
+                // Kiểm tra tài khoản loại trừ: 40*, 41*, 427*, và 211108
+                bool isExcluded = taiKhoan.StartsWith("40") ||
+                                  taiKhoan.StartsWith("41") ||
+                                  taiKhoan.StartsWith("427") ||
+                                  taiKhoan == "211108";
+
+                if (isExcluded)
+                {
+                    excludedCount++;
+                }
+                else
+                {
+                    includedCount++;
+                    totalNguonVon += balance;
+                }
+            }
+
+            _logger.LogInformation("Tính Nguồn vốn từ DP01 - Chi nhánh {BranchCode} PGD {PgdCode}: " +
+                "Tổng {Total}, Bao gồm {IncludedCount} TK, Loại trừ {ExcludedCount} TK",
+                branchCode, pgdCode ?? "ALL", totalNguonVon, includedCount, excludedCount);
+
+            return totalNguonVon;
+        }
+
     }
 }

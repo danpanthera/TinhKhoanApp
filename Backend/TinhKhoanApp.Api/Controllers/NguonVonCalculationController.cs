@@ -157,7 +157,20 @@ namespace TinhKhoanApp.Api.Controllers
                             if (maCn == branchCode && (pgdCode == null || maPgd == pgdCode))
                             {
                                 var taiKhoanHachToan = root.TryGetProperty("TAI_KHOAN_HACH_TOAN", out var tkProp) ? tkProp.GetString() : "";
-                                var currentBalance = root.TryGetProperty("CURRENT_BALANCE", out var balanceProp) ? balanceProp.GetDecimal() : 0;
+
+                                // Parse CURRENT_BALANCE - có thể là string hoặc number
+                                decimal currentBalance = 0;
+                                if (root.TryGetProperty("CURRENT_BALANCE", out var balanceProp))
+                                {
+                                    if (balanceProp.ValueKind == JsonValueKind.Number)
+                                    {
+                                        currentBalance = balanceProp.GetDecimal();
+                                    }
+                                    else if (balanceProp.ValueKind == JsonValueKind.String)
+                                    {
+                                        decimal.TryParse(balanceProp.GetString(), out currentBalance);
+                                    }
+                                }
 
                                 allItems.Add(new
                                 {
@@ -198,10 +211,11 @@ namespace TinhKhoanApp.Api.Controllers
                 var taiKhoan = item.TAI_KHOAN_HACH_TOAN;
                 var balance = item.CURRENT_BALANCE;
 
-                // Kiểm tra tài khoản loại trừ
+                // Kiểm tra tài khoản loại trừ: 40*, 41*, 427*, và 211108
                 bool isExcluded = taiKhoan.StartsWith("40") ||
                                   taiKhoan.StartsWith("41") ||
-                                  taiKhoan.StartsWith("427");
+                                  taiKhoan.StartsWith("427") ||
+                                  taiKhoan == "211108";
 
                 if (isExcluded)
                 {
@@ -222,7 +236,7 @@ namespace TinhKhoanApp.Api.Controllers
                 TotalRecords = dp01Data.Count,
                 ValidAccountsCount = validAccounts.Count,
                 ExcludedAccountsCount = excludedAccounts.Count,
-                CalculationFormula = "Tổng CURRENT_BALANCE - (TK 40*, 41*, 427*)",
+                CalculationFormula = "Tổng CURRENT_BALANCE - (TK 40*, 41*, 427*, 211108)",
                 ValidAccounts = validAccounts.Take(10), // Lấy 10 mẫu
                 ExcludedAccounts = excludedAccounts.Take(10), // Lấy 10 mẫu
                 CalculationTime = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"),
