@@ -281,6 +281,16 @@ namespace TinhKhoanApp.Api.Controllers
                         isValidFileName = fileExtension == ".csv"; // GL01 chỉ cho phép CSV
                         _logger.LogInformation("🔍 GL01 validation: CSV extension = {IsValid}", isValidFileName);
                     }
+                    // 🔥 VALIDATION ĐẶC BIỆT CHO BC57: Phải chứa "BCDT" trong tên file
+                    else if (dataType.ToUpper() == "BC57")
+                    {
+                        isValidFileName = file.FileName.Contains(dataType, StringComparison.OrdinalIgnoreCase) &&
+                                        file.FileName.Contains("BCDT", StringComparison.OrdinalIgnoreCase);
+                        _logger.LogInformation("🔍 BC57 validation: filename contains BC57={ContainsBC57}, contains BCDT={ContainsBCDT}, overall={IsValid}",
+                            file.FileName.Contains(dataType, StringComparison.OrdinalIgnoreCase),
+                            file.FileName.Contains("BCDT", StringComparison.OrdinalIgnoreCase),
+                            isValidFileName);
+                    }
                     else
                     {
                         // Tất cả loại khác: tên file PHẢI chứa mã dataType
@@ -290,9 +300,12 @@ namespace TinhKhoanApp.Api.Controllers
 
                     if (!isValidFileName)
                     {
-                        var errorMsg = dataType.ToUpper() == "GL01"
-                            ? $"❌ GL01 file phải có định dạng .csv"
-                            : $"❌ Tên file phải chứa mã '{dataType}'";
+                        var errorMsg = dataType.ToUpper() switch
+                        {
+                            "GL01" => "❌ GL01 file phải có định dạng .csv",
+                            "BC57" => "❌ BC57 file phải chứa cả 'BC57' và 'BCDT' trong tên file",
+                            _ => $"❌ Tên file phải chứa mã '{dataType}'"
+                        };
 
                         _logger.LogWarning("❌ File validation failed: {Message}", errorMsg);
                         results.Add(new RawDataImportResult
@@ -2264,7 +2277,8 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 _logger.LogError(excelEx, "❌ Failed to open Excel file: {FileName} - {Error}", file.FileName, excelEx.Message);
                 throw new InvalidOperationException($"Cannot read Excel file: {excelEx.Message}", excelEx);
-            }            using (workbook)
+            }
+            using (workbook)
             {
                 // 🔍 Validate workbook has worksheets
                 if (!workbook.Worksheets.Any())
