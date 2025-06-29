@@ -93,39 +93,33 @@
 
         <!-- 7 nút chức năng chính -->
         <div class="calculation-buttons">
-          <button @click="calculateAll" :disabled="calculating || !selectedUnitId" class="btn btn-primary">
+          <button @click="calculateAll" :disabled="calculating" class="btn btn-primary">
             {{ calculating ? 'Đang tính...' : '⚡ Tính toán' }}
           </button>
 
-          <button @click="calculateNguonVon" :disabled="calculating || !selectedUnitId" class="btn btn-warning">
+          <button @click="calculateNguonVon" :disabled="calculating" class="btn btn-warning">
             💰 Nguồn vốn
           </button>
 
-          <button @click="calculateDuNo" :disabled="calculating || !selectedUnitId" class="btn btn-info">
+          <button @click="calculateDuNo" :disabled="calculating" class="btn btn-info">
             📊 Dư nợ
           </button>
 
-          <button @click="calculateNoXau" :disabled="calculating || !selectedUnitId" class="btn btn-danger">
+          <button @click="calculateNoXau" :disabled="calculating" class="btn btn-danger">
             ⚠️ Nợ xấu
           </button>
 
-          <button @click="calculateThuNoXLRR" :disabled="calculating || !selectedUnitId" class="btn btn-success">
+          <button @click="calculateThuNoXLRR" :disabled="calculating" class="btn btn-success">
             💵 Thu nợ XLRR
           </button>
 
-          <button @click="calculateThuDichVu" :disabled="calculating || !selectedUnitId" class="btn btn-purple">
+          <button @click="calculateThuDichVu" :disabled="calculating" class="btn btn-purple">
             🎯 Thu dịch vụ
           </button>
 
-          <button @click="calculateTaiChinh" :disabled="calculating || !selectedUnitId" class="btn btn-gradient">
+          <button @click="calculateTaiChinh" :disabled="calculating" class="btn btn-gradient">
             💼 Tài chính
           </button>
-        </div>
-
-        <!-- Thông báo khi chưa chọn đơn vị -->
-        <div v-if="!selectedUnitId" class="unit-warning">
-          <i class="mdi mdi-information-outline"></i>
-          Vui lòng chọn Chi nhánh/Phòng ban để thực hiện tính toán
         </div>
       </div>
     </div>
@@ -554,9 +548,8 @@ const selectedDate = ref(''); // Thêm biến cho ngày cụ thể
 const selectedUnitId = ref('');
 const trendPeriod = ref('MONTH');
 
-// Danh sách 15 chi nhánh chuẩn hóa theo quy ước mới
+// Danh sách 15 chi nhánh chuẩn hóa theo quy ước mới (đã bỏ CnLaiChau vì có "Toàn tỉnh")
 const units = ref([
-  { id: 'CnLaiChau', name: 'CN Lai Châu', code: '9999' },
   { id: 'HoiSo', name: 'Hội Sở', code: '7800' },
   { id: 'CnTamDuong', name: 'CN Tam Đường', code: '7801' },
   { id: 'CnPhongTho', name: 'CN Phong Thổ', code: '7802' },
@@ -927,25 +920,28 @@ const calculateAll = async () => {
 
 // 2. Tính Nguồn vốn - Sử dụng service mới
 const calculateNguonVon = async () => {
-  if (!selectedUnitId.value) {
-    errorMessage.value = 'Vui lòng chọn Chi nhánh/Phòng ban trước khi tính toán';
-    return;
-  }
-
   calculating.value = true;
   errorMessage.value = '';
   successMessage.value = '';
 
   try {
-    const selectedUnit = units.value.find(u => u.id === selectedUnitId.value);
-    if (!selectedUnit) {
-      throw new Error('Không tìm thấy thông tin chi nhánh được chọn');
+    // Xác định branchId: nếu không chọn gì thì là "Toàn tỉnh" (CnLaiChau)
+    let branchId = 'CnLaiChau'; // Default: Toàn tỉnh
+    let displayName = 'Toàn tỉnh';
+
+    if (selectedUnitId.value) {
+      const selectedUnit = units.value.find(u => u.id === selectedUnitId.value);
+      if (!selectedUnit) {
+        throw new Error('Không tìm thấy thông tin chi nhánh được chọn');
+      }
+      branchId = selectedUnit.id;
+      displayName = selectedUnit.name;
     }
 
-    console.log('🔧 Tính Nguồn vốn cho:', selectedUnit.name);
+    console.log('🔧 Tính Nguồn vốn cho:', displayName);
 
     // Gọi service mới để tính Nguồn vốn
-    const result = await branchIndicatorsService.calculateNguonVon(selectedUnit.id);
+    const result = await branchIndicatorsService.calculateNguonVon(branchId);
 
     if (result.success) {
       // Cập nhật kết quả
@@ -959,7 +955,7 @@ const calculateNguonVon = async () => {
       };
 
       showCalculationResults.value = true;
-      successMessage.value = `✅ Đã tính Nguồn vốn cho ${selectedUnit.name}: ${branchIndicatorsService.formatCurrency(result.value / 1000000000)} tỷ đồng`;
+      successMessage.value = `✅ Đã tính Nguồn vốn cho ${displayName}: ${branchIndicatorsService.formatCurrency(result.value / 1000000000)} tỷ đồng`;
     } else {
       throw new Error(result.errorMessage || 'Tính toán thất bại');
     }
@@ -974,25 +970,28 @@ const calculateNguonVon = async () => {
 
 // 3. Tính Dư nợ - Sử dụng service mới
 const calculateDuNo = async () => {
-  if (!selectedUnitId.value) {
-    errorMessage.value = 'Vui lòng chọn Chi nhánh/Phòng ban trước khi tính toán';
-    return;
-  }
-
   calculating.value = true;
   errorMessage.value = '';
   successMessage.value = '';
 
   try {
-    const selectedUnit = units.value.find(u => u.id === selectedUnitId.value);
-    if (!selectedUnit) {
-      throw new Error('Không tìm thấy thông tin chi nhánh được chọn');
+    // Xác định branchId: nếu không chọn gì thì là "Toàn tỉnh" (CnLaiChau)
+    let branchId = 'CnLaiChau'; // Default: Toàn tỉnh
+    let displayName = 'Toàn tỉnh';
+
+    if (selectedUnitId.value) {
+      const selectedUnit = units.value.find(u => u.id === selectedUnitId.value);
+      if (!selectedUnit) {
+        throw new Error('Không tìm thấy thông tin chi nhánh được chọn');
+      }
+      branchId = selectedUnit.id;
+      displayName = selectedUnit.name;
     }
 
-    console.log('🔧 Tính Dư nợ cho:', selectedUnit.name);
+    console.log('🔧 Tính Dư nợ cho:', displayName);
 
     // Gọi service mới để tính Dư nợ
-    const result = await branchIndicatorsService.calculateDuNo(selectedUnit.id);
+    const result = await branchIndicatorsService.calculateDuNo(branchId);
 
     if (result.success) {
       // Cập nhật kết quả
@@ -1006,7 +1005,7 @@ const calculateDuNo = async () => {
       };
 
       showCalculationResults.value = true;
-      successMessage.value = `✅ Đã tính Dư nợ cho ${selectedUnit.name}: ${branchIndicatorsService.formatCurrency(result.value / 1000000000)} tỷ đồng`;
+      successMessage.value = `✅ Đã tính Dư nợ cho ${displayName}: ${branchIndicatorsService.formatCurrency(result.value / 1000000000)} tỷ đồng`;
     } else {
       throw new Error(result.errorMessage || 'Tính toán thất bại');
     }
@@ -1021,25 +1020,28 @@ const calculateDuNo = async () => {
 
 // 4. Tính Nợ xấu - Sử dụng service mới
 const calculateNoXau = async () => {
-  if (!selectedUnitId.value) {
-    errorMessage.value = 'Vui lòng chọn Chi nhánh/Phòng ban trước khi tính toán';
-    return;
-  }
-
   calculating.value = true;
   errorMessage.value = '';
   successMessage.value = '';
 
   try {
-    const selectedUnit = units.value.find(u => u.id === selectedUnitId.value);
-    if (!selectedUnit) {
-      throw new Error('Không tìm thấy thông tin chi nhánh được chọn');
+    // Xác định branchId: nếu không chọn gì thì là "Toàn tỉnh" (CnLaiChau)
+    let branchId = 'CnLaiChau'; // Default: Toàn tỉnh
+    let displayName = 'Toàn tỉnh';
+
+    if (selectedUnitId.value) {
+      const selectedUnit = units.value.find(u => u.id === selectedUnitId.value);
+      if (!selectedUnit) {
+        throw new Error('Không tìm thấy thông tin chi nhánh được chọn');
+      }
+      branchId = selectedUnit.id;
+      displayName = selectedUnit.name;
     }
 
-    console.log('🔧 Tính Nợ xấu cho:', selectedUnit.name);
+    console.log('🔧 Tính Nợ xấu cho:', displayName);
 
     // Gọi service mới để tính Nợ xấu
-    const result = await branchIndicatorsService.calculateNoXau(selectedUnit.id);
+    const result = await branchIndicatorsService.calculateNoXau(branchId);
 
     if (result.success) {
       // Cập nhật kết quả
@@ -1053,7 +1055,7 @@ const calculateNoXau = async () => {
       };
 
       showCalculationResults.value = true;
-      successMessage.value = `✅ Đã tính Nợ xấu cho ${selectedUnit.name}: ${branchIndicatorsService.formatPercentage(result.value)} (càng thấp càng tốt)`;
+      successMessage.value = `✅ Đã tính Nợ xấu cho ${displayName}: ${branchIndicatorsService.formatPercentage(result.value)} (càng thấp càng tốt)`;
     } else {
       throw new Error(result.errorMessage || 'Tính toán thất bại');
     }
