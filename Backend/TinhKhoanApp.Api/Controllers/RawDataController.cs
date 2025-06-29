@@ -2169,17 +2169,47 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 _logger.LogInformation("📊 Processing Excel file: {FileName} for dataType: {DataType}", file.FileName, dataType);
+                _logger.LogInformation("📊 File size: {Size} bytes, Content type: {ContentType}", file.Length, file.ContentType);
 
                 int totalProcessed = 0;
                 var records = new List<Dictionary<string, object>>();
 
                 using var stream = file.OpenReadStream();
-                using var workbook = new ClosedXML.Excel.XLWorkbook(stream);
+                
+                // 🔍 Enhanced Excel file validation
+                ClosedXML.Excel.XLWorkbook workbook;
+                try
+                {
+                    workbook = new ClosedXML.Excel.XLWorkbook(stream);
+                    _logger.LogInformation("✅ Excel workbook opened successfully");
+                }
+                catch (Exception excelEx)
+                {
+                    _logger.LogError(excelEx, "❌ Failed to open Excel file: {FileName} - {Error}", file.FileName, excelEx.Message);
+                    throw new InvalidOperationException($"Cannot read Excel file: {excelEx.Message}", excelEx);
+                }
 
-                var worksheet = workbook.Worksheets.First();
-                var rows = worksheet.RowsUsed();
+                using (workbook)
 
-                _logger.LogInformation("📊 Excel file has {RowCount} rows used", rows.Count());
+                using (workbook)
+                {
+                    // 🔍 Validate workbook has worksheets
+                    if (!workbook.Worksheets.Any())
+                    {
+                        throw new InvalidOperationException("Excel file contains no worksheets");
+                    }
+
+                    var worksheet = workbook.Worksheets.First();
+                    var rows = worksheet.RowsUsed();
+
+                    _logger.LogInformation("📊 Excel file has {RowCount} rows used in worksheet: {WorksheetName}", 
+                        rows.Count(), worksheet.Name);
+
+                    if (!rows.Any())
+                    {
+                        _logger.LogWarning("⚠️ Excel worksheet is empty");
+                        return 0;
+                    }
 
                 List<string>? headers = null;
                 int rowIndex = 0;
@@ -2301,6 +2331,8 @@ namespace TinhKhoanApp.Api.Controllers
                 }
 
                 _logger.LogInformation("✅ Excel file processing completed: {Records} records", totalProcessed);
+                } // End using workbook
+                
                 return totalProcessed;
             }
             catch (Exception ex)
