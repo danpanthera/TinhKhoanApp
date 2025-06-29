@@ -8,7 +8,9 @@ using TinhKhoanApp.Api.Services; // Thêm namespace cho các Services
 using TinhKhoanApp.Api.Filters; // Thêm namespace cho GlobalExceptionFilter
 using TinhKhoanApp.Api.Middleware; // Thêm namespace cho Middleware
 using TinhKhoanApp.Api.HealthChecks; // Thêm namespace cho HealthChecks
+using TinhKhoanApp.Api.Utils; // 🕐 Thêm Utils cho VietnamDateTime
 using TinhKhoanApp.Api.Repositories; // Thêm namespace cho Repositories
+using TinhKhoanApp.Api.Converters; // Thêm namespace cho DateTime Converters
 using System.Text.Json.Serialization;
 using BCrypt.Net;
 using Microsoft.AspNetCore.Http.Features; // For FormOptions
@@ -17,24 +19,30 @@ internal class Program
 {
     private static async Task Main(string[] args)
     {
-        // 🕐 Cấu hình timezone cho Hà Nội (UTC+7)
+        // 🕐 Cấu hình timezone cho Hà Nội (UTC+7) - SET SYSTEM DEFAULT
+        TimeZoneInfo vietnamTimeZone;
         try
         {
-            var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"); // Windows
+            vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"); // Windows
             Console.WriteLine($"✅ Timezone set to: {vietnamTimeZone.DisplayName}");
         }
         catch (TimeZoneNotFoundException)
         {
             try
             {
-                var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh"); // Linux/macOS
+                vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh"); // Linux/macOS
                 Console.WriteLine($"✅ Timezone set to: {vietnamTimeZone.DisplayName}");
             }
             catch (TimeZoneNotFoundException)
             {
-                Console.WriteLine("⚠️ Vietnam timezone not found, using system default");
+                vietnamTimeZone = TimeZoneInfo.Local; // Fallback to system timezone
+                Console.WriteLine($"⚠️ Vietnam timezone not found, using system default: {vietnamTimeZone.DisplayName}");
             }
         }
+
+        // 🔥 SET APPLICATION TIMEZONE GLOBALLY
+        Environment.SetEnvironmentVariable("TZ", "Asia/Ho_Chi_Minh");
+        Console.WriteLine($"🌏 Application timezone: {TimeZoneInfo.Local.DisplayName}");
 
         // Kiểm tra nếu có argument "seed" hoặc "reseed"
         if (args.Length > 0 && (args[0] == "seed" || args[0] == "reseed"))
@@ -63,6 +71,11 @@ internal class Program
             {
                 // Dòng này sẽ yêu cầu System.Text.Json đọc và ghi Enum dưới dạng chuỗi tên của chúng.
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+
+                // 🕐 Cấu hình DateTime serialization cho timezone Vietnam (UTC+7)
+                options.JsonSerializerOptions.Converters.Add(new VietnamDateTimeConverter());
+                options.JsonSerializerOptions.Converters.Add(new VietnamNullableDateTimeConverter());
+
                 // --- KẾT THÚC PHẦN THÊM ---
                 options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
             });
@@ -258,7 +271,7 @@ internal class Program
             var forecast = Enumerable.Range(1, 5).Select(index =>
                 new WeatherForecast
                 (
-                    DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+                    DateOnly.FromDateTime(VietnamDateTime.Now.AddDays(index)),
                     Random.Shared.Next(-20, 55),
                     summaries[Random.Shared.Next(summaries.Length)]
                 ))

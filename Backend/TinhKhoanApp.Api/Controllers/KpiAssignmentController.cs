@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models;
+using TinhKhoanApp.Api.Utils; // 🕐 Thêm Utils cho VietnamDateTime
 
 namespace TinhKhoanApp.Api.Controllers
 {
@@ -22,7 +23,7 @@ namespace TinhKhoanApp.Api.Controllers
         {
             var tables = await _context.KpiAssignmentTables
                 .Include(t => t.Indicators)
-                .Select(t => new 
+                .Select(t => new
                 {
                     t.Id,
                     t.TableType,
@@ -43,18 +44,18 @@ namespace TinhKhoanApp.Api.Controllers
                     // Ưu tiên Hội sở lên đầu
                     if (t.TableName?.Contains("Hội sở") == true)
                         return 0;
-                    
+
                     // Tìm mã chi nhánh trong tên (7800-7808)
                     var match = System.Text.RegularExpressions.Regex.Match(t.TableName ?? "", @"\((\d{4})\)");
                     if (match.Success && int.TryParse(match.Groups[1].Value, out int branchCode))
                     {
                         return branchCode;
                     }
-                    
+
                     // Nếu không có mã, sắp xếp theo tên
                     return 8000 + (t.TableName?.GetHashCode() ?? 0) % 100;
                 }
-                
+
                 // Không phải chi nhánh, sắp xếp theo TableType như cũ
                 return 10000 + (int)t.TableType;
             }).ToList();
@@ -68,7 +69,7 @@ namespace TinhKhoanApp.Api.Controllers
         {
             var tables = await _context.KpiAssignmentTables
                 .Include(t => t.Indicators)
-                .Select(t => new 
+                .Select(t => new
                 {
                     t.Id,
                     t.TableType,
@@ -217,7 +218,7 @@ namespace TinhKhoanApp.Api.Controllers
                     KhoanPeriodId = request.KhoanPeriodId,
                     TargetValue = target.TargetValue,
                     Notes = target.Notes,
-                    AssignedDate = DateTime.UtcNow
+                    AssignedDate = VietnamDateTime.Now
                 });
             }
 
@@ -290,7 +291,7 @@ namespace TinhKhoanApp.Api.Controllers
 
             // Update actual value
             target.ActualValue = request.ActualValue;
-            target.UpdatedDate = DateTime.UtcNow;
+            target.UpdatedDate = VietnamDateTime.Now;
 
             // Calculate score if actual value is provided
             if (request.ActualValue.HasValue && target.TargetValue.HasValue && target.TargetValue.Value != 0)
@@ -306,8 +307,8 @@ namespace TinhKhoanApp.Api.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok(new 
-            { 
+            return Ok(new
+            {
                 Message = "Cập nhật thành công",
                 Score = target.Score,
                 ActualValue = target.ActualValue
@@ -433,15 +434,15 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 // Tìm các bảng có chứa "Kiểm soát và Quản lý rủi ro"
                 var tablesToUpdate = await _context.KpiAssignmentTables
-                    .Where(t => (t.Description != null && t.Description.Contains("Kiểm soát và Quản lý rủi ro")) || 
+                    .Where(t => (t.Description != null && t.Description.Contains("Kiểm soát và Quản lý rủi ro")) ||
                                t.TableName.Contains("Kiểm soát và Quản lý rủi ro"))
                     .ToListAsync();
 
                 if (!tablesToUpdate.Any())
                 {
-                    return Ok(new { 
+                    return Ok(new {
                         message = "Không tìm thấy bản ghi nào có chứa 'Kiểm soát và Quản lý rủi ro'",
-                        updatedCount = 0 
+                        updatedCount = 0
                     });
                 }
 
@@ -452,7 +453,7 @@ namespace TinhKhoanApp.Api.Controllers
                     {
                         table.Description = table.Description.Replace("Kiểm soát và Quản lý rủi ro", "Kế hoạch và Quản lý rủi ro");
                     }
-                    
+
                     if (table.TableName != null)
                     {
                         table.TableName = table.TableName.Replace("Kiểm soát và Quản lý rủi ro", "Kế hoạch và Quản lý rủi ro");
@@ -461,21 +462,21 @@ namespace TinhKhoanApp.Api.Controllers
 
                 await _context.SaveChangesAsync();
 
-                return Ok(new { 
+                return Ok(new {
                     message = $"Đã cập nhật thành công {tablesToUpdate.Count} bản ghi",
                     updatedCount = tablesToUpdate.Count,
-                    updatedTables = tablesToUpdate.Select(t => new { 
-                        t.Id, 
-                        t.TableName, 
-                        t.Description 
+                    updatedTables = tablesToUpdate.Select(t => new {
+                        t.Id,
+                        t.TableName,
+                        t.Description
                     })
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { 
-                    message = "Lỗi khi cập nhật mô tả", 
-                    error = ex.Message 
+                return StatusCode(500, new {
+                    message = "Lỗi khi cập nhật mô tả",
+                    error = ex.Message
                 });
             }
         }
@@ -487,15 +488,15 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 var tablesToUpdate = await _context.KpiAssignmentTables
-                    .Where(t => (t.Description != null && t.Description.Contains("Kế toán & Ngân quỹ")) || 
+                    .Where(t => (t.Description != null && t.Description.Contains("Kế toán & Ngân quỹ")) ||
                                t.TableName.Contains("Kế toán & Ngân quỹ"))
                     .ToListAsync();
 
                 if (!tablesToUpdate.Any())
                 {
-                    return Ok(new { 
+                    return Ok(new {
                         message = "Không tìm thấy bản ghi nào có chứa 'Kế toán & Ngân quỹ'",
-                        updatedCount = 0 
+                        updatedCount = 0
                     });
                 }
 
@@ -505,7 +506,7 @@ namespace TinhKhoanApp.Api.Controllers
                     {
                         table.Description = table.Description.Replace("Kế toán & Ngân quỹ", "Kế toán & Ngân quỹ");
                     }
-                    
+
                     if (table.TableName != null)
                     {
                         table.TableName = table.TableName.Replace("Kế toán & Ngân quỹ", "Kế toán & Ngân quỹ");
@@ -514,21 +515,21 @@ namespace TinhKhoanApp.Api.Controllers
 
                 await _context.SaveChangesAsync();
 
-                return Ok(new { 
+                return Ok(new {
                     message = $"Đã cập nhật thành công {tablesToUpdate.Count} bản ghi từ 'Kế toán & Ngân quỹ' thành 'Kế toán & Ngân quỹ'",
                     updatedCount = tablesToUpdate.Count,
-                    updatedTables = tablesToUpdate.Select(t => new { 
-                        t.Id, 
-                        t.TableName, 
-                        t.Description 
+                    updatedTables = tablesToUpdate.Select(t => new {
+                        t.Id,
+                        t.TableName,
+                        t.Description
                     })
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { 
-                    message = "Lỗi khi cập nhật mô tả Kế toán & Ngân quỹ", 
-                    error = ex.Message 
+                return StatusCode(500, new {
+                    message = "Lỗi khi cập nhật mô tả Kế toán & Ngân quỹ",
+                    error = ex.Message
                 });
             }
         }
@@ -540,15 +541,15 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 var tablesToUpdate = await _context.KpiAssignmentTables
-                    .Where(t => (t.Description != null && t.Description.Contains("Thủ quỹ/Hậu kiểm Kế toán Nội bộ")) || 
+                    .Where(t => (t.Description != null && t.Description.Contains("Thủ quỹ/Hậu kiểm Kế toán Nội bộ")) ||
                                t.TableName.Contains("TQ/HK KTNB"))
                     .ToListAsync();
 
                 if (!tablesToUpdate.Any())
                 {
-                    return Ok(new { 
+                    return Ok(new {
                         message = "Không tìm thấy bản ghi nào có chứa 'Thủ quỹ/Hậu kiểm Kế toán Nội bộ'",
-                        updatedCount = 0 
+                        updatedCount = 0
                     });
                 }
 
@@ -559,7 +560,7 @@ namespace TinhKhoanApp.Api.Controllers
                         table.Description = table.Description.Replace("Thủ quỹ/Hạch kiểm Kế toán Nội bộ", "Thủ quỹ/Hậu kiểm/Kế toán nội bộ")
                                                         .Replace("Hạch kiểm", "Hậu kiểm");
                     }
-                    
+
                     if (table.TableName != null)
                     {
                         table.TableName = table.TableName.Replace("TQ/HK KTNB", "TQ/HK/KTNB");
@@ -568,21 +569,21 @@ namespace TinhKhoanApp.Api.Controllers
 
                 await _context.SaveChangesAsync();
 
-                return Ok(new { 
+                return Ok(new {
                     message = $"Đã cập nhật thành công {tablesToUpdate.Count} bản ghi",
                     updatedCount = tablesToUpdate.Count,
-                    updatedTables = tablesToUpdate.Select(t => new { 
-                        t.Id, 
-                        t.TableName, 
-                        t.Description 
+                    updatedTables = tablesToUpdate.Select(t => new {
+                        t.Id,
+                        t.TableName,
+                        t.Description
                     })
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { 
-                    message = "Lỗi khi cập nhật mô tả Thủ quỹ/Hậu kiểm", 
-                    error = ex.Message 
+                return StatusCode(500, new {
+                    message = "Lỗi khi cập nhật mô tả Thủ quỹ/Hậu kiểm",
+                    error = ex.Message
                 });
             }
         }
@@ -594,15 +595,15 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 var tablesToUpdate = await _context.KpiAssignmentTables
-                    .Where(t => (t.Description != null && t.Description.Contains("Công nghệ thông tin/Tổng hợp/Kế toán Giám sát")) || 
+                    .Where(t => (t.Description != null && t.Description.Contains("Công nghệ thông tin/Tổng hợp/Kế toán Giám sát")) ||
                                t.TableName.Contains("Trưởng phòng IT/TH/KTGS"))
                     .ToListAsync();
 
                 if (!tablesToUpdate.Any())
                 {
-                    return Ok(new { 
+                    return Ok(new {
                         message = "Không tìm thấy bản ghi nào có chứa 'Công nghệ thông tin/Tổng hợp/Kế toán Giám sát'",
-                        updatedCount = 0 
+                        updatedCount = 0
                     });
                 }
 
@@ -612,7 +613,7 @@ namespace TinhKhoanApp.Api.Controllers
                     {
                         table.Description = table.Description.Replace("Trưởng phòng Công nghệ thông tin/Tổng hợp/Kế toán Giám sát", "Trưởng/Phó các phòng: IT, Tổng hợp, Kiểm tra Giám sát");
                     }
-                    
+
                     if (table.TableName != null)
                     {
                         table.TableName = table.TableName.Replace("Trưởng phòng IT/TH/KTGS", "Trưởng/Phó các phòng IT/Tổng hợp/Kiểm tra Giám sát");
@@ -621,21 +622,21 @@ namespace TinhKhoanApp.Api.Controllers
 
                 await _context.SaveChangesAsync();
 
-                return Ok(new { 
+                return Ok(new {
                     message = $"Đã cập nhật thành công {tablesToUpdate.Count} bản ghi",
                     updatedCount = tablesToUpdate.Count,
-                    updatedTables = tablesToUpdate.Select(t => new { 
-                        t.Id, 
-                        t.TableName, 
-                        t.Description 
+                    updatedTables = tablesToUpdate.Select(t => new {
+                        t.Id,
+                        t.TableName,
+                        t.Description
                     })
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { 
-                    message = "Lỗi khi cập nhật mô tả Công nghệ thông tin", 
-                    error = ex.Message 
+                return StatusCode(500, new {
+                    message = "Lỗi khi cập nhật mô tả Công nghệ thông tin",
+                    error = ex.Message
                 });
             }
         }
@@ -647,15 +648,15 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 var tablesToUpdate = await _context.KpiAssignmentTables
-                    .Where(t => (t.Description != null && t.Description.Contains("Phó giám đốc PGD/Cán bộ Tín dụng")) || 
+                    .Where(t => (t.Description != null && t.Description.Contains("Phó giám đốc PGD/Cán bộ Tín dụng")) ||
                                t.TableName.Contains("Phó giám đốc PGD/CBTD"))
                     .ToListAsync();
 
                 if (!tablesToUpdate.Any())
                 {
-                    return Ok(new { 
+                    return Ok(new {
                         message = "Không tìm thấy bản ghi nào có chứa 'Phó giám đốc PGD'",
-                        updatedCount = 0 
+                        updatedCount = 0
                     });
                 }
 
@@ -665,7 +666,7 @@ namespace TinhKhoanApp.Api.Controllers
                     {
                         table.Description = table.Description.Replace("Phó giám đốc PGD/Cán bộ Tín dụng", "Phó giám đốc PGD kiêm Cán bộ Tín dụng");
                     }
-                    
+
                     if (table.TableName != null)
                     {
                         table.TableName = table.TableName.Replace("Phó giám đốc PGD/CBTD", "Phó Giám đốc PGD kiêm CBTD");
@@ -674,21 +675,21 @@ namespace TinhKhoanApp.Api.Controllers
 
                 await _context.SaveChangesAsync();
 
-                return Ok(new { 
+                return Ok(new {
                     message = $"Đã cập nhật thành công {tablesToUpdate.Count} bản ghi",
                     updatedCount = tablesToUpdate.Count,
-                    updatedTables = tablesToUpdate.Select(t => new { 
-                        t.Id, 
-                        t.TableName, 
-                        t.Description 
+                    updatedTables = tablesToUpdate.Select(t => new {
+                        t.Id,
+                        t.TableName,
+                        t.Description
                     })
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { 
-                    message = "Lỗi khi cập nhật mô tả Phó giám đốc PGD", 
-                    error = ex.Message 
+                return StatusCode(500, new {
+                    message = "Lỗi khi cập nhật mô tả Phó giám đốc PGD",
+                    error = ex.Message
                 });
             }
         }
@@ -705,9 +706,9 @@ namespace TinhKhoanApp.Api.Controllers
 
                 if (!tablesToUpdate.Any())
                 {
-                    return Ok(new { 
+                    return Ok(new {
                         message = "Không tìm thấy bản ghi nào có chứa 'Phó giám đốc Chi nhánh loại 2 Kế toán'",
-                        updatedCount = 0 
+                        updatedCount = 0
                     });
                 }
 
@@ -721,21 +722,21 @@ namespace TinhKhoanApp.Api.Controllers
 
                 await _context.SaveChangesAsync();
 
-                return Ok(new { 
+                return Ok(new {
                     message = $"Đã cập nhật thành công {tablesToUpdate.Count} bản ghi",
                     updatedCount = tablesToUpdate.Count,
-                    updatedTables = tablesToUpdate.Select(t => new { 
-                        t.Id, 
-                        t.TableName, 
-                        t.Description 
+                    updatedTables = tablesToUpdate.Select(t => new {
+                        t.Id,
+                        t.TableName,
+                        t.Description
                     })
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { 
-                    message = "Lỗi khi cập nhật mô tả Phó giám đốc Chi nhánh loại 2", 
-                    error = ex.Message 
+                return StatusCode(500, new {
+                    message = "Lỗi khi cập nhật mô tả Phó giám đốc Chi nhánh loại 2",
+                    error = ex.Message
                 });
             }
         }
@@ -973,7 +974,7 @@ namespace TinhKhoanApp.Api.Controllers
         public decimal MaxScore { get; set; }
         public required string Unit { get; set; }
         public string ValueTypeString { get; set; } = "NUMBER";
-        
+
         public KpiValueType ValueType => Enum.TryParse<KpiValueType>(ValueTypeString, out var result) ? result : KpiValueType.NUMBER;
     }
 
@@ -984,7 +985,7 @@ namespace TinhKhoanApp.Api.Controllers
         public required string Unit { get; set; }
         public string ValueTypeString { get; set; } = "NUMBER";
         public bool IsActive { get; set; } = true;
-        
+
         public KpiValueType ValueType => Enum.TryParse<KpiValueType>(ValueTypeString, out var result) ? result : KpiValueType.NUMBER;
     }
 

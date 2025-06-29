@@ -4,6 +4,7 @@ using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models;
 using TinhKhoanApp.Api.Models.Validation;
 using TinhKhoanApp.Api.Services;
+using TinhKhoanApp.Api.Utils; // 🕐 Thêm Utils cho VietnamDateTime
 using ClosedXML.Excel;
 using System.Text.RegularExpressions;
 using System.Globalization;
@@ -449,7 +450,7 @@ namespace TinhKhoanApp.Api.Controllers
                             duNo = 100000000 + i * 10000000,
                             laiSuat = 6.5 + (i % 5) * 0.25,
                             hanMuc = 200000000 + i * 50000000,
-                            ngayGiaiNgan = DateTime.Now.AddDays(-30 * (i % 12)).ToString("yyyy-MM-dd")
+                            ngayGiaiNgan = VietnamDateTime.Now.AddDays(-30 * (i % 12)).ToString("yyyy-MM-dd")
                         });
                         break;
 
@@ -461,7 +462,7 @@ namespace TinhKhoanApp.Api.Controllers
                             soTien = 50000000 + i * 5000000,
                             laiSuat = 3.2 + (i % 6) * 0.1,
                             kyHan = new string[] { "1 tháng", "3 tháng", "6 tháng", "12 tháng" }[i % 4],
-                            ngayMoSo = DateTime.Now.AddDays(-60 * (i % 10)).ToString("yyyy-MM-dd")
+                            ngayMoSo = VietnamDateTime.Now.AddDays(-60 * (i % 10)).ToString("yyyy-MM-dd")
                         });
                         break;
 
@@ -473,7 +474,7 @@ namespace TinhKhoanApp.Api.Controllers
                             tenTaiKhoan = $"Tài khoản GL {i}",
                             soTienNo = (i % 2 == 0) ? 25000000 + i * 3000000 : 0,
                             soTienCo = (i % 2 == 1) ? 25000000 + i * 3000000 : 0,
-                            ngayHachToan = DateTime.Now.AddDays(-i).ToString("yyyy-MM-dd")
+                            ngayHachToan = VietnamDateTime.Now.AddDays(-i).ToString("yyyy-MM-dd")
                         });
                         break;
 
@@ -484,7 +485,7 @@ namespace TinhKhoanApp.Api.Controllers
                             dataType = dataType,
                             sampleData = $"Sample data {i} for {dataType}",
                             recordValue = 1000000 + i * 100000,
-                            processedDate = DateTime.Now.AddDays(-i).ToString("yyyy-MM-dd HH:mm:ss")
+                            processedDate = VietnamDateTime.Now.AddDays(-i).ToString("yyyy-MM-dd HH:mm:ss")
                         });
                         break;
                 }
@@ -663,7 +664,7 @@ namespace TinhKhoanApp.Api.Controllers
                     recordsCleared = recordCount,
                     itemsCleared = itemCount,
                     dynamicTablesCleared = dynamicTablesCleared,
-                    timestamp = DateTime.Now
+                    timestamp = VietnamDateTime.Now
                 });
             }
             catch (Exception ex)
@@ -673,7 +674,7 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     success = false,
                     message = "Lỗi khi xóa dữ liệu: " + ex.Message,
-                    timestamp = DateTime.Now
+                    timestamp = VietnamDateTime.Now
                 });
             }
         }
@@ -1027,7 +1028,7 @@ namespace TinhKhoanApp.Api.Controllers
             columns.Add("ImportDate");
 
             // Tạo records
-            DateTime parsedDate = DateTime.Now;
+            DateTime parsedDate = VietnamDateTime.Now;
             if (statementDate != null)
             {
                 if (DateTime.TryParse(statementDate, out var date))
@@ -1058,7 +1059,7 @@ namespace TinhKhoanApp.Api.Controllers
                             record[column] = "System";
                             break;
                         case "ImportDate":
-                            record[column] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                            record[column] = VietnamDateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                             break;
                         case "MaKhachHang":
                         case "MaDuLieu":
@@ -1213,7 +1214,7 @@ namespace TinhKhoanApp.Api.Controllers
                     // Thêm thông tin metadata
                     data["BranchCode"] = branchCode;
                     data["StatementDate"] = statementDate.Value.ToString("yyyy-MM-dd");
-                    data["ImportDate"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    data["ImportDate"] = VietnamDateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                     data["ImportedBy"] = "System";
                     data["RowNumber"] = i; // 🚨 THÊM: Số thứ tự dòng để tracking
 
@@ -1223,7 +1224,7 @@ namespace TinhKhoanApp.Api.Controllers
                     records.Add(new RawDataRecord
                     {
                         JsonData = System.Text.Json.JsonSerializer.Serialize(formattedData),
-                        ProcessedDate = DateTime.UtcNow
+                        ProcessedDate = VietnamDateTime.Now
                     });
                 }
 
@@ -1233,7 +1234,7 @@ namespace TinhKhoanApp.Api.Controllers
                     FileName = fileName,
                     FileType = dataType,
                     Category = dataType,
-                    ImportDate = DateTime.UtcNow,
+                    ImportDate = VietnamDateTime.Now,
                     StatementDate = statementDate.Value,
                     ImportedBy = "System",
                     Status = "Completed",
@@ -1260,7 +1261,7 @@ namespace TinhKhoanApp.Api.Controllers
                         {
                             ImportedDataRecordId = importedDataRecord.Id,
                             RawData = record.JsonData,
-                            ProcessedDate = DateTime.UtcNow,
+                            ProcessedDate = VietnamDateTime.Now,
                             ProcessingNotes = $"Processed successfully - Branch: {branchCode}"
                         });
                     }
@@ -1492,12 +1493,12 @@ namespace TinhKhoanApp.Api.Controllers
                 }
 
                 _logger.LogWarning("❌ Không tìm thấy ngày hợp lệ trong: {FileName}, sử dụng ngày hiện tại", fileName);
-                return DateTime.Now.Date;
+                return VietnamDateTime.Now.Date;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Lỗi extract statement date từ: {FileName}", fileName);
-                return DateTime.Now.Date;
+                return VietnamDateTime.Now.Date;
             }
         }
 
@@ -1531,7 +1532,7 @@ namespace TinhKhoanApp.Api.Controllers
                     file.FileName, dataType, file.Length);
 
                 // Trích xuất ngày sao kê từ tên file
-                var statementDate = ExtractStatementDate(file.FileName) ?? DateTime.Now.Date;
+                var statementDate = ExtractStatementDate(file.FileName) ?? VietnamDateTime.Now.Date;
                 var branchCode = ExtractBranchCode(file.FileName) ?? "7800";
 
                 _logger.LogInformation("� File info: StatementDate={StatementDate}, BranchCode={BranchCode}",
@@ -1543,7 +1544,7 @@ namespace TinhKhoanApp.Api.Controllers
                     FileName = file.FileName,
                     FileType = dataType,
                     Category = dataType,
-                    ImportDate = DateTime.UtcNow,
+                    ImportDate = VietnamDateTime.Now,
                     StatementDate = statementDate,
                     ImportedBy = "System",
                     Status = "Processing", // 🔥 Bắt đầu với "Processing"
@@ -1667,7 +1668,7 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     ImportedDataRecordId = importedDataRecordId,
                     RawData = System.Text.Json.JsonSerializer.Serialize(record),
-                    ProcessedDate = DateTime.UtcNow,
+                    ProcessedDate = VietnamDateTime.Now,
                     ProcessingNotes = $"Batch processed - Branch: {branchCode}"
                 };
                 _context.ImportedDataItems.Add(item);
@@ -1745,7 +1746,7 @@ namespace TinhKhoanApp.Api.Controllers
                 var result = new
                 {
                     message = "Simple test successful",
-                    timestamp = DateTime.UtcNow,
+                    timestamp = VietnamDateTime.Now,
                     version = "1.0.0"
                 };
 
@@ -2201,7 +2202,7 @@ namespace TinhKhoanApp.Api.Controllers
                         // Thêm metadata
                         record["BranchCode"] = branchCode;
                         record["StatementDate"] = statementDate.ToString("yyyy-MM-dd");
-                        record["ImportDate"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                        record["ImportDate"] = VietnamDateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                         record["ImportedBy"] = "System";
 
                         records.Add(record);
@@ -2319,7 +2320,7 @@ namespace TinhKhoanApp.Api.Controllers
                     // Thêm metadata theo chuẩn Temporal Tables + Columnstore Indexes
                     record["BranchCode"] = branchCode;
                     record["StatementDate"] = statementDate.ToString("yyyy-MM-dd");
-                    record["ImportDate"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    record["ImportDate"] = VietnamDateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                     record["ImportedBy"] = "System";
 
                     records.Add(record);
@@ -2445,7 +2446,7 @@ namespace TinhKhoanApp.Api.Controllers
                     // Thêm metadata
                     record["BranchCode"] = branchCode;
                     record["StatementDate"] = statementDate.ToString("yyyy-MM-dd");
-                    record["ImportDate"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    record["ImportDate"] = VietnamDateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                     record["ImportedBy"] = "System";
 
                     records.Add(record);

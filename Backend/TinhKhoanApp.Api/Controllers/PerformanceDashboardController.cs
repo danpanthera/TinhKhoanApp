@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Runtime;
 using System.Text.Json;
 using TinhKhoanApp.Api.Services;
+using TinhKhoanApp.Api.Utils; // 🕐 Thêm Utils cho VietnamDateTime
 
 namespace TinhKhoanApp.Api.Controllers
 {
@@ -35,7 +36,7 @@ namespace TinhKhoanApp.Api.Controllers
                 var process = Process.GetCurrentProcess();
                 var metrics = new
                 {
-                    Timestamp = DateTime.UtcNow,
+                    Timestamp = VietnamDateTime.Now,
                     System = new
                     {
                         ProcessorCount = Environment.ProcessorCount,
@@ -55,7 +56,7 @@ namespace TinhKhoanApp.Api.Controllers
 
                 // Cache for 30 seconds
                 await _cache.SetAsync("dashboard:system", metrics, TimeSpan.FromSeconds(30));
-                
+
                 return Ok(metrics);
             }
             catch (Exception ex)
@@ -81,13 +82,13 @@ namespace TinhKhoanApp.Api.Controllers
                     SlowQueries = 0,
                     ActiveConnections = 1
                 };
-                
+
                 // Cache for 1 minute
                 await _cache.SetAsync("dashboard:database", metrics, TimeSpan.FromMinutes(1));
-                
+
                 return Ok(new
                 {
-                    Timestamp = DateTime.UtcNow,
+                    Timestamp = VietnamDateTime.Now,
                     Database = metrics
                 });
             }
@@ -112,10 +113,10 @@ namespace TinhKhoanApp.Api.Controllers
                     new { Endpoint = "/api/kpi-scoring", Calls = 0, AvgResponseTime = 0.0, ErrorRate = 0.0 },
                     new { Endpoint = "/api/raw-data", Calls = 0, AvgResponseTime = 0.0, ErrorRate = 0.0 }
                 };
-                
+
                 return Ok(new
                 {
-                    Timestamp = DateTime.UtcNow,
+                    Timestamp = VietnamDateTime.Now,
                     Endpoints = metrics
                 });
             }
@@ -141,7 +142,7 @@ namespace TinhKhoanApp.Api.Controllers
 
                 var metrics = new
                 {
-                    Timestamp = DateTime.UtcNow,
+                    Timestamp = VietnamDateTime.Now,
                     Cache = new
                     {
                         Hits = cacheHits,
@@ -177,7 +178,7 @@ namespace TinhKhoanApp.Api.Controllers
 
                 var metrics = new
                 {
-                    Timestamp = DateTime.UtcNow,
+                    Timestamp = VietnamDateTime.Now,
                     Exports = new
                     {
                         Active = activeExports,
@@ -208,8 +209,8 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 var dashboardData = new
                 {
-                    Timestamp = DateTime.UtcNow,
-                    Uptime = DateTime.UtcNow - Process.GetCurrentProcess().StartTime,
+                    Timestamp = VietnamDateTime.Now,
+                    Uptime = VietnamDateTime.Now - Process.GetCurrentProcess().StartTime,
                     System = await GetSystemMetricsInternal(),
                     Database = await GetDatabaseMetricsInternal(),
                     Cache = await GetCacheMetricsInternal(),
@@ -236,9 +237,9 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 await _cache.RemoveByPatternAsync("metrics:*");
                 await _cache.RemoveByPatternAsync("exports:*");
-                
+
                 _logger.LogInformation("Performance counters reset");
-                
+
                 return Ok(new { message = "Performance counters reset successfully" });
             }
             catch (Exception ex)
@@ -316,7 +317,7 @@ namespace TinhKhoanApp.Api.Controllers
             return Task.FromResult<object>(new
             {
                 Status = "Healthy",
-                CheckedAt = DateTime.UtcNow
+                CheckedAt = VietnamDateTime.Now
             });
         }
     }
