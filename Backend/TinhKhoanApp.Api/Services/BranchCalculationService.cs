@@ -164,32 +164,43 @@ namespace TinhKhoanApp.Api.Services
 
         private async Task<decimal> CalculateDuNoForSingleBranch(string branchCode, string? trctCode, DateTime? date)
         {
-            // Mock data tạm thời cho demo
-            await Task.Delay(100); // Simulate async operation
-
-            var mockData = branchCode switch
+            try
             {
-                "7800" => trctCode switch
+                // TODO: Implement real LN01 data calculation when available
+                // For now, using improved mock data that's proportional to branch size
+
+                await Task.Delay(50); // Simulate async operation
+
+                // Base amounts for different branch sizes (in VND)
+                var mockData = branchCode switch
                 {
-                    "01" => 340.5m * 1000000000, // 340.5 tỷ
-                    "02" => 298.2m * 1000000000, // 298.2 tỷ
-                    _ => 825.7m * 1000000000    // 825.7 tỷ
-                },
-                "7801" => 589.3m * 1000000000,   // CN Tam Đường
-                "7802" => 476.8m * 1000000000,   // CN Phong Thổ
-                "7803" => 345.2m * 1000000000,   // CN Sin Hồ
-                "7804" => 234.6m * 1000000000,   // CN Mường Tè
-                "7805" => 567.4m * 1000000000,   // CN Than Uyên
-                "7806" => 698.5m * 1000000000,   // CN Thành Phố
-                "7807" => 455.9m * 1000000000,   // CN Tân Uyên
-                "7808" => 342.1m * 1000000000,   // CN Nậm Nhùn
-                _ => 400.0m * 1000000000         // Default
-            };
+                    "7800" => trctCode switch
+                    {
+                        "01" => 45.2m * 1_000_000_000,  // PGD 1: ~45.2 tỷ
+                        "02" => 38.7m * 1_000_000_000,  // PGD 2: ~38.7 tỷ
+                        _ => 187.6m * 1_000_000_000     // Hội Sở total: ~187.6 tỷ
+                    },
+                    "7801" => 156.3m * 1_000_000_000,   // CN Tam Đường: ~156.3 tỷ
+                    "7802" => 134.8m * 1_000_000_000,   // CN Phong Thổ: ~134.8 tỷ
+                    "7803" => 98.2m * 1_000_000_000,    // CN Sin Hồ: ~98.2 tỷ
+                    "7804" => 76.4m * 1_000_000_000,    // CN Mường Tè: ~76.4 tỷ
+                    "7805" => 143.7m * 1_000_000_000,   // CN Than Uyên: ~143.7 tỷ
+                    "7806" => 165.5m * 1_000_000_000,   // CN Thành Phố: ~165.5 tỷ
+                    "7807" => 124.9m * 1_000_000_000,   // CN Tân Uyên: ~124.9 tỷ
+                    "7808" => 89.1m * 1_000_000_000,    // CN Nậm Nhùn: ~89.1 tỷ
+                    _ => 120.0m * 1_000_000_000         // Default: ~120 tỷ
+                };
 
-            _logger.LogInformation("Mock Dư nợ chi nhánh {BranchCode} TRCT {TrctCode}: {Total}",
-                branchCode, trctCode ?? "ALL", mockData);
+                _logger.LogInformation("💳 Dư nợ tín dụng (mock) - Chi nhánh {BranchCode} TRCT {TrctCode}: {Total:F2} tỷ",
+                    branchCode, trctCode ?? "ALL", mockData / 1_000_000_000);
 
-            return mockData;
+                return mockData;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi tính Dư nợ cho chi nhánh {BranchCode}", branchCode);
+                return 0m;
+            }
         }
 
         /// <summary>
@@ -238,78 +249,262 @@ namespace TinhKhoanApp.Api.Services
 
         private async Task<decimal> CalculateNoXauForSingleBranch(string branchCode, string? trctCode, DateTime? date)
         {
-            // Mock data tạm thời cho demo
-            await Task.Delay(100); // Simulate async operation
-
-            var mockData = branchCode switch
+            try
             {
-                "7800" => trctCode switch
+                // TODO: Implement real LN01 data calculation when available
+                // NPL rate should be realistic (typically 0.5% - 3% for different branches)
+
+                await Task.Delay(50); // Simulate async operation
+
+                var mockNplRate = branchCode switch
                 {
-                    "01" => 1.25m, // 1.25%
-                    "02" => 1.45m, // 1.45%
-                    _ => 1.15m     // 1.15%
-                },
-                "7801" => 0.89m,   // CN Tam Đường
-                "7802" => 1.76m,   // CN Phong Thổ
-                "7803" => 2.45m,   // CN Sin Hồ
-                "7804" => 1.34m,   // CN Mường Tè
-                "7805" => 1.67m,   // CN Than Uyên
-                "7806" => 0.98m,   // CN Thành Phố
-                "7807" => 1.55m,   // CN Tân Uyên
-                "7808" => 2.42m,   // CN Nậm Nhùn
-                _ => 1.50m         // Default
-            };
+                    "7800" => trctCode switch
+                    {
+                        "01" => 1.15m,  // PGD 1: 1.15%
+                        "02" => 1.35m,  // PGD 2: 1.35%
+                        _ => 0.85m      // Hội Sở: 0.85%
+                    },
+                    "7801" => 0.76m,    // CN Tam Đường: 0.76%
+                    "7802" => 1.42m,    // CN Phong Thổ: 1.42%
+                    "7803" => 2.18m,    // CN Sin Hồ: 2.18%
+                    "7804" => 1.67m,    // CN Mường Tè: 1.67%
+                    "7805" => 1.23m,    // CN Than Uyên: 1.23%
+                    "7806" => 0.94m,    // CN Thành Phố: 0.94%
+                    "7807" => 1.56m,    // CN Tân Uyên: 1.56%
+                    "7808" => 2.05m,    // CN Nậm Nhùn: 2.05%
+                    _ => 1.50m          // Default: 1.50%
+                };
 
-            _logger.LogInformation("Mock Tỷ lệ nợ xấu chi nhánh {BranchCode} TRCT {TrctCode}: {Rate}%",
-                branchCode, trctCode ?? "ALL", mockData);
+                _logger.LogInformation("⚠️ Tỷ lệ nợ xấu (mock) - Chi nhánh {BranchCode} TRCT {TrctCode}: {Rate:F2}%",
+                    branchCode, trctCode ?? "ALL", mockNplRate);
 
-            return mockData;
+                return mockNplRate;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi tính Nợ xấu cho chi nhánh {BranchCode}", branchCode);
+                return 1.50m; // Default NPL rate
+            }
         }
 
         // Các chỉ tiêu khác sẽ được implement tương tự
         public async Task<decimal> CalculateThuHoiXLRRByBranch(string branchId, DateTime? date = null)
         {
-            // Mock data
-            await Task.Delay(50);
-            var mockData = branchId switch
+            try
             {
-                "CnLaiChau" => 156.7m * 1000000000, // Tổng toàn tỉnh
-                "HoiSo" => 45.2m * 1000000000,
-                "CnTamDuong" => 23.5m * 1000000000,
-                "CnPhongTho" => 18.9m * 1000000000,
-                _ => 15.0m * 1000000000
-            };
-            return mockData;
+                _logger.LogInformation("Bắt đầu tính Thu hồi XLRR cho chi nhánh {BranchId}", branchId);
+
+                if (branchId == "CnLaiChau")
+                {
+                    // CN Lai Châu = tổng toàn tỉnh
+                    var branchCodes = new[] { "7800", "7801", "7802", "7803", "7804", "7805", "7806", "7807", "7808" };
+                    var totalThuHoi = 0m;
+
+                    foreach (var code in branchCodes)
+                    {
+                        var branchValue = await CalculateThuHoiXLRRForSingleBranch(code, null, date);
+                        totalThuHoi += branchValue;
+                    }
+
+                    _logger.LogInformation("Tổng Thu hồi XLRR CN Lai Châu: {Total:F2} tỷ", totalThuHoi / 1_000_000_000);
+                    return totalThuHoi;
+                }
+                else
+                {
+                    var branchCode = GetBranchCode(branchId);
+                    var trctCode = GetTrctCode(branchId);
+                    return await CalculateThuHoiXLRRForSingleBranch(branchCode, trctCode, date);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi tính Thu hồi XLRR cho chi nhánh {BranchId}", branchId);
+                return 0m;
+            }
+        }
+
+        private async Task<decimal> CalculateThuHoiXLRRForSingleBranch(string branchCode, string? trctCode, DateTime? date)
+        {
+            try
+            {
+                // TODO: Implement real XLRR recovery data calculation when available
+                await Task.Delay(50);
+
+                var mockData = branchCode switch
+                {
+                    "7800" => trctCode switch
+                    {
+                        "01" => 3.2m * 1_000_000_000,   // PGD 1: ~3.2 tỷ
+                        "02" => 2.8m * 1_000_000_000,   // PGD 2: ~2.8 tỷ
+                        _ => 12.4m * 1_000_000_000      // Hội Sở total: ~12.4 tỷ
+                    },
+                    "7801" => 8.7m * 1_000_000_000,     // CN Tam Đường: ~8.7 tỷ
+                    "7802" => 6.9m * 1_000_000_000,     // CN Phong Thổ: ~6.9 tỷ
+                    "7803" => 4.8m * 1_000_000_000,     // CN Sin Hồ: ~4.8 tỷ
+                    "7804" => 3.6m * 1_000_000_000,     // CN Mường Tè: ~3.6 tỷ
+                    "7805" => 7.2m * 1_000_000_000,     // CN Than Uyên: ~7.2 tỷ
+                    "7806" => 9.8m * 1_000_000_000,     // CN Thành Phố: ~9.8 tỷ
+                    "7807" => 6.3m * 1_000_000_000,     // CN Tân Uyên: ~6.3 tỷ
+                    "7808" => 4.1m * 1_000_000_000,     // CN Nậm Nhùn: ~4.1 tỷ
+                    _ => 5.0m * 1_000_000_000           // Default: ~5 tỷ
+                };
+
+                _logger.LogInformation("🏦 Thu hồi XLRR (mock) - Chi nhánh {BranchCode} TRCT {TrctCode}: {Total:F2} tỷ",
+                    branchCode, trctCode ?? "ALL", mockData / 1_000_000_000);
+
+                return mockData;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi tính Thu hồi XLRR cho chi nhánh {BranchCode}", branchCode);
+                return 0m;
+            }
         }
 
         public async Task<decimal> CalculateThuDichVuByBranch(string branchId, DateTime? date = null)
         {
-            // Mock data
-            await Task.Delay(50);
-            var mockData = branchId switch
+            try
             {
-                "CnLaiChau" => 89.4m * 1000000000, // Tổng toàn tỉnh
-                "HoiSo" => 28.7m * 1000000000,
-                "CnTamDuong" => 12.3m * 1000000000,
-                "CnPhongTho" => 9.8m * 1000000000,
-                _ => 8.0m * 1000000000
-            };
-            return mockData;
+                _logger.LogInformation("Bắt đầu tính Thu dịch vụ cho chi nhánh {BranchId}", branchId);
+
+                if (branchId == "CnLaiChau")
+                {
+                    // CN Lai Châu = tổng toàn tỉnh
+                    var branchCodes = new[] { "7800", "7801", "7802", "7803", "7804", "7805", "7806", "7807", "7808" };
+                    var totalThuDichVu = 0m;
+
+                    foreach (var code in branchCodes)
+                    {
+                        var branchValue = await CalculateThuDichVuForSingleBranch(code, null, date);
+                        totalThuDichVu += branchValue;
+                    }
+
+                    _logger.LogInformation("Tổng Thu dịch vụ CN Lai Châu: {Total:F2} tỷ", totalThuDichVu / 1_000_000_000);
+                    return totalThuDichVu;
+                }
+                else
+                {
+                    var branchCode = GetBranchCode(branchId);
+                    var trctCode = GetTrctCode(branchId);
+                    return await CalculateThuDichVuForSingleBranch(branchCode, trctCode, date);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi tính Thu dịch vụ cho chi nhánh {BranchId}", branchId);
+                return 0m;
+            }
+        }
+
+        private async Task<decimal> CalculateThuDichVuForSingleBranch(string branchCode, string? trctCode, DateTime? date)
+        {
+            try
+            {
+                // TODO: Implement real service income data calculation when available
+                await Task.Delay(50);
+
+                var mockData = branchCode switch
+                {
+                    "7800" => trctCode switch
+                    {
+                        "01" => 8.5m * 1_000_000_000,   // PGD 1: ~8.5 tỷ
+                        "02" => 7.2m * 1_000_000_000,   // PGD 2: ~7.2 tỷ
+                        _ => 28.9m * 1_000_000_000      // Hội Sở total: ~28.9 tỷ
+                    },
+                    "7801" => 22.6m * 1_000_000_000,    // CN Tam Đường: ~22.6 tỷ
+                    "7802" => 18.3m * 1_000_000_000,    // CN Phong Thổ: ~18.3 tỷ
+                    "7803" => 14.2m * 1_000_000_000,    // CN Sin Hồ: ~14.2 tỷ
+                    "7804" => 11.5m * 1_000_000_000,    // CN Mường Tè: ~11.5 tỷ
+                    "7805" => 20.4m * 1_000_000_000,    // CN Than Uyên: ~20.4 tỷ
+                    "7806" => 26.7m * 1_000_000_000,    // CN Thành Phố: ~26.7 tỷ
+                    "7807" => 19.8m * 1_000_000_000,    // CN Tân Uyên: ~19.8 tỷ
+                    "7808" => 13.1m * 1_000_000_000,    // CN Nậm Nhùn: ~13.1 tỷ
+                    _ => 15.0m * 1_000_000_000          // Default: ~15 tỷ
+                };
+
+                _logger.LogInformation("🏦 Thu dịch vụ (mock) - Chi nhánh {BranchCode} TRCT {TrctCode}: {Total:F2} tỷ",
+                    branchCode, trctCode ?? "ALL", mockData / 1_000_000_000);
+
+                return mockData;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi tính Thu dịch vụ cho chi nhánh {BranchCode}", branchCode);
+                return 0m;
+            }
         }
 
         public async Task<decimal> CalculateLoiNhuanByBranch(string branchId, DateTime? date = null)
         {
-            // Mock data
-            await Task.Delay(50);
-            var mockData = branchId switch
+            try
             {
-                "CnLaiChau" => 234.6m * 1000000000, // Tổng toàn tỉnh
-                "HoiSo" => 67.8m * 1000000000,
-                "CnTamDuong" => 34.2m * 1000000000,
-                "CnPhongTho" => 28.9m * 1000000000,
-                _ => 20.0m * 1000000000
-            };
-            return mockData;
+                _logger.LogInformation("Bắt đầu tính Lợi nhuận cho chi nhánh {BranchId}", branchId);
+
+                if (branchId == "CnLaiChau")
+                {
+                    // CN Lai Châu = tổng toàn tỉnh
+                    var branchCodes = new[] { "7800", "7801", "7802", "7803", "7804", "7805", "7806", "7807", "7808" };
+                    var totalLoiNhuan = 0m;
+
+                    foreach (var code in branchCodes)
+                    {
+                        var branchValue = await CalculateLoiNhuanForSingleBranch(code, null, date);
+                        totalLoiNhuan += branchValue;
+                    }
+
+                    _logger.LogInformation("Tổng Lợi nhuận CN Lai Châu: {Total:F2} tỷ", totalLoiNhuan / 1_000_000_000);
+                    return totalLoiNhuan;
+                }
+                else
+                {
+                    var branchCode = GetBranchCode(branchId);
+                    var trctCode = GetTrctCode(branchId);
+                    return await CalculateLoiNhuanForSingleBranch(branchCode, trctCode, date);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi tính Lợi nhuận cho chi nhánh {BranchId}", branchId);
+                return 0m;
+            }
+        }
+
+        private async Task<decimal> CalculateLoiNhuanForSingleBranch(string branchCode, string? trctCode, DateTime? date)
+        {
+            try
+            {
+                // TODO: Implement real profit calculation when available
+                await Task.Delay(50);
+
+                var mockData = branchCode switch
+                {
+                    "7800" => trctCode switch
+                    {
+                        "01" => 45.8m * 1_000_000_000,  // PGD 1: ~45.8 tỷ
+                        "02" => 38.2m * 1_000_000_000,  // PGD 2: ~38.2 tỷ
+                        _ => 156.4m * 1_000_000_000     // Hội Sở total: ~156.4 tỷ
+                    },
+                    "7801" => 124.7m * 1_000_000_000,   // CN Tam Đường: ~124.7 tỷ
+                    "7802" => 108.2m * 1_000_000_000,   // CN Phong Thổ: ~108.2 tỷ
+                    "7803" => 89.6m * 1_000_000_000,    // CN Sin Hồ: ~89.6 tỷ
+                    "7804" => 67.8m * 1_000_000_000,    // CN Mường Tè: ~67.8 tỷ
+                    "7805" => 118.9m * 1_000_000_000,   // CN Than Uyên: ~118.9 tỷ
+                    "7806" => 142.3m * 1_000_000_000,   // CN Thành Phố: ~142.3 tỷ
+                    "7807" => 105.6m * 1_000_000_000,   // CN Tân Uyên: ~105.6 tỷ
+                    "7808" => 78.4m * 1_000_000_000,    // CN Nậm Nhùn: ~78.4 tỷ
+                    _ => 90.0m * 1_000_000_000          // Default: ~90 tỷ
+                };
+
+                _logger.LogInformation("💵 Lợi nhuận (mock) - Chi nhánh {BranchCode} TRCT {TrctCode}: {Total:F2} tỷ",
+                    branchCode, trctCode ?? "ALL", mockData / 1_000_000_000);
+
+                return mockData;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi tính Lợi nhuận cho chi nhánh {BranchCode}", branchCode);
+                return 0m;
+            }
         }
 
         /// <summary>

@@ -13,7 +13,7 @@
       <div class="header-controls">
         <!-- Chọn đơn vị/phòng ban - 15 chi nhánh chuẩn hóa -->
         <select v-model="selectedUnitId" @change="loadTargets" class="form-select" style="min-width: 200px;">
-          <option value="">Chọn đơn vị/phòng ban</option>
+          <option value="">Tất cả đơn vị (Toàn tỉnh)</option>
           <option value="HoiSo">Hội Sở</option>
           <option value="CnTamDuong">CN Tam Đường</option>
           <option value="CnPhongTho">CN Phong Thổ</option>
@@ -184,7 +184,7 @@
             <div class="form-group">
               <label>Đơn vị/Phòng ban *</label>
               <select v-model="targetForm.unitId" class="form-select" required>
-                <option value="">Chọn đơn vị/phòng ban</option>
+                <option value="">Tất cả đơn vị (Toàn tỉnh)</option>
                 <option value="HoiSo">Hội Sở</option>
                 <option value="CnTamDuong">CN Tam Đường</option>
                 <option value="CnPhongTho">CN Phong Thổ</option>

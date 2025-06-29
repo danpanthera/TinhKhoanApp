@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models.Dashboard;
+using TinhKhoanApp.Api.Services;
 using Microsoft.AspNetCore.Authorization;
 
 namespace TinhKhoanApp.Api.Controllers
@@ -13,22 +14,41 @@ namespace TinhKhoanApp.Api.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<GeneralDashboardController> _logger;
+        private readonly IBranchCalculationService _branchCalculationService;
 
         public GeneralDashboardController(
             ApplicationDbContext context,
-            ILogger<GeneralDashboardController> logger)
+            ILogger<GeneralDashboardController> logger,
+            IBranchCalculationService branchCalculationService)
         {
             _context = context;
             _logger = logger;
+            _branchCalculationService = branchCalculationService;
         }
 
         // Lấy dữ liệu 6 chỉ tiêu chính
         [HttpGet("indicators/{branchId}")]
-        public ActionResult GetIndicators(string branchId)
+        public async Task<ActionResult> GetIndicators(string branchId)
         {
             try
             {
-                // Mock data tạm thời để test
+                _logger.LogInformation("🎯 Lấy dữ liệu dashboard cho chi nhánh {BranchId}", branchId);
+
+                // Tính toán tất cả các chỉ tiêu từ BranchCalculationService
+                var nguonVonVnd = await _branchCalculationService.CalculateNguonVonByBranch(branchId);
+                var duNoVnd = await _branchCalculationService.CalculateDuNoByBranch(branchId);
+                var noXauPercent = await _branchCalculationService.CalculateNoXauByBranch(branchId);
+                var thuNoXlrrVnd = await _branchCalculationService.CalculateThuHoiXLRRByBranch(branchId);
+                var thuDichVuVnd = await _branchCalculationService.CalculateThuDichVuByBranch(branchId);
+                var taiChinhVnd = await _branchCalculationService.CalculateLoiNhuanByBranch(branchId);
+
+                // Chuyển đổi từ VND sang tỷ VND
+                var nguonVonTy = Math.Round(nguonVonVnd / 1_000_000_000m, 2);
+                var duNoTy = Math.Round(duNoVnd / 1_000_000_000m, 2);
+                var thuNoXlrrTy = Math.Round(thuNoXlrrVnd / 1_000_000_000m, 2);
+                var thuDichVuTy = Math.Round(thuDichVuVnd / 1_000_000_000m, 2);
+                var taiChinhTy = Math.Round(taiChinhVnd / 1_000_000_000m, 2);
+
                 var result = new
                 {
                     indicators = new[]
@@ -41,9 +61,9 @@ namespace TinhKhoanApp.Api.Controllers
                             @class = "nguon-von",
                             unit = "tỷ",
                             format = "currency",
-                            currentValue = 245.8,
+                            currentValue = (double)nguonVonTy,
                             targetValue = 250.0,
-                            completionRate = 98.3,
+                            completionRate = Math.Round((double)(nguonVonTy / 250.0m * 100), 1),
                             changeFromYearStart = 25.2,
                             changeFromYearStartPercent = 11.4
                         },
@@ -55,9 +75,9 @@ namespace TinhKhoanApp.Api.Controllers
                             @class = "du-no",
                             unit = "tỷ",
                             format = "currency",
-                            currentValue = 187.6,
+                            currentValue = (double)duNoTy,
                             targetValue = 190.0,
-                            completionRate = 98.7,
+                            completionRate = Math.Round((double)(duNoTy / 190.0m * 100), 1),
                             changeFromYearStart = 15.8,
                             changeFromYearStartPercent = 9.2
                         },
@@ -69,9 +89,9 @@ namespace TinhKhoanApp.Api.Controllers
                             @class = "no-xau",
                             unit = "%",
                             format = "percent",
-                            currentValue = 0.85,
+                            currentValue = (double)noXauPercent,
                             targetValue = 1.0,
-                            completionRate = 115.0,
+                            completionRate = noXauPercent <= 1.0m ? Math.Round((double)((1.0m - noXauPercent) / 1.0m * 100 + 100), 1) : Math.Round((double)(1.0m / noXauPercent * 100), 1),
                             changeFromYearStart = -0.15,
                             changeFromYearStartPercent = -15.0
                         },
@@ -83,9 +103,9 @@ namespace TinhKhoanApp.Api.Controllers
                             @class = "thu-no-xlrr",
                             unit = "tỷ",
                             format = "currency",
-                            currentValue = 12.4,
+                            currentValue = (double)thuNoXlrrTy,
                             targetValue = 15.0,
-                            completionRate = 82.7,
+                            completionRate = Math.Round((double)(thuNoXlrrTy / 15.0m * 100), 1),
                             changeFromYearStart = 2.1,
                             changeFromYearStartPercent = 20.3
                         },
@@ -97,9 +117,9 @@ namespace TinhKhoanApp.Api.Controllers
                             @class = "thu-dich-vu",
                             unit = "tỷ",
                             format = "currency",
-                            currentValue = 28.9,
+                            currentValue = (double)thuDichVuTy,
                             targetValue = 30.0,
-                            completionRate = 96.3,
+                            completionRate = Math.Round((double)(thuDichVuTy / 30.0m * 100), 1),
                             changeFromYearStart = 3.1,
                             changeFromYearStartPercent = 12.0
                         },
@@ -111,129 +131,23 @@ namespace TinhKhoanApp.Api.Controllers
                             @class = "tai-chinh",
                             unit = "tỷ",
                             format = "currency",
-                            currentValue = 156.4,
+                            currentValue = (double)taiChinhTy,
                             targetValue = 160.0,
-                            completionRate = 97.8,
+                            completionRate = Math.Round((double)(taiChinhTy / 160.0m * 100), 1),
                             changeFromYearStart = 18.6,
                             changeFromYearStartPercent = 13.5
                         }
                     }
                 };
 
+                _logger.LogInformation("✅ Dashboard cho {BranchId}: Nguồn vốn={NguonVon} tỷ, Dư nợ={DuNo} tỷ, Nợ xấu={NoXau}%, Thu XLRR={ThuXlrr} tỷ, Thu DV={ThuDv} tỷ, Lợi nhuận={LoiNhuan} tỷ",
+                    branchId, nguonVonTy, duNoTy, noXauPercent, thuNoXlrrTy, thuDichVuTy, taiChinhTy);
                 return Ok(result);
-
-                // Code cũ - comment lại tạm thời
-                /*
-                var currentDate = DateTime.Now;
-                var yearStartDate = new DateTime(currentDate.Year, 1, 1);
-
-                // Lấy unit ID từ branch code
-                var unit = await _context.Units
-                    .FirstOrDefaultAsync(u => u.Code == branchId);
-
-                if (unit == null)
-                {
-                    return NotFound(new { message = "Không tìm thấy chi nhánh" });
-                }
-
-                var result = new
-                {
-                    indicators = new[]
-                    {
-                        new
-                        {
-                            id = "nguon_von",
-                            name = "Nguồn vốn",
-                            icon = "💰",
-                            @class = "nguon-von",
-                            unit = "tỷ",
-                            format = "currency",
-                            currentValue = await GetCurrentValue("NguonVon", unit.Id, currentDate),
-                            targetValue = await GetTargetValue("NguonVon", unit.Id, currentDate),
-                            completionRate = await GetCompletionRate("NguonVon", unit.Id, currentDate),
-                            changeFromYearStart = await GetChangeFromYearStart("NguonVon", unit.Id, yearStartDate, currentDate),
-                            changeFromYearStartPercent = await GetChangeFromYearStartPercent("NguonVon", unit.Id, yearStartDate, currentDate)
-                        },
-                        new
-                        {
-                            id = "du_no",
-                            name = "Dư nợ",
-                            icon = "💳",
-                            @class = "du-no",
-                            unit = "tỷ",
-                            format = "currency",
-                            currentValue = await GetCurrentValue("DuNo", unit.Id, currentDate),
-                            targetValue = await GetTargetValue("DuNo", unit.Id, currentDate),
-                            completionRate = await GetCompletionRate("DuNo", unit.Id, currentDate),
-                            changeFromYearStart = await GetChangeFromYearStart("DuNo", unit.Id, yearStartDate, currentDate),
-                            changeFromYearStartPercent = await GetChangeFromYearStartPercent("DuNo", unit.Id, yearStartDate, currentDate)
-                        },
-                        new
-                        {
-                            id = "no_xau",
-                            name = "Nợ Xấu",
-                            icon = "⚠️",
-                            @class = "no-xau",
-                            unit = "%",
-                            format = "percent",
-                            currentValue = await GetCurrentValue("TyLeNoXau", unit.Id, currentDate),
-                            targetValue = await GetTargetValue("TyLeNoXau", unit.Id, currentDate),
-                            completionRate = await GetCompletionRate("TyLeNoXau", unit.Id, currentDate),
-                            changeFromYearStart = await GetChangeFromYearStart("TyLeNoXau", unit.Id, yearStartDate, currentDate),
-                            changeFromYearStartPercent = await GetChangeFromYearStartPercent("TyLeNoXau", unit.Id, yearStartDate, currentDate)
-                        },
-                        new
-                        {
-                            id = "thu_no_xlrr",
-                            name = "Thu nợ đã XLRR",
-                            icon = "📈",
-                            @class = "thu-no-xlrr",
-                            unit = "tỷ",
-                            format = "currency",
-                            currentValue = await GetCurrentValue("ThuHoiXLRR", unit.Id, currentDate),
-                            targetValue = await GetTargetValue("ThuHoiXLRR", unit.Id, currentDate),
-                            completionRate = await GetCompletionRate("ThuHoiXLRR", unit.Id, currentDate),
-                            changeFromYearStart = await GetChangeFromYearStart("ThuHoiXLRR", unit.Id, yearStartDate, currentDate),
-                            changeFromYearStartPercent = await GetChangeFromYearStartPercent("ThuHoiXLRR", unit.Id, yearStartDate, currentDate)
-                        },
-                        new
-                        {
-                            id = "thu_dich_vu",
-                            name = "Thu dịch vụ",
-                            icon = "🏦",
-                            @class = "thu-dich-vu",
-                            unit = "tỷ",
-                            format = "currency",
-                            currentValue = await GetCurrentValue("ThuDichVu", unit.Id, currentDate),
-                            targetValue = await GetTargetValue("ThuDichVu", unit.Id, currentDate),
-                            completionRate = await GetCompletionRate("ThuDichVu", unit.Id, currentDate),
-                            changeFromYearStart = await GetChangeFromYearStart("ThuDichVu", unit.Id, yearStartDate, currentDate),
-                            changeFromYearStartPercent = await GetChangeFromYearStartPercent("ThuDichVu", unit.Id, yearStartDate, currentDate)
-                        },
-                        new
-                        {
-                            id = "tai_chinh",
-                            name = "Tài chính",
-                            icon = "💵",
-                            @class = "tai-chinh",
-                            unit = "tỷ",
-                            format = "currency",
-                            currentValue = await GetCurrentValue("LoiNhuan", unit.Id, currentDate),
-                            targetValue = await GetTargetValue("LoiNhuan", unit.Id, currentDate),
-                            completionRate = await GetCompletionRate("LoiNhuan", unit.Id, currentDate),
-                            changeFromYearStart = await GetChangeFromYearStart("LoiNhuan", unit.Id, yearStartDate, currentDate),
-                            changeFromYearStartPercent = await GetChangeFromYearStartPercent("LoiNhuan", unit.Id, yearStartDate, currentDate)
-                        }
-                    }
-                };
-
-                return Ok(result);
-                */
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi khi lấy dữ liệu dashboard tổng hợp");
-                return StatusCode(500, "Lỗi server");
+                _logger.LogError(ex, "❌ Lỗi khi lấy dữ liệu dashboard cho {BranchId}", branchId);
+                return StatusCode(500, new { message = "Lỗi server khi tải dashboard", error = ex.Message });
             }
         }
 
@@ -242,69 +156,6 @@ namespace TinhKhoanApp.Api.Controllers
         public ActionResult Test()
         {
             return Ok(new { message = "GeneralDashboard Controller is working", timestamp = DateTime.Now });
-        }
-
-        // Helper methods để tính toán các giá trị
-        private async Task<decimal> GetCurrentValue(string indicatorCode, int unitId, DateTime date)
-        {
-            var indicator = await _context.DashboardIndicators
-                .FirstOrDefaultAsync(i => i.Code == indicatorCode);
-
-            if (indicator == null) return 0;
-
-            var calculation = await _context.DashboardCalculations
-                .Where(c => c.DashboardIndicatorId == indicator.Id && 
-                           c.UnitId == unitId &&
-                           c.CalculationDate.Date == date.Date)
-                .OrderByDescending(c => c.CreatedDate)
-                .FirstOrDefaultAsync();
-
-            return calculation?.ActualValue ?? 0;
-        }
-
-        private async Task<decimal> GetTargetValue(string indicatorCode, int unitId, DateTime date)
-        {
-            var indicator = await _context.DashboardIndicators
-                .FirstOrDefaultAsync(i => i.Code == indicatorCode);
-
-            if (indicator == null) return 0;
-
-            var target = await _context.BusinessPlanTargets
-                .Where(t => t.DashboardIndicatorId == indicator.Id && 
-                           t.UnitId == unitId &&
-                           t.Year == date.Year &&
-                           t.Month == date.Month)
-                .FirstOrDefaultAsync();
-
-            return target?.TargetValue ?? 0;
-        }
-
-        private async Task<decimal> GetCompletionRate(string indicatorCode, int unitId, DateTime date)
-        {
-            var current = await GetCurrentValue(indicatorCode, unitId, date);
-            var target = await GetTargetValue(indicatorCode, unitId, date);
-
-            if (target == 0) return 0;
-
-            return Math.Round((current / target) * 100, 1);
-        }
-
-        private async Task<decimal> GetChangeFromYearStart(string indicatorCode, int unitId, DateTime yearStart, DateTime currentDate)
-        {
-            var currentValue = await GetCurrentValue(indicatorCode, unitId, currentDate);
-            var yearStartValue = await GetCurrentValue(indicatorCode, unitId, yearStart);
-
-            return currentValue - yearStartValue;
-        }
-
-        private async Task<decimal> GetChangeFromYearStartPercent(string indicatorCode, int unitId, DateTime yearStart, DateTime currentDate)
-        {
-            var yearStartValue = await GetCurrentValue(indicatorCode, unitId, yearStart);
-            var change = await GetChangeFromYearStart(indicatorCode, unitId, yearStart, currentDate);
-
-            if (yearStartValue == 0) return 0;
-
-            return Math.Round((change / yearStartValue) * 100, 1);
         }
     }
 }
