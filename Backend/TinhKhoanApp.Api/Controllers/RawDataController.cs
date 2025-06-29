@@ -1494,26 +1494,49 @@ namespace TinhKhoanApp.Api.Controllers
                     totalProcessed = await ProcessCsvFileContent(reader, dataType, importedDataRecord.Id,
                         statementDate, branchCode, batchSize);
                 }
-                // ✅ Cập nhật status và count
-                importedDataRecord.Status = "Completed";
-                importedDataRecord.RecordsCount = totalProcessed;
-                await _context.SaveChangesAsync();
 
-                _logger.LogInformation("✅ Hoàn thành xử lý file {FileName}: {Total} records",
-                    file.FileName, totalProcessed);
-
-                // 🔥 AUTO-PROCESS AFTER IMPORT FOR SUPPORTED DATA TYPES
-                await AutoProcessAfterImport(importedDataRecord.Id, dataType, statementDate);
-
-                return new RawDataImportResult
+                // ✅ KIỂM TRA VÀ CẬP NHẬT STATUS DỰA TRÊN KẾT QUẢ
+                if (totalProcessed > 0)
                 {
-                    Success = true,
-                    Message = $"Đã import thành công {totalProcessed} records vào database",
-                    FileName = file.FileName,
-                    RecordsProcessed = totalProcessed,
-                    DataType = dataType,
-                    StatementDate = statementDate
-                };
+                    importedDataRecord.Status = "Completed";
+                    importedDataRecord.RecordsCount = totalProcessed;
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogInformation("✅ Hoàn thành xử lý file {FileName}: {Total} records",
+                        file.FileName, totalProcessed);
+
+                    // 🔥 AUTO-PROCESS CHỈ KHI CÓ DỮ LIỆU
+                    await AutoProcessAfterImport(importedDataRecord.Id, dataType, statementDate);
+
+                    return new RawDataImportResult
+                    {
+                        Success = true,
+                        Message = $"Đã import thành công {totalProcessed} records vào database",
+                        FileName = file.FileName,
+                        RecordsProcessed = totalProcessed,
+                        DataType = dataType,
+                        StatementDate = statementDate
+                    };
+                }
+                else
+                {
+                    importedDataRecord.Status = "Failed";
+                    importedDataRecord.RecordsCount = 0;
+                    importedDataRecord.Notes = $"{importedDataRecord.Notes} | Import failed: No data found";
+                    await _context.SaveChangesAsync();
+
+                    _logger.LogWarning("⚠️ File {FileName} không chứa dữ liệu hợp lệ", file.FileName);
+
+                    return new RawDataImportResult
+                    {
+                        Success = false,
+                        Message = $"File {file.FileName} không chứa dữ liệu hợp lệ",
+                        FileName = file.FileName,
+                        RecordsProcessed = 0,
+                        DataType = dataType,
+                        StatementDate = statementDate
+                    };
+                }
             }
             catch (Exception ex)
             {
@@ -2069,12 +2092,33 @@ namespace TinhKhoanApp.Api.Controllers
                     }
                     else if (dataType.Contains("GLCB41") || dataType.Contains("GAHR26"))
                     {
-                        if (rowIndex == 1) // Header ở dòng 1 cho GLCB41 và GAHR26
+                        // 🔥 GLCB41 có thể có header ở nhiều vị trí khác nhau
+                        if (headers == null && rowIndex <= 5) // Tìm header trong 5 dòng đầu
                         {
-                            headers = GetExcelRowValuesWithEncoding(row);
-                            _logger.LogInformation("📋 {DataType} Headers: {Headers}",
-                                dataType, string.Join(", ", headers.Take(5)));
-                            continue;
+                            var candidateHeaders = GetExcelRowValuesWithEncoding(row);
+
+                            // Kiểm tra xem có phải header không bằng cách tìm các từ khóa đặc trưng
+                            var headerKeywords = new[] { "MaChiBanh", "TaiKhoan", "TenTaiKhoan", "SoDu", "PhatSinh", "NgayBaoCao", "STT" };
+                            var matchingKeywords = candidateHeaders.Count(h =>
+                                headerKeywords.Any(keyword => h.Contains(keyword, StringComparison.OrdinalIgnoreCase)));
+
+                            if (matchingKeywords >= 2) // Nếu có ít nhất 2 từ khóa match
+                            {
+                                headers = candidateHeaders;
+                                _logger.LogInformation("📋 {DataType} Headers found at row {Row}: {Headers}",
+                                    dataType, rowIndex, string.Join(", ", headers.Take(5)));
+                                continue;
+                            }
+                        }
+
+                        // Nếu đã có header thì xử lý data
+                        if (headers != null && rowIndex > headers.Count) // Skip các dòng trống sau header
+                        {
+                            // Continue to data processing below
+                        }
+                        else
+                        {
+                            continue; // Skip nếu chưa tìm thấy header hoặc đang ở vùng header
                         }
                     }
                     else
