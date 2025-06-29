@@ -620,7 +620,7 @@ const applyDateFilter = async () => {
 
     // Get data for all data types in date range
     const allResults = []
-    
+
     for (const dataType of Object.keys(dataTypeDefinitions)) {
       try {
         if (selectedFromDate.value === selectedToDate.value || !selectedToDate.value) {

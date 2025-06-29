@@ -25,6 +25,7 @@ namespace TinhKhoanApp.Api.Controllers
         private readonly IConfiguration _configuration; // 🔥 Thêm Configuration để lấy connection string
         private readonly IRawDataProcessingService _processingService; // 🔥 Inject processing service
         private readonly IFileNameParsingService _fileNameParsingService; // 🔧 CHUẨN HÓA: Inject filename parsing service
+        private readonly ILegacyExcelReaderService _legacyExcelReaderService; // 📊 Inject legacy Excel reader service
 
         // 📋 Danh sách định nghĩa loại dữ liệu - ĐỒNG BỘ TẤT CẢ LOẠI
         private static readonly Dictionary<string, string> DataTypeDefinitions = new()
@@ -44,13 +45,14 @@ namespace TinhKhoanApp.Api.Controllers
             { "GLCB41", "Bảng cân đối - Báo cáo tài chính" }
         };
 
-        public RawDataController(ApplicationDbContext context, ILogger<RawDataController> logger, IConfiguration configuration, IRawDataProcessingService processingService, IFileNameParsingService fileNameParsingService)
+        public RawDataController(ApplicationDbContext context, ILogger<RawDataController> logger, IConfiguration configuration, IRawDataProcessingService processingService, IFileNameParsingService fileNameParsingService, ILegacyExcelReaderService legacyExcelReaderService)
         {
             _context = context;
             _logger = logger;
             _configuration = configuration; // 🔥 Inject configuration để lấy connection string
             _processingService = processingService; // 🔥 Inject processing service
             _fileNameParsingService = fileNameParsingService; // 🔧 CHUẨN HÓA: Inject filename parsing service
+            _legacyExcelReaderService = legacyExcelReaderService; // 📊 Inject legacy Excel reader service
         }
 
         // 📋 GET: api/RawData - Lấy danh sách tất cả dữ liệu thô từ Temporal Tables
@@ -2162,7 +2164,7 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
-        // 📊 Helper method để xử lý file Excel với encoding đúng
+        // 📊 Helper method để xử lý file Excel với encoding đúng - HỖ TRỢ CẢ .XLS VÀ .XLSX
         private async Task<int> ProcessExcelFileForEncoding(IFormFile file, string dataType,
             int importedDataRecordId, DateTime statementDate, string branchCode, int batchSize)
         {
@@ -2175,41 +2177,111 @@ namespace TinhKhoanApp.Api.Controllers
                 var records = new List<Dictionary<string, object>>();
 
                 using var stream = file.OpenReadStream();
-                
-                // 🔍 Enhanced Excel file validation
-                ClosedXML.Excel.XLWorkbook workbook;
-                try
-                {
-                    workbook = new ClosedXML.Excel.XLWorkbook(stream);
-                    _logger.LogInformation("✅ Excel workbook opened successfully");
-                }
-                catch (Exception excelEx)
-                {
-                    _logger.LogError(excelEx, "❌ Failed to open Excel file: {FileName} - {Error}", file.FileName, excelEx.Message);
-                    throw new InvalidOperationException($"Cannot read Excel file: {excelEx.Message}", excelEx);
-                }
 
-                using (workbook)
+                // 🔍 Detect file type: .xls (legacy) hoặc .xlsx (modern)
+                bool isLegacyExcel = _legacyExcelReaderService.CanReadFile(file.FileName);
 
-                using (workbook)
+                if (isLegacyExcel)
                 {
-                    // 🔍 Validate workbook has worksheets
-                    if (!workbook.Worksheets.Any())
+                    _logger.LogInformation("📊 Using NPOI for legacy .xls file: {FileName}", file.FileName);
+
+                    // Sử dụng NPOI để đọc file .xls
+                    var excelResult = await _legacyExcelReaderService.ReadExcelFileAsync(stream, file.FileName);
+
+                    if (!excelResult.Success)
                     {
-                        throw new InvalidOperationException("Excel file contains no worksheets");
+                        throw new InvalidOperationException($"Cannot read .xls file: {excelResult.Message}");
                     }
 
-                    var worksheet = workbook.Worksheets.First();
-                    var rows = worksheet.RowsUsed();
-
-                    _logger.LogInformation("📊 Excel file has {RowCount} rows used in worksheet: {WorksheetName}", 
-                        rows.Count(), worksheet.Name);
-
-                    if (!rows.Any())
+                    // Process từng row data từ NPOI
+                    foreach (var dataRow in excelResult.Data)
                     {
-                        _logger.LogWarning("⚠️ Excel worksheet is empty");
-                        return 0;
+                        var record = new Dictionary<string, object>(dataRow);
+
+                        // Thêm metadata
+                        record["BranchCode"] = branchCode;
+                        record["StatementDate"] = statementDate.ToString("yyyy-MM-dd");
+                        record["ImportDate"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                        record["ImportedBy"] = "System";
+
+                        records.Add(record);
+
+                        // Batch processing
+                        if (records.Count >= batchSize)
+                        {
+                            await SaveBatchToDatabase(records, importedDataRecordId, branchCode);
+                            totalProcessed += records.Count;
+                            records.Clear();
+
+                            if (totalProcessed % 5000 == 0)
+                            {
+                                _logger.LogInformation("⚡ Legacy Excel processed {Processed} records...", totalProcessed);
+                            }
+                        }
                     }
+
+                    // Lưu batch cuối cùng
+                    if (records.Any())
+                    {
+                        await SaveBatchToDatabase(records, importedDataRecordId, branchCode);
+                        totalProcessed += records.Count;
+                    }
+
+                    _logger.LogInformation("✅ Legacy Excel (.xls) processing completed: {Records} records", totalProcessed);
+                    return totalProcessed;
+                }
+                else
+                {
+                    _logger.LogInformation("📊 Using ClosedXML for modern .xlsx file: {FileName}", file.FileName);
+
+                    // Sử dụng ClosedXML cho .xlsx (code hiện tại)
+                    return await ProcessModernExcelFile(stream, file, dataType, importedDataRecordId, statementDate, branchCode, batchSize);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error processing Excel file: {FileName}", file.FileName);
+                throw;
+            }
+        }
+
+        // 📊 Helper method để xử lý file .xlsx bằng ClosedXML (tách từ code cũ)
+        private async Task<int> ProcessModernExcelFile(Stream stream, IFormFile file, string dataType,
+            int importedDataRecordId, DateTime statementDate, string branchCode, int batchSize)
+        {
+            int totalProcessed = 0;
+            var records = new List<Dictionary<string, object>>();
+
+            // 🔍 Enhanced Excel file validation
+            ClosedXML.Excel.XLWorkbook workbook;
+            try
+            {
+                workbook = new ClosedXML.Excel.XLWorkbook(stream);
+                _logger.LogInformation("✅ Excel workbook opened successfully");
+            }
+            catch (Exception excelEx)
+            {
+                _logger.LogError(excelEx, "❌ Failed to open Excel file: {FileName} - {Error}", file.FileName, excelEx.Message);
+                throw new InvalidOperationException($"Cannot read Excel file: {excelEx.Message}", excelEx);
+            }            using (workbook)
+            {
+                // 🔍 Validate workbook has worksheets
+                if (!workbook.Worksheets.Any())
+                {
+                    throw new InvalidOperationException("Excel file contains no worksheets");
+                }
+
+                var worksheet = workbook.Worksheets.First();
+                var rows = worksheet.RowsUsed();
+
+                _logger.LogInformation("📊 Excel file has {RowCount} rows used in worksheet: {WorksheetName}",
+                    rows.Count(), worksheet.Name);
+
+                if (!rows.Any())
+                {
+                    _logger.LogWarning("⚠️ Excel worksheet is empty");
+                    return 0;
+                }
 
                 List<string>? headers = null;
                 int rowIndex = 0;
@@ -2218,89 +2290,33 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     rowIndex++;
 
-                    // 🔥 Xử lý header đặc biệt cho từng loại dữ liệu
-                    if (dataType.Contains("7800_DT_KHKD1"))
+                    // � Dòng 1: Header (tiêu đề nguyên bản từ file gốc)
+                    if (rowIndex == 1)
                     {
-                        if (rowIndex == 13) // Header ở dòng 13 cho 7800_DT_KHKD1
-                        {
-                            headers = GetExcelRowValuesWithEncoding(row);
-                            continue;
-                        }
-                        if (rowIndex < 14) continue; // Data từ dòng 14
-                    }
-                    else if (dataType.Contains("GLCB41") || dataType.Contains("GAHR26"))
-                    {
-                        // 🔥 GLCB41 header detection - Multiple strategies
-                        if (headers == null && rowIndex <= 20) // Mở rộng tìm kiếm đến 20 dòng
-                        {
-                            var candidateHeaders = GetExcelRowValuesWithEncoding(row);
-
-                            // Skip empty rows
-                            if (candidateHeaders.All(h => string.IsNullOrWhiteSpace(h)))
-                                continue;
-
-                            _logger.LogInformation("🔍 GLCB41 Row {Row}: [{Headers}]",
-                                rowIndex, string.Join("] [", candidateHeaders.Take(8)));
-
-                            var isHeaderRow = false;
-
-                            // Strategy 1: GLCB41 keywords
-                            var keywords = new[] { "STT", "MaChiBanh", "TaiKhoan", "TenTaiKhoan", "SoDu", "PhatSinh", "NgayBaoCao", "So_TK", "Ten_TK", "ACCOUNT", "BALANCE" };
-                            var keywordMatches = candidateHeaders.Count(h => keywords.Any(kw => h.Contains(kw, StringComparison.OrdinalIgnoreCase)));
-
-                            // Strategy 2: Fallback - any meaningful structure
-                            var nonEmptyCount = candidateHeaders.Count(h => !string.IsNullOrWhiteSpace(h) && h.Length > 1);
-
-                            if (keywordMatches >= 2 || (nonEmptyCount >= 4 && candidateHeaders.Count >= 5 && rowIndex <= 10))
-                            {
-                                isHeaderRow = true;
-                                _logger.LogInformation("✅ GLCB41 Header found: {Keywords} keywords, {NonEmpty} non-empty", keywordMatches, nonEmptyCount);
-                            }
-
-                            if (isHeaderRow)
-                            {
-                                headers = candidateHeaders;
-                                _logger.LogInformation("📋 {DataType} Headers at row {Row}: [{Headers}]",
-                                    dataType, rowIndex, string.Join("] [", headers.Take(10)));
-                                continue;
-                            }
-                        }
-                        else if (headers != null)
-                        {
-                            // Process data rows
-                            var rowValues = GetExcelRowValuesWithEncoding(row);
-                            if (rowValues.All(v => string.IsNullOrWhiteSpace(v)))
-                                continue; // Skip empty rows
-
-                            _logger.LogInformation("🔍 GLCB41 Data row {Row}: {Values} values", rowIndex, rowValues.Count);
-                        }
-                        else
-                        {
-                            continue; // Skip until header found
-                        }
-                    }
-                    else
-                    {
-                        // Xử lý header thông thường
-                        if (rowIndex == 1)
-                        {
-                            headers = GetExcelRowValuesWithEncoding(row);
-                            continue;
-                        }
+                        headers = GetExcelRowValuesWithEncoding(row);
+                        _logger.LogInformation("� Headers found: [{Headers}]", string.Join("] [", headers.Take(10)));
+                        continue;
                     }
 
+                    // ❌ Skip nếu chưa có headers
                     if (headers == null) continue;
 
-                    // Xử lý data row
+                    // 📊 Từ dòng 2 trở đi: Dữ liệu thực
                     var values = GetExcelRowValuesWithEncoding(row);
+
+                    // Skip empty rows
+                    if (values.All(v => string.IsNullOrWhiteSpace(v)))
+                        continue;
+
                     var record = new Dictionary<string, object>();
 
+                    // Map values to headers
                     for (int j = 0; j < Math.Min(headers.Count, values.Count); j++)
                     {
                         record[headers[j]] = values[j];
                     }
 
-                    // Thêm metadata
+                    // Thêm metadata theo chuẩn Temporal Tables + Columnstore Indexes
                     record["BranchCode"] = branchCode;
                     record["StatementDate"] = statementDate.ToString("yyyy-MM-dd");
                     record["ImportDate"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
@@ -2317,8 +2333,7 @@ namespace TinhKhoanApp.Api.Controllers
 
                         if (totalProcessed % 5000 == 0)
                         {
-                            _logger.LogInformation("⚡ Excel processed {Processed} records...",
-                                totalProcessed);
+                            _logger.LogInformation("⚡ Modern Excel processed {Processed} records...", totalProcessed);
                         }
                     }
                 }
@@ -2330,16 +2345,10 @@ namespace TinhKhoanApp.Api.Controllers
                     totalProcessed += records.Count;
                 }
 
-                _logger.LogInformation("✅ Excel file processing completed: {Records} records", totalProcessed);
-                } // End using workbook
-                
-                return totalProcessed;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Error processing Excel file: {FileName}", file.FileName);
-                throw;
-            }
+                _logger.LogInformation("✅ Modern Excel (.xlsx) processing completed: {Records} records", totalProcessed);
+            } // End using workbook
+
+            return totalProcessed;
         }
 
         // 📋 Helper method để lấy giá trị từ Excel row với encoding đúng
@@ -2579,6 +2588,43 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 _logger.LogError(ex, "❌ Error analyzing Excel file");
                 return StatusCode(500, new { message = "Error analyzing file", error = ex.Message });
+            }
+        }
+
+        // 🔧 DEBUG ENDPOINT: Test Legacy Excel Reader Service
+        [HttpPost("debug-legacy-excel")]
+        public async Task<IActionResult> DebugLegacyExcelReader([FromForm] IFormFile file)
+        {
+            try
+            {
+                if (file == null || file.Length == 0)
+                    return BadRequest("No file provided");
+
+                _logger.LogInformation("🔧 DEBUG: Testing Legacy Excel Reader with file {FileName}", file.FileName);
+
+                using var stream = file.OpenReadStream();
+                var result = await _legacyExcelReaderService.ReadExcelFileAsync(stream, file.FileName);
+
+                var response = new
+                {
+                    FileName = file.FileName,
+                    CanReadFile = _legacyExcelReaderService.CanReadFile(file.FileName),
+                    Success = result.Success,
+                    Message = result.Message,
+                    Headers = result.Headers,
+                    DataRowsCount = result.Data.Count,
+                    TotalRows = result.TotalRows,
+                    WorksheetName = result.WorksheetName,
+                    Errors = result.Errors,
+                    SampleData = result.Data.Take(3).ToArray() // First 3 rows for preview
+                };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error testing legacy Excel reader");
+                return StatusCode(500, new { message = "Error testing legacy reader", error = ex.Message });
             }
         }
     }

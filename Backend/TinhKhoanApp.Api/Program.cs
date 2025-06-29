@@ -125,6 +125,9 @@ internal class Program
         // � CHUẨN HÓA: Đăng ký File Name Parsing Service để đồng nhất extract thông tin từ filename
         builder.Services.AddScoped<IFileNameParsingService, FileNameParsingService>();
 
+        // 📊 Đăng ký Legacy Excel Reader Service để đọc file .xls (Excel 97-2003)
+        builder.Services.AddScoped<ILegacyExcelReaderService, LegacyExcelReaderService>();
+
         // �🗄️ Đăng ký Temporal Data Service cho high-performance import
         builder.Services.AddScoped<ITemporalDataService, TemporalDataService>();
 
