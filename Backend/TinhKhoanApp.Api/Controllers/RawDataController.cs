@@ -23,6 +23,7 @@ namespace TinhKhoanApp.Api.Controllers
         private readonly ApplicationDbContext _context;
         private readonly ILogger<RawDataController> _logger;
         private readonly IConfiguration _configuration; // 🔥 Thêm Configuration để lấy connection string
+        private readonly IRawDataProcessingService _processingService; // 🔥 Inject processing service
 
         // 📋 Danh sách định nghĩa loại dữ liệu - ĐỒNG BỘ TẤT CẢ LOẠI
         private static readonly Dictionary<string, string> DataTypeDefinitions = new()
@@ -42,11 +43,12 @@ namespace TinhKhoanApp.Api.Controllers
             { "GLCB41", "Bảng cân đối - Báo cáo tài chính" }
         };
 
-        public RawDataController(ApplicationDbContext context, ILogger<RawDataController> logger, IConfiguration configuration)
+        public RawDataController(ApplicationDbContext context, ILogger<RawDataController> logger, IConfiguration configuration, IRawDataProcessingService processingService)
         {
             _context = context;
             _logger = logger;
             _configuration = configuration; // 🔥 Inject configuration để lấy connection string
+            _processingService = processingService; // 🔥 Inject processing service
         }
 
         // 📋 GET: api/RawData - Lấy danh sách tất cả dữ liệu thô từ Temporal Tables
@@ -1500,6 +1502,9 @@ namespace TinhKhoanApp.Api.Controllers
                 _logger.LogInformation("✅ Hoàn thành xử lý file {FileName}: {Total} records",
                     file.FileName, totalProcessed);
 
+                // 🔥 AUTO-PROCESS AFTER IMPORT FOR SUPPORTED DATA TYPES
+                await AutoProcessAfterImport(importedDataRecord.Id, dataType, statementDate);
+
                 return new RawDataImportResult
                 {
                     Success = true,
@@ -2284,6 +2289,51 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 _logger.LogWarning(ex, "❌ Error fixing encoding for text: {Input}", input.Substring(0, Math.Min(input.Length, 50)));
                 return input; // Fallback to original
+            }
+        }
+
+        // 🔥 AUTO-PROCESS METHOD: Tự động xử lý dữ liệu sau khi import thành công
+        private async Task AutoProcessAfterImport(int importedDataRecordId, string dataType, DateTime statementDate)
+        {
+            try
+            {
+                _logger.LogInformation("🔄 Starting auto-process for ImportId: {ImportId}, DataType: {DataType}",
+                    importedDataRecordId, dataType);
+
+                // Chỉ tự động xử lý cho các loại dữ liệu được hỗ trợ
+                var supportedTypes = new[] { "GLCB41", "LN01", "LN02", "DP01" };
+                if (!supportedTypes.Contains(dataType.ToUpper()))
+                {
+                    _logger.LogInformation("ℹ️ DataType {DataType} không cần auto-process", dataType);
+                    return;
+                }
+
+                // Sử dụng injected processing service
+                var processingResult = await _processingService.ProcessImportedDataToHistoryAsync(
+                    importedDataRecordId, dataType.ToUpper(), statementDate);
+
+                if (processingResult.Success)
+                {
+                    _logger.LogInformation("✅ Auto-process thành công cho ImportId: {ImportId}, Processed: {ProcessedCount} records",
+                        importedDataRecordId, processingResult.ProcessedRecords);
+
+                    // Cập nhật status trong database nếu cần
+                    var importRecord = await _context.ImportedDataRecords.FindAsync(importedDataRecordId);
+                    if (importRecord != null)
+                    {
+                        importRecord.Notes = $"{importRecord.Notes} | Auto-processed: {processingResult.ProcessedRecords} records";
+                        await _context.SaveChangesAsync();
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ Auto-process failed cho ImportId: {ImportId}, Error: {Error}",
+                        importedDataRecordId, processingResult.Message);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Exception trong auto-process cho ImportId: {ImportId}", importedDataRecordId);
             }
         }
     }
