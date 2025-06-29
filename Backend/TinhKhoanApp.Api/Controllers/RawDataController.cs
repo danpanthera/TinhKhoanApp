@@ -220,37 +220,58 @@ namespace TinhKhoanApp.Api.Controllers
 
                 foreach (var file in request.Files)
                 {
-                    // 🔍 Special handling for GL01 - relax filename validation
+                    _logger.LogInformation("🔍 Validating file: {FileName} for dataType: {DataType}", file.FileName, dataType);
+
+                    // 🔥 VALIDATION 1: Kiểm tra định dạng file (chỉ cho phép XLS, XLSX, CSV)
+                    var allowedExtensions = new[] { ".xls", ".xlsx", ".csv" };
+                    var fileExtension = Path.GetExtension(file.FileName).ToLowerInvariant();
+
+                    if (!allowedExtensions.Contains(fileExtension))
+                    {
+                        _logger.LogWarning("❌ File extension not allowed: {Extension}", fileExtension);
+                        results.Add(new RawDataImportResult
+                        {
+                            Success = false,
+                            FileName = file.FileName,
+                            Message = $"❌ Định dạng file không được hỗ trợ. Chỉ cho phép: {string.Join(", ", allowedExtensions)}"
+                        });
+                        continue;
+                    }
+
+                    // 🔥 VALIDATION 2: Kiểm tra tên file chứa mã loại dữ liệu
+                    bool isValidFileName = false;
+
+                    // Special handling for GL01 - relax filename validation but still check extension
                     if (dataType.ToUpper() == "GL01")
                     {
-                        _logger.LogInformation($"🔍 GL01 File validation - FileName: {file.FileName}, DataType: {dataType}");
-                        // For GL01, just check that it's a CSV file, don't require GL01 in filename
-                        if (!file.FileName.EndsWith(".csv", StringComparison.OrdinalIgnoreCase))
-                        {
-                            _logger.LogWarning($"❌ GL01 file must be CSV format: {file.FileName}");
-                            results.Add(new RawDataImportResult
-                            {
-                                Success = false,
-                                FileName = file.FileName,
-                                Message = $"❌ GL01 file phải có định dạng .csv"
-                            });
-                            continue;
-                        }
+                        isValidFileName = fileExtension == ".csv"; // GL01 chỉ cho phép CSV
+                        _logger.LogInformation("🔍 GL01 validation: CSV extension = {IsValid}", isValidFileName);
                     }
                     else
                     {
-                        // 🔍 Kiểm tra tên file chứa mã loại dữ liệu cho các loại khác
-                        if (!file.FileName.Contains(dataType, StringComparison.OrdinalIgnoreCase))
-                        {
-                            results.Add(new RawDataImportResult
-                            {
-                                Success = false,
-                                FileName = file.FileName,
-                                Message = $"❌ Tên file phải chứa mã '{dataType}'"
-                            });
-                            continue;
-                        }
+                        // Tất cả loại khác: tên file PHẢI chứa mã dataType
+                        isValidFileName = file.FileName.Contains(dataType, StringComparison.OrdinalIgnoreCase);
+                        _logger.LogInformation("🔍 {DataType} validation: filename contains dataType = {IsValid}", dataType, isValidFileName);
                     }
+
+                    if (!isValidFileName)
+                    {
+                        var errorMsg = dataType.ToUpper() == "GL01"
+                            ? $"❌ GL01 file phải có định dạng .csv"
+                            : $"❌ Tên file phải chứa mã '{dataType}'";
+
+                        _logger.LogWarning("❌ File validation failed: {Message}", errorMsg);
+                        results.Add(new RawDataImportResult
+                        {
+                            Success = false,
+                            FileName = file.FileName,
+                            Message = errorMsg
+                        });
+                        continue;
+                    }
+
+                    // 🔥 VALIDATION PASSED - Process file
+                    _logger.LogInformation("✅ File validation passed: {FileName}", file.FileName);
 
                     var result = await ProcessSingleFile(file, dataType, request.Notes ?? "");
                     results.Add(result);
@@ -1434,26 +1455,22 @@ namespace TinhKhoanApp.Api.Controllers
         // ✅ Thêm method ProcessSingleFile bị thiếu - SỬA ĐỂ LƯU VÀO DATABASE
         private async Task<RawDataImportResult> ProcessSingleFile(IFormFile file, string dataType, string notes)
         {
+            var importedDataRecord = new ImportedDataRecord(); // Declare outside try block
+
             try
             {
-                _logger.LogInformation("📁 Xử lý file đơn: {FileName} cho loại {DataType}, Size: {FileSize} bytes",
+                _logger.LogInformation("📁 Bắt đầu xử lý file: {FileName} cho loại {DataType}, Size: {FileSize} bytes",
                     file.FileName, dataType, file.Length);
-
-                // ⚡ Streaming processing cho file lớn
-                var records = new List<Dictionary<string, object>>();
-                List<string>? headers = null;
-                int lineCount = 0;
-                const int batchSize = 1000; // Process in batches
 
                 // Trích xuất ngày sao kê từ tên file
                 var statementDate = ExtractStatementDate(file.FileName) ?? DateTime.Now.Date;
                 var branchCode = ExtractBranchCode(file.FileName) ?? "7800";
 
-                _logger.LogInformation("🔍 Trích xuất từ file {FileName}: StatementDate={StatementDate}, BranchCode={BranchCode}",
-                    file.FileName, statementDate.ToString("yyyy-MM-dd"), branchCode);
+                _logger.LogInformation("� File info: StatementDate={StatementDate}, BranchCode={BranchCode}",
+                    statementDate.ToString("yyyy-MM-dd"), branchCode);
 
-                // 💾 Tạo ImportedDataRecord trước
-                var importedDataRecord = new ImportedDataRecord
+                // 💾 Tạo ImportedDataRecord với status "Processing"
+                importedDataRecord = new ImportedDataRecord
                 {
                     FileName = file.FileName,
                     FileType = dataType,
@@ -1461,7 +1478,7 @@ namespace TinhKhoanApp.Api.Controllers
                     ImportDate = DateTime.UtcNow,
                     StatementDate = statementDate,
                     ImportedBy = "System",
-                    Status = "Processing",
+                    Status = "Processing", // 🔥 Bắt đầu với "Processing"
                     RecordsCount = 0,
                     Notes = $"{notes} - Branch: {branchCode}"
                 };
@@ -1469,30 +1486,34 @@ namespace TinhKhoanApp.Api.Controllers
                 _context.ImportedDataRecords.Add(importedDataRecord);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("✅ Tạo ImportedDataRecord ID={Id} để xử lý streaming", importedDataRecord.Id);
+                _logger.LogInformation("✅ Tạo ImportedDataRecord ID={Id} với status Processing", importedDataRecord.Id);
 
                 int totalProcessed = 0;
+                const int batchSize = 1000;
 
-                // 🔤 KIỂM TRA VÀ XỬ LÝ ENCODING ĐÚNG CHO FILE EXCEL VÀ CSV
+                // 🔤 XỬ LÝ THEO ĐỊNH DẠNG FILE
                 bool isExcelFile = file.FileName.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase) ||
                                    file.FileName.EndsWith(".xls", StringComparison.OrdinalIgnoreCase);
 
+                _logger.LogInformation("📊 File type: {FileType}", isExcelFile ? "Excel" : "CSV");
+
                 if (isExcelFile)
                 {
-                    // 📊 XỬ LÝ FILE EXCEL VỚI ClosedXML
+                    _logger.LogInformation("📊 Bắt đầu xử lý Excel file...");
                     totalProcessed = await ProcessExcelFileForEncoding(file, dataType, importedDataRecord.Id,
                         statementDate, branchCode, batchSize);
+                    _logger.LogInformation("📊 Excel processing completed: {Records} records", totalProcessed);
                 }
                 else
                 {
-                    // 📄 XỬ LÝ FILE CSV VỚI ENCODING TỐI ƯU
+                    _logger.LogInformation("📄 Bắt đầu xử lý CSV file...");
                     var encoding = DetectCsvFileEncoding(file);
-                    _logger.LogInformation("🔤 Detected encoding for {FileName}: {Encoding}",
-                        file.FileName, encoding.EncodingName);
+                    _logger.LogInformation("🔤 Detected encoding: {Encoding}", encoding.EncodingName);
 
                     using var reader = new StreamReader(file.OpenReadStream(), encoding, detectEncodingFromByteOrderMarks: true);
                     totalProcessed = await ProcessCsvFileContent(reader, dataType, importedDataRecord.Id,
                         statementDate, branchCode, batchSize);
+                    _logger.LogInformation("📄 CSV processing completed: {Records} records", totalProcessed);
                 }
 
                 // ✅ KIỂM TRA VÀ CẬP NHẬT STATUS DỰA TRÊN KẾT QUẢ
@@ -1540,12 +1561,31 @@ namespace TinhKhoanApp.Api.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Lỗi xử lý file {FileName}", file.FileName);
+                _logger.LogError(ex, "❌ Lỗi xử lý file {FileName}: {Error}", file.FileName, ex.Message);
+
+                // 🔥 Cập nhật status thành "Failed" nếu có lỗi
+                try
+                {
+                    if (importedDataRecord.Id > 0) // Đã được tạo trong database
+                    {
+                        importedDataRecord.Status = "Failed";
+                        importedDataRecord.Notes = $"{importedDataRecord.Notes} | Error: {ex.Message}";
+                        await _context.SaveChangesAsync();
+                        _logger.LogInformation("📝 Updated status to Failed for ImportedDataRecord ID={Id}", importedDataRecord.Id);
+                    }
+                }
+                catch (Exception updateEx)
+                {
+                    _logger.LogError(updateEx, "❌ Không thể cập nhật status Failed cho file {FileName}", file.FileName);
+                }
+
                 return new RawDataImportResult
                 {
                     Success = false,
                     Message = $"Lỗi xử lý file: {ex.Message}",
-                    FileName = file.FileName
+                    FileName = file.FileName,
+                    RecordsProcessed = 0,
+                    DataType = dataType
                 };
             }
         }
@@ -2073,12 +2113,10 @@ namespace TinhKhoanApp.Api.Controllers
                 var worksheet = workbook.Worksheets.First();
                 var rows = worksheet.RowsUsed();
 
-                _logger.LogInformation("📊 Excel file has {RowCount} rows used in worksheet '{WorksheetName}'", 
-                    rows.Count(), worksheet.Name);
+                _logger.LogInformation("📊 Excel file has {RowCount} rows used", rows.Count());
 
                 List<string>? headers = null;
                 int rowIndex = 0;
-                int headerRowIndex = -1;
 
                 foreach (var row in rows)
                 {
@@ -2194,69 +2232,6 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     await SaveBatchToDatabase(records, importedDataRecordId, branchCode);
                     totalProcessed += records.Count;
-                }
-
-                // 🔥 FALLBACK: Nếu không tìm thấy header cho GLCB41, thử strategy khác
-                if (totalProcessed == 0 && dataType.Contains("GLCB41"))
-                {
-                    _logger.LogWarning("⚠️ No data processed with smart detection, trying fallback for GLCB41");
-                    
-                    // Reset và thử lại với strategy đơn giản hơn
-                    rowIndex = 0;
-                    headers = null;
-                    records.Clear();
-                    
-                    foreach (var row in rows)
-                    {
-                        rowIndex++;
-                        var candidateHeaders = GetExcelRowValuesWithEncoding(row);
-                        
-                        // Fallback: Chấp nhận dòng đầu tiên có ít nhất 3 columns không rỗng
-                        if (headers == null && candidateHeaders.Count >= 3 && 
-                            candidateHeaders.Count(h => !string.IsNullOrWhiteSpace(h)) >= 3)
-                        {
-                            headers = candidateHeaders;
-                            headerRowIndex = rowIndex;
-                            _logger.LogInformation("📋 FALLBACK: Using row {Row} as headers: [{Headers}]",
-                                rowIndex, string.Join("] [", headers.Take(8)));
-                            continue;
-                        }
-                        
-                        if (headers != null && rowIndex > headerRowIndex)
-                        {
-                            var values = GetExcelRowValuesWithEncoding(row);
-                            if (values.All(v => string.IsNullOrWhiteSpace(v))) continue;
-
-                            var record = new Dictionary<string, object>();
-                            for (int j = 0; j < Math.Min(headers.Count, values.Count); j++)
-                            {
-                                record[headers[j]] = values[j];
-                            }
-
-                            record["BranchCode"] = branchCode;
-                            record["StatementDate"] = statementDate.ToString("yyyy-MM-dd");
-                            record["ImportDate"] = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                            record["ImportedBy"] = "System";
-
-                            records.Add(record);
-
-                            if (records.Count >= batchSize)
-                            {
-                                await SaveBatchToDatabase(records, importedDataRecordId, branchCode);
-                                totalProcessed += records.Count;
-                                records.Clear();
-                            }
-                        }
-                    }
-                    
-                    // Lưu batch cuối cùng của fallback
-                    if (records.Any())
-                    {
-                        await SaveBatchToDatabase(records, importedDataRecordId, branchCode);
-                        totalProcessed += records.Count;
-                    }
-                    
-                    _logger.LogInformation("🔄 FALLBACK processing result: {Records} records", totalProcessed);
                 }
 
                 _logger.LogInformation("✅ Excel file processing completed: {Records} records", totalProcessed);
