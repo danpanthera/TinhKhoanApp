@@ -554,13 +554,13 @@ const selectedDate = ref(''); // Thêm biến cho ngày cụ thể
 const selectedUnitId = ref('');
 const trendPeriod = ref('MONTH');
 
-// Data
+// Danh sách 15 chi nhánh chuẩn hóa theo quy ước mới
 const units = ref([
-  { id: 'CnLaiChau', name: 'Chi nhánh Lai Châu', code: '7800' },
+  { id: 'CnLaiChau', name: 'CN Lai Châu', code: '7800' },
   { id: 'HoiSo', name: 'Hội Sở', code: '7800' },
-  { id: 'CnTamDuong', name: 'CN Tam đường', code: '7801' },
+  { id: 'CnTamDuong', name: 'CN Tam Đường', code: '7801' },
   { id: 'CnPhongTho', name: 'CN Phong Thổ', code: '7802' },
-  { id: 'CnSinHo', name: 'CN Sìn Hồ', code: '7803' },
+  { id: 'CnSinHo', name: 'CN Sin Hồ', code: '7803' },
   { id: 'CnMuongTe', name: 'CN Mường Tè', code: '7804' },
   { id: 'CnThanUyen', name: 'CN Than Uyên', code: '7805' },
   { id: 'CnThanhPho', name: 'CN Thành Phố', code: '7806' },

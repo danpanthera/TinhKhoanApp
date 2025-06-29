@@ -421,7 +421,7 @@ const selectedIndicator = ref(null);
 const activeChartTab = ref('comparison');
 const animatedValues = ref({}); // Giá trị animated cho counters
 
-// Danh sách chi nhánh theo thứ tự cố định yêu cầu
+// Danh sách 15 chi nhánh chuẩn hóa theo quy ước mới
 const branches = ref([
   { id: 'CnLaiChau', name: 'CN Lai Châu' },
   { id: 'HoiSo', name: 'Hội Sở' },
@@ -435,9 +435,9 @@ const branches = ref([
   { id: 'CnNamNhun', name: 'CN Nậm Nhùn' },
   { id: 'CnPhongThoPgdMuongSo', name: 'CN Phong Thổ - PGD Mường So' },
   { id: 'CnThanUyenPgdMuongThan', name: 'CN Than Uyên - PGD Mường Than' },
-  { id: 'CnThanhPhoPgdso1', name: 'CN Thành Phố - PGD số 1' },
-  { id: 'CnThanhPhoPgdso2', name: 'CN Thành Phố - PGD số 2' },
-  { id: 'CnTanUyenPgdso3', name: 'CN Tân Uyên - PGD số 3' }
+  { id: 'CnThanhPhoPgdSo1', name: 'CN Thành Phố - PGD Số 1' },
+  { id: 'CnThanhPhoPgdSo2', name: 'CN Thành Phố - PGD Số 2' },
+  { id: 'CnTanUyenPgdSo3', name: 'CN Tân Uyên - PGD Số 3' }
 ]);
 
 // 6 chỉ tiêu dashboard chính với dữ liệu đầy đủ
