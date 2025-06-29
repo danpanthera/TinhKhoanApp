@@ -531,8 +531,8 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import LoadingOverlay from '../../components/dashboard/LoadingOverlay.vue';
-import apiClient from '../../services/api'; // Import default apiClient để gọi API
 import { isAuthenticated } from '../../services/auth';
+import branchIndicatorsService from '../../services/branchIndicatorsService';
 import { dashboardService } from '../../services/dashboardService';
 
 const router = useRouter();
@@ -925,7 +925,7 @@ const calculateAll = async () => {
   await triggerCalculation();
 };
 
-// 2. Tính Nguồn vốn - Gọi API thực tế
+// 2. Tính Nguồn vốn - Sử dụng service mới
 const calculateNguonVon = async () => {
   if (!selectedUnitId.value) {
     errorMessage.value = 'Vui lòng chọn Chi nhánh/Phòng ban trước khi tính toán';
@@ -944,38 +944,35 @@ const calculateNguonVon = async () => {
 
     console.log('🔧 Tính Nguồn vốn cho:', selectedUnit.name);
 
-    // Gọi API tính toán Nguồn vốn sử dụng apiClient thay vì fetch
-    let apiUrl = `NguonVonCalculation/calculate/${selectedUnit.code}`;
-    if (selectedUnit.pgdCode) {
-      apiUrl += `?pgdCode=${selectedUnit.pgdCode}`;
+    // Gọi service mới để tính Nguồn vốn
+    const result = await branchIndicatorsService.calculateNguonVon(selectedUnit.id);
+
+    if (result.success) {
+      // Cập nhật kết quả
+      calculatedIndicators.value[0].value = result.value / 1000000000; // Chuyển từ VND sang tỷ
+      calculatedIndicators.value[0].calculated = true;
+      calculatedIndicators.value[0].details = {
+        formula: 'Tổng CURRENT_BALANCE (loại trừ TK 40*, 41*, 427*)',
+        calculatedAt: result.calculatedAt,
+        unit: result.unit,
+        branchId: result.branchId
+      };
+
+      showCalculationResults.value = true;
+      successMessage.value = `✅ Đã tính Nguồn vốn cho ${selectedUnit.name}: ${branchIndicatorsService.formatCurrency(result.value / 1000000000)} tỷ đồng`;
+    } else {
+      throw new Error(result.errorMessage || 'Tính toán thất bại');
     }
 
-    const response = await apiClient.get(apiUrl);
-    const result = response.data; // Với axios, dữ liệu ở response.data
-
-    // Cập nhật kết quả
-    calculatedIndicators.value[0].value = result.totalNguonVon;
-    calculatedIndicators.value[0].calculated = true;
-    calculatedIndicators.value[0].details = {
-      formula: result.calculationFormula,
-      totalRecords: result.totalRecords,
-      validAccountsCount: result.validAccountsCount,
-      excludedAccountsCount: result.excludedAccountsCount,
-      calculationTime: result.calculationTime
-    };
-
-    showCalculationResults.value = true;
-    successMessage.value = `✅ Đã tính Nguồn vốn cho ${selectedUnit.name}: ${formatNumber(result.totalNguonVon)} tỷ đồng`;
-    calculating.value = false;
-
   } catch (error) {
-    console.error('Error calculating Nguồn vốn:', error);
+    console.error('❌ Lỗi tính Nguồn vốn:', error);
     errorMessage.value = 'Có lỗi khi tính Nguồn vốn: ' + error.message;
+  } finally {
     calculating.value = false;
   }
 };
 
-// 3. Tính Dư nợ
+// 3. Tính Dư nợ - Sử dụng service mới
 const calculateDuNo = async () => {
   if (!selectedUnitId.value) {
     errorMessage.value = 'Vui lòng chọn Chi nhánh/Phòng ban trước khi tính toán';
@@ -987,24 +984,42 @@ const calculateDuNo = async () => {
   successMessage.value = '';
 
   try {
-    console.log('🔧 Tính Dư nợ cho:', getSelectedUnitName());
+    const selectedUnit = units.value.find(u => u.id === selectedUnitId.value);
+    if (!selectedUnit) {
+      throw new Error('Không tìm thấy thông tin chi nhánh được chọn');
+    }
 
-    setTimeout(() => {
-      calculatedIndicators.value[1].value = Math.floor(Math.random() * 1000) + 800; // 800-1800 tỷ
+    console.log('🔧 Tính Dư nợ cho:', selectedUnit.name);
+
+    // Gọi service mới để tính Dư nợ
+    const result = await branchIndicatorsService.calculateDuNo(selectedUnit.id);
+
+    if (result.success) {
+      // Cập nhật kết quả
+      calculatedIndicators.value[1].value = result.value / 1000000000; // Chuyển từ VND sang tỷ
       calculatedIndicators.value[1].calculated = true;
+      calculatedIndicators.value[1].details = {
+        formula: 'Tổng DU_NO theo BRCD và TRCTCD',
+        calculatedAt: result.calculatedAt,
+        unit: result.unit,
+        branchId: result.branchId
+      };
+
       showCalculationResults.value = true;
-      successMessage.value = `✅ Đã tính Dư nợ cho ${getSelectedUnitName()}: ${formatNumber(calculatedIndicators.value[1].value)} tỷ`;
-      calculating.value = false;
-    }, 800);
+      successMessage.value = `✅ Đã tính Dư nợ cho ${selectedUnit.name}: ${branchIndicatorsService.formatCurrency(result.value / 1000000000)} tỷ đồng`;
+    } else {
+      throw new Error(result.errorMessage || 'Tính toán thất bại');
+    }
 
   } catch (error) {
-    console.error('Error calculating Dư nợ:', error);
+    console.error('❌ Lỗi tính Dư nợ:', error);
     errorMessage.value = 'Có lỗi khi tính Dư nợ: ' + error.message;
+  } finally {
     calculating.value = false;
   }
 };
 
-// 4. Tính Nợ xấu (chỉ tiêu ngược - càng thấp càng tốt)
+// 4. Tính Nợ xấu - Sử dụng service mới
 const calculateNoXau = async () => {
   if (!selectedUnitId.value) {
     errorMessage.value = 'Vui lòng chọn Chi nhánh/Phòng ban trước khi tính toán';
@@ -1016,19 +1031,37 @@ const calculateNoXau = async () => {
   successMessage.value = '';
 
   try {
-    console.log('🔧 Tính Nợ xấu cho:', getSelectedUnitName());
+    const selectedUnit = units.value.find(u => u.id === selectedUnitId.value);
+    if (!selectedUnit) {
+      throw new Error('Không tìm thấy thông tin chi nhánh được chọn');
+    }
 
-    setTimeout(() => {
-      calculatedIndicators.value[2].value = (Math.random() * 3).toFixed(2); // 0-3%
+    console.log('🔧 Tính Nợ xấu cho:', selectedUnit.name);
+
+    // Gọi service mới để tính Nợ xấu
+    const result = await branchIndicatorsService.calculateNoXau(selectedUnit.id);
+
+    if (result.success) {
+      // Cập nhật kết quả
+      calculatedIndicators.value[2].value = result.value; // Đã là % rồi
       calculatedIndicators.value[2].calculated = true;
+      calculatedIndicators.value[2].details = {
+        formula: '(DU_NO với NHOM_NO=3,4,5) / Tổng DU_NO * 100',
+        calculatedAt: result.calculatedAt,
+        unit: result.unit,
+        branchId: result.branchId
+      };
+
       showCalculationResults.value = true;
-      successMessage.value = `✅ Đã tính Nợ xấu cho ${getSelectedUnitName()}: ${calculatedIndicators.value[2].value}% (càng thấp càng tốt)`;
-      calculating.value = false;
-    }, 800);
+      successMessage.value = `✅ Đã tính Nợ xấu cho ${selectedUnit.name}: ${branchIndicatorsService.formatPercentage(result.value)} (càng thấp càng tốt)`;
+    } else {
+      throw new Error(result.errorMessage || 'Tính toán thất bại');
+    }
 
   } catch (error) {
-    console.error('Error calculating Nợ xấu:', error);
+    console.error('❌ Lỗi tính Nợ xấu:', error);
     errorMessage.value = 'Có lỗi khi tính Nợ xấu: ' + error.message;
+  } finally {
     calculating.value = false;
   }
 };

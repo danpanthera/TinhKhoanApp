@@ -97,6 +97,7 @@ internal class Program
         builder.Services.AddScoped<UnitKpiScoringService>();
         builder.Services.AddScoped<IStatementDateService, StatementDateService>();
         builder.Services.AddScoped<DashboardCalculationService>();
+        builder.Services.AddScoped<IBranchCalculationService, BranchCalculationService>();
 
         // 4. Đăng ký các dịch vụ cho Swagger/OpenAPI (để tạo tài liệu API tự động)
         builder.Services.AddEndpointsApiExplorer();
