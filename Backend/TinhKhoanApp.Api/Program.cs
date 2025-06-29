@@ -17,6 +17,25 @@ internal class Program
 {
     private static async Task Main(string[] args)
     {
+        // 🕐 Cấu hình timezone cho Hà Nội (UTC+7)
+        try
+        {
+            var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"); // Windows
+            Console.WriteLine($"✅ Timezone set to: {vietnamTimeZone.DisplayName}");
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            try
+            {
+                var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Asia/Ho_Chi_Minh"); // Linux/macOS
+                Console.WriteLine($"✅ Timezone set to: {vietnamTimeZone.DisplayName}");
+            }
+            catch (TimeZoneNotFoundException)
+            {
+                Console.WriteLine("⚠️ Vietnam timezone not found, using system default");
+            }
+        }
+
         // Kiểm tra nếu có argument "seed" hoặc "reseed"
         if (args.Length > 0 && (args[0] == "seed" || args[0] == "reseed"))
         {
