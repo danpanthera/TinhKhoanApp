@@ -414,7 +414,7 @@
                 id="unit"
                 v-model="indicatorForm.unit"
                 required
-                placeholder="%, Tỷ VND, BT, cái..."
+                placeholder="%, Triệu VND, BT, cái..."
                 class="form-input"
               />
             </div>
