@@ -565,7 +565,7 @@ namespace TinhKhoanApp.Api.Services
                 "CnThanUyenPgdSo6" => "01",
                 "CnDoanKetPgdSo1" => "01",
                 "CnDoanKetPgdSo2" => "02",
-                _ => null // Chi nhánh chính, không có PGD
+                _ => "00" // Chi nhánh chính, mã PGD = "00"
             };
         }
 
@@ -598,7 +598,7 @@ namespace TinhKhoanApp.Api.Services
                 "CnThanUyenPgdSo6" => "01",
                 "CnDoanKetPgdSo1" => "01",
                 "CnDoanKetPgdSo2" => "02",
-                _ => null // Chi nhánh chính, không có TRCTCD
+                _ => "00" // Chi nhánh chính, mã TRCTCD = "00"
             };
         }
 
@@ -690,8 +690,18 @@ namespace TinhKhoanApp.Api.Services
                                 }
                             }
 
-                            // Lọc theo chi nhánh và PGD - sử dụng logic đơn giản hơn để khớp với direct calculation
-                            bool pgdMatch = string.IsNullOrEmpty(pgdCode) || maPgd == pgdCode;
+                            // Lọc theo chi nhánh và PGD
+                            bool pgdMatch;
+                            if (pgdCode == "00")
+                            {
+                                // Chi nhánh chính - lấy tất cả records của chi nhánh đó (không lọc theo PGD)
+                                pgdMatch = true;
+                            }
+                            else
+                            {
+                                // PGD cụ thể - phải khớp chính xác mã PGD
+                                pgdMatch = maPgd == pgdCode;
+                            }
 
                             if (maCn == branchCode && pgdMatch && !string.IsNullOrEmpty(taiKhoanHachToan))
                             {
