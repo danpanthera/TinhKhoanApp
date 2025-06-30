@@ -259,12 +259,16 @@
 
             <div class="form-group">
               <label>Đơn vị tính</label>
-              <input
-                v-model="targetForm.unit"
-                type="text"
-                class="form-input"
-                placeholder="VD: VND, %, lần, ..."
-              />
+              <select v-model="targetForm.unit" class="form-select" required>
+                <option value="">Chọn đơn vị tính</option>
+                <option value="Triệu VND">Triệu VND</option>
+                <option value="%">%</option>
+                <option value="VND">VND</option>
+                <option value="lần">lần</option>
+                <option value="cái">cái</option>
+                <option value="BT">BT</option>
+                <option value="Khách hàng">Khách hàng</option>
+              </select>
             </div>
 
             <div class="form-group">
@@ -335,7 +339,7 @@ const targetForm = ref({
   period: '',
   targetValue: '',
   targetValueFormatted: '',
-  unit: 'VND',
+  unit: '', // Đơn vị tính sẽ được tự động cập nhật khi chọn chỉ tiêu
   isActive: true
 });
 
@@ -538,7 +542,7 @@ const closeModals = () => {
     period: '',
     targetValue: '',
     targetValueFormatted: '',
-    unit: 'VND',
+    unit: '', // Đơn vị tính sẽ được tự động cập nhật khi chọn chỉ tiêu
     isActive: true
   };
 };
@@ -547,6 +551,31 @@ const exportData = () => {
   // TODO: Implement export functionality
   alert('Chức năng xuất Excel sẽ được phát triển trong phiên bản tiếp theo');
 };
+
+// Hàm tự động cập nhật đơn vị tính theo chỉ tiêu được chọn
+const updateUnitByIndicator = (indicatorName) => {
+  if (!indicatorName) return;
+
+  // Mapping chỉ tiêu KPI với đơn vị tính chuẩn theo yêu cầu
+  const unitMapping = {
+    'Nguồn vốn': 'Triệu VND',
+    'Dư nợ': 'Triệu VND',
+    'Tỷ lệ nợ xấu': '%',
+    'Thu nợ đã XLRR': 'Triệu VND',
+    'Thu dịch vụ': 'Triệu VND',
+    'Lợi nhuận khoán tài chính': 'Triệu VND'
+  };
+
+  // Tự động cập nhật đơn vị tính
+  if (unitMapping[indicatorName]) {
+    targetForm.value.unit = unitMapping[indicatorName];
+  }
+};
+
+// Watcher để theo dõi thay đổi chỉ tiêu và tự động cập nhật đơn vị tính
+watch(() => targetForm.value.indicatorName, (newIndicatorName) => {
+  updateUnitByIndicator(newIndicatorName);
+});
 
 // Clear messages after 5 seconds
 watch([errorMessage, successMessage], () => {
