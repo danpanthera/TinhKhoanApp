@@ -246,15 +246,15 @@
               <label>Giá trị mục tiêu *</label>
               <input
                 v-model="targetForm.targetValueFormatted"
-                @input="onTargetValueInput"
-                @blur="formatTargetValue"
+                @input="(e) => onTargetValueInput(e)"
+                @blur="(e) => onTargetValueBlur(e)"
                 type="text"
                 class="form-input number-input"
                 required
                 placeholder="Nhập giá trị mục tiêu (VD: 1,000,000,000)"
                 autocomplete="off"
               />
-              <small class="form-hint">Số sẽ được tự động định dạng khi nhập (VD: 1,000,000,000)</small>
+              <small class="form-hint">Số sẽ được tự động định dạng khi nhập. Dấu "," ngăn cách hàng nghìn, dấu "." cho thập phân</small>
             </div>
 
             <div class="form-group">
@@ -307,8 +307,15 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { isAuthenticated } from '../../services/auth';
 import { dashboardService } from '../../services/dashboardService';
+import { useNumberInput } from '../../utils/numberFormat';
 
 const router = useRouter();
+
+// 🔢 Initialize number input utility
+const { handleInput, handleBlur, formatNumber, parseFormattedNumber } = useNumberInput({
+  maxDecimalPlaces: 2,
+  allowNegative: false
+});
 
 // Reactive data
 const loading = ref(false);
@@ -443,23 +450,18 @@ const formatNumber = (value) => {
   return Number(value).toLocaleString('vi-VN');
 };
 
-// Xử lý format số cho input
+// Number input handlers using the new utility
 const onTargetValueInput = (event) => {
-  const value = event.target.value;
-  // Chỉ cho phép số và dấu phẩy
-  const cleanValue = value.replace(/[^\d,]/g, '');
-  event.target.value = cleanValue;
-  targetForm.value.targetValueFormatted = cleanValue;
-
-  // Lưu giá trị số thuần
-  const numericValue = cleanValue.replace(/,/g, '');
-  targetForm.value.targetValue = numericValue ? parseFloat(numericValue) : '';
+  const formattedValue = handleInput(event);
+  targetForm.value.targetValueFormatted = formattedValue;
+  // Store the numeric value for backend
+  targetForm.value.targetValue = parseFormattedNumber(formattedValue);
 };
 
-const formatTargetValue = () => {
-  if (targetForm.value.targetValue) {
-    targetForm.value.targetValueFormatted = formatNumber(targetForm.value.targetValue);
-  }
+const onTargetValueBlur = (event) => {
+  const formattedValue = handleBlur(event);
+  targetForm.value.targetValueFormatted = formattedValue;
+  targetForm.value.targetValue = parseFormattedNumber(formattedValue);
 };
 
 const onPeriodTypeChange = () => {

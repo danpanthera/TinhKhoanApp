@@ -7,14 +7,14 @@
 
     <!-- Tab Navigation -->
     <div class="tab-navigation">
-      <button 
+      <button
         class="tab-button"
         :class="{ active: activeTab === 'employee' }"
         @click="switchTab('employee')"
       >
         👤 Cán bộ
       </button>
-      <button 
+      <button
         class="tab-button"
         :class="{ active: activeTab === 'unit' }"
         @click="switchTab('unit')"
@@ -35,23 +35,23 @@
 
     <!-- Tab Content -->
     <div class="tab-content">
-      
+
       <!-- Employee Tab -->
       <div v-show="activeTab === 'employee'" class="tab-pane">
         <!-- Filter Section -->
         <div class="filter-section">
           <div class="form-container">
             <h2>🔍 Tìm kiếm giao khoán cán bộ</h2>
-        
+
         <div class="filter-form">
           <div class="form-row">
             <div class="form-group">
               <label for="branchFilter">🏢 Chi nhánh:</label>
               <select id="branchFilter" v-model="selectedBranchId" @change="onBranchChange">
                 <option value="">-- Tất cả chi nhánh --</option>
-                <option 
-                  v-for="branch in branchOptions" 
-                  :key="branch.id" 
+                <option
+                  v-for="branch in branchOptions"
+                  :key="branch.id"
                   :value="branch.id"
                 >
                   🏢 {{ branch.name }} ({{ branch.code }})
@@ -63,9 +63,9 @@
               <label for="departmentFilter">🏬 Phòng ban:</label>
               <select id="departmentFilter" v-model="selectedDepartmentId" @change="onDepartmentChange">
                 <option value="">-- Tất cả phòng ban --</option>
-                <option 
-                  v-for="dept in departmentOptions" 
-                  :key="dept.id" 
+                <option
+                  v-for="dept in departmentOptions"
+                  :key="dept.id"
                   :value="dept.id"
                 >
                   🏬 {{ dept.name }} ({{ dept.code }})
@@ -77,9 +77,9 @@
               <label for="employeeFilter">Nhân viên:</label>
               <select id="employeeFilter" v-model="selectedEmployeeId" @change="onFilterChange">
                 <option value="">-- Tất cả nhân viên --</option>
-                <option 
-                  v-for="employee in filteredEmployees" 
-                  :key="employee.id" 
+                <option
+                  v-for="employee in filteredEmployees"
+                  :key="employee.id"
                   :value="employee.id"
                 >
                   {{ employee.fullName }} - {{ employee.unit?.name }}
@@ -87,15 +87,15 @@
               </select>
             </div>
           </div>
-          
+
           <div class="form-row">
             <div class="form-group">
               <label for="periodFilter">Kỳ khoán:</label>
               <select id="periodFilter" v-model="selectedPeriodId" @change="onFilterChange">
                 <option value="">-- Tất cả kỳ khoán --</option>
-                <option 
-                  v-for="period in khoanPeriods" 
-                  :key="period.id" 
+                <option
+                  v-for="period in khoanPeriods"
+                  :key="period.id"
                   :value="period.id"
                 >                      {{ period.name }} ({{ formatDate(period.startDate) }} - {{ formatDate(period.endDate) }})
                 </option>
@@ -103,8 +103,8 @@
             </div>
 
             <div class="form-group">
-              <button 
-                @click="searchAssignments" 
+              <button
+                @click="searchAssignments"
                 :disabled="!canSearch || searching"
                 class="action-button search-btn"
               >
@@ -112,10 +112,10 @@
               </button>
             </div>
           </div>
-          
+
           <div v-if="selectedBranchId || selectedDepartmentId" class="filter-summary">
             <p>
-              📊 <strong>Đang lọc:</strong> 
+              📊 <strong>Đang lọc:</strong>
               <span v-if="selectedBranchId">Chi nhánh "{{ getBranchName() }}"</span>
               <span v-if="selectedDepartmentId"> → Phòng ban "{{ getDepartmentName() }}"</span>
               → Tìm thấy <strong>{{ filteredEmployees.length }}</strong> nhân viên phù hợp
@@ -172,14 +172,14 @@
                 <td class="period-info">
                   <div class="period-name">{{ assignment.khoanPeriod?.periodName }}</div>
                   <div class="period-dates">
-                    {{ formatDate(assignment.khoanPeriod?.startDate) }} - 
+                    {{ formatDate(assignment.khoanPeriod?.startDate) }} -
                     {{ formatDate(assignment.khoanPeriod?.endDate) }}
                   </div>
                 </td>
                 <td class="indicator-info">
                   <div class="indicator-name">{{ assignment.indicator?.indicatorName }}</div>
                   <div class="indicator-details">
-                    Tối đa: {{ assignment.indicator?.maxScore }} điểm 
+                    Tối đa: {{ assignment.indicator?.maxScore }} điểm
                     ({{ assignment.indicator?.unit }})
                   </div>
                 </td>
@@ -189,10 +189,11 @@
                 </td>
                 <td class="actual-value">
                   <div v-if="editingAssignment === assignment.id" class="edit-mode">
-                    <input 
-                      type="number" 
-                      step="0.01"
-                      v-model="editingActualValue"
+                    <input
+                      type="text"
+                      v-model="editingActualValueFormatted"
+                      @input="(e) => handleActualValueInput(e)"
+                      @blur="(e) => handleActualValueBlur(e)"
                       :placeholder="`Nhập giá trị (${assignment.indicator?.unit})`"
                       class="actual-input"
                       @keyup.enter="saveActualValue(assignment)"
@@ -220,14 +221,14 @@
                 </td>
                 <td class="actions">
                   <div v-if="editingAssignment === assignment.id" class="edit-actions">
-                    <button 
+                    <button
                       @click="saveActualValue(assignment)"
                       :disabled="savingActual"
                       class="action-btn save-btn"
                     >
                       ✓
                     </button>
-                    <button 
+                    <button
                       @click="cancelEdit"
                       :disabled="savingActual"
                       class="action-btn cancel-btn"
@@ -236,7 +237,7 @@
                     </button>
                   </div>
                   <div v-else class="view-actions">
-                    <button 
+                    <button
                       @click="startEdit(assignment)"
                       class="action-btn edit-btn"
                       title="Chỉnh sửa giá trị thực hiện"
@@ -281,16 +282,16 @@
         <div class="filter-section">
           <div class="form-container">
             <h2>🔍 Tìm kiếm giao khoán chi nhánh</h2>
-            
+
             <div class="filter-form">
               <div class="form-row">
                 <div class="form-group">
                   <label for="unitBranchFilter">🏢 Chi nhánh:</label>
                   <select id="unitBranchFilter" v-model="selectedUnitBranchId" @change="onUnitBranchChange">
                     <option value="">-- Chọn chi nhánh --</option>
-                    <option 
-                      v-for="branch in branchOptions" 
-                      :key="branch.id" 
+                    <option
+                      v-for="branch in branchOptions"
+                      :key="branch.id"
                       :value="branch.id"
                     >
                       🏢 {{ branch.name }} ({{ branch.code }})
@@ -302,9 +303,9 @@
                   <label for="unitPeriodFilter">📅 Kỳ khoán:</label>
                   <select id="unitPeriodFilter" v-model="selectedUnitPeriodId" @change="onUnitFilterChange">
                     <option value="">-- Chọn kỳ khoán --</option>
-                    <option 
-                      v-for="period in khoanPeriods" 
-                      :key="period.id" 
+                    <option
+                      v-for="period in khoanPeriods"
+                      :key="period.id"
                       :value="period.id"
                     >
                       {{ period.name }} ({{ formatDate(period.startDate) }} - {{ formatDate(period.endDate) }})
@@ -313,8 +314,8 @@
                 </div>
 
                 <div class="form-group">
-                  <button 
-                    @click="searchUnitAssignments" 
+                  <button
+                    @click="searchUnitAssignments"
                     :disabled="!canSearchUnit || searchingUnit"
                     class="action-button search-btn"
                   >
@@ -322,10 +323,10 @@
                   </button>
                 </div>
               </div>
-              
+
               <div v-if="selectedUnitBranchId" class="filter-summary">
                 <p>
-                  📊 <strong>Chi nhánh được chọn:</strong> 
+                  📊 <strong>Chi nhánh được chọn:</strong>
                   "{{ getUnitBranchName() }}" trong kỳ "{{ getUnitPeriodName() }}"
                 </p>
               </div>
@@ -356,7 +357,7 @@
                 </span>
               </div>
             </div>
-            
+
             <div class="table-responsive">
               <table class="assignments-table">
                 <thead>
@@ -387,10 +388,11 @@
                     </td>
                     <td class="actual-cell">
                       <div v-if="editingUnitAssignment === assignment.id" class="edit-actual">
-                        <input 
-                          type="number" 
-                          step="0.01"
-                          v-model="editingUnitActualValue"
+                        <input
+                          type="text"
+                          v-model="editingUnitActualValueFormatted"
+                          @input="(e) => handleUnitActualValueInput(e)"
+                          @blur="(e) => handleUnitActualValueBlur(e)"
                           class="actual-input"
                           @keyup.enter="saveUnitActualValue(assignment)"
                           @keyup.escape="cancelUnitEdit"
@@ -412,14 +414,14 @@
                     </td>
                     <td class="action-cell">
                       <div v-if="editingUnitAssignment === assignment.id" class="edit-actions">
-                        <button 
+                        <button
                           @click="saveUnitActualValue(assignment)"
                           :disabled="savingUnitActual"
                           class="action-btn save-btn"
                         >
                           ✓
                         </button>
-                        <button 
+                        <button
                           @click="cancelUnitEdit"
                           :disabled="savingUnitActual"
                           class="action-btn cancel-btn"
@@ -428,7 +430,7 @@
                         </button>
                       </div>
                       <div v-else class="view-actions">
-                        <button 
+                        <button
                           @click="startUnitEdit(assignment)"
                           class="action-btn edit-btn"
                           title="Chỉnh sửa giá trị thực hiện"
@@ -472,10 +474,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { isAuthenticated } from '../services/auth';
 import api from '../services/api';
+import { isAuthenticated } from '../services/auth';
+import { useNumberInput } from '../utils/numberFormat';
 
 const router = useRouter();
 
@@ -500,6 +503,7 @@ const selectedDepartmentId = ref('');
 
 const editingAssignment = ref(null);
 const editingActualValue = ref('');
+const editingActualValueFormatted = ref('');
 
 // Unit tab specific data
 const unitAssignments = ref([]);
@@ -508,18 +512,25 @@ const selectedUnitPeriodId = ref('');
 const searchingUnit = ref(false);
 const editingUnitAssignment = ref(null);
 const editingUnitActualValue = ref('');
+const editingUnitActualValueFormatted = ref('');
 const savingUnitActual = ref(false);
+
+// 🔢 Initialize number input utility
+const { handleInput, handleBlur, formatNumber, parseFormattedNumber } = useNumberInput({
+  maxDecimalPlaces: 2,
+  allowNegative: false
+});
 
 // Computed properties
 // Updated branchOptions: Custom ordering as requested
 const branchOptions = computed(() => {
   if (!units.value || units.value.length === 0) return [];
-  
+
   // Định nghĩa thứ tự theo yêu cầu: CnLaiChau, CnTamDuong, CnPhongTho, CnSinHo, CnMuongTe, CnThanUyen, CnThanhPho, CnTanUyen, CnNamNhun
   const customOrder = [
     'CnLaiChau',     // Chi nhánh tỉnh Lai Châu
     'CnTamDuong',    // Chi nhánh Tam Đường
-    'CnPhongTho',    // Chi nhánh Phong Thổ  
+    'CnPhongTho',    // Chi nhánh Phong Thổ
     'CnSinHo',       // Chi nhánh Sìn Hồ
     'CnMuongTe',     // Chi nhánh Mường Tè
     'CnThanUyen',    // Chi nhánh Than Uyên
@@ -536,16 +547,16 @@ const branchOptions = computed(() => {
     .sort((a, b) => {
       const indexA = customOrder.indexOf(a.code);
       const indexB = customOrder.indexOf(b.code);
-      
+
       // Nếu cả hai đều có trong custom order, sắp xếp theo thứ tự đó
       if (indexA !== -1 && indexB !== -1) {
         return indexA - indexB;
       }
-      
+
       // Nếu chỉ có một trong hai có trong custom order, ưu tiên cái đó
       if (indexA !== -1) return -1;
       if (indexB !== -1) return 1;
-      
+
       // Nếu cả hai đều không có trong custom order, sắp xếp theo tên
       return (a.name || '').localeCompare(b.name || '');
     });
@@ -553,19 +564,19 @@ const branchOptions = computed(() => {
 
 const departmentOptions = computed(() => {
   if (!selectedBranchId.value || !units.value || units.value.length === 0) return [];
-  
+
   const branchId = parseInt(selectedBranchId.value);
   const branch = units.value.find(u => u.id === branchId);
   if (!branch) return [];
-  
+
   const children = units.value.filter(u => u.parentUnitId === branchId);
-  
+
   // Lọc chỉ lấy các phòng nghiệp vụ (PNVL1, PNVL2) và phòng giao dịch (PGD), loại bỏ các chi nhánh con (CNL2)
   const departments = children.filter(u => {
     const unitType = (u.type || '').toUpperCase();
     return unitType.includes('PNVL') || unitType === 'PGD';
   });
-  
+
   // Sắp xếp theo thứ tự: Ban Giám đốc, Phòng Khách hàng, Phòng Kế toán & Ngân quỹ, Phòng giao dịch
   const getDepartmentSortOrder = (name) => {
     const lowerName = (name || '').toLowerCase();
@@ -575,15 +586,15 @@ const departmentOptions = computed(() => {
     if (lowerName.includes('phòng giao dịch')) return 4;
     return 999;
   };
-  
+
   return departments.sort((a, b) => getDepartmentSortOrder(a.name) - getDepartmentSortOrder(b.name));
 });
 
 const filteredEmployees = computed(() => {
   if (!employees.value || employees.value.length === 0) return [];
-  
+
   let filtered = [...employees.value];
-  
+
   if (selectedDepartmentId.value) {
     const deptId = parseInt(selectedDepartmentId.value);
     filtered = filtered.filter(emp => emp.unitId === deptId);
@@ -591,7 +602,7 @@ const filteredEmployees = computed(() => {
     const branchDepartments = departmentOptions.value.map(dept => dept.id);
     filtered = filtered.filter(emp => branchDepartments.includes(emp.unitId));
   }
-  
+
   return filtered;
 });
 
@@ -701,13 +712,13 @@ const fetchEmployees = async () => {
     console.log('🔄 Fetching employees...');
     const response = await api.get('/Employees');
     let employeesData = [];
-    
+
     if (response.data && Array.isArray(response.data.$values)) {
       employeesData = response.data.$values;
     } else if (Array.isArray(response.data)) {
       employeesData = response.data;
     }
-    
+
     employees.value = employeesData.filter(emp => emp.isActive);
     console.log('✅ Employees loaded:', employees.value.length);
   } catch (error) {
@@ -722,14 +733,14 @@ const fetchKhoanPeriods = async () => {
     console.log('🔄 Fetching khoan periods...');
     const response = await api.get('/KhoanPeriods');
     let periodsData = [];
-    
+
     if (response.data && Array.isArray(response.data.$values)) {
       periodsData = response.data.$values;
     } else if (Array.isArray(response.data)) {
       periodsData = response.data;
     }
-    
-    khoanPeriods.value = periodsData.filter(period => 
+
+    khoanPeriods.value = periodsData.filter(period =>
       period.status === 'OPEN' || period.status === 'PROCESSING' || period.status === 'PENDINGAPPROVAL'
     );
     console.log('✅ Khoan Periods loaded:', khoanPeriods.value.length);
@@ -745,13 +756,13 @@ const fetchUnits = async () => {
     console.log('🔄 Fetching units...');
     const response = await api.get('/Units');
     let unitsData = [];
-    
+
     if (response.data && Array.isArray(response.data.$values)) {
       unitsData = response.data.$values;
     } else if (Array.isArray(response.data)) {
       unitsData = response.data;
     }
-    
+
     units.value = unitsData;
     console.log('✅ Units loaded:', units.value.length);
   } catch (error) {
@@ -771,23 +782,23 @@ const searchAssignments = async () => {
     showError('Vui lòng chọn ít nhất một tiêu chí tìm kiếm.');
     return;
   }
-  
+
   try {
     searching.value = true;
     clearMessages();
-    
+
     // Build search URL based on filters
     let url = '/KpiAssignment/search?';
     const params = [];
-    
+
     if (selectedEmployeeId.value) {
       params.push(`employeeId=${selectedEmployeeId.value}`);
     }
-    
+
     if (selectedPeriodId.value) {
       params.push(`periodId=${selectedPeriodId.value}`);
     }
-    
+
     // Add unit-based filtering
     if (selectedDepartmentId.value) {
       params.push(`unitId=${selectedDepartmentId.value}`);
@@ -801,26 +812,26 @@ const searchAssignments = async () => {
         params.push(`unitId=${branchDepartments[0]}`);
       }
     }
-    
+
     url += params.join('&');
-    
+
     const response = await api.get(url);
     let assignmentsData = [];
-    
+
     if (response.data && Array.isArray(response.data.$values)) {
       assignmentsData = response.data.$values;
     } else if (Array.isArray(response.data)) {
       assignmentsData = response.data;
     }
-    
+
     assignments.value = assignmentsData;
-    
+
     console.log('Assignments loaded:', assignments.value.length);
-    
+
     if (assignments.value.length > 0) {
       showSuccess(`Tìm thấy ${assignments.value.length} giao khoán KPI.`);
     }
-    
+
   } catch (error) {
     console.error('Error searching assignments:', error);
     if (error.response && error.response.status === 404) {
@@ -837,41 +848,43 @@ const searchAssignments = async () => {
 const startEdit = (assignment) => {
   editingAssignment.value = assignment.id;
   editingActualValue.value = assignment.actualValue || '';
+  editingActualValueFormatted.value = assignment.actualValue ? formatNumber(assignment.actualValue) : '';
 };
 
 const cancelEdit = () => {
   editingAssignment.value = null;
   editingActualValue.value = '';
+  editingActualValueFormatted.value = '';
 };
 
 const saveActualValue = async (assignment) => {
   try {
     savingActual.value = true;
     clearMessages();
-    
+
     const updateData = {
       assignmentId: assignment.id,
       actualValue: editingActualValue.value ? parseFloat(editingActualValue.value) : null
     };
-    
+
     const response = await api.put('/KpiAssignment/update-single-actual', updateData);
-    
+
     // Update local data
     const index = assignments.value.findIndex(a => a.id === assignment.id);
     if (index !== -1) {
       assignments.value[index].actualValue = updateData.actualValue;
-      
+
       // Update score if returned from API
       if (response.data && response.data.score != null) {
         assignments.value[index].score = response.data.score;
       }
     }
-    
+
     showSuccess('Cập nhật giá trị thực hiện thành công!');
-    
+
     // Exit edit mode
     cancelEdit();
-    
+
   } catch (error) {
     console.error('Error updating actual value:', error);
     if (error.response && error.response.data && error.response.data.message) {
@@ -884,41 +897,54 @@ const saveActualValue = async (assignment) => {
   }
 };
 
+// Number input handlers for employee actual values
+const handleActualValueInput = (event) => {
+  const formattedValue = handleInput(event);
+  editingActualValueFormatted.value = formattedValue;
+  editingActualValue.value = parseFormattedNumber(formattedValue);
+};
+
+const handleActualValueBlur = (event) => {
+  const formattedValue = handleBlur(event);
+  editingActualValueFormatted.value = formattedValue;
+  editingActualValue.value = parseFormattedNumber(formattedValue);
+};
+
 // Unit tab methods
 const searchUnitAssignments = async () => {
   if (!canSearchUnit.value) {
     showError('Vui lòng chọn chi nhánh và kỳ khoán.');
     return;
   }
-  
+
   try {
     searchingUnit.value = true;
     clearMessages();
-    
+
     console.log('🔍 Searching unit assignments...', {
       unitId: selectedUnitBranchId.value,
       periodId: selectedUnitPeriodId.value
     });
-    
+
     const response = await api.get(`/UnitKhoanAssignments/search?unitId=${selectedUnitBranchId.value}&periodId=${selectedUnitPeriodId.value}`);
-    
+
     let assignmentsData = [];
     if (response.data && Array.isArray(response.data.$values)) {
       assignmentsData = response.data.$values;
     } else if (Array.isArray(response.data)) {
       assignmentsData = response.data;
     }
-    
+
     unitAssignments.value = assignmentsData;
-    
+
     console.log('✅ Unit assignments loaded:', unitAssignments.value.length);
-    
+
     if (unitAssignments.value.length > 0) {
       showSuccess(`Tìm thấy ${unitAssignments.value.length} giao khoán KPI cho chi nhánh.`);
     } else {
       showError('Không tìm thấy giao khoán KPI nào cho chi nhánh này.');
     }
-    
+
   } catch (error) {
     console.error('❌ Error searching unit assignments:', error);
     if (error.response && error.response.status === 404) {
@@ -935,43 +961,45 @@ const searchUnitAssignments = async () => {
 const startUnitEdit = (assignment) => {
   editingUnitAssignment.value = assignment.id;
   editingUnitActualValue.value = assignment.actualValue || '';
+  editingUnitActualValueFormatted.value = assignment.actualValue ? formatNumber(assignment.actualValue) : '';
 };
 
 const cancelUnitEdit = () => {
   editingUnitAssignment.value = null;
   editingUnitActualValue.value = '';
+  editingUnitActualValueFormatted.value = '';
 };
 
 const saveUnitActualValue = async (assignment) => {
   try {
     savingUnitActual.value = true;
     clearMessages();
-    
+
     const updateData = {
       assignmentId: assignment.id,
       actualValue: editingUnitActualValue.value ? parseFloat(editingUnitActualValue.value) : null
     };
-    
+
     console.log('💾 Saving unit actual value:', updateData);
-    
+
     const response = await api.put('/UnitKhoanAssignments/update-actual', updateData);
-    
+
     // Update local data
     const index = unitAssignments.value.findIndex(a => a.id === assignment.id);
     if (index !== -1) {
       unitAssignments.value[index].actualValue = updateData.actualValue;
-      
+
       // Update score if returned from API
       if (response.data && response.data.score != null) {
         unitAssignments.value[index].score = response.data.score;
       }
     }
-    
+
     showSuccess('Cập nhật giá trị thực hiện cho chi nhánh thành công!');
-    
+
     // Exit edit mode
     cancelUnitEdit();
-    
+
   } catch (error) {
     console.error('❌ Error updating unit actual value:', error);
     if (error.response && error.response.data && error.response.data.message) {
@@ -982,6 +1010,19 @@ const saveUnitActualValue = async (assignment) => {
   } finally {
     savingUnitActual.value = false;
   }
+};
+
+// Number input handlers for unit actual values
+const handleUnitActualValueInput = (event) => {
+  const formattedValue = handleInput(event);
+  editingUnitActualValueFormatted.value = formattedValue;
+  editingUnitActualValue.value = parseFormattedNumber(formattedValue);
+};
+
+const handleUnitActualValueBlur = (event) => {
+  const formattedValue = handleBlur(event);
+  editingUnitActualValueFormatted.value = formattedValue;
+  editingUnitActualValue.value = parseFormattedNumber(formattedValue);
 };
 
 const onUnitFilterChange = () => {
@@ -1010,7 +1051,7 @@ const getUnitPeriodName = () => {
 const switchTab = (tabName) => {
   activeTab.value = tabName;
   clearMessages();
-  
+
   // Clear data when switching tabs
   if (tabName === 'employee') {
     unitAssignments.value = [];
@@ -1031,23 +1072,23 @@ onMounted(async () => {
   if (!isAuthenticated()) {
     console.warn('⚠️ User not authenticated, but route allows public access for debugging');
   }
-  
+
   try {
     console.log('🔄 KpiActualValuesView: Starting initial data load...');
-    
+
     // Load data sequentially to avoid race conditions
     console.log('📊 Loading employees...');
     await fetchEmployees();
-    
+
     console.log('🏢 Loading units...');
     await fetchUnits();
-    
+
     console.log('📅 Loading khoan periods...');
     await fetchKhoanPeriods();
-    
+
     console.log('✅ KpiActualValuesView: All data loaded successfully');
     console.log(`📊 Loaded: ${employees.value.length} employees, ${units.value.length} units, ${khoanPeriods.value.length} periods`);
-    
+
   } catch (error) {
     console.error('❌ KpiActualValuesView: Error loading initial data:', error);
     showError('Không thể tải dữ liệu ban đầu. Vui lòng tải lại trang.');
@@ -1125,7 +1166,7 @@ onMounted(async () => {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .tab-button {
     margin: 5px 0;
     width: 200px;
@@ -1513,30 +1554,30 @@ onMounted(async () => {
   .kpi-actual-values {
     padding: 15px;
   }
-  
+
   .header-section h1 {
     font-size: 2rem;
   }
-  
+
   .form-row {
     flex-direction: column;
     gap: 0;
   }
-  
+
   .form-group {
     margin-bottom: 20px;
   }
-  
+
   .assignments-header {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .assignments-summary {
     justify-content: space-between;
     width: 100%;
   }
-  
+
   .assignments-table {
     margin: 0 -25px;
     padding: 0 25px;
@@ -1547,15 +1588,15 @@ onMounted(async () => {
   .header-section h1 {
     font-size: 1.8rem;
   }
-  
+
   .subtitle {
     font-size: 1rem;
   }
-  
+
   .form-container {
     padding: 20px;
   }
-  
+
   .assignments-summary {
     flex-direction: column;
     gap: 8px;

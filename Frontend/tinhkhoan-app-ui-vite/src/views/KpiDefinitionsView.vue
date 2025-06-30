@@ -636,8 +636,15 @@ import { computed, nextTick, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { isAuthenticated } from '../services/auth';
 import { kpiAssignmentService } from '../services/kpiAssignmentService';
+import { useNumberInput } from '../utils/numberFormat';
 
 const router = useRouter();
+
+// 🔢 Initialize number input utility
+const { handleInput, handleBlur, formatNumber, parseFormattedNumber } = useNumberInput({
+  maxDecimalPlaces: 2,
+  allowNegative: false
+});
 
 // Reactive data
 const loading = ref(false);
@@ -2348,40 +2355,6 @@ const loadAllBranchIndicators = async () => {
   color: #64748b;
   max-width: 400px;
   padding: 40px 20px;
-}
-
-.empty-state .empty-icon {
-  font-size: 4rem;
-  margin-bottom: 20px;
-  opacity: 0.7;
-  display: block;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 0.7; }
-  50% { opacity: 1; }
-}
-
-.empty-state h3 {
-  color: #1e293b;
-  font-size: 1.4rem;
-  font-weight: 600;
-  margin-bottom: 12px;
-}
-
-.empty-state p {
-  font-size: 1rem;
-  line-height: 1.6;
-  margin-bottom: 30px;
-  color: #64748b;
-}
-
-.table-responsive {
-  overflow-x: auto;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Responsive styles */
