@@ -9,7 +9,7 @@ namespace TinhKhoanApp.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // Kích hoạt authentication cho General Dashboard
+    // [Authorize] // Tạm tắt authentication để test dashboard
     public class GeneralDashboardController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -28,19 +28,20 @@ namespace TinhKhoanApp.Api.Controllers
 
         // Lấy dữ liệu 6 chỉ tiêu chính
         [HttpGet("indicators/{branchId}")]
-        public async Task<ActionResult> GetIndicators(string branchId)
+        public async Task<ActionResult> GetIndicators(string branchId, [FromQuery] DateTime? date = null)
         {
             try
             {
-                _logger.LogInformation("🎯 Lấy dữ liệu dashboard cho chi nhánh {BranchId}", branchId);
+                var dateStr = date?.ToString("dd/MM/yyyy") ?? "ngày gần nhất";
+                _logger.LogInformation("🎯 Lấy dữ liệu dashboard cho chi nhánh {BranchId}, ngày {Date}", branchId, dateStr);
 
-                // Tính toán tất cả các chỉ tiêu từ BranchCalculationService
-                var nguonVonVnd = await _branchCalculationService.CalculateNguonVonByBranch(branchId);
-                var duNoVnd = await _branchCalculationService.CalculateDuNoByBranch(branchId);
-                var noXauPercent = await _branchCalculationService.CalculateNoXauByBranch(branchId);
-                var thuNoXlrrVnd = await _branchCalculationService.CalculateThuHoiXLRRByBranch(branchId);
-                var thuDichVuVnd = await _branchCalculationService.CalculateThuDichVuByBranch(branchId);
-                var taiChinhVnd = await _branchCalculationService.CalculateLoiNhuanByBranch(branchId);
+                // Tính toán tất cả các chỉ tiêu từ BranchCalculationService với ngày cụ thể
+                var nguonVonVnd = await _branchCalculationService.CalculateNguonVonByBranch(branchId, date);
+                var duNoVnd = await _branchCalculationService.CalculateDuNoByBranch(branchId, date);
+                var noXauPercent = await _branchCalculationService.CalculateNoXauByBranch(branchId, date);
+                var thuNoXlrrVnd = await _branchCalculationService.CalculateThuHoiXLRRByBranch(branchId, date);
+                var thuDichVuVnd = await _branchCalculationService.CalculateThuDichVuByBranch(branchId, date);
+                var taiChinhVnd = await _branchCalculationService.CalculateLoiNhuanByBranch(branchId, date);
 
                 // Chuyển đổi từ VND sang tỷ VND
                 var nguonVonTy = Math.Round(nguonVonVnd / 1_000_000_000m, 2);

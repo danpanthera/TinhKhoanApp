@@ -79,47 +79,28 @@ namespace TinhKhoanApp.Api.Services
         {
             try
             {
-                // Lấy dữ liệu thực từ bảng DP01 (ImportedDataRecords/ImportedDataItems)
-                var dp01Data = await GetDP01DataForBranch(branchCode, pgdCode);
+                // Lấy dữ liệu thực từ bảng DP01 theo ngày cụ thể
+                var dp01Data = await GetDP01DataForBranch(branchCode, pgdCode, date);
 
                 if (dp01Data.Any())
                 {
                     var totalNguonVon = CalculateNguonVonFromDP01(dp01Data, branchCode, pgdCode);
-                    _logger.LogInformation("Nguồn vốn thực tế từ DP01 - Chi nhánh {BranchCode} PGD {PgdCode}: {Total}",
-                        branchCode, pgdCode ?? "ALL", totalNguonVon);
+                    _logger.LogInformation("Nguồn vốn thực tế từ DP01 ngày {Date} - Chi nhánh {BranchCode} PGD {PgdCode}: {Total}",
+                        date?.ToString("dd/MM/yyyy") ?? "latest", branchCode, pgdCode ?? "ALL", totalNguonVon);
                     return totalNguonVon;
                 }
                 else
                 {
-                    // Fallback về mock data nếu không có dữ liệu thực
-                    _logger.LogWarning("Không tìm thấy dữ liệu DP01 thực, sử dụng mock data cho {BranchCode}", branchCode);
-
-                    var mockData = branchCode switch
-                    {
-                        "7800" => pgdCode switch
-                        {
-                            "01" => 45.5m * 1000000000, // 45.5 tỷ
-                            "02" => 38.2m * 1000000000, // 38.2 tỷ
-                            _ => 125.7m * 1000000000    // 125.7 tỷ
-                        },
-                        "7801" => 89.3m * 1000000000,   // CN Tam Đường
-                        "7802" => 76.8m * 1000000000,   // CN Phong Thổ
-                        "7803" => 45.2m * 1000000000,   // CN Sin Hồ
-                        "7804" => 34.6m * 1000000000,   // CN Mường Tè
-                        "7805" => 67.4m * 1000000000,   // CN Than Uyên
-                        "7806" => 98.5m * 1000000000,   // CN Thành Phố
-                        "7807" => 55.9m * 1000000000,   // CN Tân Uyên
-                        "7808" => 42.1m * 1000000000,   // CN Nậm Nhùn
-                        _ => 50.0m * 1000000000         // Default
-                    };
-
-                    return mockData;
+                    // Nếu không có dữ liệu thực cho ngày đó
+                    var dateStr = date?.ToString("dd/MM/yyyy") ?? "latest";
+                    _logger.LogWarning("❌ Không tìm thấy dữ liệu DP01 cho ngày {Date}, chi nhánh {BranchCode}", dateStr, branchCode);
+                    throw new InvalidOperationException($"Không có dữ liệu nguồn vốn cho ngày {dateStr}, chi nhánh {branchCode}");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi tính Nguồn vốn cho chi nhánh {BranchCode}", branchCode);
-                return 0m;
+                _logger.LogError(ex, "Lỗi tính Nguồn vốn cho chi nhánh {BranchCode} ngày {Date}", branchCode, date?.ToString("dd/MM/yyyy"));
+                throw;
             }
         }
 
@@ -567,22 +548,44 @@ namespace TinhKhoanApp.Api.Services
         /// <summary>
         /// Lấy dữ liệu DP01 từ database theo chi nhánh và PGD
         /// </summary>
-        private async Task<List<dynamic>> GetDP01DataForBranch(string branchCode, string? pgdCode)
+        private async Task<List<dynamic>> GetDP01DataForBranch(string branchCode, string? pgdCode, DateTime? date = null)
         {
             try
             {
-                _logger.LogInformation("🔍 Tìm dữ liệu DP01 cho chi nhánh {BranchCode}, PGD {PgdCode}", branchCode, pgdCode ?? "NULL");
+                _logger.LogInformation("🔍 Tìm dữ liệu DP01 cho chi nhánh {BranchCode}, PGD {PgdCode}, ngày {Date}",
+                    branchCode, pgdCode ?? "NULL", date?.ToString("dd/MM/yyyy") ?? "latest");
 
-                // Tìm trong ImportedDataRecords có category DP01
-                var dp01Records = await _context.ImportedDataRecords
-                    .Where(x => x.Category == "DP01")
-                    .ToListAsync();
+                // Xây dựng query cho ImportedDataRecords có category DP01
+                var query = _context.ImportedDataRecords.Where(x => x.Category == "DP01");
 
-                _logger.LogInformation("📄 Tìm thấy {Count} records DP01 trong database", dp01Records.Count);
+                // Lọc theo ngày nếu có tham số date
+                if (date.HasValue)
+                {
+                    // Tìm dữ liệu cho ngày cụ thể
+                    query = query.Where(x => x.StatementDate.HasValue && x.StatementDate.Value.Date == date.Value.Date);
+                }
+                else
+                {
+                    // Nếu không có tham số date, lấy ngày gần nhất
+                    var latestDate = await _context.ImportedDataRecords
+                        .Where(x => x.Category == "DP01" && x.StatementDate.HasValue)
+                        .MaxAsync(x => x.StatementDate);
+
+                    if (latestDate.HasValue)
+                    {
+                        query = query.Where(x => x.StatementDate.HasValue && x.StatementDate.Value.Date == latestDate.Value.Date);
+                        _logger.LogInformation("📅 Sử dụng ngày gần nhất: {LatestDate}", latestDate.Value.ToString("dd/MM/yyyy"));
+                    }
+                }
+
+                var dp01Records = await query.ToListAsync();
+
+                _logger.LogInformation("📄 Tìm thấy {Count} records DP01 trong database cho điều kiện lọc", dp01Records.Count);
 
                 if (!dp01Records.Any())
                 {
-                    _logger.LogWarning("❌ Không tìm thấy records DP01 nào");
+                    var dateStr = date?.ToString("dd/MM/yyyy") ?? "ngày gần nhất";
+                    _logger.LogWarning("❌ Không tìm thấy records DP01 nào cho {DateStr}", dateStr);
                     return new List<dynamic>();
                 }
 
