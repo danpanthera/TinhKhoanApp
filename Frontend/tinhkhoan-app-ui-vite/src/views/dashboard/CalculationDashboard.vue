@@ -955,7 +955,7 @@ const calculateNguonVon = async () => {
       };
 
       showCalculationResults.value = true;
-      successMessage.value = `✅ Đã tính Nguồn vốn cho ${displayName}: ${branchIndicatorsService.formatCurrency(result.value / 1000000000)} tỷ đồng`;
+      successMessage.value = `✅ Đã tính Nguồn vốn cho ${displayName}: ${branchIndicatorsService.formatCurrency(result.value / 1000000)} triệu VND`;
     } else {
       throw new Error(result.errorMessage || 'Tính toán thất bại');
     }
@@ -1005,7 +1005,7 @@ const calculateDuNo = async () => {
       };
 
       showCalculationResults.value = true;
-      successMessage.value = `✅ Đã tính Dư nợ cho ${displayName}: ${branchIndicatorsService.formatCurrency(result.value / 1000000000)} tỷ đồng`;
+      successMessage.value = `✅ Đã tính Dư nợ cho ${displayName}: ${branchIndicatorsService.formatCurrency(result.value / 1000000)} triệu VND`;
     } else {
       throw new Error(result.errorMessage || 'Tính toán thất bại');
     }
