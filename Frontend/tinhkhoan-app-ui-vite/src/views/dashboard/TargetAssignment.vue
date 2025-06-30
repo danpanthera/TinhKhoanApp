@@ -445,11 +445,6 @@ const getPeriodTypeLabel = (type) => {
   return option ? option.label : type;
 };
 
-const formatNumber = (value) => {
-  if (!value && value !== 0) return '';
-  return Number(value).toLocaleString('vi-VN');
-};
-
 // Number input handlers using the new utility
 const onTargetValueInput = (event) => {
   const formattedValue = handleInput(event);
