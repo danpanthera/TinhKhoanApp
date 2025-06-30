@@ -31,19 +31,19 @@
         <div class="method-selection">
           <div class="radio-group">
             <label class="radio-option">
-              <input 
-                type="radio" 
-                v-model="scoringMethod" 
-                value="employee" 
+              <input
+                type="radio"
+                v-model="scoringMethod"
+                value="employee"
                 @change="onScoringMethodChange"
               />
               <span class="radio-label">👤 Chấm theo Cán bộ</span>
             </label>
             <label class="radio-option">
-              <input 
-                type="radio" 
-                v-model="scoringMethod" 
-                value="unit" 
+              <input
+                type="radio"
+                v-model="scoringMethod"
+                value="unit"
                 @change="onScoringMethodChange"
               />
               <span class="radio-label">🏢 Chấm theo Chi nhánh</span>
@@ -51,12 +51,12 @@
           </div>
         </div>
       </div>
-      
+
       <div class="filter-section">
         <!-- Employee Selection (when employee method selected) -->
-        <select 
+        <select
           v-if="scoringMethod === 'employee'"
-          v-model="selectedEmployee" 
+          v-model="selectedEmployee"
           @change="loadEmployeeKPIs"
           class="filter-select"
         >
@@ -65,11 +65,11 @@
             {{ emp.fullName }} - {{ emp.positionName || 'Chưa có chức vụ' }}
           </option>
         </select>
-        
+
         <!-- Unit Selection (when unit method selected) -->
-        <select 
+        <select
           v-if="scoringMethod === 'unit'"
-          v-model="selectedUnit" 
+          v-model="selectedUnit"
           @change="loadUnitKPIs"
           class="filter-select"
         >
@@ -93,14 +93,14 @@
             </option>
           </optgroup>
         </select>
-        
+
         <select v-model="selectedPeriod" @change="loadKPIData" class="filter-select">
           <option value="">-- Chọn kỳ khoán --</option>
           <option v-for="period in periods" :key="period.id" :value="period.id">
             {{ period.name }}
           </option>
         </select>
-        
+
         <select v-model="filterType" @change="filterKPIs" class="filter-select">
           <option value="ALL">Tất cả KPI</option>
           <option value="QUALITATIVE">Định tính (Chấm tay)</option>
@@ -113,7 +113,7 @@
 
     <!-- 📋 Danh sách KPI theo loại -->
     <div class="scoring-sections" v-if="(selectedEmployee || selectedUnit) && selectedPeriod">
-      
+
       <!-- 📝 PHẦN 1: KPI Định Tính - Chấm Tay -->
       <div class="scoring-section" v-if="qualitativeKPIs.length > 0">
         <h3>📝 Chỉ Tiêu Định Tính - Chấm Điểm Thủ Công</h3>
@@ -123,24 +123,22 @@
               <h4>{{ kpi.kpiName }}</h4>
               <span class="kpi-badge">{{ kpi.maxScore }} điểm</span>
             </div>
-            
+
             <div class="scoring-input">
               <label>Kết quả thực hiện (%):</label>
               <div class="input-group">
-                <input 
-                  type="number" 
-                  v-model="kpi.actualValue"
-                  :max="100"
-                  :min="0"
-                  step="0.1"
-                  @blur="updateManualScore(kpi)"
+                <input
+                  type="text"
+                  :value="formatNumber(kpi.actualValue || 0)"
+                  @input="(e) => handleActualValueInput(e, kpi)"
+                  @blur="(e) => handleActualValueBlur(e, kpi)"
                   :class="{ 'error': kpi.error }"
                 />
                 <span class="unit">%</span>
               </div>
               <div v-if="kpi.error" class="error-message">{{ kpi.error }}</div>
             </div>
-            
+
             <div class="score-display">
               <div class="score-item">
                 <span>Chỉ tiêu:</span>
@@ -167,31 +165,31 @@
               <h4>{{ kpi.kpiName }}</h4>
               <span class="kpi-badge">{{ kpi.maxScore }} điểm</span>
             </div>
-            
+
             <div class="ratio-inputs">
               <div class="input-row">
                 <label>Tử số:</label>
-                <input 
-                  type="number" 
-                  v-model="kpi.numerator"
-                  step="0.01"
-                  @input="calculateRatio(kpi)"
+                <input
+                  type="text"
+                  :value="formatNumber(kpi.numerator || 0)"
+                  @input="(e) => handleNumeratorInput(e, kpi)"
+                  @blur="(e) => handleNumeratorBlur(e, kpi)"
                 />
               </div>
               <div class="input-row">
                 <label>Mẫu số:</label>
-                <input 
-                  type="number" 
-                  v-model="kpi.denominator"
-                  step="0.01"
-                  @input="calculateRatio(kpi)"
+                <input
+                  type="text"
+                  :value="formatNumber(kpi.denominator || 0)"
+                  @input="(e) => handleDenominatorInput(e, kpi)"
+                  @blur="(e) => handleDenominatorBlur(e, kpi)"
                 />
               </div>
               <div class="calculation-result">
                 <span>Kết quả:</span>
                 <strong>{{ kpi.calculatedRatio || 0 }}%</strong>
               </div>
-              <button 
+              <button
                 @click="saveRatioCalculation(kpi)"
                 :disabled="!kpi.numerator || !kpi.denominator"
                 class="btn-calculate"
@@ -199,7 +197,7 @@
                 💾 Lưu Kết Quả
               </button>
             </div>
-            
+
             <div class="score-display">
               <div class="score-item">
                 <span>Chỉ tiêu:</span>
@@ -224,12 +222,12 @@
       <!-- 📊 PHẦN 3: KPI Định Lượng Tuyệt Đối - Import -->
       <div class="scoring-section" v-if="absoluteKPIs.length > 0">
         <h3>📊 Chỉ Tiêu Định Lượng Tuyệt Đối - Import Dữ Liệu</h3>
-        
+
         <!-- File Upload Section -->
         <div class="import-section">
           <div class="upload-area">
-            <input 
-              type="file" 
+            <input
+              type="file"
               ref="fileInput"
               @change="handleFileUpload"
               accept=".xlsx,.csv"
@@ -240,7 +238,7 @@
             </button>
             <span class="upload-info">Hỗ trợ: .xlsx, .csv</span>
           </div>
-          
+
           <!-- Import Preview -->
           <div v-if="importPreview.length > 0" class="import-preview">
             <h4>🔍 Xem Trước Dữ Liệu Import</h4>
@@ -280,7 +278,7 @@
               <h4>{{ kpi.kpiName }}</h4>
               <span class="kpi-badge">{{ kpi.maxScore }} điểm</span>
             </div>
-            
+
             <div class="score-display">
               <div class="score-item">
                 <span>Chỉ tiêu:</span>
@@ -335,8 +333,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useApiService } from '@/composables/useApiService'
+import { computed, onMounted, ref } from 'vue';
 
 // 🎛️ Reactive Data
 const loading = ref(false)
@@ -356,48 +353,48 @@ const cnl1Units = ref([])
 const cnl2Units = ref([])
 
 // 📊 Computed Properties cho các loại KPI
-const qualitativeKPIs = computed(() => 
+const qualitativeKPIs = computed(() =>
   allKPIs.value.filter(kpi => kpi.inputType === 'QUALITATIVE')
 )
 
-const ratioKPIs = computed(() => 
+const ratioKPIs = computed(() =>
   allKPIs.value.filter(kpi => kpi.inputType === 'QUANTITATIVE_RATIO')
 )
 
-const absoluteKPIs = computed(() => 
+const absoluteKPIs = computed(() =>
   allKPIs.value.filter(kpi => kpi.inputType === 'QUANTITATIVE_ABSOLUTE')
 )
 
 // 📈 Computed Properties cho điểm số
-const qualitativeScore = computed(() => 
+const qualitativeScore = computed(() =>
   qualitativeKPIs.value.reduce((sum, kpi) => sum + (kpi.score || 0), 0)
 )
 
-const qualitativeMaxScore = computed(() => 
+const qualitativeMaxScore = computed(() =>
   qualitativeKPIs.value.reduce((sum, kpi) => sum + kpi.maxScore, 0)
 )
 
-const ratioScore = computed(() => 
+const ratioScore = computed(() =>
   ratioKPIs.value.reduce((sum, kpi) => sum + (kpi.score || 0), 0)
 )
 
-const ratioMaxScore = computed(() => 
+const ratioMaxScore = computed(() =>
   ratioKPIs.value.reduce((sum, kpi) => sum + kpi.maxScore, 0)
 )
 
-const absoluteScore = computed(() => 
+const absoluteScore = computed(() =>
   absoluteKPIs.value.reduce((sum, kpi) => sum + (kpi.score || 0), 0)
 )
 
-const absoluteMaxScore = computed(() => 
+const absoluteMaxScore = computed(() =>
   absoluteKPIs.value.reduce((sum, kpi) => sum + kpi.maxScore, 0)
 )
 
-const totalScore = computed(() => 
+const totalScore = computed(() =>
   qualitativeScore.value + ratioScore.value + absoluteScore.value
 )
 
-const totalMaxScore = computed(() => 
+const totalMaxScore = computed(() =>
   qualitativeMaxScore.value + ratioMaxScore.value + absoluteMaxScore.value
 )
 
@@ -428,7 +425,7 @@ const loadInitialData = async () => {
     ])
     employees.value = employeesData
     periods.value = periodsData
-    
+
     // Load units data for unit scoring
     await loadUnitsData()
   } catch (err) {
@@ -441,26 +438,26 @@ const loadInitialData = async () => {
 
 const loadEmployeeKPIs = async () => {
   if (!selectedEmployee.value || !selectedPeriod.value) return
-  
+
   try {
     loading.value = true
     // Sử dụng API EmployeeKpiAssignment thay vì employee-kpi-targets
     const data = await get(`/EmployeeKpiAssignment/employee/${selectedEmployee.value}`)
-    
+
     // Lọc theo period nếu cần
     const filteredData = data.filter(kpi => kpi.khoanPeriodId == selectedPeriod.value)
-    
+
     // Phân loại KPI và thêm thông tin input type
     allKPIs.value = filteredData.map((kpi) => {
       // Tạm thời phân loại dựa trên tên KPI
       let inputType = 'QUALITATIVE' // Mặc định là định tính
-      
+
       if (kpi.kpiName.includes('Tỷ lệ nợ xấu') || kpi.kpiName.includes('Phát triển khách hàng mới')) {
         inputType = 'QUANTITATIVE_RATIO' // Tỷ lệ cần tính toán
       } else if (kpi.kpiName.includes('Lợi nhuận') || kpi.kpiName.includes('Doanh số')) {
         inputType = 'QUANTITATIVE_ABSOLUTE' // Định lượng tuyệt đối
       }
-      
+
       return {
         ...kpi,
         inputType: inputType,
@@ -481,18 +478,18 @@ const loadEmployeeKPIs = async () => {
 // 🏢 Load Unit KPIs (New function for unit scoring)
 const loadUnitKPIs = async () => {
   if (!selectedUnit.value || !selectedPeriod.value) return
-  
+
   try {
     loading.value = true
     // Load unit KPI assignments
     const data = await get(`/UnitKhoanAssignments`)
-    
+
     // Filter by unit and period
-    const filteredData = data.filter(assignment => 
-      assignment.unitId == selectedUnit.value && 
+    const filteredData = data.filter(assignment =>
+      assignment.unitId == selectedUnit.value &&
       assignment.khoanPeriodId == selectedPeriod.value
     )
-    
+
     // Transform unit assignments to KPI format
     const unitKPIs = []
     filteredData.forEach(assignment => {
@@ -516,7 +513,7 @@ const loadUnitKPIs = async () => {
         })
       }
     })
-    
+
     allKPIs.value = unitKPIs
   } catch (err) {
     error.value = 'Lỗi tải KPI của chi nhánh'
@@ -543,7 +540,7 @@ const onScoringMethodChange = () => {
   selectedEmployee.value = ''
   selectedUnit.value = ''
   allKPIs.value = []
-  
+
   // Load units data if switching to unit scoring
   if (scoringMethod.value === 'unit' && cnl1Units.value.length === 0) {
     loadUnitsData()
@@ -565,7 +562,7 @@ const updateManualScore = async (kpi) => {
     kpi.error = 'Giá trị phải từ 0-100%'
     return
   }
-  
+
   try {
     kpi.error = null
     // Sử dụng API PUT để cập nhật EmployeeKpiAssignment
@@ -574,7 +571,7 @@ const updateManualScore = async (kpi) => {
       actualValue: kpi.actualValue,
       notes: kpi.notes || 'Chấm điểm thủ công'
     })
-    
+
     if (result) {
       kpi.actualValue = result.actualValue
       kpi.score = result.score
@@ -600,14 +597,14 @@ const saveRatioCalculation = async (kpi) => {
   try {
     // Tính toán tỷ lệ trước khi lưu
     calculateRatio(kpi)
-    
+
     // Sử dụng API PUT để cập nhật với giá trị đã tính toán
     const result = await put(`/EmployeeKpiAssignment/${kpi.id}`, {
       targetValue: kpi.targetValue,
       actualValue: kpi.calculatedRatio,
       notes: `Tính từ công thức: ${kpi.numerator}/${kpi.denominator} = ${kpi.calculatedRatio}%`
     })
-    
+
     if (result) {
       kpi.actualValue = result.actualValue
       kpi.score = result.score
@@ -624,7 +621,7 @@ const saveRatioCalculation = async (kpi) => {
 const handleFileUpload = (event) => {
   const file = event.target.files[0]
   if (!file) return
-  
+
   // TODO: Implement file parsing logic
   console.log('File selected:', file.name)
 }
@@ -637,7 +634,7 @@ const confirmImport = async () => {
         actualValue: row.actualValue
       }))
     })
-    
+
     if (result.success) {
       await loadEmployeeKPIs() // Reload để cập nhật điểm
       importPreview.value = []
@@ -651,6 +648,49 @@ const confirmImport = async () => {
 const cancelImport = () => {
   importPreview.value = []
 }
+
+// Number input handlers for KPI scoring
+const handleActualValueInput = (event, kpi) => {
+  const formattedValue = handleInput(event);
+  event.target.value = formattedValue;
+  kpi.actualValue = parseFormattedNumber(formattedValue);
+  updateManualScore(kpi);
+};
+
+const handleActualValueBlur = (event, kpi) => {
+  const formattedValue = handleBlur(event);
+  event.target.value = formattedValue;
+  kpi.actualValue = parseFormattedNumber(formattedValue);
+  updateManualScore(kpi);
+};
+
+const handleNumeratorInput = (event, kpi) => {
+  const formattedValue = handleInput(event);
+  event.target.value = formattedValue;
+  kpi.numerator = parseFormattedNumber(formattedValue);
+  calculateRatio(kpi);
+};
+
+const handleNumeratorBlur = (event, kpi) => {
+  const formattedValue = handleBlur(event);
+  event.target.value = formattedValue;
+  kpi.numerator = parseFormattedNumber(formattedValue);
+  calculateRatio(kpi);
+};
+
+const handleDenominatorInput = (event, kpi) => {
+  const formattedValue = handleInput(event);
+  event.target.value = formattedValue;
+  kpi.denominator = parseFormattedNumber(formattedValue);
+  calculateRatio(kpi);
+};
+
+const handleDenominatorBlur = (event, kpi) => {
+  const formattedValue = handleBlur(event);
+  event.target.value = formattedValue;
+  kpi.denominator = parseFormattedNumber(formattedValue);
+  calculateRatio(kpi);
+};
 
 // 🔧 Helper functions
 const formatNumber = (value) => {
@@ -1151,24 +1191,24 @@ const getStatusText = (status) => {
   .kpi-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .stats-cards {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .filter-section {
     grid-template-columns: 1fr;
   }
-  
+
   .summary-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .kpi-header {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .kpi-badge {
     margin-left: 0;
     margin-top: 8px;
