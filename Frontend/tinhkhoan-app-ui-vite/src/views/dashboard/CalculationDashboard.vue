@@ -990,9 +990,10 @@ const calculateDuNo = async () => {
     }
 
     console.log('🔧 Tính Dư nợ cho:', displayName);
+    console.log('📅 Ngày được chọn:', selectedDate.value);
 
-    // Gọi service mới để tính Dư nợ
-    const result = await branchIndicatorsService.calculateDuNo(branchId);
+    // Gọi service mới để tính Dư nợ với tham số ngày
+    const result = await branchIndicatorsService.calculateDuNo(branchId, selectedDate.value);
 
     if (result.success) {
       // Cập nhật kết quả
@@ -1040,9 +1041,10 @@ const calculateNoXau = async () => {
     }
 
     console.log('🔧 Tính Nợ xấu cho:', displayName);
+    console.log('📅 Ngày được chọn:', selectedDate.value);
 
-    // Gọi service mới để tính Nợ xấu
-    const result = await branchIndicatorsService.calculateNoXau(branchId);
+    // Gọi service mới để tính Nợ xấu với tham số ngày
+    const result = await branchIndicatorsService.calculateNoXau(branchId, selectedDate.value);
 
     if (result.success) {
       // Cập nhật kết quả
