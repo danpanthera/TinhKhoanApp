@@ -694,12 +694,13 @@ namespace TinhKhoanApp.Api.Services
                             bool pgdMatch;
                             if (pgdCode == "00")
                             {
-                                // Chi nhánh chính - lấy tất cả records của chi nhánh đó (không lọc theo PGD)
+                                // Chi nhánh chính (PGD "00") - lấy TẤT CẢ dữ liệu của chi nhánh
+                                // Bao gồm: chi nhánh chính + tất cả PGD trực thuộc (01, 02, 03...)
                                 pgdMatch = true;
                             }
                             else
                             {
-                                // PGD cụ thể - phải khớp chính xác mã PGD
+                                // PGD cụ thể (01, 02, 03...) - chỉ lấy dữ liệu của PGD đó
                                 pgdMatch = maPgd == pgdCode;
                             }
 
