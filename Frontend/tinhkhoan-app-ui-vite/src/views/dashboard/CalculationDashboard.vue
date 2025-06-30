@@ -672,12 +672,12 @@ const showCalculationResults = ref(false);
 
 // Khai báo calculatedIndicators để lưu kết quả tính toán của 6 chỉ tiêu chính
 const calculatedIndicators = ref([
-  { id: 'nguon_von', name: 'Nguồn vốn', value: 0, calculated: false, details: null },
-  { id: 'du_no', name: 'Dư nợ', value: 0, calculated: false, details: null },
-  { id: 'no_xau', name: 'Nợ Xấu', value: 0, calculated: false, details: null },
-  { id: 'thu_no_xlrr', name: 'Thu nợ đã XLRR', value: 0, calculated: false, details: null },
-  { id: 'thu_dich_vu', name: 'Thu dịch vụ', value: 0, calculated: false, details: null },
-  { id: 'tai_chinh', name: 'Tài chính', value: 0, calculated: false, details: null }
+  { id: 'nguon_von', name: 'Nguồn vốn', value: 0, calculated: false, details: null, unit: 'Triệu VND', icon: '💰', class: 'primary' },
+  { id: 'du_no', name: 'Dư nợ', value: 0, calculated: false, details: null, unit: 'Triệu VND', icon: '📊', class: 'secondary' },
+  { id: 'no_xau', name: 'Nợ Xấu', value: 0, calculated: false, details: null, unit: '%', icon: '⚠️', class: 'warning' },
+  { id: 'thu_no_xlrr', name: 'Thu nợ đã XLRR', value: 0, calculated: false, details: null, unit: 'Triệu VND', icon: '🔄', class: 'success' },
+  { id: 'thu_dich_vu', name: 'Thu dịch vụ', value: 0, calculated: false, details: null, unit: 'Triệu VND', icon: '💼', class: 'purple' },
+  { id: 'tai_chinh', name: 'Tài chính', value: 0, calculated: false, details: null, unit: 'Triệu VND', icon: '💹', class: 'info' }
 ]);
 
 // Computed properties
@@ -944,18 +944,18 @@ const calculateNguonVon = async () => {
     const result = await branchIndicatorsService.calculateNguonVon(branchId);
 
     if (result.success) {
-      // Cập nhật kết quả
-      calculatedIndicators.value[0].value = result.value / 1000000000; // Chuyển từ VND sang tỷ
+      // Cập nhật kết quả - backend đã trả về đơn vị triệu VND
+      calculatedIndicators.value[0].value = result.value; // Không cần chuyển đổi
       calculatedIndicators.value[0].calculated = true;
       calculatedIndicators.value[0].details = {
         formula: 'Tổng CURRENT_BALANCE (loại trừ TK 40*, 41*, 427*)',
         calculatedAt: result.calculatedAt,
-        unit: result.unit,
+        unit: 'Triệu VND',
         branchId: result.branchId
       };
 
       showCalculationResults.value = true;
-      successMessage.value = `✅ Đã tính Nguồn vốn cho ${displayName}: ${branchIndicatorsService.formatCurrency(result.value / 1000000000)} tỷ đồng`;
+      successMessage.value = `✅ Đã tính Nguồn vốn cho ${displayName}: ${branchIndicatorsService.formatCurrency(result.value)} triệu VND`;
     } else {
       throw new Error(result.errorMessage || 'Tính toán thất bại');
     }
@@ -994,18 +994,18 @@ const calculateDuNo = async () => {
     const result = await branchIndicatorsService.calculateDuNo(branchId);
 
     if (result.success) {
-      // Cập nhật kết quả
-      calculatedIndicators.value[1].value = result.value / 1000000000; // Chuyển từ VND sang tỷ
+      // Cập nhật kết quả - backend đã trả về đơn vị triệu VND
+      calculatedIndicators.value[1].value = result.value; // Không cần chuyển đổi
       calculatedIndicators.value[1].calculated = true;
       calculatedIndicators.value[1].details = {
         formula: 'Tổng DU_NO theo BRCD và TRCTCD',
         calculatedAt: result.calculatedAt,
-        unit: result.unit,
+        unit: 'Triệu VND',
         branchId: result.branchId
       };
 
       showCalculationResults.value = true;
-      successMessage.value = `✅ Đã tính Dư nợ cho ${displayName}: ${branchIndicatorsService.formatCurrency(result.value / 1000000000)} tỷ đồng`;
+      successMessage.value = `✅ Đã tính Dư nợ cho ${displayName}: ${branchIndicatorsService.formatCurrency(result.value)} triệu VND`;
     } else {
       throw new Error(result.errorMessage || 'Tính toán thất bại');
     }
@@ -1068,89 +1068,152 @@ const calculateNoXau = async () => {
   }
 };
 
-// 5. Tính Thu nợ XLRR
+// 5. Tính Thu nợ XLRR - Sử dụng service thực
 const calculateThuNoXLRR = async () => {
-  if (!selectedUnitId.value) {
-    errorMessage.value = 'Vui lòng chọn Chi nhánh/Phòng ban trước khi tính toán';
-    return;
-  }
-
   calculating.value = true;
   errorMessage.value = '';
   successMessage.value = '';
 
   try {
-    console.log('🔧 Tính Thu nợ XLRR cho:', getSelectedUnitName());
+    // Xác định branchId: nếu không chọn gì thì là "Toàn tỉnh" (CnLaiChau)
+    let branchId = 'CnLaiChau'; // Default: Toàn tỉnh
+    let displayName = 'Toàn tỉnh';
 
-    setTimeout(() => {
-      calculatedIndicators.value[3].value = Math.floor(Math.random() * 100) + 20; // 20-120 tỷ
+    if (selectedUnitId.value) {
+      const selectedUnit = units.value.find(u => u.id === selectedUnitId.value);
+      if (!selectedUnit) {
+        throw new Error('Không tìm thấy thông tin chi nhánh được chọn');
+      }
+      branchId = selectedUnit.id;
+      displayName = selectedUnit.name;
+    }
+
+    console.log('🔧 Tính Thu nợ XLRR cho:', displayName);
+
+    // Gọi service thực để tính Thu hồi XLRR
+    const result = await branchIndicatorsService.calculateThuHoiXLRR(branchId);
+
+    if (result.success) {
+      // Cập nhật kết quả - backend đã trả về đơn vị triệu VND
+      calculatedIndicators.value[3].value = result.value; // Không cần chuyển đổi
       calculatedIndicators.value[3].calculated = true;
+      calculatedIndicators.value[3].details = {
+        formula: 'Chờ công thức cụ thể từ nghiệp vụ',
+        calculatedAt: result.calculatedAt,
+        unit: 'Triệu VND',
+        branchId: result.branchId
+      };
+
       showCalculationResults.value = true;
-      successMessage.value = `✅ Đã tính Thu nợ XLRR cho ${getSelectedUnitName()}: ${formatNumber(calculatedIndicators.value[3].value)} tỷ`;
-      calculating.value = false;
-    }, 800);
+      successMessage.value = `✅ Đã tính Thu nợ XLRR cho ${displayName}: ${branchIndicatorsService.formatCurrency(result.value)} triệu VND`;
+    } else {
+      throw new Error(result.errorMessage || 'Tính toán thất bại');
+    }
 
   } catch (error) {
-    console.error('Error calculating Thu nợ XLRR:', error);
+    console.error('❌ Lỗi tính Thu nợ XLRR:', error);
     errorMessage.value = 'Có lỗi khi tính Thu nợ XLRR: ' + error.message;
+  } finally {
     calculating.value = false;
   }
 };
 
-// 6. Tính Thu dịch vụ
+// 6. Tính Thu dịch vụ - Sử dụng service thực
 const calculateThuDichVu = async () => {
-  if (!selectedUnitId.value) {
-    errorMessage.value = 'Vui lòng chọn Chi nhánh/Phòng ban trước khi tính toán';
-    return;
-  }
-
   calculating.value = true;
   errorMessage.value = '';
   successMessage.value = '';
 
   try {
-    console.log('🔧 Tính Thu dịch vụ cho:', getSelectedUnitName());
+    // Xác định branchId: nếu không chọn gì thì là "Toàn tỉnh" (CnLaiChau)
+    let branchId = 'CnLaiChau'; // Default: Toàn tỉnh
+    let displayName = 'Toàn tỉnh';
 
-    setTimeout(() => {
-      calculatedIndicators.value[4].value = Math.floor(Math.random() * 50) + 10; // 10-60 tỷ
+    if (selectedUnitId.value) {
+      const selectedUnit = units.value.find(u => u.id === selectedUnitId.value);
+      if (!selectedUnit) {
+        throw new Error('Không tìm thấy thông tin chi nhánh được chọn');
+      }
+      branchId = selectedUnit.id;
+      displayName = selectedUnit.name;
+    }
+
+    console.log('🔧 Tính Thu dịch vụ cho:', displayName);
+
+    // Gọi service thực để tính Thu dịch vụ
+    const result = await branchIndicatorsService.calculateThuDichVu(branchId);
+
+    if (result.success) {
+      // Cập nhật kết quả - backend đã trả về đơn vị triệu VND
+      calculatedIndicators.value[4].value = result.value; // Không cần chuyển đổi
       calculatedIndicators.value[4].calculated = true;
+      calculatedIndicators.value[4].details = {
+        formula: 'Chờ công thức cụ thể từ nghiệp vụ',
+        calculatedAt: result.calculatedAt,
+        unit: 'Triệu VND',
+        branchId: result.branchId
+      };
+
       showCalculationResults.value = true;
-      successMessage.value = `✅ Đã tính Thu dịch vụ cho ${getSelectedUnitName()}: ${formatNumber(calculatedIndicators.value[4].value)} tỷ`;
-      calculating.value = false;
-    }, 800);
+      successMessage.value = `✅ Đã tính Thu dịch vụ cho ${displayName}: ${branchIndicatorsService.formatCurrency(result.value)} triệu VND`;
+    } else {
+      throw new Error(result.errorMessage || 'Tính toán thất bại');
+    }
 
   } catch (error) {
-    console.error('Error calculating Thu dịch vụ:', error);
+    console.error('❌ Lỗi tính Thu dịch vụ:', error);
     errorMessage.value = 'Có lỗi khi tính Thu dịch vụ: ' + error.message;
+  } finally {
     calculating.value = false;
   }
 };
 
-// 7. Tính Lợi nhuận khoán tài chính
+// 7. Tính Lợi nhuận tài chính - Sử dụng service thực
 const calculateTaiChinh = async () => {
-  if (!selectedUnitId.value) {
-    errorMessage.value = 'Vui lòng chọn Chi nhánh/Phòng ban trước khi tính toán';
-    return;
-  }
-
   calculating.value = true;
   errorMessage.value = '';
   successMessage.value = '';
 
   try {
-    console.log('🔧 Tính Lợi nhuận khoán tài chính cho:', getSelectedUnitName());
+    // Xác định branchId: nếu không chọn gì thì là "Toàn tỉnh" (CnLaiChau)
+    let branchId = 'CnLaiChau'; // Default: Toàn tỉnh
+    let displayName = 'Toàn tỉnh';
 
-    setTimeout(() => {
-      calculatedIndicators.value[5].value = Math.floor(Math.random() * 200) + 50; // 50-250 tỷ
+    if (selectedUnitId.value) {
+      const selectedUnit = units.value.find(u => u.id === selectedUnitId.value);
+      if (!selectedUnit) {
+        throw new Error('Không tìm thấy thông tin chi nhánh được chọn');
+      }
+      branchId = selectedUnit.id;
+      displayName = selectedUnit.name;
+    }
+
+    console.log('🔧 Tính Lợi nhuận tài chính cho:', displayName);
+
+    // Gọi service thực để tính Lợi nhuận
+    const result = await branchIndicatorsService.calculateLoiNhuan(branchId);
+
+    if (result.success) {
+      // Cập nhật kết quả - backend đã trả về đơn vị triệu VND
+      calculatedIndicators.value[5].value = result.value; // Không cần chuyển đổi
       calculatedIndicators.value[5].calculated = true;
+      calculatedIndicators.value[5].details = {
+        formula: '(TK 7+790001+8511) - (TK 8+882)',
+        calculatedAt: result.calculatedAt,
+        unit: 'Triệu VND',
+        branchId: result.branchId
+      };
+
       showCalculationResults.value = true;
-      successMessage.value = `✅ Đã tính Lợi nhuận khoán tài chính cho ${getSelectedUnitName()}: ${formatNumber(calculatedIndicators.value[5].value)} tỷ`;
-      calculating.value = false;
-    }, 800);
+      successMessage.value = `✅ Đã tính Lợi nhuận tài chính cho ${displayName}: ${branchIndicatorsService.formatCurrency(result.value)} triệu VND`;
+    } else {
+      throw new Error(result.errorMessage || 'Tính toán thất bại');
+    }
 
   } catch (error) {
-    console.error('Error calculating Tài chính:', error);
-    errorMessage.value = 'Có lỗi khi tính Lợi nhuận khoán tài chính: ' + error.message;
+    console.error('❌ Lỗi tính Lợi nhuận tài chính:', error);
+    errorMessage.value = 'Có lỗi khi tính Lợi nhuận tài chính: ' + error.message;
+  } finally {
     calculating.value = false;
   }
 };

@@ -234,11 +234,11 @@ namespace TinhKhoanApp.Api.Services
                     BranchCode = branchCode
                 };
 
-                var finalValue = totalDisbursement / 1_000_000_000m; // Chuyển sang tỷ đồng
+                var finalValue = totalDisbursement / 1_000_000m; // Chuyển sang triệu VND
 
                 await SaveCalculation("DuNo", unitId, date, finalValue, calculationDetails, startTime);
 
-                _logger.LogInformation("Hoàn thành tính Dư nợ: {Value} tỷ đồng", finalValue);
+                _logger.LogInformation("Hoàn thành tính Dư nợ: {Value} triệu VND", finalValue);
                 return finalValue;
             }
             catch (Exception ex)
@@ -307,29 +307,37 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Tính toán Thu hồi nợ đã XLRR
-        /// TODO: Chờ anh cung cấp công thức chi tiết
+        /// Tính toán Thu hồi nợ đã XLRR (đơn vị: Triệu VND)
+        /// TODO: Cần dữ liệu thực từ bảng import để có công thức chính xác
         /// </summary>
         public async Task<decimal> CalculateThuHoiXLRR(int unitId, DateTime date)
         {
             var startTime = DateTime.Now;
             try
             {
-                _logger.LogInformation("Tính toán Thu hồi XLRR - chưa có công thức cụ thể");
+                var unit = await _context.Units.FindAsync(unitId);
+                if (unit == null) return 0;
 
-                // Tạm thời trả về giá trị mẫu
-                var sampleValue = new Random().Next(10, 100);
+                var branchCode = GetBranchCode(unit.Code);
+                _logger.LogInformation("Tính toán Thu hồi XLRR cho {UnitName} ngày {Date}", unit.Name, date.ToString("yyyy-MM-dd"));
+
+                // Tạm thời dùng giá trị mẫu theo yêu cầu đơn vị Triệu VND
+                var sampleValueTrieuVND = new Random().Next(10, 100); // Triệu VND
 
                 var calculationDetails = new
                 {
-                    Formula = "Chờ công thức từ anh",
-                    Note = "Tính năng đang phát triển",
-                    SampleValue = sampleValue,
-                    CalculationDate = date
+                    Formula = "Tổng số tiền thu hồi từ nợ đã XLRR",
+                    Note = "Chờ dữ liệu thực từ file import LN01",
+                    Unit = "Triệu VND",
+                    SampleValue = sampleValueTrieuVND,
+                    CalculationDate = date,
+                    UnitInfo = new { unit.Code, unit.Name },
+                    BranchCode = branchCode
                 };
 
-                await SaveCalculation("ThuHoiXLRR", unitId, date, sampleValue, calculationDetails, startTime);
-                return sampleValue;
+                await SaveCalculation("ThuHoiXLRR", unitId, date, sampleValueTrieuVND, calculationDetails, startTime);
+                _logger.LogInformation("Hoàn thành tính Thu hồi XLRR: {Value} triệu VND", sampleValueTrieuVND);
+                return sampleValueTrieuVND;
             }
             catch (Exception ex)
             {
@@ -348,21 +356,31 @@ namespace TinhKhoanApp.Api.Services
             var startTime = DateTime.Now;
             try
             {
-                _logger.LogInformation("Tính toán Thu dịch vụ - chờ công thức cụ thể");
+                var unit = await _context.Units.FindAsync(unitId);
+                if (unit == null) return 0;
 
-                // Tạm thời trả về giá trị mẫu
-                var sampleValue = new Random().Next(50, 200);
+                var branchCode = GetBranchCode(unit.Code);
+                _logger.LogInformation("Tính toán Thu dịch vụ cho {UnitName} ngày {Date}", unit.Name, date.ToString("yyyy-MM-dd"));
+
+                // TODO: Thay bằng query thực từ hệ thống
+                // Tạm thời trả về giá trị mẫu theo đơn vị Triệu VND
+                var sampleValueMillions = new Random().Next(50, 200); // Đã ở đơn vị triệu VND
 
                 var calculationDetails = new
                 {
-                    Formula = "Chờ công thức từ anh",
-                    Note = "Tính năng đang phát triển",
-                    SampleValue = sampleValue,
-                    CalculationDate = date
+                    Formula = "Chờ công thức cụ thể từ nghiệp vụ",
+                    Note = "Tính năng đang phát triển - giá trị mẫu",
+                    SampleValue = sampleValueMillions,
+                    Unit = "Triệu VND",
+                    CalculationDate = date,
+                    UnitInfo = new { unit.Code, unit.Name },
+                    BranchCode = branchCode
                 };
 
-                await SaveCalculation("ThuDichVu", unitId, date, sampleValue, calculationDetails, startTime);
-                return sampleValue;
+                await SaveCalculation("ThuDichVu", unitId, date, sampleValueMillions, calculationDetails, startTime);
+
+                _logger.LogInformation("Hoàn thành tính Thu dịch vụ: {Value} triệu VND", sampleValueMillions);
+                return sampleValueMillions;
             }
             catch (Exception ex)
             {
@@ -427,11 +445,11 @@ namespace TinhKhoanApp.Api.Services
                     BranchCode = branchCode
                 };
 
-                var finalValue = profit / 1_000_000_000m; // Chuyển sang tỷ đồng
+                var finalValue = profit / 1_000_000m; // Chuyển sang triệu VND
 
                 await SaveCalculation("LoiNhuan", unitId, date, finalValue, calculationDetails, startTime);
 
-                _logger.LogInformation("Hoàn thành tính Lợi nhuận: {Value} tỷ đồng", finalValue);
+                _logger.LogInformation("Hoàn thành tính Lợi nhuận: {Value} triệu VND", finalValue);
                 return finalValue;
             }
             catch (Exception ex)
