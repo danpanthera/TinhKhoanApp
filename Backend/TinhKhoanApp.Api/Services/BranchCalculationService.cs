@@ -161,14 +161,14 @@ namespace TinhKhoanApp.Api.Services
                         "02" => 38.7m * 1_000_000_000,  // PGD 2: ~38.7 tỷ
                         _ => 187.6m * 1_000_000_000     // Hội Sở total: ~187.6 tỷ
                     },
-                    "7801" => 156.3m * 1_000_000_000,   // CN Tam Đường: ~156.3 tỷ
+                    "7801" => 156.3m * 1_000_000_000,   // CN Bình Lư: ~156.3 tỷ
                     "7802" => 134.8m * 1_000_000_000,   // CN Phong Thổ: ~134.8 tỷ
                     "7803" => 98.2m * 1_000_000_000,    // CN Sin Hồ: ~98.2 tỷ
-                    "7804" => 76.4m * 1_000_000_000,    // CN Mường Tè: ~76.4 tỷ
+                    "7804" => 76.4m * 1_000_000_000,    // CN Bum Tở: ~76.4 tỷ
                     "7805" => 143.7m * 1_000_000_000,   // CN Than Uyên: ~143.7 tỷ
-                    "7806" => 165.5m * 1_000_000_000,   // CN Thành Phố: ~165.5 tỷ
+                    "7806" => 165.5m * 1_000_000_000,   // CN Đoàn Kết: ~165.5 tỷ
                     "7807" => 124.9m * 1_000_000_000,   // CN Tân Uyên: ~124.9 tỷ
-                    "7808" => 89.1m * 1_000_000_000,    // CN Nậm Nhùn: ~89.1 tỷ
+                    "7808" => 89.1m * 1_000_000_000,    // CN Nậm Hàng: ~89.1 tỷ
                     _ => 120.0m * 1_000_000_000         // Default: ~120 tỷ
                 };
 
@@ -245,14 +245,14 @@ namespace TinhKhoanApp.Api.Services
                         "02" => 1.35m,  // PGD 2: 1.35%
                         _ => 0.85m      // Hội Sở: 0.85%
                     },
-                    "7801" => 0.76m,    // CN Tam Đường: 0.76%
+                    "7801" => 0.76m,    // CN Bình Lư: 0.76%
                     "7802" => 1.42m,    // CN Phong Thổ: 1.42%
                     "7803" => 2.18m,    // CN Sin Hồ: 2.18%
-                    "7804" => 1.67m,    // CN Mường Tè: 1.67%
+                    "7804" => 1.67m,    // CN Bum Tở: 1.67%
                     "7805" => 1.23m,    // CN Than Uyên: 1.23%
-                    "7806" => 0.94m,    // CN Thành Phố: 0.94%
+                    "7806" => 0.94m,    // CN Đoàn Kết: 0.94%
                     "7807" => 1.56m,    // CN Tân Uyên: 1.56%
-                    "7808" => 2.05m,    // CN Nậm Nhùn: 2.05%
+                    "7808" => 2.05m,    // CN Nậm Hàng: 2.05%
                     _ => 1.50m          // Default: 1.50%
                 };
 
@@ -319,14 +319,14 @@ namespace TinhKhoanApp.Api.Services
                         "02" => 2.8m * 1_000_000_000,   // PGD 2: ~2.8 tỷ
                         _ => 12.4m * 1_000_000_000      // Hội Sở total: ~12.4 tỷ
                     },
-                    "7801" => 8.7m * 1_000_000_000,     // CN Tam Đường: ~8.7 tỷ
+                    "7801" => 8.7m * 1_000_000_000,     // CN Bình Lư: ~8.7 tỷ
                     "7802" => 6.9m * 1_000_000_000,     // CN Phong Thổ: ~6.9 tỷ
                     "7803" => 4.8m * 1_000_000_000,     // CN Sin Hồ: ~4.8 tỷ
-                    "7804" => 3.6m * 1_000_000_000,     // CN Mường Tè: ~3.6 tỷ
+                    "7804" => 3.6m * 1_000_000_000,     // CN Bum Tở: ~3.6 tỷ
                     "7805" => 7.2m * 1_000_000_000,     // CN Than Uyên: ~7.2 tỷ
-                    "7806" => 9.8m * 1_000_000_000,     // CN Thành Phố: ~9.8 tỷ
+                    "7806" => 9.8m * 1_000_000_000,     // CN Đoàn Kết: ~9.8 tỷ
                     "7807" => 6.3m * 1_000_000_000,     // CN Tân Uyên: ~6.3 tỷ
-                    "7808" => 4.1m * 1_000_000_000,     // CN Nậm Nhùn: ~4.1 tỷ
+                    "7808" => 4.1m * 1_000_000_000,     // CN Nậm Hàng: ~4.1 tỷ
                     _ => 5.0m * 1_000_000_000           // Default: ~5 tỷ
                 };
 
@@ -392,14 +392,14 @@ namespace TinhKhoanApp.Api.Services
                         "02" => 7.2m * 1_000_000_000,   // PGD 2: ~7.2 tỷ
                         _ => 28.9m * 1_000_000_000      // Hội Sở total: ~28.9 tỷ
                     },
-                    "7801" => 22.6m * 1_000_000_000,    // CN Tam Đường: ~22.6 tỷ
+                    "7801" => 22.6m * 1_000_000_000,    // CN Bình Lư: ~22.6 tỷ
                     "7802" => 18.3m * 1_000_000_000,    // CN Phong Thổ: ~18.3 tỷ
                     "7803" => 14.2m * 1_000_000_000,    // CN Sin Hồ: ~14.2 tỷ
-                    "7804" => 11.5m * 1_000_000_000,    // CN Mường Tè: ~11.5 tỷ
+                    "7804" => 11.5m * 1_000_000_000,    // CN Bum Tở: ~11.5 tỷ
                     "7805" => 20.4m * 1_000_000_000,    // CN Than Uyên: ~20.4 tỷ
-                    "7806" => 26.7m * 1_000_000_000,    // CN Thành Phố: ~26.7 tỷ
+                    "7806" => 26.7m * 1_000_000_000,    // CN Đoàn Kết: ~26.7 tỷ
                     "7807" => 19.8m * 1_000_000_000,    // CN Tân Uyên: ~19.8 tỷ
-                    "7808" => 13.1m * 1_000_000_000,    // CN Nậm Nhùn: ~13.1 tỷ
+                    "7808" => 13.1m * 1_000_000_000,    // CN Nậm Hàng: ~13.1 tỷ
                     _ => 15.0m * 1_000_000_000          // Default: ~15 tỷ
                 };
 
@@ -465,14 +465,14 @@ namespace TinhKhoanApp.Api.Services
                         "02" => 38.2m * 1_000_000_000,  // PGD 2: ~38.2 tỷ
                         _ => 156.4m * 1_000_000_000     // Hội Sở total: ~156.4 tỷ
                     },
-                    "7801" => 124.7m * 1_000_000_000,   // CN Tam Đường: ~124.7 tỷ
+                    "7801" => 124.7m * 1_000_000_000,   // CN Bình Lư: ~124.7 tỷ
                     "7802" => 108.2m * 1_000_000_000,   // CN Phong Thổ: ~108.2 tỷ
                     "7803" => 89.6m * 1_000_000_000,    // CN Sin Hồ: ~89.6 tỷ
-                    "7804" => 67.8m * 1_000_000_000,    // CN Mường Tè: ~67.8 tỷ
+                    "7804" => 67.8m * 1_000_000_000,    // CN Bum Tở: ~67.8 tỷ
                     "7805" => 118.9m * 1_000_000_000,   // CN Than Uyên: ~118.9 tỷ
-                    "7806" => 142.3m * 1_000_000_000,   // CN Thành Phố: ~142.3 tỷ
+                    "7806" => 142.3m * 1_000_000_000,   // CN Đoàn Kết: ~142.3 tỷ
                     "7807" => 105.6m * 1_000_000_000,   // CN Tân Uyên: ~105.6 tỷ
-                    "7808" => 78.4m * 1_000_000_000,    // CN Nậm Nhùn: ~78.4 tỷ
+                    "7808" => 78.4m * 1_000_000_000,    // CN Nậm Hàng: ~78.4 tỷ
                     _ => 90.0m * 1_000_000_000          // Default: ~90 tỷ
                 };
 
@@ -489,13 +489,27 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Mapping BranchId thành mã chi nhánh
+        /// Mapping BranchId thành mã chi nhánh - Hỗ trợ cả format cũ và mới
         /// </summary>
         private string GetBranchCode(string branchId)
         {
+            // Nếu format mới từ frontend (7800, 7800-01)
+            if (branchId.Contains("-"))
+            {
+                return branchId.Split('-')[0]; // Lấy phần trước dấu -
+            }
+
+            // Nếu đã là mã số thuần (7800, 7801, ...)
+            if (branchId.All(char.IsDigit) && branchId.Length == 4)
+            {
+                return branchId;
+            }
+
+            // Format cũ - mapping tên thành mã
             return branchId switch
             {
                 "HoiSo" => "7800",
+                // Tên cũ (để backward compatibility)
                 "CnTamDuong" => "7801",
                 "CnPhongTho" => "7802",
                 "CnSinHo" => "7803",
@@ -509,38 +523,81 @@ namespace TinhKhoanApp.Api.Services
                 "CnThanhPhoPgdSo1" => "7806",
                 "CnThanhPhoPgdSo2" => "7806",
                 "CnTanUyenPgdSo3" => "7807",
+                // Tên mới theo quy ước anh
+                "CnBinhLu" => "7801",
+                "CnPhongThoPgdSo5" => "7802",
+                "CnBumTo" => "7804",
+                "CnThanUyenPgdSo6" => "7805",
+                "CnDoanKet" => "7806",
+                "CnDoanKetPgdSo1" => "7806",
+                "CnDoanKetPgdSo2" => "7806",
+                "CnNamHang" => "7808",
                 _ => "7800" // Default Hội Sở
             };
         }
 
         /// <summary>
-        /// Mapping BranchId thành mã PGD cho DP01
+        /// Mapping BranchId thành mã PGD cho DP01 - Hỗ trợ cả format cũ và mới
         /// </summary>
         private string? GetPgdCode(string branchId)
         {
+            // Nếu format mới từ frontend (7800-01, 7806-02)
+            if (branchId.Contains("-"))
+            {
+                var parts = branchId.Split('-');
+                if (parts.Length == 2)
+                {
+                    return parts[1]; // Trả về phần sau dấu - (01, 02, ...)
+                }
+            }
+
+            // Format cũ - mapping tên thành mã PGD
             return branchId switch
             {
+                // Tên cũ (để backward compatibility)
                 "CnPhongThoPgdMuongSo" => "01",
                 "CnThanUyenPgdMuongThan" => "01",
                 "CnThanhPhoPgdSo1" => "01",
                 "CnThanhPhoPgdSo2" => "02",
                 "CnTanUyenPgdSo3" => "01",
+                // Tên mới theo quy ước anh
+                "CnPhongThoPgdSo5" => "01",
+                "CnThanUyenPgdSo6" => "01",
+                "CnDoanKetPgdSo1" => "01",
+                "CnDoanKetPgdSo2" => "02",
                 _ => null // Chi nhánh chính, không có PGD
             };
         }
 
         /// <summary>
-        /// Mapping BranchId thành mã TRCTCD cho LN01
+        /// Mapping BranchId thành mã TRCTCD cho LN01 - Hỗ trợ cả format cũ và mới
         /// </summary>
         private string? GetTrctCode(string branchId)
         {
+            // Nếu format mới từ frontend (7800-01, 7806-02)
+            if (branchId.Contains("-"))
+            {
+                var parts = branchId.Split('-');
+                if (parts.Length == 2)
+                {
+                    return parts[1]; // Trả về phần sau dấu - (01, 02, ...)
+                }
+            }
+
+            // Format cũ - mapping tên thành mã TRCTCD
             return branchId switch
             {
+                // Tên cũ (để backward compatibility)
                 "CnPhongThoPgdMuongSo" => "01",
                 "CnThanUyenPgdMuongThan" => "01",
                 "CnThanhPhoPgdSo1" => "01",
                 "CnThanhPhoPgdSo2" => "02",
                 "CnTanUyenPgdSo3" => "01",
+                // Tên mới theo quy ước anh
+                "CnPhongThoPgdSo5" => "01",
+                "CnThanUyenPgdSo6" => "01",
+                "CnDoanKetPgdSo1" => "01",
+                "CnDoanKetPgdSo2" => "02",
                 _ => null // Chi nhánh chính, không có TRCTCD
             };
         }
