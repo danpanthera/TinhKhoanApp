@@ -183,50 +183,134 @@ namespace TinhKhoanApp.Api.Services
         /// Tính toán Dư nợ cho vay từ dữ liệu LN01
         /// Công thức: Tổng DISBURSEMENT_AMOUNT theo chi nhánh và PGD
         /// </summary>
+        /// <summary>
+        /// Tính toán Dư nợ cho vay từ dữ liệu LN01
+        /// Công thức: Tổng DISBURSEMENT_AMOUNT theo chi nhánh từ file LN01 chính xác theo ngày
+        /// </summary>
         public async Task<decimal> CalculateDuNo(int unitId, DateTime date)
         {
             var startTime = DateTime.Now;
             try
             {
                 var unit = await _context.Units.FindAsync(unitId);
-                if (unit == null) return 0;
+                if (unit == null)
+                {
+                    _logger.LogWarning("Unit {UnitId} không tồn tại", unitId);
+                    return 0;
+                }
 
                 var branchCode = GetBranchCode(unit.Code);
-                _logger.LogInformation("Tính toán Dư nợ cho {UnitName} ngày {Date}", unit.Name, date.ToString("yyyy-MM-dd"));
+                _logger.LogInformation("Tính toán Dư nợ cho {UnitName} (Code: {BranchCode}) ngày {Date}",
+                    unit.Name, branchCode, date.ToString("yyyy-MM-dd"));
 
-                // TODO: Thay bằng query thực từ bảng LN01
-                var sampleData = GenerateSampleDuNoData(branchCode, date);
+                // Xác định ngày cụ thể cần tìm file LN01 dựa trên chỉ tiêu lũy kế
+                var targetStatementDate = GetTargetStatementDate(date);
 
-                // Tính tổng DISBURSEMENT_AMOUNT
-                var totalDisbursement = sampleData.Sum(d => (decimal)d.DisbursementAmount);
+                if (targetStatementDate == null)
+                {
+                    // Các tháng/năm khác chưa có dữ liệu
+                    var errorMessage = GetDataNotAvailableMessage(date);
+                    _logger.LogWarning(errorMessage);
 
-                // Phân tích theo nhóm nợ
-                var byGroup = sampleData
-                    .GroupBy(d => d.NhomNo)
-                    .Select(g => new
+                    await SaveCalculationError("DuNo", unitId, date, errorMessage, startTime);
+                    throw new InvalidOperationException(errorMessage);
+                }
+
+                // Tìm file import LN01 có StatementDate chính xác
+                var latestImportRecord = await _context.ImportedDataRecords
+                    .Where(r => r.StatementDate.HasValue &&
+                               r.StatementDate.Value.Date == targetStatementDate.Value.Date &&
+                               r.Status == "Completed" &&
+                               (r.Category.Contains("LN01") || r.Category.Contains("Dư nợ")))
+                    .OrderByDescending(r => r.ImportDate) // Sắp xếp theo ngày import nếu có nhiều file cùng ngày
+                    .FirstOrDefaultAsync();
+
+                if (latestImportRecord == null)
+                {
+                    var errorMessage = $"Không tìm thấy file import LN01 cho ngày {targetStatementDate:yyyy-MM-dd}. Vui lòng kiểm tra dữ liệu đã được import chưa.";
+                    _logger.LogWarning(errorMessage);
+
+                    await SaveCalculationError("DuNo", unitId, date, errorMessage, startTime);
+                    throw new InvalidOperationException(errorMessage);
+                }
+
+                // Lấy dữ liệu chi tiết từ file import mới nhất
+                var importedItems = await _context.ImportedDataItems
+                    .Where(i => i.ImportedDataRecordId == latestImportRecord.Id)
+                    .Select(i => i.RawData)
+                    .ToListAsync();
+
+                decimal totalDisbursement = 0;
+                var processedRecords = 0;
+                var nhomNoBreakdown = new Dictionary<string, decimal>();
+
+                foreach (var rawDataJson in importedItems)
+                {
+                    try
                     {
-                        NhomNo = g.Key,
-                        Count = g.Count(),
-                        Total = g.Sum(d => (decimal)d.DisbursementAmount)
-                    })
-                    .ToList();
+                        // Parse JSON data để lấy thông tin khoản vay
+                        var jsonDoc = JsonDocument.Parse(rawDataJson);
+                        var root = jsonDoc.RootElement;
+
+                        // Kiểm tra có thuộc chi nhánh đang tính không
+                        var belongsToBranch = root.TryGetProperty("BRANCH_CODE", out var branchElement) &&
+                                            branchElement.GetString() == branchCode;
+
+                        if (!belongsToBranch) continue;
+
+                        // Lấy số tiền giải ngân
+                        if (root.TryGetProperty("DISBURSEMENT_AMOUNT", out var disbursementElement) ||
+                            root.TryGetProperty("DisbursementAmount", out disbursementElement) ||
+                            root.TryGetProperty("disbursement_amount", out disbursementElement))
+                        {
+                            if (decimal.TryParse(disbursementElement.GetString(), out var disbursement))
+                            {
+                                totalDisbursement += disbursement;
+                                processedRecords++;
+
+                                // Phân tích theo nhóm nợ
+                                var nhomNo = "01"; // Default
+                                if (root.TryGetProperty("NHOM_NO", out var nhomNoElement) ||
+                                    root.TryGetProperty("NhomNo", out nhomNoElement))
+                                {
+                                    nhomNo = nhomNoElement.GetString() ?? "01";
+                                }
+
+                                if (!nhomNoBreakdown.ContainsKey(nhomNo))
+                                    nhomNoBreakdown[nhomNo] = 0;
+                                nhomNoBreakdown[nhomNo] += disbursement;
+                            }
+                        }
+                    }
+                    catch (JsonException ex)
+                    {
+                        _logger.LogWarning("Lỗi parse JSON data LN01: {Error}", ex.Message);
+                        continue;
+                    }
+                }
+
+                var finalValue = totalDisbursement / 1_000_000m; // Chuyển sang triệu VND
 
                 var calculationDetails = new
                 {
-                    Formula = "Tổng DISBURSEMENT_AMOUNT từ LN01",
+                    Formula = "Tổng DISBURSEMENT_AMOUNT từ file LN01 chính xác theo ngày",
+                    SourceFile = latestImportRecord.FileName,
+                    StatementDate = latestImportRecord.StatementDate,
+                    ImportDate = latestImportRecord.ImportDate,
                     TotalDisbursement = totalDisbursement,
-                    ByNhomNo = byGroup,
-                    TotalRecords = sampleData.Count,
+                    FinalValue = finalValue,
+                    Unit = "Triệu VND",
+                    ProcessedRecords = processedRecords,
+                    NhomNoBreakdown = nhomNoBreakdown,
                     CalculationDate = date,
                     UnitInfo = new { unit.Code, unit.Name },
                     BranchCode = branchCode
                 };
 
-                var finalValue = totalDisbursement / 1_000_000m; // Chuyển sang triệu VND
-
                 await SaveCalculation("DuNo", unitId, date, finalValue, calculationDetails, startTime);
 
-                _logger.LogInformation("Hoàn thành tính Dư nợ: {Value} triệu VND", finalValue);
+                _logger.LogInformation("Hoàn thành tính Dư nợ từ file thực: {Value} triệu VND (từ {Records} bản ghi)",
+                    finalValue, processedRecords);
                 return finalValue;
             }
             catch (Exception ex)
