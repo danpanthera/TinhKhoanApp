@@ -223,8 +223,10 @@
               </div>
               <div class="progress-details">
                 <span class="progress-percentage">{{ uploadProgress }}%</span>
-                <span class="progress-file-info" v-if="currentUploadingFile">
-                  {{ currentUploadingFile }} ({{ uploadedFiles }}/{{ totalFiles }})
+                <span class="progress-file-info" v-if="currentUploadingFile && totalFiles > 0">
+                  <strong>{{ currentUploadingFile }}</strong>
+                  <br>
+                  <small>Đang xử lý file {{ uploadedFiles }}/{{ totalFiles }}</small>
                 </span>
               </div>
             </div>
@@ -435,10 +437,13 @@ const selectedDataType = ref(null)
 const selectedFiles = ref([])
 const importNotes = ref('')
 const uploading = ref(false)
+// State cho upload progress tracking chi tiết
 const uploadProgress = ref(0)
 const currentUploadingFile = ref('')
 const uploadedFiles = ref(0)
 const totalFiles = ref(0)
+const uploadStartTime = ref(null)
+const estimatedTimePerFile = ref(5000) // 5 giây ước tính mỗi file
 const statementDateFormatted = computed(() => {
   if (!selectedFromDate.value) return ''
   return `(${formatDate(selectedFromDate.value)})`
@@ -520,14 +525,24 @@ const showSuccess = (message, timeout = 3000) => {
   }, timeout)
 }
 
-// Upload status text
+// Upload status text với thông tin chi tiết
 const getUploadStatusText = () => {
-  if (uploadProgress.value === 0) return 'Đang chuẩn bị...'
-  if (uploadProgress.value < 20) return 'Đang tải dữ liệu lên...'
-  if (uploadProgress.value < 50) return 'Đang xử lý dữ liệu...'
-  if (uploadProgress.value < 90) return 'Đang lưu dữ liệu...'
-  if (uploadProgress.value < 100) return 'Sắp hoàn thành...'
-  return 'Đã hoàn thành!'
+  if (uploadProgress.value === 0) return 'Đang chuẩn bị upload...'
+
+  if (totalFiles.value <= 1) {
+    // Single file upload
+    if (uploadProgress.value < 20) return 'Đang tải file lên server...'
+    if (uploadProgress.value < 60) return 'Đang xử lý và phân tích dữ liệu...'
+    if (uploadProgress.value < 90) return 'Đang lưu vào cơ sở dữ liệu...'
+    if (uploadProgress.value < 100) return 'Sắp hoàn thành...'
+  } else {
+    // Multiple files upload
+    if (uploadProgress.value < 15) return `Đang tải file ${uploadedFiles}/${totalFiles} lên server...`
+    if (uploadProgress.value < 85) return `Đang xử lý file ${uploadedFiles}/${totalFiles}...`
+    if (uploadProgress.value < 100) return `Đang hoàn tất xử lý ${totalFiles} files...`
+  }
+
+  return 'Đã hoàn thành tất cả!'
 }
 
 // Format date từ chuỗi ISO
@@ -1255,25 +1270,54 @@ const performImport = async () => {
 
     currentUploadingFile.value = selectedFiles.value[0].name
 
-    // Chuẩn bị options cho API call
+    // Reset progress tracking
+    uploadProgress.value = 0
+    uploadedFiles.value = 0
+    uploadStartTime.value = Date.now()
+
+    // Cập nhật tổng số files để hiển thị
+    totalFiles.value = selectedFiles.value.length
+
+    // Ước tính thời gian dựa trên size file
+    const avgFileSize = selectedFiles.value.reduce((sum, f) => sum + f.size, 0) / selectedFiles.value.length
+    estimatedTimePerFile.value = Math.max(3000, Math.min(15000, avgFileSize / 50000)) // 3-15 giây tùy size
+
+    // Chuẩn bị options cho API call với progress tracking cải tiến
     const options = {
       notes: importNotes.value,
       statementDate: selectedFromDate.value,
       onProgress: (progressInfo) => {
-        // Cập nhật thông tin progress
+        // Cập nhật thông tin progress chung từ backend
         uploadProgress.value = progressInfo.percentage
 
-        // Cập nhật thông tin file đang upload
-        if (progressInfo.percentage > 30 && progressInfo.percentage < 60 && selectedFiles.value.length > 1) {
-          currentUploadingFile.value = selectedFiles.value[1].name
-          uploadedFiles.value = 1
-        } else if (progressInfo.percentage >= 60 && selectedFiles.value.length > 2) {
-          currentUploadingFile.value = selectedFiles.value[2].name
-          uploadedFiles.value = 2
-        } else {
-          currentUploadingFile.value = selectedFiles.value[0].name
-          uploadedFiles.value = progressInfo.percentage >= 95 ? selectedFiles.value.length : 0
+        // Tính toán file đang được xử lý dựa trên tiến độ và thời gian
+        const elapsedTime = Date.now() - uploadStartTime.value
+        const estimatedCurrentFile = Math.min(
+          Math.floor(elapsedTime / estimatedTimePerFile.value),
+          Math.floor(progressInfo.percentage / (100 / selectedFiles.value.length))
+        )
+
+        // Đảm bảo index không vượt quá số file có sẵn
+        const fileIndex = Math.max(0, Math.min(estimatedCurrentFile, selectedFiles.value.length - 1))
+
+        // Cập nhật file hiện tại đang được xử lý
+        if (fileIndex >= 0 && fileIndex < selectedFiles.value.length) {
+          currentUploadingFile.value = selectedFiles.value[fileIndex].name
+
+          // Logic cập nhật số file đã upload dựa trên progress
+          if (progressInfo.percentage < 10) {
+            uploadedFiles.value = 0
+          } else if (progressInfo.percentage >= 95) {
+            uploadedFiles.value = selectedFiles.value.length
+            currentUploadingFile.value = "Hoàn thành tất cả files"
+          } else {
+            // Tính toán số file đã hoàn thành dựa trên progress
+            const completedFiles = Math.floor((progressInfo.percentage / 100) * selectedFiles.value.length)
+            uploadedFiles.value = Math.min(completedFiles + 1, selectedFiles.value.length) // +1 cho file đang xử lý
+          }
         }
+
+        console.log(`📊 Upload Progress: ${progressInfo.percentage}%, File ${uploadedFiles.value}/${totalFiles.value}: ${currentUploadingFile.value}`)
       }
     }
 

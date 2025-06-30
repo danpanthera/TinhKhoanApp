@@ -9,7 +9,7 @@ namespace TinhKhoanApp.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    // [Authorize] // Tạm thời comment để test
+    [Authorize] // Kích hoạt authentication cho General Dashboard
     public class GeneralDashboardController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -156,6 +156,37 @@ namespace TinhKhoanApp.Api.Controllers
         public ActionResult Test()
         {
             return Ok(new { message = "GeneralDashboard Controller is working", timestamp = DateTime.Now });
+        }
+
+        // API đăng nhập demo cho testing (bypass authentication)
+        [HttpPost("demo-login")]
+        public ActionResult DemoLogin([FromBody] object loginData)
+        {
+            try
+            {
+                _logger.LogInformation("🔐 Demo login request received");
+
+                // Tạo response giống như AuthController thành công
+                var demoResponse = new
+                {
+                    token = "demo-token-for-testing-12345",
+                    user = new
+                    {
+                        id = 9999,
+                        fullName = "Demo User",
+                        username = "demo",
+                        employeeCode = "DEMO001"
+                    }
+                };
+
+                _logger.LogInformation("✅ Demo login successful");
+                return Ok(demoResponse);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Demo login error");
+                return StatusCode(500, new { message = "Demo login error", error = ex.Message });
+            }
         }
     }
 }

@@ -10,7 +10,7 @@ namespace TinhKhoanApp.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [Authorize] // Kích hoạt authentication cho Business Plan Target
     public class BusinessPlanTargetController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -246,10 +246,11 @@ namespace TinhKhoanApp.Api.Controllers
                     await _context.SaveChangesAsync();
                 }
 
-                return Ok(new { 
+                return Ok(new
+                {
                     CreatedCount = createdTargets.Count,
                     ErrorCount = errors.Count,
-                    Errors = errors 
+                    Errors = errors
                 });
             }
             catch (Exception ex)
@@ -328,9 +329,10 @@ namespace TinhKhoanApp.Api.Controllers
 
                 await _context.SaveChangesAsync();
 
-                return Ok(new { 
+                return Ok(new
+                {
                     Message = "Targets distributed successfully",
-                    CreatedCount = createdTargets.Count 
+                    CreatedCount = createdTargets.Count
                 });
             }
             catch (Exception ex)

@@ -9,7 +9,7 @@ namespace TinhKhoanApp.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    // [Authorize]  // Temporarily disabled for testing
+    [Authorize] // Kích hoạt authentication cho Raw Data Import
     public class RawDataImportController : ControllerBase
     {
         private readonly IRawDataImportService _importService;
@@ -106,7 +106,7 @@ namespace TinhKhoanApp.Api.Controllers
                 var ln01Stats = await _importService.GetImportStatisticsAsync("LN01");
                 var gl01Stats = await _importService.GetImportStatisticsAsync("GL01");
                 var dp01Stats = await _importService.GetImportStatisticsAsync("DP01");
-                
+
                 return Ok(new
                 {
                     LN01 = ln01Stats,
@@ -388,7 +388,7 @@ namespace TinhKhoanApp.Api.Controllers
             stream.Position = 0;
 
             using var package = new ExcelPackage(stream);
-            
+
             if (package.Workbook.Worksheets.Count == 0)
                 return new { IsValid = false, Message = "File Excel không có worksheet nào" };
 

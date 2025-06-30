@@ -129,6 +129,26 @@ internal class Program
                 ValidIssuer = builder.Configuration["Jwt:Issuer"],
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"] ?? "default-secret-key"))
             };
+
+            // Thêm logging cho authentication events
+            options.Events = new JwtBearerEvents
+            {
+                OnAuthenticationFailed = context =>
+                {
+                    Console.WriteLine($"🔒 JWT Authentication failed: {context.Exception.Message}");
+                    return Task.CompletedTask;
+                },
+                OnTokenValidated = context =>
+                {
+                    Console.WriteLine($"✅ JWT Token validated for user: {context.Principal?.Identity?.Name}");
+                    return Task.CompletedTask;
+                },
+                OnChallenge = context =>
+                {
+                    Console.WriteLine($"⚠️ JWT Challenge triggered: {context.Error} - {context.ErrorDescription}");
+                    return Task.CompletedTask;
+                }
+            };
         });        // Register services        // KPI services removed during cleanup        // 🗄️ Đăng ký Raw Data Import Service
         builder.Services.AddScoped<IRawDataImportService, RawDataImportService>();
         builder.Services.AddScoped<IExtendedRawDataImportService, ExtendedRawDataImportService>();

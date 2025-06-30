@@ -9,7 +9,7 @@ namespace TinhKhoanApp.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [Authorize] // Kích hoạt authentication cho Dashboard
     public class DashboardController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -26,7 +26,15 @@ namespace TinhKhoanApp.Api.Controllers
             _logger = logger;
         }
 
+        [HttpGet("test-auth")]
+        [Authorize] // Test authentication
+        public IActionResult TestAuth()
+        {
+            return Ok(new { message = "Authentication successful", user = User.Identity?.Name });
+        }
+
         [HttpGet("indicators")]
+        [Authorize] // Bắt buộc authentication cho endpoint này
         public async Task<ActionResult<IEnumerable<DashboardIndicator>>> GetIndicators()
         {
             try
@@ -382,7 +390,6 @@ namespace TinhKhoanApp.Api.Controllers
         /// Endpoint này được gọi từ frontend CalculationDashboard.vue
         /// </summary>
         [HttpGet("calculation-results")]
-        [AllowAnonymous] // Cho phép truy cập không cần auth để test
         public async Task<ActionResult> GetCalculationResults(
             [FromQuery] int year,
             [FromQuery] int? quarter = null,
