@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models.Dashboard;
+using TinhKhoanApp.Api.Utils;
 using System.Text.Json;
 
 namespace TinhKhoanApp.Api.Services
@@ -65,15 +66,7 @@ namespace TinhKhoanApp.Api.Services
                 // Xác định ngày cụ thể cần tìm file dựa trên chỉ tiêu lũy kế
                 var targetStatementDate = GetTargetStatementDate(date);
 
-                if (targetStatementDate == null)
-                {
-                    // Các tháng/năm khác chưa có dữ liệu
-                    var errorMessage = GetDataNotAvailableMessage(date);
-                    _logger.LogWarning(errorMessage);
-
-                    await SaveCalculationError("NguonVon", unitId, date, errorMessage, startTime);
-                    throw new InvalidOperationException(errorMessage);
-                }
+                _logger.LogInformation("Tìm file DP01 có StatementDate = {TargetDate}", targetStatementDate.Value.ToString("yyyy-MM-dd"));
 
                 // Tìm file import DP01 có StatementDate chính xác
                 var latestImportRecord = await _context.ImportedDataRecords
@@ -206,15 +199,7 @@ namespace TinhKhoanApp.Api.Services
                 // Xác định ngày cụ thể cần tìm file LN01 dựa trên chỉ tiêu lũy kế
                 var targetStatementDate = GetTargetStatementDate(date);
 
-                if (targetStatementDate == null)
-                {
-                    // Các tháng/năm khác chưa có dữ liệu
-                    var errorMessage = GetDataNotAvailableMessage(date);
-                    _logger.LogWarning(errorMessage);
-
-                    await SaveCalculationError("DuNo", unitId, date, errorMessage, startTime);
-                    throw new InvalidOperationException(errorMessage);
-                }
+                _logger.LogInformation("Tìm file LN01 có StatementDate = {TargetDate}", targetStatementDate.Value.ToString("yyyy-MM-dd"));
 
                 // Tìm file import LN01 có StatementDate chính xác
                 var latestImportRecord = await _context.ImportedDataRecords
@@ -344,15 +329,7 @@ namespace TinhKhoanApp.Api.Services
                 // Xác định ngày cụ thể cần tìm file LN01 dựa trên chỉ tiêu lũy kế
                 var targetStatementDate = GetTargetStatementDate(date);
 
-                if (targetStatementDate == null)
-                {
-                    // Các tháng/năm khác chưa có dữ liệu
-                    var errorMessage = GetDataNotAvailableMessage(date);
-                    _logger.LogWarning(errorMessage);
-
-                    await SaveCalculationError("TyLeNoXau", unitId, date, errorMessage, startTime);
-                    throw new InvalidOperationException(errorMessage);
-                }
+                _logger.LogInformation("Tìm file LN01 có StatementDate = {TargetDate}", targetStatementDate.Value.ToString("yyyy-MM-dd"));
 
                 // Tìm file import LN01 có StatementDate chính xác (sử dụng lại file đã có từ CalculateDuNo)
                 var latestImportRecord = await _context.ImportedDataRecords
@@ -474,8 +451,8 @@ namespace TinhKhoanApp.Api.Services
         /// TODO: Cần dữ liệu thực từ bảng import để có công thức chính xác
         /// </summary>
         /// <summary>
-        /// Tính toán Thu hồi XLRR từ dữ liệu LN01
-        /// Công thức: Tổng số tiền thu hồi từ nợ đã xử lý rủi ro theo chi nhánh từ file LN01 chính xác theo ngày
+        /// Tính toán Thu hồi XLRR từ dữ liệu ThuXLRR
+        /// Công thức: Tổng số tiền thu hồi từ nợ đã xử lý rủi ro theo chi nhánh từ bảng ThuXLRR chính xác theo ngày
         /// </summary>
         public async Task<decimal> CalculateThuHoiXLRR(int unitId, DateTime date)
         {
@@ -496,36 +473,28 @@ namespace TinhKhoanApp.Api.Services
                 // Xác định ngày cụ thể cần tìm file dựa trên chỉ tiêu lũy kế
                 var targetStatementDate = GetTargetStatementDate(date);
 
-                if (targetStatementDate == null)
-                {
-                    // Các tháng/năm khác chưa có dữ liệu
-                    var errorMessage = GetDataNotAvailableMessage(date);
-                    _logger.LogWarning(errorMessage);
+                _logger.LogInformation("Tìm file ThuXLRR có StatementDate = {TargetDate}", targetStatementDate.Value.ToString("yyyy-MM-dd"));
 
-                    await SaveCalculationError("ThuHoiXLRR", unitId, date, errorMessage, startTime);
-                    throw new InvalidOperationException(errorMessage);
-                }
-
-                // Tìm file import LN01 có StatementDate chính xác
+                // Tìm file import ThuXLRR có StatementDate chính xác
                 var latestImportRecord = await _context.ImportedDataRecords
                     .Where(r => r.StatementDate.HasValue &&
                                r.StatementDate.Value.Date == targetStatementDate.Value.Date &&
                                r.Status == "Completed" &&
-                               (r.Category.Contains("LN01") || r.Category.Contains("Dư nợ")))
+                               (r.Category.Contains("ThuXLRR") || r.Category.Contains("Thu hồi XLRR")))
                     .OrderByDescending(r => r.ImportDate)
                     .FirstOrDefaultAsync();
 
                 if (latestImportRecord == null)
                 {
-                    var errorMessage = $"Không tìm thấy file import LN01 cho ngày {targetStatementDate:yyyy-MM-dd}. Vui lòng kiểm tra dữ liệu đã được import chưa.";
+                    var errorMessage = $"Không tìm thấy file import ThuXLRR cho ngày {targetStatementDate:yyyy-MM-dd}. Vui lòng kiểm tra dữ liệu đã được import chưa.";
                     _logger.LogWarning(errorMessage);
 
                     await SaveCalculationError("ThuHoiXLRR", unitId, date, errorMessage, startTime);
                     throw new InvalidOperationException(errorMessage);
                 }
 
-                // Lấy dữ liệu chi tiết từ file import mới nhất
-                var importedItems = await _context.ImportedDataItems
+                // Lấy dữ liệu chi tiết từ bảng ThuXLRR
+                var importedItems = await _context.ThuXLRR
                     .Where(i => i.ImportedDataRecordId == latestImportRecord.Id)
                     .Select(i => i.RawData)
                     .ToListAsync();
@@ -537,6 +506,8 @@ namespace TinhKhoanApp.Api.Services
                 {
                     try
                     {
+                        if (string.IsNullOrEmpty(rawDataJson)) continue;
+
                         var jsonDoc = JsonDocument.Parse(rawDataJson);
                         var root = jsonDoc.RootElement;
 
@@ -549,7 +520,8 @@ namespace TinhKhoanApp.Api.Services
                         // Tìm trường thu hồi XLRR - có thể là RECOVERED_AMOUNT hoặc tương tự
                         if (root.TryGetProperty("RECOVERED_AMOUNT", out var recoveredElement) ||
                             root.TryGetProperty("RecoveredAmount", out recoveredElement) ||
-                            root.TryGetProperty("recovered_amount", out recoveredElement))
+                            root.TryGetProperty("recovered_amount", out recoveredElement) ||
+                            root.TryGetProperty("SO_TIEN_THU_HOI", out recoveredElement))
                         {
                             if (decimal.TryParse(recoveredElement.GetString(), out var recoveredAmount))
                             {
@@ -569,7 +541,7 @@ namespace TinhKhoanApp.Api.Services
 
                 var calculationDetails = new
                 {
-                    Formula = "Tổng RECOVERED_AMOUNT từ file LN01 mới nhất theo chi nhánh",
+                    Formula = "Tổng RECOVERED_AMOUNT từ bảng ThuXLRR mới nhất theo chi nhánh",
                     SourceFile = latestImportRecord.FileName,
                     StatementDate = latestImportRecord.StatementDate,
                     ImportDate = latestImportRecord.ImportDate,
@@ -584,7 +556,7 @@ namespace TinhKhoanApp.Api.Services
 
                 await SaveCalculation("ThuHoiXLRR", unitId, date, finalValue, calculationDetails, startTime);
 
-                _logger.LogInformation("Hoàn thành tính Thu hồi XLRR từ file thực: {Value} triệu VND (từ {Records} bản ghi)",
+                _logger.LogInformation("Hoàn thành tính Thu hồi XLRR từ bảng ThuXLRR: {Value} triệu VND (từ {Records} bản ghi)",
                     finalValue, processedRecords);
                 return finalValue;
             }
@@ -597,30 +569,139 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Tính toán Thu dịch vụ
-        /// TODO: Chờ anh cung cấp công thức chi tiết
+        /// Tính toán Thu dịch vụ từ dữ liệu GLCB41
+        /// Công thức: Tổng thu nhập từ các tài khoản dịch vụ theo chi nhánh từ file GLCB41 chính xác theo ngày
         /// </summary>
         public async Task<decimal> CalculateThuDichVu(int unitId, DateTime date)
         {
             var startTime = DateTime.Now;
             try
             {
-                _logger.LogInformation("Tính toán Thu dịch vụ - chờ công thức cụ thể");
+                var unit = await _context.Units.FindAsync(unitId);
+                if (unit == null)
+                {
+                    _logger.LogWarning("Unit {UnitId} không tồn tại", unitId);
+                    return 0;
+                }
 
-                // Tạm thời trả về giá trị mẫu (triệu VND)
-                var sampleValue = new Random().Next(50, 200);
+                var branchCode = GetBranchCode(unit.Code);
+                _logger.LogInformation("Tính toán Thu dịch vụ cho {UnitName} (Code: {BranchCode}) ngày {Date}",
+                    unit.Name, branchCode, date.ToString("yyyy-MM-dd"));
+
+                // Xác định ngày cụ thể cần tìm file dựa trên chỉ tiêu lũy kế
+                var targetStatementDate = GetTargetStatementDate(date);
+
+                _logger.LogInformation("Tìm file GLCB41 có StatementDate = {TargetDate}", targetStatementDate.Value.ToString("yyyy-MM-dd"));
+
+                // Tìm file import GLCB41 có StatementDate chính xác
+                var latestImportRecord = await _context.ImportedDataRecords
+                    .Where(r => r.StatementDate.HasValue &&
+                               r.StatementDate.Value.Date == targetStatementDate.Value.Date &&
+                               r.Status == "Completed" &&
+                               (r.Category.Contains("GLCB41") || r.Category.Contains("Thu dịch vụ")))
+                    .OrderByDescending(r => r.ImportDate)
+                    .FirstOrDefaultAsync();
+
+                if (latestImportRecord == null)
+                {
+                    var errorMessage = $"Không tìm thấy file import GLCB41 cho ngày {targetStatementDate:yyyy-MM-dd}. Vui lòng kiểm tra dữ liệu đã được import chưa.";
+                    _logger.LogWarning(errorMessage);
+
+                    await SaveCalculationError("ThuDichVu", unitId, date, errorMessage, startTime);
+                    throw new InvalidOperationException(errorMessage);
+                }
+
+                // Lấy dữ liệu chi tiết từ file import mới nhất
+                var importedItems = await _context.ImportedDataItems
+                    .Where(i => i.ImportedDataRecordId == latestImportRecord.Id)
+                    .Select(i => i.RawData)
+                    .ToListAsync();
+
+                decimal totalServiceRevenue = 0;
+                var processedRecords = 0;
+
+                // Các tài khoản thu dịch vụ (có thể cần điều chỉnh theo thực tế)
+                var serviceRevenueAccounts = new[] { "7111", "7112", "7113", "7114", "7115", "7121", "7122" };
+
+                foreach (var rawDataJson in importedItems)
+                {
+                    try
+                    {
+                        if (string.IsNullOrEmpty(rawDataJson)) continue;
+
+                        var jsonDoc = JsonDocument.Parse(rawDataJson);
+                        var root = jsonDoc.RootElement;
+
+                        // Kiểm tra có thuộc chi nhánh đang tính không
+                        var belongsToBranch = root.TryGetProperty("BRANCH_CODE", out var branchElement) &&
+                                            branchElement.GetString() == branchCode;
+
+                        if (!belongsToBranch) continue;
+
+                        // Lấy thông tin tài khoản
+                        if (root.TryGetProperty("ACCOUNT_CODE", out var accountCodeElement) ||
+                            root.TryGetProperty("AccountCode", out accountCodeElement) ||
+                            root.TryGetProperty("account_code", out accountCodeElement))
+                        {
+                            var accountCode = accountCodeElement.GetString() ?? "";
+
+                            // Chỉ tính các tài khoản thu dịch vụ
+                            if (serviceRevenueAccounts.Any(acc => accountCode.StartsWith(acc)))
+                            {
+                                // Lấy số dư Credit (thu nhập dịch vụ thường có Credit > Debit)
+                                decimal creditAmount = 0, debitAmount = 0;
+
+                                if (root.TryGetProperty("CREDIT_AMOUNT", out var creditElement) ||
+                                    root.TryGetProperty("CreditAmount", out creditElement) ||
+                                    root.TryGetProperty("credit_amount", out creditElement))
+                                {
+                                    decimal.TryParse(creditElement.GetString(), out creditAmount);
+                                }
+
+                                if (root.TryGetProperty("DEBIT_AMOUNT", out var debitElement) ||
+                                    root.TryGetProperty("DebitAmount", out debitElement) ||
+                                    root.TryGetProperty("debit_amount", out debitElement))
+                                {
+                                    decimal.TryParse(debitElement.GetString(), out debitAmount);
+                                }
+
+                                // Thu dịch vụ = Credit - Debit
+                                var serviceAmount = creditAmount - debitAmount;
+                                totalServiceRevenue += serviceAmount;
+                                processedRecords++;
+                            }
+                        }
+                    }
+                    catch (JsonException ex)
+                    {
+                        _logger.LogWarning("Lỗi parse JSON dữ liệu import: {Error}", ex.Message);
+                        continue;
+                    }
+                }
+
+                var finalValue = totalServiceRevenue / 1_000_000m; // Chuyển sang triệu VND
 
                 var calculationDetails = new
                 {
-                    Formula = "Chờ công thức từ anh",
-                    Note = "Tính năng đang phát triển - đơn vị: Triệu VND",
-                    SampleValue = sampleValue,
+                    Formula = "Tổng (Credit - Debit) từ các tài khoản thu dịch vụ trong GLCB41",
+                    SourceFile = latestImportRecord.FileName,
+                    StatementDate = latestImportRecord.StatementDate,
+                    ImportDate = latestImportRecord.ImportDate,
+                    TotalServiceRevenue = totalServiceRevenue,
+                    FinalValue = finalValue,
                     Unit = "Triệu VND",
-                    CalculationDate = date
+                    ProcessedRecords = processedRecords,
+                    ServiceRevenueAccounts = serviceRevenueAccounts,
+                    CalculationDate = date,
+                    UnitInfo = new { unit.Code, unit.Name },
+                    BranchCode = branchCode
                 };
 
-                await SaveCalculation("ThuDichVu", unitId, date, sampleValue, calculationDetails, startTime);
-                return sampleValue;
+                await SaveCalculation("ThuDichVu", unitId, date, finalValue, calculationDetails, startTime);
+
+                _logger.LogInformation("Hoàn thành tính Thu dịch vụ từ file GLCB41: {Value} triệu VND (từ {Records} bản ghi)",
+                    finalValue, processedRecords);
+                return finalValue;
             }
             catch (Exception ex)
             {
@@ -653,15 +734,7 @@ namespace TinhKhoanApp.Api.Services
                 // Xác định ngày cụ thể cần tìm file dựa trên chỉ tiêu lũy kế
                 var targetStatementDate = GetTargetStatementDate(date);
 
-                if (targetStatementDate == null)
-                {
-                    // Các tháng/năm khác chưa có dữ liệu
-                    var errorMessage = GetDataNotAvailableMessage(date);
-                    _logger.LogWarning(errorMessage);
-
-                    await SaveCalculationError("LoiNhuan", unitId, date, errorMessage, startTime);
-                    throw new InvalidOperationException(errorMessage);
-                }
+                _logger.LogInformation("Tìm file GLCB41 có StatementDate = {TargetDate}", targetStatementDate.Value.ToString("yyyy-MM-dd"));
 
                 // Tìm file import GLCB41 có StatementDate chính xác
                 var latestImportRecord = await _context.ImportedDataRecords
@@ -951,10 +1024,10 @@ namespace TinhKhoanApp.Api.Services
         {
             return indicatorCode switch
             {
-                "HuyDong" => "DP01",
+                "HuyDong" or "NguonVon" => "DP01",
                 "DuNo" or "TyLeNoXau" => "LN01",
-                "LoiNhuan" => "GLCB41",
-                "ThuHoiXLRR" or "ThuDichVu" => "TBD", // To Be Determined
+                "ThuHoiXLRR" => "ThuXLRR",
+                "ThuDichVu" or "LoiNhuan" => "GLCB41",
                 _ => "Unknown"
             };
         }
@@ -1090,7 +1163,7 @@ namespace TinhKhoanApp.Api.Services
                 "HuyDong" => "DP01",
                 "DuNo" => "LN01",
                 "TyLeNoXau" => "LN01",
-                "ThuHoiXLRR" => "GLCB41",
+                "ThuHoiXLRR" => "ThuXLRR",
                 "ThuDichVu" => "GLCB41",
                 "LoiNhuan" => "GLCB41",
                 _ => "Unknown"
@@ -1098,24 +1171,27 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Helper method: Xác định ngày Statement cụ thể dựa trên ngày được chọn
-        /// Chỉ tiêu lũy kế: chỉ có dữ liệu cho 30/4/2025 và 31/12/2024
+        /// Helper method: Xác định ngày Statement cụ thể dựa trên kỳ được chọn
+        /// Quy ước: Nếu chọn năm -> ngày cuối năm, nếu chọn tháng -> ngày cuối tháng, nếu chọn ngày cụ thể -> ngày đó
         /// </summary>
         private DateTime? GetTargetStatementDate(DateTime selectedDate)
         {
-            if (selectedDate.Year == 2025 && selectedDate.Month == 4)
+            // Kiểm tra các loại kỳ:
+
+            // 1. Nếu chọn cả tháng và ngày cụ thể (ngày != 1) -> lấy chính ngày đó
+            if (selectedDate.Day > 1)
             {
-                // Tháng 4/2025 -> file ngày 30/4/2025
-                return new DateTime(2025, 4, 30);
-            }
-            else if (selectedDate.Year == 2024 && (selectedDate.Month == 12 || selectedDate.Month == 0))
-            {
-                // Tháng 12/2024 hoặc năm 2024 -> file ngày 31/12/2024
-                return new DateTime(2024, 12, 31);
+                return selectedDate.Date;
             }
 
-            // Các tháng/năm khác chưa có dữ liệu
-            return null;
+            // 2. Nếu chọn tháng (ngày = 1) -> lấy ngày cuối tháng
+            if (selectedDate.Month > 0 && selectedDate.Day == 1)
+            {
+                return new DateTime(selectedDate.Year, selectedDate.Month, DateTime.DaysInMonth(selectedDate.Year, selectedDate.Month));
+            }
+
+            // 3. Nếu chọn năm (không chỉ định tháng) -> lấy ngày cuối năm (31/12)
+            return new DateTime(selectedDate.Year, 12, 31);
         }
 
         /// <summary>
@@ -1123,8 +1199,9 @@ namespace TinhKhoanApp.Api.Services
         /// </summary>
         private string GetDataNotAvailableMessage(DateTime selectedDate)
         {
-            return $"Chưa có dữ liệu file cho tháng {selectedDate.Month}/{selectedDate.Year}. " +
-                   "Hiện tại chỉ có dữ liệu cho tháng 4/2025 và 12/2024.";
+            var targetDate = GetTargetStatementDate(selectedDate);
+            return $"Chưa có dữ liệu file cho ngày {targetDate:yyyy-MM-dd} (tương ứng với kỳ {selectedDate.Month}/{selectedDate.Year}). " +
+                   "Vui lòng kiểm tra xem file dữ liệu đã được import chưa hoặc chọn kỳ khác.";
         }
 
     }

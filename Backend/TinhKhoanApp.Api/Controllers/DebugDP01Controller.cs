@@ -258,7 +258,7 @@ namespace TinhKhoanApp.Api.Controllers
                                         TaiKhoan = taiKhoan,
                                         Balance = balance,
                                         IsExcluded = isExcluded,
-                                        BalanceFormatted = (balance / 1_000_000_000m).ToString("N2") + " tỷ"
+                                        BalanceFormatted = (balance / 1_000_000_000m).ToString("N2", new System.Globalization.CultureInfo("vi-VN")) + " tỷ"
                                     });
                                 }
                             }
