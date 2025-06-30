@@ -1127,45 +1127,5 @@ namespace TinhKhoanApp.Api.Services
                    "Hiện tại chỉ có dữ liệu cho tháng 4/2025 và 12/2024.";
         }
 
-        //=== SAMPLE DATA GENERATORS (Replace with real data queries) ===
-
-        private List<dynamic> GenerateSampleNguonVonData(string branchCode, DateTime date)
-        {
-            var random = new Random(date.DayOfYear);
-            var accounts = new[] { "421001", "421002", "423001", "423002", "111001", "112001", "211001", "401001", "411001", "427001" };
-
-            return accounts.Select(acc => new
-            {
-                AccountCode = acc,
-                CurrentBalance = random.Next(100_000_000, 2_000_000_000) // 100M - 2B VND
-            }).Cast<dynamic>().ToList();
-        }
-
-        private List<dynamic> GenerateSampleDuNoData(string branchCode, DateTime date)
-        {
-            var random = new Random(date.DayOfYear);
-            var groups = new[] { "01", "02", "03", "04", "05" };
-
-            return Enumerable.Range(1, 50).Select(i => new
-            {
-                DisbursementAmount = random.Next(50_000_000, 500_000_000), // 50M - 500M VND
-                NhomNo = groups[random.Next(groups.Length)]
-            }).Cast<dynamic>().ToList();
-        }
-
-        private List<dynamic> GenerateSampleGLCB41Data(string branchCode, DateTime date)
-        {
-            var random = new Random(date.DayOfYear);
-            var accounts = new[] { "7", "790001", "8511", "8", "882" };
-
-            return accounts.SelectMany(acc =>
-                Enumerable.Range(1, 10).Select(i => new
-                {
-                    AccountCode = acc + (i.ToString().PadLeft(3, '0')),
-                    DebitAmount = random.Next(10_000_000, 100_000_000),  // 10M - 100M VND
-                    CreditAmount = random.Next(10_000_000, 100_000_000)  // 10M - 100M VND
-                })
-            ).Cast<dynamic>().ToList();
-        }
     }
 }
