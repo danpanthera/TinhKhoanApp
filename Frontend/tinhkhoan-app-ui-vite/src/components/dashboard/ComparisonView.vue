@@ -6,7 +6,7 @@
         <h3>So sánh hiệu quả giữa các đơn vị</h3>
         <p class="subtitle">Phân tích đa chiều các chỉ tiêu kinh doanh</p>
       </div>
-      
+
       <div class="comparison-controls">
         <el-select v-model="selectedIndicators" multiple placeholder="Chọn chỉ tiêu" style="width: 300px">
           <el-option
@@ -16,13 +16,13 @@
             :value="indicator.code"
           />
         </el-select>
-        
+
         <el-select v-model="comparisonType" placeholder="Loại so sánh" style="width: 200px">
           <el-option label="Theo giá trị tuyệt đối" value="absolute" />
           <el-option label="Theo tỷ lệ hoàn thành" value="completion" />
           <el-option label="Theo tăng trưởng" value="growth" />
         </el-select>
-        
+
         <el-select v-model="chartType" placeholder="Loại biểu đồ" style="width: 150px">
           <el-option label="Cột" value="bar" />
           <el-option label="Đường" value="line" />
@@ -69,7 +69,7 @@
                 inactive-text="Giá trị gốc"
               />
             </div>
-            
+
             <el-table
               :data="rankingData"
               stripe
@@ -79,7 +79,7 @@
             >
               <el-table-column type="index" label="Hạng" width="60" align="center" />
               <el-table-column prop="unitName" label="Đơn vị" width="200" />
-              
+
               <el-table-column
                 v-for="indicator in selectedIndicators"
                 :key="indicator"
@@ -98,7 +98,7 @@
                   </div>
                 </template>
               </el-table-column>
-              
+
               <el-table-column label="Tổng điểm" width="100" align="center">
                 <template #default="{ row }">
                   <el-tag :type="getScoreType(row.totalScore)" size="small">
@@ -109,14 +109,14 @@
             </el-table>
           </div>
         </el-col>
-        
+
         <el-col :span="8">
           <!-- Performance Summary -->
           <div class="performance-summary">
             <div class="summary-header">
               <h4>Tóm tắt hiệu quả</h4>
             </div>
-            
+
             <div class="summary-cards">
               <div class="summary-card best">
                 <div class="card-icon">
@@ -128,7 +128,7 @@
                   <div class="card-subtitle">{{ getBestUnit().score }}/100 điểm</div>
                 </div>
               </div>
-              
+
               <div class="summary-card average">
                 <div class="card-icon">
                   <i class="mdi mdi-chart-line"></i>
@@ -139,7 +139,7 @@
                   <div class="card-subtitle">trên {{ rankingData.length }} đơn vị</div>
                 </div>
               </div>
-              
+
               <div class="summary-card improvement">
                 <div class="card-icon">
                   <i class="mdi mdi-trending-up"></i>
@@ -151,7 +151,7 @@
                 </div>
               </div>
             </div>
-            
+
             <!-- Performance Insights -->
             <div class="insights">
               <h5>Nhận xét từ dữ liệu</h5>
@@ -178,7 +178,7 @@
             <el-radio-button label="quarter">Theo quý</el-radio-button>
           </el-radio-group>
         </div>
-        
+
         <trend-chart
           :data="trendComparisonData"
           :height="300"
@@ -191,8 +191,8 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
+import { computed, onMounted, ref, watch } from 'vue';
 import ComparisonChart from './ComparisonChart.vue';
 import TrendChart from './TrendChart.vue';
 
@@ -223,8 +223,8 @@ const comparisonChartData = ref([
   { unitName: 'CN Lai Châu', HuyDong: 1450, DuNo: 1200, LoiNhuan: 145 },
   { unitName: 'CN Điện Biên', HuyDong: 980, DuNo: 850, LoiNhuan: 98 },
   { unitName: 'CN Sơn La', HuyDong: 1200, DuNo: 1050, LoiNhuan: 120 },
-  { unitName: 'PGD Mường Tè', HuyDong: 250, DuNo: 220, LoiNhuan: 25 },
-  { unitName: 'PGD Tam Đường', HuyDong: 180, DuNo: 160, LoiNhuan: 18 }
+  { unitName: 'PGD Bum Tở', HuyDong: 250, DuNo: 220, LoiNhuan: 25 },
+  { unitName: 'PGD Bình Lư', HuyDong: 180, DuNo: 160, LoiNhuan: 18 }
 ]);
 
 const rankingData = ref([
@@ -250,14 +250,14 @@ const rankingData = ref([
     totalScore: 75
   },
   {
-    unitName: 'PGD Mường Tè',
+    unitName: 'PGD Bum Tở',
     HuyDong: 102.1, HuyDong_rank: 4,
     DuNo: 98.2, DuNo_rank: 3,
     LoiNhuan: 95.6, LoiNhuan_rank: 3,
     totalScore: 82
   },
   {
-    unitName: 'PGD Tam Đường',
+    unitName: 'PGD Bình Lư',
     HuyDong: 90.0, HuyDong_rank: 5,
     DuNo: 88.5, DuNo_rank: 5,
     LoiNhuan: 85.2, LoiNhuan_rank: 5,
@@ -286,7 +286,7 @@ const performanceInsights = computed(() => [
     id: 2,
     icon: 'mdi-alert-circle',
     color: '#E6A23C',
-    text: 'PGD Tam Đường cần cải thiện, chỉ đạt 68/100 điểm'
+    text: 'PGD Bình Lư cần cải thiện, chỉ đạt 68/100 điểm'
   },
   {
     id: 3,
@@ -330,12 +330,12 @@ const formatCellValue = (value, indicator) => {
   if (showPercentage.value && comparisonType.value === 'completion') {
     return value.toFixed(1) + '%';
   }
-  
+
   const indicatorObj = props.indicators.find(i => i.code === indicator);
   if (indicatorObj?.unit === '%') {
     return value.toFixed(2) + '%';
   }
-  
+
   return new Intl.NumberFormat('vi-VN').format(value);
 };
 
