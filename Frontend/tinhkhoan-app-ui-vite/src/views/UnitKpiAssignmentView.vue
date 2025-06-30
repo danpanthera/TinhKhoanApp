@@ -115,12 +115,13 @@
                 </td>
                 <td>
                   <input
-                    type="number"
-                    step="0.01"
-                    v-model="kpiTargets[indicator.id]"
+                    type="text"
+                    :value="formatNumber(kpiTargets[indicator.id] || 0)"
                     placeholder="Nhập mục tiêu"
                     class="form-control"
                     style="font-size: 0.85rem; padding: 8px 12px;"
+                    @input="(e) => handleKpiTargetInput(e, indicator.id)"
+                    @blur="(e) => handleKpiTargetBlur(e, indicator.id)"
                   />
                 </td>
                 <td style="text-align: center;">
@@ -230,9 +231,20 @@
 </template>
 
 <script setup>
-import api from '@/services/api'
-import { logApiResponse, normalizeNetArray } from '@/utils/apiHelpers'
-import { computed, onMounted, ref, watch } from 'vue'
+import api from '@/services/api';
+import { logApiResponse, normalizeNetArray } from '@/utils/apiHelpers';
+import { computed, onMounted, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
+import { useNumberInput } from '../utils/numberFormat';
+
+// Router instance
+const router = useRouter();
+
+// 🔢 Initialize number input utility
+const { handleInput, handleBlur, formatNumber, parseFormattedNumber } = useNumberInput({
+  maxDecimalPlaces: 2,
+  allowNegative: false
+});
 
 // Reactive data
 const loading = ref(false)
@@ -614,6 +626,19 @@ function formatDate(dateString) {
   const date = new Date(dateString)
   return date.toLocaleDateString('vi-VN')
 }
+
+// Number input handlers for KPI targets
+const handleKpiTargetInput = (event, indicatorId) => {
+  const formattedValue = handleInput(event);
+  event.target.value = formattedValue;
+  kpiTargets.value[indicatorId] = parseFormattedNumber(formattedValue);
+};
+
+const handleKpiTargetBlur = (event, indicatorId) => {
+  const formattedValue = handleBlur(event);
+  event.target.value = formattedValue;
+  kpiTargets.value[indicatorId] = parseFormattedNumber(formattedValue);
+};
 
 onMounted(() => {
   loadInitialData()

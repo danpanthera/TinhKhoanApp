@@ -1,21 +1,21 @@
 <template>
   <div class="units-view">
     <h1>Danh sách Đơn vị</h1>
-    
+
     <!-- Section quản lý đơn vị được chọn -->
     <div class="selection-management" style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e9ecef;">
       <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 16px;">
         <button
           @click="toggleSelectionMode"
           class="action-button"
-          :style="{ 
+          :style="{
             backgroundColor: isSelectionMode ? '#e74c3c' : '#2ecc71',
             borderColor: isSelectionMode ? '#c0392b' : '#27ae60'
           }"
         >
           {{ isSelectionMode ? '✕ Thoát chế độ chọn' : '☑ Chọn Đơn vị' }}
         </button>
-        
+
         <button
           v-if="isSelectionMode && selectedUnits.size > 0"
           @click="selectAllVisible"
@@ -24,7 +24,7 @@
         >
           Chọn tất cả hiển thị
         </button>
-        
+
         <button
           v-if="isSelectionMode && selectedUnits.size > 0"
           @click="clearSelection"
@@ -33,7 +33,7 @@
         >
           Bỏ chọn tất cả
         </button>
-        
+
         <button
           v-if="selectedUnits.size > 0"
           @click="confirmDeleteSelected"
@@ -43,15 +43,15 @@
           🗑 Xóa đã chọn ({{ selectedUnits.size }})
         </button>
       </div>
-      
+
       <!-- Hiển thị danh sách đơn vị đã chọn -->
       <div v-if="selectedUnits.size > 0" class="selected-units-display">
         <h4 style="margin: 0 0 12px 0; color: #2c3e50;">Đơn vị đã chọn ({{ selectedUnits.size }}):</h4>
         <div style="max-height: 120px; overflow-y: auto; background: white; padding: 12px; border-radius: 4px; border: 1px solid #ddd;">
-          <div v-for="unitId in Array.from(selectedUnits)" :key="unitId" 
+          <div v-for="unitId in Array.from(selectedUnits)" :key="unitId"
                style="display: inline-block; background: #3498db; color: white; padding: 4px 8px; margin: 2px; border-radius: 4px; font-size: 0.85em;">
             {{ getUnitDisplayName(unitId) }}
-            <button @click="removeFromSelection(unitId)" 
+            <button @click="removeFromSelection(unitId)"
                     style="background: none; border: none; color: white; margin-left: 6px; cursor: pointer; font-weight: bold;">
               ×
             </button>
@@ -103,14 +103,14 @@
             <div class="branch-main-info" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
               <div class="unit-info" style="display: flex; align-items: center; gap: 8px; flex: 1;">
                 <!-- Checkbox cho chế độ chọn -->
-                <input 
+                <input
                   v-if="isSelectionMode"
                   type="checkbox"
                   :checked="selectedUnits.has(branch.id)"
                   @change="toggleUnitSelection(branch.id)"
                   style="margin-right: 8px; transform: scale(1.2);"
                 />
-                <button 
+                <button
                   v-if="hasChildrenForBranch(branch.id)"
                   @click="toggleNode(branch.id)"
                   class="toggle-button-enhanced"
@@ -141,10 +141,10 @@
                 <strong>Loại:</strong> {{ branch.type || 'Chi nhánh' }}
               </span>
             </div>
-            <TreeDepartments 
+            <TreeDepartments
               v-if="!hasChildrenForBranch(branch.id) || expandedNodes.has(branch.id)"
-              :parentId="branch.id" 
-              :allUnits="unitStore.allUnits" 
+              :parentId="branch.id"
+              :allUnits="unitStore.allUnits"
               :level="0"
               :isSelectionMode="isSelectionMode"
               :selectedUnits="selectedUnits"
@@ -169,7 +169,7 @@
         <thead>
           <tr style="background: #eaf6ff;">
             <th v-if="isSelectionMode" style="padding: 10px; border-bottom: 1px solid #e0e0e0; width: 50px;">
-              <input 
+              <input
                 type="checkbox"
                 :checked="isAllVisibleSelected"
                 @change="toggleSelectAllVisible"
@@ -187,7 +187,7 @@
         <tbody>
           <tr v-for="unit in sortedAllUnits" :key="unit.id">
             <td v-if="isSelectionMode" style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0; text-align: center;">
-              <input 
+              <input
                 type="checkbox"
                 :checked="selectedUnits.has(unit.id)"
                 @change="toggleUnitSelection(unit.id)"
@@ -244,9 +244,11 @@
         <div class="form-group">
           <label for="parentUnitId">Chi nhánh cha (ID):</label>
           <input
-            type="number"
+            type="text"
             id="parentUnitId"
-            v-model="currentUnit.parentUnitId"
+            :value="formatNumber(currentUnit.parentUnitId || 0)"
+            @input="(e) => handleParentUnitIdInput(e)"
+            @blur="(e) => handleParentUnitIdBlur(e)"
             placeholder="Nhập ID chi nhánh cha (bỏ trống nếu là chi nhánh gốc)"
             min="1"
             style="min-width: 200px; padding: 8px 12px; border-radius: 4px; border: 1px solid #ced4da;"
@@ -325,8 +327,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, defineComponent, h, watch, nextTick } from "vue";
 import { useUnitStore } from "@/stores/unitStore";
+import { computed, defineComponent, h, nextTick, onMounted, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
+import { useNumberInput } from '../utils/numberFormat';
+
+const router = useRouter();
+
+// 🔢 Initialize number input utility
+const { handleInput, handleBlur, formatNumber, parseFormattedNumber } = useNumberInput({
+  maxDecimalPlaces: 0,
+  allowNegative: false
+});
 
 const unitStore = useUnitStore();
 
@@ -367,10 +379,10 @@ const canCreateCNL2 = computed(() => {
 // Computed properties cho chức năng chọn đơn vị
 const isAllVisibleSelected = computed(() => {
   if (viewMode.value === 'grid') {
-    return sortedAllUnits.value.length > 0 && 
+    return sortedAllUnits.value.length > 0 &&
            sortedAllUnits.value.every(unit => selectedUnits.value.has(unit.id));
   } else {
-    return branches.value.length > 0 && 
+    return branches.value.length > 0 &&
            branches.value.every(branch => selectedUnits.value.has(branch.id));
   }
 });
@@ -437,10 +449,10 @@ const confirmDeleteSelected = () => {
     alert('Không có đơn vị nào được chọn để xóa!');
     return;
   }
-  
+
   const unitNames = Array.from(selectedUnits.value).map(id => getUnitDisplayName(id));
   const confirmMessage = `Bạn có chắc chắn muốn xóa ${selectedUnits.value.size} đơn vị sau không?\n\n${unitNames.join('\n')}`;
-  
+
   if (confirm(confirmMessage)) {
     deleteSelectedUnits();
   }
@@ -451,7 +463,7 @@ const deleteSelectedUnits = async () => {
   let successCount = 0;
   let failCount = 0;
   const errors = [];
-  
+
   for (const unitId of unitsToDelete) {
     try {
       await unitStore.deleteUnit(unitId);
@@ -462,10 +474,10 @@ const deleteSelectedUnits = async () => {
       console.error(`Error deleting unit ${unitId}:`, error);
     }
   }
-  
+
   // Clear selection after deletion attempt
   clearSelection();
-  
+
   // Show results
   if (successCount > 0 && failCount === 0) {
     alert(`Xóa thành công ${successCount} đơn vị!`);
@@ -508,7 +520,7 @@ onMounted(() => {
   console.log('UnitsView mounted, current units count:', unitStore.allUnits.length);
   console.log('Is loading:', unitStore.isLoading);
   console.log('Error:', unitStore.error);
-  
+
   // Force load units mỗi khi mount
   loadUnits();
 });
@@ -526,18 +538,18 @@ const openUnitModal = async () => {
   };
   formError.value = null;
   unitStore.error = null;
-  
+
   // Đợi DOM update
   await nextTick();
-  
+
   // Scroll xuống form với smooth animation
   const formContainer = document.querySelector('.form-container');
   if (formContainer) {
-    formContainer.scrollIntoView({ 
-      behavior: 'smooth', 
-      block: 'start' 
+    formContainer.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
     });
-    
+
     // Đợi animation scroll hoàn thành rồi focus
     setTimeout(() => {
       const firstInput = document.getElementById('unitCode');
@@ -552,7 +564,7 @@ const openUnitModal = async () => {
 // Hàm bắt đầu sửa đơn vị với auto-focus
 const startEditUnitWithModal = async (unit) => {
   console.log("Bắt đầu sửa đơn vị:", unit);
-  
+
   isEditing.value = true;
   currentUnit.value = {
     id: unit.id,
@@ -563,18 +575,18 @@ const startEditUnitWithModal = async (unit) => {
   };
   formError.value = null;
   unitStore.error = null;
-  
+
   // Đợi DOM update
   await nextTick();
-  
+
   // Scroll xuống form với smooth animation
   const formContainer = document.querySelector('.form-container');
   if (formContainer) {
-    formContainer.scrollIntoView({ 
-      behavior: 'smooth', 
-      block: 'start' 
+    formContainer.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
     });
-    
+
     // Đợi animation scroll hoàn thành rồi focus
     setTimeout(() => {
       const firstInput = document.getElementById('unitCode');
@@ -649,7 +661,7 @@ const handleSubmitUnit = async () => {
       formError.value = 'Không thể tạo CNL2 vì chưa có CNL1 nào! Vui lòng tạo CNL1 trước.';
       return;
     }
-    
+
     // Nếu người dùng nhập parentUnitId, kiểm tra xem có phải CNL1 không
     if (parentIdToSubmit) {
       const parent = unitStore.allUnits.find(u => u.id === parentIdToSubmit);
@@ -842,10 +854,10 @@ const departmentOptions = computed(() => {
   const parent = unitStore.allUnits.find(u => u.id === Number(currentUnit.value.parentUnitId));
   if (!parent) return [];
   const type = (parent.type || '').toUpperCase();
-  
+
   if (type === 'CNL1') {
     // Lấy các phòng nghiệp vụ PNVL1 thực tế từ database
-    const pnvl1Units = unitStore.allUnits.filter(u => 
+    const pnvl1Units = unitStore.allUnits.filter(u =>
       u.parentUnitId === parent.id && (u.type || '').toUpperCase() === 'PNVL1'
     );
     return pnvl1Units.map(u => ({
@@ -909,7 +921,7 @@ const TreeDepartments = defineComponent({
     // Bảo vệ nếu props không hợp lệ
     const safeParentId = computed(() => typeof props.parentId === 'number' ? props.parentId : 0);
     const safeAllUnits = computed(() => Array.isArray(props.allUnits) ? props.allUnits : []);
-    const children = computed(() => 
+    const children = computed(() =>
       safeAllUnits.value
         .filter(u => u.parentUnitId === safeParentId.value)
         .sort((a, b) => (a.id || 0) - (b.id || 0))
@@ -927,28 +939,28 @@ const TreeDepartments = defineComponent({
 
     return () => {
       if (!children.value.length) return null;
-      return h('ul', { 
-        class: 'department-list', 
-        style: 'margin: 2px 0 0 18px; padding-left: 0; transition: all 0.3s ease;' 
+      return h('ul', {
+        class: 'department-list',
+        style: 'margin: 2px 0 0 18px; padding-left: 0; transition: all 0.3s ease;'
       },
         children.value.map(dept => {
           const hasChildNodes = hasChildren(dept.id);
           const isNodeExpanded = isExpanded(dept.id);
           const isLeafNode = !hasChildNodes;
-          
-          return h('li', { 
-            class: 'list-item department-item tree-node', 
-            style: 'margin-bottom: 4px; min-height: 32px; font-size: 0.92em; display: block; padding: 8px 12px; border-radius: 0 4px 4px 0;', 
-            key: dept.id 
+
+          return h('li', {
+            class: 'list-item department-item tree-node',
+            style: 'margin-bottom: 4px; min-height: 32px; font-size: 0.92em; display: block; padding: 8px 12px; border-radius: 0 4px 4px 0;',
+            key: dept.id
           }, [
             // Hàng thông tin chính
-            h('div', { 
-              class: 'department-main-info', 
-              style: 'display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;' 
+            h('div', {
+              class: 'department-main-info',
+              style: 'display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;'
             }, [
-              h('div', { 
-                class: 'unit-info', 
-                style: 'display: flex; align-items: center; gap: 6px; flex: 1;' 
+              h('div', {
+                class: 'unit-info',
+                style: 'display: flex; align-items: center; gap: 6px; flex: 1;'
               }, [
                 // Checkbox cho chế độ chọn
                 props.isSelectionMode ? h('input', {
@@ -961,12 +973,12 @@ const TreeDepartments = defineComponent({
                 hasChildNodes ? h('button', {
                   class: 'toggle-button-enhanced',
                   style: `
-                    background: #27ae60; 
-                    border: none; 
-                    padding: 3px 7px; 
-                    cursor: pointer; 
-                    font-size: 1em; 
-                    color: white; 
+                    background: #27ae60;
+                    border: none;
+                    padding: 3px 7px;
+                    cursor: pointer;
+                    font-size: 1em;
+                    color: white;
                     font-weight: bold;
                     margin-right: 4px;
                     border-radius: 50%;
@@ -988,33 +1000,33 @@ const TreeDepartments = defineComponent({
                     e.target.style.backgroundColor = '#27ae60';
                     e.target.style.transform = 'scale(1)';
                   }
-                }, isNodeExpanded ? '−' : '+') : h('span', { 
-                  style: 'font-size: 0.9em; margin-right: 30px; color: #bdc3c7;' 
+                }, isNodeExpanded ? '−' : '+') : h('span', {
+                  style: 'font-size: 0.9em; margin-right: 30px; color: #bdc3c7;'
                 }, isLeafNode ? '└─' : '├─'),
                 h('span', { style: 'font-size: 0.9em;' }, dept.type === 'CNL2' ? '🏢' : '🏬'),
                 h('strong', { style: 'font-size: 1em; color: #2c3e50;' }, dept.name)
               ]),
-              h('div', { 
-                class: 'actions', 
-                style: 'display: flex; gap: 6px; flex-shrink: 0;' 
+              h('div', {
+                class: 'actions',
+                style: 'display: flex; gap: 6px; flex-shrink: 0;'
               }, [
                 h('button', { class: 'edit-btn', onClick: () => emit('editUnit', dept) }, 'Sửa'),
                 h('button', { class: 'delete-btn', onClick: () => emit('deleteUnit', dept.id) }, 'Xóa')
               ])
             ]),
             // Hàng thông tin chi tiết
-            h('div', { 
-              class: 'department-details', 
-              style: 'display: flex; align-items: center; gap: 10px; margin-left: 30px; font-size: 0.85em; color: #7f8c8d; flex-wrap: wrap;' 
+            h('div', {
+              class: 'department-details',
+              style: 'display: flex; align-items: center; gap: 10px; margin-left: 30px; font-size: 0.85em; color: #7f8c8d; flex-wrap: wrap;'
             }, [
-              h('span', { 
-                style: 'background: #f1f2f6; padding: 2px 5px; border-radius: 3px;' 
+              h('span', {
+                style: 'background: #f1f2f6; padding: 2px 5px; border-radius: 3px;'
               }, `ID: ${dept.id}`),
-              h('span', { 
-                style: 'background: #f1f2f6; padding: 2px 5px; border-radius: 3px;' 
+              h('span', {
+                style: 'background: #f1f2f6; padding: 2px 5px; border-radius: 3px;'
               }, `Mã: ${dept.code}`),
-              h('span', { 
-                style: 'background: #f1f2f6; padding: 2px 5px; border-radius: 3px;' 
+              h('span', {
+                style: 'background: #f1f2f6; padding: 2px 5px; border-radius: 3px;'
               }, `Loại: ${dept.type || 'Phòng nghiệp vụ'}`)
             ]),
             // Only render children if node is expanded and has children
@@ -1347,12 +1359,12 @@ button.action-button:hover:not(:disabled) {
 }
 
 .toggle-button {
-  background: none !important; 
-  border: none !important; 
-  padding: 2px 6px !important; 
-  cursor: pointer !important; 
-  font-size: 0.8em !important; 
-  color: #3498db !important; 
+  background: none !important;
+  border: none !important;
+  padding: 2px 6px !important;
+  cursor: pointer !important;
+  font-size: 0.8em !important;
+  color: #3498db !important;
   font-weight: bold !important;
   margin-right: 2px !important;
   border-radius: 3px !important;
@@ -1372,12 +1384,12 @@ button.action-button:hover:not(:disabled) {
 
 /* Enhanced toggle buttons for better visibility */
 .toggle-button-enhanced {
-  background: #3498db !important; 
-  border: none !important; 
-  padding: 4px 8px !important; 
-  cursor: pointer !important; 
-  font-size: 1.1em !important; 
-  color: white !important; 
+  background: #3498db !important;
+  border: none !important;
+  padding: 4px 8px !important;
+  cursor: pointer !important;
+  font-size: 1.1em !important;
+  color: white !important;
   font-weight: bold !important;
   margin-right: 6px !important;
   border-radius: 50% !important;
