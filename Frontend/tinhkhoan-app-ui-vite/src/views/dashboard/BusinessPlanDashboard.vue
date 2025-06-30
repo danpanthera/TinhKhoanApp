@@ -435,7 +435,7 @@ import { formatNumber as formatVNNumber } from '../../utils/numberFormat.js';
 
 // State quản lý
 const loading = ref(false);
-const selectedBranch = ref('7800'); // Mặc định chọn Hội Sở (mã 7800)
+const selectedBranch = ref('7800-00'); // Mặc định chọn Hội Sở (mã 7800, PGD 00)
 const selectedDate = ref(null); // Ngày sao kê cụ thể
 const dateRange = ref([dayjs().format('YYYY-MM'), dayjs().format('YYYY-MM')]); // Tháng hiện tại
 const currentTime = ref(new Date());
@@ -444,22 +444,22 @@ const selectedIndicator = ref(null);
 const activeChartTab = ref('comparison');
 const animatedValues = ref({}); // Giá trị animated cho counters
 
-// Danh sách chi nhánh và PGD theo quy ước mới
+// Danh sách chi nhánh và PGD theo quy ước mới (PGD "00" cho chi nhánh chính)
 const branches = ref([
-  { id: '7800', name: 'Hội Sở' },
-  { id: '7801', name: 'CN Bình Lư' },
-  { id: '7802', name: 'CN Phong Thổ' },
+  { id: '7800-00', name: 'Hội Sở' },
+  { id: '7801-00', name: 'CN Bình Lư' },
+  { id: '7802-00', name: 'CN Phong Thổ' },
   { id: '7802-01', name: 'CN Phong Thổ - PGD Số 5' },
-  { id: '7803', name: 'CN Sìn Hồ' },
-  { id: '7804', name: 'CN Bum Tở' },
-  { id: '7805', name: 'CN Than Uyên' },
+  { id: '7803-00', name: 'CN Sìn Hồ' },
+  { id: '7804-00', name: 'CN Bum Tở' },
+  { id: '7805-00', name: 'CN Than Uyên' },
   { id: '7805-01', name: 'CN Than Uyên - PGD Số 6' },
-  { id: '7806', name: 'CN Đoàn Kết' },
+  { id: '7806-00', name: 'CN Đoàn Kết' },
   { id: '7806-01', name: 'CN Đoàn Kết - PGD Số 1' },
   { id: '7806-02', name: 'CN Đoàn Kết - PGD Số 2' },
-  { id: '7807', name: 'CN Tân Uyên' },
+  { id: '7807-00', name: 'CN Tân Uyên' },
   { id: '7807-01', name: 'CN Tân Uyên - PGD Số 3' },
-  { id: '7808', name: 'CN Nậm Hàng' }
+  { id: '7808-00', name: 'CN Nậm Hàng' }
 ]);
 
 // 6 chỉ tiêu dashboard chính - sẽ được cập nhật từ API backend
