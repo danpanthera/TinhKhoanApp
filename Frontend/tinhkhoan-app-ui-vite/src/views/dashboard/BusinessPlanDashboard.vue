@@ -66,9 +66,30 @@
             </div>
 
             <div class="filter-group">
-              <label for="date-range-picker" class="filter-label-enhanced">
+              <label for="date-picker" class="filter-label-enhanced">
                 <span class="label-icon">📅</span>
-                <span class="label-text">Thời gian</span>
+                <span class="label-text">Ngày sao kê</span>
+              </label>
+              <el-date-picker
+                id="date-picker"
+                v-model="selectedDate"
+                type="date"
+                placeholder="Chọn ngày sao kê"
+                format="DD/MM/YYYY"
+                value-format="YYYY-MM-DD"
+                @change="handleDateChange"
+                class="date-picker-enhanced"
+                autocomplete="off"
+                aria-label="Chọn ngày sao kê cụ thể"
+                size="large"
+                clearable
+              />
+            </div>
+
+            <div class="filter-group">
+              <label for="date-range-picker" class="filter-label-enhanced">
+                <span class="label-icon">�</span>
+                <span class="label-text">Khoảng thời gian</span>
               </label>
               <el-date-picker
                 id="date-range-picker"
@@ -410,10 +431,12 @@ import { ElDialog, ElMessage } from 'element-plus';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import LoadingOverlay from '../../components/dashboard/LoadingOverlay.vue';
 import { dashboardService } from '../../services/dashboardService.js';
+import { formatNumber as formatVNNumber } from '../../utils/numberFormat.js';
 
 // State quản lý
 const loading = ref(false);
-const selectedBranch = ref('HoiSo'); // Mặc định chọn Hội Sở
+const selectedBranch = ref('7800'); // Mặc định chọn Hội Sở (mã 7800)
+const selectedDate = ref(null); // Ngày sao kê cụ thể
 const dateRange = ref([dayjs().format('YYYY-MM'), dayjs().format('YYYY-MM')]); // Tháng hiện tại
 const currentTime = ref(new Date());
 const showDetailModal = ref(false);
@@ -421,129 +444,21 @@ const selectedIndicator = ref(null);
 const activeChartTab = ref('comparison');
 const animatedValues = ref({}); // Giá trị animated cho counters
 
-// Danh sách 15 chi nhánh chuẩn hóa theo quy ước mới (đã bỏ CnLaiChau vì có "Toàn tỉnh")
+// Danh sách 9 chi nhánh theo mã code backend
 const branches = ref([
-  { id: 'HoiSo', name: 'Hội Sở' },
-  { id: 'CnTamDuong', name: 'CN Tam Đường' },
-  { id: 'CnPhongTho', name: 'CN Phong Thổ' },
-  { id: 'CnSinHo', name: 'CN Sin Hồ' },
-  { id: 'CnMuongTe', name: 'CN Mường Tè' },
-  { id: 'CnThanUyen', name: 'CN Than Uyên' },
-  { id: 'CnThanhPho', name: 'CN Thành Phố' },
-  { id: 'CnTanUyen', name: 'CN Tân Uyên' },
-  { id: 'CnNamNhun', name: 'CN Nậm Nhùn' },
-  { id: 'CnPhongThoPgdMuongSo', name: 'CN Phong Thổ - PGD Mường So' },
-  { id: 'CnThanUyenPgdMuongThan', name: 'CN Than Uyên - PGD Mường Than' },
-  { id: 'CnThanhPhoPgdSo1', name: 'CN Thành Phố - PGD Số 1' },
-  { id: 'CnThanhPhoPgdSo2', name: 'CN Thành Phố - PGD Số 2' },
-  { id: 'CnTanUyenPgdSo3', name: 'CN Tân Uyên - PGD Số 3' }
+  { id: '7800', name: 'Hội Sở' },
+  { id: '7801', name: 'CN Tam Đường' },
+  { id: '7802', name: 'CN Phong Thổ' },
+  { id: '7803', name: 'CN Sin Hồ' },
+  { id: '7804', name: 'CN Mường Tè' },
+  { id: '7805', name: 'CN Than Uyên' },
+  { id: '7806', name: 'CN Thành Phố' },
+  { id: '7807', name: 'CN Tân Uyên' },
+  { id: '7808', name: 'CN Nậm Nhùn' }
 ]);
 
-// 6 chỉ tiêu dashboard chính với dữ liệu đầy đủ
-const indicators = ref([
-  {
-    id: 'nguon_von',
-    name: 'Nguồn vốn',
-    icon: '💰',
-    class: 'nguon-von',
-    unit: 'triệu',
-    format: 'currency',
-    currentValue: 1250.5,
-    targetValue: 1200.0,
-    quarterTargetValue: 300.0,
-    completionRate: 104.2,
-    quarterCompletionRate: 112.5,
-    changeFromYearStart: 125.3,
-    changeFromYearStartPercent: 11.2,
-    changeFromMonthStart: 35.7,
-    changeFromMonthStartPercent: 2.9
-  },
-  {
-    id: 'du_no',
-    name: 'Dư nợ',
-    icon: '💳',
-    class: 'du-no',
-    unit: 'triệu',
-    format: 'currency',
-    currentValue: 980.3,
-    targetValue: 1000.0,
-    quarterTargetValue: 250.0,
-    completionRate: 98.0,
-    quarterCompletionRate: 105.2,
-    changeFromYearStart: 45.8,
-    changeFromYearStartPercent: 4.9,
-    changeFromMonthStart: 12.4,
-    changeFromMonthStartPercent: 1.3
-  },
-  {
-    id: 'no_xau',
-    name: 'Nợ Xấu',
-    icon: '⚠️',
-    class: 'no-xau',
-    unit: '%',
-    format: 'percent',
-    currentValue: 1.8,
-    targetValue: 2.0,
-    quarterTargetValue: 1.9,
-    completionRate: 90.0,
-    quarterCompletionRate: 94.7,
-    changeFromYearStart: -0.3,
-    changeFromYearStartPercent: -14.3,
-    changeFromMonthStart: -0.1,
-    changeFromMonthStartPercent: -5.3
-  },
-  {
-    id: 'thu_no_xlrr',
-    name: 'Thu nợ đã XLRR',
-    icon: '📈',
-    class: 'thu-no-xlrr',
-    unit: 'triệu',
-    format: 'currency',
-    currentValue: 45.7,
-    targetValue: 50.0,
-    quarterTargetValue: 12.5,
-    completionRate: 91.4,
-    quarterCompletionRate: 109.8,
-    changeFromYearStart: 8.2,
-    changeFromYearStartPercent: 21.9,
-    changeFromMonthStart: 2.8,
-    changeFromMonthStartPercent: 6.5
-  },
-  {
-    id: 'thu_dich_vu',
-    name: 'Thu dịch vụ',
-    icon: '🏦',
-    class: 'thu-dich-vu',
-    unit: 'triệu',
-    format: 'currency',
-    currentValue: 28.9,
-    targetValue: 30.0,
-    quarterTargetValue: 7.5,
-    completionRate: 96.3,
-    quarterCompletionRate: 115.7,
-    changeFromYearStart: 3.1,
-    changeFromYearStartPercent: 12.0,
-    changeFromMonthStart: 1.2,
-    changeFromMonthStartPercent: 4.3
-  },
-  {
-    id: 'tai_chinh',
-    name: 'Tài chính',
-    icon: '💵',
-    class: 'tai-chinh',
-    unit: 'triệu',
-    format: 'currency',
-    currentValue: 156.4,
-    targetValue: 160.0,
-    quarterTargetValue: 40.0,
-    completionRate: 97.8,
-    quarterCompletionRate: 117.3,
-    changeFromYearStart: 18.6,
-    changeFromYearStartPercent: 13.5,
-    changeFromMonthStart: 4.9,
-    changeFromMonthStartPercent: 3.2
-  }
-]);
+// 6 chỉ tiêu dashboard chính - sẽ được cập nhật từ API backend
+const indicators = ref([]);
 
 // Tổng quan thống kê
 const overviewStats = computed(() => {
@@ -684,8 +599,9 @@ const formatCurrentTime = () => {
 };
 
 const formatNumber = (value) => {
-  if (!value) return '0';
-  return new Intl.NumberFormat('vi-VN').format(value);
+  if (!value && value !== 0) return '0';
+  // Sử dụng formatVNNumber từ utils với định dạng chuẩn Việt Nam
+  return formatVNNumber(value);
 };
 
 const formatChangePercent = (value) => {
@@ -750,6 +666,11 @@ const handleDateRangeChange = async () => {
   await loadDashboardData();
 };
 
+const handleDateChange = async () => {
+  console.log('📅 Date changed to:', selectedDate.value);
+  await loadDashboardData();
+};
+
 const refreshData = async () => {
   await loadDashboardData();
 };
@@ -759,16 +680,38 @@ const showIndicatorDetail = (indicator) => {
   showDetailModal.value = true;
 };
 
-// Tải dữ liệu dashboard
 const loadDashboardData = async () => {
   loading.value = true;
   try {
-    // Gọi API để lấy dữ liệu thực tế
-    const data = await dashboardService.getGeneralDashboardData(selectedBranch.value);
+    const dateStr = selectedDate.value ? selectedDate.value : 'ngày gần nhất';
+    console.log('🔄 Đang tải dữ liệu dashboard cho chi nhánh:', selectedBranch.value, 'ngày:', dateStr);
+    console.log('📅 selectedDate.value:', selectedDate.value);
+
+    // Gọi API để lấy dữ liệu thực tế từ backend với ngày cụ thể
+    const data = await dashboardService.getGeneralDashboardData(selectedBranch.value, selectedDate.value);
+    console.log('✅ Dữ liệu dashboard nhận được:', data);
 
     if (data && data.indicators) {
-      // Cập nhật dữ liệu từ API
-      indicators.value = data.indicators;
+      // Xử lý dữ liệu từ API - chuyển đổi đơn vị và format
+      indicators.value = data.indicators.map(indicator => {
+        const processedIndicator = { ...indicator };
+
+        // Chuyển đổi từ tỷ VND sang triệu VND cho các chỉ tiêu tiền tệ
+        if (indicator.format === 'currency' && indicator.unit === 'tỷ') {
+          processedIndicator.currentValue = indicator.currentValue * 1000; // Chuyển tỷ -> triệu
+          processedIndicator.targetValue = indicator.targetValue * 1000;
+          processedIndicator.unit = 'triệu VND';
+        }
+
+        console.log(`📊 ${indicator.name}: ${processedIndicator.currentValue} ${processedIndicator.unit}`);
+        return processedIndicator;
+      });
+
+      console.log('🎯 Đã cập nhật indicators với đơn vị triệu VND:', indicators.value);
+    } else {
+      console.warn('⚠️ Không có dữ liệu indicators từ API');
+      // Fallback: khởi tạo mảng rỗng để tránh lỗi render
+      indicators.value = [];
     }
 
     // Khởi động animation cho counters
@@ -784,20 +727,23 @@ const loadDashboardData = async () => {
 
     playSuccessSound();
     ElMessage.success({
-      message: 'Dữ liệu đã được cập nhật thành công',
+      message: 'Dữ liệu đã được cập nhật thành công với số liệu thật từ backend',
       type: 'success',
       duration: 2000,
       showClose: true
     });
 
   } catch (error) {
-    console.error('Error loading dashboard data:', error);
+    console.error('❌ Error loading dashboard data:', error);
     ElMessage.error({
       message: 'Không thể tải dữ liệu dashboard. Vui lòng thử lại!',
       type: 'error',
       duration: 3000,
       showClose: true
     });
+
+    // Fallback: khởi tạo mảng rỗng để tránh lỗi render
+    indicators.value = [];
   } finally {
     loading.value = false;
   }
