@@ -941,8 +941,12 @@ const calculateNguonVon = async () => {
     console.log('🔧 Tính Nguồn vốn cho:', displayName);
     console.log('📅 Ngày được chọn:', selectedDate.value);
 
+    // Chỉ truyền ngày khi có giá trị hợp lệ (không rỗng và không null)
+    const dateParam = selectedDate.value && selectedDate.value.trim() !== '' ? selectedDate.value : null;
+    console.log('📋 Date parameter sẽ truyền:', dateParam);
+
     // Gọi service mới để tính Nguồn vốn với tham số ngày
-    const result = await branchIndicatorsService.calculateNguonVon(branchId, selectedDate.value);
+    const result = await branchIndicatorsService.calculateNguonVon(branchId, dateParam);
 
     if (result.success) {
       // Cập nhật kết quả
@@ -992,8 +996,12 @@ const calculateDuNo = async () => {
     console.log('🔧 Tính Dư nợ cho:', displayName);
     console.log('📅 Ngày được chọn:', selectedDate.value);
 
+    // Chỉ truyền ngày khi có giá trị hợp lệ (không rỗng và không null)
+    const dateParam = selectedDate.value && selectedDate.value.trim() !== '' ? selectedDate.value : null;
+    console.log('📋 Date parameter sẽ truyền:', dateParam);
+
     // Gọi service mới để tính Dư nợ với tham số ngày
-    const result = await branchIndicatorsService.calculateDuNo(branchId, selectedDate.value);
+    const result = await branchIndicatorsService.calculateDuNo(branchId, dateParam);
 
     if (result.success) {
       // Cập nhật kết quả
@@ -1043,8 +1051,12 @@ const calculateNoXau = async () => {
     console.log('🔧 Tính Nợ xấu cho:', displayName);
     console.log('📅 Ngày được chọn:', selectedDate.value);
 
+    // Chỉ truyền ngày khi có giá trị hợp lệ (không rỗng và không null)
+    const dateParam = selectedDate.value && selectedDate.value.trim() !== '' ? selectedDate.value : null;
+    console.log('📋 Date parameter sẽ truyền:', dateParam);
+
     // Gọi service mới để tính Nợ xấu với tham số ngày
-    const result = await branchIndicatorsService.calculateNoXau(branchId, selectedDate.value);
+    const result = await branchIndicatorsService.calculateNoXau(branchId, dateParam);
 
     if (result.success) {
       // Cập nhật kết quả

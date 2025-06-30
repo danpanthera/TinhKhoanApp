@@ -27,7 +27,20 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                _logger.LogInformation("Bắt đầu tính Nguồn vốn cho chi nhánh {BranchId}", request.BranchId);
+                // Validation request
+                if (request == null || string.IsNullOrWhiteSpace(request.BranchId))
+                {
+                    _logger.LogWarning("❌ Request không hợp lệ - BranchId bị thiếu hoặc rỗng");
+                    return BadRequest(new BranchCalculationResponse
+                    {
+                        IndicatorName = "Nguồn vốn",
+                        Success = false,
+                        ErrorMessage = "BranchId không được để trống"
+                    });
+                }
+
+                _logger.LogInformation("🔧 Nhận request tính Nguồn vốn - BranchId: {BranchId}, Date: {Date}",
+                    request.BranchId, request.Date?.ToString("dd/MM/yyyy") ?? "null");
 
                 var result = await _branchCalculationService.CalculateNguonVonByBranch(
                     request.BranchId,

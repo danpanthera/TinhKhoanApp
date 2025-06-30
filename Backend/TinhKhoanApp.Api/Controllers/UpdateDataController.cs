@@ -71,17 +71,17 @@ namespace TinhKhoanApp.Api.Controllers
                 }
 
                 // 3. Cập nhật đơn vị "Tỷ VND" → "Triệu VND" trong KPI definitions nếu có
-                var kpiDefinitionsWithTyVnd = await _context.KpiDefinitions
-                    .Where(k => k.Unit.Contains("Tỷ VND") || k.Unit.Contains("tỷ VND"))
+                var kpiDefinitionsWithTyVnd = await _context.KPIDefinitions
+                    .Where(k => k.UnitOfMeasure != null && (k.UnitOfMeasure.Contains("Tỷ VND") || k.UnitOfMeasure.Contains("tỷ VND")))
                     .ToListAsync();
 
                 int updatedKpiDefinitions = 0;
                 foreach (var kpi in kpiDefinitionsWithTyVnd)
                 {
-                    var oldUnit = kpi.Unit;
-                    kpi.Unit = kpi.Unit.Replace("Tỷ VND", "Triệu VND").Replace("tỷ VND", "Triệu VND");
+                    var oldUnit = kpi.UnitOfMeasure;
+                    kpi.UnitOfMeasure = kpi.UnitOfMeasure?.Replace("Tỷ VND", "Triệu VND").Replace("tỷ VND", "Triệu VND");
                     updatedKpiDefinitions++;
-                    _logger.LogInformation("✅ Updated KpiDefinition Unit: {OldUnit} → {NewUnit}", oldUnit, kpi.Unit);
+                    _logger.LogInformation("✅ Updated KpiDefinition Unit: {OldUnit} → {NewUnit}", oldUnit, kpi.UnitOfMeasure);
                 }
 
                 // Lưu thay đổi
@@ -126,9 +126,9 @@ namespace TinhKhoanApp.Api.Controllers
                     .Select(k => new { k.TableType, k.TableName })
                     .ToListAsync();
 
-                var kpiDefinitionsUnits = await _context.KpiDefinitions
-                    .Where(k => k.Unit.Contains("VND"))
-                    .Select(k => new { k.Name, k.Unit })
+                var kpiDefinitionsUnits = await _context.KPIDefinitions
+                    .Where(k => k.UnitOfMeasure != null && k.UnitOfMeasure.Contains("VND"))
+                    .Select(k => new { k.KpiName, k.UnitOfMeasure })
                     .ToListAsync();
 
                 return Ok(new

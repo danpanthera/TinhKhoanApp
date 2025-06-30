@@ -355,8 +355,8 @@ internal class Program
                 var cnl2Departments = new[]
                 {
                     // Chi nhánh Tam Đường
-                    new Unit { Code = "KhCnTamDuong", Name = "Phòng Khách hàng", Type = "Kh", ParentUnitId = cnTamDuong.Id },
-                    new Unit { Code = "KtnqCnTamDuong", Name = "Phòng Kế toán & Ngân quỹ", Type = "Ktnq", ParentUnitId = cnTamDuong.Id },
+                    new Unit { Code = "KhCnTamDuong", Name = "Phòng Khách hàng", Type = "Kh", ParentUnitId = cnBinhLu.Id },
+                    new Unit { Code = "KtnqCnTamDuong", Name = "Phòng Kế toán & Ngân quỹ", Type = "Ktnq", ParentUnitId = cnBinhLu.Id },
 
                     // Chi nhánh Phong Thổ
                     new Unit { Code = "KhCnPhongTho", Name = "Phòng Khách hàng", Type = "Kh", ParentUnitId = cnPhongTho.Id },
@@ -368,8 +368,8 @@ internal class Program
                     new Unit { Code = "KtnqCnSinHo", Name = "Phòng Kế toán & Ngân quỹ", Type = "Ktnq", ParentUnitId = cnSinHo.Id },
 
                     // Chi nhánh Mường Tè
-                    new Unit { Code = "KhCnMuongTe", Name = "Phòng Khách hàng", Type = "Kh", ParentUnitId = cnMuongTe.Id },
-                    new Unit { Code = "KtnqCnMuongTe", Name = "Phòng Kế toán & Ngân quỹ", Type = "Ktnq", ParentUnitId = cnMuongTe.Id },
+                    new Unit { Code = "KhCnMuongTe", Name = "Phòng Khách hàng", Type = "Kh", ParentUnitId = cnBumTo.Id },
+                    new Unit { Code = "KtnqCnMuongTe", Name = "Phòng Kế toán & Ngân quỹ", Type = "Ktnq", ParentUnitId = cnBumTo.Id },
 
                     // Chi nhánh Than Uyên
                     new Unit { Code = "KhCnThanUyen", Name = "Phòng Khách hàng", Type = "Kh", ParentUnitId = cnThanUyen.Id },
@@ -377,10 +377,10 @@ internal class Program
                     new Unit { Code = "PgdMuongThan", Name = "Phòng giao dịch Mường Than", Type = "PGD", ParentUnitId = cnThanUyen.Id },
 
                     // Chi nhánh Thành Phố
-                    new Unit { Code = "KhCnThanhPho", Name = "Phòng Khách hàng", Type = "Kh", ParentUnitId = cnThanhPho.Id },
-                    new Unit { Code = "KtnqCnThanhPho", Name = "Phòng Kế toán & Ngân quỹ", Type = "Ktnq", ParentUnitId = cnThanhPho.Id },
-                    new Unit { Code = "PgdSo1", Name = "Phòng giao dịch số 1", Type = "PGD", ParentUnitId = cnThanhPho.Id },
-                    new Unit { Code = "PgdSo2", Name = "Phòng giao dịch số 2", Type = "PGD", ParentUnitId = cnThanhPho.Id },
+                    new Unit { Code = "KhCnThanhPho", Name = "Phòng Khách hàng", Type = "Kh", ParentUnitId = cnDoanKet.Id },
+                    new Unit { Code = "KtnqCnThanhPho", Name = "Phòng Kế toán & Ngân quỹ", Type = "Ktnq", ParentUnitId = cnDoanKet.Id },
+                    new Unit { Code = "PgdSo1", Name = "Phòng giao dịch số 1", Type = "PGD", ParentUnitId = cnDoanKet.Id },
+                    new Unit { Code = "PgdSo2", Name = "Phòng giao dịch số 2", Type = "PGD", ParentUnitId = cnDoanKet.Id },
 
                     // Chi nhánh Tân Uyên
                     new Unit { Code = "KhCnTanUyen", Name = "Phòng Khách hàng", Type = "Kh", ParentUnitId = cnTanUyen.Id },
@@ -388,8 +388,8 @@ internal class Program
                     new Unit { Code = "PgdSo3", Name = "Phòng giao dịch số 3", Type = "PGD", ParentUnitId = cnTanUyen.Id },
 
                     // Chi nhánh Nậm Nhùn
-                    new Unit { Code = "KhCnNamNhun", Name = "Phòng Khách hàng", Type = "Kh", ParentUnitId = cnNamNhun.Id },
-                    new Unit { Code = "KtnqCnNamNhun", Name = "Phòng Kế toán & Ngân quỹ", Type = "Ktnq", ParentUnitId = cnNamNhun.Id }
+                    new Unit { Code = "KhCnNamNhun", Name = "Phòng Khách hàng", Type = "Kh", ParentUnitId = cnNamHang.Id },
+                    new Unit { Code = "KtnqCnNamNhun", Name = "Phòng Kế toán & Ngân quỹ", Type = "Ktnq", ParentUnitId = cnNamHang.Id }
                 };
                 db.Units.AddRange(cnl2Departments);
                 db.SaveChanges();
@@ -529,8 +529,8 @@ internal class Program
                 var cnl2Departments = new[]
                 {
                     // Chi nhánh Tam Đường
-                    new Unit { Code = "KhCnTamDuong", Name = "Phòng Khách hàng", Type = "Kh", ParentUnitId = cnTamDuong.Id },
-                    new Unit { Code = "KtnqCnTamDuong", Name = "Phòng Kế toán & Ngân quỹ", Type = "Ktnq", ParentUnitId = cnTamDuong.Id },
+                    new Unit { Code = "KhCnTamDuong", Name = "Phòng Khách hàng", Type = "Kh", ParentUnitId = cnBinhLu.Id },
+                    new Unit { Code = "KtnqCnTamDuong", Name = "Phòng Kế toán & Ngân quỹ", Type = "Ktnq", ParentUnitId = cnBinhLu.Id },
 
                     // Chi nhánh Phong Thổ
                     new Unit { Code = "KhCnPhongTho", Name = "Phòng Khách hàng", Type = "Kh", ParentUnitId = cnPhongTho.Id },
@@ -542,8 +542,8 @@ internal class Program
                     new Unit { Code = "KtnqCnSinHo", Name = "Phòng Kế toán & Ngân quỹ", Type = "Ktnq", ParentUnitId = cnSinHo.Id },
 
                     // Chi nhánh Mường Tè
-                    new Unit { Code = "KhCnMuongTe", Name = "Phòng Khách hàng", Type = "Kh", ParentUnitId = cnMuongTe.Id },
-                    new Unit { Code = "KtnqCnMuongTe", Name = "Phòng Kế toán & Ngân quỹ", Type = "Ktnq", ParentUnitId = cnMuongTe.Id },
+                    new Unit { Code = "KhCnMuongTe", Name = "Phòng Khách hàng", Type = "Kh", ParentUnitId = cnBumTo.Id },
+                    new Unit { Code = "KtnqCnMuongTe", Name = "Phòng Kế toán & Ngân quỹ", Type = "Ktnq", ParentUnitId = cnBumTo.Id },
 
                     // Chi nhánh Than Uyên
                     new Unit { Code = "KhCnThanUyen", Name = "Phòng Khách hàng", Type = "Kh", ParentUnitId = cnThanUyen.Id },
@@ -551,10 +551,10 @@ internal class Program
                     new Unit { Code = "PgdMuongThan", Name = "Phòng giao dịch Mường Than", Type = "PGD", ParentUnitId = cnThanUyen.Id },
 
                     // Chi nhánh Thành Phố
-                    new Unit { Code = "KhCnThanhPho", Name = "Phòng Khách hàng", Type = "Kh", ParentUnitId = cnThanhPho.Id },
-                    new Unit { Code = "KtnqCnThanhPho", Name = "Phòng Kế toán & Ngân quỹ", Type = "Ktnq", ParentUnitId = cnThanhPho.Id },
-                    new Unit { Code = "PgdSo1", Name = "Phòng giao dịch số 1", Type = "PGD", ParentUnitId = cnThanhPho.Id },
-                    new Unit { Code = "PgdSo2", Name = "Phòng giao dịch số 2", Type = "PGD", ParentUnitId = cnThanhPho.Id },
+                    new Unit { Code = "KhCnThanhPho", Name = "Phòng Khách hàng", Type = "Kh", ParentUnitId = cnDoanKet.Id },
+                    new Unit { Code = "KtnqCnThanhPho", Name = "Phòng Kế toán & Ngân quỹ", Type = "Ktnq", ParentUnitId = cnDoanKet.Id },
+                    new Unit { Code = "PgdSo1", Name = "Phòng giao dịch số 1", Type = "PGD", ParentUnitId = cnDoanKet.Id },
+                    new Unit { Code = "PgdSo2", Name = "Phòng giao dịch số 2", Type = "PGD", ParentUnitId = cnDoanKet.Id },
 
                     // Chi nhánh Tân Uyên
                     new Unit { Code = "KhCnTanUyen", Name = "Phòng Khách hàng", Type = "Kh", ParentUnitId = cnTanUyen.Id },
@@ -562,8 +562,8 @@ internal class Program
                     new Unit { Code = "PgdSo3", Name = "Phòng giao dịch số 3", Type = "PGD", ParentUnitId = cnTanUyen.Id },
 
                     // Chi nhánh Nậm Nhùn
-                    new Unit { Code = "KhCnNamNhun", Name = "Phòng Khách hàng", Type = "Kh", ParentUnitId = cnNamNhun.Id },
-                    new Unit { Code = "KtnqCnNamNhun", Name = "Phòng Kế toán & Ngân quỹ", Type = "Ktnq", ParentUnitId = cnNamNhun.Id }
+                    new Unit { Code = "KhCnNamNhun", Name = "Phòng Khách hàng", Type = "Kh", ParentUnitId = cnNamHang.Id },
+                    new Unit { Code = "KtnqCnNamNhun", Name = "Phòng Kế toán & Ngân quỹ", Type = "Ktnq", ParentUnitId = cnNamHang.Id }
                 };
                 db.Units.AddRange(cnl2Departments);
                 db.SaveChanges();
