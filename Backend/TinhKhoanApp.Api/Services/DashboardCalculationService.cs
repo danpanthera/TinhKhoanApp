@@ -82,9 +82,9 @@ namespace TinhKhoanApp.Api.Services
 
                     // Fallback: sử dụng dữ liệu mẫu như cũ
                     var sampleData = GenerateSampleNguonVonData(branchCode, date);
-                    var excludedPrefixes = new[] { "2", "40", "41", "427" };
+                    var sampleExcludedPrefixes = new[] { "2", "40", "41", "427" };
                     var totalBalance = sampleData
-                        .Where(d => !excludedPrefixes.Any(prefix => d.AccountCode.StartsWith(prefix)))
+                        .Where(d => !sampleExcludedPrefixes.Any(prefix => d.AccountCode.StartsWith(prefix)))
                         .Sum(d => d.CurrentBalance);
 
                     var finalValue = totalBalance / 1_000_000m; // Chuyển sang triệu VND
