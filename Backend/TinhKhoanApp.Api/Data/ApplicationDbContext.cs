@@ -77,6 +77,11 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<GAHR26_History> GAHR26_History { get; set; }
         public DbSet<GLCB41_History> GLCB41_History { get; set; }
 
+        // 💰 DbSets cho 3 bảng dữ liệu thô mới với Temporal Tables
+        public DbSet<ThuXLRR> ThuXLRR { get; set; }
+        public DbSet<MSIT72_TSBD> MSIT72_TSBD { get; set; }
+        public DbSet<MSIT72_TSGH> MSIT72_TSGH { get; set; }
+
         // 📊 DbSets cho hệ thống Dashboard Kế hoạch Kinh doanh
         public DbSet<DashboardIndicator> DashboardIndicators { get; set; }
         public DbSet<BusinessPlanTarget> BusinessPlanTargets { get; set; }
