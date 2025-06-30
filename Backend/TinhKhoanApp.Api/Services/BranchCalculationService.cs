@@ -618,11 +618,17 @@ namespace TinhKhoanApp.Api.Services
                 // Lọc theo ngày nếu có tham số date
                 if (date.HasValue)
                 {
+                    // Debug log ngày được filter
+                    _logger.LogInformation("🎯 Filter by specific date: {Date} (Date component: {DateOnly})", 
+                        date.Value.ToString("yyyy-MM-dd HH:mm:ss"), date.Value.Date.ToString("yyyy-MM-dd"));
+                        
                     // Tìm dữ liệu cho ngày cụ thể
                     query = query.Where(x => x.StatementDate.HasValue && x.StatementDate.Value.Date == date.Value.Date);
                 }
                 else
                 {
+                    _logger.LogInformation("📅 No date specified, finding latest date...");
+                    
                     // Nếu không có tham số date, lấy ngày gần nhất
                     var latestDate = await _context.ImportedDataRecords
                         .Where(x => x.Category == "DP01" && x.StatementDate.HasValue)
@@ -633,7 +639,15 @@ namespace TinhKhoanApp.Api.Services
                         query = query.Where(x => x.StatementDate.HasValue && x.StatementDate.Value.Date == latestDate.Value.Date);
                         _logger.LogInformation("📅 Sử dụng ngày gần nhất: {LatestDate}", latestDate.Value.ToString("dd/MM/yyyy"));
                     }
+                    else
+                    {
+                        _logger.LogWarning("❌ Không tìm thấy StatementDate nào trong database");
+                    }
                 }
+
+                // Debug: Log chi tiết thông tin filter
+                _logger.LogInformation("🔍 DEBUG Filter details - Date param: {Date}, HasValue: {HasValue}, Category: DP01", 
+                    date?.ToString("yyyy-MM-dd HH:mm:ss") ?? "NULL", date.HasValue);
 
                 var dp01Records = await query.ToListAsync();
 

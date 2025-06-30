@@ -76,16 +76,16 @@ namespace TinhKhoanApp.Api.Data
             { KpiTableType.PhophongKhCnl2, "Phó phòng KH CNL2" },
             { KpiTableType.TruongphongKtnqCnl2, "Trưởng phòng Kế toán & Ngân quỹ CNL2" },
             { KpiTableType.PhophongKtnqCnl2, "Phó phòng Kế toán & Ngân quỹ CNL2" },
-            // Chi nhánh
+            // Chi nhánh (cập nhật tên mới)
             { KpiTableType.HoiSo, "Hội sở" },
-            { KpiTableType.CnTamDuong, "Chi nhánh Tam Đường" },
+            { KpiTableType.CnTamDuong, "Chi nhánh Bình Lư" },
             { KpiTableType.CnPhongTho, "Chi nhánh Phong Thổ" },
             { KpiTableType.CnSinHo, "Chi nhánh Sin Hồ" },
-            { KpiTableType.CnMuongTe, "Chi nhánh Mường Tè" },
+            { KpiTableType.CnMuongTe, "Chi nhánh Bum Tở" },
             { KpiTableType.CnThanUyen, "Chi nhánh Than Uyên" },
-            { KpiTableType.CnThanhPho, "Chi nhánh Thành phố" },
+            { KpiTableType.CnThanhPho, "Chi nhánh Đoàn Kết" },
             { KpiTableType.CnTanUyen, "Chi nhánh Tân Uyên" },
-            { KpiTableType.CnNamNhun, "Chi nhánh Nậm Nhùn" }
+            { KpiTableType.CnNamNhun, "Chi nhánh Nậm Hàng" }
         };
 
         public static void SeedKpiAssignmentTables(ApplicationDbContext context)
