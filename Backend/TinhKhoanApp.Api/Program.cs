@@ -319,29 +319,29 @@ internal class Program
                 db.SaveChanges();
 
                 // Lấy ID của CNL1 vừa tạo
-                var cnl1 = db.Units.First(u => u.Code == "CnLaiChau");                // Tạo CNL2 (chi nhánh cấp 2 - con của CNL1)
+                var cnl1 = db.Units.First(u => u.Code == "CnLaiChau");                // Tạo CNL2 (chi nhánh cấp 2 - con của CNL1) - cập nhật tên mới
                 var cnl2Units = new[]
                 {
-                    new Unit { Code = "CnTamDuong", Name = "Chi nhánh Tam Đường", Type = "CNL2", ParentUnitId = cnl1.Id },
+                    new Unit { Code = "CnBinhLu", Name = "Chi nhánh Bình Lư", Type = "CNL2", ParentUnitId = cnl1.Id },
                     new Unit { Code = "CnPhongTho", Name = "Chi nhánh Phong Thổ", Type = "CNL2", ParentUnitId = cnl1.Id },
                     new Unit { Code = "CnSinHo", Name = "Chi nhánh Sìn Hồ", Type = "CNL2", ParentUnitId = cnl1.Id },
-                    new Unit { Code = "CnMuongTe", Name = "Chi nhánh Mường Tè", Type = "CNL2", ParentUnitId = cnl1.Id },
+                    new Unit { Code = "CnBumTo", Name = "Chi nhánh Bum Tở", Type = "CNL2", ParentUnitId = cnl1.Id },
                     new Unit { Code = "CnThanUyen", Name = "Chi nhánh Than Uyên", Type = "CNL2", ParentUnitId = cnl1.Id },
-                    new Unit { Code = "CnThanhPho", Name = "Chi nhánh Thành Phố", Type = "CNL2", ParentUnitId = cnl1.Id },
+                    new Unit { Code = "CnDoanKet", Name = "Chi nhánh Đoàn Kết", Type = "CNL2", ParentUnitId = cnl1.Id },
                     new Unit { Code = "CnTanUyen", Name = "Chi nhánh Tân Uyên", Type = "CNL2", ParentUnitId = cnl1.Id },
-                    new Unit { Code = "CnNamNhun", Name = "Chi nhánh Nậm Nhùn", Type = "CNL2", ParentUnitId = cnl1.Id }
+                    new Unit { Code = "CnNamHang", Name = "Chi nhánh Nậm Hàng", Type = "CNL2", ParentUnitId = cnl1.Id }
                 };
                 db.Units.AddRange(cnl2Units);
-                db.SaveChanges();                // Lấy ID của các CNL2 vừa tạo
+                db.SaveChanges();                // Lấy ID của các CNL2 vừa tạo - cập nhật tên code mới
                 var cnLaiChau = db.Units.First(u => u.Code == "CnLaiChau");
-                var cnTamDuong = db.Units.First(u => u.Code == "CnTamDuong");
+                var cnBinhLu = db.Units.First(u => u.Code == "CnBinhLu");
                 var cnPhongTho = db.Units.First(u => u.Code == "CnPhongTho");
                 var cnSinHo = db.Units.First(u => u.Code == "CnSinHo");
-                var cnMuongTe = db.Units.First(u => u.Code == "CnMuongTe");
+                var cnBumTo = db.Units.First(u => u.Code == "CnBumTo");
                 var cnThanUyen = db.Units.First(u => u.Code == "CnThanUyen");
-                var cnThanhPho = db.Units.First(u => u.Code == "CnThanhPho");
+                var cnDoanKet = db.Units.First(u => u.Code == "CnDoanKet");
                 var cnTanUyen = db.Units.First(u => u.Code == "CnTanUyen");
-                var cnNamNhun = db.Units.First(u => u.Code == "CnNamNhun");// Tạo các phòng nghiệp vụ trực thuộc CNL1
+                var cnNamHang = db.Units.First(u => u.Code == "CnNamHang");// Tạo các phòng nghiệp vụ trực thuộc CNL1
                 var cnl1Departments = new[]
                 {
                     new Unit { Code = "Khdn", Name = "Phòng Khách hàng doanh nghiệp", Type = "Khdn", ParentUnitId = cnl1.Id },

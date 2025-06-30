@@ -7,6 +7,16 @@ using System.Text.Json;
 
 namespace TinhKhoanApp.Api.Controllers
 {
+    /// <summary>
+    /// Request model cho debug date filter
+    /// </summary>
+    public class DebugDateFilterRequest
+    {
+        public string BranchId { get; set; } = string.Empty;
+        public DateTime? Date1 { get; set; }
+        public DateTime? Date2 { get; set; }
+    }
+
     [ApiController]
     [Route("api/[controller]")]
     public class DebugNguonVonController : ControllerBase
@@ -851,6 +861,119 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 _logger.LogError(ex, "Lỗi tính toán toàn bộ file 7800");
                 return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Lấy danh sách StatementDate có sẵn trong database cho DP01
+        /// </summary>
+        [HttpGet("statement-dates")]
+        public async Task<ActionResult> GetAvailableStatementDates()
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Lấy danh sách StatementDate có sẵn");
+
+                var statementDates = await _context.ImportedDataRecords
+                    .Where(x => x.Category == "DP01" && x.StatementDate.HasValue)
+                    .Select(x => x.StatementDate.Value)
+                    .Distinct()
+                    .OrderByDescending(x => x)
+                    .ToListAsync();
+
+                var formattedDates = statementDates.Select(date => new
+                {
+                    date = date.ToString("yyyy-MM-dd"),
+                    vietnameseFormat = VietnamDateTime.ToVietnameseDateString(date),
+                    recordCount = _context.ImportedDataRecords
+                        .Count(x => x.Category == "DP01" && x.StatementDate.HasValue && x.StatementDate.Value.Date == date.Date)
+                }).ToList();
+
+                return Ok(new
+                {
+                    success = true,
+                    message = $"Tìm thấy {statementDates.Count} ngày StatementDate khác nhau",
+                    dates = formattedDates,
+                    totalRecords = await _context.ImportedDataRecords.CountAsync(x => x.Category == "DP01")
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Lỗi khi lấy StatementDate");
+                return BadRequest(new { success = false, error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Debug filter theo ngày - kiểm tra tại sao 2 ngày khác nhau ra cùng kết quả
+        /// </summary>
+        [HttpPost("debug-date-filter")]
+        public async Task<ActionResult> DebugDateFilter([FromBody] DebugDateFilterRequest request)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Debug filter theo ngày - {Date1} vs {Date2}",
+                    request.Date1?.ToString("dd/MM/yyyy") ?? "null",
+                    request.Date2?.ToString("dd/MM/yyyy") ?? "null");
+
+                var result1 = request.Date1.HasValue
+                    ? await _branchCalculationService.CalculateNguonVonByBranch(request.BranchId, request.Date1)
+                    : await _branchCalculationService.CalculateNguonVonByBranch(request.BranchId);
+
+                var result2 = request.Date2.HasValue
+                    ? await _branchCalculationService.CalculateNguonVonByBranch(request.BranchId, request.Date2)
+                    : await _branchCalculationService.CalculateNguonVonByBranch(request.BranchId);
+
+                // Kiểm tra dữ liệu thực tế trong database cho mỗi ngày
+                var records1 = request.Date1.HasValue
+                    ? await _context.ImportedDataRecords
+                        .Where(x => x.Category == "DP01" && x.StatementDate.HasValue && x.StatementDate.Value.Date == request.Date1.Value.Date)
+                        .CountAsync()
+                    : await _context.ImportedDataRecords
+                        .Where(x => x.Category == "DP01" && x.StatementDate.HasValue)
+                        .CountAsync();
+
+                var records2 = request.Date2.HasValue
+                    ? await _context.ImportedDataRecords
+                        .Where(x => x.Category == "DP01" && x.StatementDate.HasValue && x.StatementDate.Value.Date == request.Date2.Value.Date)
+                        .CountAsync()
+                    : await _context.ImportedDataRecords
+                        .Where(x => x.Category == "DP01" && x.StatementDate.HasValue)
+                        .CountAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    branchId = request.BranchId,
+                    date1 = new
+                    {
+                        date = request.Date1?.ToString("dd/MM/yyyy") ?? "latest",
+                        result = result1,
+                        resultTrieuVnd = Math.Round(result1 / 1_000_000m, 2),
+                        recordsFound = records1
+                    },
+                    date2 = new
+                    {
+                        date = request.Date2?.ToString("dd/MM/yyyy") ?? "latest",
+                        result = result2,
+                        resultTrieuVnd = Math.Round(result2 / 1_000_000m, 2),
+                        recordsFound = records2
+                    },
+                    analysis = new
+                    {
+                        isSameResult = result1 == result2,
+                        difference = Math.Abs(result1 - result2),
+                        differenceTrieuVnd = Math.Round(Math.Abs(result1 - result2) / 1_000_000m, 2),
+                        possibleIssues = result1 == result2 && request.Date1 != request.Date2
+                            ? new[] { "Filter theo ngày không hoạt động", "Cùng sử dụng ngày gần nhất", "Dữ liệu trùng lặp" }
+                            : new[] { "Logic filter theo ngày hoạt động bình thường" }
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Lỗi debug date filter");
+                return BadRequest(new { success = false, error = ex.Message });
             }
         }
     }

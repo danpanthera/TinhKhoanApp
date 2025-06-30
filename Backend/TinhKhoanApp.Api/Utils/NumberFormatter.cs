@@ -49,7 +49,7 @@ namespace TinhKhoanApp.Api.Utils
         }
 
         /// <summary>
-        /// Format số tiền với đơn vị (triệu VND, tỷ VND)
+        /// Format số tiền với đơn vị (triệu VND) - thống nhất tất cả về triệu VND
         /// </summary>
         /// <param name="value">Giá trị tiền tệ (VND)</param>
         /// <param name="showUnit">Có hiển thị đơn vị không</param>
@@ -59,12 +59,8 @@ namespace TinhKhoanApp.Api.Utils
             string formattedValue = "";
             string unit = "";
 
-            if (Math.Abs(value) >= 1_000_000_000) // Tỷ VND
-            {
-                formattedValue = FormatNumber(value / 1_000_000_000m, 2);
-                unit = " tỷ VND";
-            }
-            else if (Math.Abs(value) >= 1_000_000) // Triệu VND
+            // Thống nhất tất cả về "Triệu VND" theo yêu cầu anh
+            if (Math.Abs(value) >= 1_000_000) // Từ triệu VND trở lên
             {
                 formattedValue = FormatNumber(value / 1_000_000m, 2);
                 unit = " triệu VND";

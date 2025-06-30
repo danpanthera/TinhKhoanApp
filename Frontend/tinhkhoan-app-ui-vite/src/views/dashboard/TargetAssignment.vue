@@ -15,18 +15,18 @@
         <select v-model="selectedUnitId" @change="loadTargets" class="form-select" style="min-width: 200px;">
           <option value="">Tất cả đơn vị (Toàn tỉnh)</option>
           <option value="HoiSo">Hội Sở</option>
-          <option value="CnTamDuong">CN Tam Đường</option>
+          <option value="CnBinhLu">CN Bình Lư</option>
           <option value="CnPhongTho">CN Phong Thổ</option>
-          <option value="CnSinHo">CN Sin Hồ</option>
-          <option value="CnMuongTe">CN Mường Tè</option>
+          <option value="CnSinHo">CN Sìn Hồ</option>
+          <option value="CnBumTo">CN Bum Tở</option>
           <option value="CnThanUyen">CN Than Uyên</option>
-          <option value="CnThanhPho">CN Thành Phố</option>
+          <option value="CnDoanKet">CN Đoàn Kết</option>
           <option value="CnTanUyen">CN Tân Uyên</option>
-          <option value="CnNamNhun">CN Nậm Nhùn</option>
-          <option value="CnPhongThoPgdMuongSo">CN Phong Thổ - PGD Mường So</option>
-          <option value="CnThanUyenPgdMuongThan">CN Than Uyên - PGD Mường Than</option>
-          <option value="CnThanhPhoPgdSo1">CN Thành Phố - PGD Số 1</option>
-          <option value="CnThanhPhoPgdSo2">CN Thành Phố - PGD Số 2</option>
+          <option value="CnNamHang">CN Nậm Hàng</option>
+          <option value="CnPhongThoPgdSo5">CN Phong Thổ - PGD Số 5</option>
+          <option value="CnThanUyenPgdSo6">CN Than Uyên - PGD Số 6</option>
+          <option value="CnDoanKetPgdSo1">CN Đoàn Kết - PGD Số 1</option>
+          <option value="CnDoanKetPgdSo2">CN Đoàn Kết - PGD Số 2</option>
           <option value="CnTanUyenPgdSo3">CN Tân Uyên - PGD Số 3</option>
         </select>
 
@@ -186,18 +186,18 @@
               <select v-model="targetForm.unitId" class="form-select" required>
                 <option value="">Tất cả đơn vị (Toàn tỉnh)</option>
                 <option value="HoiSo">Hội Sở</option>
-                <option value="CnTamDuong">CN Tam Đường</option>
+                <option value="CnBinhLu">CN Bình Lư</option>
                 <option value="CnPhongTho">CN Phong Thổ</option>
                 <option value="CnSinHo">CN Sin Hồ</option>
-                <option value="CnMuongTe">CN Mường Tè</option>
+                <option value="CnBumTo">CN Bum Tở</option>
                 <option value="CnThanUyen">CN Than Uyên</option>
-                <option value="CnThanhPho">CN Thành Phố</option>
+                <option value="CnDoanKet">CN Đoàn Kết</option>
                 <option value="CnTanUyen">CN Tân Uyên</option>
-                <option value="CnNamNhun">CN Nậm Nhùn</option>
+                <option value="CnNamHang">CN Nậm Hàng</option>
                 <option value="CnPhongThoPgdMuongSo">CN Phong Thổ - PGD Mường So</option>
                 <option value="CnThanUyenPgdMuongThan">CN Than Uyên - PGD Mường Than</option>
-                <option value="CnThanhPhoPgdSo1">CN Thành Phố - PGD Số 1</option>
-                <option value="CnThanhPhoPgdSo2">CN Thành Phố - PGD Số 2</option>
+                <option value="CnDoanKetPgdSo1">CN Đoàn Kết - PGD Số 1</option>
+                <option value="CnDoanKetPgdSo2">CN Đoàn Kết - PGD Số 2</option>
                 <option value="CnTanUyenPgdSo3">CN Tân Uyên - PGD Số 3</option>
               </select>
             </div>

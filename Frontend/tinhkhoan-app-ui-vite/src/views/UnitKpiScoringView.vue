@@ -414,17 +414,17 @@ export default {
     const sortedUnits = computed(() => {
       if (!units.value || units.value.length === 0) return []
 
-      // Sắp xếp theo thứ tự: CnLaiChau (7800), CnTamDuong (7801), CnPhongTho (7802), CnSinHo (7803), CnMuongTe (7804), CnThanUyen (7805), CnThanhPho (7806), CnTanUyen (7807), CnNamNhun (7808)
+      // Sắp xếp theo thứ tự: CnLaiChau (7800), CnBinhLu (7801), CnPhongTho (7802), CnSinHo (7803), CnBumTo (7804), CnThanUyen (7805), CnDoanKet (7806), CnTanUyen (7807), CnNamHang (7808)
       const customOrder = [
         'CnLaiChau',    // Chi nhánh Lai Châu (7800)
-        'CnTamDuong',   // Chi nhánh Tam Đường (7801)
+        'CnBinhLu',     // Chi nhánh Bình Lư (7801)
         'CnPhongTho',   // Chi nhánh Phong Thổ (7802)
         'CnSinHo',      // Chi nhánh Sìn Hồ (7803)
-        'CnMuongTe',    // Chi nhánh Mường Tè (7804)
+        'CnBumTo',      // Chi nhánh Bum Tở (7804)
         'CnThanUyen',   // Chi nhánh Than Uyên (7805)
-        'CnThanhPho',   // Chi nhánh Thành Phố (7806)
+        'CnDoanKet',    // Chi nhánh Đoàn Kết (7806)
         'CnTanUyen',    // Chi nhánh Tân Uyên (7807)
-        'CnNamNhun'     // Chi nhánh Nậm Nhùn (7808)
+        'CnNamHang'     // Chi nhánh Nậm Hàng (7808)
       ]
 
       return units.value.sort((a, b) => {

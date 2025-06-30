@@ -83,5 +83,37 @@ namespace TinhKhoanApp.Api.Utils
         {
             return Today.ToString(format);
         }
+
+        /// <summary>
+        /// Format ngày theo chuẩn Việt Nam dd/mm/yyyy
+        /// </summary>
+        public static string ToVietnameseDateString(DateTime dateTime)
+        {
+            return dateTime.ToString("dd/MM/yyyy");
+        }
+
+        /// <summary>
+        /// Format ngày giờ theo chuẩn Việt Nam dd/mm/yyyy HH:mm:ss
+        /// </summary>
+        public static string ToVietnameseDateTimeString(DateTime dateTime)
+        {
+            return dateTime.ToString("dd/MM/yyyy HH:mm:ss");
+        }
+
+        /// <summary>
+        /// Lấy ngày hiện tại theo format Việt Nam dd/mm/yyyy
+        /// </summary>
+        public static string TodayVietnameseString()
+        {
+            return ToVietnameseDateString(Today);
+        }
+
+        /// <summary>
+        /// Lấy ngày giờ hiện tại theo format Việt Nam dd/mm/yyyy HH:mm:ss
+        /// </summary>
+        public static string NowVietnameseString()
+        {
+            return ToVietnameseDateTimeString(Now);
+        }
     }
 }

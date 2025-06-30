@@ -548,21 +548,21 @@ const selectedDate = ref(''); // Thêm biến cho ngày cụ thể
 const selectedUnitId = ref('');
 const trendPeriod = ref('MONTH');
 
-// Danh sách 15 chi nhánh chuẩn hóa theo quy ước mới (đã bỏ CnLaiChau vì có "Toàn tỉnh")
+// Danh sách chi nhánh và PGD theo quy ước mới
 const units = ref([
   { id: 'HoiSo', name: 'Hội Sở', code: '7800' },
-  { id: 'CnTamDuong', name: 'CN Tam Đường', code: '7801' },
+  { id: 'CnBinhLu', name: 'CN Bình Lư', code: '7801' },
   { id: 'CnPhongTho', name: 'CN Phong Thổ', code: '7802' },
-  { id: 'CnSinHo', name: 'CN Sin Hồ', code: '7803' },
-  { id: 'CnMuongTe', name: 'CN Mường Tè', code: '7804' },
+  { id: 'CnSinHo', name: 'CN Sìn Hồ', code: '7803' },
+  { id: 'CnBumTo', name: 'CN Bum Tở', code: '7804' },
   { id: 'CnThanUyen', name: 'CN Than Uyên', code: '7805' },
-  { id: 'CnThanhPho', name: 'CN Thành Phố', code: '7806' },
+  { id: 'CnDoanKet', name: 'CN Đoàn Kết', code: '7806' },
   { id: 'CnTanUyen', name: 'CN Tân Uyên', code: '7807' },
-  { id: 'CnNamNhun', name: 'CN Nậm Nhùn', code: '7808' },
-  { id: 'CnPhongThoPgdMuongSo', name: 'CN Phong Thổ - PGD Mường So', code: '7802', pgdCode: '01' },
-  { id: 'CnThanUyenPgdMuongThan', name: 'CN Than Uyên - PGD Mường Than', code: '7805', pgdCode: '01' },
-  { id: 'CnThanhPhoPgdSo1', name: 'CN Thành Phố - PGD Số 1', code: '7806', pgdCode: '01' },
-  { id: 'CnThanhPhoPgdSo2', name: 'CN Thành Phố - PGD Số 2', code: '7806', pgdCode: '02' },
+  { id: 'CnNamHang', name: 'CN Nậm Hàng', code: '7808' },
+  { id: 'CnPhongThoPgdSo5', name: 'CN Phong Thổ - PGD Số 5', code: '7802', pgdCode: '01' },
+  { id: 'CnThanUyenPgdSo6', name: 'CN Than Uyên - PGD Số 6', code: '7805', pgdCode: '01' },
+  { id: 'CnDoanKetPgdSo1', name: 'CN Đoàn Kết - PGD Số 1', code: '7806', pgdCode: '01' },
+  { id: 'CnDoanKetPgdSo2', name: 'CN Đoàn Kết - PGD Số 2', code: '7806', pgdCode: '02' },
   { id: 'CnTanUyenPgdSo3', name: 'CN Tân Uyên - PGD Số 3', code: '7807', pgdCode: '01' }
 ]);
 const overview = ref({

@@ -4,14 +4,14 @@ export const kpiAssignmentService = {
   // Get all KPI assignment tables
   async getTables() {
     const response = await api.get('/kpiassignment/tables');
-    
+
     let tablesData = [];
     if (response.data && Array.isArray(response.data.$values)) {
       tablesData = response.data.$values;
     } else if (Array.isArray(response.data)) {
       tablesData = response.data;
     }
-    
+
     // Enhanced categorization logic for better table classification
     return tablesData.map(table => {
       // Use the category from backend if available, otherwise apply our logic
@@ -27,10 +27,10 @@ export const kpiAssignmentService = {
         // Safely check tableType - ensure it's a string
         const tableType = table.tableType || '';
         const tableTypeLC = typeof tableType === 'string' ? tableType.toLowerCase() : '';
-        
+
         // Employee tables - using a more comprehensive list of keywords
         if (
-          tableTypeLC.includes('role') || 
+          tableTypeLC.includes('role') ||
           tableTypeLC.includes('employee') ||
           tableTypeLC.includes('canbo') ||
           tableTypeLC.includes('cán bộ') ||
@@ -49,7 +49,7 @@ export const kpiAssignmentService = {
           (typeof table.tableType === 'string' && /^\d+$/.test(table.tableType) && parseInt(table.tableType) >= 0 && parseInt(table.tableType) <= 22)
         ) {
           table.category = 'Vai trò cán bộ';
-        } 
+        }
         // Branch tables - using a more comprehensive list of keywords
         else if (
           tableTypeLC.includes('cn') ||
@@ -67,13 +67,13 @@ export const kpiAssignmentService = {
           tableTypeLC.startsWith('cn_')    // Chi nhánh
         ) {
           table.category = 'Chi nhánh';
-        } 
+        }
         // Fallback for other cases
         else {
           // Check for known patterns in table names
           const tableName = table.tableName || '';
           const tableNameLC = typeof tableName === 'string' ? tableName.toLowerCase() : '';
-          
+
           if (
             tableNameLC.includes('chi nhánh') ||
             tableNameLC.includes('phòng giao dịch') ||
@@ -95,26 +95,26 @@ export const kpiAssignmentService = {
           }
         }
       }
-      
+
       // Format the table code for better display in the UI
       if (table.tableType) {
         table.displayCode = String(table.tableType).toUpperCase();
       }
-      
+
       return table;
     }).sort((a, b) => {
-      // Custom sorting for branch names in the specified order
+      // Custom sorting for branch names in the specified order (cập nhật tên mới)
       const branchOrder = [
-        'CnLaiChau', 'CnTamDuong', 'CnPhongTho', 'CnSinHo', 'CnMuongTe', 
-        'CnThanUyen', 'CnThanhPho', 'CnTanUyen', 'CnNamNhun'
+        'CnLaiChau', 'CnBinhLu', 'CnPhongTho', 'CnSinHo', 'CnBumTo',
+        'CnThanUyen', 'CnDoanKet', 'CnTanUyen', 'CnNamHang'
       ];
-      
+
       const aType = String(a.tableType || '');
       const bType = String(b.tableType || '');
-      
+
       const aOrder = branchOrder.indexOf(aType);
       const bOrder = branchOrder.indexOf(bType);
-      
+
       // If both are in the custom order list, sort by that order
       if (aOrder !== -1 && bOrder !== -1) {
         return aOrder - bOrder;
@@ -122,7 +122,7 @@ export const kpiAssignmentService = {
       // If only one is in the custom order list, prioritize it
       if (aOrder !== -1) return -1;
       if (bOrder !== -1) return 1;
-      
+
       // Default alphabetical sort for everything else
       return aType.localeCompare(bType);
     });
@@ -132,19 +132,19 @@ export const kpiAssignmentService = {
   async getTableDetails(tableId) {
     const response = await api.get(`/KpiAssignment/tables/${tableId}`);
     const tableData = response.data;
-    
+
     if (tableData && tableData.indicators) {
       let indicatorsData = [];
-      
+
       if (Array.isArray(tableData.indicators.$values)) {
         indicatorsData = tableData.indicators.$values;
       } else if (Array.isArray(tableData.indicators)) {
         indicatorsData = tableData.indicators;
       }
-      
+
       tableData.indicators = indicatorsData.sort((a, b) => a.orderIndex - b.orderIndex);
     }
-    
+
     return tableData;
   },
 
@@ -157,14 +157,14 @@ export const kpiAssignmentService = {
   // Get employee KPI assignments for a period
   async getEmployeeAssignments(employeeId, periodId) {
     const response = await api.get(`/KpiAssignment/employee/${employeeId}/period/${periodId}`);
-    
+
     let assignmentsData = [];
     if (response.data && Array.isArray(response.data.$values)) {
       assignmentsData = response.data.$values;
     } else if (Array.isArray(response.data)) {
       assignmentsData = response.data;
     }
-    
+
     return assignmentsData;
   },
 
