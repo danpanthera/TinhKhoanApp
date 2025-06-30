@@ -19,7 +19,7 @@ log_error() { echo -e "${RED}❌ $1${NC}"; }
 # Lấy đường dẫn project
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BACKEND_DIR="$SCRIPT_DIR"
-FRONTEND_DIR="$(cd "$SCRIPT_DIR/../../../Frontend/tinhkhoan-app-ui-vite" && pwd)"
+FRONTEND_DIR="/Users/nguyendat/Documents/Projects/TinhKhoanApp/Frontend/tinhkhoan-app-ui-vite"
 
 log_info "Backend: $BACKEND_DIR"
 log_info "Frontend: $FRONTEND_DIR"
@@ -53,6 +53,7 @@ log_info "Dừng các process cũ..."
 pkill -f "dotnet.*TinhKhoanApp" 2>/dev/null || true
 lsof -ti:5055 | xargs kill -9 2>/dev/null || true
 lsof -ti:5173 | xargs kill -9 2>/dev/null || true
+lsof -ti:3000 | xargs kill -9 2>/dev/null || true
 log_success "Đã dừng các process cũ"
 
 # 3. Khởi động Backend
@@ -91,6 +92,13 @@ fi
 
 # 4. Khởi động Frontend
 log_info "Khởi động Frontend..."
+
+# Kiểm tra thư mục Frontend tồn tại
+if [[ ! -d "$FRONTEND_DIR" ]]; then
+    log_error "Không tìm thấy thư mục Frontend: $FRONTEND_DIR"
+    exit 1
+fi
+
 cd "$FRONTEND_DIR"
 
 # Install dependencies nếu cần
@@ -100,17 +108,38 @@ if [[ ! -d "node_modules" ]]; then
 fi
 
 # Chạy frontend trong background
-log_info "Khởi động Frontend dev server trên port 5173..."
+log_info "Khởi động Frontend dev server..."
 nohup npm run dev > /tmp/frontend.log 2>&1 &
 FRONTEND_PID=$!
 log_success "Frontend đã khởi động (PID: $FRONTEND_PID)"
+
+# Đợi frontend khởi động và kiểm tra port thực tế
+sleep 3
+FRONTEND_PORT=""
+if curl -s -f "http://localhost:5173" > /dev/null 2>&1; then
+    FRONTEND_PORT="5173"
+elif curl -s -f "http://localhost:3000" > /dev/null 2>&1; then
+    FRONTEND_PORT="3000"
+elif curl -s -f "http://localhost:4173" > /dev/null 2>&1; then
+    FRONTEND_PORT="4173"
+fi
+
+if [[ -n "$FRONTEND_PORT" ]]; then
+    log_success "Frontend đã sẵn sàng trên port $FRONTEND_PORT"
+else
+    log_warning "Frontend đang khởi động, kiểm tra log: tail -f /tmp/frontend.log"
+fi
 
 # 5. Tóm tắt
 echo ""
 log_success "🎉 Hệ thống đã khởi động hoàn tất!"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🔗 Backend API:  http://localhost:5055"
-echo "🔗 Frontend App: http://localhost:5173"
+if [[ -n "$FRONTEND_PORT" ]]; then
+    echo "🔗 Frontend App: http://localhost:$FRONTEND_PORT"
+else
+    echo "🔗 Frontend App: đang khởi động... (kiểm tra log)"
+fi
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "📋 Process IDs:"
 echo "   Backend PID:  $BACKEND_PID"
@@ -126,8 +155,12 @@ echo "   pkill -f 'dotnet.*TinhKhoanApp'"
 echo ""
 
 # Mở browser (tùy chọn)
-if command -v open &> /dev/null; then
-    log_info "Mở browser sau 5 giây..."
+if command -v open &> /dev/null && [[ -n "$FRONTEND_PORT" ]]; then
+    log_info "Mở browser sau 3 giây..."
+    sleep 3
+    open "http://localhost:$FRONTEND_PORT"
+elif command -v open &> /dev/null; then
+    log_info "Mở browser với port mặc định sau 5 giây..."
     sleep 5
-    open "http://localhost:5173"
+    open "http://localhost:3000" || open "http://localhost:5173"
 fi
