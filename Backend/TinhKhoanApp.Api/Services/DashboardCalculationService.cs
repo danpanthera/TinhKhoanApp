@@ -104,31 +104,50 @@ namespace TinhKhoanApp.Api.Services
                         var jsonDoc = JsonDocument.Parse(rawDataJson);
                         var root = jsonDoc.RootElement;
 
-                        // Tìm các field có thể chứa thông tin tài khoản và số dư
-                        if (root.TryGetProperty("ACCOUNT_CODE", out var accountCodeElement) ||
-                            root.TryGetProperty("AccountCode", out accountCodeElement) ||
-                            root.TryGetProperty("account_code", out accountCodeElement))
+                        // Lấy thông tin tài khoản hạch toán từ DP01
+                        string accountCode = "";
+                        if (root.TryGetProperty("TAI_KHOAN_HACH_TOAN", out var taiKhoanElement))
                         {
-                            var accountCode = accountCodeElement.GetString() ?? "";
+                            accountCode = taiKhoanElement.GetString() ?? "";
+                        }
+                        else if (root.TryGetProperty("ACCOUNT_CODE", out var accountCodeElement))
+                        {
+                            accountCode = accountCodeElement.GetString() ?? "";
+                        }
 
-                            // Kiểm tra có thuộc chi nhánh đang tính không
-                            var belongsToBranch = root.TryGetProperty("BRANCH_CODE", out var branchElement) &&
-                                                branchElement.GetString() == branchCode;
+                        if (string.IsNullOrEmpty(accountCode)) continue;
 
-                            if (!belongsToBranch) continue;
+                        // Kiểm tra chi nhánh - DP01 có thể có MA_CN, BranchCode
+                        string fileBranchCode = "";
+                        if (root.TryGetProperty("MA_CN", out var maCnElement))
+                        {
+                            fileBranchCode = maCnElement.GetString() ?? "";
+                        }
+                        else if (root.TryGetProperty("BranchCode", out var branchCodeElement))
+                        {
+                            fileBranchCode = branchCodeElement.GetString() ?? "";
+                        }
+                        else if (root.TryGetProperty("BRANCH_CODE", out var legacyBranchElement))
+                        {
+                            fileBranchCode = legacyBranchElement.GetString() ?? "";
+                        }
 
-                            // Chỉ tính các tài khoản không thuộc danh sách loại trừ
-                            if (!excludedPrefixes.Any(prefix => accountCode.StartsWith(prefix)))
+                        // Kiểm tra có thuộc chi nhánh đang tính không
+                        var belongsToBranch = fileBranchCode == branchCode;
+
+                        if (!belongsToBranch) continue;
+
+                        // Chỉ tính các tài khoản không thuộc danh sách loại trừ
+                        if (!excludedPrefixes.Any(prefix => accountCode.StartsWith(prefix)))
+                        {
+                            if (root.TryGetProperty("CURRENT_BALANCE", out var balanceElement) ||
+                                root.TryGetProperty("CurrentBalance", out balanceElement) ||
+                                root.TryGetProperty("current_balance", out balanceElement))
                             {
-                                if (root.TryGetProperty("CURRENT_BALANCE", out var balanceElement) ||
-                                    root.TryGetProperty("CurrentBalance", out balanceElement) ||
-                                    root.TryGetProperty("current_balance", out balanceElement))
+                                if (decimal.TryParse(balanceElement.GetString(), out var balance))
                                 {
-                                    if (decimal.TryParse(balanceElement.GetString(), out var balance))
-                                    {
-                                        totalNguonVon += balance;
-                                        processedRecords++;
-                                    }
+                                    totalNguonVon += balance;
+                                    processedRecords++;
                                 }
                             }
                         }
@@ -918,6 +937,7 @@ namespace TinhKhoanApp.Api.Services
         {
             return unitCode switch
             {
+                "HoiSo" => "7800",          // Hội Sở
                 "CnLaiChau" => "9999",      // Chi nhánh Lai Châu
                 "CnTamDuong" => "7801",     // Chi nhánh Tam Đường
                 "CnPhongTho" => "7802",     // Chi nhánh Phong Thổ

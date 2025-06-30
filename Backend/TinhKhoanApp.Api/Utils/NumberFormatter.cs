@@ -8,8 +8,21 @@ namespace TinhKhoanApp.Api.Utils
     /// </summary>
     public static class NumberFormatter
     {
-        // CultureInfo cho định dạng Việt Nam
-        private static readonly CultureInfo VietnameseCulture = new CultureInfo("vi-VN");
+        // Custom CultureInfo cho định dạng Việt Nam (dấu phẩy ngăn cách nghìn, dấu chấm thập phân)
+        private static readonly CultureInfo CustomVietnameseCulture = CreateCustomVietnameseCulture();
+
+        /// <summary>
+        /// Tạo custom CultureInfo cho định dạng số Việt Nam đúng chuẩn
+        /// </summary>
+        private static CultureInfo CreateCustomVietnameseCulture()
+        {
+            var culture = new CultureInfo("en-US"); // Dùng en-US làm base
+            culture.NumberFormat.NumberGroupSeparator = ",";    // Dấu phẩy ngăn cách nghìn
+            culture.NumberFormat.NumberDecimalSeparator = ".";   // Dấu chấm thập phân
+            culture.NumberFormat.CurrencyGroupSeparator = ",";
+            culture.NumberFormat.CurrencyDecimalSeparator = ".";
+            return culture;
+        }
 
         /// <summary>
         /// Format số thành chuỗi với định dạng Việt Nam (dấu phẩy ngăn cách nghìn, dấu chấm thập phân)
@@ -20,7 +33,7 @@ namespace TinhKhoanApp.Api.Utils
         public static string FormatNumber(decimal value, int decimalPlaces = 0)
         {
             string format = decimalPlaces > 0 ? $"N{decimalPlaces}" : "N0";
-            return value.ToString(format, VietnameseCulture);
+            return value.ToString(format, CustomVietnameseCulture);
         }
 
         /// <summary>
@@ -32,7 +45,7 @@ namespace TinhKhoanApp.Api.Utils
         public static string FormatNumber(double value, int decimalPlaces = 0)
         {
             string format = decimalPlaces > 0 ? $"N{decimalPlaces}" : "N0";
-            return value.ToString(format, VietnameseCulture);
+            return value.ToString(format, CustomVietnameseCulture);
         }
 
         /// <summary>
@@ -79,7 +92,7 @@ namespace TinhKhoanApp.Api.Utils
         public static string FormatPercentage(decimal value, int decimalPlaces = 2)
         {
             string format = $"N{decimalPlaces}";
-            return value.ToString(format, VietnameseCulture) + "%";
+            return value.ToString(format, CustomVietnameseCulture) + "%";
         }
 
         /// <summary>
@@ -103,7 +116,7 @@ namespace TinhKhoanApp.Api.Utils
                                   .Replace("%", "")
                                   .Trim();
 
-            if (decimal.TryParse(cleanValue, NumberStyles.Number, VietnameseCulture, out decimal result))
+            if (decimal.TryParse(cleanValue, NumberStyles.Number, CustomVietnameseCulture, out decimal result))
             {
                 return result;
             }
@@ -126,11 +139,40 @@ namespace TinhKhoanApp.Api.Utils
         }
 
         /// <summary>
-        /// Lấy CultureInfo Việt Nam
+        /// Lấy CultureInfo Việt Nam custom
         /// </summary>
         public static CultureInfo GetVietnameseCulture()
         {
-            return VietnameseCulture;
+            return CustomVietnameseCulture;
+        }
+
+        /// <summary>
+        /// Test và debug định dạng số theo chuẩn Việt Nam
+        /// </summary>
+        public static string TestFormat()
+        {
+            var customCulture = CustomVietnameseCulture;
+            var result = new System.Text.StringBuilder();
+
+            result.AppendLine($"Custom Vietnamese Culture Info:");
+            result.AppendLine($"Number decimal separator: '{customCulture.NumberFormat.NumberDecimalSeparator}'");
+            result.AppendLine($"Number group separator: '{customCulture.NumberFormat.NumberGroupSeparator}'");
+
+            // Test giá trị đúng: 499,616 triệu VND
+            decimal correctValue = 499616000000m;
+            result.AppendLine($"\nGiá trị đúng: {correctValue:N0} VND");
+            result.AppendLine($"Chia cho 1 triệu: {(correctValue / 1_000_000m)}");
+            result.AppendLine($"Format với FormatNumber: {FormatNumber(correctValue / 1_000_000m, 2)}");
+            result.AppendLine($"Format với FormatCurrency: {FormatCurrency(correctValue, true)}");
+
+            // Test giá trị sai: 1,042,128.78 triệu VND
+            decimal wrongValue = 1042128780000m;
+            result.AppendLine($"\nGiá trị sai: {wrongValue:N0} VND");
+            result.AppendLine($"Chia cho 1 triệu: {(wrongValue / 1_000_000m)}");
+            result.AppendLine($"Format với FormatNumber: {FormatNumber(wrongValue / 1_000_000m, 2)}");
+            result.AppendLine($"Format với FormatCurrency: {FormatCurrency(wrongValue, true)}");
+
+            return result.ToString();
         }
     }
 }
