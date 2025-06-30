@@ -444,17 +444,22 @@ const selectedIndicator = ref(null);
 const activeChartTab = ref('comparison');
 const animatedValues = ref({}); // Giá trị animated cho counters
 
-// Danh sách 9 chi nhánh theo mã code backend
+// Danh sách chi nhánh và PGD theo quy ước mới
 const branches = ref([
   { id: '7800', name: 'Hội Sở' },
-  { id: '7801', name: 'CN Tam Đường' },
+  { id: '7801', name: 'CN Bình Lư' },
   { id: '7802', name: 'CN Phong Thổ' },
-  { id: '7803', name: 'CN Sin Hồ' },
-  { id: '7804', name: 'CN Mường Tè' },
+  { id: '7802-01', name: 'CN Phong Thổ - PGD Số 5' },
+  { id: '7803', name: 'CN Sìn Hồ' },
+  { id: '7804', name: 'CN Bum Tở' },
   { id: '7805', name: 'CN Than Uyên' },
-  { id: '7806', name: 'CN Thành Phố' },
+  { id: '7805-01', name: 'CN Than Uyên - PGD Số 6' },
+  { id: '7806', name: 'CN Đoàn Kết' },
+  { id: '7806-01', name: 'CN Đoàn Kết - PGD Số 1' },
+  { id: '7806-02', name: 'CN Đoàn Kết - PGD Số 2' },
   { id: '7807', name: 'CN Tân Uyên' },
-  { id: '7808', name: 'CN Nậm Nhùn' }
+  { id: '7807-01', name: 'CN Tân Uyên - PGD Số 3' },
+  { id: '7808', name: 'CN Nậm Hàng' }
 ]);
 
 // 6 chỉ tiêu dashboard chính - sẽ được cập nhật từ API backend
@@ -997,14 +1002,14 @@ const contributorsData = ref({
   nguon_von: {
     year: [
       { id: 1, name: 'Nguyễn Văn A - CN Lai Châu', contribution: 85.2 },
-      { id: 2, name: 'Trần Thị B - CN Tam Đường', contribution: 67.5 },
+      { id: 2, name: 'Trần Thị B - CN Bình Lư', contribution: 67.5 },
       { id: 3, name: 'Lê Văn C - Hội Sở', contribution: 54.8 },
       { id: 4, name: 'Phạm Thị D - CN Phong Thổ', contribution: 43.2 },
       { id: 5, name: 'Hoàng Văn E - CN Sin Hồ', contribution: 38.7 }
     ],
     month: [
       { id: 1, name: 'Nguyễn Văn A - CN Lai Châu', contribution: 12.5 },
-      { id: 2, name: 'Trần Thị B - CN Tam Đường', contribution: 8.7 },
+      { id: 2, name: 'Trần Thị B - CN Bình Lư', contribution: 8.7 },
       { id: 3, name: 'Lê Văn C - Hội Sở', contribution: 6.9 },
       { id: 4, name: 'Phạm Thị D - CN Phong Thổ', contribution: 5.2 },
       { id: 5, name: 'Hoàng Văn E - CN Sin Hồ', contribution: 2.4 }

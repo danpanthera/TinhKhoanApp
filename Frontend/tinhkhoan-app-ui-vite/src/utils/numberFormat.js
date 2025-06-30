@@ -29,6 +29,17 @@ export const formatNumber = (value, options = {}) => {
 };
 
 /**
+ * Format số tiền theo chuẩn Việt Nam
+ * @param {number|string} value - Giá trị số cần format
+ * @param {string} currency - Đơn vị tiền tệ (VND, triệu VND, tỷ VND)
+ * @returns {string} Chuỗi tiền tệ đã format
+ */
+export const formatCurrency = (value, currency = 'VND') => {
+  const formatted = formatNumber(value, { maximumFractionDigits: 2 });
+  return `${formatted} ${currency}`;
+};
+
+/**
  * Parse chuỗi đã format thành số
  * @param {string} formattedValue - Chuỗi đã format
  * @returns {number} Giá trị số
@@ -168,6 +179,7 @@ export const useNumberInput = (options = {}) => {
 // Export default cho dễ import
 export default {
   formatNumber,
+  formatCurrency,
   parseFormattedNumber,
   sanitizeNumberInput,
   formatNumberRealtime,

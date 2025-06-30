@@ -339,12 +339,21 @@ export const dashboardService = {
   },
 
   // API cho General Dashboard
-  async getGeneralDashboardData(branchId) {
+  async getGeneralDashboardData(branchId, date = null) {
     try {
-      const response = await api.get(`/GeneralDashboard/indicators/${branchId}`);
+      let url = `/GeneralDashboard/indicators/${branchId}`;
+      if (date) {
+        // Format date thành YYYY-MM-DD cho backend
+        const formattedDate = date instanceof Date ? date.toISOString().split('T')[0] : date;
+        url += `?date=${formattedDate}`;
+      }
+
+      console.log('🔄 Gọi API:', url);
+      const response = await api.get(url);
+      console.log('✅ API response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Error fetching general dashboard data:', error);
+      console.error('❌ Error fetching general dashboard data:', error);
       throw error;
     }
   }
