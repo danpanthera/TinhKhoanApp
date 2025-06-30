@@ -433,7 +433,7 @@ async function onBranchChange() {
       // For CNL1, try multiple matching strategies
       kpiTable = branchTables.find(t =>
         safeStringEquals(t.tableType, 'HoiSo') ||
-        safeStringEquals(t.tableType, 'CnTamDuong') ||
+        safeStringEquals(t.tableType, 'CnBinhLu') ||
         safeStringIncludes(t.tableName, 'hội sở (7800)') ||
         safeStringIncludes(t.tableName, 'cnl1') ||
         safeStringIncludes(t.tableName, 'chi nhánh cấp 1')

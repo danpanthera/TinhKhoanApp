@@ -343,17 +343,17 @@ const selectedKpiTable = computed(() => {
 
 // Updated branchOptions: Custom ordering as requested
 const branchOptions = computed(() => {
-  // Định nghĩa thứ tự theo yêu cầu: CnLaiChau, CnTamDuong, CnPhongTho, CnSinHo, CnMuongTe, CnThanUyen, CnThanhPho, CnTanUyen, CnNamNhun
+  // Định nghĩa thứ tự theo yêu cầu (cập nhật tên mới): CnLaiChau, CnBinhLu, CnPhongTho, CnSinHo, CnBumTo, CnThanUyen, CnDoanKet, CnTanUyen, CnNamHang
   const customOrder = [
     'CnLaiChau',     // Chi nhánh tỉnh Lai Châu
-    'CnTamDuong',    // Chi nhánh Tam Đường
+    'CnBinhLu',      // Chi nhánh Bình Lư
     'CnPhongTho',    // Chi nhánh Phong Thổ
     'CnSinHo',       // Chi nhánh Sìn Hồ
-    'CnMuongTe',     // Chi nhánh Mường Tè
+    'CnBumTo',       // Chi nhánh Bum Tở
     'CnThanUyen',    // Chi nhánh Than Uyên
-    'CnThanhPho',    // Chi nhánh Thành Phố
+    'CnDoanKet',     // Chi nhánh Đoàn Kết
     'CnTanUyen',     // Chi nhánh Tân Uyên
-    'CnNamNhun'      // Chi nhánh Nậm Nhùn
+    'CnNamHang'      // Chi nhánh Nậm Hàng
   ];
 
   return units.value

@@ -18,7 +18,7 @@
       >
         + Thêm nhân viên
       </button>
-      
+
       <!-- Các nút cho tính năng chọn nhiều -->
       <template v-if="pagedEmployees.length > 0">
         <button
@@ -28,7 +28,7 @@
         >
           {{ isAllSelected ? 'Bỏ chọn tất cả' : 'Chọn tất cả' }}
         </button>
-        
+
         <button
           v-if="selectedEmployeeIds.length > 0"
           @click="confirmDeleteSelected"
@@ -68,8 +68,8 @@
         <thead>
           <tr>
             <th style="width: 50px; min-width: 50px;">
-              <input 
-                type="checkbox" 
+              <input
+                type="checkbox"
                 :checked="isAllSelected"
                 @change="toggleSelectAll"
                 title="Chọn/Bỏ chọn tất cả"
@@ -90,11 +90,11 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="employee in pagedEmployees" :key="employee.id" 
+          <tr v-for="employee in pagedEmployees" :key="employee.id"
               :class="{ 'selected-row': selectedEmployeeIds.includes(employee.id) }">
             <td class="checkbox-cell">
-              <input 
-                type="checkbox" 
+              <input
+                type="checkbox"
                 :value="employee.id"
                 v-model="selectedEmployeeIds"
                 :disabled="employee.username === 'admin'"
@@ -103,8 +103,8 @@
             </td>
             <td class="action-cell">
               <button @click="startEditEmployee(employee)" class="edit-btn">Sửa</button>
-              <button 
-                @click="confirmDeleteEmployee(employee.id)" 
+              <button
+                @click="confirmDeleteEmployee(employee.id)"
                 class="delete-btn"
                 :disabled="employee.username === 'admin'"
                 :title="employee.username === 'admin' ? 'Không thể xóa tài khoản admin' : 'Xóa nhân viên'"
@@ -279,8 +279,8 @@
           <div class="form-group">
             <label for="roleIds">Vai trò:</label>
             <div class="role-dropdown-container">
-              <div 
-                class="role-dropdown-header" 
+              <div
+                class="role-dropdown-header"
                 @click="toggleRoleDropdown"
                 :class="{ 'active': isRoleDropdownOpen }"
               >
@@ -290,14 +290,14 @@
                 <span class="dropdown-arrow" :class="{ 'rotated': isRoleDropdownOpen }">▼</span>
               </div>
               <div v-if="isRoleDropdownOpen" class="role-dropdown-menu">
-                <div 
-                  v-for="role in roleStore.allRoles" 
-                  :key="role.id" 
+                <div
+                  v-for="role in roleStore.allRoles"
+                  :key="role.id"
                   class="role-option"
                   @click="toggleRoleSelection(role.id)"
                 >
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     :checked="isRoleSelected(role.id)"
                     @click.stop
                     @change="toggleRoleSelection(role.id)"
@@ -359,11 +359,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useEmployeeStore } from "@/stores/employeeStore";
-import { useUnitStore } from "@/stores/unitStore";
 import { usePositionStore } from "@/stores/positionStore";
 import { useRoleStore } from "@/stores/roleStore";
+import { useUnitStore } from "@/stores/unitStore";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 
 const employeeStore = useEmployeeStore();
 const unitStore = useUnitStore();
@@ -439,17 +439,17 @@ const displayError = computed(() => {
 
 // Updated branchOptions: Custom ordering to match EmployeeKpiAssignmentView
 const branchOptions = computed(() => {
-  // Định nghĩa thứ tự theo yêu cầu: CnLaiChau, CnTamDuong, CnPhongTho, CnSinHo, CnMuongTe, CnThanUyen, CnThanhPho, CnTanUyen, CnNamNhun
+  // Định nghĩa thứ tự theo yêu cầu (cập nhật tên mới): CnLaiChau, CnBinhLu, CnPhongTho, CnSinHo, CnBumTo, CnThanUyen, CnDoanKet, CnTanUyen, CnNamHang
   const customOrder = [
     'CnLaiChau',     // Chi nhánh tỉnh Lai Châu
-    'CnTamDuong',    // Chi nhánh Tam Đường
-    'CnPhongTho',    // Chi nhánh Phong Thổ  
+    'CnBinhLu',      // Chi nhánh Bình Lư
+    'CnPhongTho',    // Chi nhánh Phong Thổ
     'CnSinHo',       // Chi nhánh Sìn Hồ
-    'CnMuongTe',     // Chi nhánh Mường Tè
+    'CnBumTo',       // Chi nhánh Bum Tở
     'CnThanUyen',    // Chi nhánh Than Uyên
-    'CnThanhPho',    // Chi nhánh Thành Phố
+    'CnDoanKet',     // Chi nhánh Đoàn Kết
     'CnTanUyen',     // Chi nhánh Tân Uyên
-    'CnNamNhun'      // Chi nhánh Nậm Nhùn
+    'CnNamHang'      // Chi nhánh Nậm Hàng
   ];
 
   return unitStore.allUnits
@@ -460,16 +460,16 @@ const branchOptions = computed(() => {
     .sort((a, b) => {
       const indexA = customOrder.indexOf(a.code);
       const indexB = customOrder.indexOf(b.code);
-      
+
       // Nếu cả hai đều có trong custom order, sắp xếp theo thứ tự đó
       if (indexA !== -1 && indexB !== -1) {
         return indexA - indexB;
       }
-      
+
       // Nếu chỉ có một trong hai có trong custom order, ưu tiên cái đó
       if (indexA !== -1) return -1;
       if (indexB !== -1) return 1;
-      
+
       // Nếu cả hai đều không có trong custom order, sắp xếp theo tên
       return (a.name || '').localeCompare(b.name || '');
     });
@@ -480,16 +480,16 @@ const departmentOptions = computed(() => {
   if (!selectedBranchId.value) return [];
   const branch = unitStore.allUnits.find(u => u.id === Number(selectedBranchId.value));
   if (!branch) return [];
-  
+
   // Lấy các phòng nghiệp vụ con của chi nhánh đã chọn
   const children = unitStore.allUnits.filter(u => u.parentUnitId === branch.id);
-  
+
   // Lọc chỉ lấy các phòng nghiệp vụ (PNVL1, PNVL2) và phòng giao dịch (PGD), loại bỏ các chi nhánh con (CNL2)
   const departments = children.filter(u => {
     const unitType = (u.type || '').toUpperCase();
     return unitType.includes('PNVL') || unitType === 'PGD';
   });
-  
+
   // Sắp xếp theo thứ tự: Ban Giám đốc, Phòng Khách hàng, Phòng Kế toán & Ngân quỹ, Phòng giao dịch
   return departments.sort((a, b) => {
     const getOrder = (name) => {
@@ -500,7 +500,7 @@ const departmentOptions = computed(() => {
       if (lowerName.includes('phòng giao dịch')) return 4;
       return 999;
     };
-    
+
     return getOrder(a.name) - getOrder(b.name);
   });
 });
@@ -547,7 +547,7 @@ const startEditEmployee = async (employee) => {
   formError.value = null;
   employeeStore.error = null;
   isEditing.value = true;
-  
+
   // Fetch chi tiết nhân viên để lấy passwordHash gốc
   try {
     const detail = await employeeStore.fetchEmployeeDetail(employee.id);
@@ -560,11 +560,11 @@ const startEditEmployee = async (employee) => {
     originalPasswordHash.value = employee.passwordHash || "";
     formError.value = "Không lấy được thông tin chi tiết nhân viên. Có thể không cập nhật được nếu thiếu passwordHash.";
   }
-  
+
   // Đảm bảo các field có giá trị đúng
   currentEmployee.value.unitId = currentEmployee.value.unitId ? Number(currentEmployee.value.unitId) : null;
   currentEmployee.value.positionId = currentEmployee.value.positionId ? Number(currentEmployee.value.positionId) : null;
-  
+
   // Đồng bộ selectedBranchId
   syncSelectedBranchWithEmployeeUnit();
   // Đồng bộ selectedBranchId
@@ -617,12 +617,12 @@ function getNextEmployeeCode() {
 // Function to extract only primitive fields from employee object
 function extractEmployeePrimitives(employee) {
   if (!employee) return {};
-  
+
   // Extract role IDs from different possible structures
   let roleIds = [];
   if (employee.employeeRoles && Array.isArray(employee.employeeRoles)) {
     // Try different possible field names to ensure compatibility
-    roleIds = employee.employeeRoles.map(er => 
+    roleIds = employee.employeeRoles.map(er =>
       er.RoleId || er.roleId || er.role?.id
     ).filter(id => id && !isNaN(Number(id))).map(id => Number(id));
   } else if (employee.roleIds && Array.isArray(employee.roleIds)) {
@@ -634,10 +634,10 @@ function extractEmployeePrimitives(employee) {
     // Handle case where roles array contains role objects directly
     roleIds = employee.roles.map(role => role.id).filter(id => id && !isNaN(Number(id))).map(id => Number(id));
   }
-  
+
   console.log('🔍 extractEmployeePrimitives - employee:', employee);
   console.log('🔍 extractEmployeePrimitives - extracted roleIds:', roleIds);
-  
+
   return {
     id: employee.id ?? null,
     employeeCode: employee.employeeCode ?? '',
@@ -661,14 +661,14 @@ const handleSubmitEmployee = async () => {
 
   // Extract and clean data for submission
   let dataToProcess = extractEmployeePrimitives(currentEmployee.value);
-  
+
   // Override roleIds with current form values to ensure latest selection is used
   if (currentEmployee.value.roleIds && Array.isArray(currentEmployee.value.roleIds)) {
     dataToProcess.roleIds = currentEmployee.value.roleIds.map(id => Number(id));
   }
-  
+
   console.log('🔍 handleSubmitEmployee - dataToProcess before trim:', dataToProcess);
-  
+
   for (const key in dataToProcess) {
     if (
       key !== "unitId" &&
@@ -868,12 +868,12 @@ const confirmDeleteSelected = async () => {
     return;
   }
 
-  const selectedEmployees = employeeStore.allEmployees.filter(emp => 
+  const selectedEmployees = employeeStore.allEmployees.filter(emp =>
     selectedEmployeeIds.value.includes(emp.id)
   );
 
   const employeeNames = selectedEmployees.map(emp => emp.fullName).join(', ');
-  
+
   if (confirm(`Bạn có chắc chắn muốn xóa ${selectedEmployeeIds.value.length} nhân viên sau không?\n\n${employeeNames}`)) {
     await deleteSelectedEmployees();
   }
@@ -884,16 +884,16 @@ const deleteSelectedEmployees = async () => {
   isDeleting.value = true;
   formError.value = null;
   employeeStore.error = null;
-  
+
   try {
     const result = await employeeStore.deleteMultipleEmployees(selectedEmployeeIds.value);
-    
+
     // Reset danh sách chọn
     selectedEmployeeIds.value = [];
-    
+
     // Hiển thị thông báo thành công
     alert(`✅ ${result.deletedCount} nhân viên đã được xóa thành công!`);
-    
+
   } catch (error) {
     console.error("Lỗi khi xóa nhiều nhân viên:", error);
     formError.value = employeeStore.error || "Có lỗi xảy ra khi xóa nhân viên.";
@@ -927,7 +927,7 @@ const toggleRoleSelection = (roleId) => {
   if (!currentEmployee.value.roleIds) {
     currentEmployee.value.roleIds = [];
   }
-  
+
   const index = currentEmployee.value.roleIds.indexOf(roleId);
   if (index > -1) {
     currentEmployee.value.roleIds.splice(index, 1);
@@ -944,17 +944,17 @@ const getSelectedRolesText = () => {
   if (!currentEmployee.value.roleIds || currentEmployee.value.roleIds.length === 0) {
     return "Chọn vai trò...";
   }
-  
-  const selectedRoles = roleStore.allRoles.filter(role => 
+
+  const selectedRoles = roleStore.allRoles.filter(role =>
     currentEmployee.value.roleIds.includes(role.id)
   );
-  
+
     if (selectedRoles.length === 1) {
     return selectedRoles[0].name;
   } else if (selectedRoles.length > 1) {
     return `${selectedRoles.length} vai trò đã chọn`;
   }
-  
+
   return "Chọn vai trò...";
 };
 
@@ -974,7 +974,7 @@ function onInputTextOnly(field, event) {
 function onUsernameInput(event) {
   let val = event.target.value.replace(/[^a-zA-Z0-9]/g, '');
   currentEmployee.value.username = val;
-  
+
   // Auto-generate email when creating new employee (not when editing)
   if (!isEditing.value && val) {
     currentEmployee.value.email = `${val}@agribank.com.vn`;
@@ -995,7 +995,7 @@ function scrollToAddEmployeeForm() {
 function getRoleNames(employee) {
   // Handle different role structures
   let roleNames = [];
-  
+
   if (employee.roles && employee.roles.$values && Array.isArray(employee.roles.$values)) {
     // Handle roles.$values structure (current API format)
     roleNames = employee.roles.$values.map(role => role.name).filter(name => name);
@@ -1006,7 +1006,7 @@ function getRoleNames(employee) {
     // Handle employeeRoles structure (legacy)
     roleNames = employee.employeeRoles.map(er => er.role?.name).filter(name => name);
   }
-  
+
   return roleNames.length > 0 ? roleNames.join(', ') : 'Chưa có vai trò';
 }
 
@@ -1017,7 +1017,7 @@ onMounted(() => {
   if (!isEditing.value) {
     currentEmployee.value.employeeCode = getNextEmployeeCode();
   }
-  
+
   // Add click outside listener for role dropdown
   document.addEventListener('click', handleClickOutside);
 });
@@ -1264,17 +1264,17 @@ ul {
     margin: 10px;
     padding: 15px;
   }
-  
+
   .form-row {
     flex-direction: column;
     gap: 0;
   }
-  
+
   .list-item {
     flex-direction: column;
     align-items: flex-start;
   }
-  
+
   .actions {
     width: 100%;
     justify-content: space-between;
@@ -1459,11 +1459,11 @@ ul {
     padding: 8px 12px;
     min-height: 40px;
   }
-  
+
   .role-option {
     padding: 10px 14px;
   }
-  
+
   .role-dropdown-menu {
     max-height: 240px;
   }
