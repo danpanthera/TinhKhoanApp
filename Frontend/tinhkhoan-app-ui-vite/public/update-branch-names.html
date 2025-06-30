@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Cập nhật tên chi nhánh và đơn vị tính</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .result { margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 3px; max-height: 400px; overflow-y: auto; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .update-btn { background: #28a745; }
+        .update-btn:hover { background: #218838; }
+        .check-btn { background: #17a2b8; }
+        .check-btn:hover { background: #138496; }
+        pre { white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Cập nhật tên chi nhánh và đơn vị tính</h1>
+
+        <div class="test-section">
+            <h3>1. Kiểm tra tên hiện tại trong database</h3>
+            <button onclick="checkCurrentNames()" class="check-btn">🔍 Kiểm tra tên hiện tại</button>
+            <div id="checkResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Cập nhật tên chi nhánh và đơn vị tính</h3>
+            <p><strong>Mapping sẽ được áp dụng:</strong></p>
+            <ul>
+                <li>Chi nhánh Tam Đường → <strong>Chi nhánh Bình Lư</strong></li>
+                <li>Chi nhánh Mường Tè → <strong>Chi nhánh Bum Tở</strong></li>
+                <li>Chi nhánh Thành Phố → <strong>Chi nhánh Đoàn Kết</strong></li>
+                <li>Chi nhánh Nậm Nhùn → <strong>Chi nhánh Nậm Hàng</strong></li>
+                <li>Tất cả "Tỷ VND" → <strong>"Triệu VND"</strong></li>
+            </ul>
+            <button onclick="updateNames()" class="update-btn">✅ Cập nhật Database</button>
+            <div id="updateResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Test API Nguồn vốn sau khi cập nhật</h3>
+            <label>Chi nhánh:</label>
+            <select id="branchSelect">
+                <option value="CnLaiChau">CN Lai Châu (Toàn tỉnh)</option>
+                <option value="7801-00">CN Bình Lư (7801-00)</option>
+                <option value="7806-00">CN Đoàn Kết (7806-00)</option>
+                <option value="7808-00">CN Nậm Hàng (7808-00)</option>
+            </select>
+            <br>
+            <label>Ngày 1:</label>
+            <input type="date" id="testDate1" value="2024-12-31">
+            <label>Ngày 2:</label>
+            <input type="date" id="testDate2" value="2025-04-30">
+            <br>
+            <button onclick="testNguonVonAfterUpdate()">💰 Test Nguồn Vốn</button>
+            <div id="testResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. Debug StatementDate trong database</h3>
+            <button onclick="debugStatementDates()">📅 Kiểm tra StatementDate</button>
+            <div id="statementResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5055/api';
+
+        async function checkCurrentNames() {
+            const resultDiv = document.getElementById('checkResult');
+            resultDiv.innerHTML = '🔄 Đang kiểm tra...';
+
+            try {
+                const response = await fetch(`${API_BASE}/UpdateData/check-branch-names`);
+                const result = await response.json();
+
+                if (result.success) {
+                    let html = '<h4>✅ Kết quả kiểm tra:</h4>';
+
+                    html += '<h5>Units (CNL2):</h5><ul>';
+                    result.units.forEach(unit => {
+                        html += `<li><strong>${unit.code}</strong>: ${unit.name}</li>`;
+                    });
+                    html += '</ul>';
+
+                    html += '<h5>KPI Tables (Chi nhánh):</h5><ul>';
+                    result.kpiTables.forEach(table => {
+                        html += `<li><strong>${table.tableType}</strong>: ${table.tableName}</li>`;
+                    });
+                    html += '</ul>';
+
+                    html += '<h5>KPI Definitions có VND:</h5><ul>';
+                    result.kpiDefinitionsWithVnd.forEach(kpi => {
+                        html += `<li><strong>${kpi.name}</strong>: ${kpi.unit}</li>`;
+                    });
+                    html += '</ul>';
+
+                    resultDiv.innerHTML = html;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.innerHTML = `<p class="error">❌ Lỗi: ${result.error}</p>`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ Lỗi: ${error.message}</p>`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function updateNames() {
+            const resultDiv = document.getElementById('updateResult');
+            resultDiv.innerHTML = '🔄 Đang cập nhật database...';
+
+            try {
+                const response = await fetch(`${API_BASE}/UpdateData/update-branch-names`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    let html = '<h4>✅ Cập nhật thành công!</h4>';
+                    html += `<p><strong>Tổng số thay đổi:</strong> ${result.summary.totalChanges}</p>`;
+                    html += `<p><strong>Units cập nhật:</strong> ${result.summary.updatedUnits}</p>`;
+                    html += `<p><strong>KPI Tables cập nhật:</strong> ${result.summary.updatedKpiTables}</p>`;
+                    html += `<p><strong>KPI Definitions cập nhật:</strong> ${result.summary.updatedKpiDefinitions}</p>`;
+
+                    html += '<h5>Mapping áp dụng:</h5><ul>';
+                    Object.entries(result.mappings).forEach(([oldName, newName]) => {
+                        html += `<li>${oldName} → <strong>${newName}</strong></li>`;
+                    });
+                    html += '</ul>';
+
+                    resultDiv.innerHTML = html;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.innerHTML = `<p class="error">❌ Lỗi: ${result.error}</p>`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ Lỗi: ${error.message}</p>`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testNguonVonAfterUpdate() {
+            const branchId = document.getElementById('branchSelect').value;
+            const date1 = document.getElementById('testDate1').value;
+            const date2 = document.getElementById('testDate2').value;
+            const resultDiv = document.getElementById('testResult');
+
+            resultDiv.innerHTML = '🔄 Đang test API Nguồn vốn...';
+
+            try {
+                // Test với 2 ngày khác nhau
+                const [response1, response2] = await Promise.all([
+                    fetch(`${API_BASE}/BranchIndicators/nguon-von`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ branchId, date: date1 })
+                    }),
+                    fetch(`${API_BASE}/BranchIndicators/nguon-von`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ branchId, date: date2 })
+                    })
+                ]);
+
+                const result1 = await response1.json();
+                const result2 = await response2.json();
+
+                let html = '<h4>💰 Kết quả test Nguồn vốn:</h4>';
+                html += `<p><strong>Chi nhánh:</strong> ${branchId}</p>`;
+                html += `<p><strong>Ngày ${date1}:</strong> ${formatCurrency(result1.value)} triệu VND</p>`;
+                html += `<p><strong>Ngày ${date2}:</strong> ${formatCurrency(result2.value)} triệu VND</p>`;
+
+                if (result1.value === result2.value) {
+                    html += `<p class="error">❌ <strong>VẤN ĐỀ:</strong> Vẫn trả về cùng số liệu!</p>`;
+                    html += `<p>➡️ Cần debug thêm logic filter theo ngày</p>`;
+                } else {
+                    html += `<p class="success">✅ OK: Có sự khác biệt giữa 2 ngày</p>`;
+                    const diff = Math.abs(result1.value - result2.value);
+                    html += `<p><strong>Chênh lệch:</strong> ${formatCurrency(diff)} triệu VND</p>`;
+                }
+
+                resultDiv.innerHTML = html;
+                resultDiv.className = 'result';
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ Lỗi: ${error.message}</p>`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function debugStatementDates() {
+            const resultDiv = document.getElementById('statementResult');
+            resultDiv.innerHTML = '🔄 Đang kiểm tra StatementDate...';
+
+            try {
+                const response = await fetch(`${API_BASE}/DebugNguonVon/statement-dates`);
+                const result = await response.json();
+
+                if (result.success) {
+                    let html = '<h4>📅 StatementDate trong database:</h4>';
+                    html += `<p><strong>Tổng records DP01:</strong> ${result.totalRecords}</p>`;
+                    html += `<p><strong>Số ngày khác nhau:</strong> ${result.dates.length}</p>`;
+
+                    if (result.dates.length > 0) {
+                        html += '<h5>Danh sách ngày:</h5><ul>';
+                        result.dates.forEach(dateInfo => {
+                            html += `<li><strong>${dateInfo.vietnameseFormat}</strong> (${dateInfo.date}) - ${dateInfo.recordCount} records</li>`;
+                        });
+                        html += '</ul>';
+                    } else {
+                        html += '<p class="warning">⚠️ Không có dữ liệu DP01 nào trong database!</p>';
+                    }
+
+                    resultDiv.innerHTML = html;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.innerHTML = `<p class="error">❌ Lỗi: ${result.error || 'API error'}</p>`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p class="error">❌ Lỗi: ${error.message}</p>`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        function formatCurrency(value) {
+            if (typeof value === 'number') {
+                return (value / 1000000).toLocaleString('vi-VN', { maximumFractionDigits: 2 });
+            }
+            return value;
+        }
+
+        // Auto load kiểm tra tên hiện tại
+        window.onload = function() {
+            checkCurrentNames();
+        };
+    </script>
+</body>
+</html>

@@ -162,7 +162,7 @@ namespace TinhKhoanApp.Api.Data
         {
             var indicators = new List<KpiIndicator>();
             var roleCode = TableTypeToRoleCodeMapping[kpiTable.TableType];
-            
+
             // Lấy KPI definitions từ database theo roleCode
             var kpiDefinitions = context.KPIDefinitions
                 .Where(k => k.KpiCode.StartsWith(roleCode + "_"))
