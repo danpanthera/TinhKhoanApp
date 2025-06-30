@@ -282,18 +282,18 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 new("CnLaiChau", "Chi nhánh Lai Châu", "9999", null),
                 new("HoiSo", "Hội Sở", "7800", null),
-                new("CnTamDuong", "CN Tam Đường", "7801", null),
+                new("CnBinhLu", "CN Bình Lư", "7801", null),
                 new("CnPhongTho", "CN Phong Thổ", "7802", null),
                 new("CnSinHo", "CN Sìn Hồ", "7803", null),
-                new("CnMuongTe", "CN Mường Tè", "7804", null),
+                new("CnBumTo", "CN Bum Tở", "7804", null),
                 new("CnThanUyen", "CN Than Uyên", "7805", null),
-                new("CnThanhPho", "CN Thành Phố", "7806", null),
+                new("CnDoanKet", "CN Đoàn Kết", "7806", null),
                 new("CnTanUyen", "CN Tân Uyên", "7807", null),
-                new("CnNamNhun", "CN Nậm Nhùn", "7808", null),
-                new("CnPhongThoPgdMuongSo", "CN Phong Thổ - PGD Mường So", "7802", "01"),
-                new("CnThanUyenPgdMuongThan", "CN Than Uyên - PGD Mường Than", "7805", "01"),
-                new("CnThanhPhoPgdSo1", "CN Thành Phố - PGD Số 1", "7806", "01"),
-                new("CnThanhPhoPgdSo2", "CN Thành Phố - PGD Số 2", "7806", "02"),
+                new("CnNamHang", "CN Nậm Hàng", "7808", null),
+                new("CnPhongThoPgdSo5", "CN Phong Thổ - PGD Số 5", "7802", "01"),
+                new("CnThanUyenPgdSo6", "CN Than Uyên - PGD Số 6", "7805", "01"),
+                new("CnDoanKetPgdSo1", "CN Đoàn Kết - PGD Số 1", "7806", "01"),
+                new("CnDoanKetPgdSo2", "CN Đoàn Kết - PGD Số 2", "7806", "02"),
                 new("CnTanUyenPgdSo3", "CN Tân Uyên - PGD Số 3", "7807", "01")
             };
         }

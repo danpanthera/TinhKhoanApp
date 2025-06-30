@@ -340,8 +340,8 @@ async function loadInitialData() {
       { id: 7, name: 'CN Đoàn Kết', code: 'CnDoanKet', type: 'CNL2', sortOrder: 7 },
       { id: 8, name: 'CN Tân Uyên', code: 'CnTanUyen', type: 'CNL2', sortOrder: 8 },
       { id: 9, name: 'CN Nậm Hàng', code: 'CnNamHang', type: 'CNL2', sortOrder: 9 },
-      { id: 10, name: 'CN Phong Thổ - PGD Mường So', code: 'CnPhongThoPgdMuongSo', type: 'CNL2', sortOrder: 10, parentUnitId: 3 },
-      { id: 11, name: 'CN Than Uyên - PGD Mường Than', code: 'CnThanUyenPgdMuongThan', type: 'CNL2', sortOrder: 11, parentUnitId: 6 },
+      { id: 10, name: 'CN Phong Thổ - PGD Số 5', code: 'CnPhongThoPgdSo5', type: 'CNL2', sortOrder: 10, parentUnitId: 3 },
+      { id: 11, name: 'CN Than Uyên - PGD Số 6', code: 'CnThanUyenPgdSo6', type: 'CNL2', sortOrder: 11, parentUnitId: 6 },
       { id: 12, name: 'CN Đoàn Kết - PGD Số 1', code: 'CnDoanKetPgdSo1', type: 'CNL2', sortOrder: 12, parentUnitId: 7 },
       { id: 13, name: 'CN Đoàn Kết - PGD Số 2', code: 'CnDoanKetPgdSo2', type: 'CNL2', sortOrder: 13, parentUnitId: 7 },
       { id: 14, name: 'CN Tân Uyên - PGD Số 3', code: 'CnTanUyenPgdSo3', type: 'CNL2', sortOrder: 14, parentUnitId: 8 }

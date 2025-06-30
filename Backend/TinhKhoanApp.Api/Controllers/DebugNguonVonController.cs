@@ -225,6 +225,7 @@ namespace TinhKhoanApp.Api.Controllers
             return branchId switch
             {
                 "HoiSo" => "7800",
+                // Tên cũ (để backward compatibility)
                 "CnTamDuong" => "7801",
                 "CnPhongTho" => "7802",
                 "CnSinHo" => "7803",
@@ -238,6 +239,15 @@ namespace TinhKhoanApp.Api.Controllers
                 "CnThanhPhoPgdSo1" => "7806",
                 "CnThanhPhoPgdSo2" => "7806",
                 "CnTanUyenPgdSo3" => "7807",
+                // Tên mới theo quy ước anh
+                "CnBinhLu" => "7801",
+                "CnPhongThoPgdSo5" => "7802",
+                "CnBumTo" => "7804",
+                "CnThanUyenPgdSo6" => "7805",
+                "CnDoanKet" => "7806",
+                "CnDoanKetPgdSo1" => "7806",
+                "CnDoanKetPgdSo2" => "7806",
+                "CnNamHang" => "7808",
                 _ => "7800" // Default Hội Sở
             };
         }
@@ -246,11 +256,17 @@ namespace TinhKhoanApp.Api.Controllers
         {
             return branchId switch
             {
+                // Tên cũ (để backward compatibility)
                 "CnPhongThoPgdMuongSo" => "01",
                 "CnThanUyenPgdMuongThan" => "01",
                 "CnThanhPhoPgdSo1" => "01",
                 "CnThanhPhoPgdSo2" => "02",
                 "CnTanUyenPgdSo3" => "01",
+                // Tên mới theo quy ước anh
+                "CnPhongThoPgdSo5" => "01",
+                "CnThanUyenPgdSo6" => "01",
+                "CnDoanKetPgdSo1" => "01",
+                "CnDoanKetPgdSo2" => "02",
                 _ => null // Chi nhánh chính, không có PGD
             };
         }
@@ -559,14 +575,14 @@ namespace TinhKhoanApp.Api.Controllers
                     string branchName = branchCode switch
                     {
                         "7800" => "Hội Sở",
-                        "7801" => "Chi nhánh Tam Đường",
+                        "7801" => "Chi nhánh Bình Lư",
                         "7802" => "Chi nhánh Phong Thổ",
                         "7803" => "Chi nhánh Sin Hồ",
-                        "7804" => "Chi nhánh Mường Tè",
+                        "7804" => "Chi nhánh Bum Tở",
                         "7805" => "Chi nhánh Than Uyên",
-                        "7806" => "Chi nhánh Thành phố",
+                        "7806" => "Chi nhánh Đoàn Kết",
                         "7807" => "Chi nhánh Tân Uyên",
-                        "7808" => "Chi nhánh Nậm Nhùn",
+                        "7808" => "Chi nhánh Nậm Hàng",
                         "9999" => "Chi nhánh Lai Châu",
                         _ => $"Chi nhánh {branchCode}"
                     };

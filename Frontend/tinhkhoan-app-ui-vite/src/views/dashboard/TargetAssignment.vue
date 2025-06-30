@@ -194,8 +194,8 @@
                 <option value="CnDoanKet">CN Đoàn Kết</option>
                 <option value="CnTanUyen">CN Tân Uyên</option>
                 <option value="CnNamHang">CN Nậm Hàng</option>
-                <option value="CnPhongThoPgdMuongSo">CN Phong Thổ - PGD Mường So</option>
-                <option value="CnThanUyenPgdMuongThan">CN Than Uyên - PGD Mường Than</option>
+                <option value="CnPhongThoPgdSo5">CN Phong Thổ - PGD Số 5</option>
+                <option value="CnThanUyenPgdSo6">CN Than Uyên - PGD Số 6</option>
                 <option value="CnDoanKetPgdSo1">CN Đoàn Kết - PGD Số 1</option>
                 <option value="CnDoanKetPgdSo2">CN Đoàn Kết - PGD Số 2</option>
                 <option value="CnTanUyenPgdSo3">CN Tân Uyên - PGD Số 3</option>

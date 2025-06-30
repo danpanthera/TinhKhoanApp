@@ -950,14 +950,20 @@ namespace TinhKhoanApp.Api.Services
             {
                 "HoiSo" => "7800",          // Hội Sở
                 "CnLaiChau" => "9999",      // Chi nhánh Lai Châu
-                "CnTamDuong" => "7801",     // Chi nhánh Tam Đường
+                // Tên cũ (để backward compatibility)
+                "CnTamDuong" => "7801",     // Chi nhánh Bình Lư (tên cũ)
                 "CnPhongTho" => "7802",     // Chi nhánh Phong Thổ
                 "CnSinHo" => "7803",        // Chi nhánh Sin Hồ
-                "CnMuongTe" => "7804",      // Chi nhánh Mường Tè
+                "CnMuongTe" => "7804",      // Chi nhánh Bum Tở (tên cũ)
                 "CnThanUyen" => "7805",     // Chi nhánh Than Uyên
-                "CnThanhPho" => "7806",     // Chi nhánh Thành phố
+                "CnThanhPho" => "7806",     // Chi nhánh Đoàn Kết (tên cũ)
                 "CnTanUyen" => "7807",      // Chi nhánh Tân Uyên
-                "CnNamNhun" => "7808",      // Chi nhánh Nậm Nhùn
+                "CnNamNhun" => "7808",      // Chi nhánh Nậm Hàng (tên cũ)
+                // Tên mới theo quy ước anh
+                "CnBinhLu" => "7801",       // Chi nhánh Bình Lư
+                "CnBumTo" => "7804",        // Chi nhánh Bum Tở
+                "CnDoanKet" => "7806",      // Chi nhánh Đoàn Kết
+                "CnNamHang" => "7808",      // Chi nhánh Nậm Hàng
                 _ => "ALL"                  // Toàn tỉnh hoặc không xác định
             };
         }

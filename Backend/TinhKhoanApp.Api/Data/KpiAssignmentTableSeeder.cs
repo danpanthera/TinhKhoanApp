@@ -39,14 +39,14 @@ namespace TinhKhoanApp.Api.Data
             { KpiTableType.PhophongKtnqCnl2, "PhophongKtnqCnl2" },
             // Chi nhánh (9 chi nhánh) - sẽ có logic riêng
             { KpiTableType.HoiSo, "HoiSo" },
-            { KpiTableType.CnTamDuong, "CnTamDuong" },
+            { KpiTableType.CnTamDuong, "CnBinhLu" },
             { KpiTableType.CnPhongTho, "CnPhongTho" },
             { KpiTableType.CnSinHo, "CnSinHo" },
-            { KpiTableType.CnMuongTe, "CnMuongTe" },
+            { KpiTableType.CnMuongTe, "CnBumTo" },
             { KpiTableType.CnThanUyen, "CnThanUyen" },
-            { KpiTableType.CnThanhPho, "CnThanhPho" },
+            { KpiTableType.CnThanhPho, "CnDoanKet" },
             { KpiTableType.CnTanUyen, "CnTanUyen" },
-            { KpiTableType.CnNamNhun, "CnNamNhun" }
+            { KpiTableType.CnNamNhun, "CnNamHang" }
         };
 
         // Mapping từ KpiTableType sang role descriptions chuẩn

@@ -99,7 +99,7 @@ Data/
 curl "http://localhost:5055/api/GeneralDashboard/indicators/HoiSo"
 # → Nguồn vốn: 519.26 tỷ ✅
 
-# Test CN Tam Đường
+# Test CN Bình Lư
 curl "http://localhost:5055/api/GeneralDashboard/indicators/CnTamDuong"
 # → Dư nợ: 156.3 tỷ ✅
 
@@ -108,7 +108,7 @@ curl "http://localhost:5055/api/GeneralDashboard/indicators/CnLaiChau"
 # → Nguồn vốn: 1,029.06 tỷ ✅
 
 # Test PGD
-curl "http://localhost:5055/api/GeneralDashboard/indicators/CnThanhPhoPgdSo1"
+curl "http://localhost:5055/api/GeneralDashboard/indicators/CnDoanKetPgdSo1"
 # → Nguồn vốn: 98.5 tỷ ✅
 ```
 

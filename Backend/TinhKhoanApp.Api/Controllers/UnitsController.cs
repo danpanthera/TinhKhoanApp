@@ -19,7 +19,7 @@ namespace TinhKhoanApp.Api.Controllers
             _context = context;
         }
 
-        // GET: api/Units 
+        // GET: api/Units
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UnitListItemDto>>> GetUnits()
         {
@@ -46,6 +46,7 @@ namespace TinhKhoanApp.Api.Controllers
             return code switch
             {
                 "CnLaiChau" => 1,
+                // Tên cũ (để backward compatibility)
                 "CnTamDuong" => 2,
                 "CnPhongTho" => 3,
                 "CnSinHo" => 4,
@@ -53,6 +54,11 @@ namespace TinhKhoanApp.Api.Controllers
                 "CnThanUyen" => 6,
                 "CnThanhPho" => 7,
                 "CnTanUyen" => 8,
+                // Tên mới theo quy ước anh
+                "CnBinhLu" => 2,
+                "CnBumTo" => 5,
+                "CnDoanKet" => 7,
+                "CnNamHang" => 9,
                 "CnNamNhun" => 9,
                 _ => 999 // Các units khác sẽ được sắp xếp cuối
             };
@@ -96,7 +102,7 @@ namespace TinhKhoanApp.Api.Controllers
         }
 
         // ... (các phương thức GetUnit(id), PostUnit, PutUnit, DeleteUnit giữ nguyên, chúng vẫn làm việc với model Unit đầy đủ) ...
-        // GET: api/Units/5 
+        // GET: api/Units/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Unit>> GetUnit(int id) // Get chi tiết vẫn trả về Unit đầy đủ
         {
@@ -111,7 +117,7 @@ namespace TinhKhoanApp.Api.Controllers
             }
             return Ok(unit);
         }
-        
+
         // POST: api/Units
         [HttpPost]
         public async Task<ActionResult<Unit>> PostUnit([FromBody] Unit unit)
@@ -136,7 +142,7 @@ namespace TinhKhoanApp.Api.Controllers
                         .Where(u => u.Type == "CNL1")
                         .OrderBy(u => u.Id)
                         .FirstOrDefaultAsync();
-                    
+
                     if (defaultCNL1 != null)
                     {
                         unit.ParentUnitId = defaultCNL1.Id;
@@ -179,7 +185,8 @@ namespace TinhKhoanApp.Api.Controllers
             }
             if (unit.ParentUnitId.HasValue)
             {
-                if (unit.ParentUnitId.Value == id) {
+                if (unit.ParentUnitId.Value == id)
+                {
                     ModelState.AddModelError("ParentUnitId", "Đơn vị không thể tự làm cha của chính nó.");
                     return BadRequest(ModelState);
                 }
@@ -225,7 +232,7 @@ namespace TinhKhoanApp.Api.Controllers
             var hasEmployees = await _context.Employees.AnyAsync(e => e.UnitId == id);
             if (hasEmployees)
             {
-                 return BadRequest(new { message = "Đơn vị này đang có nhân viên và không thể xóa. Hãy di chuyển nhân viên sang đơn vị khác trước." });
+                return BadRequest(new { message = "Đơn vị này đang có nhân viên và không thể xóa. Hãy di chuyển nhân viên sang đơn vị khác trước." });
             }
             _context.Units.Remove(unit);
             await _context.SaveChangesAsync();

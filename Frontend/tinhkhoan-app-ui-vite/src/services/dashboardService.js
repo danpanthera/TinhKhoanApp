@@ -251,14 +251,14 @@ export const dashboardService = {
     // Define the correct branch order
     const branchOrder = [
       'Chi nhánh Lai Châu',    // Hội sở (parent)
-      'Chi nhánh Thành Phố',
-      'Chi nhánh Tam Đường',
+      'Chi nhánh Đoàn Kết',
+      'Chi nhánh Bình Lư',
       'Chi nhánh Tân Uyên',
       'Chi nhánh Sìn Hồ',
       'Chi nhánh Phong Thổ',
       'Chi nhánh Than Uyên',
-      'Chi nhánh Mường Tè',
-      'Chi nhánh Nậm Nhùn'
+      'Chi nhánh Bum Tở',
+      'Chi nhánh Nậm Hàng'
     ];
 
     return [...units].sort((a, b) => {
