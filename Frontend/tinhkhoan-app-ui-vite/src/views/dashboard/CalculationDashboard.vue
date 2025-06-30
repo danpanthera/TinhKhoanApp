@@ -939,9 +939,10 @@ const calculateNguonVon = async () => {
     }
 
     console.log('🔧 Tính Nguồn vốn cho:', displayName);
+    console.log('📅 Ngày được chọn:', selectedDate.value);
 
-    // Gọi service mới để tính Nguồn vốn
-    const result = await branchIndicatorsService.calculateNguonVon(branchId);
+    // Gọi service mới để tính Nguồn vốn với tham số ngày
+    const result = await branchIndicatorsService.calculateNguonVon(branchId, selectedDate.value);
 
     if (result.success) {
       // Cập nhật kết quả
