@@ -42,9 +42,9 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Tính toán Nguồn vốn huy động từ dữ liệu DP01
-        /// Công thức: Tổng CURRENT_BALANCE trừ các TK bắt đầu bằng "2, 40, 41, 427"
-        /// Bao gồm: KKH (TK 421), CKH (TK 423)
+        /// Tính toán Nguồn vốn huy động từ dữ liệu thực đã import
+        /// Công thức: Lấy dữ liệu nguồn vốn từ ngày mới nhất (file import gần nhất trong tháng)
+        /// VD: Tháng 4/2025 → lấy file có ngày 20250430, Tháng 5/2025 → lấy file có ngày 20250531
         /// </summary>
         public async Task<decimal> CalculateNguonVon(int unitId, DateTime date)
         {
@@ -58,60 +58,135 @@ namespace TinhKhoanApp.Api.Services
                     return 0;
                 }
 
-                // Lấy mã chi nhánh từ Unit Code
                 var branchCode = GetBranchCode(unit.Code);
                 _logger.LogInformation("Tính toán Nguồn vốn cho {UnitName} (Code: {BranchCode}) ngày {Date}",
                     unit.Name, branchCode, date.ToString("yyyy-MM-dd"));
 
-                // TODO: Khi có bảng DP01 thực tế, thay thế logic này
-                // Hiện tại tạo dữ liệu mẫu để demo
-                var sampleData = GenerateSampleNguonVonData(branchCode, date);
+                // Tìm file import gần nhất trong tháng được chọn
+                var lastDayOfMonth = new DateTime(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month));
+                var firstDayOfMonth = new DateTime(date.Year, date.Month, 1);
 
-                // Tính tổng CURRENT_BALANCE trừ các TK loại trừ
-                var excludedPrefixes = new[] { "2", "40", "41", "427" };
-                var totalBalance = sampleData
-                    .Where(d => !excludedPrefixes.Any(prefix => d.AccountCode.StartsWith(prefix)))
-                    .Sum(d => d.CurrentBalance);
+                // Lấy file import mới nhất có StatementDate trong tháng và chứa dữ liệu của chi nhánh
+                var latestImportRecord = await _context.ImportedDataRecords
+                    .Where(r => r.StatementDate.HasValue &&
+                               r.StatementDate.Value >= firstDayOfMonth &&
+                               r.StatementDate.Value <= lastDayOfMonth &&
+                               r.Status == "Completed" &&
+                               (r.Category.Contains("DP01") || r.Category.Contains("Nguồn vốn")))
+                    .OrderByDescending(r => r.StatementDate)
+                    .FirstOrDefaultAsync();
 
-                // Tính riêng nguồn vốn KKH và CKH
-                var kkhBalance = sampleData
-                    .Where(d => d.AccountCode.StartsWith("421"))
-                    .Sum(d => d.CurrentBalance);
-
-                var ckhBalance = sampleData
-                    .Where(d => d.AccountCode.StartsWith("423"))
-                    .Sum(d => d.CurrentBalance);
-
-                // Tạo chi tiết tính toán
-                var calculationDetails = new
+                if (latestImportRecord == null)
                 {
-                    Formula = "Tổng CURRENT_BALANCE - TK(2,40,41,427)",
-                    TotalBalance = totalBalance,
-                    ExcludedAccounts = excludedPrefixes,
-                    NguonVonKKH = kkhBalance,
-                    NguonVonCKH = ckhBalance,
-                    DetailBreakdown = new
+                    _logger.LogWarning("Không tìm thấy file import nguồn vốn cho tháng {Month}/{Year}", date.Month, date.Year);
+
+                    // Fallback: sử dụng dữ liệu mẫu như cũ
+                    var sampleData = GenerateSampleNguonVonData(branchCode, date);
+                    var excludedPrefixes = new[] { "2", "40", "41", "427" };
+                    var totalBalance = sampleData
+                        .Where(d => !excludedPrefixes.Any(prefix => d.AccountCode.StartsWith(prefix)))
+                        .Sum(d => d.CurrentBalance);
+
+                    var finalValue = totalBalance / 1_000_000m; // Chuyển sang triệu VND
+
+                    var calculationDetails = new
                     {
-                        IncludedAccounts = sampleData.Where(d => !excludedPrefixes.Any(p => d.AccountCode.StartsWith(p))).Count(),
-                        ExcludedAccounts = sampleData.Where(d => excludedPrefixes.Any(p => d.AccountCode.StartsWith(p))).Count()
-                    },
+                        Formula = "Tổng CURRENT_BALANCE - TK(2,40,41,427) từ dữ liệu mẫu",
+                        TotalBalance = totalBalance,
+                        FinalValue = finalValue,
+                        Unit = "Triệu VND",
+                        Note = "Sử dụng dữ liệu mẫu do không có file import thực",
+                        CalculationDate = date,
+                        UnitInfo = new { unit.Code, unit.Name },
+                        BranchCode = branchCode
+                    };
+
+                    await SaveCalculation("NguonVon", unitId, date, finalValue, calculationDetails, startTime);
+                    return finalValue;
+                }
+
+                // Lấy dữ liệu chi tiết từ file import mới nhất
+                var importedItems = await _context.ImportedDataItems
+                    .Where(i => i.ImportedDataRecordId == latestImportRecord.Id)
+                    .Select(i => i.RawData)
+                    .ToListAsync();
+
+                decimal totalNguonVon = 0;
+                var excludedPrefixes = new[] { "2", "40", "41", "427" };
+                var processedRecords = 0;
+
+                foreach (var rawDataJson in importedItems)
+                {
+                    try
+                    {
+                        // Parse JSON data để lấy thông tin tài khoản và số dư
+                        var jsonDoc = JsonDocument.Parse(rawDataJson);
+                        var root = jsonDoc.RootElement;
+
+                        // Tìm các field có thể chứa thông tin tài khoản và số dư
+                        if (root.TryGetProperty("ACCOUNT_CODE", out var accountCodeElement) ||
+                            root.TryGetProperty("AccountCode", out accountCodeElement) ||
+                            root.TryGetProperty("account_code", out accountCodeElement))
+                        {
+                            var accountCode = accountCodeElement.GetString() ?? "";
+
+                            // Kiểm tra có thuộc chi nhánh đang tính không
+                            var belongsToBranch = root.TryGetProperty("BRANCH_CODE", out var branchElement) &&
+                                                branchElement.GetString() == branchCode;
+
+                            if (!belongsToBranch) continue;
+
+                            // Chỉ tính các tài khoản không thuộc danh sách loại trừ
+                            if (!excludedPrefixes.Any(prefix => accountCode.StartsWith(prefix)))
+                            {
+                                if (root.TryGetProperty("CURRENT_BALANCE", out var balanceElement) ||
+                                    root.TryGetProperty("CurrentBalance", out balanceElement) ||
+                                    root.TryGetProperty("current_balance", out balanceElement))
+                                {
+                                    if (decimal.TryParse(balanceElement.GetString(), out var balance))
+                                    {
+                                        totalNguonVon += balance;
+                                        processedRecords++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    catch (JsonException ex)
+                    {
+                        _logger.LogWarning("Lỗi parse JSON dữ liệu import: {Error}", ex.Message);
+                        continue;
+                    }
+                }
+
+                var finalValueReal = totalNguonVon / 1_000_000m; // Chuyển sang triệu VND
+
+                var calculationDetailsReal = new
+                {
+                    Formula = "Tổng CURRENT_BALANCE - TK(2,40,41,427) từ file import mới nhất",
+                    SourceFile = latestImportRecord.FileName,
+                    StatementDate = latestImportRecord.StatementDate,
+                    ImportDate = latestImportRecord.ImportDate,
+                    TotalNguonVon = totalNguonVon,
+                    FinalValue = finalValueReal,
+                    Unit = "Triệu VND",
+                    ProcessedRecords = processedRecords,
+                    ExcludedAccountPrefixes = excludedPrefixes,
                     CalculationDate = date,
                     UnitInfo = new { unit.Code, unit.Name },
                     BranchCode = branchCode
                 };
 
-                var finalValue = totalBalance / 1_000_000_000m; // Chuyển sang tỷ đồng
+                await SaveCalculation("NguonVon", unitId, date, finalValueReal, calculationDetailsReal, startTime);
 
-                // Lưu kết quả tính toán
-                await SaveCalculation("HuyDong", unitId, date, finalValue, calculationDetails, startTime);
-
-                _logger.LogInformation("Hoàn thành tính Nguồn vốn: {Value} tỷ đồng", finalValue);
-                return finalValue;
+                _logger.LogInformation("Hoàn thành tính Nguồn vốn từ file thực: {Value} triệu VND (từ {Records} bản ghi)",
+                    finalValueReal, processedRecords);
+                return finalValueReal;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Lỗi khi tính toán Nguồn vốn cho unit {UnitId}", unitId);
-                await SaveCalculationError("HuyDong", unitId, date, ex.Message, startTime);
+                await SaveCalculationError("NguonVon", unitId, date, ex.Message, startTime);
                 return 0;
             }
         }
