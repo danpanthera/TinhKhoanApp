@@ -62,47 +62,35 @@ namespace TinhKhoanApp.Api.Services
                 _logger.LogInformation("Tính toán Nguồn vốn cho {UnitName} (Code: {BranchCode}) ngày {Date}",
                     unit.Name, branchCode, date.ToString("yyyy-MM-dd"));
 
-                // Tìm file import gần nhất trong tháng được chọn
-                var lastDayOfMonth = new DateTime(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month));
-                var firstDayOfMonth = new DateTime(date.Year, date.Month, 1);
+                // Xác định ngày cụ thể cần tìm file dựa trên chỉ tiêu lũy kế
+                var targetStatementDate = GetTargetStatementDate(date);
 
-                // Lấy file import mới nhất có StatementDate trong tháng và chứa dữ liệu của chi nhánh
+                if (targetStatementDate == null)
+                {
+                    // Các tháng/năm khác chưa có dữ liệu
+                    var errorMessage = GetDataNotAvailableMessage(date);
+                    _logger.LogWarning(errorMessage);
+
+                    await SaveCalculationError("NguonVon", unitId, date, errorMessage, startTime);
+                    throw new InvalidOperationException(errorMessage);
+                }
+
+                // Tìm file import DP01 có StatementDate chính xác
                 var latestImportRecord = await _context.ImportedDataRecords
                     .Where(r => r.StatementDate.HasValue &&
-                               r.StatementDate.Value >= firstDayOfMonth &&
-                               r.StatementDate.Value <= lastDayOfMonth &&
+                               r.StatementDate.Value.Date == targetStatementDate.Value.Date &&
                                r.Status == "Completed" &&
                                (r.Category.Contains("DP01") || r.Category.Contains("Nguồn vốn")))
-                    .OrderByDescending(r => r.StatementDate)
+                    .OrderByDescending(r => r.ImportDate) // Sắp xếp theo ngày import nếu có nhiều file cùng ngày
                     .FirstOrDefaultAsync();
 
                 if (latestImportRecord == null)
                 {
-                    _logger.LogWarning("Không tìm thấy file import nguồn vốn cho tháng {Month}/{Year}", date.Month, date.Year);
+                    var errorMessage = $"Không tìm thấy file import DP01 cho ngày {targetStatementDate:yyyy-MM-dd}. Vui lòng kiểm tra dữ liệu đã được import chưa.";
+                    _logger.LogWarning(errorMessage);
 
-                    // Fallback: sử dụng dữ liệu mẫu như cũ
-                    var sampleData = GenerateSampleNguonVonData(branchCode, date);
-                    var sampleExcludedPrefixes = new[] { "2", "40", "41", "427" };
-                    var totalBalance = sampleData
-                        .Where(d => !sampleExcludedPrefixes.Any(prefix => d.AccountCode.StartsWith(prefix)))
-                        .Sum(d => d.CurrentBalance);
-
-                    var finalValue = totalBalance / 1_000_000m; // Chuyển sang triệu VND
-
-                    var calculationDetails = new
-                    {
-                        Formula = "Tổng CURRENT_BALANCE - TK(2,40,41,427) từ dữ liệu mẫu",
-                        TotalBalance = totalBalance,
-                        FinalValue = finalValue,
-                        Unit = "Triệu VND",
-                        Note = "Sử dụng dữ liệu mẫu do không có file import thực",
-                        CalculationDate = date,
-                        UnitInfo = new { unit.Code, unit.Name },
-                        BranchCode = branchCode
-                    };
-
-                    await SaveCalculation("NguonVon", unitId, date, finalValue, calculationDetails, startTime);
-                    return finalValue;
+                    await SaveCalculationError("NguonVon", unitId, date, errorMessage, startTime);
+                    throw new InvalidOperationException(errorMessage);
                 }
 
                 // Lấy dữ liệu chi tiết từ file import mới nhất
@@ -757,7 +745,37 @@ namespace TinhKhoanApp.Api.Services
             };
         }
 
-        // === SAMPLE DATA GENERATORS (Replace with real data queries) ===
+        /// <summary>
+        /// Helper method: Xác định ngày Statement cụ thể dựa trên ngày được chọn
+        /// Chỉ tiêu lũy kế: chỉ có dữ liệu cho 30/4/2025 và 31/12/2024
+        /// </summary>
+        private DateTime? GetTargetStatementDate(DateTime selectedDate)
+        {
+            if (selectedDate.Year == 2025 && selectedDate.Month == 4)
+            {
+                // Tháng 4/2025 -> file ngày 30/4/2025
+                return new DateTime(2025, 4, 30);
+            }
+            else if (selectedDate.Year == 2024 && (selectedDate.Month == 12 || selectedDate.Month == 0))
+            {
+                // Tháng 12/2024 hoặc năm 2024 -> file ngày 31/12/2024
+                return new DateTime(2024, 12, 31);
+            }
+
+            // Các tháng/năm khác chưa có dữ liệu
+            return null;
+        }
+
+        /// <summary>
+        /// Helper method: Tạo thông báo lỗi cho các tháng/năm chưa có dữ liệu
+        /// </summary>
+        private string GetDataNotAvailableMessage(DateTime selectedDate)
+        {
+            return $"Chưa có dữ liệu file cho tháng {selectedDate.Month}/{selectedDate.Year}. " +
+                   "Hiện tại chỉ có dữ liệu cho tháng 4/2025 và 12/2024.";
+        }
+
+        //=== SAMPLE DATA GENERATORS (Replace with real data queries) ===
 
         private List<dynamic> GenerateSampleNguonVonData(string branchCode, DateTime date)
         {
