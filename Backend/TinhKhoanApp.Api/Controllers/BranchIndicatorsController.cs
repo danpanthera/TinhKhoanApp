@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Services;
 using TinhKhoanApp.Api.Utils;
 
@@ -10,13 +12,16 @@ namespace TinhKhoanApp.Api.Controllers
     {
         private readonly IBranchCalculationService _branchCalculationService;
         private readonly ILogger<BranchIndicatorsController> _logger;
+        private readonly ApplicationDbContext _context;
 
         public BranchIndicatorsController(
             IBranchCalculationService branchCalculationService,
-            ILogger<BranchIndicatorsController> logger)
+            ILogger<BranchIndicatorsController> logger,
+            ApplicationDbContext context)
         {
             _branchCalculationService = branchCalculationService;
             _logger = logger;
+            _context = context;
         }
 
         /// <summary>
@@ -302,6 +307,70 @@ namespace TinhKhoanApp.Api.Controllers
                     Success = false,
                     ErrorMessage = ex.Message
                 });
+            }
+        }
+
+        /// <summary>
+        /// Debug endpoint - Kiểm tra dữ liệu DP01 có trong database
+        /// </summary>
+        [HttpGet("debug-dp01-data")]
+        public async Task<ActionResult> DebugDP01Data()
+        {
+            try
+            {
+                // Kiểm tra tổng số records DP01
+                var totalDP01Records = await _context.ImportedDataRecords
+                    .Where(x => x.Category == "DP01")
+                    .CountAsync();
+
+                // Kiểm tra các ngày có dữ liệu
+                var availableDates = await _context.ImportedDataRecords
+                    .Where(x => x.Category == "DP01" && x.StatementDate.HasValue)
+                    .Select(x => x.StatementDate.Value.Date)
+                    .Distinct()
+                    .OrderByDescending(x => x)
+                    .Take(10)
+                    .ToListAsync();
+
+                // Kiểm tra ngày gần nhất và dữ liệu
+                var latestDate = availableDates.FirstOrDefault();
+                var sampleData = new List<object>();
+
+                if (latestDate != default)
+                {
+                    var latestRecords = await _context.ImportedDataRecords
+                        .Where(x => x.Category == "DP01" && x.StatementDate.HasValue && x.StatementDate.Value.Date == latestDate)
+                        .ToListAsync();
+
+                    foreach (var record in latestRecords.Take(2))
+                    {
+                        var items = await _context.ImportedDataItems
+                            .Where(x => x.ImportedDataRecordId == record.Id)
+                            .Take(3)
+                            .Select(x => x.RawData)
+                            .ToListAsync();
+
+                        sampleData.Add(new
+                        {
+                            FileName = record.FileName,
+                            ItemCount = await _context.ImportedDataItems.Where(x => x.ImportedDataRecordId == record.Id).CountAsync(),
+                            SampleItems = items.Take(2).ToList()
+                        });
+                    }
+                }
+
+                return Ok(new
+                {
+                    TotalDP01Records = totalDP01Records,
+                    AvailableDates = availableDates.Select(d => d.ToString("yyyy-MM-dd")).ToList(),
+                    LatestDate = latestDate.ToString("yyyy-MM-dd"),
+                    SampleData = sampleData
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi debug DP01 data");
+                return BadRequest(new { Error = ex.Message });
             }
         }
     }

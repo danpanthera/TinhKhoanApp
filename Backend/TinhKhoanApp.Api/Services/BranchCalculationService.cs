@@ -65,6 +65,9 @@ namespace TinhKhoanApp.Api.Services
                     var branchCode = GetBranchCode(branchId);
                     var pgdCode = GetPgdCode(branchId);
 
+                    _logger.LogInformation("🔧 Mapping: {BranchId} → BranchCode={BranchCode}, PgdCode={PgdCode}",
+                        branchId, branchCode, pgdCode);
+
                     return await CalculateNguonVonForSingleBranch(branchCode, pgdCode, date);
                 }
             }
@@ -489,117 +492,50 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Mapping BranchId thành mã chi nhánh - Hỗ trợ cả format cũ và mới
+        /// Mapping branchId từ frontend sang mã chi nhánh trong database
         /// </summary>
         private string GetBranchCode(string branchId)
         {
-            // Nếu format mới từ frontend (7800, 7800-01)
-            if (branchId.Contains("-"))
-            {
-                return branchId.Split('-')[0]; // Lấy phần trước dấu -
-            }
-
-            // Nếu đã là mã số thuần (7800, 7801, ...)
-            if (branchId.All(char.IsDigit) && branchId.Length == 4)
-            {
-                return branchId;
-            }
-
-            // Format cũ - mapping tên thành mã
             return branchId switch
             {
-                "HoiSo" => "7800",
-                // Tên cũ (để backward compatibility)
-                "CnTamDuong" => "7801",
-                "CnPhongTho" => "7802",
-                "CnSinHo" => "7803",
-                "CnMuongTe" => "7804",
-                "CnThanUyen" => "7805",
-                "CnThanhPho" => "7806",
-                "CnTanUyen" => "7807",
-                "CnNamNhun" => "7808",
-                "CnPhongThoPgdMuongSo" => "7802",
-                "CnThanUyenPgdMuongThan" => "7805",
-                "CnThanhPhoPgdSo1" => "7806",
-                "CnThanhPhoPgdSo2" => "7806",
-                "CnTanUyenPgdSo3" => "7807",
-                // Tên mới theo quy ước anh
-                "CnBinhLu" => "7801",
-                "CnPhongThoPgdSo5" => "7802",
-                "CnBumTo" => "7804",
-                "CnThanUyenPgdSo6" => "7805",
-                "CnDoanKet" => "7806",
-                "CnDoanKetPgdSo1" => "7806",
-                "CnDoanKetPgdSo2" => "7806",
-                "CnNamHang" => "7808",
-                _ => "7800" // Default Hội Sở
+                "HoiSo" => "7800",           // Hội Sở
+                "CnBinhLu" => "7801",        // Chi nhánh Bình Lư
+                "CnPhongTho" => "7802",      // Chi nhánh Phong Thổ
+                "CnSinHo" => "7803",         // Chi nhánh Sìn Hồ
+                "CnBumTo" => "7804",         // Chi nhánh Bum Tở
+                "CnThanUyen" => "7805",      // Chi nhánh Than Uyên
+                "CnDoanKet" => "7806",       // Chi nhánh Đoàn Kết
+                "CnTanUyen" => "7807",       // Chi nhánh Tân Uyên
+                "CnNamHang" => "7808",       // Chi nhánh Nậm Hàng
+                _ => branchId                // Fallback: trả về chính nó nếu không match
             };
         }
 
         /// <summary>
-        /// Mapping BranchId thành mã PGD cho DP01 - Hỗ trợ cả format cũ và mới
+        /// Mapping branchId sang PGD code (nếu có)
         /// </summary>
         private string? GetPgdCode(string branchId)
         {
-            // Nếu format mới từ frontend (7800-01, 7806-02)
-            if (branchId.Contains("-"))
-            {
-                var parts = branchId.Split('-');
-                if (parts.Length == 2)
-                {
-                    return parts[1]; // Trả về phần sau dấu - (01, 02, ...)
-                }
-            }
-
-            // Format cũ - mapping tên thành mã PGD
+            // Đa số trường hợp là chi nhánh chính (PGD "00")
+            // Chỉ có một số trường hợp cụ thể là PGD riêng
             return branchId switch
             {
-                // Tên cũ (để backward compatibility)
-                "CnPhongThoPgdMuongSo" => "01",
-                "CnThanUyenPgdMuongThan" => "01",
-                "CnThanhPhoPgdSo1" => "01",
-                "CnThanhPhoPgdSo2" => "02",
-                "CnTanUyenPgdSo3" => "01",
-                // Tên mới theo quy ước anh
-                "CnPhongThoPgdSo5" => "01",
-                "CnThanUyenPgdSo6" => "01",
-                "CnDoanKetPgdSo1" => "01",
-                "CnDoanKetPgdSo2" => "02",
-                _ => "00" // Chi nhánh chính, mã PGD = "00"
+                "PgdMuongSo" => "01",        // PGD Mường So (thuộc CN Phong Thổ)
+                "PgdMuongThan" => "01",      // PGD Mường Than (thuộc CN Than Uyên)
+                "PgdSo1" => "01",            // PGD Số 1 (thuộc CN Đoàn Kết)
+                "PgdSo2" => "02",            // PGD Số 2 (thuộc CN Đoàn Kết)
+                "PgdSo3" => "01",            // PGD Số 3 (thuộc CN Tân Uyên)
+                _ => "00"                    // Mặc định: chi nhánh chính (tất cả PGD)
             };
         }
 
         /// <summary>
-        /// Mapping BranchId thành mã TRCTCD cho LN01 - Hỗ trợ cả format cũ và mới
+        /// Mapping cho tính toán Dư nợ (TRCT code)
         /// </summary>
         private string? GetTrctCode(string branchId)
         {
-            // Nếu format mới từ frontend (7800-01, 7806-02)
-            if (branchId.Contains("-"))
-            {
-                var parts = branchId.Split('-');
-                if (parts.Length == 2)
-                {
-                    return parts[1]; // Trả về phần sau dấu - (01, 02, ...)
-                }
-            }
-
-            // Format cũ - mapping tên thành mã TRCTCD
-            return branchId switch
-            {
-                // Tên cũ (để backward compatibility)
-                "CnPhongThoPgdMuongSo" => "01",
-                "CnThanUyenPgdMuongThan" => "01",
-                "CnThanhPhoPgdSo1" => "01",
-                "CnThanhPhoPgdSo2" => "02",
-                "CnTanUyenPgdSo3" => "01",
-                // Tên mới theo quy ước anh
-                "CnPhongThoPgdSo5" => "01",
-                "CnThanUyenPgdSo6" => "01",
-                "CnDoanKetPgdSo1" => "01",
-                "CnDoanKetPgdSo2" => "02",
-                _ => "00" // Chi nhánh chính, mã TRCTCD = "00"
-            };
+            // Logic tương tự GetPgdCode nhưng cho bảng LN01
+            return GetPgdCode(branchId);
         }
 
         /// <summary>
