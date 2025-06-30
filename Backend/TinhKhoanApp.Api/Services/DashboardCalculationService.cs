@@ -356,31 +356,22 @@ namespace TinhKhoanApp.Api.Services
             var startTime = DateTime.Now;
             try
             {
-                var unit = await _context.Units.FindAsync(unitId);
-                if (unit == null) return 0;
+                _logger.LogInformation("Tính toán Thu dịch vụ - chờ công thức cụ thể");
 
-                var branchCode = GetBranchCode(unit.Code);
-                _logger.LogInformation("Tính toán Thu dịch vụ cho {UnitName} ngày {Date}", unit.Name, date.ToString("yyyy-MM-dd"));
-
-                // TODO: Thay bằng query thực từ hệ thống
-                // Tạm thời trả về giá trị mẫu theo đơn vị Triệu VND
-                var sampleValueMillions = new Random().Next(50, 200); // Đã ở đơn vị triệu VND
+                // Tạm thời trả về giá trị mẫu (triệu VND)
+                var sampleValue = new Random().Next(50, 200);
 
                 var calculationDetails = new
                 {
-                    Formula = "Chờ công thức cụ thể từ nghiệp vụ",
-                    Note = "Tính năng đang phát triển - giá trị mẫu",
-                    SampleValue = sampleValueMillions,
+                    Formula = "Chờ công thức từ anh",
+                    Note = "Tính năng đang phát triển - đơn vị: Triệu VND",
+                    SampleValue = sampleValue,
                     Unit = "Triệu VND",
-                    CalculationDate = date,
-                    UnitInfo = new { unit.Code, unit.Name },
-                    BranchCode = branchCode
+                    CalculationDate = date
                 };
 
-                await SaveCalculation("ThuDichVu", unitId, date, sampleValueMillions, calculationDetails, startTime);
-
-                _logger.LogInformation("Hoàn thành tính Thu dịch vụ: {Value} triệu VND", sampleValueMillions);
-                return sampleValueMillions;
+                await SaveCalculation("ThuDichVu", unitId, date, sampleValue, calculationDetails, startTime);
+                return sampleValue;
             }
             catch (Exception ex)
             {
