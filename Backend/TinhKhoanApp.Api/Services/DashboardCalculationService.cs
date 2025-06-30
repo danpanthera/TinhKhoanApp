@@ -68,14 +68,25 @@ namespace TinhKhoanApp.Api.Services
 
                 _logger.LogInformation("Tìm file DP01 có StatementDate = {TargetDate}", targetStatementDate.Value.ToString("yyyy-MM-dd"));
 
-                // Tìm file import DP01 có StatementDate chính xác
-                var latestImportRecord = await _context.ImportedDataRecords
+                // Tìm file import DP01 có StatementDate chính xác và đúng mã chi nhánh
+                var allRecordsForDate = await _context.ImportedDataRecords
                     .Where(r => r.StatementDate.HasValue &&
                                r.StatementDate.Value.Date == targetStatementDate.Value.Date &&
                                r.Status == "Completed" &&
                                (r.Category.Contains("DP01") || r.Category.Contains("Nguồn vốn")))
-                    .OrderByDescending(r => r.ImportDate) // Sắp xếp theo ngày import nếu có nhiều file cùng ngày
-                    .FirstOrDefaultAsync();
+                    .OrderByDescending(r => r.ImportDate)
+                    .ToListAsync();
+
+                // Ưu tiên tìm file có mã chi nhánh đúng trong tên file
+                var latestImportRecord = allRecordsForDate
+                    .FirstOrDefault(r => !string.IsNullOrEmpty(r.FileName) &&
+                                        r.FileName.StartsWith($"{branchCode}_dp01_"));
+
+                // Nếu không tìm thấy file đúng mã chi nhánh, lấy file đầu tiên
+                if (latestImportRecord == null)
+                {
+                    latestImportRecord = allRecordsForDate.FirstOrDefault();
+                }
 
                 if (latestImportRecord == null)
                 {

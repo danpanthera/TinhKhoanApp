@@ -505,5 +505,353 @@ namespace TinhKhoanApp.Api.Controllers
                 return StatusCode(500, new { error = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Liệt kê tất cả file DP01 đã import trong hệ thống
+        /// </summary>
+        [HttpGet("list-all-dp01-files")]
+        public async Task<ActionResult> ListAllDP01Files()
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Liệt kê tất cả file DP01 trong hệ thống");
+
+                var dp01Records = await _context.ImportedDataRecords
+                    .Where(r => r.Category.Contains("DP01") || r.Category.Contains("Nguồn vốn"))
+                    .OrderByDescending(r => r.StatementDate)
+                    .ThenByDescending(r => r.ImportDate)
+                    .Select(r => new
+                    {
+                        r.Id,
+                        r.FileName,
+                        r.Category,
+                        r.StatementDate,
+                        r.ImportDate,
+                        r.Status,
+                        TotalRecords = _context.ImportedDataItems.Count(i => i.ImportedDataRecordId == r.Id)
+                    })
+                    .ToListAsync();
+
+                // Phân tích tên file để tìm mã chi nhánh
+                var filesWithBranchInfo = dp01Records.Select(r =>
+                {
+                    string branchCode = "Unknown";
+                    if (!string.IsNullOrEmpty(r.FileName))
+                    {
+                        // Pattern: 7800_dp01_20241231.csv
+                        var parts = r.FileName.Split('_');
+                        if (parts.Length >= 2 && parts[1].ToLower().Contains("dp01"))
+                        {
+                            branchCode = parts[0];
+                        }
+                    }
+
+                    string branchName = branchCode switch
+                    {
+                        "7800" => "Hội Sở",
+                        "7801" => "Chi nhánh Tam Đường",
+                        "7802" => "Chi nhánh Phong Thổ",
+                        "7803" => "Chi nhánh Sin Hồ",
+                        "7804" => "Chi nhánh Mường Tè",
+                        "7805" => "Chi nhánh Than Uyên",
+                        "7806" => "Chi nhánh Thành phố",
+                        "7807" => "Chi nhánh Tân Uyên",
+                        "7808" => "Chi nhánh Nậm Nhùn",
+                        "9999" => "Chi nhánh Lai Châu",
+                        _ => $"Chi nhánh {branchCode}"
+                    };
+
+                    return new
+                    {
+                        r.Id,
+                        r.FileName,
+                        r.Category,
+                        r.StatementDate,
+                        r.ImportDate,
+                        r.Status,
+                        r.TotalRecords,
+                        BranchCode = branchCode,
+                        BranchName = branchName,
+                        IsHoiSo = branchCode == "7800"
+                    };
+                }).ToList();
+
+                var hoiSoFiles = filesWithBranchInfo.Where(f => f.IsHoiSo).ToList();
+
+                return Ok(new
+                {
+                    totalDP01Files = dp01Records.Count,
+                    hoiSoFiles = new
+                    {
+                        count = hoiSoFiles.Count,
+                        files = hoiSoFiles
+                    },
+                    allBranches = filesWithBranchInfo
+                        .GroupBy(f => new { f.BranchCode, f.BranchName })
+                        .Select(g => new
+                        {
+                            g.Key.BranchCode,
+                            g.Key.BranchName,
+                            FileCount = g.Count(),
+                            LatestFile = g.OrderByDescending(f => f.StatementDate).FirstOrDefault()
+                        })
+                        .OrderBy(b => b.BranchCode)
+                        .ToList(),
+                    allFiles = filesWithBranchInfo
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi liệt kê file DP01");
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Test tính toán nguồn vốn trực tiếp với file 7800_dp01_20241231.csv
+        /// </summary>
+        [HttpGet("test-7800-calculation")]
+        public async Task<ActionResult> Test7800Calculation()
+        {
+            try
+            {
+                var branchCode = "7800"; // Hội Sở
+                var targetDate = new DateTime(2024, 12, 31);
+
+                _logger.LogInformation("🔍 Test tính toán trực tiếp file 7800_dp01_20241231.csv");
+
+                // Tìm file cụ thể 7800_dp01_20241231.csv
+                var specificRecord = await _context.ImportedDataRecords
+                    .FirstOrDefaultAsync(r => r.FileName == "7800_dp01_20241231.csv" &&
+                                            r.Status == "Completed");
+
+                if (specificRecord == null)
+                {
+                    return NotFound(new { message = "Không tìm thấy file 7800_dp01_20241231.csv" });
+                }
+
+                // Lấy sample dữ liệu từ file này
+                var sampleItems = await _context.ImportedDataItems
+                    .Where(i => i.ImportedDataRecordId == specificRecord.Id)
+                    .Select(i => i.RawData)
+                    .Take(10)
+                    .ToListAsync();
+
+                var accountAnalysis = new List<object>();
+                decimal totalBalance = 0;
+                var excludedPrefixes = new[] { "2", "40", "41", "427" };
+                var processedCount = 0;
+
+                foreach (var rawDataJson in sampleItems)
+                {
+                    try
+                    {
+                        var jsonDoc = JsonDocument.Parse(rawDataJson);
+                        var root = jsonDoc.RootElement;
+
+                        var analysis = new Dictionary<string, object>();
+
+                        // Lấy tất cả fields
+                        foreach (var prop in root.EnumerateObject())
+                        {
+                            analysis[prop.Name] = prop.Value.ToString();
+                        }
+
+                        // Kiểm tra logic
+                        var accountCode = "";
+                        if (root.TryGetProperty("TAI_KHOAN_HACH_TOAN", out var tkhElement))
+                            accountCode = tkhElement.GetString() ?? "";
+
+                        var fileBranchCode = "";
+                        if (root.TryGetProperty("MA_CN", out var maCnElement))
+                            fileBranchCode = maCnElement.GetString() ?? "";
+
+                        var balance = 0m;
+                        if (root.TryGetProperty("CURRENT_BALANCE", out var balanceElement) &&
+                            decimal.TryParse(balanceElement.GetString(), out balance))
+                        {
+                            // Logic kiểm tra
+                            var belongsToBranch = fileBranchCode == branchCode;
+                            var isExcluded = excludedPrefixes.Any(prefix => accountCode.StartsWith(prefix));
+                            var willInclude = belongsToBranch && !isExcluded;
+
+                            if (willInclude)
+                            {
+                                totalBalance += balance;
+                                processedCount++;
+                            }
+
+                            analysis["_LOGIC"] = new
+                            {
+                                accountCode,
+                                fileBranchCode,
+                                balance = balance.ToString("N0"),
+                                belongsToBranch,
+                                isExcluded,
+                                willInclude
+                            };
+                        }
+
+                        accountAnalysis.Add(analysis);
+                    }
+                    catch (Exception ex)
+                    {
+                        accountAnalysis.Add(new { error = ex.Message });
+                    }
+                }
+
+                return Ok(new
+                {
+                    fileInfo = new
+                    {
+                        specificRecord.FileName,
+                        specificRecord.StatementDate,
+                        specificRecord.Id,
+                        TotalRecordsInFile = await _context.ImportedDataItems
+                            .CountAsync(i => i.ImportedDataRecordId == specificRecord.Id)
+                    },
+                    searchCriteria = new
+                    {
+                        targetBranchCode = branchCode,
+                        targetDate = targetDate.ToString("yyyy-MM-dd"),
+                        excludedPrefixes
+                    },
+                    sampleAnalysis = new
+                    {
+                        totalSampleRecords = sampleItems.Count,
+                        processedCount,
+                        totalBalance = totalBalance.ToString("N0"),
+                        totalBalanceTrieuVnd = (totalBalance / 1_000_000m).ToString("N2"),
+                        sampleDetails = accountAnalysis
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi test file 7800");
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Tính toán TOÀN BỘ nguồn vốn từ file 7800_dp01_20241231.csv
+        /// </summary>
+        [HttpGet("calculate-full-7800")]
+        public async Task<ActionResult> CalculateFull7800()
+        {
+            try
+            {
+                var branchCode = "7800";
+                var targetDate = new DateTime(2024, 12, 31);
+
+                _logger.LogInformation("💰 Tính toán TOÀN BỘ nguồn vốn từ file 7800_dp01_20241231.csv");
+
+                var specificRecord = await _context.ImportedDataRecords
+                    .FirstOrDefaultAsync(r => r.FileName == "7800_dp01_20241231.csv" &&
+                                            r.Status == "Completed");
+
+                if (specificRecord == null)
+                {
+                    return NotFound(new { message = "Không tìm thấy file 7800_dp01_20241231.csv" });
+                }
+
+                // Lấy TOÀN BỘ dữ liệu từ file này
+                var allItems = await _context.ImportedDataItems
+                    .Where(i => i.ImportedDataRecordId == specificRecord.Id)
+                    .Select(i => i.RawData)
+                    .ToListAsync();
+
+                decimal totalBalance = 0;
+                var excludedPrefixes = new[] { "2", "40", "41", "427" };
+                var processedCount = 0;
+                var skippedCount = 0;
+                var errorCount = 0;
+                var accountBreakdown = new Dictionary<string, decimal>();
+
+                foreach (var rawDataJson in allItems)
+                {
+                    try
+                    {
+                        var jsonDoc = JsonDocument.Parse(rawDataJson);
+                        var root = jsonDoc.RootElement;
+
+                        // Lấy thông tin cần thiết
+                        var accountCode = "";
+                        if (root.TryGetProperty("TAI_KHOAN_HACH_TOAN", out var tkhElement))
+                            accountCode = tkhElement.GetString() ?? "";
+
+                        var fileBranchCode = "";
+                        if (root.TryGetProperty("MA_CN", out var maCnElement))
+                            fileBranchCode = maCnElement.GetString() ?? "";
+
+                        if (root.TryGetProperty("CURRENT_BALANCE", out var balanceElement) &&
+                            decimal.TryParse(balanceElement.GetString(), out var balance))
+                        {
+                            var belongsToBranch = fileBranchCode == branchCode;
+                            var isExcluded = excludedPrefixes.Any(prefix => accountCode.StartsWith(prefix));
+
+                            if (belongsToBranch && !isExcluded)
+                            {
+                                totalBalance += balance;
+                                processedCount++;
+
+                                // Thống kê theo tài khoản
+                                if (!accountBreakdown.ContainsKey(accountCode))
+                                    accountBreakdown[accountCode] = 0;
+                                accountBreakdown[accountCode] += balance;
+                            }
+                            else
+                            {
+                                skippedCount++;
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        errorCount++;
+                    }
+                }
+
+                var finalTrieuVnd = totalBalance / 1_000_000m;
+
+                return Ok(new
+                {
+                    fileInfo = new
+                    {
+                        specificRecord.FileName,
+                        specificRecord.StatementDate,
+                        TotalRecordsInFile = allItems.Count
+                    },
+                    calculation = new
+                    {
+                        totalRecords = allItems.Count,
+                        processedCount,
+                        skippedCount,
+                        errorCount,
+                        totalBalanceVnd = NumberFormatter.FormatNumber(totalBalance, 0),
+                        totalBalanceTrieuVnd = NumberFormatter.FormatNumber(finalTrieuVnd, 2),
+                        finalResult = $"{NumberFormatter.FormatNumber(finalTrieuVnd, 2)} triệu VND"
+                    },
+                    accountBreakdown = accountBreakdown
+                        .OrderByDescending(kvp => kvp.Value)
+                        .Take(10)
+                        .ToDictionary(
+                            kvp => kvp.Key,
+                            kvp => new
+                            {
+                                balanceVnd = NumberFormatter.FormatNumber(kvp.Value, 0),
+                                balanceTrieuVnd = NumberFormatter.FormatNumber(kvp.Value / 1_000_000m, 2)
+                            }
+                        ),
+                    excludedPrefixes,
+                    searchCriteria = new { branchCode, targetDate = targetDate.ToString("yyyy-MM-dd") }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi tính toán toàn bộ file 7800");
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
     }
 }
