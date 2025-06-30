@@ -323,7 +323,7 @@ namespace TinhKhoanApp.Api.Services
 
         /// <summary>
         /// Tính toán Tỷ lệ nợ xấu từ dữ liệu LN01
-        /// Công thức: (Nợ nhóm 3,4,5 / Tổng dư nợ) * 100
+        /// Công thức: (Nợ nhóm 3,4,5 / Tổng dư nợ) * 100 từ file LN01 chính xác theo ngày
         /// </summary>
         public async Task<decimal> CalculateTyLeNoXau(int unitId, DateTime date)
         {
@@ -331,35 +331,125 @@ namespace TinhKhoanApp.Api.Services
             try
             {
                 var unit = await _context.Units.FindAsync(unitId);
-                if (unit == null) return 0;
+                if (unit == null)
+                {
+                    _logger.LogWarning("Unit {UnitId} không tồn tại", unitId);
+                    return 0;
+                }
 
                 var branchCode = GetBranchCode(unit.Code);
-                _logger.LogInformation("Tính toán Tỷ lệ nợ xấu cho {UnitName} ngày {Date}", unit.Name, date.ToString("yyyy-MM-dd"));
+                _logger.LogInformation("Tính toán Tỷ lệ nợ xấu cho {UnitName} (Code: {BranchCode}) ngày {Date}",
+                    unit.Name, branchCode, date.ToString("yyyy-MM-dd"));
 
-                // TODO: Thay bằng query thực từ bảng LN01
-                var sampleData = GenerateSampleDuNoData(branchCode, date);
+                // Xác định ngày cụ thể cần tìm file LN01 dựa trên chỉ tiêu lũy kế
+                var targetStatementDate = GetTargetStatementDate(date);
 
-                // Tổng dư nợ
-                var totalDebt = sampleData.Sum(d => (decimal)d.DisbursementAmount);
+                if (targetStatementDate == null)
+                {
+                    // Các tháng/năm khác chưa có dữ liệu
+                    var errorMessage = GetDataNotAvailableMessage(date);
+                    _logger.LogWarning(errorMessage);
 
-                // Nợ xấu (nhóm 3, 4, 5)
+                    await SaveCalculationError("TyLeNoXau", unitId, date, errorMessage, startTime);
+                    throw new InvalidOperationException(errorMessage);
+                }
+
+                // Tìm file import LN01 có StatementDate chính xác (sử dụng lại file đã có từ CalculateDuNo)
+                var latestImportRecord = await _context.ImportedDataRecords
+                    .Where(r => r.StatementDate.HasValue &&
+                               r.StatementDate.Value.Date == targetStatementDate.Value.Date &&
+                               r.Status == "Completed" &&
+                               (r.Category.Contains("LN01") || r.Category.Contains("Dư nợ")))
+                    .OrderByDescending(r => r.ImportDate)
+                    .FirstOrDefaultAsync();
+
+                if (latestImportRecord == null)
+                {
+                    var errorMessage = $"Không tìm thấy file import LN01 cho ngày {targetStatementDate:yyyy-MM-dd}. Vui lòng kiểm tra dữ liệu đã được import chưa.";
+                    _logger.LogWarning(errorMessage);
+
+                    await SaveCalculationError("TyLeNoXau", unitId, date, errorMessage, startTime);
+                    throw new InvalidOperationException(errorMessage);
+                }
+
+                // Lấy dữ liệu chi tiết từ file import mới nhất
+                var importedItems = await _context.ImportedDataItems
+                    .Where(i => i.ImportedDataRecordId == latestImportRecord.Id)
+                    .Select(i => i.RawData)
+                    .ToListAsync();
+
+                decimal totalDebt = 0;
+                decimal badDebt = 0;
+                var processedRecords = 0;
+                var nhomNoBreakdown = new Dictionary<string, decimal>();
                 var badDebtGroups = new[] { "03", "04", "05" };
-                var badDebt = sampleData
-                    .Where(d => badDebtGroups.Contains((string)d.NhomNo))
-                    .Sum(d => (decimal)d.DisbursementAmount);
+
+                foreach (var rawDataJson in importedItems)
+                {
+                    try
+                    {
+                        // Parse JSON data để lấy thông tin khoản vay
+                        var jsonDoc = JsonDocument.Parse(rawDataJson);
+                        var root = jsonDoc.RootElement;
+
+                        // Kiểm tra có thuộc chi nhánh đang tính không
+                        var belongsToBranch = root.TryGetProperty("BRANCH_CODE", out var branchElement) &&
+                                            branchElement.GetString() == branchCode;
+
+                        if (!belongsToBranch) continue;
+
+                        // Lấy số tiền giải ngân và nhóm nợ
+                        if (root.TryGetProperty("DISBURSEMENT_AMOUNT", out var disbursementElement) ||
+                            root.TryGetProperty("DisbursementAmount", out disbursementElement) ||
+                            root.TryGetProperty("disbursement_amount", out disbursementElement))
+                        {
+                            if (decimal.TryParse(disbursementElement.GetString(), out var disbursement))
+                            {
+                                totalDebt += disbursement;
+
+                                var nhomNo = "01"; // Default
+                                if (root.TryGetProperty("NHOM_NO", out var nhomNoElement) ||
+                                    root.TryGetProperty("NhomNo", out nhomNoElement))
+                                {
+                                    nhomNo = nhomNoElement.GetString() ?? "01";
+                                }
+
+                                if (!nhomNoBreakdown.ContainsKey(nhomNo))
+                                    nhomNoBreakdown[nhomNo] = 0;
+                                nhomNoBreakdown[nhomNo] += disbursement;
+
+                                // Tính nợ xấu (nhóm 3, 4, 5)
+                                if (badDebtGroups.Contains(nhomNo))
+                                {
+                                    badDebt += disbursement;
+                                }
+
+                                processedRecords++;
+                            }
+                        }
+                    }
+                    catch (JsonException ex)
+                    {
+                        _logger.LogWarning("Lỗi parse JSON data LN01: {Error}", ex.Message);
+                        continue;
+                    }
+                }
 
                 var ratio = totalDebt > 0 ? (badDebt / totalDebt * 100) : 0;
 
                 var calculationDetails = new
                 {
-                    Formula = "(Nợ nhóm 3,4,5 / Tổng dư nợ) * 100",
+                    Formula = "(Nợ nhóm 3,4,5 / Tổng dư nợ) * 100 từ file LN01 chính xác theo ngày",
+                    SourceFile = latestImportRecord.FileName,
+                    StatementDate = latestImportRecord.StatementDate,
+                    ImportDate = latestImportRecord.ImportDate,
                     TotalDebt = totalDebt,
                     BadDebt = badDebt,
                     BadDebtGroups = badDebtGroups,
                     Ratio = ratio,
-                    GroupBreakdown = sampleData.GroupBy(d => d.NhomNo)
-                        .Select(g => new { NhomNo = g.Key, Count = g.Count(), Amount = g.Sum(d => (decimal)d.DisbursementAmount) })
-                        .ToList(),
+                    Unit = "%",
+                    ProcessedRecords = processedRecords,
+                    NhomNoBreakdown = nhomNoBreakdown,
                     CalculationDate = date,
                     UnitInfo = new { unit.Code, unit.Name },
                     BranchCode = branchCode
@@ -367,7 +457,8 @@ namespace TinhKhoanApp.Api.Services
 
                 await SaveCalculation("TyLeNoXau", unitId, date, ratio, calculationDetails, startTime);
 
-                _logger.LogInformation("Hoàn thành tính Tỷ lệ nợ xấu: {Value}%", ratio);
+                _logger.LogInformation("Hoàn thành tính Tỷ lệ nợ xấu từ file thực: {Value}% (từ {Records} bản ghi)",
+                    ratio, processedRecords);
                 return ratio;
             }
             catch (Exception ex)
@@ -382,34 +473,120 @@ namespace TinhKhoanApp.Api.Services
         /// Tính toán Thu hồi nợ đã XLRR (đơn vị: Triệu VND)
         /// TODO: Cần dữ liệu thực từ bảng import để có công thức chính xác
         /// </summary>
+        /// <summary>
+        /// Tính toán Thu hồi XLRR từ dữ liệu LN01
+        /// Công thức: Tổng số tiền thu hồi từ nợ đã xử lý rủi ro theo chi nhánh từ file LN01 chính xác theo ngày
+        /// </summary>
         public async Task<decimal> CalculateThuHoiXLRR(int unitId, DateTime date)
         {
             var startTime = DateTime.Now;
             try
             {
                 var unit = await _context.Units.FindAsync(unitId);
-                if (unit == null) return 0;
+                if (unit == null)
+                {
+                    _logger.LogWarning("Unit {UnitId} không tồn tại", unitId);
+                    return 0;
+                }
 
                 var branchCode = GetBranchCode(unit.Code);
-                _logger.LogInformation("Tính toán Thu hồi XLRR cho {UnitName} ngày {Date}", unit.Name, date.ToString("yyyy-MM-dd"));
+                _logger.LogInformation("Tính toán Thu hồi XLRR cho {UnitName} (Code: {BranchCode}) ngày {Date}",
+                    unit.Name, branchCode, date.ToString("yyyy-MM-dd"));
 
-                // Tạm thời dùng giá trị mẫu theo yêu cầu đơn vị Triệu VND
-                var sampleValueTrieuVND = new Random().Next(10, 100); // Triệu VND
+                // Xác định ngày cụ thể cần tìm file dựa trên chỉ tiêu lũy kế
+                var targetStatementDate = GetTargetStatementDate(date);
+
+                if (targetStatementDate == null)
+                {
+                    // Các tháng/năm khác chưa có dữ liệu
+                    var errorMessage = GetDataNotAvailableMessage(date);
+                    _logger.LogWarning(errorMessage);
+
+                    await SaveCalculationError("ThuHoiXLRR", unitId, date, errorMessage, startTime);
+                    throw new InvalidOperationException(errorMessage);
+                }
+
+                // Tìm file import LN01 có StatementDate chính xác
+                var latestImportRecord = await _context.ImportedDataRecords
+                    .Where(r => r.StatementDate.HasValue &&
+                               r.StatementDate.Value.Date == targetStatementDate.Value.Date &&
+                               r.Status == "Completed" &&
+                               (r.Category.Contains("LN01") || r.Category.Contains("Dư nợ")))
+                    .OrderByDescending(r => r.ImportDate)
+                    .FirstOrDefaultAsync();
+
+                if (latestImportRecord == null)
+                {
+                    var errorMessage = $"Không tìm thấy file import LN01 cho ngày {targetStatementDate:yyyy-MM-dd}. Vui lòng kiểm tra dữ liệu đã được import chưa.";
+                    _logger.LogWarning(errorMessage);
+
+                    await SaveCalculationError("ThuHoiXLRR", unitId, date, errorMessage, startTime);
+                    throw new InvalidOperationException(errorMessage);
+                }
+
+                // Lấy dữ liệu chi tiết từ file import mới nhất
+                var importedItems = await _context.ImportedDataItems
+                    .Where(i => i.ImportedDataRecordId == latestImportRecord.Id)
+                    .Select(i => i.RawData)
+                    .ToListAsync();
+
+                decimal totalThuHoiXLRR = 0;
+                var processedRecords = 0;
+
+                foreach (var rawDataJson in importedItems)
+                {
+                    try
+                    {
+                        var jsonDoc = JsonDocument.Parse(rawDataJson);
+                        var root = jsonDoc.RootElement;
+
+                        // Kiểm tra có thuộc chi nhánh đang tính không
+                        var belongsToBranch = root.TryGetProperty("BRANCH_CODE", out var branchElement) &&
+                                            branchElement.GetString() == branchCode;
+
+                        if (!belongsToBranch) continue;
+
+                        // Tìm trường thu hồi XLRR - có thể là RECOVERED_AMOUNT hoặc tương tự
+                        if (root.TryGetProperty("RECOVERED_AMOUNT", out var recoveredElement) ||
+                            root.TryGetProperty("RecoveredAmount", out recoveredElement) ||
+                            root.TryGetProperty("recovered_amount", out recoveredElement))
+                        {
+                            if (decimal.TryParse(recoveredElement.GetString(), out var recoveredAmount))
+                            {
+                                totalThuHoiXLRR += recoveredAmount;
+                                processedRecords++;
+                            }
+                        }
+                    }
+                    catch (JsonException ex)
+                    {
+                        _logger.LogWarning("Lỗi parse JSON dữ liệu import: {Error}", ex.Message);
+                        continue;
+                    }
+                }
+
+                var finalValue = totalThuHoiXLRR / 1_000_000m; // Chuyển sang triệu VND
 
                 var calculationDetails = new
                 {
-                    Formula = "Tổng số tiền thu hồi từ nợ đã XLRR",
-                    Note = "Chờ dữ liệu thực từ file import LN01",
+                    Formula = "Tổng RECOVERED_AMOUNT từ file LN01 mới nhất theo chi nhánh",
+                    SourceFile = latestImportRecord.FileName,
+                    StatementDate = latestImportRecord.StatementDate,
+                    ImportDate = latestImportRecord.ImportDate,
+                    TotalThuHoiXLRR = totalThuHoiXLRR,
+                    FinalValue = finalValue,
                     Unit = "Triệu VND",
-                    SampleValue = sampleValueTrieuVND,
+                    ProcessedRecords = processedRecords,
                     CalculationDate = date,
                     UnitInfo = new { unit.Code, unit.Name },
                     BranchCode = branchCode
                 };
 
-                await SaveCalculation("ThuHoiXLRR", unitId, date, sampleValueTrieuVND, calculationDetails, startTime);
-                _logger.LogInformation("Hoàn thành tính Thu hồi XLRR: {Value} triệu VND", sampleValueTrieuVND);
-                return sampleValueTrieuVND;
+                await SaveCalculation("ThuHoiXLRR", unitId, date, finalValue, calculationDetails, startTime);
+
+                _logger.LogInformation("Hoàn thành tính Thu hồi XLRR từ file thực: {Value} triệu VND (từ {Records} bản ghi)",
+                    finalValue, processedRecords);
+                return finalValue;
             }
             catch (Exception ex)
             {
@@ -454,8 +631,8 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Tính toán Lợi nhuận tài chính từ dữ liệu GLCB41
-        /// Công thức: (Tài khoản 7 + 790001 + 8511) - (Tài khoản 8 + 882)
+        /// Tính toán Lợi nhuận tài chính từ dữ liệu GLCB41 thực tế
+        /// Công thức: (Tài khoản 7 + 790001 + 8511) - (Tài khoản 8 + 882) từ file GLCB41 chính xác theo ngày
         /// </summary>
         public async Task<decimal> CalculateLoiNhuan(int unitId, DateTime date)
         {
@@ -463,56 +640,147 @@ namespace TinhKhoanApp.Api.Services
             try
             {
                 var unit = await _context.Units.FindAsync(unitId);
-                if (unit == null) return 0;
+                if (unit == null)
+                {
+                    _logger.LogWarning("Unit {UnitId} không tồn tại", unitId);
+                    return 0;
+                }
 
                 var branchCode = GetBranchCode(unit.Code);
-                _logger.LogInformation("Tính toán Lợi nhuận cho {UnitName} ngày {Date}", unit.Name, date.ToString("yyyy-MM-dd"));
+                _logger.LogInformation("Tính toán Lợi nhuận cho {UnitName} (Code: {BranchCode}) ngày {Date}",
+                    unit.Name, branchCode, date.ToString("yyyy-MM-dd"));
 
-                // TODO: Thay bằng query thực từ bảng GLCB41
-                var sampleData = GenerateSampleGLCB41Data(branchCode, date);
+                // Xác định ngày cụ thể cần tìm file dựa trên chỉ tiêu lũy kế
+                var targetStatementDate = GetTargetStatementDate(date);
+
+                if (targetStatementDate == null)
+                {
+                    // Các tháng/năm khác chưa có dữ liệu
+                    var errorMessage = GetDataNotAvailableMessage(date);
+                    _logger.LogWarning(errorMessage);
+
+                    await SaveCalculationError("LoiNhuan", unitId, date, errorMessage, startTime);
+                    throw new InvalidOperationException(errorMessage);
+                }
+
+                // Tìm file import GLCB41 có StatementDate chính xác
+                var latestImportRecord = await _context.ImportedDataRecords
+                    .Where(r => r.StatementDate.HasValue &&
+                               r.StatementDate.Value.Date == targetStatementDate.Value.Date &&
+                               r.Status == "Completed" &&
+                               (r.Category.Contains("GLCB41") || r.Category.Contains("Lợi nhuận")))
+                    .OrderByDescending(r => r.ImportDate)
+                    .FirstOrDefaultAsync();
+
+                if (latestImportRecord == null)
+                {
+                    var errorMessage = $"Không tìm thấy file import GLCB41 cho ngày {targetStatementDate:yyyy-MM-dd}. Vui lòng kiểm tra dữ liệu đã được import chưa.";
+                    _logger.LogWarning(errorMessage);
+
+                    await SaveCalculationError("LoiNhuan", unitId, date, errorMessage, startTime);
+                    throw new InvalidOperationException(errorMessage);
+                }
+
+                // Lấy dữ liệu chi tiết từ file import mới nhất
+                var importedItems = await _context.ImportedDataItems
+                    .Where(i => i.ImportedDataRecordId == latestImportRecord.Id)
+                    .Select(i => i.RawData)
+                    .ToListAsync();
+
+                decimal totalRevenue = 0; // Thu nhập
+                decimal totalExpense = 0; // Chi phí
+                var processedRecords = 0;
 
                 // Thu nhập (7 + 790001 + 8511)
                 var revenueAccounts = new[] { "7", "790001", "8511" };
-                var revenue = sampleData
-                    .Where(d => revenueAccounts.Any(acc => d.AccountCode.StartsWith(acc)))
-                    .Sum(d => (decimal)d.CreditAmount - (decimal)d.DebitAmount); // Credit - Debit cho tài khoản thu
-
                 // Chi phí (8 + 882)
                 var expenseAccounts = new[] { "8", "882" };
-                var expense = sampleData
-                    .Where(d => expenseAccounts.Any(acc => d.AccountCode.StartsWith(acc)))
-                    .Sum(d => (decimal)d.DebitAmount - (decimal)d.CreditAmount); // Debit - Credit cho tài khoản chi
 
-                var profit = revenue - expense;
+                foreach (var rawDataJson in importedItems)
+                {
+                    try
+                    {
+                        var jsonDoc = JsonDocument.Parse(rawDataJson);
+                        var root = jsonDoc.RootElement;
+
+                        // Kiểm tra có thuộc chi nhánh đang tính không
+                        var belongsToBranch = root.TryGetProperty("BRANCH_CODE", out var branchElement) &&
+                                            branchElement.GetString() == branchCode;
+
+                        if (!belongsToBranch) continue;
+
+                        // Lấy thông tin tài khoản
+                        if (root.TryGetProperty("ACCOUNT_CODE", out var accountCodeElement) ||
+                            root.TryGetProperty("AccountCode", out accountCodeElement) ||
+                            root.TryGetProperty("account_code", out accountCodeElement))
+                        {
+                            var accountCode = accountCodeElement.GetString() ?? "";
+
+                            // Lấy số dư Credit và Debit
+                            decimal creditAmount = 0, debitAmount = 0;
+
+                            if (root.TryGetProperty("CREDIT_AMOUNT", out var creditElement) ||
+                                root.TryGetProperty("CreditAmount", out creditElement) ||
+                                root.TryGetProperty("credit_amount", out creditElement))
+                            {
+                                decimal.TryParse(creditElement.GetString(), out creditAmount);
+                            }
+
+                            if (root.TryGetProperty("DEBIT_AMOUNT", out var debitElement) ||
+                                root.TryGetProperty("DebitAmount", out debitElement) ||
+                                root.TryGetProperty("debit_amount", out debitElement))
+                            {
+                                decimal.TryParse(debitElement.GetString(), out debitAmount);
+                            }
+
+                            // Tính thu nhập từ các tài khoản thu
+                            if (revenueAccounts.Any(acc => accountCode.StartsWith(acc)))
+                            {
+                                totalRevenue += creditAmount - debitAmount; // Credit - Debit cho tài khoản thu
+                            }
+
+                            // Tính chi phí từ các tài khoản chi
+                            if (expenseAccounts.Any(acc => accountCode.StartsWith(acc)))
+                            {
+                                totalExpense += debitAmount - creditAmount; // Debit - Credit cho tài khoản chi
+                            }
+
+                            processedRecords++;
+                        }
+                    }
+                    catch (JsonException ex)
+                    {
+                        _logger.LogWarning("Lỗi parse JSON dữ liệu import: {Error}", ex.Message);
+                        continue;
+                    }
+                }
+
+                var profit = totalRevenue - totalExpense;
+                var finalValue = profit / 1_000_000m; // Chuyển sang triệu VND
 
                 var calculationDetails = new
                 {
-                    Formula = "(TK 7+790001+8511) - (TK 8+882)",
-                    Revenue = revenue,
-                    RevenueAccounts = revenueAccounts,
-                    Expense = expense,
-                    ExpenseAccounts = expenseAccounts,
+                    Formula = "(TK 7+790001+8511) - (TK 8+882) từ file GLCB41 mới nhất",
+                    SourceFile = latestImportRecord.FileName,
+                    StatementDate = latestImportRecord.StatementDate,
+                    ImportDate = latestImportRecord.ImportDate,
+                    TotalRevenue = totalRevenue,
+                    TotalExpense = totalExpense,
                     Profit = profit,
-                    RevenueDetail = sampleData
-                        .Where(d => revenueAccounts.Any(acc => d.AccountCode.StartsWith(acc)))
-                        .GroupBy(d => d.AccountCode.Substring(0, Math.Min(d.AccountCode.Length, 6)))
-                        .Select(g => new { Account = g.Key, Amount = g.Sum(d => (decimal)d.CreditAmount - (decimal)d.DebitAmount) })
-                        .ToList(),
-                    ExpenseDetail = sampleData
-                        .Where(d => expenseAccounts.Any(acc => d.AccountCode.StartsWith(acc)))
-                        .GroupBy(d => d.AccountCode.Substring(0, Math.Min(d.AccountCode.Length, 3)))
-                        .Select(g => new { Account = g.Key, Amount = g.Sum(d => (decimal)d.DebitAmount - (decimal)d.CreditAmount) })
-                        .ToList(),
+                    FinalValue = finalValue,
+                    Unit = "Triệu VND",
+                    ProcessedRecords = processedRecords,
+                    RevenueAccounts = revenueAccounts,
+                    ExpenseAccounts = expenseAccounts,
                     CalculationDate = date,
                     UnitInfo = new { unit.Code, unit.Name },
                     BranchCode = branchCode
                 };
 
-                var finalValue = profit / 1_000_000m; // Chuyển sang triệu VND
-
                 await SaveCalculation("LoiNhuan", unitId, date, finalValue, calculationDetails, startTime);
 
-                _logger.LogInformation("Hoàn thành tính Lợi nhuận: {Value} triệu VND", finalValue);
+                _logger.LogInformation("Hoàn thành tính Lợi nhuận từ file thực: {Value} triệu VND (từ {Records} bản ghi)",
+                    finalValue, processedRecords);
                 return finalValue;
             }
             catch (Exception ex)
