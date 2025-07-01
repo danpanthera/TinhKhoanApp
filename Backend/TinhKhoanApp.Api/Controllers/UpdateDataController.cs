@@ -41,15 +41,15 @@ namespace TinhKhoanApp.Api.Controllers
                 var unitCodeMapping = new Dictionary<string, string>
                 {
                     { "PgdMuongSo", "CnPhongThoPgdSo5" }, // Phòng giao dịch Mường So → PGD Số 5
-                    { "PgdMuongThan", "CnThanUyenPgdSo6" }, // Phòng giao dịch Mường Than → PGD Mường Than
+                    { "PgdMuongThan", "CnThanUyenPgdSo6" }, // Phòng giao dịch Mường Than → PGD Số 6
                     { "PgdSo1", "CnDoanKetPgdSo1" }, // PGD số 1 → có mã CnDoanKetPgdSo1
-                    { "PgdSo2", "CnDoanKetPgdSo2" } // PGD số 2 → có mã CnDoanKetPgdSo2
+                    { "PgdSo2", "CnDoanKetPgdSo2" ` } // PGD số 2 → có mã CnDoanKetPgdSo2
                 };
 
                 var unitNameMapping = new Dictionary<string, string>
                 {
                     { "Phòng giao dịch Mường So", "PGD Số 5" },
-                    { "Phòng giao dịch Mường Than", "PGD Mường Than" }
+                    { "Phòng giao dịch Mường Than", "PGD Số 6" }
                 };
 
                 int updatedUnits = 0;
@@ -99,6 +99,30 @@ namespace TinhKhoanApp.Api.Controllers
                         updatedUnits++;
                         _logger.LogInformation("✅ Updated Unit Name: {OldName} → {NewName}", mapping.Key, mapping.Value);
                     }
+                }
+
+                // 1.3 Cập nhật trực tiếp PGD bằng ID (fallback nếu name matching không work)
+                try
+                {
+                    var pgdMuongSo = await _context.Units.FindAsync(20); // ID 20 = Phòng giao dịch Mường So
+                    if (pgdMuongSo != null && pgdMuongSo.Name.Contains("Mường So"))
+                    {
+                        pgdMuongSo.Name = "PGD Số 5";
+                        updatedUnits++;
+                        _logger.LogInformation("✅ Direct update ID 20: Phòng giao dịch Mường So → PGD Số 5");
+                    }
+
+                    var pgdMuongThan = await _context.Units.FindAsync(27); // ID 27 = Phòng giao dịch Mường Than
+                    if (pgdMuongThan != null && pgdMuongThan.Name.Contains("Mường Than"))
+                    {
+                        pgdMuongThan.Name = "PGD Số 6";
+                        updatedUnits++;
+                        _logger.LogInformation("✅ Direct update ID 27: Phòng giao dịch Mường Than → PGD Số 6");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "⚠️ Không thể update trực tiếp PGD");
                 }
 
                 // 2. Cập nhật bảng KpiAssignmentTables
@@ -189,6 +213,63 @@ namespace TinhKhoanApp.Api.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Lỗi kiểm tra tên chi nhánh");
+                return BadRequest(new { success = false, error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Cập nhật tên PGD cụ thể theo yêu cầu mới
+        /// </summary>
+        [HttpPost("update-pgd-names")]
+        public async Task<ActionResult> UpdatePgdNames()
+        {
+            try
+            {
+                _logger.LogInformation("🔄 Bắt đầu cập nhật tên PGD trong database");
+
+                int updatedCount = 0;
+
+                // Cập nhật Phòng giao dịch Mường So → PGD Số 5
+                var pgdMuongSo = await _context.Units
+                    .Where(u => u.Name == "Phòng giao dịch Mường So")
+                    .ToListAsync();
+
+                foreach (var unit in pgdMuongSo)
+                {
+                    unit.Name = "PGD Số 5";
+                    updatedCount++;
+                    _logger.LogInformation("✅ Updated: {OldName} → {NewName}", "Phòng giao dịch Mường So", "PGD Số 5");
+                }
+
+                // Cập nhật Phòng giao dịch Mường Than → PGD Số 6
+                var pgdMuongThan = await _context.Units
+                    .Where(u => u.Name == "Phòng giao dịch Mường Than")
+                    .ToListAsync();
+
+                foreach (var unit in pgdMuongThan)
+                {
+                    unit.Name = "PGD Số 6";
+                    updatedCount++;
+                    _logger.LogInformation("✅ Updated: {OldName} → {NewName}", "Phòng giao dịch Mường Than", "PGD Số 6");
+                }
+
+                // Lưu thay đổi
+                var saveResult = await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Cập nhật tên PGD thành công",
+                    summary = new
+                    {
+                        updatedUnits = updatedCount,
+                        totalChanges = saveResult
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Lỗi cập nhật tên PGD");
                 return BadRequest(new { success = false, error = ex.Message });
             }
         }
