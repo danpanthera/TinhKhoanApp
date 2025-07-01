@@ -1,6 +1,6 @@
 <template>
-  <div 
-    class="kpi-card" 
+  <div
+    class="kpi-card"
     :class="cardClass"
     @click="$emit('click', indicator)"
   >
@@ -9,7 +9,7 @@
       <div class="decoration-circle circle-1"></div>
       <div class="decoration-circle circle-2"></div>
     </div>
-    
+
     <!-- Header với icon và badge -->
     <div class="card-header">
       <div class="icon-wrapper" :style="{ background: indicator.color + '20' }">
@@ -24,7 +24,7 @@
         {{ statusText }}
       </div>
     </div>
-    
+
     <!-- Main values với animation -->
     <div class="card-values">
       <div class="value-item actual">
@@ -39,7 +39,7 @@
         <span class="value-number">{{ formatValue(indicator.planValue) }}</span>
       </div>
     </div>
-    
+
     <!-- Progress bar với gradient -->
     <div class="progress-section">
       <div class="progress-header">
@@ -48,9 +48,9 @@
       </div>
       <div class="progress-bar-wrapper">
         <div class="progress-bar-bg"></div>
-        <div 
+        <div
           class="progress-bar-fill"
-          :style="{ 
+          :style="{
             width: completionRate + '%',
             background: progressGradient
           }"
@@ -59,7 +59,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Mini trend chart -->
     <div v-if="showTrend && indicator.trend" class="trend-section">
       <div class="trend-header">
@@ -69,14 +69,14 @@
           {{ trendValue }}%
         </span>
       </div>
-      <mini-trend-chart 
-        :data="indicator.trend" 
+      <mini-trend-chart
+        :data="indicator.trend"
         :color="indicator.color"
         :gradient="true"
         :height="50"
       />
     </div>
-    
+
     <!-- Footer với thông tin bổ sung -->
     <div class="card-footer">
       <div class="footer-stat">
@@ -88,7 +88,7 @@
         <span>Cập nhật: {{ getTimeAgo(indicator.dataDate) }}</span>
       </div>
     </div>
-    
+
     <!-- Hover effect overlay -->
     <div class="hover-overlay">
       <span class="view-detail">Xem chi tiết <i class="mdi mdi-arrow-right"></i></span>
@@ -98,8 +98,8 @@
 
 <script setup>
 import { computed } from 'vue';
-import MiniTrendChart from './MiniTrendChart.vue';
 import AnimatedNumber from './AnimatedNumber.vue';
+import MiniTrendChart from './MiniTrendChart.vue';
 
 const props = defineProps({
   indicator: {
@@ -117,7 +117,7 @@ const emit = defineEmits(['click']);
 // Computed properties
 const completionRate = computed(() => {
   if (!props.indicator.planValue || props.indicator.planValue === 0) return 0;
-  
+
   // Đối với tỷ lệ nợ xấu, càng thấp càng tốt
   if (props.indicator.code === 'TyLeNoXau') {
     if (props.indicator.actualValue <= props.indicator.planValue) {
@@ -125,7 +125,7 @@ const completionRate = computed(() => {
     }
     return Math.min((props.indicator.planValue / props.indicator.actualValue) * 100, 100);
   }
-  
+
   return Math.min((props.indicator.actualValue / props.indicator.planValue) * 100, 120);
 });
 
@@ -188,18 +188,18 @@ const trendValue = computed(() => {
 // Methods
 const formatValue = (value) => {
   if (!value && value !== 0) return '-';
-  
+
   if (props.indicator.unit === '%') {
     return value.toFixed(2) + '%';
   }
-  
-  // Format với separator nghìn và tỷ
+
+  // Format với separator nghìn và triệu
   if (value >= 1000000) {
-    return (value / 1000000).toFixed(1) + ' tỷ';
+    return (value / 1000000).toFixed(1) + ' triệu';
   } else if (value >= 1000) {
     return new Intl.NumberFormat('vi-VN').format(value);
   }
-  
+
   return value.toString();
 };
 
@@ -214,15 +214,15 @@ const formatDate = (date) => {
 
 const getTimeAgo = (date) => {
   if (!date) return 'N/A';
-  
+
   const now = new Date();
   const past = new Date(date);
   const diffInHours = Math.floor((now - past) / (1000 * 60 * 60));
-  
+
   if (diffInHours < 1) return 'Vừa xong';
   if (diffInHours < 24) return `${diffInHours}h trước`;
   if (diffInHours < 48) return 'Hôm qua';
-  
+
   const diffInDays = Math.floor(diffInHours / 24);
   return `${diffInDays} ngày trước`;
 };
@@ -575,15 +575,15 @@ const getTimeAgo = (date) => {
   .kpi-card {
     padding: 20px;
   }
-  
+
   .card-values {
     padding: 16px;
   }
-  
+
   .value-number {
     font-size: 22px;
   }
-  
+
   .card-name {
     font-size: 16px;
   }

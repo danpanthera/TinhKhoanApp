@@ -3,8 +3,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, nextTick, onUnmounted } from 'vue';
 import * as echarts from 'echarts';
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 
 const props = defineProps({
   data: {
@@ -102,7 +102,7 @@ const updateChart = () => {
     yAxis: [
       {
         type: 'value',
-        name: 'Tỷ đồng',
+        name: 'Triệu đồng',
         nameTextStyle: {
           color: '#909399',
           fontSize: 12
@@ -165,7 +165,7 @@ const generateSeries = () => {
 
   return props.data.datasets.map(dataset => {
     const isPercentage = dataset.name.includes('Tỷ lệ') || dataset.name.includes('%');
-    
+
     return {
       name: dataset.name,
       type: 'line',
@@ -206,7 +206,7 @@ const getUnitBySeriesName = (seriesName) => {
   if (seriesName.includes('Tỷ lệ') || seriesName.includes('%')) {
     return '%';
   }
-  return 'tỷ đồng';
+  return 'triệu đồng';
 };
 
 const formatValue = (value, unit) => {
@@ -236,7 +236,7 @@ onMounted(() => {
   nextTick(() => {
     initChart();
   });
-  
+
   // Add resize listener
   window.addEventListener('resize', resize);
 });
