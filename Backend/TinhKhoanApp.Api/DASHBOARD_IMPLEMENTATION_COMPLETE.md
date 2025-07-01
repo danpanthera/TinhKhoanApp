@@ -22,7 +22,7 @@
 
 - ✅ **GeneralDashboardController**: Sử dụng `IBranchCalculationService` cho tất cả chỉ tiêu
 - ✅ **BranchCalculationService**: Cải thiện logic tính toán và mock data
-- ✅ **Parse số đúng**: VND → tỷ VND với Math.Round(, 2)
+- ✅ **Parse số đúng**: VND → triệu VND với Math.Round(, 2)
 - ✅ **Completion Rate**: Tính toán động cho từng chỉ tiêu
 - ✅ **Log chi tiết**: Debug và monitoring tốt hơn
 - ✅ **Xử lý lỗi**: Exception handling đầy đủ

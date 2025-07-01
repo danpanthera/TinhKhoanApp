@@ -89,7 +89,7 @@ namespace TinhKhoanApp.Api.Models
 
         [Required]
         [StringLength(50)]
-        public string Unit { get; set; } = string.Empty; // Đơn vị tính (%, Tỷ VND, BT, cái)
+        public string Unit { get; set; } = string.Empty; // Đơn vị tính (%, Triệu VND, BT, cái)
 
         [Required]
         public int OrderIndex { get; set; } // Thứ tự hiển thị

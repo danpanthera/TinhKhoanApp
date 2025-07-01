@@ -43,7 +43,7 @@ namespace TinhKhoanApp.Api.Controllers
                 var thuDichVuVnd = await _branchCalculationService.CalculateThuDichVuByBranch(branchId, date);
                 var taiChinhVnd = await _branchCalculationService.CalculateLoiNhuanByBranch(branchId, date);
 
-                // Chuyển đổi từ VND sang tỷ VND
+                // Chuyển đổi từ VND sang triệu VND
                 var nguonVonTy = Math.Round(nguonVonVnd / 1_000_000_000m, 2);
                 var duNoTy = Math.Round(duNoVnd / 1_000_000_000m, 2);
                 var thuNoXlrrTy = Math.Round(thuNoXlrrVnd / 1_000_000_000m, 2);
