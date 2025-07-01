@@ -31,7 +31,7 @@ export const formatNumber = (value, options = {}) => {
 /**
  * Format số tiền theo chuẩn Việt Nam
  * @param {number|string} value - Giá trị số cần format
- * @param {string} currency - Đơn vị tiền tệ (VND, triệu VND, tỷ VND)
+ * @param {string} currency - Đơn vị tiền tệ (VND, triệu VND, triệu VND)
  * @returns {string} Chuỗi tiền tệ đã format
  */
 export const formatCurrency = (value, currency = 'VND') => {

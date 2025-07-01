@@ -241,12 +241,12 @@ namespace TinhKhoanApp.Api.Controllers
                 "CnTanUyenPgdSo3" => "7807",
                 // Tên mới theo quy ước anh
                 "CnBinhLu" => "7801",
-                "CnPhongThoPgdSo5" => "7802",
+                "CnPhongThoPgdSo5" => "7802",         // PGD Số 5 (thuộc CN Phong Thổ)
                 "CnBumTo" => "7804",
-                "CnThanUyenPgdSo6" => "7805",
+                "CnThanUyenPgdSo6" => "7805",         // PGD Mường Than (thuộc CN Than Uyên)
                 "CnDoanKet" => "7806",
-                "CnDoanKetPgdSo1" => "7806",
-                "CnDoanKetPgdSo2" => "7806",
+                "CnDoanKetPgdSo1" => "7806",          // PGD số 1 (thuộc CN Đoàn Kết)
+                "CnDoanKetPgdSo2" => "7806",          // PGD số 2 (thuộc CN Đoàn Kết)
                 "CnNamHang" => "7808",
                 _ => "7800" // Default Hội Sở
             };

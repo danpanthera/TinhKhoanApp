@@ -701,7 +701,7 @@ const loadDashboardData = async () => {
       indicators.value = data.indicators.map(indicator => {
         const processedIndicator = { ...indicator };
 
-        // Chuyển đổi từ tỷ VND sang triệu VND cho các chỉ tiêu tiền tệ
+        // Chuyển đổi từ triệu VND sang triệu VND cho các chỉ tiêu tiền tệ
         if (indicator.format === 'currency' && indicator.unit === 'tỷ') {
           processedIndicator.currentValue = indicator.currentValue * 1000; // Chuyển tỷ -> triệu
           processedIndicator.targetValue = indicator.targetValue * 1000;

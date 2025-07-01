@@ -1295,14 +1295,14 @@ namespace TinhKhoanApp.Api.Controllers
             return branchCode switch
             {
                 "9999" => "CnLaiChau",
-                "7801" => "CnTamDuong",
+                "7801" => "CnBinhLu",        // Cập nhật từ CnTamDuong thành CnBinhLu
                 "7802" => "CnPhongTho",
                 "7803" => "CnSinHo",
-                "7804" => "CnMuongTe",
+                "7804" => "CnBumTo",         // Cập nhật từ CnMuongTe thành CnBumTo
                 "7805" => "CnThanUyen",
-                "7806" => "CnThanhPho",
+                "7806" => "CnDoanKet",       // Cập nhật từ CnThanhPho thành CnDoanKet
                 "7807" => "CnTanUyen",
-                "7808" => "CnNamNhun",
+                "7808" => "CnNamHang",       // Cập nhật từ CnNamNhun thành CnNamHang
 
                 _ => $"Chi_nhanh_{branchCode}"
             };

@@ -338,11 +338,11 @@ namespace TinhKhoanApp.Api.Controllers
                         var root = jsonDoc.RootElement;
 
                         totalItems++;
-                        
+
                         var maCn = root.TryGetProperty("MA_CN", out var cnProp) ? cnProp.GetString() : "";
                         var maPgd = root.TryGetProperty("MA_PGD", out var pgdProp) ? pgdProp.GetString() : "";
                         var taiKhoan = root.TryGetProperty("TAI_KHOAN_HACH_TOAN", out var tkProp) ? tkProp.GetString() : "";
-                        
+
                         decimal currentBalance = 0;
                         if (root.TryGetProperty("CURRENT_BALANCE", out var balanceProp))
                         {

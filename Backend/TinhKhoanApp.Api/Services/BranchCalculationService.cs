@@ -512,7 +512,7 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Mapping branchId sang PGD code (nếu có)
+        /// Mapping branchId sang PGD code (nếu có) - cập nhật theo yêu cầu mới
         /// </summary>
         private string? GetPgdCode(string branchId)
         {
@@ -520,12 +520,12 @@ namespace TinhKhoanApp.Api.Services
             // Chỉ có một số trường hợp cụ thể là PGD riêng
             return branchId switch
             {
-                "PgdMuongSo" => "01",        // PGD Mường So (thuộc CN Phong Thổ)
-                "PgdMuongThan" => "01",      // PGD Mường Than (thuộc CN Than Uyên)
-                "PgdSo1" => "01",            // PGD Số 1 (thuộc CN Đoàn Kết)
-                "PgdSo2" => "02",            // PGD Số 2 (thuộc CN Đoàn Kết)
-                "PgdSo3" => "01",            // PGD Số 3 (thuộc CN Tân Uyên)
-                _ => "00"                    // Mặc định: chi nhánh chính (tất cả PGD)
+                "CnPhongThoPgdSo5" => "01",     // PGD Số 5 (thuộc CN Phong Thổ)
+                "CnThanUyenPgdSo6" => "01",     // PGD Mường Than (thuộc CN Than Uyên)
+                "CnDoanKetPgdSo1" => "01",      // PGD Số 1 (thuộc CN Đoàn Kết)
+                "CnDoanKetPgdSo2" => "02",      // PGD Số 2 (thuộc CN Đoàn Kết)
+                "PgdSo3" => "01",               // PGD Số 3 (thuộc CN Tân Uyên)
+                _ => "00"                       // Mặc định: chi nhánh chính (tất cả PGD)
             };
         }
 
