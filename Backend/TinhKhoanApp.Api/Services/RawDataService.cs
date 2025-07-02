@@ -83,21 +83,32 @@ namespace TinhKhoanApp.Api.Services
 
                 decimal totalNguonVon = 0;
                 int processedRecords = 0;
+                int totalItemsChecked = 0; // Debug counter
                 var excludedAccounts = new[] { "40", "41", "427", "211108" };
                 var accountBalances = new Dictionary<string, AccountDetail>();
+                var unitCodes = new HashSet<string>(); // Debug: track unique unit codes
+
+                _logger.LogInformation("🔍 Debug: Processing {RecordCount} records for unitCode: {UnitCode}",
+                    importedRecords.Count, request.UnitCode);
 
                 foreach (var record in importedRecords)
                 {
                     foreach (var item in record.ImportedDataItems)
                     {
+                        totalItemsChecked++; // Debug counter
                         try
                         {
                             var jsonData = JsonSerializer.Deserialize<Dictionary<string, object>>(item.RawData);
 
-                            // Lấy mã chi nhánh từ dữ liệu
+                            // Debug: Lấy mã chi nhánh từ dữ liệu để log
+                            string? maCn = null;
                             if (jsonData.TryGetValue("MA_CN", out var maCnObj))
                             {
-                                var maCn = maCnObj?.ToString();
+                                maCn = maCnObj?.ToString();
+                                if (!string.IsNullOrEmpty(maCn))
+                                {
+                                    unitCodes.Add(maCn); // Debug: collect unique unit codes
+                                }
 
                                 // Nếu yêu cầu tính cho chi nhánh cụ thể (không phải ALL), chỉ lấy dữ liệu của chi nhánh đó
                                 if (!string.IsNullOrEmpty(request.UnitCode) && request.UnitCode != "ALL" &&
@@ -167,8 +178,8 @@ namespace TinhKhoanApp.Api.Services
                     }
                 }
 
-                _logger.LogInformation("✅ Calculation completed - Total: {Total:N0}, Records: {Count}",
-                    totalNguonVon, processedRecords);
+                _logger.LogInformation("✅ Calculation completed - Total: {Total:N0}, Records: {Count}, Items checked: {ItemsChecked}, Unique units: [{Units}]",
+                    totalNguonVon, processedRecords, totalItemsChecked, string.Join(", ", unitCodes));
 
                 // Lấy top 20 tài khoản có số dư lớn nhất
                 var topAccounts = accountBalances.Values
