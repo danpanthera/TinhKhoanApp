@@ -8,27 +8,30 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5055
 export const branchIndicatorsService = {
 
   /**
-   * Tính toán Nguồn vốn theo chi nhánh
+   * Tính toán Nguồn vốn theo chi nhánh từ dữ liệu thô DP01
    */
   async calculateNguonVon(branchId, date = null) {
     try {
-      // Validate và xử lý tham số date
-      let validDate = null;
+      // Chuyển đổi date thành định dạng phù hợp cho API mới
+      let targetDate = new Date();
       if (date && date.trim() !== '') {
-        validDate = date;
+        const parsedDate = new Date(date);
+        if (!isNaN(parsedDate.getTime())) {
+          targetDate = parsedDate;
+        }
       }
 
-      console.log('🌐 API Call - branchId:', branchId, 'date:', validDate);
+      console.log('🌐 API Call - branchId:', branchId, 'date:', targetDate.toISOString());
 
-      // Chỉ gửi thuộc tính date khi có giá trị hợp lệ
-      const requestBody = { branchId };
-      if (validDate) {
-        requestBody.date = validDate;
-      }
+      const requestBody = {
+        unitCode: branchId,
+        targetDate: targetDate.toISOString(),
+        dateType: "month" // Mặc định tính theo tháng
+      };
 
       console.log('📋 Request body:', requestBody);
 
-      const response = await fetch(`${API_BASE_URL}/BranchIndicators/nguon-von`, {
+      const response = await fetch(`${API_BASE_URL}/NguonVon/calculate`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -41,7 +44,19 @@ export const branchIndicatorsService = {
       }
 
       const result = await response.json()
-      return result
+
+      // Chuyển đổi định dạng response để tương thích với frontend hiện tại
+      if (result.success && result.data) {
+        return {
+          total: result.data.totalBalance,
+          unitName: result.data.unitName,
+          recordCount: result.data.recordCount,
+          topAccounts: result.data.topAccounts,
+          message: result.message
+        }
+      } else {
+        throw new Error(result.message || 'Không thể tính toán nguồn vốn')
+      }
     } catch (error) {
       console.error('❌ Lỗi tính Nguồn vốn:', error)
       throw error

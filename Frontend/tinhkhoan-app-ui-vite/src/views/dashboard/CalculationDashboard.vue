@@ -989,37 +989,25 @@ const calculateNguonVon = async () => {
       selectedPeriod: selectedPeriod.value
     });
 
-    // Gọi API mới để tính Nguồn vốn từ bảng DP01
-    const response = await fetch('/api/NguonVon/calculate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        unitCode: unitCode,
-        targetDate: targetDate.toISOString(),
-        dateType: dateType
-      })
-    });
+    // Gọi service để tính Nguồn vốn từ bảng DP01
+    const result = await branchIndicatorsService.calculateNguonVon(unitCode, targetDate.toISOString());
 
-    const result = await response.json();
-
-    if (result.success) {
+    if (result.total !== undefined) {
       // Cập nhật kết quả vào UI
-      calculatedIndicators.value[0].value = result.data.totalBalance / 1000000; // Chuyển từ VND sang triệu VND
+      calculatedIndicators.value[0].value = result.total / 1000000; // Chuyển từ VND sang triệu VND
       calculatedIndicators.value[0].calculated = true;
       calculatedIndicators.value[0].details = {
         formula: 'Tổng CURRENT_BALANCE từ DP01 (loại trừ TK 40*, 41*, 427*, 211108)',
         calculatedAt: new Date().toISOString(),
         unit: 'Triệu VND',
-        unitCode: result.data.unitCode,
-        unitName: result.data.unitName,
-        recordCount: result.data.recordCount,
-        calculatedDate: result.calculatedDate
+        unitCode: unitCode,
+        unitName: result.unitName || displayName,
+        recordCount: result.recordCount,
+        calculatedDate: targetDate.toLocaleDateString('vi-VN')
       };
 
       showCalculationResults.value = true;
-      successMessage.value = `✅ Đã tính Nguồn vốn cho ${result.data.unitName}: ${formatCurrency(result.data.totalBalance)} VND (${result.data.recordCount.toLocaleString()} bản ghi, ngày ${result.calculatedDate})`;
+      successMessage.value = `✅ Đã tính Nguồn vốn cho ${result.unitName || displayName}: ${formatCurrency(result.total)} VND (${result.recordCount?.toLocaleString() || 0} bản ghi)`;
     } else {
       throw new Error(result.message || 'Tính toán thất bại');
     }
