@@ -99,8 +99,8 @@ internal class Program
         builder.Services.AddScoped<IStatementDateService, StatementDateService>();
         builder.Services.AddScoped<DashboardCalculationService>();
         builder.Services.AddScoped<IBranchCalculationService, BranchCalculationService>();
-        // 💰 Đăng ký service tính toán nguồn vốn từ DP01
-        builder.Services.AddScoped<INguonVonService, NguonVonService>();
+        // 💰 Đăng ký service tính toán nguồn vốn từ DP01 (dữ liệu thô)
+        builder.Services.AddScoped<IRawDataService, RawDataService>();
 
         // 4. Đăng ký các dịch vụ cho Swagger/OpenAPI (để tạo tài liệu API tự động)
         builder.Services.AddEndpointsApiExplorer();

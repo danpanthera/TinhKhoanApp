@@ -7,20 +7,20 @@ using System.Threading.Tasks;
 namespace TinhKhoanApp.Api.Controllers
 {
     /// <summary>
-    /// Controller xử lý API tính toán nguồn vốn từ bảng DP01
+    /// Controller xử lý API tính toán nguồn vốn từ dữ liệu thô DP01
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class NguonVonController : ControllerBase
     {
-        private readonly INguonVonService _nguonVonService;
+        private readonly IRawDataService _rawDataService;
         private readonly ILogger<NguonVonController> _logger;
 
         public NguonVonController(
-            INguonVonService nguonVonService,
+            IRawDataService rawDataService,
             ILogger<NguonVonController> logger)
         {
-            _nguonVonService = nguonVonService;
+            _rawDataService = rawDataService;
             _logger = logger;
         }
 
@@ -48,35 +48,38 @@ namespace TinhKhoanApp.Api.Controllers
                 _logger.LogInformation("🔍 API: Bắt đầu tính toán nguồn vốn cho đơn vị: {Unit}, ngày: {Date}, loại: {Type}",
                     request.UnitCode, request.TargetDate.ToString("dd/MM/yyyy"), request.DateType);
 
-                // Xác định ngày cần lấy dữ liệu dựa trên input
-                var targetDate = _nguonVonService.DetermineTargetDate(request.TargetDate, request.DateType);
+                // Tính toán nguồn vốn từ dữ liệu thô
+                var result = await _rawDataService.CalculateNguonVonFromRawDataAsync(request);
 
-                _logger.LogInformation("📅 Ngày target được xác định: {TargetDate}", targetDate.ToString("dd/MM/yyyy"));
-
-                // Tính toán nguồn vốn
-                var result = await _nguonVonService.CalculateNguonVonAsync(request.UnitCode, targetDate);
-
-                if (result == null)
+                if (result == null || !result.HasData)
                 {
-                    _logger.LogWarning("⚠️ Không tìm thấy dữ liệu cho đơn vị {Unit} ngày {Date}", request.UnitCode, targetDate.ToString("dd/MM/yyyy"));
+                    _logger.LogWarning("⚠️ Không tìm thấy dữ liệu cho đơn vị {Unit} ngày {Date}", request.UnitCode, request.TargetDate.ToString("dd/MM/yyyy"));
 
                     return NotFound(new
                     {
                         success = false,
-                        message = "Chưa tìm thấy dữ liệu theo ngày chỉ định",
-                        requestedDate = targetDate.ToString("dd/MM/yyyy"),
+                        message = result?.Message ?? "Chưa tìm thấy dữ liệu theo ngày chỉ định",
+                        requestedDate = request.TargetDate.ToString("dd/MM/yyyy"),
                         unitCode = request.UnitCode
                     });
                 }
 
-                _logger.LogInformation("✅ Tính toán thành công: {Balance:N0} VND cho {Unit}", result.TotalBalance, result.UnitName);
+                _logger.LogInformation("✅ Tính toán thành công: {Balance:N0} VND cho {Unit}", result.Summary.TotalBalance, result.Summary.UnitCode);
 
                 return Ok(new
                 {
                     success = true,
-                    data = result,
-                    calculatedDate = targetDate.ToString("dd/MM/yyyy"),
-                    message = $"Tính toán thành công cho {result.UnitName}"
+                    data = new
+                    {
+                        unitCode = result.Summary.UnitCode,
+                        unitName = GetUnitName(result.Summary.UnitCode),
+                        totalBalance = result.Summary.TotalBalance,
+                        recordCount = result.Summary.RecordCount,
+                        calculatedDate = result.Summary.CalculatedDate,
+                        topAccounts = result.TopAccounts.Take(10).ToList()
+                    },
+                    calculatedDate = request.TargetDate.ToString("dd/MM/yyyy"),
+                    message = result.Message
                 });
             }
             catch (ArgumentException ex)
@@ -116,7 +119,12 @@ namespace TinhKhoanApp.Api.Controllers
 
                 _logger.LogInformation("🔍 API: Lấy chi tiết nguồn vốn cho {Unit} ngày {Date}", unitCode, date.ToString("dd/MM/yyyy"));
 
-                var details = await _nguonVonService.GetNguonVonDetailsAsync(unitCode, date);
+                var details = await _rawDataService.CalculateNguonVonFromRawDataAsync(new NguonVonRequest
+                {
+                    UnitCode = unitCode,
+                    TargetDate = date,
+                    DateType = "day"
+                });
 
                 return Ok(new
                 {
@@ -193,6 +201,31 @@ namespace TinhKhoanApp.Api.Controllers
                     error = ex.Message
                 });
             }
+        }
+
+        /// <summary>
+        /// Mapping từ mã đơn vị sang tên đơn vị
+        /// </summary>
+        /// <param name="unitCode">Mã đơn vị</param>
+        /// <returns>Tên đơn vị</returns>
+        private static string GetUnitName(string unitCode)
+        {
+            var mapping = new Dictionary<string, string>
+            {
+                { "7800", "Hội sở" },
+                { "7801", "Chi nhánh Bình Lư" },
+                { "7802", "Chi nhánh Phong Thổ" },
+                { "7803", "Chi nhánh Sìn Hồ" },
+                { "7804", "Chi nhánh Bum Tở" },
+                { "7805", "Chi nhánh Than Uyên" },
+                { "7806", "Chi nhánh Đoàn Kết" },
+                { "7807", "Chi nhánh Tân Uyên" },
+                { "7808", "Chi nhánh Nậm Hàng" },
+                { "ALL", "Tất cả đơn vị" },
+                { "", "Tất cả đơn vị" }
+            };
+
+            return mapping.ContainsKey(unitCode) ? mapping[unitCode] : unitCode;
         }
     }
 }

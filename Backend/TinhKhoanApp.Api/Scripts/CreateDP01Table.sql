@@ -1,7 +1,7 @@
 -- Script tạo bảng DP01 cho tính toán nguồn vốn
 -- Chạy script này trong SQL Server Management Studio hoặc Azure Data Studio
 
-USE [YourDatabaseName] -- Thay thế bằng tên database thực tế
+USE [TinhKhoanAppDB] -- Tên database mặc định của project
 GO
 
 -- Kiểm tra và tạo bảng DP01 nếu chưa tồn tại
