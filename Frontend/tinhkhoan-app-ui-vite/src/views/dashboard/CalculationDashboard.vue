@@ -71,7 +71,7 @@
 
         <div class="filter-group" v-if="periodType === 'DATE'">
           <label for="date-select" class="filter-label">Ngày cụ thể:</label>
-          <input id="date-select" v-model="selectedDate" @change="loadData" type="date" class="form-select" aria-label="Chọn ngày cụ thể">
+          <input id="date-select" v-model="selectedDate" @change="loadData" type="date" class="form-select" aria-label="Chọn ngày cụ thể" />
         </div>
 
         <div class="filter-group">
