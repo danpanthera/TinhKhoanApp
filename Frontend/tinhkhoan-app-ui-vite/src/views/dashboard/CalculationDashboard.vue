@@ -1303,3 +1303,352 @@ const getProgressClass = (rate) => {
   return 'progress-low';
 };
 </script>
+
+<style scoped>
+/* ===== CALCULATION DASHBOARD STYLES ===== */
+
+.calculation-dashboard {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* PAGE HEADER */
+.page-header {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 30px;
+  margin-bottom: 30px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.header-title h1 {
+  color: #2d3748;
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-title h1 i {
+  color: #667eea;
+  font-size: 2.5rem;
+}
+
+.subtitle {
+  color: #718096;
+  font-size: 1.1rem;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400;
+}
+
+.subtitle i {
+  color: #a0aec0;
+}
+
+/* HEADER CONTROLS */
+.header-controls {
+  margin-top: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* FILTER GROUPS */
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-label {
+  font-weight: 600;
+  color: #4a5568;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-select {
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 1rem;
+  background: white;
+  color: #2d3748;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  transform: translateY(-2px);
+}
+
+.form-select:hover {
+  border-color: #cbd5e0;
+  transform: translateY(-1px);
+}
+
+/* CALCULATION BUTTONS */
+.calculation-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.btn {
+  padding: 16px 24px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.btn:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s;
+}
+
+.btn:hover:before {
+  left: 100%;
+}
+
+.btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active {
+  transform: translateY(-1px);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* BUTTON COLORS */
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-warning {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+}
+
+.btn-info {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+  color: white;
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  color: #2d3748;
+}
+
+.btn-purple {
+  background: linear-gradient(135deg, #d299c2 0%, #fef9d7 100%);
+  color: #2d3748;
+}
+
+.btn-gradient {
+  background: linear-gradient(135deg, #89f7fe 0%, #66a6ff 100%);
+  color: white;
+}
+
+/* MESSAGES */
+.error-message {
+  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+  border: 1px solid #fed7d7;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 20px 0;
+  animation: slideInDown 0.5s ease;
+}
+
+.error-message p {
+  margin: 0;
+  color: #742a2a;
+  font-weight: 600;
+}
+
+.success-message {
+  background: linear-gradient(135deg, #c3f0ca 0%, #faf0ca 100%);
+  border: 1px solid #c6f6d5;
+  border-radius: 12px;
+  padding: 16px;
+  margin: 20px 0;
+  animation: slideInDown 0.5s ease;
+}
+
+.success-message p {
+  margin: 0;
+  color: #276749;
+  font-weight: 600;
+}
+
+/* ANIMATIONS */
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* RESPONSIVE DESIGN */
+@media (min-width: 768px) {
+  .header-controls {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 20px;
+  }
+
+  .filter-group {
+    min-width: 150px;
+  }
+
+  .calculation-buttons {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    width: 100%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .calculation-dashboard {
+    padding: 30px;
+  }
+
+  .page-header {
+    padding: 40px;
+  }
+
+  .calculation-buttons {
+    grid-template-columns: repeat(4, 1fr);
+    max-width: none;
+  }
+}
+
+/* LOADING STATES */
+.btn:disabled {
+  position: relative;
+}
+
+.btn:disabled:after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  margin: auto;
+  border: 2px solid transparent;
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+@keyframes spin {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* HOVER EFFECTS */
+.filter-group:hover .form-select {
+  border-color: #a0aec0;
+}
+
+.calculation-buttons .btn {
+  background-size: 200% 200%;
+  background-position: 0% 50%;
+  transition: all 0.3s ease, background-position 0.3s ease;
+}
+
+.calculation-buttons .btn:hover {
+  background-position: 100% 50%;
+}
+
+/* ACCESSIBILITY */
+.btn:focus-visible {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+.form-select:focus-visible {
+  outline: 2px solid #667eea;
+  outline-offset: 2px;
+}
+
+/* DARK MODE SUPPORT */
+@media (prefers-color-scheme: dark) {
+  .page-header {
+    background: rgba(45, 55, 72, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .header-title h1 {
+    color: #f7fafc;
+  }
+
+  .subtitle {
+    color: #a0aec0;
+  }
+
+  .filter-label {
+    color: #e2e8f0;
+  }
+
+  .form-select {
+    background: #2d3748;
+    border-color: #4a5568;
+    color: #f7fafc;
+  }
+}
+</style>

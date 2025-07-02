@@ -22,6 +22,7 @@ export const branchIndicatorsService = {
       }
 
       console.log('🌐 API Call - branchId:', branchId, 'date:', targetDate.toISOString());
+      console.log('🔗 API URL:', `${API_BASE_URL}/NguonVon/calculate`);
 
       const requestBody = {
         unitCode: branchId,
