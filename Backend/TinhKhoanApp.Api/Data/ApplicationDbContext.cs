@@ -87,6 +87,9 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<BusinessPlanTarget> BusinessPlanTargets { get; set; }
         public DbSet<DashboardCalculation> DashboardCalculations { get; set; }
 
+        // 💰 DbSet cho bảng DP01 - Dữ liệu báo cáo tài chính theo ngày
+        public DbSet<DP01> DP01s { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -473,7 +476,27 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         private void ConfigureMainTableWithOriginalColumns(ModelBuilder modelBuilder)
         {
             // Tạm thời comment out vì cần xem lại cấu hình temporal table
-            // Thay vào đó, đảm bảo History models có tên cột chính xác
+            // Thay vào đó, đảm bảo History models có tên cột chính xác            // 🏦 Cấu hình cho bảng DP01 - Dữ liệu báo cáo tài chính
+            modelBuilder.Entity<DP01>(entity =>
+            {
+                entity.ToTable("DP01");
+
+                // Cấu hình precision cho CURRENT_BALANCE (18,2 để lưu số tiền lớn)
+                entity.Property(e => e.CURRENT_BALANCE)
+                    .HasPrecision(18, 2);
+
+                // Tạo clustered columnstore index cho hiệu suất cao
+                entity.HasIndex(e => new { e.DATA_DATE, e.MA_CN, e.MA_PGD })
+                    .HasDatabaseName("IX_DP01_DateBranchPGD_Clustered");
+
+                // Index cho tài khoản hạch toán để filter nhanh
+                entity.HasIndex(e => e.TAI_KHOAN_HACH_TOAN)
+                    .HasDatabaseName("IX_DP01_Account");
+
+                // Index cho mã chi nhánh
+                entity.HasIndex(e => e.MA_CN)
+                    .HasDatabaseName("IX_DP01_Branch");
+            });
         }
     }
 }

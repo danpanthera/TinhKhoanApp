@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Data; // Namespace chứa ApplicationDbContext
 using TinhKhoanApp.Api.Models; // Namespace chứa các Model (cần cho WeatherForecast nếu Sếp muốn giữ lại)
 using TinhKhoanApp.Api.Services; // Thêm namespace cho các Services
+using TinhKhoanApp.Api.Services.Interfaces; // Thêm namespace cho Interface Services
 using TinhKhoanApp.Api.Filters; // Thêm namespace cho GlobalExceptionFilter
 using TinhKhoanApp.Api.Middleware; // Thêm namespace cho Middleware
 using TinhKhoanApp.Api.HealthChecks; // Thêm namespace cho HealthChecks
@@ -98,6 +99,8 @@ internal class Program
         builder.Services.AddScoped<IStatementDateService, StatementDateService>();
         builder.Services.AddScoped<DashboardCalculationService>();
         builder.Services.AddScoped<IBranchCalculationService, BranchCalculationService>();
+        // 💰 Đăng ký service tính toán nguồn vốn từ DP01
+        builder.Services.AddScoped<INguonVonService, NguonVonService>();
 
         // 4. Đăng ký các dịch vụ cho Swagger/OpenAPI (để tạo tài liệu API tự động)
         builder.Services.AddEndpointsApiExplorer();
