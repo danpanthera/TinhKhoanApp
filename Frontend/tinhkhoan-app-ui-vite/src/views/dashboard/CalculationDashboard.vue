@@ -522,10 +522,9 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import LoadingOverlay from '../../components/dashboard/LoadingOverlay.vue';
-import { isAuthenticated } from '../../services/auth';
 import branchIndicatorsService from '../../services/branchIndicatorsService';
 import { dashboardService } from '../../services/dashboardService';
 
@@ -934,11 +933,11 @@ const calculateNguonVon = async () => {
       if (!selectedUnit) {
         throw new Error('Không tìm thấy thông tin chi nhánh được chọn');
       }
-      
+
       // Mapping từ unit.id sang unitCode cho API DP01
       const unitMapping = {
         'HoiSo': 'HoiSo',
-        'CnBinhLu': 'CnBinhLu', 
+        'CnBinhLu': 'CnBinhLu',
         'CnPhongTho': 'CnPhongTho',
         'CnSinHo': 'CnSinHo',
         'CnBumTo': 'CnBumTo',
@@ -952,7 +951,7 @@ const calculateNguonVon = async () => {
         'CnDoanKetPgdSo2': 'CnDoanKetPgdSo2',
         'CnTanUyenPgdSo3': 'CnTanUyenPgdSo3'
       };
-      
+
       unitCode = unitMapping[selectedUnit.id] || 'ALL';
       displayName = selectedUnit.name;
     }
@@ -981,9 +980,9 @@ const calculateNguonVon = async () => {
     }
 
     console.log('� Tính Nguồn vốn từ DP01:', {
-      unitCode, 
-      displayName, 
-      targetDate: targetDate.toISOString(), 
+      unitCode,
+      displayName,
+      targetDate: targetDate.toISOString(),
       dateType,
       periodType: periodType.value,
       selectedYear: selectedYear.value,
@@ -1315,3 +1314,4 @@ const getProgressClass = (rate) => {
   if (rate >= 50) return 'progress-medium';
   return 'progress-low';
 };
+</script>
