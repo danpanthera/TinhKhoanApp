@@ -40,11 +40,15 @@ export const branchIndicatorsService = {
         body: JSON.stringify(requestBody)
       })
 
+      console.log('📡 Response status:', response.status, response.statusText);
+
       if (!response.ok) {
+        console.error('❌ API Error:', response.status, response.statusText);
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
       const result = await response.json()
+      console.log('📥 API Response:', result);
 
       // Chuyển đổi định dạng response để tương thích với frontend hiện tại
       if (result.success && result.data) {
