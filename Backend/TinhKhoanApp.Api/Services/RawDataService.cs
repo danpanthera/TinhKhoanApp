@@ -99,8 +99,8 @@ namespace TinhKhoanApp.Api.Services
                             {
                                 var maCn = maCnObj?.ToString();
 
-                                // Nếu yêu cầu tính cho chi nhánh cụ thể, chỉ lấy dữ liệu của chi nhánh đó
-                                if (!string.IsNullOrEmpty(request.UnitCode) &&
+                                // Nếu yêu cầu tính cho chi nhánh cụ thể (không phải ALL), chỉ lấy dữ liệu của chi nhánh đó
+                                if (!string.IsNullOrEmpty(request.UnitCode) && request.UnitCode != "ALL" &&
                                     !string.Equals(maCn, request.UnitCode, StringComparison.OrdinalIgnoreCase))
                                 {
                                     continue; // Bỏ qua bản ghi này
@@ -207,6 +207,33 @@ namespace TinhKhoanApp.Api.Services
                     TopAccounts = new List<AccountDetail>()
                 };
             }
+        }
+
+        /// <summary>
+        /// Lấy tên đơn vị từ mã đơn vị
+        /// </summary>
+        /// <param name="unitCode">Mã đơn vị</param>
+        /// <returns>Tên đơn vị tương ứng</returns>
+        private string GetUnitName(string unitCode)
+        {
+            if (string.IsNullOrEmpty(unitCode) || unitCode == "ALL")
+            {
+                return "🏛️ Toàn tỉnh (Tổng hợp)";
+            }
+
+            return unitCode switch
+            {
+                "7800" => "🏢 Hội Sở",
+                "7801" => "🏦 Chi nhánh Bình Lư",
+                "7802" => "🏦 Chi nhánh Phong Thổ",
+                "7803" => "🏦 Chi nhánh Sìn Hồ",
+                "7804" => "🏦 Chi nhánh Bum Tở",
+                "7805" => "🏦 Chi nhánh Than Uyên",
+                "7806" => "🏦 Chi nhánh Đoàn Kết",
+                "7807" => "🏦 Chi nhánh Tân Uyên",
+                "7808" => "🏦 Chi nhánh Nậm Hàng",
+                _ => $"Chi nhánh {unitCode}"
+            };
         }
     }
 }

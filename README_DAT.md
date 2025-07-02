@@ -5,4 +5,4 @@ tìm xong nguyên nhân hãy tự động code vào !
 tự động chọn "Continue" ở cửa sổ chat để add/chạy các dòng lệnh từ terminal...v.v. mà không cần hỏi.
 Tự động commit các file thay đổi (không push)
 khi sửa code, thay đổi các table, controller, services...v.v thì luôn phải tuân thủ theo phương thức/công nghê lưu trữ Temporal Tables + Columnstore Indexes để tối ưu hiệu năng.
-Chú ý khi tạo commit hãy chia nhỏ nếu chúng quá dài để tránh bị delay hoặc treo lệnh commit nhé!
+Chú ý khi tạo commit hãy luôn chia nhỏ commit thành các phần nhỏ, mỗi phần chỉ sửa một chức năng hoặc một vấn đề cụ thể. Rồi mới commit

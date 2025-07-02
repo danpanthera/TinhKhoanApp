@@ -212,17 +212,17 @@ namespace TinhKhoanApp.Api.Controllers
         {
             var mapping = new Dictionary<string, string>
             {
-                { "7800", "Hội sở" },
-                { "7801", "Chi nhánh Bình Lư" },
-                { "7802", "Chi nhánh Phong Thổ" },
-                { "7803", "Chi nhánh Sìn Hồ" },
-                { "7804", "Chi nhánh Bum Tở" },
-                { "7805", "Chi nhánh Than Uyên" },
-                { "7806", "Chi nhánh Đoàn Kết" },
-                { "7807", "Chi nhánh Tân Uyên" },
-                { "7808", "Chi nhánh Nậm Hàng" },
-                { "ALL", "Tất cả đơn vị" },
-                { "", "Tất cả đơn vị" }
+                { "7800", "🏢 Hội sở" },
+                { "7801", "🏦 Chi nhánh Bình Lư" },
+                { "7802", "🏦 Chi nhánh Phong Thổ" },
+                { "7803", "🏦 Chi nhánh Sìn Hồ" },
+                { "7804", "🏦 Chi nhánh Bum Tở" },
+                { "7805", "🏦 Chi nhánh Than Uyên" },
+                { "7806", "🏦 Chi nhánh Đoàn Kết" },
+                { "7807", "🏦 Chi nhánh Tân Uyên" },
+                { "7808", "🏦 Chi nhánh Nậm Hàng" },
+                { "ALL", "🏛️ Toàn tỉnh (Tổng hợp)" },
+                { "", "🏛️ Toàn tỉnh (Tổng hợp)" }
             };
 
             return mapping.ContainsKey(unitCode) ? mapping[unitCode] : unitCode;

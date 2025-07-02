@@ -544,25 +544,26 @@ const selectedYear = ref(new Date().getFullYear());
 const periodType = ref('');
 const selectedPeriod = ref('');
 const selectedDate = ref(''); // Thêm biến cho ngày cụ thể
-const selectedUnitId = ref('');
+const selectedUnitId = ref('ALL'); // Mặc định chọn "Toàn tỉnh" thay vì rỗng
 const trendPeriod = ref('MONTH');
 
-// Danh sách chi nhánh và PGD theo quy ước mới
+// Danh sách chi nhánh và PGD theo quy ước mới - Thêm option "Toàn tỉnh" ở đầu
 const units = ref([
-  { id: 'HoiSo', name: 'Hội Sở', code: '7800' },
-  { id: 'CnBinhLu', name: 'CN Bình Lư', code: '7801' },
-  { id: 'CnPhongTho', name: 'CN Phong Thổ', code: '7802' },
-  { id: 'CnSinHo', name: 'CN Sìn Hồ', code: '7803' },
-  { id: 'CnBumTo', name: 'CN Bum Tở', code: '7804' },
-  { id: 'CnThanUyen', name: 'CN Than Uyên', code: '7805' },
-  { id: 'CnDoanKet', name: 'CN Đoàn Kết', code: '7806' },
-  { id: 'CnTanUyen', name: 'CN Tân Uyên', code: '7807' },
-  { id: 'CnNamHang', name: 'CN Nậm Hàng', code: '7808' },
-  { id: 'CnPhongThoPgdSo5', name: 'CN Phong Thổ - PGD Số 5', code: '7802', pgdCode: '01' },
-  { id: 'CnThanUyenPgdSo6', name: 'CN Than Uyên - PGD Số 6', code: '7805', pgdCode: '01' },
-  { id: 'CnDoanKetPgdSo1', name: 'CN Đoàn Kết - PGD Số 1', code: '7806', pgdCode: '01' },
-  { id: 'CnDoanKetPgdSo2', name: 'CN Đoàn Kết - PGD Số 2', code: '7806', pgdCode: '02' },
-  { id: 'CnTanUyenPgdSo3', name: 'CN Tân Uyên - PGD Số 3', code: '7807', pgdCode: '01' }
+  { id: 'ALL', name: '🏛️ Toàn tỉnh (Tổng hợp)', code: 'ALL', isTotal: true }, // Option mặc định cho tổng hợp
+  { id: 'HoiSo', name: '🏢 Hội Sở', code: '7800' },
+  { id: 'CnBinhLu', name: '🏦 CN Bình Lư', code: '7801' },
+  { id: 'CnPhongTho', name: '🏦 CN Phong Thổ', code: '7802' },
+  { id: 'CnSinHo', name: '🏦 CN Sìn Hồ', code: '7803' },
+  { id: 'CnBumTo', name: '🏦 CN Bum Tở', code: '7804' },
+  { id: 'CnThanUyen', name: '🏦 CN Than Uyên', code: '7805' },
+  { id: 'CnDoanKet', name: '🏦 CN Đoàn Kết', code: '7806' },
+  { id: 'CnTanUyen', name: '🏦 CN Tân Uyên', code: '7807' },
+  { id: 'CnNamHang', name: '🏦 CN Nậm Hàng', code: '7808' },
+  { id: 'CnPhongThoPgdSo5', name: '🏪 CN Phong Thổ - PGD Số 5', code: '7802', pgdCode: '01' },
+  { id: 'CnThanUyenPgdSo6', name: '🏪 CN Than Uyên - PGD Số 6', code: '7805', pgdCode: '01' },
+  { id: 'CnDoanKetPgdSo1', name: '🏪 CN Đoàn Kết - PGD Số 1', code: '7806', pgdCode: '01' },
+  { id: 'CnDoanKetPgdSo2', name: '🏪 CN Đoàn Kết - PGD Số 2', code: '7806', pgdCode: '02' },
+  { id: 'CnTanUyenPgdSo3', name: '🏪 CN Tân Uyên - PGD Số 3', code: '7807', pgdCode: '01' }
 ]);
 const overview = ref({
   totalTargets: 0,
@@ -701,7 +702,7 @@ const missingIndicators = computed(() => {
 });
 
 const getSelectedUnitName = () => {
-  if (!selectedUnitId.value) return 'Tất cả đơn vị';
+  if (!selectedUnitId.value || selectedUnitId.value === 'ALL') return '🏛️ Toàn tỉnh (Tổng hợp)';
   const unit = units.value.find(u => u.id === selectedUnitId.value);
   return unit ? unit.name : 'Không xác định';
 };
@@ -925,34 +926,34 @@ const calculateNguonVon = async () => {
 
   try {
     // Xác định unitCode cho API mới (mapping từ unit hiện tại sang mã API)
-    let unitCode = 'ALL'; // Default: Tất cả đơn vị
-    let displayName = 'Tất cả đơn vị (Toàn tỉnh)';
+    let unitCode = 'ALL'; // Default: Toàn tỉnh (tổng hợp tất cả chi nhánh 7800->7808)
+    let displayName = '🏛️ Toàn tỉnh (Tổng hợp)';
 
-    if (selectedUnitId.value) {
+    if (selectedUnitId.value && selectedUnitId.value !== 'ALL') {
       const selectedUnit = units.value.find(u => u.id === selectedUnitId.value);
       if (!selectedUnit) {
         throw new Error('Không tìm thấy thông tin chi nhánh được chọn');
       }
 
-      // Mapping từ unit.id sang unitCode cho API DP01
+      // Mapping từ unit.id sang unitCode cho API DP01 (sử dụng mã số thực tế từ database)
       const unitMapping = {
-        'HoiSo': 'HoiSo',
-        'CnBinhLu': 'CnBinhLu',
-        'CnPhongTho': 'CnPhongTho',
-        'CnSinHo': 'CnSinHo',
-        'CnBumTo': 'CnBumTo',
-        'CnThanUyen': 'CnThanUyen',
-        'CnDoanKet': 'CnDoanKet',
-        'CnTanUyen': 'CnTanUyen',
-        'CnNamHang': 'CnNamHang',
-        'CnPhongThoPgdSo5': 'CnPhongThoPgdSo5',
-        'CnThanUyenPgdSo6': 'CnThanUyenPgdSo6',
-        'CnDoanKetPgdSo1': 'CnDoanKetPgdSo1',
-        'CnDoanKetPgdSo2': 'CnDoanKetPgdSo2',
-        'CnTanUyenPgdSo3': 'CnTanUyenPgdSo3'
+        'HoiSo': '7800',              // Hội sở
+        'CnBinhLu': '7801',           // Chi nhánh Bình Lư
+        'CnPhongTho': '7802',         // Chi nhánh Phong Thổ
+        'CnSinHo': '7803',            // Chi nhánh Sin Hồ
+        'CnBumTo': '7804',            // Chi nhánh Bum Tở
+        'CnThanUyen': '7805',         // Chi nhánh Than Uyên
+        'CnDoanKet': '7806',          // Chi nhánh Đoan Kết
+        'CnTanUyen': '7807',          // Chi nhánh Tân Uyên
+        'CnNamHang': '7808',          // Chi nhánh Nậm Hãng
+        'CnPhongThoPgdSo5': '7802',   // PGD số 5 thuộc Phong Thổ
+        'CnThanUyenPgdSo6': '7805',   // PGD số 6 thuộc Than Uyên
+        'CnDoanKetPgdSo1': '7806',    // PGD số 1 thuộc Đoan Kết
+        'CnDoanKetPgdSo2': '7806',    // PGD số 2 thuộc Đoan Kết
+        'CnTanUyenPgdSo3': '7807'     // PGD số 3 thuộc Tân Uyên
       };
 
-      unitCode = unitMapping[selectedUnit.id] || 'ALL';
+      unitCode = unitMapping[selectedUnit.id] || selectedUnit.code || 'ALL'; // Fallback về ALL (toàn tỉnh)
       displayName = selectedUnit.name;
     }
 
