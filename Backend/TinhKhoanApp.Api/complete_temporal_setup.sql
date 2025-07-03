@@ -25,7 +25,7 @@ SELECT
     END AS ColumnstoreStatus
 FROM sys.tables t
 LEFT JOIN sys.tables h ON t.history_table_id = h.object_id
-WHERE t.name IN ('7800_DT_KHKD1', 'BC57', 'DB01', 'DP01', 'DPDA', 'EI01', 'GAHR26', 'GL01', 'GLCB41', 'KH03', 'LN01', 'LN02', 'LN03', 'RR01')
+WHERE t.name IN ('7800_DT_KHKD1', 'BC57', 'DB01', 'DP01', 'DPDA', 'EI01', 'GAHR26', 'GL01', 'GL41', 'KH03', 'LN01', 'LN02', 'LN03', 'RR01')
 ORDER BY t.name;
 
 -- =======================================
@@ -169,11 +169,11 @@ BEGIN
     );
 END
 
--- 5. Tạo bảng GLCB41 nếu chưa có
-IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'GLCB41')
+-- 5. Tạo bảng GL41 nếu chưa có
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'GL41')
 BEGIN
-    PRINT '🔧 Creating table GLCB41...';
-    CREATE TABLE [GLCB41] (
+    PRINT '🔧 Creating table GL41...';
+    CREATE TABLE [GL41] (
         [Id] int IDENTITY(1,1) NOT NULL,
         [BusinessKey] nvarchar(500) NOT NULL,
         [EffectiveDate] datetime2 NOT NULL,
@@ -203,7 +203,7 @@ BEGIN
         [NgayTao] datetime2 NULL,
         [NgayCapNhat] datetime2 NULL,
         [AdditionalData] nvarchar(max) NULL,
-        CONSTRAINT [PK_GLCB41] PRIMARY KEY ([Id])
+        CONSTRAINT [PK_GL41] PRIMARY KEY ([Id])
     );
 END
 
@@ -277,20 +277,20 @@ BEGIN
     ALTER TABLE [GAHR26] SET (SYSTEM_VERSIONING = ON (HISTORY_TABLE = dbo.GAHR26_History));
 END
 
--- 5. Kích hoạt Temporal cho GLCB41
-IF EXISTS (SELECT 1 FROM sys.tables WHERE name = 'GLCB41' AND temporal_type = 0)
+-- 5. Kích hoạt Temporal cho GL41
+IF EXISTS (SELECT 1 FROM sys.tables WHERE name = 'GL41' AND temporal_type = 0)
 BEGIN
-    PRINT '🚀 Enabling Temporal Table for GLCB41...';
+    PRINT '🚀 Enabling Temporal Table for GL41...';
 
-    IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = 'SysStartTime' AND Object_ID = Object_ID('GLCB41'))
+    IF NOT EXISTS(SELECT 1 FROM sys.columns WHERE Name = 'SysStartTime' AND Object_ID = Object_ID('GL41'))
     BEGIN
-        ALTER TABLE [GLCB41] ADD
+        ALTER TABLE [GL41] ADD
             SysStartTime DATETIME2 GENERATED ALWAYS AS ROW START HIDDEN NOT NULL DEFAULT SYSUTCDATETIME(),
             SysEndTime DATETIME2 GENERATED ALWAYS AS ROW END HIDDEN NOT NULL DEFAULT CONVERT(DATETIME2, '9999-12-31 23:59:59.9999999'),
             PERIOD FOR SYSTEM_TIME (SysStartTime, SysEndTime);
     END
 
-    ALTER TABLE [GLCB41] SET (SYSTEM_VERSIONING = ON (HISTORY_TABLE = dbo.GLCB41_History));
+    ALTER TABLE [GL41] SET (SYSTEM_VERSIONING = ON (HISTORY_TABLE = dbo.GL41_History));
 END
 
 -- 6. Kích hoạt Temporal cho KH03 (nếu chưa có)
@@ -349,13 +349,13 @@ BEGIN
     ON GAHR26_History;
 END
 
--- 5. Columnstore Index cho GLCB41_History
-IF EXISTS (SELECT 1 FROM sys.tables WHERE name = 'GLCB41_History')
-    AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_GLCB41_History_ColumnStore' AND object_id = OBJECT_ID('GLCB41_History'))
+-- 5. Columnstore Index cho GL41_History
+IF EXISTS (SELECT 1 FROM sys.tables WHERE name = 'GL41_History')
+    AND NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_GL41_History_ColumnStore' AND object_id = OBJECT_ID('GL41_History'))
 BEGIN
-    PRINT '📊 Creating Columnstore Index for GLCB41_History...';
-    CREATE CLUSTERED COLUMNSTORE INDEX IX_GLCB41_History_ColumnStore
-    ON GLCB41_History;
+    PRINT '📊 Creating Columnstore Index for GL41_History...';
+    CREATE CLUSTERED COLUMNSTORE INDEX IX_GL41_History_ColumnStore
+    ON GL41_History;
 END
 
 -- 6. Columnstore Index cho KH03_History
@@ -386,7 +386,7 @@ SELECT
     END AS ColumnstoreStatus
 FROM sys.tables t
 LEFT JOIN sys.tables h ON t.history_table_id = h.object_id
-WHERE t.name IN ('7800_DT_KHKD1', 'BC57', 'DB01', 'DP01', 'DPDA', 'EI01', 'GAHR26', 'GL01', 'GLCB41', 'KH03', 'LN01', 'LN02', 'LN03', 'RR01')
+WHERE t.name IN ('7800_DT_KHKD1', 'BC57', 'DB01', 'DP01', 'DPDA', 'EI01', 'GAHR26', 'GL01', 'GL41', 'KH03', 'LN01', 'LN02', 'LN03', 'RR01')
 ORDER BY t.name;
 
 PRINT '🎯 Temporal Tables + Columnstore Indexes setup completed successfully!';

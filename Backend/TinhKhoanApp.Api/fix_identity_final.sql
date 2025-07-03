@@ -195,7 +195,7 @@ SELECT
     END AS Status
 FROM sys.tables t
 LEFT JOIN sys.tables h ON t.history_table_id = h.object_id
-WHERE t.name IN ('7800_DT_KHKD1', 'BC57', 'DB01', 'DP01', 'DPDA', 'EI01', 'GAHR26', 'GL01', 'GLCB41', 'KH03', 'LN01', 'LN02', 'LN03', 'RR01')
+WHERE t.name IN ('7800_DT_KHKD1', 'BC57', 'DB01', 'DP01', 'DPDA', 'EI01', 'GAHR26', 'GL01', 'GL41', 'KH03', 'LN01', 'LN02', 'LN03', 'RR01')
 ORDER BY t.name;
 
 PRINT '🎉 SUCCESS! Temporal Tables + Columnstore Indexes setup completed for all target tables!';

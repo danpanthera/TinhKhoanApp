@@ -43,7 +43,7 @@ namespace TinhKhoanApp.Api.Controllers
             { "BC57", "Sao kê Lãi dự thu - Dự phòng lãi" },
             { "RR01", "Sao kê dư nợ gốc, lãi XLRR - Rủi ro tín dụng" },
             { "7800_DT_KHKD1", "Báo cáo KHKD (DT) - Kế hoạch kinh doanh doanh thu" },
-            { "GLCB41", "Bảng cân đối - Báo cáo tài chính" }
+            { "GL41", "Bảng cân đối - Báo cáo tài chính" }
         };
 
         public RawDataController(ApplicationDbContext context, ILogger<RawDataController> logger, IConfiguration configuration, IRawDataProcessingService processingService, IFileNameParsingService fileNameParsingService, ILegacyExcelReaderService legacyExcelReaderService)
@@ -2011,8 +2011,8 @@ namespace TinhKhoanApp.Api.Controllers
                             dataSource = "PROCESSED_HISTORY_TABLE"
                         });
 
-                    case "GLCB41":
-                        var glcb41Data = await _context                .GL41_History
+                    case "GL41":
+                        var gl41Data = await _context.GL41_History
                             .Where(h => import.StatementDate.HasValue && h.StatementDate.Date == import.StatementDate.Value.Date)
                             .OrderByDescending(h => h.ProcessedDate)
                             .Take(100)
@@ -2046,9 +2046,9 @@ namespace TinhKhoanApp.Api.Controllers
                         return Ok(new
                         {
                             response.importInfo,
-                            processedData = glcb41Data.Cast<object>().ToList(),
-                            totalRecords = glcb41Data.Count,
-                            tableName = "GLCB41_History",
+                            processedData = gl41Data.Cast<object>().ToList(),
+                            totalRecords = gl41Data.Count,
+                            tableName = "GL41_History",
                             dataSource = "PROCESSED_HISTORY_TABLE"
                         });
 
@@ -2530,7 +2530,7 @@ namespace TinhKhoanApp.Api.Controllers
                     importedDataRecordId, dataType);
 
                 // Chỉ tự động xử lý cho các loại dữ liệu được hỗ trợ
-                var supportedTypes = new[] { "GLCB41", "LN01", "LN02", "DP01" };
+                var supportedTypes = new[] { "GL41", "LN01", "LN02", "DP01" };
                 if (!supportedTypes.Contains(dataType.ToUpper()))
                 {
                     _logger.LogInformation("ℹ️ DataType {DataType} không cần auto-process", dataType);

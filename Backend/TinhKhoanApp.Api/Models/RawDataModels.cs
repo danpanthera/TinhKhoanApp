@@ -15,7 +15,7 @@ namespace TinhKhoanApp.Api.Models
 
         [Required]
         [StringLength(50)]
-        public string DataType { get; set; } = null!; // LN01, LN02, LN03, DP01, DB01, GL01, EI01, BC57, DPDA, KH03, RR01, GLCB41, 7800_DT_KHKD1
+        public string DataType { get; set; } = null!; // LN01, LN02, LN03, DP01, DB01, GL01, EI01, BC57, DPDA, KH03, RR01, GL41, 7800_DT_KHKD1
 
         [Required]
         public DateTime ImportDate { get; set; } // Ngày import
@@ -82,7 +82,7 @@ namespace TinhKhoanApp.Api.Models
         DPDA,         // Dữ liệu sao kê phát hành thẻ
         KH03,         // Sao kê Khách hàng pháp nhân
         RR01,         // Sao kê dư nợ gốc, lãi XLRR
-        GLCB41,       // Bảng cân đối kế toán
+        GL41,       // Bảng cân đối kế toán
 
         // Business planning data
         _7800_DT_KHKD1 // Báo cáo KHKD (DT) - Dữ liệu kế hoạch kinh doanh
@@ -94,7 +94,7 @@ namespace TinhKhoanApp.Api.Models
         [Required(ErrorMessage = "Vui lòng chọn ít nhất một file")]
         public IFormFileCollection? Files { get; set; }
 
-        public string? DataType { get; set; } // Loại dữ liệu (LN01, LN02, LN03, DP01, DB01, GL01, EI01, BC57, DPDA, KH03, RR01, GLCB41, 7800_DT_KHKD1)
+        public string? DataType { get; set; } // Loại dữ liệu (LN01, LN02, LN03, DP01, DB01, GL01, EI01, BC57, DPDA, KH03, RR01, GL41, 7800_DT_KHKD1)
         public string? Notes { get; set; } // Ghi chú
     }
 

@@ -8,7 +8,7 @@ GO
 PRINT '🔧 Creating proper history tables and enabling temporal...';
 
 -- =======================================
--- 🗄️ TẠO HISTORY TABLES CHO GAHR26 VÀ GLCB41
+-- 🗄️ TẠO HISTORY TABLES CHO GAHR26 VÀ GL41
 -- =======================================
 
 -- Create GAHR26_History table if not exist
@@ -43,11 +43,11 @@ BEGIN
     PRINT '✅ GAHR26_History table created.';
 END
 
--- Create GLCB41_History table if not exist
-IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'GLCB41_History')
+-- Create GL41_History table if not exist
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'GL41_History')
 BEGIN
-    PRINT '🔧 Creating GLCB41_History table...';
-    CREATE TABLE [GLCB41_History] (
+    PRINT '🔧 Creating GL41_History table...';
+    CREATE TABLE [GL41_History] (
         [Id] int NOT NULL,
         [BusinessKey] nvarchar(500) NOT NULL,
         [EffectiveDate] datetime2 NOT NULL,
@@ -73,7 +73,7 @@ BEGIN
         [SysStartTime] datetime2 NOT NULL,
         [SysEndTime] datetime2 NOT NULL
     );
-    PRINT '✅ GLCB41_History table created.';
+    PRINT '✅ GL41_History table created.';
 END
 
 -- =======================================
@@ -163,23 +163,23 @@ BEGIN
     PRINT '✅ GAHR26 temporal configuration completed.';
 END
 
--- Enable temporal for GLCB41
-IF EXISTS (SELECT 1 FROM sys.tables WHERE name = 'GLCB41' AND temporal_type = 0)
+-- Enable temporal for GL41
+IF EXISTS (SELECT 1 FROM sys.tables WHERE name = 'GL41' AND temporal_type = 0)
 BEGIN
-    PRINT '🔧 Configuring temporal for GLCB41...';
+    PRINT '🔧 Configuring temporal for GL41...';
 
     -- Add temporal columns
-    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('GLCB41') AND name = 'SysStartTime')
+    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('GL41') AND name = 'SysStartTime')
     BEGIN
-        ALTER TABLE [GLCB41] ADD
+        ALTER TABLE [GL41] ADD
             [SysStartTime] datetime2 GENERATED ALWAYS AS ROW START NOT NULL DEFAULT '1900-01-01 00:00:00.0000000',
             [SysEndTime] datetime2 GENERATED ALWAYS AS ROW END NOT NULL DEFAULT '9999-12-31 23:59:59.9999999',
             PERIOD FOR SYSTEM_TIME ([SysStartTime], [SysEndTime]);
     END
 
     -- Enable system versioning
-    ALTER TABLE [GLCB41] SET (SYSTEM_VERSIONING = ON (HISTORY_TABLE = [dbo].[GLCB41_History]));
-    PRINT '✅ GLCB41 temporal configuration completed.';
+    ALTER TABLE [GL41] SET (SYSTEM_VERSIONING = ON (HISTORY_TABLE = [dbo].[GL41_History]));
+    PRINT '✅ GL41 temporal configuration completed.';
 END
 
 -- Enable temporal for DPDA
@@ -233,7 +233,7 @@ INSERT INTO @history_tables VALUES
 ('DPDA_History'),
 ('EI01_History'),
 ('GAHR26_History'),
-('GLCB41_History');
+('GL41_History');
 
 DECLARE @table NVARCHAR(128);
 DECLARE @sql NVARCHAR(MAX);
@@ -293,7 +293,7 @@ SELECT
     END AS Status
 FROM sys.tables t
 LEFT JOIN sys.tables h ON t.history_table_id = h.object_id
-WHERE t.name IN ('7800_DT_KHKD1', 'DPDA', 'EI01', 'GAHR26', 'GLCB41')
+WHERE t.name IN ('7800_DT_KHKD1', 'DPDA', 'EI01', 'GAHR26', 'GL41')
 ORDER BY t.name;
 
 PRINT '🚀 Temporal Tables + Columnstore Indexes setup completed!';

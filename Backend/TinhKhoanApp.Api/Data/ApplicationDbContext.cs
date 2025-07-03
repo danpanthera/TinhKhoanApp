@@ -524,34 +524,69 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         private void ConfigureNewDataTables(ModelBuilder modelBuilder)
         {
             // 🏦 Cấu hình bảng DB01 - Tài sản đảm bảo
-            ConfigureDataTableWithTemporal<DataTables.DB01>(modelBuilder, "DB01");
+            ConfigureDataTableBasic<DataTables.DB01>(modelBuilder, "DB01");
 
             // 💰 Cấu hình bảng DPDA - Tiền gửi của dân
-            ConfigureDataTableWithTemporal<DataTables.DPDA>(modelBuilder, "DPDA");
+            ConfigureDataTableBasic<DataTables.DPDA>(modelBuilder, "DPDA");
 
             // 📊 Cấu hình bảng EI01 - Thu nhập khác
-            ConfigureDataTableWithTemporal<DataTables.EI01>(modelBuilder, "EI01");
+            ConfigureDataTableBasic<DataTables.EI01>(modelBuilder, "EI01");
 
             // 📋 Cấu hình bảng GL01 - Sổ cái tổng hợp
-            ConfigureDataTableWithTemporal<DataTables.GL01>(modelBuilder, "GL01");
+            ConfigureDataTableBasic<DataTables.GL01>(modelBuilder, "GL01");
 
             // 👥 Cấu hình bảng KH03 - Khách hàng
-            ConfigureDataTableWithTemporal<DataTables.KH03>(modelBuilder, "KH03");
+            ConfigureDataTableBasic<DataTables.KH03>(modelBuilder, "KH03");
 
             // 🏷️ Cấu hình bảng LN01 - Cho vay
-            ConfigureDataTableWithTemporal<DataTables.LN01>(modelBuilder, "LN01");
+            ConfigureDataTableBasic<DataTables.LN01>(modelBuilder, "LN01");
 
             // 📄 Cấu hình bảng LN02 - Cho vay chi tiết
-            ConfigureDataTableWithTemporal<DataTables.LN02>(modelBuilder, "LN02");
+            ConfigureDataTableBasic<DataTables.LN02>(modelBuilder, "LN02");
 
             // ⚠️ Cấu hình bảng LN03 - Nợ xấu
-            ConfigureDataTableWithTemporal<DataTables.LN03>(modelBuilder, "LN03");
+            ConfigureDataTableBasic<DataTables.LN03>(modelBuilder, "LN03");
 
             // 📈 Cấu hình bảng RR01 - Tỷ lệ
-            ConfigureDataTableWithTemporal<DataTables.RR01>(modelBuilder, "RR01");
+            ConfigureDataTableBasic<DataTables.RR01>(modelBuilder, "RR01");
 
             // 📊 Cấu hình bảng 7800_DT_KHKD1 - Doanh thu kế hoạch kinh doanh 1
-            ConfigureDataTableWithTemporal<DataTables.DT_KHKD1>(modelBuilder, "7800_DT_KHKD1");
+            ConfigureDataTableBasic<DataTables.DT_KHKD1>(modelBuilder, "7800_DT_KHKD1");
+        }
+
+        /// <summary>
+        /// Cấu hình cơ bản cho bảng dữ liệu (không temporal)
+        /// </summary>
+        private void ConfigureDataTableBasic<T>(ModelBuilder modelBuilder, string tableName) where T : class
+        {
+            modelBuilder.Entity<T>(entity =>
+            {
+                // Cấu hình tên bảng
+                entity.ToTable(tableName);
+
+                // Cấu hình precision cho các trường tiền tệ
+                foreach (var property in typeof(T).GetProperties())
+                {
+                    if (property.PropertyType == typeof(decimal?) || property.PropertyType == typeof(decimal))
+                    {
+                        var propertyName = property.Name;
+                        if (propertyName.Contains("TIEN") || propertyName.Contains("DU_NO") ||
+                            propertyName.Contains("GIA_TRI") || propertyName.Contains("BALANCE") ||
+                            propertyName.Contains("PLAN_") || propertyName.Contains("ACTUAL_"))
+                        {
+                            entity.Property(propertyName).HasPrecision(18, 2);
+                        }
+                        else if (propertyName.Contains("LAI_SUAT") || propertyName.Contains("TY_LE"))
+                        {
+                            entity.Property(propertyName).HasPrecision(10, 6);
+                        }
+                        else if (propertyName.Equals("ACHIEVEMENT_RATE"))
+                        {
+                            entity.Property(propertyName).HasPrecision(18, 2);
+                        }
+                    }
+                }
+            });
         }
 
         /// <summary>

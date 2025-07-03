@@ -27,7 +27,7 @@ SELECT
     END AS ColumnstoreStatus
 FROM sys.tables t
 LEFT JOIN sys.tables h ON t.history_table_id = h.object_id
-WHERE t.name IN ('7800_DT_KHKD1', 'BC57', 'DB01', 'DP01', 'DPDA', 'EI01', 'GAHR26', 'GL01', 'GLCB41', 'KH03', 'LN01', 'LN02', 'LN03', 'RR01')
+WHERE t.name IN ('7800_DT_KHKD1', 'BC57', 'DB01', 'DP01', 'DPDA', 'EI01', 'GAHR26', 'GL01', 'GL41', 'KH03', 'LN01', 'LN02', 'LN03', 'RR01')
 ORDER BY t.name;
 
 -- =======================================
@@ -132,11 +132,11 @@ BEGIN
     PRINT '✅ Table GAHR26 created with temporal versioning.';
 END
 
--- 3. Tạo bảng GLCB41 nếu chưa có
-IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'GLCB41')
+-- 3. Tạo bảng GL41 nếu chưa có
+IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'GL41')
 BEGIN
-    PRINT '🔧 Creating table GLCB41...';
-    CREATE TABLE [GLCB41] (
+    PRINT '🔧 Creating table GL41...';
+    CREATE TABLE [GL41] (
         [Id] int IDENTITY(1,1) NOT NULL,
         [BusinessKey] nvarchar(500) NOT NULL,
         [EffectiveDate] datetime2 NOT NULL,
@@ -163,9 +163,9 @@ BEGIN
         [SysStartTime] datetime2 GENERATED ALWAYS AS ROW START NOT NULL,
         [SysEndTime] datetime2 GENERATED ALWAYS AS ROW END NOT NULL,
         PERIOD FOR SYSTEM_TIME ([SysStartTime], [SysEndTime]),
-        CONSTRAINT [PK_GLCB41] PRIMARY KEY ([Id])
-    ) WITH (SYSTEM_VERSIONING = ON (HISTORY_TABLE = [GLCB41_History]));
-    PRINT '✅ Table GLCB41 created with temporal versioning.';
+        CONSTRAINT [PK_GL41] PRIMARY KEY ([Id])
+    ) WITH (SYSTEM_VERSIONING = ON (HISTORY_TABLE = [GL41_History]));
+    PRINT '✅ Table GL41 created with temporal versioning.';
 END
 
 -- =======================================
@@ -243,7 +243,7 @@ SELECT name
 FROM sys.tables
 WHERE name LIKE '%_History'
   AND name IN ('7800_DT_KHKD1_History', 'BC57_History', 'DB01_History', 'DP01_History', 'DPDA_History',
-               'EI01_History', 'GAHR26_History', 'GL01_History', 'GLCB41_History', 'KH03_History',
+               'EI01_History', 'GAHR26_History', 'GL01_History', 'GL41_History', 'KH03_History',
                'LN01_History', 'LN02_History', 'LN03_History', 'RR01_History')
   AND NOT EXISTS (
       SELECT 1 FROM sys.indexes
@@ -296,11 +296,11 @@ SELECT
     END AS Status
 FROM sys.tables t
 LEFT JOIN sys.tables h ON t.history_table_id = h.object_id
-WHERE t.name IN ('7800_DT_KHKD1', 'BC57', 'DB01', 'DP01', 'DPDA', 'EI01', 'GAHR26', 'GL01', 'GLCB41', 'KH03', 'LN01', 'LN02', 'LN03', 'RR01')
+WHERE t.name IN ('7800_DT_KHKD1', 'BC57', 'DB01', 'DP01', 'DPDA', 'EI01', 'GAHR26', 'GL01', 'GL41', 'KH03', 'LN01', 'LN02', 'LN03', 'RR01')
    OR t.name IN (
        SELECT t2.name
        FROM sys.tables t2
-       WHERE t2.name IN ('7800_DT_KHKD1', 'BC57', 'DB01', 'DP01', 'DPDA', 'EI01', 'GAHR26', 'GL01', 'GLCB41', 'KH03', 'LN01', 'LN02', 'LN03', 'RR01')
+       WHERE t2.name IN ('7800_DT_KHKD1', 'BC57', 'DB01', 'DP01', 'DPDA', 'EI01', 'GAHR26', 'GL01', 'GL41', 'KH03', 'LN01', 'LN02', 'LN03', 'RR01')
    )
 ORDER BY t.name;
 

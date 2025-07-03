@@ -15,7 +15,7 @@ SELECT
     h.name AS HistoryTableName
 FROM sys.tables t
 LEFT JOIN sys.tables h ON t.history_table_id = h.object_id
-WHERE t.name IN ('7800_DT_KHKD1', 'DPDA', 'EI01', 'GAHR26', 'GLCB41')
+WHERE t.name IN ('7800_DT_KHKD1', 'DPDA', 'EI01', 'GAHR26', 'GL41')
 ORDER BY t.name;
 
 -- Lưu ý: Để rename cột trong temporal table, cần tắt system versioning trước

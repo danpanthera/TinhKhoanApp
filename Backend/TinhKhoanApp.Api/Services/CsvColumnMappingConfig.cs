@@ -57,10 +57,10 @@ namespace TinhKhoanApp.Api.Services
         };
 
         /// <summary>
-        /// Mapping cho bảng GLCB41 (General Ledger detail)
+        /// Mapping cho bảng GL41 (General Ledger detail)
         /// Giữ nguyên tên cột CSV gốc làm property name
         /// </summary>
-        public static readonly Dictionary<string, string> GLCB41_ColumnMapping = new()
+        public static readonly Dictionary<string, string> GL41_ColumnMapping = new()
         {
             // Model Property (CSV gốc) → CSV Header (cũng chính là CSV gốc)
             { "JOURNAL_NO", "JOURNAL_NO" },
@@ -118,7 +118,7 @@ namespace TinhKhoanApp.Api.Services
             {
                 "LN01" => LN01_ColumnMapping,
                 "GAHR26" => GAHR26_ColumnMapping,
-                "GLCB41" => GLCB41_ColumnMapping,
+                "GL41" => GL41_ColumnMapping,
                 "7800_DT_KHKD1" => DT_KHKD1_ColumnMapping,
                 _ => null
             };

@@ -65,7 +65,7 @@ namespace TinhKhoanApp.Api.Services
             { "BC57", "Sao kê Lãi dự thu - Dự phòng lãi" },
             { "RR01", "Sao kê dư nợ gốc, lãi XLRR - Rủi ro tín dụng" },
             { "DT_KHKD1", "Báo cáo KHKD (DT) - Kế hoạch kinh doanh doanh thu" },
-            { "GLCB41", "Bảng cân đối - Báo cáo tài chính" }
+            { "GL41", "Bảng cân đối - Báo cáo tài chính" }
         };
 
         public FileNameParsingService(ILogger<FileNameParsingService> logger)

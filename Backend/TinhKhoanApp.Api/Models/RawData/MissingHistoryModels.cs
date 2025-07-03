@@ -259,7 +259,7 @@ namespace TinhKhoanApp.Api.Models.RawData
         [StringLength(64)]
         public string DataHash { get; set; } = null!;
 
-        // 📊 Business Data Fields for GLCB41 (Sổ cái chi tiết)
+        // 📊 Business Data Fields for GL41 (Sổ cái chi tiết)
         // Giữ nguyên tên cột CSV gốc
         [StringLength(50)]
         [Column("JOURNAL_NO")]

@@ -36,7 +36,7 @@ INSERT INTO @RawDataTypes VALUES
     ('LN03', 'LN03_RawData', 'Dữ liệu Nợ XLRR'),
     ('KH03', 'KH03_RawData', 'Sao kê Khách hàng pháp nhân'),
     ('RR01', 'RR01_RawData', 'Sao kê dư nợ gốc, lãi XLRR'),
-    ('GLCB41', 'GLCB41_RawData', 'Bảng cân đối kế toán');
+    ('GL41', 'GL41_RawData', 'Bảng cân đối kế toán');
 
 DECLARE @DataType NVARCHAR(20), @TableName NVARCHAR(50), @Description NVARCHAR(200);
 DECLARE @HistoryTableName NVARCHAR(50), @SQL NVARCHAR(MAX);
