@@ -3,10 +3,7 @@
  * Service để tính toán 6 chỉ tiêu chính theo chi nhánh
  */
 
-// Debug: Kiểm tra environment variables
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
-console.log('🔧 branchIndicatorsService - API_BASE_URL:', API_BASE_URL);
-console.log('🔧 Environment:', import.meta.env.MODE);
 
 export const branchIndicatorsService = {
 
@@ -25,14 +22,7 @@ export const branchIndicatorsService = {
       }
 
       console.log('🌐 API Call - branchId:', branchId, 'date:', targetDate.toISOString());
-      
-      // Debug: Thử cả 2 cách - proxy và direct
-      const apiEndpoints = [
-        `${API_BASE_URL}/NguonVon/calculate`, // Proxy qua Vite
-        'http://localhost:5055/api/NguonVon/calculate' // Direct call
-      ];
-      
-      console.log('🔗 Trying endpoints:', apiEndpoints);
+      console.log('🔗 API URL:', `${API_BASE_URL}/NguonVon/calculate`);
 
       const requestBody = {
         unitCode: branchId,
@@ -42,41 +32,19 @@ export const branchIndicatorsService = {
 
       console.log('📋 Request body:', requestBody);
 
-      let response;
-      let lastError;
-      
-      // Thử từng endpoint cho đến khi thành công
-      for (const endpoint of apiEndpoints) {
-        try {
-          console.log(`🚀 Attempting API call to: ${endpoint}`);
-          
-          response = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(requestBody)
-          });
+      const response = await fetch(`${API_BASE_URL}/NguonVon/calculate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      })
 
-          console.log(`📡 Response from ${endpoint}:`, response.status, response.statusText);
+      console.log('📡 Response status:', response.status, response.statusText);
 
-          if (response.ok) {
-            console.log(`✅ Success with endpoint: ${endpoint}`);
-            break; // Thành công, thoát loop
-          } else {
-            console.warn(`❌ Failed with endpoint ${endpoint}:`, response.status);
-            lastError = new Error(`HTTP error! status: ${response.status}`);
-          }
-        } catch (error) {
-          console.warn(`❌ Network error with endpoint ${endpoint}:`, error.message);
-          lastError = error;
-        }
-      }
-
-      // Nếu tất cả endpoints đều fail
-      if (!response || !response.ok) {
-        console.error('❌ All API endpoints failed');
-        throw lastError || new Error('Không thể kết nối đến API server');
+      if (!response.ok) {
+        console.error('❌ API Error:', response.status, response.statusText);
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
 
       const result = await response.json()
