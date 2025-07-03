@@ -918,108 +918,103 @@ const calculateAll = async () => {
   await triggerCalculation();
 };
 
-// 2. Tính Nguồn vốn - Sử dụng API DP01 mới
+// 2. Tính Nguồn vốn - Sử dụng API mới theo yêu cầu của anh
 const calculateNguonVon = async () => {
   calculating.value = true;
   errorMessage.value = '';
   successMessage.value = '';
 
   try {
-    // Xác định unitCode cho API mới (mapping từ unit hiện tại sang mã API)
-    let unitCode = 'ALL'; // Default: Toàn tỉnh (tổng hợp tất cả chi nhánh 7800->7808)
-    let displayName = '🏛️ Toàn tỉnh (Tổng hợp)';
+    // Xác định unitKey dựa trên selectedUnitId
+    let unitKey = 'ToanTinh'; // Mặc định là Toàn tỉnh
+    let displayName = 'Toàn tỉnh';
 
     if (selectedUnitId.value && selectedUnitId.value !== 'ALL') {
       const selectedUnit = units.value.find(u => u.id === selectedUnitId.value);
       if (!selectedUnit) {
-        throw new Error('Không tìm thấy thông tin chi nhánh được chọn');
+        throw new Error('Không tìm thấy thông tin đơn vị được chọn');
       }
-
-      // Mapping từ unit.id sang unitCode cho API DP01 (sử dụng mã số thực tế từ database)
-      const unitMapping = {
-        'HoiSo': '7800',              // Hội sở
-        'CnBinhLu': '7801',           // Chi nhánh Bình Lư
-        'CnPhongTho': '7802',         // Chi nhánh Phong Thổ
-        'CnSinHo': '7803',            // Chi nhánh Sin Hồ
-        'CnBumTo': '7804',            // Chi nhánh Bum Tở
-        'CnThanUyen': '7805',         // Chi nhánh Than Uyên
-        'CnDoanKet': '7806',          // Chi nhánh Đoan Kết
-        'CnTanUyen': '7807',          // Chi nhánh Tân Uyên
-        'CnNamHang': '7808',          // Chi nhánh Nậm Hãng
-        'CnPhongThoPgdSo5': '7802',   // PGD số 5 thuộc Phong Thổ
-        'CnThanUyenPgdSo6': '7805',   // PGD số 6 thuộc Than Uyên
-        'CnDoanKetPgdSo1': '7806',    // PGD số 1 thuộc Đoan Kết
-        'CnDoanKetPgdSo2': '7806',    // PGD số 2 thuộc Đoan Kết
-        'CnTanUyenPgdSo3': '7807'     // PGD số 3 thuộc Tân Uyên
+      
+      // Mapping từ id trong units đến unitKey trong API
+      const unitKeyMapping = {
+        'HoiSo': 'HoiSo',
+        'CnBinhLu': 'CnBinhLu',
+        'CnPhongTho': 'CnPhongTho',
+        'CnSinHo': 'CnSinHo',
+        'CnBumTo': 'CnBumTo',
+        'CnThanUyen': 'CnThanUyen',
+        'CnDoanKet': 'CnDoanKet',
+        'CnTanUyen': 'CnTanUyen',
+        'CnNamHang': 'CnNamHang',
+        'CnPhongThoPgdSo5': 'CnPhongTho-PGD5',
+        'CnThanUyenPgdSo6': 'CnThanUyen-PGD6',
+        'CnDoanKetPgdSo1': 'CnDoanKet-PGD1',
+        'CnDoanKetPgdSo2': 'CnDoanKet-PGD2',
+        'CnTanUyenPgdSo3': 'CnTanUyen-PGD3'
       };
 
-      unitCode = unitMapping[selectedUnit.id] || selectedUnit.code || 'ALL'; // Fallback về ALL (toàn tỉnh)
+      unitKey = unitKeyMapping[selectedUnit.id] || 'ToanTinh';
       displayName = selectedUnit.name;
     }
 
-    // Xác định ngày và loại ngày từ các filter đã chọn
+    // Xác định ngày tính toán
     let targetDate = new Date();
-    let dateType = 'day';
-
     if (periodType.value === 'DATE' && selectedDate.value) {
-      // Nếu chọn ngày cụ thể
       targetDate = new Date(selectedDate.value);
-      dateType = 'day';
     } else if (periodType.value === 'MONTH' && selectedYear.value && selectedPeriod.value) {
-      // Nếu chọn tháng
       targetDate = new Date(selectedYear.value, selectedPeriod.value - 1, 1);
-      dateType = 'month';
     } else if (periodType.value === 'QUARTER' && selectedYear.value && selectedPeriod.value) {
-      // Nếu chọn quý, lấy tháng cuối quý
       const quarterEndMonth = selectedPeriod.value * 3;
       targetDate = new Date(selectedYear.value, quarterEndMonth - 1, 1);
-      dateType = 'month';
     } else if (selectedYear.value) {
-      // Nếu chỉ chọn năm
       targetDate = new Date(selectedYear.value, 0, 1);
-      dateType = 'year';
     }
 
-    console.log('� Tính Nguồn vốn từ DP01:', {
-      unitCode,
+    console.log('💰 Tính Nguồn vốn:', {
+      unitKey,
       displayName,
-      targetDate: targetDate.toISOString(),
-      dateType,
-      periodType: periodType.value,
-      selectedYear: selectedYear.value,
-      selectedPeriod: selectedPeriod.value
+      targetDate: targetDate.toISOString()
     });
 
-    // Gọi service để tính Nguồn vốn từ bảng DP01
-    const result = await branchIndicatorsService.calculateNguonVon(unitCode, targetDate.toISOString());
+    // Gọi API mới để tính Nguồn vốn
+    const response = await fetch(`/api/NguonVonButton/calculate/${unitKey}?targetDate=${targetDate.toISOString()}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
 
-    if (result.total !== undefined) {
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    if (result.success && result.data) {
       // Cập nhật kết quả vào UI
-      calculatedIndicators.value[0].value = result.total / 1000000; // Chuyển từ VND sang triệu VND
+      calculatedIndicators.value[0].value = result.data.totalNguonVonTrieuVND;
       calculatedIndicators.value[0].calculated = true;
       calculatedIndicators.value[0].details = {
-        formula: 'Tổng CURRENT_BALANCE từ DP01 (loại trừ TK 40*, 41*, 427*, 211108)',
+        formula: result.data.formula,
         calculatedAt: new Date().toISOString(),
         unit: 'Triệu VND',
-        unitCode: unitCode,
-        unitName: result.unitName || displayName,
-        recordCount: result.recordCount,
-        calculatedDate: targetDate.toLocaleDateString('vi-VN')
+        unitKey: result.data.unitKey,
+        unitName: result.data.unitName,
+        recordCount: result.data.recordCount,
+        calculatedDate: result.data.calculationDate,
+        topAccounts: result.data.topAccounts
       };
 
       showCalculationResults.value = true;
-      successMessage.value = `✅ Đã tính Nguồn vốn cho ${result.unitName || displayName}: ${formatCurrency(result.total)} VND (${result.recordCount?.toLocaleString() || 0} bản ghi)`;
+      successMessage.value = `✅ ${result.message}: ${result.data.totalNguonVonTrieuVND.toLocaleString()} triệu VND (${result.data.recordCount?.toLocaleString() || 0} bản ghi)`;
     } else {
       throw new Error(result.message || 'Tính toán thất bại');
     }
 
   } catch (error) {
-    console.error('❌ Lỗi tính Nguồn vốn từ DP01:', error);
-    if (error.message.includes('Chưa tìm thấy dữ liệu')) {
-      errorMessage.value = 'Chưa tìm thấy dữ liệu DP01 theo thời gian đã chọn. Vui lòng chọn thời gian khác hoặc kiểm tra dữ liệu.';
-    } else {
-      errorMessage.value = 'Có lỗi khi tính Nguồn vốn: ' + error.message;
-    }
+    console.error('❌ Lỗi tính Nguồn vốn:', error);
+    errorMessage.value = 'Có lỗi khi tính Nguồn vốn: ' + error.message;
   } finally {
     calculating.value = false;
   }
