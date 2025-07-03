@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models.NguonVon;
+using TinhKhoanApp.Api.Models;
 using TinhKhoanApp.Api.Services.Interfaces;
+using System.Text.Json;
 
 namespace TinhKhoanApp.Api.Controllers
 {
@@ -30,14 +32,14 @@ namespace TinhKhoanApp.Api.Controllers
             { "CnDoanKet", new BranchInfo("7806", null, "CN Đoàn Kết") },
             { "CnTanUyen", new BranchInfo("7807", null, "CN Tân Uyên") },
             { "CnNamHang", new BranchInfo("7808", null, "CN Nậm Hàng") },
-            
+
             // Các PGD
             { "CnPhongTho-PGD5", new BranchInfo("7802", "01", "CN Phong Thổ - PGD Số 5") },
             { "CnThanUyen-PGD6", new BranchInfo("7805", "01", "CN Than Uyên - PGD Số 6") },
             { "CnDoanKet-PGD1", new BranchInfo("7806", "01", "CN Đoàn Kết - PGD Số 1") },
             { "CnDoanKet-PGD2", new BranchInfo("7806", "02", "CN Đoàn Kết - PGD Số 2") },
             { "CnTanUyen-PGD3", new BranchInfo("7807", "01", "CN Tân Uyên - PGD Số 3") },
-            
+
             // Toàn tỉnh
             { "ToanTinh", new BranchInfo("ALL", null, "Toàn tỉnh") }
         };
@@ -60,16 +62,17 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 if (!_branchMapping.ContainsKey(unitKey))
                 {
-                    return BadRequest(new { 
-                        success = false, 
-                        message = $"Không tìm thấy đơn vị '{unitKey}'. Các đơn vị hỗ trợ: {string.Join(", ", _branchMapping.Keys)}" 
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = $"Không tìm thấy đơn vị '{unitKey}'. Các đơn vị hỗ trợ: {string.Join(", ", _branchMapping.Keys)}"
                     });
                 }
 
                 var branchInfo = _branchMapping[unitKey];
                 var calculationDate = targetDate ?? DateTime.Now;
 
-                _logger.LogInformation("💰 Bắt đầu tính Nguồn vốn cho {UnitName} ({UnitKey}) - MA_CN: {MaCN}, MA_PGD: {MaPGD}", 
+                _logger.LogInformation("💰 Bắt đầu tính Nguồn vốn cho {UnitName} ({UnitKey}) - MA_CN: {MaCN}, MA_PGD: {MaPGD}",
                     branchInfo.DisplayName, unitKey, branchInfo.MaCN, branchInfo.MaPGD ?? "ALL");
 
                 decimal totalNguonVon;
@@ -132,36 +135,71 @@ namespace TinhKhoanApp.Api.Controllers
         {
             var allBranchCodes = new[] { "7800", "7801", "7802", "7803", "7804", "7805", "7806", "7807", "7808" };
 
-            // Query tổng cho tất cả chi nhánh
-            var query = _context.DP01s
-                .Where(d => d.DATA_DATE.Date == targetDate.Date && allBranchCodes.Contains(d.MA_CN))
-                .Where(d =>
-                    !d.TAI_KHOAN_HACH_TOAN.StartsWith("40") &&
-                    !d.TAI_KHOAN_HACH_TOAN.StartsWith("41") &&
-                    !d.TAI_KHOAN_HACH_TOAN.StartsWith("427") &&
-                    d.TAI_KHOAN_HACH_TOAN != "211108"
-                );
+            // Query dữ liệu từ ImportedDataItems thay vì DP01
+            var importedDataQuery = _context.ImportedDataItems
+                .Include(i => i.ImportedDataRecord)
+                .Where(i => i.ImportedDataRecord.Category == "DP01" || 
+                           i.ImportedDataRecord.FileName.Contains("DP01"));
 
-            var totalNguonVon = await query.SumAsync(d => d.CURRENT_BALANCE ?? 0);
-            var recordCount = await query.CountAsync();
+            var allData = await importedDataQuery.ToListAsync();
+            
+            decimal totalNguonVon = 0;
+            int recordCount = 0;
+            var topAccountsDict = new Dictionary<string, decimal>();
 
-            // Top accounts
-            var topAccounts = await query
-                .GroupBy(d => d.TAI_KHOAN_HACH_TOAN)
-                .Select(g => new {
-                    AccountCode = g.Key,
-                    TotalBalance = g.Sum(x => x.CURRENT_BALANCE ?? 0),
-                    RecordCount = g.Count()
-                })
-                .OrderByDescending(a => a.TotalBalance)
+            foreach (var item in allData)
+            {
+                try
+                {
+                    var dp01Data = System.Text.Json.JsonSerializer.Deserialize<DP01Data>(item.RawData);
+                    
+                    // Kiểm tra ngày tính toán
+                    if (dp01Data.DATA_DATE?.Date != targetDate.Date)
+                        continue;
+
+                    // Kiểm tra MA_CN trong danh sách chi nhánh
+                    if (!allBranchCodes.Contains(dp01Data.MA_CN))
+                        continue;
+
+                    // Áp dụng điều kiện loại trừ tài khoản
+                    var taiKhoan = dp01Data.TAI_KHOAN_HACH_TOAN ?? "";
+                    if (taiKhoan.StartsWith("40") || taiKhoan.StartsWith("41") || 
+                        taiKhoan.StartsWith("427") || taiKhoan == "211108")
+                        continue;
+
+                    var balance = dp01Data.CURRENT_BALANCE != 0 ? dp01Data.CURRENT_BALANCE : dp01Data.SO_DU_CUOI_KY;
+                    totalNguonVon += balance;
+                    recordCount++;
+
+                    // Tính top accounts
+                    var accountKey = dp01Data.TAI_KHOAN_HACH_TOAN;
+                    if (!topAccountsDict.ContainsKey(accountKey))
+                        topAccountsDict[accountKey] = 0;
+                    topAccountsDict[accountKey] += balance;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning("⚠️ Lỗi khi parse dữ liệu DP01 item {ItemId}: {Error}", item.Id, ex.Message);
+                    continue;
+                }
+            }
+
+            var topAccounts = topAccountsDict
+                .OrderByDescending(kvp => Math.Abs(kvp.Value))
                 .Take(20)
-                .ToListAsync();
+                .Select(kvp => new
+                {
+                    AccountCode = kvp.Key,
+                    TotalBalance = kvp.Value,
+                    RecordCount = 1
+                })
+                .ToList<object>();
 
             return new CalculationResult
             {
                 Total = totalNguonVon,
                 RecordCount = recordCount,
-                TopAccounts = topAccounts.Cast<object>().ToList()
+                TopAccounts = topAccounts
             };
         }
 
@@ -170,43 +208,75 @@ namespace TinhKhoanApp.Api.Controllers
         /// </summary>
         private async Task<CalculationResult> CalculateSingleUnit(BranchInfo branchInfo, DateTime targetDate)
         {
-            var query = _context.DP01s
-                .Where(d => d.DATA_DATE.Date == targetDate.Date && d.MA_CN == branchInfo.MaCN);
+            // Query dữ liệu từ ImportedDataItems thay vì DP01
+            var importedDataQuery = _context.ImportedDataItems
+                .Include(i => i.ImportedDataRecord)
+                .Where(i => i.ImportedDataRecord.Category == "DP01" || 
+                           i.ImportedDataRecord.FileName.Contains("DP01"));
 
-            // Lọc theo PGD nếu có
-            if (!string.IsNullOrEmpty(branchInfo.MaPGD))
+            var allData = await importedDataQuery.ToListAsync();
+            
+            decimal totalNguonVon = 0;
+            int recordCount = 0;
+            var topAccountsDict = new Dictionary<string, decimal>();
+
+            foreach (var item in allData)
             {
-                query = query.Where(d => d.MA_PGD == branchInfo.MaPGD);
+                try
+                {
+                    var dp01Data = JsonSerializer.Deserialize<DP01Data>(item.RawData);
+                    
+                    // Kiểm tra ngày tính toán
+                    if (dp01Data.DATA_DATE?.Date != targetDate.Date)
+                        continue;
+
+                    // Kiểm tra MA_CN
+                    if (dp01Data.MA_CN != branchInfo.MaCN)
+                        continue;
+
+                    // Kiểm tra MA_PGD nếu có
+                    if (!string.IsNullOrEmpty(branchInfo.MaPGD) && dp01Data.MA_PGD != branchInfo.MaPGD)
+                        continue;
+
+                    // Áp dụng điều kiện loại trừ tài khoản
+                    var taiKhoan = dp01Data.TAI_KHOAN_HACH_TOAN ?? "";
+                    if (taiKhoan.StartsWith("40") || taiKhoan.StartsWith("41") || 
+                        taiKhoan.StartsWith("427") || taiKhoan == "211108")
+                        continue;
+
+                    var balance = dp01Data.CURRENT_BALANCE != 0 ? dp01Data.CURRENT_BALANCE : dp01Data.SO_DU_CUOI_KY;
+                    totalNguonVon += balance;
+                    recordCount++;
+
+                    // Tính top accounts
+                    var accountKey = dp01Data.TAI_KHOAN_HACH_TOAN;
+                    if (!topAccountsDict.ContainsKey(accountKey))
+                        topAccountsDict[accountKey] = 0;
+                    topAccountsDict[accountKey] += balance;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning("⚠️ Lỗi khi parse dữ liệu DP01 item {ItemId}: {Error}", item.Id, ex.Message);
+                    continue;
+                }
             }
 
-            // Lọc tài khoản theo điều kiện: bỏ đi 40*, 41*, 427*, 211108
-            query = query.Where(d =>
-                !d.TAI_KHOAN_HACH_TOAN.StartsWith("40") &&
-                !d.TAI_KHOAN_HACH_TOAN.StartsWith("41") &&
-                !d.TAI_KHOAN_HACH_TOAN.StartsWith("427") &&
-                d.TAI_KHOAN_HACH_TOAN != "211108"
-            );
-
-            var totalNguonVon = await query.SumAsync(d => d.CURRENT_BALANCE ?? 0);
-            var recordCount = await query.CountAsync();
-
-            // Top accounts
-            var topAccounts = await query
-                .GroupBy(d => d.TAI_KHOAN_HACH_TOAN)
-                .Select(g => new {
-                    AccountCode = g.Key,
-                    TotalBalance = g.Sum(x => x.CURRENT_BALANCE ?? 0),
-                    RecordCount = g.Count()
-                })
-                .OrderByDescending(a => a.TotalBalance)
+            var topAccounts = topAccountsDict
+                .OrderByDescending(kvp => Math.Abs(kvp.Value))
                 .Take(20)
-                .ToListAsync();
+                .Select(kvp => new
+                {
+                    AccountCode = kvp.Key,
+                    TotalBalance = kvp.Value,
+                    RecordCount = 1
+                })
+                .ToList<object>();
 
             return new CalculationResult
             {
                 Total = totalNguonVon,
                 RecordCount = recordCount,
-                TopAccounts = topAccounts.Cast<object>().ToList()
+                TopAccounts = topAccounts
             };
         }
 
