@@ -3,6 +3,7 @@ using TinhKhoanApp.Api.Models; // Đảm bảo namespace này đúng với nơi 
 using TinhKhoanApp.Api.Models.RawData; // Thêm namespace cho Raw Data models
 using TinhKhoanApp.Api.Models.Temporal; // Thêm namespace cho Temporal models
 using TinhKhoanApp.Api.Models.Dashboard; // Thêm namespace cho Dashboard models
+using DataTables = TinhKhoanApp.Api.Models.DataTables; // Alias để tránh conflict
 
 namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
 {
@@ -92,16 +93,16 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
 
         // 📊 DbSets cho các bảng dữ liệu riêng biệt theo từng loại file
         // Tuân thủ Temporal Tables + Columnstore Indexes
-        public DbSet<DB01> DB01s { get; set; }
-        public DbSet<DPDA> DPDAs { get; set; }
-        public DbSet<EI01> EI01s { get; set; }
-        public DbSet<GL01> GL01s { get; set; }
-        public DbSet<KH03> KH03s { get; set; }
-        public DbSet<LN01> LN01s { get; set; }
-        public DbSet<LN02> LN02s { get; set; }
-        public DbSet<LN03> LN03s { get; set; }
-        public DbSet<RR01> RR01s { get; set; }
-        public DbSet<DT_KHKD1> DT_KHKD1s { get; set; }
+        public DbSet<DataTables.DB01> DB01s { get; set; }
+        public DbSet<DataTables.DPDA> DPDAs { get; set; }
+        public DbSet<DataTables.EI01> EI01s { get; set; }
+        public DbSet<DataTables.GL01> GL01s { get; set; }
+        public DbSet<DataTables.KH03> KH03s { get; set; }
+        public DbSet<DataTables.LN01> LN01s { get; set; }
+        public DbSet<DataTables.LN02> LN02s { get; set; }
+        public DbSet<DataTables.LN03> LN03s { get; set; }
+        public DbSet<DataTables.RR01> RR01s { get; set; }
+        public DbSet<DataTables.DT_KHKD1> DT_KHKD1s { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -437,11 +438,11 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
             ConfigureMainTableWithOriginalColumns(modelBuilder);
 
             // Cấu hình temporal table cho KH03 (chỉ thiếu temporal table)
-            ConfigureTemporalTable<KH03History>(modelBuilder, "KH03", "KH03_History");
+            // ConfigureTemporalTable<KH03History>(modelBuilder, "KH03", "KH03_History");
 
-            // Đảm bảo các bảng đã có cũng được cấu hình đúng
-            ConfigureTemporalTable<DPDAHistory>(modelBuilder, "DPDA", "DPDA_History");
-            ConfigureTemporalTable<EI01History>(modelBuilder, "EI01", "EI01_History");
+            // Đảm bảo các bảng đã có cũng được cấu hình đúng - COMMENT TẠM THỜI ĐỂ TRÁNH CONFLICT
+            // ConfigureTemporalTable<DPDAHistory>(modelBuilder, "DPDA", "DPDA_History");
+            // ConfigureTemporalTable<EI01History>(modelBuilder, "EI01", "EI01_History");
 
             // 🆕 Cấu hình Temporal Tables cho các bảng dữ liệu mới
             // Mỗi bảng sẽ có Temporal Tables + Columnstore Indexes tự động
@@ -523,34 +524,34 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         private void ConfigureNewDataTables(ModelBuilder modelBuilder)
         {
             // 🏦 Cấu hình bảng DB01 - Tài sản đảm bảo
-            ConfigureDataTableWithTemporal<DB01>(modelBuilder, "DB01");
+            ConfigureDataTableWithTemporal<DataTables.DB01>(modelBuilder, "DB01");
 
             // 💰 Cấu hình bảng DPDA - Tiền gửi của dân
-            ConfigureDataTableWithTemporal<DPDA>(modelBuilder, "DPDA");
+            ConfigureDataTableWithTemporal<DataTables.DPDA>(modelBuilder, "DPDA");
 
-            // 📊 Cấu hình bảng EI01 - Thu nhập khác  
-            ConfigureDataTableWithTemporal<EI01>(modelBuilder, "EI01");
+            // 📊 Cấu hình bảng EI01 - Thu nhập khác
+            ConfigureDataTableWithTemporal<DataTables.EI01>(modelBuilder, "EI01");
 
             // 📋 Cấu hình bảng GL01 - Sổ cái tổng hợp
-            ConfigureDataTableWithTemporal<GL01>(modelBuilder, "GL01");
+            ConfigureDataTableWithTemporal<DataTables.GL01>(modelBuilder, "GL01");
 
             // 👥 Cấu hình bảng KH03 - Khách hàng
-            ConfigureDataTableWithTemporal<KH03>(modelBuilder, "KH03");
+            ConfigureDataTableWithTemporal<DataTables.KH03>(modelBuilder, "KH03");
 
             // 🏷️ Cấu hình bảng LN01 - Cho vay
-            ConfigureDataTableWithTemporal<LN01>(modelBuilder, "LN01");
+            ConfigureDataTableWithTemporal<DataTables.LN01>(modelBuilder, "LN01");
 
             // 📄 Cấu hình bảng LN02 - Cho vay chi tiết
-            ConfigureDataTableWithTemporal<LN02>(modelBuilder, "LN02");
+            ConfigureDataTableWithTemporal<DataTables.LN02>(modelBuilder, "LN02");
 
             // ⚠️ Cấu hình bảng LN03 - Nợ xấu
-            ConfigureDataTableWithTemporal<LN03>(modelBuilder, "LN03");
+            ConfigureDataTableWithTemporal<DataTables.LN03>(modelBuilder, "LN03");
 
             // 📈 Cấu hình bảng RR01 - Tỷ lệ
-            ConfigureDataTableWithTemporal<RR01>(modelBuilder, "RR01");
+            ConfigureDataTableWithTemporal<DataTables.RR01>(modelBuilder, "RR01");
 
             // 📊 Cấu hình bảng 7800_DT_KHKD1 - Doanh thu kế hoạch kinh doanh 1
-            ConfigureDataTableWithTemporal<DT_KHKD1>(modelBuilder, "7800_DT_KHKD1");
+            ConfigureDataTableWithTemporal<DataTables.DT_KHKD1>(modelBuilder, "7800_DT_KHKD1");
         }
 
         /// <summary>
@@ -608,7 +609,7 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
                     if (property.PropertyType == typeof(decimal?) || property.PropertyType == typeof(decimal))
                     {
                         var propertyName = property.Name;
-                        if (propertyName.Contains("TIEN") || propertyName.Contains("DU_NO") || 
+                        if (propertyName.Contains("TIEN") || propertyName.Contains("DU_NO") ||
                             propertyName.Contains("GIA_TRI") || propertyName.Contains("BALANCE") ||
                             propertyName.Contains("PLAN_") || propertyName.Contains("ACTUAL_"))
                         {

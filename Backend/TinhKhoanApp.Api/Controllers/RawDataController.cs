@@ -2012,7 +2012,7 @@ namespace TinhKhoanApp.Api.Controllers
                         });
 
                     case "GLCB41":
-                        var glcb41Data = await _context.GLCB41_History
+                        var glcb41Data = await _context                .GL41_History
                             .Where(h => import.StatementDate.HasValue && h.StatementDate.Date == import.StatementDate.Value.Date)
                             .OrderByDescending(h => h.ProcessedDate)
                             .Take(100)
