@@ -124,8 +124,8 @@ namespace TinhKhoanApp.Api.Services
                     case "KH03":
                         await ProcessKH03DataAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result);
                         break;
-                    case "GLCB41":
-                        await ProcessGLCB41DataAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result);
+                    case "GL41":
+                        await ProcessGL41DataAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result);
                         break;
                     // GL01 sẽ được xử lý trong tương lai với model phù hợp
                     // case "GL01":
@@ -582,10 +582,10 @@ namespace TinhKhoanApp.Api.Services
             result.Message = $"Successfully processed {processedCount} KH03 records (raw data processing)";
         }
 
-        private async Task ProcessGLCB41DataAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result)
+        private async Task ProcessGL41DataAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result)
         {
-            result.TableName = "GLCB41_History";
-            var historyRecords = new List<GLCB41_History>();
+            result.TableName = "GL41_History";
+            var historyRecords = new List<GL41_History>();
 
             foreach (var item in dataItems)
             {
@@ -596,10 +596,10 @@ namespace TinhKhoanApp.Api.Services
                     var rowData = JsonSerializer.Deserialize<Dictionary<string, object>>(item.RawData);
                     if (rowData == null || !rowData.Any()) continue;
 
-                    // Tạo business key duy nhất cho GLCB41 record
-                    var businessKey = GenerateBusinessKey("GLCB41", rowData);
+                    // Tạo business key duy nhất cho GL41 record
+                    var businessKey = GenerateBusinessKey("GL41", rowData);
 
-                    var historyRecord = new GLCB41_History
+                    var historyRecord = new GL41_History
                     {
                         BusinessKey = businessKey,
                         EffectiveDate = statementDate,
@@ -609,7 +609,7 @@ namespace TinhKhoanApp.Api.Services
                         IsCurrent = true,
                         DataHash = GenerateDataHash(rowData),
 
-                        // 🏦 GLCB41 specific fields - Mapping theo cột CSV gốc
+                        // 🏦 GL41 specific fields - Mapping theo cột CSV gốc
                         JOURNAL_NO = GetStringValue(rowData, "JOURNAL_NO") ?? GetStringValue(rowData, "SO_CT"),
                         ACCOUNT_NO = GetStringValue(rowData, "ACCOUNT_NO") ?? GetStringValue(rowData, "SO_TK"),
                         ACCOUNT_NAME = GetStringValue(rowData, "ACCOUNT_NAME") ?? GetStringValue(rowData, "TEN_TK"),
@@ -638,26 +638,26 @@ namespace TinhKhoanApp.Api.Services
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning("❌ Error processing GLCB41 data item: {Error}", ex.Message);
+                    _logger.LogWarning("❌ Error processing GL41 data item: {Error}", ex.Message);
                     result.Errors.Add($"Row error: {ex.Message}");
                 }
             }
 
             if (historyRecords.Any())
             {
-                _context.GLCB41_History.AddRange(historyRecords);
+                _context.GL41_History.AddRange(historyRecords);
                 await _context.SaveChangesAsync();
 
                 result.Success = true;
                 result.ProcessedRecords = historyRecords.Count;
-                result.Message = $"Successfully processed {historyRecords.Count} GLCB41 records to GLCB41_History";
+                result.Message = $"Successfully processed {historyRecords.Count} GL41 records to GL41_History";
 
-                _logger.LogInformation("✅ GLCB41: Processed {Count} records to GLCB41_History", historyRecords.Count);
+                _logger.LogInformation("✅ GL41: Processed {Count} records to GL41_History", historyRecords.Count);
             }
             else
             {
-                result.Message = "No valid GLCB41 records to process";
-                _logger.LogWarning("⚠️ GLCB41: No valid records found to process");
+                result.Message = "No valid GL41 records to process";
+                _logger.LogWarning("⚠️ GL41: No valid records found to process");
             }
         }
         #endregion

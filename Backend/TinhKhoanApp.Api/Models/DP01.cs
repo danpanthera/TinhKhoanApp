@@ -71,5 +71,13 @@ namespace TinhKhoanApp.Api.Models
         [Column("TEN_TAI_KHOAN")]
         [StringLength(500)]
         public string? TEN_TAI_KHOAN { get; set; }
+
+        /// <summary>
+        /// Ngày dữ liệu theo định dạng dd/mm/yyyy (VD: 30/04/2025)
+        /// Được lấy từ tên file *yyyymmdd.csv và chuyển đổi thành dd/mm/yyyy
+        /// </summary>
+        [Column("NGAY_DL")]
+        [StringLength(10)]
+        public string? NgayDL { get; set; }
     }
 }

@@ -599,8 +599,8 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Tính toán Thu dịch vụ từ dữ liệu GLCB41
-        /// Công thức: Tổng thu nhập từ các tài khoản dịch vụ theo chi nhánh từ file GLCB41 chính xác theo ngày
+        /// Tính toán Thu dịch vụ từ dữ liệu GL41
+        /// Công thức: Tổng thu nhập từ các tài khoản dịch vụ theo chi nhánh từ file GL41 chính xác theo ngày
         /// </summary>
         public async Task<decimal> CalculateThuDichVu(int unitId, DateTime date)
         {
@@ -621,20 +621,20 @@ namespace TinhKhoanApp.Api.Services
                 // Xác định ngày cụ thể cần tìm file dựa trên chỉ tiêu lũy kế
                 var targetStatementDate = GetTargetStatementDate(date);
 
-                _logger.LogInformation("Tìm file GLCB41 có StatementDate = {TargetDate}", targetStatementDate.Value.ToString("yyyy-MM-dd"));
+                _logger.LogInformation("Tìm file GL41 có StatementDate = {TargetDate}", targetStatementDate.Value.ToString("yyyy-MM-dd"));
 
-                // Tìm file import GLCB41 có StatementDate chính xác
+                // Tìm file import GL41 có StatementDate chính xác
                 var latestImportRecord = await _context.ImportedDataRecords
                     .Where(r => r.StatementDate.HasValue &&
                                r.StatementDate.Value.Date == targetStatementDate.Value.Date &&
                                r.Status == "Completed" &&
-                               (r.Category.Contains("GLCB41") || r.Category.Contains("Thu dịch vụ")))
+                               (r.Category.Contains("GL41") || r.Category.Contains("Thu dịch vụ")))
                     .OrderByDescending(r => r.ImportDate)
                     .FirstOrDefaultAsync();
 
                 if (latestImportRecord == null)
                 {
-                    var errorMessage = $"Không tìm thấy file import GLCB41 cho ngày {targetStatementDate:yyyy-MM-dd}. Vui lòng kiểm tra dữ liệu đã được import chưa.";
+                    var errorMessage = $"Không tìm thấy file import GL41 cho ngày {targetStatementDate:yyyy-MM-dd}. Vui lòng kiểm tra dữ liệu đã được import chưa.";
                     _logger.LogWarning(errorMessage);
 
                     await SaveCalculationError("ThuDichVu", unitId, date, errorMessage, startTime);
@@ -713,7 +713,7 @@ namespace TinhKhoanApp.Api.Services
 
                 var calculationDetails = new
                 {
-                    Formula = "Tổng (Credit - Debit) từ các tài khoản thu dịch vụ trong GLCB41",
+                    Formula = "Tổng (Credit - Debit) từ các tài khoản thu dịch vụ trong GL41",
                     SourceFile = latestImportRecord.FileName,
                     StatementDate = latestImportRecord.StatementDate,
                     ImportDate = latestImportRecord.ImportDate,
@@ -729,7 +729,7 @@ namespace TinhKhoanApp.Api.Services
 
                 await SaveCalculation("ThuDichVu", unitId, date, finalValue, calculationDetails, startTime);
 
-                _logger.LogInformation("Hoàn thành tính Thu dịch vụ từ file GLCB41: {Value} triệu VND (từ {Records} bản ghi)",
+                _logger.LogInformation("Hoàn thành tính Thu dịch vụ từ file GL41: {Value} triệu VND (từ {Records} bản ghi)",
                     finalValue, processedRecords);
                 return finalValue;
             }
@@ -742,8 +742,8 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Tính toán Lợi nhuận tài chính từ dữ liệu GLCB41 thực tế
-        /// Công thức: (Tài khoản 7 + 790001 + 8511) - (Tài khoản 8 + 882) từ file GLCB41 chính xác theo ngày
+        /// Tính toán Lợi nhuận tài chính từ dữ liệu GL41 thực tế
+        /// Công thức: (Tài khoản 7 + 790001 + 8511) - (Tài khoản 8 + 882) từ file GL41 chính xác theo ngày
         /// </summary>
         public async Task<decimal> CalculateLoiNhuan(int unitId, DateTime date)
         {
@@ -764,20 +764,20 @@ namespace TinhKhoanApp.Api.Services
                 // Xác định ngày cụ thể cần tìm file dựa trên chỉ tiêu lũy kế
                 var targetStatementDate = GetTargetStatementDate(date);
 
-                _logger.LogInformation("Tìm file GLCB41 có StatementDate = {TargetDate}", targetStatementDate.Value.ToString("yyyy-MM-dd"));
+                _logger.LogInformation("Tìm file GL41 có StatementDate = {TargetDate}", targetStatementDate.Value.ToString("yyyy-MM-dd"));
 
-                // Tìm file import GLCB41 có StatementDate chính xác
+                // Tìm file import GL41 có StatementDate chính xác
                 var latestImportRecord = await _context.ImportedDataRecords
                     .Where(r => r.StatementDate.HasValue &&
                                r.StatementDate.Value.Date == targetStatementDate.Value.Date &&
                                r.Status == "Completed" &&
-                               (r.Category.Contains("GLCB41") || r.Category.Contains("Lợi nhuận")))
+                               (r.Category.Contains("GL41") || r.Category.Contains("Lợi nhuận")))
                     .OrderByDescending(r => r.ImportDate)
                     .FirstOrDefaultAsync();
 
                 if (latestImportRecord == null)
                 {
-                    var errorMessage = $"Không tìm thấy file import GLCB41 cho ngày {targetStatementDate:yyyy-MM-dd}. Vui lòng kiểm tra dữ liệu đã được import chưa.";
+                    var errorMessage = $"Không tìm thấy file import GL41 cho ngày {targetStatementDate:yyyy-MM-dd}. Vui lòng kiểm tra dữ liệu đã được import chưa.";
                     _logger.LogWarning(errorMessage);
 
                     await SaveCalculationError("LoiNhuan", unitId, date, errorMessage, startTime);
@@ -863,7 +863,7 @@ namespace TinhKhoanApp.Api.Services
 
                 var calculationDetails = new
                 {
-                    Formula = "(TK 7+790001+8511) - (TK 8+882) từ file GLCB41 mới nhất",
+                    Formula = "(TK 7+790001+8511) - (TK 8+882) từ file GL41 mới nhất",
                     SourceFile = latestImportRecord.FileName,
                     StatementDate = latestImportRecord.StatementDate,
                     ImportDate = latestImportRecord.ImportDate,
@@ -1064,7 +1064,7 @@ namespace TinhKhoanApp.Api.Services
                 "HuyDong" or "NguonVon" => "DP01",
                 "DuNo" or "TyLeNoXau" => "LN01",
                 "ThuHoiXLRR" => "ThuXLRR",
-                "ThuDichVu" or "LoiNhuan" => "GLCB41",
+                "ThuDichVu" or "LoiNhuan" => "GL41",
                 _ => "Unknown"
             };
         }
@@ -1114,15 +1114,15 @@ namespace TinhKhoanApp.Api.Services
                         break;
                     case "ThuHoiXLRR":
                         value = await CalculateThuHoiXLRR(unitId ?? 0, calculationDate);
-                        calculationDetails = "Tính từ dữ liệu GLCB41 - Thu hồi nợ xử lý rủi ro";
+                        calculationDetails = "Tính từ dữ liệu GL41 - Thu hồi nợ xử lý rủi ro";
                         break;
                     case "ThuDichVu":
                         value = await CalculateThuDichVu(unitId ?? 0, calculationDate);
-                        calculationDetails = "Tính từ dữ liệu GLCB41 - Doanh thu dịch vụ";
+                        calculationDetails = "Tính từ dữ liệu GL41 - Doanh thu dịch vụ";
                         break;
                     case "LoiNhuan":
                         value = await CalculateLoiNhuan(unitId ?? 0, calculationDate);
-                        calculationDetails = "Tính từ dữ liệu GLCB41 - Lợi nhuận trước thuế";
+                        calculationDetails = "Tính từ dữ liệu GL41 - Lợi nhuận trước thuế";
                         break;
                     default:
                         _logger.LogWarning("Unknown indicator code: {Code}", indicator.Code);
@@ -1201,8 +1201,8 @@ namespace TinhKhoanApp.Api.Services
                 "DuNo" => "LN01",
                 "TyLeNoXau" => "LN01",
                 "ThuHoiXLRR" => "ThuXLRR",
-                "ThuDichVu" => "GLCB41",
-                "LoiNhuan" => "GLCB41",
+                "ThuDichVu" => "GL41",
+                "LoiNhuan" => "GL41",
                 _ => "Unknown"
             };
         }

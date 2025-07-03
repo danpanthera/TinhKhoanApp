@@ -127,26 +127,27 @@ namespace TinhKhoanApp.Api.Controllers
         }
 
         /// <summary>
-        /// Tính Nguồn vốn cho toàn tỉnh (tổng từ 7800-7808)
+        /// Tính Nguồn vốn cho toàn tỉnh (tổng từ 7800-7808) theo quy ước mới
+        /// Lọc theo MA_CN + NgayDL (dd/mm/yyyy) + loại trừ tài khoản theo nghiệp vụ
         /// </summary>
         private async Task<CalculationResult> CalculateAllProvince(DateTime targetDate)
         {
             var allBranchCodes = new[] { "7800", "7801", "7802", "7803", "7804", "7805", "7806", "7807", "7808" };
-            var dateString = targetDate.ToString("yyyyMMdd"); // VD: 20250430
+            var targetDateString = targetDate.ToString("dd/MM/yyyy"); // VD: 30/04/2025
 
             decimal totalNguonVon = 0;
             int totalRecordCount = 0;
             var allTopAccounts = new List<object>();
 
-            // Tính tổng cho từng chi nhánh dựa trên FileName
+            // Tính tổng cho từng chi nhánh dựa trên MA_CN và NgayDL
             foreach (var maCN in allBranchCodes)
             {
-                var fileNamePattern = $"{maCN}_dp01_{dateString}.csv"; // VD: 7801_dp01_20250430.csv
-                _logger.LogInformation("📊 Đang tính cho file: {FileName}", fileNamePattern);
+                _logger.LogInformation("📊 Đang tính cho chi nhánh: {MaCN} ngày {Date}", maCN, targetDateString);
 
-                // Query dữ liệu từ bảng DP01 với điều kiện FileName
+                // Query dữ liệu từ bảng DP01 với điều kiện MA_CN và DATA_DATE
+                // TODO: Chuyển sang NgayDL khi đã populate dữ liệu
                 var query = _context.DP01s
-                    .Where(d => d.FileName == fileNamePattern)
+                    .Where(d => d.MA_CN == maCN && d.DATA_DATE.Date == targetDate.Date)
                     .Where(d =>
                         !d.TAI_KHOAN_HACH_TOAN.StartsWith("40") &&
                         !d.TAI_KHOAN_HACH_TOAN.StartsWith("41") &&
@@ -210,7 +211,8 @@ namespace TinhKhoanApp.Api.Controllers
                 branchInfo.DisplayName, branchInfo.MaCN, targetDate.ToString("yyyy-MM-dd"));
 
             // Query dữ liệu từ bảng DP01 dựa trên MA_CN và DATA_DATE
-            // Tương đương với việc tìm file {maCN}_dp01_{yyyyMMdd}.csv
+            // TODO: Chuyển sang NgayDL khi đã populate dữ liệu
+            var targetDateString = targetDate.ToString("dd/MM/yyyy"); // VD: 30/04/2025
             var query = _context.DP01s
                 .Where(d => d.MA_CN == branchInfo.MaCN && d.DATA_DATE.Date == targetDate.Date);
 
@@ -384,51 +386,48 @@ namespace TinhKhoanApp.Api.Controllers
         }
 
         /// <summary>
-        /// Tạm thời: Populate FileName cho dữ liệu DP01 dựa trên MA_CN và DATA_DATE
+        /// Populate cột NgayDL cho dữ liệu DP01 từ DATA_DATE
+        /// Chuyển đổi từ DATA_DATE sang định dạng dd/mm/yyyy
         /// </summary>
-        [HttpPost("populate-filename")]
-        public async Task<IActionResult> PopulateFileName()
+        [HttpPost("populate-ngaydl")]
+        public async Task<IActionResult> PopulateNgayDL()
         {
             try
             {
-                _logger.LogInformation("🔄 Bắt đầu populate FileName cho dữ liệu DP01...");
+                _logger.LogInformation("🔄 Bắt đầu populate NgayDL cho dữ liệu DP01...");
 
-                // Lấy dữ liệu DP01 chưa có FileName (batch nhỏ để tránh timeout)
+                // Lấy dữ liệu DP01 chưa có NgayDL (batch nhỏ để tránh timeout)
                 var recordsToUpdate = await _context.DP01s
-                    .Where(d => d.FileName == null || d.FileName == "")
+                    .Where(d => d.NgayDL == null || d.NgayDL == "")
                     .Take(1000) // Chỉ xử lý 1000 records để test
                     .ToListAsync();
 
-                _logger.LogInformation($"📊 Tìm thấy {recordsToUpdate.Count} bản ghi cần update FileName");
+                _logger.LogInformation($"📊 Tìm thấy {recordsToUpdate.Count} bản ghi cần update NgayDL");
 
                 int updateCount = 0;
                 foreach (var record in recordsToUpdate)
                 {
-                    if (!string.IsNullOrEmpty(record.MA_CN))
-                    {
-                        // Tạo FileName từ MA_CN và DATA_DATE
-                        // VD: 7801_dp01_20250430.csv
-                        var dateString = record.DATA_DATE.ToString("yyyyMMdd");
-                        record.FileName = $"{record.MA_CN}_dp01_{dateString}.csv";
-                        updateCount++;
-                    }
+                    // Tạo NgayDL từ DATA_DATE
+                    // VD: 2025-04-30 -> 30/04/2025
+                    record.NgayDL = record.DATA_DATE.ToString("dd/MM/yyyy");
+                    updateCount++;
                 }
 
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation($"✅ Đã update FileName cho {updateCount} bản ghi");
+                _logger.LogInformation($"✅ Đã update NgayDL cho {updateCount} bản ghi");
 
                 return Ok(new
                 {
                     success = true,
                     updatedRecords = updateCount,
                     totalProcessed = recordsToUpdate.Count,
-                    message = $"Đã populate FileName cho {updateCount} bản ghi DP01"
+                    message = $"Đã populate NgayDL cho {updateCount} bản ghi DP01"
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Lỗi khi populate FileName");
+                _logger.LogError(ex, "❌ Lỗi khi populate NgayDL");
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }

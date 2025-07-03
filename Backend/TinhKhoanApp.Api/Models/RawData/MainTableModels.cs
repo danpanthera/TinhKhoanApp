@@ -212,10 +212,10 @@ namespace TinhKhoanApp.Api.Models.RawData
     }
 
     // =======================================
-    // 📊 GLCB41 - Dữ liệu sổ cái chi tiết Model (Main Table)
+    // 📊 GL41 - Dữ liệu sổ cái chi tiết Model (Main Table)
     // =======================================
-    [Table("GLCB41")]
-    public class GLCB41 : IExtendedHistoryModel
+    [Table("GL41")]
+    public class GL41 : IExtendedHistoryModel
     {
         [Key]
         public int Id { get; set; }
