@@ -3,7 +3,9 @@
  * Service để tính toán 6 chỉ tiêu chính theo chi nhánh
  */
 
+// API Base URL với fallback cho dev environment
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
+const DIRECT_API_URL = 'http://localhost:5055/api' // Fallback trực tiếp cho dev
 
 export const branchIndicatorsService = {
 
@@ -22,7 +24,6 @@ export const branchIndicatorsService = {
       }
 
       console.log('🌐 API Call - branchId:', branchId, 'date:', targetDate.toISOString());
-      console.log('🔗 API URL:', `${API_BASE_URL}/NguonVon/calculate`);
 
       const requestBody = {
         unitCode: branchId,
@@ -32,13 +33,29 @@ export const branchIndicatorsService = {
 
       console.log('📋 Request body:', requestBody);
 
-      const response = await fetch(`${API_BASE_URL}/NguonVon/calculate`, {
+      // Thử proxy trước, nếu lỗi thì thử direct URL
+      let apiUrl = `${API_BASE_URL}/NguonVon/calculate`;
+      console.log('🔗 Trying proxy API URL:', apiUrl);
+
+      let response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(requestBody)
-      })
+      }).catch(async (proxyError) => {
+        console.warn('⚠️ Proxy failed, trying direct URL:', proxyError.message);
+        apiUrl = `${DIRECT_API_URL}/NguonVon/calculate`;
+        console.log('🔗 Trying direct API URL:', apiUrl);
+
+        return fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        });
+      });
 
       console.log('📡 Response status:', response.status, response.statusText);
 
