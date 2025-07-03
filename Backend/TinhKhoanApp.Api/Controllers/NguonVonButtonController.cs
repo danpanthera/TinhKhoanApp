@@ -160,7 +160,7 @@ namespace TinhKhoanApp.Api.Controllers
                 totalNguonVon += branchTotal;
                 totalRecordCount += branchCount;
 
-                _logger.LogInformation("✅ Chi nhánh {MaCN}: {Total:N0} VND từ {Count} bản ghi", 
+                _logger.LogInformation("✅ Chi nhánh {MaCN}: {Total:N0} VND từ {Count} bản ghi",
                     maCN, branchTotal, branchCount);
 
                 // Lấy top accounts của chi nhánh này
@@ -190,7 +190,7 @@ namespace TinhKhoanApp.Api.Controllers
                 .Cast<object>()
                 .ToList();
 
-            _logger.LogInformation("🏆 Tổng nguồn vốn toàn tỉnh: {Total:N0} VND từ {Count} bản ghi", 
+            _logger.LogInformation("🏆 Tổng nguồn vốn toàn tỉnh: {Total:N0} VND từ {Count} bản ghi",
                 totalNguonVon, totalRecordCount);
 
             return new CalculationResult
@@ -209,7 +209,7 @@ namespace TinhKhoanApp.Api.Controllers
             var dateString = targetDate.ToString("yyyyMMdd"); // VD: 20250430
             var fileNamePattern = $"{branchInfo.MaCN}_dp01_{dateString}.csv"; // VD: 7801_dp01_20250430.csv
 
-            _logger.LogInformation("📊 Tính nguồn vốn cho {UnitName} từ file: {FileName}", 
+            _logger.LogInformation("📊 Tính nguồn vốn cho {UnitName} từ file: {FileName}",
                 branchInfo.DisplayName, fileNamePattern);
 
             // Query dữ liệu từ bảng DP01 với điều kiện FileName
@@ -247,7 +247,7 @@ namespace TinhKhoanApp.Api.Controllers
                 })
                 .ToListAsync();
 
-            _logger.LogInformation("✅ Kết quả {UnitName}: {Total:N0} VND từ {Count} bản ghi", 
+            _logger.LogInformation("✅ Kết quả {UnitName}: {Total:N0} VND từ {Count} bản ghi",
                 branchInfo.DisplayName, totalNguonVon, recordCount);
 
             if (recordCount == 0)
@@ -341,6 +341,97 @@ namespace TinhKhoanApp.Api.Controllers
             catch
             {
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Test endpoint đơn giản - kiểm tra có dữ liệu DP01 hay không
+        /// </summary>
+        [HttpGet("test-dp01")]
+        public async Task<IActionResult> TestDP01()
+        {
+            try
+            {
+                // Đếm tổng số record
+                var totalCount = await _context.DP01s.CountAsync();
+
+                // Đếm record có FileName
+                var withFileNameCount = await _context.DP01s.CountAsync(d => d.FileName != null && d.FileName != "");
+
+                // Lấy sample record đầu tiên
+                var firstRecord = await _context.DP01s.FirstOrDefaultAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    totalRecords = totalCount,
+                    recordsWithFileName = withFileNameCount,
+                    sampleRecord = firstRecord != null ? new
+                    {
+                        firstRecord.Id,
+                        firstRecord.MA_CN,
+                        firstRecord.DATA_DATE,
+                        firstRecord.TAI_KHOAN_HACH_TOAN,
+                        firstRecord.CURRENT_BALANCE,
+                        firstRecord.FileName
+                    } : null,
+                    message = $"Tổng {totalCount:N0} bản ghi DP01, {withFileNameCount:N0} có FileName"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Lỗi khi test DP01");
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Tạm thời: Populate FileName cho dữ liệu DP01 dựa trên MA_CN và DATA_DATE
+        /// </summary>
+        [HttpPost("populate-filename")]
+        public async Task<IActionResult> PopulateFileName()
+        {
+            try
+            {
+                _logger.LogInformation("🔄 Bắt đầu populate FileName cho dữ liệu DP01...");
+
+                // Lấy dữ liệu DP01 chưa có FileName (batch nhỏ để tránh timeout)
+                var recordsToUpdate = await _context.DP01s
+                    .Where(d => d.FileName == null || d.FileName == "")
+                    .Take(1000) // Chỉ xử lý 1000 records để test
+                    .ToListAsync();
+
+                _logger.LogInformation($"📊 Tìm thấy {recordsToUpdate.Count} bản ghi cần update FileName");
+
+                int updateCount = 0;
+                foreach (var record in recordsToUpdate)
+                {
+                    if (!string.IsNullOrEmpty(record.MA_CN))
+                    {
+                        // Tạo FileName từ MA_CN và DATA_DATE
+                        // VD: 7801_dp01_20250430.csv
+                        var dateString = record.DATA_DATE.ToString("yyyyMMdd");
+                        record.FileName = $"{record.MA_CN}_dp01_{dateString}.csv";
+                        updateCount++;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"✅ Đã update FileName cho {updateCount} bản ghi");
+
+                return Ok(new
+                {
+                    success = true,
+                    updatedRecords = updateCount,
+                    totalProcessed = recordsToUpdate.Count,
+                    message = $"Đã populate FileName cho {updateCount} bản ghi DP01"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Lỗi khi populate FileName");
+                return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
     }
