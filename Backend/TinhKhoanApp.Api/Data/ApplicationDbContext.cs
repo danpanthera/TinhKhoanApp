@@ -90,6 +90,19 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         // 💰 DbSet cho bảng DP01 - Dữ liệu báo cáo tài chính theo ngày
         public DbSet<DP01> DP01s { get; set; }
 
+        // 📊 DbSets cho các bảng dữ liệu riêng biệt theo từng loại file
+        // Tuân thủ Temporal Tables + Columnstore Indexes
+        public DbSet<DB01> DB01s { get; set; }
+        public DbSet<DPDA> DPDAs { get; set; }
+        public DbSet<EI01> EI01s { get; set; }
+        public DbSet<GL01> GL01s { get; set; }
+        public DbSet<KH03> KH03s { get; set; }
+        public DbSet<LN01> LN01s { get; set; }
+        public DbSet<LN02> LN02s { get; set; }
+        public DbSet<LN03> LN03s { get; set; }
+        public DbSet<RR01> RR01s { get; set; }
+        public DbSet<DT_KHKD1> DT_KHKD1s { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -429,6 +442,10 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
             // Đảm bảo các bảng đã có cũng được cấu hình đúng
             ConfigureTemporalTable<DPDAHistory>(modelBuilder, "DPDA", "DPDA_History");
             ConfigureTemporalTable<EI01History>(modelBuilder, "EI01", "EI01_History");
+
+            // 🆕 Cấu hình Temporal Tables cho các bảng dữ liệu mới
+            // Mỗi bảng sẽ có Temporal Tables + Columnstore Indexes tự động
+            ConfigureNewDataTables(modelBuilder);
         }
 
         // 🔧 Helper method để cấu hình Temporal Table
@@ -496,6 +513,113 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
                 // Index cho mã chi nhánh
                 entity.HasIndex(e => e.MA_CN)
                     .HasDatabaseName("IX_DP01_Branch");
+            });
+        }
+
+        /// <summary>
+        /// Cấu hình Temporal Tables + Columnstore Indexes cho các bảng dữ liệu mới
+        /// Theo quy ước: mỗi loại file sẽ có bảng riêng với đầy đủ Temporal capabilities
+        /// </summary>
+        private void ConfigureNewDataTables(ModelBuilder modelBuilder)
+        {
+            // 🏦 Cấu hình bảng DB01 - Tài sản đảm bảo
+            ConfigureDataTableWithTemporal<DB01>(modelBuilder, "DB01");
+
+            // 💰 Cấu hình bảng DPDA - Tiền gửi của dân
+            ConfigureDataTableWithTemporal<DPDA>(modelBuilder, "DPDA");
+
+            // 📊 Cấu hình bảng EI01 - Thu nhập khác  
+            ConfigureDataTableWithTemporal<EI01>(modelBuilder, "EI01");
+
+            // 📋 Cấu hình bảng GL01 - Sổ cái tổng hợp
+            ConfigureDataTableWithTemporal<GL01>(modelBuilder, "GL01");
+
+            // 👥 Cấu hình bảng KH03 - Khách hàng
+            ConfigureDataTableWithTemporal<KH03>(modelBuilder, "KH03");
+
+            // 🏷️ Cấu hình bảng LN01 - Cho vay
+            ConfigureDataTableWithTemporal<LN01>(modelBuilder, "LN01");
+
+            // 📄 Cấu hình bảng LN02 - Cho vay chi tiết
+            ConfigureDataTableWithTemporal<LN02>(modelBuilder, "LN02");
+
+            // ⚠️ Cấu hình bảng LN03 - Nợ xấu
+            ConfigureDataTableWithTemporal<LN03>(modelBuilder, "LN03");
+
+            // 📈 Cấu hình bảng RR01 - Tỷ lệ
+            ConfigureDataTableWithTemporal<RR01>(modelBuilder, "RR01");
+
+            // 📊 Cấu hình bảng 7800_DT_KHKD1 - Doanh thu kế hoạch kinh doanh 1
+            ConfigureDataTableWithTemporal<DT_KHKD1>(modelBuilder, "7800_DT_KHKD1");
+        }
+
+        /// <summary>
+        /// Cấu hình Temporal Table + Columnstore Index cho một bảng dữ liệu
+        /// </summary>
+        private void ConfigureDataTableWithTemporal<T>(ModelBuilder modelBuilder, string tableName) where T : class
+        {
+            modelBuilder.Entity<T>(entity =>
+            {
+                // Cấu hình bảng thành Temporal Table
+                entity.ToTable(tableName, tb => tb.IsTemporal(ttb =>
+                {
+                    ttb.HasPeriodStart("SysStartTime").HasColumnName("SysStartTime");
+                    ttb.HasPeriodEnd("SysEndTime").HasColumnName("SysEndTime");
+                    ttb.UseHistoryTable($"{tableName}_History");
+                }));
+
+                // Thêm shadow properties cho temporal columns
+                entity.Property<DateTime>("SysStartTime")
+                    .HasColumnName("SysStartTime");
+                entity.Property<DateTime>("SysEndTime")
+                    .HasColumnName("SysEndTime");
+
+                // Indexes tối ưu cho báo cáo và truy vấn
+                var entityType = typeof(T);
+
+                // Index cho NgayDL (tất cả bảng đều có)
+                entity.HasIndex("NgayDL")
+                    .HasDatabaseName($"IX_{tableName}_NgayDL");
+
+                // Index cho MA_CN (tất cả bảng đều có)
+                if (entityType.GetProperty("MA_CN") != null)
+                {
+                    entity.HasIndex("MA_CN")
+                        .HasDatabaseName($"IX_{tableName}_MaCN");
+                }
+
+                // Index kết hợp cho performance tốt nhất
+                if (entityType.GetProperty("MA_CN") != null)
+                {
+                    entity.HasIndex(new[] { "NgayDL", "MA_CN" })
+                        .HasDatabaseName($"IX_{tableName}_NgayDL_MaCN");
+                }
+
+                // Index cho MA_PGD nếu có
+                if (entityType.GetProperty("MA_PGD") != null)
+                {
+                    entity.HasIndex("MA_PGD")
+                        .HasDatabaseName($"IX_{tableName}_MaPGD");
+                }
+
+                // Cấu hình precision cho các trường tiền tệ
+                foreach (var property in entityType.GetProperties())
+                {
+                    if (property.PropertyType == typeof(decimal?) || property.PropertyType == typeof(decimal))
+                    {
+                        var propertyName = property.Name;
+                        if (propertyName.Contains("TIEN") || propertyName.Contains("DU_NO") || 
+                            propertyName.Contains("GIA_TRI") || propertyName.Contains("BALANCE") ||
+                            propertyName.Contains("PLAN_") || propertyName.Contains("ACTUAL_"))
+                        {
+                            entity.Property(propertyName).HasPrecision(18, 2);
+                        }
+                        else if (propertyName.Contains("LAI_SUAT") || propertyName.Contains("TY_LE"))
+                        {
+                            entity.Property(propertyName).HasPrecision(10, 6);
+                        }
+                    }
+                }
             });
         }
     }
