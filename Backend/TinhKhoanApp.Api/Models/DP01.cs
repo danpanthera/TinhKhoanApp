@@ -57,5 +57,19 @@ namespace TinhKhoanApp.Api.Models
         /// </summary>
         [Column("UPDATED_DATE")]
         public DateTime? UpdatedDate { get; set; }
+
+        /// <summary>
+        /// Tên file CSV được import (VD: 7801_dp01_20250430.csv)
+        /// </summary>
+        [Column("FILE_NAME")]
+        [StringLength(100)]
+        public string? FileName { get; set; }
+
+        /// <summary>
+        /// Tên tài khoản hạch toán
+        /// </summary>
+        [Column("TEN_TAI_KHOAN")]
+        [StringLength(500)]
+        public string? TEN_TAI_KHOAN { get; set; }
     }
 }

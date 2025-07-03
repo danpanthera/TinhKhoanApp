@@ -132,38 +132,72 @@ namespace TinhKhoanApp.Api.Controllers
         private async Task<CalculationResult> CalculateAllProvince(DateTime targetDate)
         {
             var allBranchCodes = new[] { "7800", "7801", "7802", "7803", "7804", "7805", "7806", "7807", "7808" };
+            var dateString = targetDate.ToString("yyyyMMdd"); // VD: 20250430
 
-            // Sử dụng bảng DP01 trực tiếp từ KHO DỮ LIỆU THÔ
-            var query = _context.DP01s
-                .Where(d => d.DATA_DATE.Date == targetDate.Date && allBranchCodes.Contains(d.MA_CN))
-                .Where(d =>
-                    !d.TAI_KHOAN_HACH_TOAN.StartsWith("40") &&
-                    !d.TAI_KHOAN_HACH_TOAN.StartsWith("41") &&
-                    !d.TAI_KHOAN_HACH_TOAN.StartsWith("427") &&
-                    d.TAI_KHOAN_HACH_TOAN != "211108"
-                );
+            decimal totalNguonVon = 0;
+            int totalRecordCount = 0;
+            var allTopAccounts = new List<object>();
 
-            var totalNguonVon = await query.SumAsync(d => d.CURRENT_BALANCE ?? 0);
-            var recordCount = await query.CountAsync();
+            // Tính tổng cho từng chi nhánh dựa trên FileName
+            foreach (var maCN in allBranchCodes)
+            {
+                var fileNamePattern = $"{maCN}_dp01_{dateString}.csv"; // VD: 7801_dp01_20250430.csv
+                _logger.LogInformation("📊 Đang tính cho file: {FileName}", fileNamePattern);
 
-            // Top accounts
-            var topAccounts = await query
-                .GroupBy(d => d.TAI_KHOAN_HACH_TOAN)
-                .Select(g => new
+                // Query dữ liệu từ bảng DP01 với điều kiện FileName
+                var query = _context.DP01s
+                    .Where(d => d.FileName == fileNamePattern)
+                    .Where(d =>
+                        !d.TAI_KHOAN_HACH_TOAN.StartsWith("40") &&
+                        !d.TAI_KHOAN_HACH_TOAN.StartsWith("41") &&
+                        !d.TAI_KHOAN_HACH_TOAN.StartsWith("427") &&
+                        d.TAI_KHOAN_HACH_TOAN != "211108"
+                    );
+
+                var branchTotal = await query.SumAsync(d => d.CURRENT_BALANCE ?? 0);
+                var branchCount = await query.CountAsync();
+
+                totalNguonVon += branchTotal;
+                totalRecordCount += branchCount;
+
+                _logger.LogInformation("✅ Chi nhánh {MaCN}: {Total:N0} VND từ {Count} bản ghi", 
+                    maCN, branchTotal, branchCount);
+
+                // Lấy top accounts của chi nhánh này
+                if (branchCount > 0)
                 {
-                    AccountCode = g.Key,
-                    TotalBalance = g.Sum(x => x.CURRENT_BALANCE ?? 0),
-                    RecordCount = g.Count()
-                })
-                .OrderByDescending(a => Math.Abs(a.TotalBalance))
+                    var branchTopAccounts = await query
+                        .OrderByDescending(d => Math.Abs(d.CURRENT_BALANCE ?? 0))
+                        .Take(5)
+                        .Select(d => new
+                        {
+                            MaCN = maCN,
+                            AccountCode = d.TAI_KHOAN_HACH_TOAN,
+                            AccountName = d.TEN_TAI_KHOAN,
+                            TotalBalance = d.CURRENT_BALANCE ?? 0
+                        })
+                        .ToListAsync();
+
+                    allTopAccounts.AddRange(branchTopAccounts.Cast<object>());
+                }
+            }
+
+            // Sắp xếp lại top accounts theo số dư
+            var topAccounts = allTopAccounts
+                .Cast<dynamic>()
+                .OrderByDescending(x => Math.Abs((decimal)x.TotalBalance))
                 .Take(20)
-                .ToListAsync();
+                .Cast<object>()
+                .ToList();
+
+            _logger.LogInformation("🏆 Tổng nguồn vốn toàn tỉnh: {Total:N0} VND từ {Count} bản ghi", 
+                totalNguonVon, totalRecordCount);
 
             return new CalculationResult
             {
                 Total = totalNguonVon,
-                RecordCount = recordCount,
-                TopAccounts = topAccounts.Cast<object>().ToList()
+                RecordCount = totalRecordCount,
+                TopAccounts = topAccounts
             };
         }
 
@@ -172,17 +206,17 @@ namespace TinhKhoanApp.Api.Controllers
         /// </summary>
         private async Task<CalculationResult> CalculateSingleUnit(BranchInfo branchInfo, DateTime targetDate)
         {
-            // Sử dụng bảng DP01 trực tiếp từ KHO DỮ LIỆU THÔ
+            var dateString = targetDate.ToString("yyyyMMdd"); // VD: 20250430
+            var fileNamePattern = $"{branchInfo.MaCN}_dp01_{dateString}.csv"; // VD: 7801_dp01_20250430.csv
+
+            _logger.LogInformation("📊 Tính nguồn vốn cho {UnitName} từ file: {FileName}", 
+                branchInfo.DisplayName, fileNamePattern);
+
+            // Query dữ liệu từ bảng DP01 với điều kiện FileName
             var query = _context.DP01s
-                .Where(d => d.DATA_DATE.Date == targetDate.Date && d.MA_CN == branchInfo.MaCN);
+                .Where(d => d.FileName == fileNamePattern);
 
-            // Lọc theo PGD nếu có
-            if (!string.IsNullOrEmpty(branchInfo.MaPGD))
-            {
-                query = query.Where(d => d.MA_PGD == branchInfo.MaPGD);
-            }
-
-            // Lọc tài khoản theo điều kiện: bỏ đi 40*, 41*, 427*, 211108
+            // Áp dụng điều kiện lọc tài khoản theo yêu cầu
             query = query.Where(d =>
                 !d.TAI_KHOAN_HACH_TOAN.StartsWith("40") &&
                 !d.TAI_KHOAN_HACH_TOAN.StartsWith("41") &&
@@ -190,21 +224,36 @@ namespace TinhKhoanApp.Api.Controllers
                 d.TAI_KHOAN_HACH_TOAN != "211108"
             );
 
+            // Nếu là PGD thì lọc thêm theo MA_PGD
+            if (!string.IsNullOrEmpty(branchInfo.MaPGD))
+            {
+                query = query.Where(d => d.MA_PGD == branchInfo.MaPGD);
+                _logger.LogInformation("🏪 Lọc thêm theo PGD: {MaPGD}", branchInfo.MaPGD);
+            }
+
             var totalNguonVon = await query.SumAsync(d => d.CURRENT_BALANCE ?? 0);
             var recordCount = await query.CountAsync();
 
-            // Top accounts
+            // Lấy top 20 tài khoản có số dư lớn nhất để debug và báo cáo
             var topAccounts = await query
-                .GroupBy(d => d.TAI_KHOAN_HACH_TOAN)
-                .Select(g => new
-                {
-                    AccountCode = g.Key,
-                    TotalBalance = g.Sum(x => x.CURRENT_BALANCE ?? 0),
-                    RecordCount = g.Count()
-                })
-                .OrderByDescending(a => Math.Abs(a.TotalBalance))
+                .OrderByDescending(d => Math.Abs(d.CURRENT_BALANCE ?? 0))
                 .Take(20)
+                .Select(d => new
+                {
+                    AccountCode = d.TAI_KHOAN_HACH_TOAN,
+                    AccountName = d.TEN_TAI_KHOAN,
+                    TotalBalance = d.CURRENT_BALANCE ?? 0,
+                    MaPGD = d.MA_PGD
+                })
                 .ToListAsync();
+
+            _logger.LogInformation("✅ Kết quả {UnitName}: {Total:N0} VND từ {Count} bản ghi", 
+                branchInfo.DisplayName, totalNguonVon, recordCount);
+
+            if (recordCount == 0)
+            {
+                _logger.LogWarning("⚠️ Không tìm thấy dữ liệu cho file: {FileName}", fileNamePattern);
+            }
 
             return new CalculationResult
             {
@@ -234,6 +283,65 @@ namespace TinhKhoanApp.Api.Controllers
                 data = units,
                 message = "Danh sách các đơn vị hỗ trợ"
             });
+        }
+
+        /// <summary>
+        /// Debug: Lấy danh sách các file DP01 có trong database
+        /// </summary>
+        [HttpGet("debug/files")]
+        public async Task<IActionResult> GetDP01Files()
+        {
+            try
+            {
+                var files = await _context.DP01s
+                    .Where(d => d.FileName != null)
+                    .Select(d => d.FileName)
+                    .Distinct()
+                    .OrderBy(f => f)
+                    .ToListAsync();
+
+                var fileInfo = files.Select(f => new
+                {
+                    FileName = f,
+                    MaCN = f?.Length >= 4 ? f.Substring(0, 4) : "",
+                    DatePart = f?.Length >= 18 ? f.Substring(10, 8) : "",
+                    ParsedDate = f?.Length >= 18 ? ParseDateFromFileName(f.Substring(10, 8)) : null
+                }).ToList();
+
+                _logger.LogInformation("🔍 Tìm thấy {Count} file DP01 trong database", files.Count);
+
+                return Ok(new
+                {
+                    success = true,
+                    totalFiles = files.Count,
+                    files = fileInfo,
+                    message = "Danh sách các file DP01 trong database"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Lỗi khi lấy danh sách file DP01");
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Parse ngày từ tên file (yyyyMMdd -> DateTime)
+        /// </summary>
+        private DateTime? ParseDateFromFileName(string datePart)
+        {
+            try
+            {
+                if (datePart.Length == 8 && DateTime.TryParseExact(datePart, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out DateTime result))
+                {
+                    return result;
+                }
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 
