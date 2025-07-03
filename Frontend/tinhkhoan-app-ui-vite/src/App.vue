@@ -125,11 +125,11 @@
           <div class="nav-dropdown-menu" :class="{ show: showDashboardMenu }" @click="hideAllMenus">
             <router-link to="/dashboard/target-assignment" class="dropdown-item">
               <span class="item-icon">🎯</span>
-              <span>1. Giao chỉ tiêu kế hoạch</span>
+              <span>1. Giao chỉ tiêu</span>
             </router-link>
             <router-link to="/dashboard/calculation" class="dropdown-item">
               <span class="item-icon">🧮</span>
-              <span>2. Cập nhật tình hình thực hiện</span>
+              <span>2. Cập nhật</span>
             </router-link>
             <router-link to="/dashboard/business-plan" class="dropdown-item">
               <span class="item-icon">�</span>
