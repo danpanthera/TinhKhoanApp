@@ -94,5 +94,15 @@ namespace TinhKhoanApp.Api.Controllers
                 return null;
             }
         }
+
+        [HttpGet("test")]
+        public IActionResult Test()
+        {
+            return Ok(new { 
+                message = "ImportedData API đang hoạt động", 
+                timestamp = DateTime.Now,
+                status = "OK"
+            });
+        }
     }
 }

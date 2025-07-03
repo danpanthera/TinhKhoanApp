@@ -138,11 +138,11 @@ namespace TinhKhoanApp.Api.Controllers
             // Query dữ liệu từ ImportedDataItems thay vì DP01
             var importedDataQuery = _context.ImportedDataItems
                 .Include(i => i.ImportedDataRecord)
-                .Where(i => i.ImportedDataRecord.Category == "DP01" || 
+                .Where(i => i.ImportedDataRecord.Category == "DP01" ||
                            i.ImportedDataRecord.FileName.Contains("DP01"));
 
             var allData = await importedDataQuery.ToListAsync();
-            
+
             decimal totalNguonVon = 0;
             int recordCount = 0;
             var topAccountsDict = new Dictionary<string, decimal>();
@@ -152,7 +152,7 @@ namespace TinhKhoanApp.Api.Controllers
                 try
                 {
                     var dp01Data = System.Text.Json.JsonSerializer.Deserialize<DP01Data>(item.RawData);
-                    
+
                     // Kiểm tra ngày tính toán
                     if (dp01Data.DATA_DATE?.Date != targetDate.Date)
                         continue;
@@ -163,7 +163,7 @@ namespace TinhKhoanApp.Api.Controllers
 
                     // Áp dụng điều kiện loại trừ tài khoản
                     var taiKhoan = dp01Data.TAI_KHOAN_HACH_TOAN ?? "";
-                    if (taiKhoan.StartsWith("40") || taiKhoan.StartsWith("41") || 
+                    if (taiKhoan.StartsWith("40") || taiKhoan.StartsWith("41") ||
                         taiKhoan.StartsWith("427") || taiKhoan == "211108")
                         continue;
 
@@ -211,11 +211,11 @@ namespace TinhKhoanApp.Api.Controllers
             // Query dữ liệu từ ImportedDataItems thay vì DP01
             var importedDataQuery = _context.ImportedDataItems
                 .Include(i => i.ImportedDataRecord)
-                .Where(i => i.ImportedDataRecord.Category == "DP01" || 
+                .Where(i => i.ImportedDataRecord.Category == "DP01" ||
                            i.ImportedDataRecord.FileName.Contains("DP01"));
 
             var allData = await importedDataQuery.ToListAsync();
-            
+
             decimal totalNguonVon = 0;
             int recordCount = 0;
             var topAccountsDict = new Dictionary<string, decimal>();
@@ -225,7 +225,7 @@ namespace TinhKhoanApp.Api.Controllers
                 try
                 {
                     var dp01Data = JsonSerializer.Deserialize<DP01Data>(item.RawData);
-                    
+
                     // Kiểm tra ngày tính toán
                     if (dp01Data.DATA_DATE?.Date != targetDate.Date)
                         continue;
@@ -240,7 +240,7 @@ namespace TinhKhoanApp.Api.Controllers
 
                     // Áp dụng điều kiện loại trừ tài khoản
                     var taiKhoan = dp01Data.TAI_KHOAN_HACH_TOAN ?? "";
-                    if (taiKhoan.StartsWith("40") || taiKhoan.StartsWith("41") || 
+                    if (taiKhoan.StartsWith("40") || taiKhoan.StartsWith("41") ||
                         taiKhoan.StartsWith("427") || taiKhoan == "211108")
                         continue;
 
