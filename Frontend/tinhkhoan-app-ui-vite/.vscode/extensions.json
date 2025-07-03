@@ -2,13 +2,16 @@
   "recommendations": [
     "Vue.volar",
     "Vue.vscode-typescript-vue-plugin",
-    "bradlc.vscode-tailwindcss",
-    "esbenp.prettier-vscode",
-    "formulahendry.auto-rename-tag",
-    "ms-vscode.vscode-json",
     "ms-vscode.vscode-typescript-next",
     "GitHub.copilot",
     "GitHub.copilot-chat",
+    "ms-dotnettools.csdevkit",
+    "ms-dotnettools.csharp"
+  ],
+  "unwantedRecommendations": [
+    "ms-vscode.vscode-eslint",
+    "bradlc.vscode-tailwindcss",
+    "formulahendry.auto-rename-tag",
     "ms-vscode.live-server",
     "christian-kohler.path-intellisense",
     "zignd.html-css-class-completion",
@@ -17,10 +20,6 @@
     "gruntfuggly.todo-tree",
     "alefragnani.bookmarks",
     "streetsidesoftware.code-spell-checker",
-    "usernamehw.errorlens",
-    "ms-vscode.vscode-typescript-next"
-  ],
-  "unwantedRecommendations": [
-    "ms-vscode.vscode-eslint"
+    "usernamehw.errorlens"
   ]
 }
