@@ -206,15 +206,13 @@ namespace TinhKhoanApp.Api.Controllers
         /// </summary>
         private async Task<CalculationResult> CalculateSingleUnit(BranchInfo branchInfo, DateTime targetDate)
         {
-            var dateString = targetDate.ToString("yyyyMMdd"); // VD: 20250430
-            var fileNamePattern = $"{branchInfo.MaCN}_dp01_{dateString}.csv"; // VD: 7801_dp01_20250430.csv
+            _logger.LogInformation("� Tính nguồn vốn cho {UnitName} (MA_CN: {MaCN}) ngày {Date}",
+                branchInfo.DisplayName, branchInfo.MaCN, targetDate.ToString("yyyy-MM-dd"));
 
-            _logger.LogInformation("📊 Tính nguồn vốn cho {UnitName} từ file: {FileName}",
-                branchInfo.DisplayName, fileNamePattern);
-
-            // Query dữ liệu từ bảng DP01 với điều kiện FileName
+            // Query dữ liệu từ bảng DP01 dựa trên MA_CN và DATA_DATE
+            // Tương đương với việc tìm file {maCN}_dp01_{yyyyMMdd}.csv
             var query = _context.DP01s
-                .Where(d => d.FileName == fileNamePattern);
+                .Where(d => d.MA_CN == branchInfo.MaCN && d.DATA_DATE.Date == targetDate.Date);
 
             // Áp dụng điều kiện lọc tài khoản theo yêu cầu
             query = query.Where(d =>
@@ -252,7 +250,7 @@ namespace TinhKhoanApp.Api.Controllers
 
             if (recordCount == 0)
             {
-                _logger.LogWarning("⚠️ Không tìm thấy dữ liệu cho file: {FileName}", fileNamePattern);
+                _logger.LogWarning("⚠️ Không tìm thấy dữ liệu cho MA_CN: {MaCN}, ngày: {Date}", branchInfo.MaCN, targetDate.ToString("yyyy-MM-dd"));
             }
 
             return new CalculationResult

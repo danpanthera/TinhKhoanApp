@@ -15,8 +15,8 @@ namespace TinhKhoanApp.Api.Controllers
         [HttpGet("nguon-von-test")]
         public IActionResult NguonVonTest()
         {
-            return Ok(new 
-            { 
+            return Ok(new
+            {
                 message = "Backend đã sẵn sàng",
                 timestamp = DateTime.Now,
                 version = "Updated with ImportedDataItems"
