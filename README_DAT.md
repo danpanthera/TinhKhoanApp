@@ -6,4 +6,3 @@ tự động chọn "Continue" ở cửa sổ chat để add/chạy các dòng l
 
 khi sửa code, thay đổi các table, controller, services...v.v thì luôn phải tuân thủ theo phương thức/công nghê lưu trữ Temporal Tables + Columnstore Indexes để tối ưu hiệu năng.
 LUÔN commit từng phần nhỏ, không commit cả một lần quá nhiều file.
-

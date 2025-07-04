@@ -5,11 +5,11 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TinhKhoanApp.Api.Models.DataTables
 {
     /// <summary>
-    /// Bảng DP01 - Dữ liệu báo cáo tài chính theo ngày
+    /// Bảng DP01_New - Dữ liệu báo cáo tài chính theo ngày (New Structure)
     /// Lưu trữ dữ liệu từ các file CSV có filename chứa "DP01"
     /// Tuân thủ Temporal Tables + Columnstore Indexes
     /// </summary>
-    [Table("DP01")]
+    [Table("DP01_New")]
     public class DP01
     {
         /// <summary>
