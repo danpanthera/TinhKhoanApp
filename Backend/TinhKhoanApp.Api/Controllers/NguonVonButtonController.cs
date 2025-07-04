@@ -9,6 +9,7 @@ namespace TinhKhoanApp.Api.Controllers
     /// <summary>
     /// Controller tính toán Nguồn vốn theo yêu cầu mới của anh
     /// Hỗ trợ tính cho Hội Sở, các Chi nhánh, PGD và Toàn tỉnh
+    /// SỬ DỤNG BẢNG DP01_New (DP01_News DbSet) - CHÍNH THỨC
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
@@ -17,10 +18,10 @@ namespace TinhKhoanApp.Api.Controllers
         private readonly ApplicationDbContext _context;
         private readonly ILogger<NguonVonButtonController> _logger;
 
-        // Mapping theo yêu cầu của anh
+        // Mapping theo yêu cầu của anh - CẬP NHẬT CHÍNH XÁC
         private readonly Dictionary<string, BranchInfo> _branchMapping = new Dictionary<string, BranchInfo>
         {
-            // Hội Sở và các Chi nhánh chính
+            // Mapping theo yêu cầu của anh - CẬP NHẬT CHÍNH XÁC
             { "HoiSo", new BranchInfo("7800", null, "Hội Sở") },
             { "CnBinhLu", new BranchInfo("7801", null, "CN Bình Lư") },
             { "CnPhongTho", new BranchInfo("7802", null, "CN Phong Thổ") },
@@ -29,7 +30,7 @@ namespace TinhKhoanApp.Api.Controllers
             { "CnThanUyen", new BranchInfo("7805", null, "CN Than Uyên") },
             { "CnDoanKet", new BranchInfo("7806", null, "CN Đoàn Kết") },
             { "CnTanUyen", new BranchInfo("7807", null, "CN Tân Uyên") },
-            { "CnNamHang", new BranchInfo("7808", null, "CN Nậm Hàng") },
+            { "CnNamNhun", new BranchInfo("7808", null, "CN Nậm Nhùn") }, // Sửa từ Nậm Hàng
 
             // Các PGD
             { "CnPhongTho-PGD5", new BranchInfo("7802", "01", "CN Phong Thổ - PGD Số 5") },
@@ -49,12 +50,19 @@ namespace TinhKhoanApp.Api.Controllers
         }
 
         /// <summary>
-        /// Tính Nguồn vốn theo button được ấn
+        /// Tính Nguồn vốn theo button được ấn - CẬP NHẬT THEO YÊU CẦU CHÍNH XÁC
+        /// Hỗ trợ lọc theo date/month/year và sử dụng bảng DP01_New
         /// </summary>
         /// <param name="unitKey">Key đơn vị (HoiSo, CnBinhLu, CnPhongTho-PGD5, ToanTinh...)</param>
-        /// <param name="targetDate">Ngày tính toán (optional, mặc định là ngày hiện tại)</param>
+        /// <param name="targetDate">Ngày cụ thể (dd/MM/yyyy)</param>
+        /// <param name="targetMonth">Tháng và năm (MM/yyyy) - sẽ lọc ngày cuối tháng</param>
+        /// <param name="targetYear">Năm (yyyy) - sẽ lọc ngày 31/12/yyyy</param>
         [HttpPost("calculate/{unitKey}")]
-        public async Task<IActionResult> CalculateNguonVon(string unitKey, [FromQuery] DateTime? targetDate = null)
+        public async Task<IActionResult> CalculateNguonVon(
+            string unitKey,
+            [FromQuery] string? targetDate = null,
+            [FromQuery] string? targetMonth = null,
+            [FromQuery] string? targetYear = null)
         {
             try
             {
@@ -68,10 +76,12 @@ namespace TinhKhoanApp.Api.Controllers
                 }
 
                 var branchInfo = _branchMapping[unitKey];
-                var calculationDate = targetDate ?? DateTime.Now;
 
-                _logger.LogInformation("💰 Bắt đầu tính Nguồn vốn cho {UnitName} ({UnitKey}) - MA_CN: {MaCN}, MA_PGD: {MaPGD}",
-                    branchInfo.DisplayName, unitKey, branchInfo.MaCN, branchInfo.MaPGD ?? "ALL");
+                // Xác định NgayDL để lọc theo yêu cầu của anh
+                string ngayDLFilter = DetermineNgayDLFilter(targetDate, targetMonth, targetYear);
+
+                _logger.LogInformation("💰 Bắt đầu tính Nguồn vốn cho {UnitName} ({UnitKey}) - MA_CN: {MaCN}, MA_PGD: {MaPGD}, NgayDL: {NgayDL}",
+                    branchInfo.DisplayName, unitKey, branchInfo.MaCN, branchInfo.MaPGD ?? "ALL", ngayDLFilter);
 
                 decimal totalNguonVon;
                 int recordCount;
@@ -80,7 +90,7 @@ namespace TinhKhoanApp.Api.Controllers
                 if (unitKey == "ToanTinh")
                 {
                     // Tính toàn tỉnh (tổng từ 7800-7808)
-                    var result = await CalculateAllProvince(calculationDate);
+                    var result = await CalculateAllProvince(ngayDLFilter);
                     totalNguonVon = result.Total;
                     recordCount = result.RecordCount;
                     topAccounts = result.TopAccounts;
@@ -88,7 +98,7 @@ namespace TinhKhoanApp.Api.Controllers
                 else
                 {
                     // Tính cho đơn vị cụ thể
-                    var result = await CalculateSingleUnit(branchInfo, calculationDate);
+                    var result = await CalculateSingleUnit(branchInfo, ngayDLFilter);
                     totalNguonVon = result.Total;
                     recordCount = result.RecordCount;
                     topAccounts = result.TopAccounts;
@@ -108,9 +118,16 @@ namespace TinhKhoanApp.Api.Controllers
                         totalNguonVon = totalNguonVon,
                         totalNguonVonTrieuVND = Math.Round(totalNguonVon / 1_000_000m, 2),
                         recordCount = recordCount,
-                        calculationDate = calculationDate.ToString("dd/MM/yyyy"),
+                        filterDate = ngayDLFilter,
                         topAccounts = topAccounts.Take(10).ToList(), // Top 10 tài khoản
-                        formula = "Tổng CURRENT_BALANCE - (loại trừ TK 40*, 41*, 427*, 211108)"
+                        formula = "Tổng CURRENT_BALANCE từ DP01_New - (loại trừ TK 40*, 41*, 427*, 211108)",
+                        appliedFilters = new
+                        {
+                            maCN = branchInfo.MaCN,
+                            maPGD = branchInfo.MaPGD,
+                            ngayDL = ngayDLFilter,
+                            excludedAccounts = new[] { "40*", "41*", "427*", "211108" }
+                        }
                     },
                     message = $"Tính toán thành công cho {branchInfo.DisplayName}"
                 });
@@ -127,27 +144,60 @@ namespace TinhKhoanApp.Api.Controllers
         }
 
         /// <summary>
-        /// Tính Nguồn vốn cho toàn tỉnh (tổng từ 7800-7808) theo quy ước mới
-        /// Lọc theo MA_CN + NgayDL (dd/mm/yyyy) + loại trừ tài khoản theo nghiệp vụ
+        /// Xác định NgayDL filter theo priority: targetDate > targetMonth > targetYear > today
         /// </summary>
-        private async Task<CalculationResult> CalculateAllProvince(DateTime targetDate)
+        private string DetermineNgayDLFilter(string? targetDate, string? targetMonth, string? targetYear)
+        {
+            // 1. Nếu có targetDate cụ thể (dd/MM/yyyy)
+            if (!string.IsNullOrEmpty(targetDate))
+            {
+                return targetDate;
+            }
+
+            // 2. Nếu có targetMonth (MM/yyyy) -> lấy ngày cuối tháng
+            if (!string.IsNullOrEmpty(targetMonth))
+            {
+                if (DateTime.TryParseExact(targetMonth, "MM/yyyy", null, System.Globalization.DateTimeStyles.None, out DateTime monthDate))
+                {
+                    var lastDayOfMonth = new DateTime(monthDate.Year, monthDate.Month, DateTime.DaysInMonth(monthDate.Year, monthDate.Month));
+                    return lastDayOfMonth.ToString("dd/MM/yyyy");
+                }
+            }
+
+            // 3. Nếu có targetYear (yyyy) -> lấy ngày 31/12/yyyy
+            if (!string.IsNullOrEmpty(targetYear))
+            {
+                if (int.TryParse(targetYear, out int year))
+                {
+                    var lastDayOfYear = new DateTime(year, 12, 31);
+                    return lastDayOfYear.ToString("dd/MM/yyyy");
+                }
+            }
+
+            // 4. Mặc định là ngày hôm nay
+            return DateTime.Now.ToString("dd/MM/yyyy");
+        }
+
+        /// <summary>
+        /// Tính Nguồn vốn cho toàn tỉnh (tổng từ 7800-7808) - SỬ DỤNG DP01_New
+        /// Lọc theo MA_CN + NgayDL (dd/MM/yyyy) + loại trừ tài khoản theo nghiệp vụ
+        /// </summary>
+        private async Task<CalculationResult> CalculateAllProvince(string ngayDLFilter)
         {
             var allBranchCodes = new[] { "7800", "7801", "7802", "7803", "7804", "7805", "7806", "7807", "7808" };
-            var targetDateString = targetDate.ToString("dd/MM/yyyy"); // VD: 30/04/2025
 
             decimal totalNguonVon = 0;
             int totalRecordCount = 0;
             var allTopAccounts = new List<object>();
 
-            // Tính tổng cho từng chi nhánh dựa trên MA_CN và NgayDL
+            // Tính tổng cho từng chi nhánh dựa trên MA_CN và NgayDL từ bảng DP01_New
             foreach (var maCN in allBranchCodes)
             {
-                _logger.LogInformation("📊 Đang tính cho chi nhánh: {MaCN} ngày {Date}", maCN, targetDateString);
+                _logger.LogInformation("📊 Đang tính cho chi nhánh: {MaCN} ngày {Date}", maCN, ngayDLFilter);
 
-                // Query dữ liệu từ bảng DP01 với điều kiện MA_CN và DATA_DATE
-                // TODO: Chuyển sang NgayDL khi đã populate dữ liệu
-                var query = _context.DP01s
-                    .Where(d => d.MA_CN == maCN && d.DATA_DATE.Date == targetDate.Date)
+                // Query dữ liệu từ bảng DP01_New theo yêu cầu của anh
+                var query = _context.DP01_News
+                    .Where(d => d.MA_CN == maCN && d.NgayDL == ngayDLFilter)
                     .Where(d =>
                         !d.TAI_KHOAN_HACH_TOAN.StartsWith("40") &&
                         !d.TAI_KHOAN_HACH_TOAN.StartsWith("41") &&
@@ -174,8 +224,8 @@ namespace TinhKhoanApp.Api.Controllers
                         {
                             MaCN = maCN,
                             AccountCode = d.TAI_KHOAN_HACH_TOAN,
-                            AccountName = d.TEN_TAI_KHOAN,
-                            TotalBalance = d.CURRENT_BALANCE ?? 0
+                            CurrentBalance = d.CURRENT_BALANCE ?? 0,
+                            NgayDL = d.NgayDL
                         })
                         .ToListAsync();
 
@@ -186,13 +236,13 @@ namespace TinhKhoanApp.Api.Controllers
             // Sắp xếp lại top accounts theo số dư
             var topAccounts = allTopAccounts
                 .Cast<dynamic>()
-                .OrderByDescending(x => Math.Abs((decimal)x.TotalBalance))
+                .OrderByDescending(x => Math.Abs((decimal)x.CurrentBalance))
                 .Take(20)
                 .Cast<object>()
                 .ToList();
 
-            _logger.LogInformation("🏆 Tổng nguồn vốn toàn tỉnh: {Total:N0} VND từ {Count} bản ghi",
-                totalNguonVon, totalRecordCount);
+            _logger.LogInformation("🏆 Tổng nguồn vốn toàn tỉnh: {Total:N0} VND từ {Count} bản ghi (NgayDL: {NgayDL})",
+                totalNguonVon, totalRecordCount, ngayDLFilter);
 
             return new CalculationResult
             {
@@ -203,20 +253,19 @@ namespace TinhKhoanApp.Api.Controllers
         }
 
         /// <summary>
-        /// Tính Nguồn vốn cho một đơn vị cụ thể
+        /// Tính Nguồn vốn cho một đơn vị cụ thể - SỬ DỤNG DP01_New
+        /// Lọc theo MA_CN + MA_PGD (nếu có) + NgayDL + loại trừ tài khoản
         /// </summary>
-        private async Task<CalculationResult> CalculateSingleUnit(BranchInfo branchInfo, DateTime targetDate)
+        private async Task<CalculationResult> CalculateSingleUnit(BranchInfo branchInfo, string ngayDLFilter)
         {
-            _logger.LogInformation("� Tính nguồn vốn cho {UnitName} (MA_CN: {MaCN}) ngày {Date}",
-                branchInfo.DisplayName, branchInfo.MaCN, targetDate.ToString("yyyy-MM-dd"));
+            _logger.LogInformation("💰 Tính nguồn vốn cho {UnitName} (MA_CN: {MaCN}) ngày {NgayDL}",
+                branchInfo.DisplayName, branchInfo.MaCN, ngayDLFilter);
 
-            // Query dữ liệu từ bảng DP01 dựa trên MA_CN và DATA_DATE
-            // TODO: Chuyển sang NgayDL khi đã populate dữ liệu
-            var targetDateString = targetDate.ToString("dd/MM/yyyy"); // VD: 30/04/2025
-            var query = _context.DP01s
-                .Where(d => d.MA_CN == branchInfo.MaCN && d.DATA_DATE.Date == targetDate.Date);
+            // Query dữ liệu từ bảng DP01_New theo yêu cầu của anh
+            var query = _context.DP01_News
+                .Where(d => d.MA_CN == branchInfo.MaCN && d.NgayDL == ngayDLFilter);
 
-            // Áp dụng điều kiện lọc tài khoản theo yêu cầu
+            // Áp dụng điều kiện lọc tài khoản theo yêu cầu của anh
             query = query.Where(d =>
                 !d.TAI_KHOAN_HACH_TOAN.StartsWith("40") &&
                 !d.TAI_KHOAN_HACH_TOAN.StartsWith("41") &&
@@ -241,18 +290,20 @@ namespace TinhKhoanApp.Api.Controllers
                 .Select(d => new
                 {
                     AccountCode = d.TAI_KHOAN_HACH_TOAN,
-                    AccountName = d.TEN_TAI_KHOAN,
-                    TotalBalance = d.CURRENT_BALANCE ?? 0,
-                    MaPGD = d.MA_PGD
+                    CurrentBalance = d.CURRENT_BALANCE ?? 0,
+                    MaCN = d.MA_CN,
+                    MaPGD = d.MA_PGD,
+                    NgayDL = d.NgayDL,
+                    FileName = d.FileName
                 })
                 .ToListAsync();
 
-            _logger.LogInformation("✅ Kết quả {UnitName}: {Total:N0} VND từ {Count} bản ghi",
-                branchInfo.DisplayName, totalNguonVon, recordCount);
+            _logger.LogInformation("✅ Kết quả {UnitName}: {Total:N0} VND từ {Count} bản ghi (NgayDL: {NgayDL})",
+                branchInfo.DisplayName, totalNguonVon, recordCount, ngayDLFilter);
 
             if (recordCount == 0)
             {
-                _logger.LogWarning("⚠️ Không tìm thấy dữ liệu cho MA_CN: {MaCN}, ngày: {Date}", branchInfo.MaCN, targetDate.ToString("yyyy-MM-dd"));
+                _logger.LogWarning("⚠️ Không tìm thấy dữ liệu cho MA_CN: {MaCN}, NgayDL: {NgayDL}", branchInfo.MaCN, ngayDLFilter);
             }
 
             return new CalculationResult
@@ -286,14 +337,14 @@ namespace TinhKhoanApp.Api.Controllers
         }
 
         /// <summary>
-        /// Debug: Lấy danh sách các file DP01 có trong database
+        /// Debug: Lấy danh sách các file DP01_New có trong database
         /// </summary>
         [HttpGet("debug/files")]
         public async Task<IActionResult> GetDP01Files()
         {
             try
             {
-                var files = await _context.DP01s
+                var files = await _context.DP01_News
                     .Where(d => d.FileName != null)
                     .Select(d => d.FileName)
                     .Distinct()
@@ -308,19 +359,31 @@ namespace TinhKhoanApp.Api.Controllers
                     ParsedDate = f?.Length >= 18 ? ParseDateFromFileName(f.Substring(10, 8)) : null
                 }).ToList();
 
-                _logger.LogInformation("🔍 Tìm thấy {Count} file DP01 trong database", files.Count);
+                // Thống kê theo NgayDL
+                var dateStats = await _context.DP01_News
+                    .GroupBy(d => d.NgayDL)
+                    .Select(g => new
+                    {
+                        NgayDL = g.Key,
+                        RecordCount = g.Count()
+                    })
+                    .OrderBy(x => x.NgayDL)
+                    .ToListAsync();
+
+                _logger.LogInformation("🔍 Tìm thấy {Count} file DP01_New trong database", files.Count);
 
                 return Ok(new
                 {
                     success = true,
                     totalFiles = files.Count,
-                    files = fileInfo,
-                    message = "Danh sách các file DP01 trong database"
+                    files = fileInfo.Take(20), // Chỉ hiển thị 20 files đầu
+                    dateStatistics = dateStats.Take(20), // Top 20 ngày có dữ liệu
+                    message = "Danh sách các file DP01_New trong database"
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Lỗi khi lấy danh sách file DP01");
+                _logger.LogError(ex, "❌ Lỗi khi lấy danh sách file DP01_New");
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
@@ -330,107 +393,154 @@ namespace TinhKhoanApp.Api.Controllers
         /// </summary>
         private DateTime? ParseDateFromFileName(string datePart)
         {
-            try
+            if (string.IsNullOrEmpty(datePart) || datePart.Length != 8) return null;
+
+            if (DateTime.TryParseExact(datePart, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out DateTime date))
             {
-                if (datePart.Length == 8 && DateTime.TryParseExact(datePart, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out DateTime result))
-                {
-                    return result;
-                }
-                return null;
+                return date;
             }
-            catch
-            {
-                return null;
-            }
+            return null;
         }
 
         /// <summary>
-        /// Test endpoint đơn giản - kiểm tra có dữ liệu DP01 hay không
+        /// Test endpoint để verify logic theo ví dụ của anh
+        /// VD: Chi nhánh Bình Lư (7801) với ngày 30/04/2025
         /// </summary>
-        [HttpGet("test-dp01")]
-        public async Task<IActionResult> TestDP01()
+        [HttpPost("test-logic")]
+        public async Task<IActionResult> TestNguonVonLogic([FromBody] TestNguonVonRequest request)
         {
             try
             {
-                // Đếm tổng số record
-                var totalCount = await _context.DP01s.CountAsync();
+                _logger.LogInformation("🧪 Testing Nguồn vốn logic: {BranchName} - {Date}", request.BranchName, request.Date);
 
-                // Đếm record có FileName
-                var withFileNameCount = await _context.DP01s.CountAsync(d => d.FileName != null && d.FileName != "");
+                // Tìm branch mapping
+                var branchKey = request.BranchKey ??
+                    _branchMapping.FirstOrDefault(kvp => kvp.Value.DisplayName.Contains(request.BranchName ?? "")).Key;
 
-                // Lấy sample record đầu tiên
-                var firstRecord = await _context.DP01s.FirstOrDefaultAsync();
-
-                return Ok(new
+                if (string.IsNullOrEmpty(branchKey) || !_branchMapping.ContainsKey(branchKey))
                 {
-                    success = true,
-                    totalRecords = totalCount,
-                    recordsWithFileName = withFileNameCount,
-                    sampleRecord = firstRecord != null ? new
+                    return BadRequest(new
                     {
-                        firstRecord.Id,
-                        firstRecord.MA_CN,
-                        firstRecord.DATA_DATE,
-                        firstRecord.TAI_KHOAN_HACH_TOAN,
-                        firstRecord.CURRENT_BALANCE,
-                        firstRecord.FileName
-                    } : null,
-                    message = $"Tổng {totalCount:N0} bản ghi DP01, {withFileNameCount:N0} có FileName"
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Lỗi khi test DP01");
-                return StatusCode(500, new { success = false, message = ex.Message });
-            }
-        }
+                        success = false,
+                        message = $"Không tìm thấy chi nhánh '{request.BranchName}'. Available: {string.Join(", ", _branchMapping.Values.Select(v => v.DisplayName))}"
+                    });
+                }
 
-        /// <summary>
-        /// Populate cột NgayDL cho dữ liệu DP01 từ DATA_DATE
-        /// Chuyển đổi từ DATA_DATE sang định dạng dd/mm/yyyy
-        /// </summary>
-        [HttpPost("populate-ngaydl")]
-        public async Task<IActionResult> PopulateNgayDL()
-        {
-            try
-            {
-                _logger.LogInformation("🔄 Bắt đầu populate NgayDL cho dữ liệu DP01...");
+                var branchInfo = _branchMapping[branchKey];
+                var ngayDL = request.Date;
 
-                // Lấy dữ liệu DP01 chưa có NgayDL (batch nhỏ để tránh timeout)
-                var recordsToUpdate = await _context.DP01s
-                    .Where(d => d.NgayDL == null || d.NgayDL == "")
-                    .Take(1000) // Chỉ xử lý 1000 records để test
+                _logger.LogInformation("📋 Test parameters: MaCN={MaCN}, MaPGD={MaPGD}, NgayDL={NgayDL}",
+                    branchInfo.MaCN, branchInfo.MaPGD, ngayDL);
+
+                // Query step by step để debug
+                var allRecords = await _context.DP01_News
+                    .Where(d => d.MA_CN == branchInfo.MaCN && d.NgayDL == ngayDL)
+                    .CountAsync();
+
+                var afterAccountFilter = await _context.DP01_News
+                    .Where(d => d.MA_CN == branchInfo.MaCN && d.NgayDL == ngayDL)
+                    .Where(d =>
+                        !d.TAI_KHOAN_HACH_TOAN.StartsWith("40") &&
+                        !d.TAI_KHOAN_HACH_TOAN.StartsWith("41") &&
+                        !d.TAI_KHOAN_HACH_TOAN.StartsWith("427") &&
+                        d.TAI_KHOAN_HACH_TOAN != "211108"
+                    )
+                    .CountAsync();
+
+                var finalQuery = _context.DP01_News
+                    .Where(d => d.MA_CN == branchInfo.MaCN && d.NgayDL == ngayDL)
+                    .Where(d =>
+                        !d.TAI_KHOAN_HACH_TOAN.StartsWith("40") &&
+                        !d.TAI_KHOAN_HACH_TOAN.StartsWith("41") &&
+                        !d.TAI_KHOAN_HACH_TOAN.StartsWith("427") &&
+                        d.TAI_KHOAN_HACH_TOAN != "211108"
+                    );
+
+                if (!string.IsNullOrEmpty(branchInfo.MaPGD))
+                {
+                    finalQuery = finalQuery.Where(d => d.MA_PGD == branchInfo.MaPGD);
+                }
+
+                var finalCount = await finalQuery.CountAsync();
+                var totalBalance = await finalQuery.SumAsync(d => d.CURRENT_BALANCE ?? 0);
+
+                var excludedAccounts = await _context.DP01_News
+                    .Where(d => d.MA_CN == branchInfo.MaCN && d.NgayDL == ngayDL)
+                    .Where(d =>
+                        d.TAI_KHOAN_HACH_TOAN.StartsWith("40") ||
+                        d.TAI_KHOAN_HACH_TOAN.StartsWith("41") ||
+                        d.TAI_KHOAN_HACH_TOAN.StartsWith("427") ||
+                        d.TAI_KHOAN_HACH_TOAN == "211108"
+                    )
+                    .GroupBy(d => d.TAI_KHOAN_HACH_TOAN)
+                    .Select(g => new
+                    {
+                        AccountCode = g.Key,
+                        Count = g.Count(),
+                        TotalBalance = g.Sum(d => d.CURRENT_BALANCE ?? 0)
+                    })
+                    .OrderByDescending(x => Math.Abs(x.TotalBalance))
+                    .Take(10)
                     .ToListAsync();
 
-                _logger.LogInformation($"📊 Tìm thấy {recordsToUpdate.Count} bản ghi cần update NgayDL");
-
-                int updateCount = 0;
-                foreach (var record in recordsToUpdate)
-                {
-                    // Tạo NgayDL từ DATA_DATE
-                    // VD: 2025-04-30 -> 30/04/2025
-                    record.NgayDL = record.DATA_DATE.ToString("dd/MM/yyyy");
-                    updateCount++;
-                }
-
-                await _context.SaveChangesAsync();
-
-                _logger.LogInformation($"✅ Đã update NgayDL cho {updateCount} bản ghi");
+                var topAccounts = await finalQuery
+                    .OrderByDescending(d => Math.Abs(d.CURRENT_BALANCE ?? 0))
+                    .Take(10)
+                    .Select(d => new
+                    {
+                        AccountCode = d.TAI_KHOAN_HACH_TOAN,
+                        CurrentBalance = d.CURRENT_BALANCE ?? 0,
+                        MaCN = d.MA_CN,
+                        MaPGD = d.MA_PGD
+                    })
+                    .ToListAsync();
 
                 return Ok(new
                 {
                     success = true,
-                    updatedRecords = updateCount,
-                    totalProcessed = recordsToUpdate.Count,
-                    message = $"Đã populate NgayDL cho {updateCount} bản ghi DP01"
+                    testInput = new
+                    {
+                        branchName = request.BranchName,
+                        branchKey = branchKey,
+                        date = request.Date,
+                        maCN = branchInfo.MaCN,
+                        maPGD = branchInfo.MaPGD
+                    },
+                    filterSteps = new
+                    {
+                        step1_totalRecords = allRecords,
+                        step2_afterAccountFilter = afterAccountFilter,
+                        step3_finalWithPGD = finalCount,
+                        step4_totalBalance = totalBalance,
+                        step5_balanceInTrieuVND = Math.Round(totalBalance / 1_000_000m, 2)
+                    },
+                    excludedAccountsSample = excludedAccounts,
+                    topAccountsIncluded = topAccounts,
+                    conclusion = new
+                    {
+                        isImplementedCorrectly = finalCount > 0,
+                        message = finalCount > 0
+                            ? $"✅ Logic implemented correctly. Found {finalCount} records with total balance {totalBalance:N0} VND"
+                            : $"❌ No data found for MaCN={branchInfo.MaCN}, NgayDL={ngayDL}. Check data availability."
+                    }
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ Lỗi khi populate NgayDL");
+                _logger.LogError(ex, "❌ Error testing Nguồn vốn logic");
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
+    }
+
+    /// <summary>
+    /// Request model cho test endpoint
+    /// </summary>
+    public class TestNguonVonRequest
+    {
+        public string? BranchKey { get; set; }
+        public string? BranchName { get; set; }
+        public string Date { get; set; } = "";
     }
 
     /// <summary>
