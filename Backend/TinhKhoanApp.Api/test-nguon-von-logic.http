@@ -1,0 +1,118 @@
+### Test Nguồn vốn Logic - Theo yêu cầu của anh
+### Kiểm tra implementation logic cho nút "Nguồn vốn"
+
+# 1. Test với ví dụ anh đã cho: Chi nhánh Bình Lư với ngày 30/04/2025
+POST http://localhost:5055/api/NguonVonButton/test-logic
+Content-Type: application/json
+
+{
+  "branchKey": "CnBinhLu",
+  "branchName": "CN Bình Lư",
+  "date": "30/04/2025"
+}
+
+###
+
+# 2. Test calculation endpoint thực tế - Chi nhánh Bình Lư
+POST http://localhost:5055/api/NguonVonButton/calculate/CnBinhLu?targetDate=30/04/2025
+
+###
+
+# 3. Test với PGD - CN Phong Thổ PGD Số 5
+POST http://localhost:5055/api/NguonVonButton/test-logic
+Content-Type: application/json
+
+{
+  "branchKey": "CnPhongTho-PGD5",
+  "branchName": "CN Phong Thổ - PGD Số 5",
+  "date": "30/04/2025"
+}
+
+###
+
+# 4. Test calculation endpoint cho PGD
+POST http://localhost:5055/api/NguonVonButton/calculate/CnPhongTho-PGD5?targetDate=30/04/2025
+
+###
+
+# 5. Test Toàn tỉnh
+POST http://localhost:5055/api/NguonVonButton/calculate/ToanTinh?targetDate=30/04/2025
+
+###
+
+# 6. Test với filter theo năm (sẽ lấy 31/12/2024)
+POST http://localhost:5055/api/NguonVonButton/calculate/CnBinhLu?targetYear=2024
+
+###
+
+# 7. Test với filter theo tháng (sẽ lấy 30/04/2025)
+POST http://localhost:5055/api/NguonVonButton/calculate/CnBinhLu?targetMonth=04/2025
+
+###
+
+# 8. Test lấy danh sách units hỗ trợ
+GET http://localhost:5055/api/NguonVonButton/units
+
+###
+
+# 9. Debug: Lấy danh sách files DP01_New
+GET http://localhost:5055/api/NguonVonButton/debug/files
+
+###
+
+# 10. Test với Hội Sở
+POST http://localhost:5055/api/NguonVonButton/calculate/HoiSo?targetDate=30/04/2025
+
+###
+
+# 11. Test nhiều CN khác nhau trong 1 ngày
+POST http://localhost:5055/api/NguonVonButton/calculate/CnSinHo?targetDate=30/04/2025
+
+###
+
+POST http://localhost:5055/api/NguonVonButton/calculate/CnThanUyen?targetDate=30/04/2025
+
+###
+
+POST http://localhost:5055/api/NguonVonButton/calculate/CnDoanKet?targetDate=30/04/2025
+
+###
+
+# 12. Test các PGD khác
+POST http://localhost:5055/api/NguonVonButton/calculate/CnDoanKet-PGD1?targetDate=30/04/2025
+
+###
+
+POST http://localhost:5055/api/NguonVonButton/calculate/CnDoanKet-PGD2?targetDate=30/04/2025
+
+###
+
+# ✅ VERIFICATION CHECKLIST theo yêu cầu anh:
+#
+# 1. ✅ Date Filtering Logic:
+#    - targetDate: Filter NgayDL exactly (✅)
+#    - targetYear: Filter NgayDL = 31/12/year (✅)
+#    - targetMonth: Filter NgayDL = last day of month (✅)
+#
+# 2. ✅ Branch Mapping:
+#    - Đã map đúng tất cả các CN từ 7800-7808 (✅)
+#    - Đã map đúng các PGD với MA_PGD filter (✅)
+#    - Hỗ trợ "Toàn tỉnh" sum từ 7800-7808 (✅)
+#
+# 3. ✅ Account Filtering:
+#    - Exclude accounts starting with "40" (✅)
+#    - Exclude accounts starting with "41" (✅)
+#    - Exclude accounts starting with "427" (✅)
+#    - Exclude exact account "211108" (✅)
+#
+# 4. ✅ Data Source:
+#    - Sử dụng bảng DP01_New (DP01_News DbSet) (✅)
+#    - Filter theo MA_CHI_NHANH thay vì MA_CN (✅)
+#    - Filter theo NgayDL (string dd/MM/yyyy) (✅)
+#    - Sum CURRENT_BALANCE column (✅)
+#
+# 5. ✅ Additional Features:
+#    - Debug endpoint để check data availability (✅)
+#    - Test endpoint để verify logic step-by-step (✅)
+#    - Top accounts reporting (✅)
+#    - Proper error handling và logging (✅)
