@@ -43,6 +43,7 @@ namespace TinhKhoanApp.Api.Controllers
             { "BC57", "Sao kê Lãi dự thu - Dự phòng lãi" },
             { "RR01", "Sao kê dư nợ gốc, lãi XLRR - Rủi ro tín dụng" },
             { "7800_DT_KHKD1", "Báo cáo KHKD (DT) - Kế hoạch kinh doanh doanh thu" },
+            { "DT_KHKD1", "Báo cáo KHKD (DT) - Kế hoạch kinh doanh doanh thu" },
             { "GL41", "Bảng cân đối - Báo cáo tài chính" }
         };
 
@@ -2530,7 +2531,7 @@ namespace TinhKhoanApp.Api.Controllers
                     importedDataRecordId, dataType);
 
                 // Chỉ tự động xử lý cho các loại dữ liệu được hỗ trợ
-                var supportedTypes = new[] { "GL41", "LN01", "LN02", "DP01" };
+                var supportedTypes = new[] { "LN01", "LN02", "LN03", "DB01", "DPDA", "DP01", "EI01", "GL01", "GL41", "KH03", "RR01", "7800_DT_KHKD1", "DT_KHKD1" };
                 if (!supportedTypes.Contains(dataType.ToUpper()))
                 {
                     _logger.LogInformation("ℹ️ DataType {DataType} không cần auto-process", dataType);

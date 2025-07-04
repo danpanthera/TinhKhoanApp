@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models.RawData;
+using TinhKhoanApp.Api.Models.DataTables;
 using System.Text;
 using System.Text.Json;
 
@@ -22,23 +23,21 @@ namespace TinhKhoanApp.Api.Controllers
         }
 
         /// <summary>
-        /// Lấy danh sách thay đổi của chi nhánh 7808 từ 30/4/2025 đến 31/5/2025 từ ImportedDataRecords
+        /// Lấy danh sách thay đổi của chi nhánh 7808 từ 30/4/2025 đến 31/5/2025 từ bảng LN01 mới
         /// </summary>
         [HttpGet("changes/branch-7808")]
         public async Task<IActionResult> GetBranch7808Changes()
         {
             try
             {
-                // Truy vấn từ ImportedDataRecords và ImportedDataItems
-                var importRecords = await _context.ImportedDataRecords
-                    .Where(x => x.Category == "LN01" &&
-                               x.FileName.Contains("7808") &&
-                               x.StatementDate >= new DateTime(2025, 4, 30) &&
-                               x.StatementDate <= new DateTime(2025, 5, 31))
-                    .OrderByDescending(x => x.StatementDate)
+                // Truy vấn trực tiếp từ bảng LN01 mới
+                var lnData = await _context.LN01s
+                    .Where(x => x.MA_CHI_NHANH == "7808" &&
+                               x.NgayDL == "30/04/2025" || x.NgayDL == "31/05/2025")
+                    .OrderByDescending(x => x.NgayDL)
                     .ToListAsync();
 
-                if (!importRecords.Any())
+                if (!lnData.Any())
                 {
                     return Ok(new
                     {
@@ -48,69 +47,74 @@ namespace TinhKhoanApp.Api.Controllers
                             TimeRange = "30/04/2025 - 31/05/2025",
                             BranchCode = "7808",
                             QueryTime = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"),
-                            Message = "Không tìm thấy dữ liệu LN01 cho chi nhánh 7808 trong khoảng thời gian này"
-                        },
-                        Changes = new List<object>()
+                            DataSource = "LN01 Table (Optimized)",
+                            Message = "No LN01 data found for branch 7808 in specified date range"
+                        }
                     });
                 }
 
-                // Lấy chi tiết dữ liệu cho mỗi file import
-                var detailedChanges = new List<object>();
+                // Group by NgayDL to calculate changes
+                var april30Data = lnData.Where(x => x.NgayDL == "30/04/2025").ToList();
+                var may31Data = lnData.Where(x => x.NgayDL == "31/05/2025").ToList();
 
-                foreach (var record in importRecords)
+                return Ok(new
                 {
-                    // Lấy một số mẫu dữ liệu từ ImportedDataItems
-                    var sampleItems = await _context.ImportedDataItems
-                        .Where(x => x.ImportedDataRecordId == record.Id)
-                        .Take(10) // Lấy 10 mẫu đầu tiên
-                        .Select(x => new
-                        {
-                            Id = x.Id,
-                            RawData = x.RawData,
-                            ProcessedDate = x.ProcessedDate.ToString("dd/MM/yyyy HH:mm:ss")
-                        })
-                        .ToListAsync();
-
-                    detailedChanges.Add(new
+                    Summary = new
                     {
-                        ImportId = record.Id,
-                        FileName = record.FileName,
-                        StatementDate = record.StatementDate?.ToString("dd/MM/yyyy") ?? "N/A",
-                        ImportDate = record.ImportDate.ToString("dd/MM/yyyy HH:mm:ss"),
-                        ImportedBy = record.ImportedBy ?? "System",
-                        Status = record.Status ?? "Unknown",
-                        RecordsCount = record.RecordsCount,
-                        Category = record.Category,
-                        FileType = record.FileType,
-                        Notes = record.Notes,
+                        TotalChanges = lnData.Count,
+                        TimeRange = "30/04/2025 - 31/05/2025",
                         BranchCode = "7808",
-                        SampleData = sampleItems,
-                        ChangeType = record.StatementDate.HasValue && record.StatementDate.Value.Date == new DateTime(2025, 4, 30).Date
-                            ? "Dữ liệu đầu kỳ"
-                            : record.StatementDate.HasValue && record.StatementDate.Value.Date == new DateTime(2025, 5, 31).Date
-                            ? "Dữ liệu cuối kỳ"
-                            : "Dữ liệu giữa kỳ"
-                    });
-                }
-
-                var summary = new
-                {
-                    TotalChanges = importRecords.Count,
-                    TotalRecords = importRecords.Sum(x => x.RecordsCount),
-                    TimeRange = "30/04/2025 - 31/05/2025",
-                    BranchCode = "7808",
-                    QueryTime = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"),
-                    DateRange = new
-                    {
-                        FromDate = importRecords.Min(r => r.StatementDate)?.ToString("dd/MM/yyyy") ?? "N/A",
-                        ToDate = importRecords.Max(r => r.StatementDate)?.ToString("dd/MM/yyyy") ?? "N/A"
+                        QueryTime = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"),
+                        DataSource = "LN01 Table (Optimized)",
+                        April30Records = april30Data.Count,
+                        May31Records = may31Data.Count
                     },
-                    FileInfo = importRecords.Select(r => new
+                    Data = new
                     {
-                        FileName = r.FileName,
-                        Records = r.RecordsCount,
-                        Date = r.StatementDate?.ToString("dd/MM/yyyy")
-                    }).ToList()
+                        April30 = april30Data.Take(10), // Limit for performance
+                        May31 = may31Data.Take(10)
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new {
+                    error = "Lỗi khi truy vấn dữ liệu LN01",
+                    details = ex.Message,
+                    source = "LN01 Table"
+                });
+            }
+        }
+
+        /// <summary>
+        /// Lấy thống kê tổng quan dữ liệu LN01
+        /// </summary>
+        [HttpGet("summary")]
+        public async Task<IActionResult> GetSummary()
+        {
+            try
+            {
+                var totalRecords = await _context.LN01s.CountAsync();
+                var uniqueBranches = await _context.LN01s.Select(x => x.MA_CHI_NHANH).Distinct().CountAsync();
+                var latestDate = await _context.LN01s.OrderByDescending(x => x.NgayDL).Select(x => x.NgayDL).FirstOrDefaultAsync();
+
+                return Ok(new
+                {
+                    TotalRecords = totalRecords,
+                    UniqueBranches = uniqueBranches,
+                    LatestDataDate = latestDate,
+                    QueryTime = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss"),
+                    DataSource = "LN01 Table (Optimized)"
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new {
+                    error = "Lỗi khi truy vấn thống kê LN01",
+                    details = ex.Message
+                });
+            }
+        }
                 };
 
                 return Ok(new
