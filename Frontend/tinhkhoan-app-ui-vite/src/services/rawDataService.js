@@ -807,12 +807,12 @@ class RawDataService {
         acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: '7800_DT_KHKD1'
       },
-      'GLCB41': {
-        name: 'GLCB41',
+      'GL41': {
+        name: 'GL41',
         description: 'Bảng cân đối',
         icon: '⚖️',
         acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
-        requiredKeyword: 'GLCB41'
+        requiredKeyword: 'GL41'
       },
       'API_IMPORT': {
         name: 'API_IMPORT',

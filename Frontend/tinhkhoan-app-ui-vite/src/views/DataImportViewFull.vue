@@ -888,8 +888,8 @@ const viewDataType = async (dataType) => {
         if (filteredResults.value.length === 0) {
           showError(`Không có dữ liệu ${dataType} cho ngày ${formatDate(selectedFromDate.value)}`)
         } else {
-          // 🔥 ENHANCED: For BC57, DPDA, LN01, GLCB41, and 7800_DT_KHKD1, try to show processed data instead of raw import data
-          if (['BC57', 'DPDA', 'LN01', 'GLCB41', '7800_DT_KHKD1'].includes(dataType.toUpperCase()) && filteredResults.value.length > 0) {
+          // 🔥 ENHANCED: For BC57, DPDA, LN01, GL41, and 7800_DT_KHKD1, try to show processed data instead of raw import data
+          if (['BC57', 'DPDA', 'LN01', 'GL41', '7800_DT_KHKD1'].includes(dataType.toUpperCase()) && filteredResults.value.length > 0) {
             const importId = filteredResults.value[0].id
             console.log(`🔄 Fetching processed data for ${dataType} import ID: ${importId}`)
 

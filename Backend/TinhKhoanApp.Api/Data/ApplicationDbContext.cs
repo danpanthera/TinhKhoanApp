@@ -94,9 +94,11 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         // 📊 DbSets cho các bảng dữ liệu riêng biệt theo từng loại file
         // Tuân thủ Temporal Tables + Columnstore Indexes
         public DbSet<DataTables.DB01> DB01s { get; set; }
+        public DbSet<DataTables.DP01> DP01NewTables { get; set; }
         public DbSet<DataTables.DPDA> DPDAs { get; set; }
         public DbSet<DataTables.EI01> EI01s { get; set; }
         public DbSet<DataTables.GL01> GL01s { get; set; }
+        public DbSet<DataTables.GL41> GL41s { get; set; }
         public DbSet<DataTables.KH03> KH03s { get; set; }
         public DbSet<DataTables.LN01> LN01s { get; set; }
         public DbSet<DataTables.LN02> LN02s { get; set; }
