@@ -8,7 +8,7 @@ khi sửa code, thay đổi các table, controller, services...v.v thì luôn ph
 LUÔN commit từng phần nhỏ, không commit cả một lần quá nhiều file.
 databasse là "TinhKhoanDB" và mật khẩu là "YourStrong@Password123"
 trên docker có container chứa SQL server với tên là "sql_server_tinhkhoan"
-
+User authentication: "admin", password: "admin123"
 ## 🐳 Azure SQL Edge ARM64 Container Setup
 
 **Container Name:** azure_sql_edge_tinhkhoan

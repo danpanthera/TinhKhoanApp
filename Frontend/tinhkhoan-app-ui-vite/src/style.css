@@ -1,5 +1,6 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* 🇻🇳 Font stack tối ưu cho tiếng Việt - Azure SQL Edge UTF-8 */
+  font-family: "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   line-height: 1.5;
   font-weight: 400;
 
@@ -11,6 +12,10 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* 🇻🇳 Đảm bảo hỗ trợ Unicode tiếng Việt */
+  unicode-bidi: normal;
+  -webkit-text-size-adjust: 100%;
 }
 
 a {
@@ -76,4 +81,23 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+/* 🇻🇳 CSS GLOBAL HỖ TRỢ TIẾNG VIỆT - Azure SQL Edge UTF-8 */
+* {
+  font-family: "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+/* Đảm bảo dropdown và select hiển thị tiếng Việt đúng */
+select, option, input, textarea, button {
+  font-family: "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "Noto Sans", "Liberation Sans", sans-serif;
+  unicode-bidi: normal;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Đảm bảo các element Vue.js hiển thị tiếng Việt đúng */
+.dropdown-item, .select-option, .form-control, .table-dropdown {
+  font-family: "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "Noto Sans", "Liberation Sans", sans-serif;
+  unicode-bidi: normal;
+  text-rendering: optimizeLegibility;
 }
