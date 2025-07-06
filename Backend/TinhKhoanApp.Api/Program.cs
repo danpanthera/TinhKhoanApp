@@ -61,9 +61,21 @@ internal class Program
         if (string.IsNullOrEmpty(connectionString))
         {
             throw new InvalidOperationException("SQL Server connection string is not configured.");
-        }        // 2. Đăng ký ApplicationDbContext với SQL Server provider
+        }        // 2. Đăng ký ApplicationDbContext với SQL Server provider - OPTIMIZED
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer(connectionString));
+        {
+            options.UseSqlServer(connectionString, sqlOptions =>
+            {
+                // 🚀 PERFORMANCE OPTIMIZATIONS
+                sqlOptions.CommandTimeout(120); // 2 phút timeout cho commands
+                sqlOptions.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null); // Retry logic
+            });
+
+            // 🚀 EF Core Performance Settings
+            options.EnableSensitiveDataLogging(false); // Tắt sensitive logging trong production
+            options.EnableServiceProviderCaching(true); // Cache service provider
+            options.EnableDetailedErrors(false); // Tắt detailed errors trong production
+        });
 
         // 3. Đăng ký các dịch vụ cho Controllers (quan trọng nếu Sếp dùng API Controllers)
         /* builder.Services.AddControllers(); */

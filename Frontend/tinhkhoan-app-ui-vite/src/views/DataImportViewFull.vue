@@ -491,7 +491,7 @@
 
             <div v-if="smartUploading" class="smart-upload-progress">
               <div class="progress-header">
-                <h4>🚀 Đang xử lý Smart Import...</h4>
+                <h4>🚀 Đang xử lý Smart Import (Parallel)...</h4>
                 <div class="progress-info">
                   <span class="progress-text">{{ smartUploadProgress.current }}/{{ smartUploadProgress.total }} file</span>
                   <span class="progress-percentage">{{ smartUploadProgress.percentage }}%</span>
@@ -509,6 +509,9 @@
                              smartUploadProgress.stage === 'completed' ? '✅ Hoàn thành' :
                              smartUploadProgress.stage }}
                 </p>
+                <p v-if="smartUploadProgress.activeFiles > 0" class="parallel-info">
+                  🔥 {{ smartUploadProgress.activeFiles }} file đang upload đồng thời
+                </p>
               </div>
             </div>
 
@@ -519,6 +522,9 @@
                   <span class="stat success">✅ Thành công: {{ smartImportResults.successCount }}</span>
                   <span class="stat error">❌ Lỗi: {{ smartImportResults.failureCount }}</span>
                   <span class="stat total">📁 Tổng: {{ smartImportResults.totalFiles }}</span>
+                  <span v-if="smartImportResults.uploadMethod" class="stat method">
+                    🚀 Method: {{ smartImportResults.uploadMethod === 'parallel' ? `Parallel (${smartImportResults.maxConcurrency} concurrent)` : 'Sequential' }}
+                  </span>
                 </div>
               </div>
               <div class="results-detail">
@@ -2884,10 +2890,21 @@ const startSmartImport = async () => {
 }
 
 .upload-stage {
-  margin: 0;
+  margin: 0 0 8px 0;
   font-size: 0.9rem;
   color: #666;
   font-style: italic;
+}
+
+.parallel-info {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #8B1538;
+  font-weight: 600;
+  background: rgba(139, 21, 56, 0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
 }
 
 @keyframes uploadPulse {
@@ -2905,6 +2922,56 @@ const startSmartImport = async () => {
   }
   100% {
     left: 100%;
+  }
+}
+
+/* 📊 RESULT STATS STYLING */
+.result-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 15px;
+}
+
+.stat {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.stat.success {
+  background: rgba(0, 200, 81, 0.1);
+  color: #00C851;
+  border: 1px solid rgba(0, 200, 81, 0.3);
+}
+
+.stat.error {
+  background: rgba(244, 67, 54, 0.1);
+  color: #f44336;
+  border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+.stat.total {
+  background: rgba(139, 21, 56, 0.1);
+  color: #8B1538;
+  border: 1px solid rgba(139, 21, 56, 0.3);
+}
+
+.stat.method {
+  background: rgba(33, 150, 243, 0.1);
+  color: #2196f3;
+  border: 1px solid rgba(33, 150, 243, 0.3);
+  animation: methodGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes methodGlow {
+  from {
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+  }
+  to {
+    box-shadow: 0 4px 16px rgba(33, 150, 243, 0.4);
   }
 }
 </style>

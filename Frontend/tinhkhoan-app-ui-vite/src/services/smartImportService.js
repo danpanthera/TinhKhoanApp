@@ -43,7 +43,7 @@ class SmartImportService {
   }
 
   /**
-   * Upload file thông thường (nhỏ hơn 10MB)
+   * Upload file thông thường (nhỏ hơn 10MB) - OPTIMIZED
    */
   async uploadNormalFile(file, statementDate = null, progressCallback = null) {
     const formData = new FormData()
@@ -56,9 +56,11 @@ class SmartImportService {
 
     const response = await apiClient.post('/SmartDataImport/upload', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
+        'Content-Type': 'multipart/form-data',
+        // 🚀 OPTIMIZATION: Enable compression
+        'Accept-Encoding': 'gzip, deflate, br'
       },
-      timeout: 300000, // 5 phút timeout cho file lớn
+      timeout: 120000, // 🚀 Giảm timeout xuống 2 phút cho file nhỏ
       onUploadProgress: (progressEvent) => {
         if (progressCallback && progressEvent.total) {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
@@ -76,11 +78,11 @@ class SmartImportService {
   }
 
   /**
-   * Upload file lớn với chunked upload
+   * Upload file lớn với chunked upload - OPTIMIZED
    */
   async uploadLargeFile(file, statementDate = null, progressCallback = null) {
-    // TODO: Implement chunked upload when backend supports it
-    // For now, use normal upload with extended timeout
+    // TODO: Implement true chunked upload when backend supports it
+    // For now, use optimized upload with extended timeout
     const formData = new FormData()
     formData.append('file', file)
 
@@ -90,9 +92,11 @@ class SmartImportService {
 
     const response = await apiClient.post('/SmartDataImport/upload', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
+        'Content-Type': 'multipart/form-data',
+        // 🚀 OPTIMIZATION: Enable compression
+        'Accept-Encoding': 'gzip, deflate, br'
       },
-      timeout: 600000, // 10 phút timeout cho file rất lớn
+      timeout: 300000, // 🚀 5 phút cho file lớn
       onUploadProgress: (progressEvent) => {
         if (progressCallback && progressEvent.total) {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
@@ -121,7 +125,7 @@ class SmartImportService {
   }
 
   /**
-   * Upload nhiều file với Smart Import
+   * Upload nhiều file với Smart Import - OPTIMIZED PARALLEL VERSION
    * @param {FileList|Array} files - Danh sách file cần upload
    * @param {Date} statementDate - Ngày sao kê (tùy chọn)
    * @param {Function} progressCallback - Callback để track progress tổng thể
@@ -129,60 +133,95 @@ class SmartImportService {
    */
   async uploadSmartFiles(files, statementDate = null, progressCallback = null) {
     try {
-      const results = []
       const totalFiles = files.length
+      const MAX_CONCURRENT_UPLOADS = 3 // 🚀 Upload tối đa 3 file cùng lúc
 
-      // Upload từng file một để có thể tracking progress
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i]
-        console.log(`📤 Smart uploading file ${i + 1}/${totalFiles}: ${file.name}`)
+      console.log(`🚀 Starting PARALLEL Smart Import with ${totalFiles} files (max ${MAX_CONCURRENT_UPLOADS} concurrent)`)
 
-        // Update overall progress
+      // 📊 Tracking variables
+      const results = []
+      const progressTracking = new Map() // Track progress của từng file
+      let completedCount = 0
+
+      // Update overall progress function
+      const updateOverallProgress = () => {
+        const totalProgress = Array.from(progressTracking.values()).reduce((sum, progress) => sum + progress, 0)
+        const overallPercentage = Math.round(totalProgress / totalFiles)
+
         if (progressCallback) {
+          const currentFiles = Array.from(progressTracking.keys()).filter(fileName =>
+            progressTracking.get(fileName) < 100
+          )
+
           progressCallback({
-            current: i,
+            current: completedCount,
             total: totalFiles,
-            percentage: Math.round((i / totalFiles) * 100),
-            currentFile: file.name,
-            stage: 'uploading'
+            percentage: overallPercentage,
+            currentFile: currentFiles.length > 0 ? `${currentFiles.length} file(s) đang upload...` : 'Hoàn thành',
+            stage: completedCount === totalFiles ? 'completed' : 'uploading',
+            activeFiles: currentFiles.length
           })
         }
+      }
 
+      // 🚀 Create upload promises với concurrency control
+      const uploadFile = async (file, index) => {
         try {
+          // Initialize progress tracking
+          progressTracking.set(file.name, 0)
+
           // Progress callback cho từng file
           const fileProgressCallback = (fileProgress) => {
-            if (progressCallback) {
-              progressCallback({
-                current: i,
-                total: totalFiles,
-                percentage: Math.round(((i + fileProgress.percentage / 100) / totalFiles) * 100),
-                currentFile: file.name,
-                stage: 'uploading',
-                fileProgress: fileProgress
-              })
-            }
+            progressTracking.set(file.name, fileProgress.percentage)
+            updateOverallProgress()
           }
 
           const result = await this.uploadSmartFile(file, statementDate, fileProgressCallback)
-          results.push({
+
+          // Mark as completed
+          progressTracking.set(file.name, 100)
+          completedCount++
+
+          console.log(`✅ Successfully uploaded: ${file.name} (${completedCount}/${totalFiles})`)
+
+          return {
             fileName: file.name,
             success: true,
             result: result,
-            index: i + 1,
+            index: index + 1,
             fileSize: file.size
-          })
-
-          console.log(`✅ Successfully uploaded: ${file.name}`)
+          }
         } catch (error) {
+          completedCount++
           console.error(`❌ Failed to upload: ${file.name}`, error)
-          results.push({
+
+          return {
             fileName: file.name,
             success: false,
             error: error.message,
-            index: i + 1,
+            index: index + 1,
             fileSize: file.size
-          })
+          }
         }
+      }
+
+      // 🚀 PARALLEL PROCESSING với concurrency limit
+      const promises = []
+      for (let i = 0; i < totalFiles; i += MAX_CONCURRENT_UPLOADS) {
+        const batch = []
+
+        // Tạo batch của MAX_CONCURRENT_UPLOADS files
+        for (let j = 0; j < MAX_CONCURRENT_UPLOADS && (i + j) < totalFiles; j++) {
+          const fileIndex = i + j
+          const file = files[fileIndex]
+          batch.push(uploadFile(file, fileIndex))
+        }
+
+        // Chờ batch hoàn thành trước khi tiếp tục batch tiếp theo
+        const batchResults = await Promise.all(batch)
+        results.push(...batchResults)
+
+        console.log(`📦 Completed batch ${Math.floor(i / MAX_CONCURRENT_UPLOADS) + 1} - ${batchResults.length} files`)
       }
 
       // Final progress update
@@ -191,17 +230,25 @@ class SmartImportService {
           current: totalFiles,
           total: totalFiles,
           percentage: 100,
-          currentFile: '',
-          stage: 'completed'
+          currentFile: 'Hoàn thành tất cả',
+          stage: 'completed',
+          activeFiles: 0
         })
       }
 
+      const successCount = results.filter(r => r.success).length
+      const failureCount = results.filter(r => !r.success).length
+
+      console.log(`🏁 PARALLEL Smart Import completed: ${successCount}/${totalFiles} successful`)
+
       return {
-        totalFiles: files.length,
-        successCount: results.filter(r => r.success).length,
-        failureCount: results.filter(r => !r.success).length,
+        totalFiles: totalFiles,
+        successCount: successCount,
+        failureCount: failureCount,
         results: results,
-        totalSize: Array.from(files).reduce((sum, file) => sum + file.size, 0)
+        totalSize: Array.from(files).reduce((sum, file) => sum + file.size, 0),
+        uploadMethod: 'parallel',
+        maxConcurrency: MAX_CONCURRENT_UPLOADS
       }
     } catch (error) {
       console.error('🔥 Smart Import batch upload error:', error)
