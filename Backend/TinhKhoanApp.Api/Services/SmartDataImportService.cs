@@ -155,63 +155,19 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Import multiple files with smart routing - OPTIMIZED VERSION
-        /// Processes files in parallel batches for better performance
+        /// Import multiple files with smart routing
         /// </summary>
         public async Task<List<SmartImportResult>> ImportMultipleFilesSmartAsync(List<IFormFile> files)
         {
             var results = new List<SmartImportResult>();
 
-            if (!files.Any())
+            foreach (var file in files)
             {
-                return results;
+                var result = await ImportFileSmartAsync(file);
+                results.Add(result);
             }
 
-            _logger.LogInformation("🚀 Starting OPTIMIZED batch Smart Import for {FileCount} files", files.Count);
-            var batchStartTime = DateTime.UtcNow;
-
-            try
-            {
-                // ✅ OPTIMIZATION 1: Process in parallel batches
-                const int BATCH_SIZE = 3; // Process 3 files simultaneously
-                var tasks = new List<Task<SmartImportResult>>();
-
-                for (int i = 0; i < files.Count; i += BATCH_SIZE)
-                {
-                    var batch = files.Skip(i).Take(BATCH_SIZE).ToList();
-
-                    _logger.LogInformation("📦 Processing batch {BatchNumber}: {FileCount} files",
-                        (i / BATCH_SIZE) + 1, batch.Count);
-
-                    // Process batch in parallel
-                    var batchTasks = batch.Select(file => ImportFileSmartAsync(file)).ToArray();
-
-                    // Wait for current batch to complete before starting next
-                    var batchResults = await Task.WhenAll(batchTasks);
-                    results.AddRange(batchResults);
-
-                    // Small delay between batches to avoid overwhelming the system
-                    if (i + BATCH_SIZE < files.Count)
-                    {
-                        await Task.Delay(200); // 200ms delay between batches
-                    }
-                }
-
-                var totalDuration = (DateTime.UtcNow - batchStartTime).TotalSeconds;
-                var successCount = results.Count(r => r.Success);
-
-                _logger.LogInformation("✅ OPTIMIZED batch Smart Import completed: {SuccessCount}/{TotalCount} successful in {Duration:F1}s",
-                    successCount, files.Count, totalDuration);
-
-                return results;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Batch Smart Import failed");
-
-                // Return partial results if any completed
-                return results;
-            }
+            return results;
         }
 
         /// <summary>
