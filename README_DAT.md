@@ -85,3 +85,36 @@ sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C
 - **Container mới:** azure_sql_edge_tinhkhoan (Azure SQL Edge ARM64) ✅ ĐANG SỬ DỤNG
 - **Port:** 1433:1433
 - **Performance:** Tối ưu cho Apple Silicon Mac
+
+### 🗑️ **XÓA DỮ LIỆU UNITS VÀ ROLES - 06/07/2025**
+
+**✅ HOÀN THÀNH:** Đã xóa toàn bộ dữ liệu liên quan đến Đơn vị (Units) và Vai trò (Roles)
+
+#### Quy trình xóa an toàn:
+1. **Backup dữ liệu:** Tạo backup với timestamp `UnitsBackup_20250706_201639`, `RolesBackup_20250706_201639`
+2. **Xóa theo thứ tự đúng:** 
+   - EmployeeRoles (quan hệ nhiều-nhiều)
+   - EmployeeKpiAssignments, BranchKpiAssignments (KPI assignments)
+   - Cập nhật Employees.UnitId = NULL (tránh foreign key conflict)
+   - Xóa child Units (ParentUnitId IS NOT NULL)
+   - Xóa parent Units (ParentUnitId IS NULL)
+   - Xóa tất cả Roles
+3. **Reset Identity:** DBCC CHECKIDENT cho Units và Roles về 0
+
+#### Kết quả:
+- **Units:** 46 → 0 ✅
+- **Roles:** 23 → 0 ✅
+- **Frontend:** Hiển thị danh sách trống ✅
+- **Backend API:** Trả về arrays rỗng ✅
+
+#### API Endpoints mới:
+- `POST /api/Maintenance/backup-units-roles` - Tạo backup
+- `POST /api/Maintenance/delete-units-roles` - Xóa dữ liệu
+
+#### Files tạo:
+- `MaintenanceController.cs` - Controller xử lý maintenance
+- `backup_units_roles_data.sql` - Script backup thủ công
+- `delete_units_roles_data.sql` - Script xóa thủ công
+- `delete_units_roles.sh` - Bash script automation
+
+**🎯 Mục đích:** Chuẩn bị clean slate để import dữ liệu mới hoặc test hệ thống với dữ liệu trống.
