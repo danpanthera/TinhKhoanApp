@@ -74,7 +74,7 @@
                   :key="table.id"
                   :value="table.id"
                 >
-                  {{ table.tableName }} ({{ getIndicatorCount(table.id) }} chỉ tiêu)
+                  {{ table.description || table.tableName }} ({{ getIndicatorCount(table.id) }} chỉ tiêu)
                   <span class="table-code">{{ table.tableType }}</span>
                 </option>
               </select>
@@ -82,7 +82,7 @@
 
             <!-- Thông tin bảng đã chọn -->
             <div v-if="selectedTable" class="selected-table-info">
-              <h3>{{ selectedTable.tableName }}</h3>
+              <h3>{{ selectedTable.description || selectedTable.tableName }}</h3>
 
               <div class="table-details">
                 <div class="detail-item">
@@ -138,7 +138,7 @@
 
         <div v-else class="indicators-panel">
           <div class="indicators-header">
-            <h2>⚡ Chỉ tiêu KPI - {{ selectedTable.tableName }}</h2>
+            <h2>⚡ Chỉ tiêu KPI - {{ selectedTable.description || selectedTable.tableName }}</h2>
             <button
               @click="openAddIndicatorModal"
               class="action-button add-btn"

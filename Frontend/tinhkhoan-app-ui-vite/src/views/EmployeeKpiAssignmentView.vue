@@ -158,14 +158,14 @@
             <select v-model="selectedTableId" @change="onTableChange" class="form-control">
               <option value="">-- Chọn bảng KPI --</option>
               <option v-for="table in staffKpiTables" :key="table.id" :value="table.id">
-                📊 {{ table.tableName }} ({{ table.indicatorCount }} chỉ tiêu)
+                📊 {{ table.description || table.tableName }} ({{ table.indicatorCount }} chỉ tiêu)
               </option>
             </select>
           </div>
 
           <div class="alert-agribank alert-info" v-if="selectedTableId && selectedKpiTable">
             <strong>📊 Đã chọn:</strong>
-            "{{ selectedKpiTable.tableName }}" → <strong>{{ selectedKpiTable.indicatorCount }}</strong> chỉ tiêu KPI
+            "{{ selectedKpiTable.description || selectedKpiTable.tableName }}" → <strong>{{ selectedKpiTable.indicatorCount }}</strong> chỉ tiêu KPI
           </div>
         </div>
       </div>
@@ -332,7 +332,7 @@ const handleTargetBlur = (event, indicatorId) => {
 const staffKpiTables = computed(() => {
   return kpiTables.value
     .filter(table => table.category === 'Vai trò cán bộ')
-    .sort((a, b) => (a.tableName || '').localeCompare(b.tableName || ''))
+    .sort((a, b) => (a.description || a.tableName || '').localeCompare(b.description || b.tableName || ''))
 })
 
 // Bảng KPI đã chọn
@@ -785,7 +785,7 @@ function getEmployeeShortName(empId) {
 
 function getKpiTableTitle() {
   const table = kpiTables.value.find(t => t.id === parseInt(selectedTableId.value))
-  return table ? table.tableName : 'Bảng KPI'
+  return table ? (table.description || table.tableName) : 'Bảng KPI'
 }
 
 function getIndicatorUnit(indicator) {
