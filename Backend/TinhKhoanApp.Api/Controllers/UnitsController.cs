@@ -46,20 +46,21 @@ namespace TinhKhoanApp.Api.Controllers
             return code switch
             {
                 "CnLaiChau" => 1,
+                "HoiSo" => 2,  // Hội Sở
                 // Tên cũ (để backward compatibility)
-                "CnTamDuong" => 2,
-                "CnPhongTho" => 3,
-                "CnSinHo" => 4,
-                "CnMuongTe" => 5,
-                "CnThanUyen" => 6,
-                "CnThanhPho" => 7,
-                "CnTanUyen" => 8,
+                "CnTamDuong" => 3,
+                "CnPhongTho" => 4,
+                "CnSinHo" => 5,
+                "CnMuongTe" => 6,
+                "CnThanUyen" => 7,
+                "CnThanhPho" => 8,
+                "CnTanUyen" => 9,
                 // Tên mới theo quy ước anh
-                "CnBinhLu" => 2,
-                "CnBumTo" => 5,
-                "CnDoanKet" => 7,
-                "CnNamHang" => 9,
-                "CnNamNhun" => 9,
+                "CnBinhLu" => 3,
+                "CnBumTo" => 6,
+                "CnDoanKet" => 8,
+                "CnNamHang" => 10,
+                "CnNamNhun" => 10,
                 _ => 999 // Các units khác sẽ được sắp xếp cuối
             };
         }
@@ -236,51 +237,6 @@ namespace TinhKhoanApp.Api.Controllers
             _context.Units.Remove(unit);
             await _context.SaveChangesAsync();
             return NoContent();
-        }
-
-        // POST: api/Units/restore-original-data (Admin only)
-        [HttpPost("restore-original-data")]
-        public async Task<ActionResult> RestoreOriginalData()
-        {
-            try
-            {
-                // Đọc script SQL từ file
-                var scriptPath = Path.Combine(Directory.GetCurrentDirectory(), "restore_original_data.sql");
-                if (!System.IO.File.Exists(scriptPath))
-                {
-                    return BadRequest(new { message = "Script file not found: restore_original_data.sql" });
-                }
-
-                var sqlScript = await System.IO.File.ReadAllTextAsync(scriptPath);
-
-                // Execute SQL script
-                await _context.Database.ExecuteSqlRawAsync(sqlScript);
-
-                // Verify results
-                var unitsCount = await _context.Units.CountAsync(u => !u.IsDeleted);
-                var positionsCount = await _context.Positions.CountAsync();
-                var employeesCount = await _context.Employees.CountAsync(e => e.IsActive);
-
-                return Ok(new
-                {
-                    message = "✅ Đã khôi phục dữ liệu gốc thành công!",
-                    results = new
-                    {
-                        units = unitsCount,
-                        positions = positionsCount,
-                        employees = employeesCount
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new
-                {
-                    message = "❌ Lỗi khi khôi phục dữ liệu",
-                    error = ex.Message,
-                    details = ex.ToString()
-                });
-            }
         }
     }
 }
