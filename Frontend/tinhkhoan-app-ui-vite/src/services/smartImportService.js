@@ -8,76 +8,286 @@ class SmartImportService {
 
   /**
    * Upload file với Smart Import - tự động phân loại dựa vào filename
+   * OPTIMIZED VERSION với timeout ngắn hơn và retry logic
    * @param {File} file - File cần upload
    * @param {Date} statementDate - Ngày sao kê (tùy chọn)
    * @returns {Promise} Kết quả upload và xử lý
    */
   async uploadSmartFile(file, statementDate = null) {
+    const MAX_RETRIES = 2
+    const TIMEOUT = 30000 // 30 giây thay vì 5 phút
+
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        console.log(`📤 Smart Import attempt ${attempt}/${MAX_RETRIES} for: ${file.name}`)
+
+        const formData = new FormData()
+        formData.append('file', file)
+
+        // Thêm statement date nếu có
+        if (statementDate) {
+          formData.append('statementDate', statementDate.toISOString())
+        }
+
+        // ✅ OPTIMIZATION: Giảm timeout và thêm progress tracking
+        const response = await apiClient.post('/SmartDataImport/upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          },
+          timeout: TIMEOUT,
+          onUploadProgress: (progressEvent) => {
+            if (progressEvent.lengthComputable) {
+              const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+              console.log(`📊 Upload progress for ${file.name}: ${percentCompleted}%`)
+            }
+          }
+        })
+
+        console.log(`✅ Smart Import success on attempt ${attempt} for: ${file.name}`)
+        return response.data
+
+      } catch (error) {
+        console.error(`❌ Smart Import attempt ${attempt} failed for ${file.name}:`, error.message)
+
+        // Nếu là lần thử cuối hoặc lỗi không retry được
+        if (attempt === MAX_RETRIES || this.isNonRetryableError(error)) {
+          throw new Error(`Smart Import failed after ${attempt} attempt(s): ${error.response?.data?.message || error.message}`)
+        }
+
+        // Đợi trước khi retry (exponential backoff)
+        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000) // 1s, 2s, max 5s
+        console.log(`⏳ Retrying in ${delay}ms...`)
+        await new Promise(resolve => setTimeout(resolve, delay))
+      }
+    }
+  }
+
+  /**
+   * Kiểm tra xem lỗi có nên retry không
+   */
+  isNonRetryableError(error) {
+    const status = error.response?.status
+
+    // Không retry với lỗi client (4xx) trừ timeout
+    if (status >= 400 && status < 500 && status !== 408 && status !== 429) {
+      return true
+    }
+
+    // Không retry với lỗi file format
+    if (error.message?.includes('format') || error.message?.includes('invalid file')) {
+      return true
+    }
+
+    return false
+  }
+
+  /**
+   * Upload nhiều file với Smart Import - OPTIMIZED VERSION
+   * @param {FileList|Array} files - Danh sách file cần upload
+   * @param {Date} statementDate - Ngày sao kê (tùy chọn)
+   * @param {Function} progressCallback - Callback để update progress
+   * @returns {Promise} Kết quả upload batch
+   */
+  async uploadSmartFiles(files, statementDate = null, progressCallback = null) {
     try {
+      const results = []
+      const startTime = Date.now()
+
+      // ✅ OPTIMIZATION 1: Batch upload nhỏ thay vì từng file một
+      const BATCH_SIZE = 3 // Upload 3 file cùng lúc
+      const batches = []
+
+      for (let i = 0; i < files.length; i += BATCH_SIZE) {
+        batches.push(files.slice(i, i + BATCH_SIZE))
+      }
+
+      console.log(`🚀 Smart Import SUPER OPTIMIZED: ${files.length} files using batch endpoint`)
+
+      // ✅ SUPER OPTIMIZATION: Sử dụng batch upload endpoint khi có ít file
+      if (files.length <= 5) {
+        console.log('📦 Using single batch upload for', files.length, 'files')
+        const result = await this.uploadSmartFilesBatch(files, statementDate, progressCallback)
+        result.duration = (Date.now() - startTime) / 1000
+        return result
+      }
+
+      let completedFiles = 0
+
+      for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+        const batch = batches[batchIndex]
+        console.log(`� Processing batch ${batchIndex + 1}/${batches.length} (${batch.length} files)`)
+
+        // ✅ OPTIMIZATION 2: Upload song song trong batch
+        const batchPromises = batch.map(async (file, fileIndex) => {
+          const overallIndex = batchIndex * BATCH_SIZE + fileIndex
+
+          try {
+            // Update progress cho file hiện tại
+            if (progressCallback) {
+              progressCallback({
+                current: completedFiles + 1,
+                total: files.length,
+                percentage: Math.round((completedFiles / files.length) * 100),
+                currentFile: file.name,
+                status: 'uploading'
+              })
+            }
+
+            console.log(`📤 Uploading ${overallIndex + 1}/${files.length}: ${file.name}`)
+
+            const result = await this.uploadSmartFile(file, statementDate)
+
+            completedFiles++
+
+            // Update progress sau khi hoàn thành
+            if (progressCallback) {
+              progressCallback({
+                current: completedFiles,
+                total: files.length,
+                percentage: Math.round((completedFiles / files.length) * 100),
+                currentFile: file.name,
+                status: 'completed'
+              })
+            }
+
+            return {
+              fileName: file.name,
+              success: true,
+              result: result,
+              index: overallIndex + 1
+            }
+          } catch (error) {
+            completedFiles++
+
+            if (progressCallback) {
+              progressCallback({
+                current: completedFiles,
+                total: files.length,
+                percentage: Math.round((completedFiles / files.length) * 100),
+                currentFile: file.name,
+                status: 'error'
+              })
+            }
+
+            return {
+              fileName: file.name,
+              success: false,
+              error: error.message,
+              index: overallIndex + 1
+            }
+          }
+        })
+
+        // Đợi batch hoàn thành
+        const batchResults = await Promise.all(batchPromises)
+        results.push(...batchResults)
+
+        // ✅ OPTIMIZATION 3: Thêm delay nhỏ giữa các batch để tránh overwhelm server
+        if (batchIndex < batches.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500)) // 500ms delay
+        }
+      }
+
+      const totalTime = (Date.now() - startTime) / 1000
+      console.log(`✅ Smart Import completed in ${totalTime.toFixed(2)}s`)
+
+      return {
+        totalFiles: files.length,
+        successCount: results.filter(r => r.success).length,
+        failureCount: results.filter(r => !r.success).length,
+        results: results,
+        duration: totalTime
+      }
+    } catch (error) {
+      console.error('🔥 Smart Import batch upload error:', error)
+      throw new Error(`Smart Import batch failed: ${error.message}`)
+    }
+  }
+
+  /**
+   * Upload batch files qua endpoint /upload-multiple - SUPER OPTIMIZED
+   */
+  async uploadSmartFilesBatch(files, statementDate = null, progressCallback = null) {
+    try {
+      if (progressCallback) {
+        progressCallback({
+          current: 0,
+          total: files.length,
+          percentage: 0,
+          currentFile: 'Preparing batch upload...',
+          status: 'preparing'
+        })
+      }
+
       const formData = new FormData()
-      formData.append('file', file)
+
+      // Thêm tất cả files
+      files.forEach((file, index) => {
+        formData.append('files', file)
+      })
 
       // Thêm statement date nếu có
       if (statementDate) {
         formData.append('statementDate', statementDate.toISOString())
       }
 
-      const response = await apiClient.post('/SmartDataImport/upload', formData, {
+      if (progressCallback) {
+        progressCallback({
+          current: 0,
+          total: files.length,
+          percentage: 10,
+          currentFile: 'Uploading batch...',
+          status: 'uploading'
+        })
+      }
+
+      const response = await apiClient.post('/SmartDataImport/upload-multiple', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         },
-        timeout: 300000 // 5 phút timeout cho file lớn
+        timeout: 60000, // 1 phút cho batch
+        onUploadProgress: (progressEvent) => {
+          if (progressEvent.lengthComputable && progressCallback) {
+            const uploadPercent = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            progressCallback({
+              current: Math.floor(files.length * uploadPercent / 100),
+              total: files.length,
+              percentage: uploadPercent,
+              currentFile: 'Processing batch...',
+              status: 'processing'
+            })
+          }
+        }
       })
 
-      return response.data
-    } catch (error) {
-      console.error('🔥 Smart Import upload error:', error)
-      throw new Error(`Smart Import failed: ${error.response?.data?.message || error.message}`)
-    }
-  }
+      const result = response.data
 
-  /**
-   * Upload nhiều file với Smart Import
-   * @param {FileList|Array} files - Danh sách file cần upload
-   * @param {Date} statementDate - Ngày sao kê (tùy chọn)
-   * @returns {Promise} Kết quả upload batch
-   */
-  async uploadSmartFiles(files, statementDate = null) {
-    try {
-      const results = []
-
-      // Upload từng file một để có thể tracking progress
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i]
-        console.log(`📤 Smart uploading file ${i + 1}/${files.length}: ${file.name}`)
-
-        try {
-          const result = await this.uploadSmartFile(file, statementDate)
-          results.push({
-            fileName: file.name,
-            success: true,
-            result: result,
-            index: i + 1
-          })
-        } catch (error) {
-          results.push({
-            fileName: file.name,
-            success: false,
-            error: error.message,
-            index: i + 1
-          })
-        }
+      if (progressCallback) {
+        progressCallback({
+          current: files.length,
+          total: files.length,
+          percentage: 100,
+          currentFile: 'Completed!',
+          status: 'completed'
+        })
       }
 
       return {
-        totalFiles: files.length,
-        successCount: results.filter(r => r.success).length,
-        failureCount: results.filter(r => !r.success).length,
-        results: results
+        totalFiles: result.totalFiles || files.length,
+        successCount: result.successCount || 0,
+        failureCount: (result.totalFiles || files.length) - (result.successCount || 0),
+        results: result.results?.map((r, index) => ({
+          fileName: r.fileName,
+          success: r.success,
+          result: r,
+          index: index + 1
+        })) || [],
+        duration: result.results?.[0]?.duration || 0
       }
+
     } catch (error) {
-      console.error('🔥 Smart Import batch upload error:', error)
-      throw new Error(`Smart Import batch failed: ${error.message}`)
+      console.error('🔥 Batch upload error:', error)
+      throw new Error(`Batch upload failed: ${error.response?.data?.message || error.message}`)
     }
   }
 

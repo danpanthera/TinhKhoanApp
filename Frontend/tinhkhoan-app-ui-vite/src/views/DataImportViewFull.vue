@@ -1721,7 +1721,7 @@ const extractDateFromFileName = (fileName) => {
   return smartImportService.extractDateFromFileName(fileName)
 }
 
-// Bắt đầu Smart Import
+// Bắt đầu Smart Import - OPTIMIZED VERSION
 const startSmartImport = async () => {
   if (smartSelectedFiles.value.length === 0) {
     errorMessage.value = 'Vui lòng chọn ít nhất một file'
@@ -1748,18 +1748,34 @@ const startSmartImport = async () => {
       currentFile: ''
     }
 
-    console.log('🧠 Starting Smart Import with', smartSelectedFiles.value.length, 'files')
+    console.log('🧠 Starting OPTIMIZED Smart Import with', smartSelectedFiles.value.length, 'files')
 
-    // Call Smart Import Service
+    // ✅ OPTIMIZATION: Sử dụng callback để update progress real-time
+    const progressCallback = (progressInfo) => {
+      smartUploadProgress.value = {
+        current: progressInfo.current,
+        total: progressInfo.total,
+        percentage: progressInfo.percentage,
+        currentFile: progressInfo.currentFile
+      }
+
+      console.log(`📊 Progress: ${progressInfo.current}/${progressInfo.total} (${progressInfo.percentage}%) - ${progressInfo.currentFile}`)
+    }
+
+    // Call OPTIMIZED Smart Import Service với progress callback
     const results = await smartImportService.uploadSmartFiles(
       smartSelectedFiles.value,
-      statementDate
+      statementDate,
+      progressCallback
     )
 
     smartImportResults.value = results
 
+    // ✅ OPTIMIZATION: Hiển thị thông tin thời gian
+    const avgTimePerFile = results.duration ? (results.duration / results.totalFiles).toFixed(1) : 'N/A'
+
     if (results.successCount > 0) {
-      successMessage.value = `✅ Smart Import hoàn thành! ${results.successCount}/${results.totalFiles} file thành công`
+      successMessage.value = `✅ Smart Import hoàn thành! ${results.successCount}/${results.totalFiles} file thành công trong ${results.duration?.toFixed(1)}s (avg: ${avgTimePerFile}s/file)`
 
       // Refresh data sau khi import thành công
       await refreshAllData()
