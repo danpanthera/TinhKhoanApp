@@ -56,11 +56,10 @@ class SmartImportService {
 
     const response = await apiClient.post('/SmartDataImport/upload', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
-        // 🚀 OPTIMIZATION: Enable compression
-        'Accept-Encoding': 'gzip, deflate, br'
+        'Content-Type': 'multipart/form-data'
+        // � Removed Accept-Encoding - Browser handles this automatically
       },
-      timeout: 120000, // 🚀 Giảm timeout xuống 2 phút cho file nhỏ
+      timeout: 60000, // 🚀 Giảm xuống 1 phút cho file nhỏ
       onUploadProgress: (progressEvent) => {
         if (progressCallback && progressEvent.total) {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
@@ -92,11 +91,10 @@ class SmartImportService {
 
     const response = await apiClient.post('/SmartDataImport/upload', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
-        // 🚀 OPTIMIZATION: Enable compression
-        'Accept-Encoding': 'gzip, deflate, br'
+        'Content-Type': 'multipart/form-data'
+        // � Removed Accept-Encoding - Browser handles this automatically
       },
-      timeout: 300000, // 🚀 5 phút cho file lớn
+      timeout: 180000, // 🚀 Giảm xuống 3 phút cho file lớn
       onUploadProgress: (progressEvent) => {
         if (progressCallback && progressEvent.total) {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
@@ -134,7 +132,7 @@ class SmartImportService {
   async uploadSmartFiles(files, statementDate = null, progressCallback = null) {
     try {
       const totalFiles = files.length
-      const MAX_CONCURRENT_UPLOADS = 3 // 🚀 Upload tối đa 3 file cùng lúc
+      const MAX_CONCURRENT_UPLOADS = 5 // 🚀 Tăng lên 5 file cùng lúc để tăng tốc
 
       console.log(`🚀 Starting PARALLEL Smart Import with ${totalFiles} files (max ${MAX_CONCURRENT_UPLOADS} concurrent)`)
 
@@ -205,24 +203,29 @@ class SmartImportService {
         }
       }
 
-      // 🚀 PARALLEL PROCESSING với concurrency limit
-      const promises = []
-      for (let i = 0; i < totalFiles; i += MAX_CONCURRENT_UPLOADS) {
-        const batch = []
+      // 🚀 TRUE PARALLEL PROCESSING - All files at once for maximum speed
+      console.log('🏎️ Using TRUE parallel processing (all files at once)')
 
-        // Tạo batch của MAX_CONCURRENT_UPLOADS files
-        for (let j = 0; j < MAX_CONCURRENT_UPLOADS && (i + j) < totalFiles; j++) {
-          const fileIndex = i + j
-          const file = files[fileIndex]
-          batch.push(uploadFile(file, fileIndex))
+      // Create all upload promises at once
+      const allPromises = Array.from(files).map((file, index) => uploadFile(file, index))
+
+      // Use Promise.allSettled to handle individual failures gracefully
+      const settledResults = await Promise.allSettled(allPromises)
+
+      // Extract results from settled promises
+      settledResults.forEach((settled, index) => {
+        if (settled.status === 'fulfilled') {
+          results.push(settled.value)
+        } else {
+          results.push({
+            fileName: files[index].name,
+            success: false,
+            error: settled.reason?.message || 'Unknown error',
+            index: index + 1,
+            fileSize: files[index].size
+          })
         }
-
-        // Chờ batch hoàn thành trước khi tiếp tục batch tiếp theo
-        const batchResults = await Promise.all(batch)
-        results.push(...batchResults)
-
-        console.log(`📦 Completed batch ${Math.floor(i / MAX_CONCURRENT_UPLOADS) + 1} - ${batchResults.length} files`)
-      }
+      })
 
       // Final progress update
       if (progressCallback) {
@@ -239,7 +242,7 @@ class SmartImportService {
       const successCount = results.filter(r => r.success).length
       const failureCount = results.filter(r => !r.success).length
 
-      console.log(`🏁 PARALLEL Smart Import completed: ${successCount}/${totalFiles} successful`)
+      console.log(`🏁 TRUE PARALLEL Smart Import completed: ${successCount}/${totalFiles} successful`)
 
       return {
         totalFiles: totalFiles,
@@ -247,8 +250,8 @@ class SmartImportService {
         failureCount: failureCount,
         results: results,
         totalSize: Array.from(files).reduce((sum, file) => sum + file.size, 0),
-        uploadMethod: 'parallel',
-        maxConcurrency: MAX_CONCURRENT_UPLOADS
+        uploadMethod: 'true-parallel',
+        maxConcurrency: 'unlimited'
       }
     } catch (error) {
       console.error('🔥 Smart Import batch upload error:', error)
