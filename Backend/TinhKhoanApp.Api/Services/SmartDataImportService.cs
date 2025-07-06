@@ -184,7 +184,7 @@ namespace TinhKhoanApp.Api.Services
             try
             {
                 _logger.LogInformation("🔍 [ROUTING_DEBUG] Analyzing filename: {FileName}", fileName);
-                
+
                 // Pattern 1: Standard format: BranchCode_DataType_YYYYMMDD.ext
                 // Example: 7800_DP01_20241231.csv, 7808_LN01_20241130.xlsx
                 var standardPattern = @"^(\d{4})_([A-Za-z0-9]+)_(\d{8})\.(.+)$";
@@ -208,7 +208,7 @@ namespace TinhKhoanApp.Api.Services
                     }
 
                     routingInfo.IsStandardFormat = true;
-                    _logger.LogInformation("📅 [PATTERN1_SUCCESS] Branch: {Branch}, DataType: {DataType}, Date: {Date}", 
+                    _logger.LogInformation("📅 [PATTERN1_SUCCESS] Branch: {Branch}, DataType: {DataType}, Date: {Date}",
                         routingInfo.BranchCode, routingInfo.DataTypeCode, routingInfo.DateString);
                 }
                 else
@@ -235,7 +235,7 @@ namespace TinhKhoanApp.Api.Services
                         }
 
                         routingInfo.IsStandardFormat = true; // Treat test files as standard format
-                        _logger.LogInformation("📅 [PATTERN2_SUCCESS] Branch: {Branch}, DataType: {DataType}, Date: {Date}", 
+                        _logger.LogInformation("📅 [PATTERN2_SUCCESS] Branch: {Branch}, DataType: {DataType}, Date: {Date}",
                             routingInfo.BranchCode, routingInfo.DataTypeCode, routingInfo.DateString);
                     }
                     else
@@ -280,7 +280,7 @@ namespace TinhKhoanApp.Api.Services
                     // Extract NgayDL từ filename pattern và lưu vào routing info
                     // Use robust extraction that works regardless of filename format
                     var extractedNgayDL = ExtractNgayDLFromFileName(fileName);
-                    
+
                     // For testing: force a date extraction if not found
                     if (string.IsNullOrEmpty(extractedNgayDL) || extractedNgayDL == DateTime.Now.ToString("dd/MM/yyyy"))
                     {
@@ -294,16 +294,16 @@ namespace TinhKhoanApp.Api.Services
                             extractedNgayDL = "30/11/2024";
                         }
                     }
-                    
+
                     // FORCE NgayDL for testing
                     if (fileName.Contains("20241231"))
                     {
                         extractedNgayDL = "31/12/2024";
                     }
-                    
+
                     routingInfo.NgayDL = extractedNgayDL;
                     _logger.LogInformation("📅 Extracted NgayDL: {NgayDL} from filename: {FileName}", extractedNgayDL, fileName);
-                    
+
                     // Also try to extract date from StatementDate if available
                     if (routingInfo.StatementDate.HasValue && string.IsNullOrEmpty(extractedNgayDL))
                     {
@@ -760,12 +760,12 @@ namespace TinhKhoanApp.Api.Services
             try
             {
                 _logger.LogInformation("🔍 [EXTRACT_DEBUG] Extracting NgayDL from filename: {FileName}", fileName);
-                
+
                 // Multiple patterns to extract 8-digit date: yyyymmdd
                 var patterns = new[]
                 {
                     @"(\d{8})\.(?:csv|xlsx?)$",  // ends with 8 digits before extension
-                    @"_(\d{8})\.(?:csv|xlsx?)$", // underscore then 8 digits before extension  
+                    @"_(\d{8})\.(?:csv|xlsx?)$", // underscore then 8 digits before extension
                     @"(\d{4})(\d{2})(\d{2})",    // any 8 consecutive digits
                 };
 
@@ -773,11 +773,11 @@ namespace TinhKhoanApp.Api.Services
                 {
                     var match = Regex.Match(fileName, pattern, RegexOptions.IgnoreCase);
                     _logger.LogInformation("🔍 [EXTRACT_DEBUG] Testing pattern '{Pattern}': Match={Success}", pattern, match.Success);
-                    
+
                     if (match.Success)
                     {
                         string dateString;
-                        
+
                         if (match.Groups.Count == 2) // Single group with full date
                         {
                             dateString = match.Groups[1].Value;
