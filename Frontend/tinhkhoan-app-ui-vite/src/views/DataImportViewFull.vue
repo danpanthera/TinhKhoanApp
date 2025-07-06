@@ -545,6 +545,7 @@
 <script setup>
 import api from '@/services/api'; // ✅ Import api để sử dụng trong fallback strategy
 import rawDataService from '@/services/rawDataService';
+import smartImportService from '@/services/smartImportService';
 import { computed, ref } from 'vue';
 
 // Reactive state
@@ -1684,19 +1685,25 @@ const closeSmartImportModal = () => {
 
 // Xử lý chọn file Smart Import
 const handleSmartFileSelect = (event) => {
+  console.log('🔍 handleSmartFileSelect called', event)
   const files = event.target.files
+  console.log('🔍 Files selected:', files ? files.length : 0)
   if (files.length === 0) return
 
   smartSelectedFiles.value = Array.from(files)
+  console.log('🔍 smartSelectedFiles updated:', smartSelectedFiles.value.length)
 }
 
 // Xử lý kéo thả file
 const handleSmartFileDrop = (event) => {
+  console.log('🔍 handleSmartFileDrop called', event)
   isDragOver.value = false
   const files = event.dataTransfer.files
+  console.log('🔍 Files dropped:', files ? files.length : 0)
   if (files.length === 0) return
 
   smartSelectedFiles.value = Array.from(files)
+  console.log('🔍 smartSelectedFiles updated:', smartSelectedFiles.value.length)
 }
 
 // Xóa file khỏi danh sách
