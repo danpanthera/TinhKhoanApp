@@ -149,8 +149,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
 import { useKhoanPeriodStore } from "@/stores/khoanPeriodStore";
+import { computed, onMounted, ref } from "vue";
 
 const khoanPeriodStore = useKhoanPeriodStore();
 

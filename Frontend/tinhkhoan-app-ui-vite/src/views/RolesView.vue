@@ -99,8 +99,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
 import { useRoleStore } from "@/stores/roleStore";
+import { onMounted, ref } from "vue";
 
 const roleStore = useRoleStore();
 
@@ -114,8 +114,20 @@ const isEditing = ref(false);
 const formError = ref(null);
 
 onMounted(() => {
+  console.log('🔍 RolesView mounted - Debug Info:', {
+    rolesLength: roleStore.roles.length,
+    isLoading: roleStore.isLoading,
+    error: roleStore.error
+  });
+
   if (roleStore.roles.length === 0 && !roleStore.isLoading) {
+    console.log('📞 Calling roleStore.fetchRoles()...');
     roleStore.fetchRoles();
+  } else {
+    console.log('⏭️ Skipping fetchRoles because:', {
+      hasRoles: roleStore.roles.length > 0,
+      isLoading: roleStore.isLoading
+    });
   }
 });
 

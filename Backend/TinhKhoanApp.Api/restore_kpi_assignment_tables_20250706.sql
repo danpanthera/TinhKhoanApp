@@ -1,6 +1,6 @@
 -- =============================================================
 -- PHỤC HỒI 32 BẢNG KPI ASSIGNMENT TABLES
--- 23 bảng KPI cho cán bộ + 9 bảng KPI cho chi nhánh  
+-- 23 bảng KPI cho cán bộ + 9 bảng KPI cho chi nhánh
 -- Ngày: 06/07/2025
 -- =============================================================
 
@@ -23,10 +23,10 @@ PRINT '📥 PHẦN 1: Tạo 23 bảng KPI cho cán bộ...';
 SET IDENTITY_INSERT KpiAssignmentTables ON;
 
 -- 1. Bảng KPI cho Trưởng phòng Khách hàng Doanh nghiệp
-INSERT INTO KpiAssignmentTables (Id, TableType, TableName, Description, Category, IsActive, CreatedDate) 
+INSERT INTO KpiAssignmentTables (Id, TableType, TableName, Description, Category, IsActive, CreatedDate)
 VALUES (1, 1, N'TruongphongKhdn', N'Bảng KPI Trưởng phòng Khách hàng Doanh nghiệp', N'CANBO', 1, GETDATE());
 
--- 2. Bảng KPI cho Trưởng phòng Khách hàng Cá nhân  
+-- 2. Bảng KPI cho Trưởng phòng Khách hàng Cá nhân
 INSERT INTO KpiAssignmentTables (Id, TableType, TableName, Description, Category, IsActive, CreatedDate)
 VALUES (2, 1, N'TruongphongKhcn', N'Bảng KPI Trưởng phòng Khách hàng Cá nhân', N'CANBO', 1, GETDATE());
 
@@ -42,7 +42,7 @@ VALUES (4, 1, N'PhophongKhcn', N'Bảng KPI Phó phòng Khách hàng Cá nhân',
 INSERT INTO KpiAssignmentTables (Id, TableType, TableName, Description, Category, IsActive, CreatedDate)
 VALUES (5, 1, N'TruongphongKhqlrr', N'Bảng KPI Trưởng phòng Kế hoạch & Quản lý rủi ro', N'CANBO', 1, GETDATE());
 
--- 6. Bảng KPI cho Phó phòng Kế hoạch & Quản lý rủi ro  
+-- 6. Bảng KPI cho Phó phòng Kế hoạch & Quản lý rủi ro
 INSERT INTO KpiAssignmentTables (Id, TableType, TableName, Description, Category, IsActive, CreatedDate)
 VALUES (6, 1, N'PhophongKhqlrr', N'Bảng KPI Phó phòng Kế hoạch & Quản lý rủi ro', N'CANBO', 1, GETDATE());
 
@@ -90,7 +90,7 @@ VALUES (16, 1, N'TruongphongKhCnl2', N'Bảng KPI Trưởng phòng Khách hàng 
 INSERT INTO KpiAssignmentTables (Id, TableType, TableName, Description, Category, IsActive, CreatedDate)
 VALUES (17, 1, N'PhophongKhCnl2', N'Bảng KPI Phó phòng Khách hàng CNL2', N'CANBO', 1, GETDATE());
 
--- 18. Bảng KPI cho Trưởng phòng Kế toán & Ngân quỹ CNL2  
+-- 18. Bảng KPI cho Trưởng phòng Kế toán & Ngân quỹ CNL2
 INSERT INTO KpiAssignmentTables (Id, TableType, TableName, Description, Category, IsActive, CreatedDate)
 VALUES (18, 1, N'TruongphongKtnqCnl2', N'Bảng KPI Trưởng phòng Kế toán & Ngân quỹ CNL2', N'CANBO', 1, GETDATE());
 
@@ -114,7 +114,7 @@ VALUES (22, 1, N'GiamdocCnl2', N'Bảng KPI Giám đốc Chi nhánh cấp 2', N'
 INSERT INTO KpiAssignmentTables (Id, TableType, TableName, Description, Category, IsActive, CreatedDate)
 VALUES (23, 1, N'CanBoNghiepVuKhac', N'Bảng KPI Cán bộ nghiệp vụ khác', N'CANBO', 1, GETDATE());
 
--- =============================================================  
+-- =============================================================
 -- PHẦN 2: 9 BẢNG KPI CHO CHI NHÁNH
 -- =============================================================
 PRINT '📥 PHẦN 2: Tạo 9 bảng KPI cho chi nhánh...';
@@ -123,7 +123,7 @@ PRINT '📥 PHẦN 2: Tạo 9 bảng KPI cho chi nhánh...';
 INSERT INTO KpiAssignmentTables (Id, TableType, TableName, Description, Category, IsActive, CreatedDate)
 VALUES (24, 2, N'KPI_CnBinhLu', N'Bảng KPI Chi nhánh Bình Lư', N'CHINHANH', 1, GETDATE());
 
--- 25. Bảng KPI Chi nhánh Phong Thổ  
+-- 25. Bảng KPI Chi nhánh Phong Thổ
 INSERT INTO KpiAssignmentTables (Id, TableType, TableName, Description, Category, IsActive, CreatedDate)
 VALUES (25, 2, N'KPI_CnPhongTho', N'Bảng KPI Chi nhánh Phong Thổ', N'CHINHANH', 1, GETDATE());
 
@@ -151,7 +151,7 @@ VALUES (30, 2, N'KPI_CnTanUyen', N'Bảng KPI Chi nhánh Tân Uyên', N'CHINHANH
 INSERT INTO KpiAssignmentTables (Id, TableType, TableName, Description, Category, IsActive, CreatedDate)
 VALUES (31, 2, N'KPI_CnNamHang', N'Bảng KPI Chi nhánh Nậm Hàng', N'CHINHANH', 1, GETDATE());
 
--- 32. Bảng KPI Hội Sở 
+-- 32. Bảng KPI Hội Sở
 INSERT INTO KpiAssignmentTables (Id, TableType, TableName, Description, Category, IsActive, CreatedDate)
 VALUES (32, 2, N'KPI_HoiSo', N'Bảng KPI Hội Sở', N'CHINHANH', 1, GETDATE());
 
@@ -168,15 +168,15 @@ PRINT '==================================================';
 SELECT COUNT(*) as 'Tong_so_bang_KPI' FROM KpiAssignmentTables;
 
 -- Thống kê theo category
-SELECT 
+SELECT
     Category as 'Loai_bang_KPI',
     COUNT(*) as 'So_luong'
-FROM KpiAssignmentTables 
+FROM KpiAssignmentTables
 GROUP BY Category;
 
--- Thống kê theo table type  
-SELECT 
-    CASE TableType 
+-- Thống kê theo table type
+SELECT
+    CASE TableType
         WHEN 1 THEN 'Cán bộ'
         WHEN 2 THEN 'Chi nhánh'
         ELSE 'Khác'
@@ -187,12 +187,12 @@ GROUP BY TableType;
 
 PRINT '';
 PRINT '📊 CHI TIẾT 32 BẢNG KPI:';
-SELECT 
+SELECT
     Id,
     TableName as 'Ten_bang',
-    Description as 'Mo_ta', 
+    Description as 'Mo_ta',
     Category as 'Loai'
-FROM KpiAssignmentTables 
+FROM KpiAssignmentTables
 ORDER BY Id;
 
 PRINT '';

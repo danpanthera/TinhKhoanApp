@@ -1,5 +1,5 @@
-import { defineStore } from "pinia";
 import apiClient from "@/services/api"; // Import instance Axios đã tạo
+import { defineStore } from "pinia";
 
 export const useRoleStore = defineStore("role", {
   // State: Nơi lưu trữ dữ liệu
@@ -18,24 +18,41 @@ export const useRoleStore = defineStore("role", {
   // Actions: Nơi định nghĩa các hàm để thay đổi state, thường dùng để gọi API
   actions: {
     async fetchRoles() {
+      console.log('🚀 fetchRoles() called - Starting API request...');
       this.isLoading = true;
       this.error = null;
       try {
+        console.log('📞 Making API call to:', '/Roles');
         const response = await apiClient.get("/Roles"); // Gọi API GET /api/Roles
+        console.log('📦 API Response received:', {
+          status: response.status,
+          dataType: typeof response.data,
+          isArray: Array.isArray(response.data),
+          dataLength: response.data?.length,
+          hasValues: !!response.data?.$values
+        });
 
         if (response.data && Array.isArray(response.data.$values)) {
+          console.log('✅ Using $values format, length:', response.data.$values.length);
           this.roles = response.data.$values;
         } else if (Array.isArray(response.data)) {
+          console.log('✅ Using direct array format, length:', response.data.length);
           this.roles = response.data;
         } else {
           console.error(
-            "Dữ liệu trả về từ API fetchRoles không phải là mảng hoặc không có trường $values hợp lệ:",
+            "❌ Dữ liệu trả về từ API fetchRoles không phải là mảng hoặc không có trường $values hợp lệ:",
             response.data
           );
           this.roles = [];
           this.error = "Dữ liệu vai trò nhận được không đúng định dạng.";
         }
+
+        console.log('🎯 Final roles state:', {
+          rolesCount: this.roles.length,
+          firstRole: this.roles[0]
+        });
       } catch (err) {
+        console.error('❌ fetchRoles error:', err);
         this.roles = [];
         this.error =
           "Không thể tải danh sách vai trò. Lỗi: " +
@@ -43,6 +60,7 @@ export const useRoleStore = defineStore("role", {
         console.error("Lỗi khi fetchRoles:", err);
       } finally {
         this.isLoading = false;
+        console.log('🏁 fetchRoles() completed, isLoading:', this.isLoading);
       }
     },
 

@@ -81,10 +81,12 @@ sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C
 - **Azure SQL Edge ARM64:** Tối ưu cho Apple Silicon, performance cao
 
 ### 🔄 **CONTAINER INFO:**
-- **Container cũ:** sql_server_tinhkhoan (SQL Server)
-- **Container mới:** azure_sql_edge_tinhkhoan (Azure SQL Edge ARM64) ✅ ĐANG SỬ DỤNG
+- **Container cũ:** sql_server_tinhkhoan (SQL Server) - ✅ ĐÃ XÓA
+- **Container extract:** sqlserver-extract - ✅ ĐÃ XÓA (06/07/2025)
+- **Container chính:** azure_sql_edge_tinhkhoan (Azure SQL Edge ARM64) ✅ ĐANG SỬ DỤNG
 - **Port:** 1433:1433
 - **Performance:** Tối ưu cho Apple Silicon Mac
+- **Status:** Môi trường đã được dọn dẹp, chỉ còn container chính
 
 ### 🗑️ **XÓA DỮ LIỆU UNITS VÀ ROLES - 06/07/2025**
 
@@ -158,3 +160,49 @@ Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
 - **API compatible:** Frontend có thể fetch và hiển thị đầy đủ
 
 **🎯 Status:** Sẵn sàng cho việc gán Roles và Employees vào từng đơn vị.
+
+### 🎭 **TẠO 23 VAI TRÒ - 06/07/2025**
+
+**✅ HOÀN THÀNH:** Đã tạo thành công 23 vai trò theo danh sách chuẩn
+
+#### Danh sách 23 vai trò:
+| ID | Mã vai trò | Tên vai trò | Mô tả |
+|----|------------|-------------|--------|
+| 1 | TruongphongKhdn | Trưởng phòng KHDN | Trưởng phòng Khách hàng Doanh nghiệp |
+| 2 | TruongphongKhcn | Trưởng phòng KHCN | Trưởng phòng Khách hàng Cá nhân |
+| 3 | PhophongKhdn | Phó phòng KHDN | Phó phòng Khách hàng Doanh nghiệp |
+| 4 | PhophongKhcn | Phó phòng KHCN | Phó phòng Khách hàng Cá nhân |
+| 5 | TruongphongKhqlrr | Trưởng phòng KH&QLRR | Trưởng phòng Kế hoạch & Quản lý rủi ro |
+| 6 | PhophongKhqlrr | Phó phòng KH&QLRR | Phó phòng Kế hoạch & Quản lý rủi ro |
+| 7 | Cbtd | Cán bộ tín dụng | Cán bộ tín dụng |
+| 8 | TruongphongKtnqCnl1 | Trưởng phòng KTNQ CNL1 | Trưởng phòng Kế toán & Ngân quỹ CNL1 |
+| 9 | PhophongKtnqCnl1 | Phó phòng KTNQ CNL1 | Phó phòng Kế toán & Ngân quỹ CNL1 |
+| 10 | Gdv | GDV | Giao dịch viên |
+| 11 | TqHkKtnb | Thủ quỹ \| Hậu kiểm \| KTNB | Thủ quỹ \| Hậu kiểm \| Kế toán nghiệp vụ |
+| 12 | TruongphoItThKtgs | Trưởng phó IT \| Tổng hợp \| KTGS | Trưởng phó IT \| Tổng hợp \| Kiểm tra giám sát |
+| 13 | CBItThKtgsKhqlrr | Cán bộ IT \| Tổng hợp \| KTGS \| KH&QLRR | Cán bộ IT \| Tổng hợp \| KTGS \| KH&QLRR |
+| 14 | GiamdocPgd | Giám đốc Phòng giao dịch | Giám đốc Phòng giao dịch |
+| 15 | PhogiamdocPgd | Phó giám đốc Phòng giao dịch | Phó giám đốc Phòng giao dịch |
+| 16 | PhogiamdocPgdCbtd | Phó giám đốc PGD kiêm CBTD | Phó giám đốc Phòng giao dịch kiêm CBTD |
+| 17 | GiamdocCnl2 | Giám đốc CNL2 | Giám đốc Chi nhánh cấp 2 |
+| 18 | PhogiamdocCnl2Td | Phó giám đốc CNL2 phụ trách TD | Phó giám đốc CNL2 phụ trách Tín dụng |
+| 19 | PhogiamdocCnl2Kt | Phó giám đốc CNL2 phụ trách KT | Phó giám đốc CNL2 phụ trách Kế toán |
+| 20 | TruongphongKhCnl2 | Trưởng phòng KH CNL2 | Trưởng phòng Khách hàng CNL2 |
+| 21 | PhophongKhCnl2 | Phó phòng KH CNL2 | Phó phòng Khách hàng CNL2 |
+| 22 | TruongphongKtnqCnl2 | Trưởng phòng KTNQ CNL2 | Trưởng phòng Kế toán & Ngân quỹ CNL2 |
+| 23 | PhophongKtnqCnl2 | Phó phòng KTNQ CNL2 | Phó phòng Kế toán & Ngân quỹ CNL2 |
+
+#### Công cụ sử dụng:
+- **Shell script:** `create_23_roles.sh` - Automation tạo toàn bộ 23 vai trò
+- **API Roles:** POST `/api/roles` - Tạo từng vai trò với Name và Description
+- **Model:** Role entity với properties Id, Name, Description, EmployeeRoles
+- **Validation:** JSON schema và backend validation đầy đủ
+
+#### Đặc điểm kỹ thuật:
+- **Auto-increment ID:** Database tự động gán ID tuần tự từ 1-23
+- **Unicode support:** Tên và mô tả tiếng Việt hiển thị đúng
+- **API compatible:** Frontend có thể fetch và hiển thị đầy đủ
+- **Mã vai trò:** Giữ nguyên không thay đổi theo yêu cầu
+- **Navigation properties:** Hỗ trợ quan hệ many-to-many với Employees
+
+**🎯 Status:** Sẵn sàng để gán vai trò cho nhân viên trong từng đơn vị.

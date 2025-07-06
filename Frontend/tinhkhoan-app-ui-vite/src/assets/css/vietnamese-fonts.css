@@ -20,7 +20,7 @@
 }
 
 /* Heading fonts */
-h1, h2, h3, h4, h5, h6, 
+h1, h2, h3, h4, h5, h6,
 .heading, .title, .page-title {
   font-family: var(--font-heading);
   font-weight: 600;

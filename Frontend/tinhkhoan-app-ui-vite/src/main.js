@@ -1,13 +1,13 @@
-import { createApp } from "vue";
 import { createPinia } from "pinia"; // 1. Import createPinia
+import { createApp } from "vue";
+import Vue3Toastify from 'vue3-toastify';
+import 'vue3-toastify/dist/index.css';
 import App from "./App.vue";
 import router from "./router";
-import 'vue3-toastify/dist/index.css';
-import Vue3Toastify from 'vue3-toastify';
 // Import Element Plus
+import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
-import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 // 🇻🇳 Import Vietnamese fonts CSS FIRST (highest priority)
 import './assets/css/vietnamese-fonts.css';
 // Import Agribank theme CSS
@@ -31,8 +31,8 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component);
 }
 
-app.use(Vue3Toastify, { 
-  autoClose: 2500, 
+app.use(Vue3Toastify, {
+  autoClose: 2500,
   position: 'top-right',
   hideProgressBar: false,
   closeOnClick: true,
