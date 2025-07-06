@@ -17,6 +17,7 @@ namespace TinhKhoanApp.Api.Services
     {
         Task<ProcessingResult> ProcessImportedDataToHistoryAsync(int importedDataRecordId, string category);
         Task<ProcessingResult> ProcessImportedDataToHistoryAsync(int importedDataRecordId, string category, DateTime? statementDate);
+        Task<ProcessingResult> ProcessImportedDataToHistoryAsync(int importedDataRecordId, string category, DateTime? statementDate, string? ngayDL);
         Task<List<string>> GetValidCategoriesAsync();
         Task<ProcessingValidationResult> ValidateImportedDataForCategoryAsync(int importedDataRecordId, string category);
     }
@@ -58,12 +59,17 @@ namespace TinhKhoanApp.Api.Services
 
         public async Task<ProcessingResult> ProcessImportedDataToHistoryAsync(int importedDataRecordId, string category, DateTime? statementDate)
         {
+            return await ProcessImportedDataToHistoryAsync(importedDataRecordId, category, statementDate, null);
+        }
+
+        public async Task<ProcessingResult> ProcessImportedDataToHistoryAsync(int importedDataRecordId, string category, DateTime? statementDate, string? ngayDL)
+        {
             var result = new ProcessingResult();
 
             try
             {
-                _logger.LogInformation("🔄 Starting processing imported data to history. RecordId: {RecordId}, Category: {Category}",
-                    importedDataRecordId, category);
+                _logger.LogInformation("🔄 Starting processing imported data to history. RecordId: {RecordId}, Category: {Category}, NgayDL: {NgayDL}",
+                    importedDataRecordId, category, ngayDL);
 
                 // Validate parameters
                 if (string.IsNullOrWhiteSpace(category))
@@ -101,6 +107,10 @@ namespace TinhKhoanApp.Api.Services
                 // Use statement date from parameter or from imported record
                 var effectiveStatementDate = statementDate ?? importedRecord.StatementDate ?? DateTime.UtcNow.Date;
 
+                // Use provided NgayDL or extract from filename as fallback
+                var effectiveNgayDL = ngayDL ?? ExtractNgayDLFromFileName(importedRecord.FileName);
+                _logger.LogInformation("📅 Using NgayDL: {NgayDL} for import processing", effectiveNgayDL);
+
                 // Generate batch ID for this processing operation
                 var batchId = Guid.NewGuid().ToString();
                 result.BatchId = batchId;
@@ -124,7 +134,7 @@ namespace TinhKhoanApp.Api.Services
                         await ProcessDPDAToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName);
                         break;
                     case "DP01":
-                        await ProcessDP01ToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName);
+                        await ProcessDP01ToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName, effectiveNgayDL);
                         break;
                     case "EI01":
                         await ProcessEI01ToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName);
@@ -583,7 +593,7 @@ namespace TinhKhoanApp.Api.Services
             _logger.LogInformation("✅ Processed {Count} DPDA records with batch ID {BatchId}", processedCount, batchId);
         }
 
-        private async Task ProcessDP01ToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName)
+        private async Task ProcessDP01ToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName, string ngayDL)
         {
             result.TableName = "DP01";
             var processedCount = 0;
@@ -600,8 +610,8 @@ namespace TinhKhoanApp.Api.Services
                     var rowData = JsonSerializer.Deserialize<Dictionary<string, object>>(item.RawData);
                     if (rowData == null || !rowData.Any()) continue;
 
-                    // Lấy NgayDL từ filename theo quy tắc pattern *yyyymmdd.csv -> dd/MM/yyyy
-                    string ngayDL = ExtractNgayDLFromFileName(fileName);
+                    // Use the NgayDL passed from the calling method
+                    _logger.LogInformation("📅 [DP01_IMPORT] Using NgayDL: {NgayDL} for row {RowNum}", ngayDL, processedCount + 1);
 
                     // Tạo entity mới với mapping đầy đủ các trường
                     var dp01Entity = new TinhKhoanApp.Api.Models.DataTables.DP01
@@ -1158,14 +1168,14 @@ namespace TinhKhoanApp.Api.Services
         private string ExtractNgayDLFromFileName(string fileName)
         {
             _logger.LogInformation("🔍 [EXTRACT_DEBUG] Bắt đầu extract NgayDL từ filename: {FileName}", fileName);
-            
+
             try
             {
                 // Pattern để extract date: *20241231.csv -> 31/12/2024
                 var datePattern = @"(\d{4})(\d{2})(\d{2})";
                 var match = Regex.Match(fileName, datePattern);
 
-                _logger.LogInformation("🔍 [EXTRACT_DEBUG] Pattern: {Pattern}, Match: {Success}, Groups: {GroupCount}", 
+                _logger.LogInformation("🔍 [EXTRACT_DEBUG] Pattern: {Pattern}, Match: {Success}, Groups: {GroupCount}",
                     datePattern, match.Success, match.Groups.Count);
 
                 if (match.Success && match.Groups.Count >= 4)
@@ -1181,7 +1191,7 @@ namespace TinhKhoanApp.Api.Services
                         System.Globalization.DateTimeStyles.None, out DateTime parsedDate))
                     {
                         var formattedDate = parsedDate.ToString("dd/MM/yyyy");
-                        _logger.LogInformation("📅 [EXTRACT_DATE] Filename: {FileName} -> {Year}-{Month}-{Day} -> {FormattedDate}", 
+                        _logger.LogInformation("📅 [EXTRACT_DATE] Filename: {FileName} -> {Year}-{Month}-{Day} -> {FormattedDate}",
                             fileName, year, month, day, formattedDate);
                         return formattedDate;
                     }
