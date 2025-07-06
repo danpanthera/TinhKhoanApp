@@ -206,3 +206,75 @@ Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
 - **Navigation properties:** Hỗ trợ quan hệ many-to-many với Employees
 
 **🎯 Status:** Sẵn sàng để gán vai trò cho nhân viên trong từng đơn vị.
+
+### 📊 **CẤU HÌNH KPI ASSIGNMENT TABLES - 06/07/2025**
+
+**✅ HOÀN THÀNH:** Đã có đủ 32 bảng KPI theo đúng cấu trúc
+
+#### 🧑‍💼 Tab "Dành cho Cán bộ" - 23 bảng KPI:
+| ID | Tên Bảng KPI | Mô tả |
+|----|--------------|--------|
+| 1 | TruongphongKhdn | Trưởng phòng KHDN |
+| 2 | TruongphongKhcn | Trưởng phòng KHCN |
+| 3 | PhophongKhdn | Phó phòng KHDN |
+| 4 | PhophongKhcn | Phó phòng KHCN |
+| 5 | TruongphongKhqlrr | Trưởng phòng KH&QLRR |
+| 6 | PhophongKhqlrr | Phó phòng KH&QLRR |
+| 7 | Cbtd | Cán bộ tín dụng |
+| 8 | TruongphongKtnqCnl1 | Trưởng phòng KTNQ CNL1 |
+| 9 | PhophongKtnqCnl1 | Phó phòng KTNQ CNL1 |
+| 10 | Gdv | Giao dịch viên |
+| 11 | TqHkKtnb | Thủ quỹ \| Hậu kiểm \| KTNB |
+| 12 | TruongphoItThKtgs | Trưởng phó IT \| Tổng hợp \| KTGS |
+| 13 | CBItThKtgsKhqlrr | Cán bộ IT \| Tổng hợp \| KTGS \| KH&QLRR |
+| 14 | GiamdocPgd | Giám đốc Phòng giao dịch |
+| 15 | PhogiamdocPgd | Phó giám đốc Phòng giao dịch |
+| 16 | PhogiamdocPgdCbtd | Phó giám đốc PGD kiêm CBTD |
+| 17 | GiamdocCnl2 | Giám đốc CNL2 |
+| 18 | PhogiamdocCnl2Td | Phó giám đốc CNL2 phụ trách TD |
+| 19 | PhogiamdocCnl2Kt | Phó giám đốc CNL2 phụ trách KT |
+| 20 | TruongphongKhCnl2 | Trưởng phòng KH CNL2 |
+| 21 | PhophongKhCnl2 | Phó phòng KH CNL2 |
+| 22 | TruongphongKtnqCnl2 | Trưởng phòng KTNQ CNL2 |
+| 23 | PhophongKtnqCnl2 | Phó phòng KTNQ CNL2 |
+
+#### 🏢 Tab "Dành cho Chi nhánh" - 9 bảng KPI:
+| ID | Tên Bảng KPI | Mô tả |
+|----|--------------|--------|
+| 24 | HoiSo | KPI cho Hội Sở |
+| 25 | BinhLu | KPI cho Chi nhánh Bình Lư |
+| 26 | PhongTho | KPI cho Chi nhánh Phong Thổ |
+| 27 | SinHo | KPI cho Chi nhánh Sìn Hồ |
+| 28 | BumTo | KPI cho Chi nhánh Bum Tở |
+| 29 | ThanUyen | KPI cho Chi nhánh Than Uyên |
+| 30 | DoanKet | KPI cho Chi nhánh Đoàn Kết |
+| 31 | TanUyen | KPI cho Chi nhánh Tân Uyên |
+| 32 | NamHang | KPI cho Chi nhánh Nậm Hàng |
+
+#### Hệ thống KPI Assignment:
+1. **📋 "Cấu hình KPI"** (KpiAssignmentTables) - ✅ 32 bảng template
+   - 23 bảng cho cán bộ (Category = "CANBO") ✅
+   - 9 bảng cho chi nhánh (Category = "CHINHANH") ✅
+
+2. **🧑‍💼 "Giao khoán KPI cho cán bộ"** (EmployeeKpiAssignments) - ❌ 0 records
+   - Cần: EmployeeId + KpiDefinitionId + KhoanPeriodId + TargetValue
+   - Phụ thuộc: Employees, KPI Definitions, Khoan Periods
+
+3. **🏢 "Giao khoán KPI cho chi nhánh"** (UnitKpiScorings) - ❌ 0 records  
+   - Cần: UnitId + KhoanPeriodId + Scores
+   - Phụ thuộc: Units, Khoan Periods
+
+#### Trạng thái dữ liệu hỗ trợ:
+- **✅ Units:** 46 đơn vị
+- **✅ Roles:** 23 vai trò  
+- **✅ Employees:** 10 nhân viên
+- **✅ KPI Definitions:** 135 định nghĩa KPI
+- **❌ Khoan Periods:** Chưa có (cần tạo)
+
+#### Đặc điểm kỹ thuật:
+- **Temporal Tables + Columnstore:** Tối ưu hiệu năng cho tất cả bảng KPI
+- **Template-based system:** KpiAssignmentTables là template cho giao khoán thực tế
+- **Unicode support:** Tên tiếng Việt hiển thị đúng
+- **API compatible:** Frontend fetch và cập nhật real-time
+
+**🎯 Status:** Sẵn sàng tạo Khoan Periods và triển khai giao khoán KPI thực tế.
