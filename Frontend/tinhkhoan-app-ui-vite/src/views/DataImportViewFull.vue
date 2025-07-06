@@ -492,12 +492,24 @@
             <div v-if="smartUploading" class="smart-upload-progress">
               <div class="progress-header">
                 <h4>🚀 Đang xử lý Smart Import...</h4>
-                <span class="progress-text">{{ smartUploadProgress.current }}/{{ smartUploadProgress.total }}</span>
+                <div class="progress-info">
+                  <span class="progress-text">{{ smartUploadProgress.current }}/{{ smartUploadProgress.total }} file</span>
+                  <span class="progress-percentage">{{ smartUploadProgress.percentage }}%</span>
+                </div>
               </div>
               <div class="progress-bar-container">
-                <div class="progress-bar" :style="{ width: smartUploadProgress.percentage + '%' }"></div>
+                <div class="progress-bar" :style="{ width: smartUploadProgress.percentage + '%' }">
+                  <span class="progress-bar-text">{{ smartUploadProgress.percentage }}%</span>
+                </div>
               </div>
-              <p class="current-file">📤 {{ smartUploadProgress.currentFile }}</p>
+              <div class="current-file-info">
+                <p class="current-file">📤 {{ smartUploadProgress.currentFile }}</p>
+                <p v-if="smartUploadProgress.stage" class="upload-stage">
+                  Status: {{ smartUploadProgress.stage === 'uploading' ? '⬆️ Đang upload' :
+                             smartUploadProgress.stage === 'completed' ? '✅ Hoàn thành' :
+                             smartUploadProgress.stage }}
+                </p>
+              </div>
             </div>
 
             <div v-if="smartImportResults && smartImportResults.results" class="smart-import-results">
@@ -549,6 +561,7 @@
 
 <script setup>
 import api from '@/services/api'; // ✅ Import api để sử dụng trong fallback strategy
+import audioService from '@/services/audioService';
 import rawDataService from '@/services/rawDataService';
 import smartImportService from '@/services/smartImportService';
 import { computed, ref } from 'vue';
@@ -1731,10 +1744,22 @@ const startSmartImport = async () => {
     return
   }
 
+  // 🚀 OPTIMIZATION: Kiểm tra file size trước khi upload
+  const totalSize = smartSelectedFiles.value.reduce((sum, file) => sum + file.size, 0)
+  const maxTotalSize = 500 * 1024 * 1024 // 500MB total limit
+
+  if (totalSize > maxTotalSize) {
+    errorMessage.value = `⚠️ Tổng dung lượng file quá lớn (${smartImportService.formatFileSize(totalSize)}). Giới hạn: ${smartImportService.formatFileSize(maxTotalSize)}`
+    return
+  }
+
   smartUploading.value = true
   smartImportResults.value = null
   errorMessage.value = ''
   successMessage.value = ''
+
+  // 📊 Performance tracking
+  const startTime = Date.now()
 
   try {
     // Prepare statement date
@@ -1748,10 +1773,10 @@ const startSmartImport = async () => {
       current: 0,
       total: smartSelectedFiles.value.length,
       percentage: 0,
-      currentFile: ''
+      currentFile: 'Chuẩn bị upload...'
     }
 
-    console.log('🧠 Starting OPTIMIZED Smart Import with', smartSelectedFiles.value.length, 'files')
+    console.log('🧠 Starting OPTIMIZED Smart Import with', smartSelectedFiles.value.length, 'files', `(Total size: ${smartImportService.formatFileSize(totalSize)})`)
 
     // ✅ OPTIMIZATION: Sử dụng callback để update progress real-time
     const progressCallback = (progressInfo) => {
@@ -1759,10 +1784,14 @@ const startSmartImport = async () => {
         current: progressInfo.current,
         total: progressInfo.total,
         percentage: progressInfo.percentage,
-        currentFile: progressInfo.currentFile
+        currentFile: progressInfo.currentFile,
+        stage: progressInfo.stage || 'uploading'
       }
 
-      console.log(`📊 Progress: ${progressInfo.current}/${progressInfo.total} (${progressInfo.percentage}%) - ${progressInfo.currentFile}`)
+      // 📊 Log detailed progress
+      if (progressInfo.fileProgress) {
+        console.log(`📊 File Progress: ${progressInfo.currentFile} - ${progressInfo.fileProgress.percentage}% (${smartImportService.formatFileSize(progressInfo.fileProgress.loaded)}/${smartImportService.formatFileSize(progressInfo.fileProgress.total)})`)
+      }
     }
 
     // Call OPTIMIZED Smart Import Service với progress callback
@@ -1772,28 +1801,56 @@ const startSmartImport = async () => {
       progressCallback
     )
 
+    // Calculate total duration
+    const endTime = Date.now()
+    const duration = (endTime - startTime) / 1000
+    results.duration = duration
+
     smartImportResults.value = results
 
-    // ✅ OPTIMIZATION: Hiển thị thông tin thời gian
-    const avgTimePerFile = results.duration ? (results.duration / results.totalFiles).toFixed(1) : 'N/A'
+    // ✅ OPTIMIZATION: Hiển thị thông tin chi tiết
+    const avgTimePerFile = duration > 0 ? (duration / results.totalFiles).toFixed(1) : 'N/A'
+    const avgSpeedMBps = totalSize > 0 && duration > 0 ? (totalSize / (1024 * 1024) / duration).toFixed(2) : 'N/A'
 
     if (results.successCount > 0) {
-      successMessage.value = `✅ Smart Import hoàn thành! ${results.successCount}/${results.totalFiles} file thành công trong ${results.duration?.toFixed(1)}s (avg: ${avgTimePerFile}s/file)`
+      // 🔊 AUDIO NOTIFICATION: Phát âm thanh thành công
+      audioService.playSuccess()
+
+      const sizeInfo = `${smartImportService.formatFileSize(totalSize)}`
+      successMessage.value = `✅ Smart Import hoàn thành! ${results.successCount}/${results.totalFiles} file thành công (${sizeInfo} trong ${duration.toFixed(1)}s - ${avgSpeedMBps} MB/s)`
 
       // Refresh data sau khi import thành công
       await refreshAllData()
     }
 
     if (results.failureCount > 0) {
+      // 🔊 AUDIO NOTIFICATION: Âm thanh cảnh báo cho lỗi
+      audioService.playNotification()
       errorMessage.value = `⚠️ ${results.failureCount}/${results.totalFiles} file import thất bại. Xem chi tiết bên dưới.`
     }
 
+    // Log thống kê cuối
+    console.log(`📈 Smart Import Stats:`, {
+      totalFiles: results.totalFiles,
+      successCount: results.successCount,
+      failureCount: results.failureCount,
+      totalSize: smartImportService.formatFileSize(totalSize),
+      duration: `${duration.toFixed(1)}s`,
+      avgTimePerFile: `${avgTimePerFile}s`,
+      avgSpeed: `${avgSpeedMBps} MB/s`
+    })
+
   } catch (error) {
     console.error('🔥 Smart Import error:', error)
+
+    // 🔊 AUDIO NOTIFICATION: Âm thanh lỗi
+    audioService.playError()
+
     errorMessage.value = `Lỗi Smart Import: ${error.message}`
   } finally {
     smartUploading.value = false
     smartUploadProgress.value.percentage = 100
+    smartUploadProgress.value.currentFile = 'Hoàn thành'
   }
 }
 </script>
@@ -2726,6 +2783,128 @@ const startSmartImport = async () => {
   }
   to {
     box-shadow: 0 6px 20px rgba(0, 200, 81, 0.5);
+  }
+}
+
+/* 🚀 ENHANCED SMART UPLOAD PROGRESS STYLES */
+.smart-upload-progress {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 2px solid #8B1538;
+  border-radius: 15px;
+  padding: 20px;
+  margin: 20px 0;
+  box-shadow: 0 8px 25px rgba(139, 21, 56, 0.2);
+  animation: uploadPulse 2s ease-in-out infinite alternate;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.progress-header h4 {
+  margin: 0;
+  color: #8B1538;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.progress-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+
+.progress-text {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.progress-percentage {
+  font-weight: bold;
+  color: #8B1538;
+  font-size: 1.1rem;
+}
+
+.progress-bar-container {
+  background: #e9ecef;
+  border-radius: 10px;
+  height: 25px;
+  overflow: hidden;
+  margin-bottom: 15px;
+  position: relative;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 50%, #8B1538 100%);
+  transition: width 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+.progress-bar-text {
+  color: white;
+  font-weight: bold;
+  font-size: 0.8rem;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+.current-file-info {
+  background: rgba(139, 21, 56, 0.05);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.current-file {
+  margin: 0 0 8px 0;
+  font-weight: 600;
+  color: #333;
+  word-break: break-all;
+}
+
+.upload-stage {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #666;
+  font-style: italic;
+}
+
+@keyframes uploadPulse {
+  from {
+    box-shadow: 0 8px 25px rgba(139, 21, 56, 0.2);
+  }
+  to {
+    box-shadow: 0 12px 35px rgba(139, 21, 56, 0.3);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
   }
 }
 </style>
