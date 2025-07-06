@@ -53,7 +53,7 @@ find_kpi_table_for_role() {
     # Mapping logic dựa trên pattern đã thấy
     case $role_id in
         1) echo "1" ;;  # Trưởng phòng KHDN → TruongphongKhdn
-        2) echo "2" ;;  # Trưởng phòng KHCN → TruongphongKhcn  
+        2) echo "2" ;;  # Trưởng phòng KHCN → TruongphongKhcn
         5) echo "5" ;;  # Trưởng phòng KH&QLRR → TruongphongKhqlrr
         8) echo "8" ;;  # Trưởng phòng KTNQ CNL1 → TruongphongKtnqCnl1
         12) echo "12" ;; # Trưởng phó IT | Tổng hợp | KTGS → TruongphoItThKtgs
@@ -69,11 +69,11 @@ for emp_id in {1..10}; do
     if [ $? -eq 0 ]; then
         emp_name=$(echo "$emp_data" | jq -r '.FullName // "N/A"')
         role_id=$(echo "$emp_data" | jq -r '.EmployeeRoles[0].RoleId // "null"')
-        
+
         if [ "$role_id" != "null" ]; then
             role_name=$(curl -s "$BASE_URL/roles" | jq -r ".[] | select(.Id == $role_id) | .Name")
             table_id=$(find_kpi_table_for_role $role_id)
-            
+
             echo "   Employee $emp_id: $emp_name"
             echo "     → Role: $role_id ($role_name)"
             echo "     → KPI Table: $table_id"
@@ -106,25 +106,25 @@ create_assignment_for_employee() {
     local emp_name="$2"
     local role_id=$3
     local table_id=$4
-    
+
     echo "   🔄 Tạo assignment cho Employee $emp_id ($emp_name)"
     echo "     Role: $role_id, Table: $table_id, Period: $current_period"
-    
+
     # Lấy danh sách indicators từ table
     table_detail=$(curl -s "$BASE_URL/KpiAssignment/tables/$table_id")
     indicators=$(echo "$table_detail" | jq '.Indicators[]?')
-    
+
     if [ -n "$indicators" ]; then
         indicators_count=$(echo "$table_detail" | jq '.Indicators | length')
         echo "     → Tìm thấy $indicators_count indicators"
-        
+
         # Tạo targets array cho tất cả indicators trong table
         targets=$(echo "$table_detail" | jq '[.Indicators[] | {
             IndicatorId: .Id,
             TargetValue: (.MaxScore * 0.8 | floor),
             Notes: "Auto-assigned based on role"
         }]')
-        
+
         # Tạo payload request
         assignment_payload=$(jq -n \
             --arg empId "$emp_id" \
@@ -135,12 +135,12 @@ create_assignment_for_employee() {
                 KhoanPeriodId: ($periodId | tonumber),
                 Targets: $targets
             }')
-        
+
         # Gửi request
         result=$(curl -s -X POST "$BASE_URL/KpiAssignment/assign" \
             -H "Content-Type: application/json" \
             -d "$assignment_payload")
-        
+
         # Kiểm tra kết quả
         if echo "$result" | jq -e '.Message' >/dev/null 2>&1; then
             targets_count=$(echo "$result" | jq -r '.TargetsCount')
@@ -162,10 +162,10 @@ for emp_id in {1..10}; do
     if [ $? -eq 0 ]; then
         emp_name=$(echo "$emp_data" | jq -r '.FullName')
         role_id=$(echo "$emp_data" | jq -r '.EmployeeRoles[0].RoleId // "null"')
-        
+
         if [ "$role_id" != "null" ]; then
             table_id=$(find_kpi_table_for_role $role_id)
-            
+
             if [ "$table_id" != "null" ]; then
                 create_assignment_for_employee $emp_id "$emp_name" $role_id $table_id
             else
@@ -184,7 +184,7 @@ for emp_id in {1..3}; do
     assignment=$(curl -s "$BASE_URL/KpiAssignment/employee/$emp_id/period/$current_period")
     targets_count=$(echo "$assignment" | jq '.KpiTargets | length')
     emp_name=$(echo "$assignment" | jq -r '.Employee.FullName')
-    
+
     echo "   Employee $emp_id ($emp_name): $targets_count KPI targets"
 done
 
