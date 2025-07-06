@@ -91,6 +91,10 @@ internal class Program
 
                 // --- KẾT THÚC PHẦN THÊM ---
                 options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+
+                // 🇻🇳 CẤU HÌNH UTF-8 CHO TIẾNG VIỆT - Azure SQL Edge
+                options.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+                options.JsonSerializerOptions.PropertyNamingPolicy = null; // Giữ nguyên tên property
             });
 
         // 🔧 Cấu hình cho file upload lớn

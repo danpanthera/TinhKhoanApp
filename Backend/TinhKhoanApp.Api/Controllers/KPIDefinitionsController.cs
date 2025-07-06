@@ -45,6 +45,114 @@ namespace TinhKhoanApp.Api.Controllers
             return Ok(kpiDefinition);
         }
 
+        // 🇻🇳 DROPDOWN KPI CHO CÁN BỘ - hiển thị theo mô tả tiếng Việt
+        [HttpGet("dropdown/canbo")]
+        public async Task<ActionResult<IEnumerable<object>>> GetKPIDropdownForCanBo()
+        {
+            try
+            {
+                // Lấy KPI cho cán bộ (không phải chi nhánh)
+                var kpis = await _context.KPIDefinitions
+                    .Where(k => k.IsActive &&
+                           !k.KpiCode.StartsWith("CnlaiChau_") &&
+                           !k.KpiCode.StartsWith("Cnl2_"))
+                    .Select(k => new
+                    {
+                        Id = k.Id,
+                        Code = k.KpiCode,
+                        Name = k.KpiName, // Hiển thị mô tả tiếng Việt
+                        Description = k.Description,
+                        MaxScore = k.MaxScore,
+                        UnitOfMeasure = k.UnitOfMeasure
+                    })
+                    .OrderBy(k => k.Name)
+                    .ToListAsync();
+
+                return Ok(kpis);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Lỗi khi lấy danh sách KPI cho cán bộ",
+                    error = ex.Message
+                });
+            }
+        }
+
+        // 🏢 DROPDOWN KPI CHO CHI NHÁNH - hiển thị theo mô tả tiếng Việt
+        [HttpGet("dropdown/chinhanh")]
+        public async Task<ActionResult<IEnumerable<object>>> GetKPIDropdownForChiNhanh()
+        {
+            try
+            {
+                // Lấy KPI cho chi nhánh
+                var kpis = await _context.KPIDefinitions
+                    .Where(k => k.IsActive &&
+                           (k.KpiCode.StartsWith("CnlaiChau_") ||
+                            k.KpiCode.StartsWith("Cnl2_")))
+                    .Select(k => new
+                    {
+                        Id = k.Id,
+                        Code = k.KpiCode,
+                        Name = k.KpiName, // Hiển thị mô tả tiếng Việt
+                        Description = k.Description,
+                        MaxScore = k.MaxScore,
+                        UnitOfMeasure = k.UnitOfMeasure
+                    })
+                    .OrderBy(k => k.Name)
+                    .ToListAsync();
+
+                return Ok(kpis);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Lỗi khi lấy danh sách KPI cho chi nhánh",
+                    error = ex.Message
+                });
+            }
+        }
+
+        // 📊 THỐNG KÊ KPI - số lượng theo phân loại
+        [HttpGet("stats")]
+        public async Task<ActionResult<object>> GetKPIStats()
+        {
+            try
+            {
+                var totalKPI = await _context.KPIDefinitions.CountAsync(k => k.IsActive);
+                var canboKPI = await _context.KPIDefinitions
+                    .CountAsync(k => k.IsActive &&
+                               !k.KpiCode.StartsWith("CnlaiChau_") &&
+                               !k.KpiCode.StartsWith("Cnl2_"));
+                var chinhanhKPI = await _context.KPIDefinitions
+                    .CountAsync(k => k.IsActive &&
+                               (k.KpiCode.StartsWith("CnlaiChau_") ||
+                                k.KpiCode.StartsWith("Cnl2_")));
+
+                return Ok(new
+                {
+                    TotalKPI = totalKPI,
+                    CanBoKPI = canboKPI,
+                    ChiNhanhKPI = chinhanhKPI,
+                    Description = new
+                    {
+                        CanBo = "23 bảng KPI dành cho cán bộ",
+                        ChiNhanh = "9 bảng KPI dành cho chi nhánh"
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "Lỗi khi lấy thống kê KPI",
+                    error = ex.Message
+                });
+            }
+        }
+
         // POST: api/KPIDefinitions
         [HttpPost]
         public async Task<ActionResult<KPIDefinition>> PostKPIDefinition([FromBody] KPIDefinition kpiDefinition)
@@ -124,13 +232,13 @@ namespace TinhKhoanApp.Api.Controllers
         {
             // TẠM THỜI VÔ HIỆU HÓA - Đang dọn sạch logic CBType cũ
             // Sẽ được thay thế bằng API mới cho 23 vai trò chuẩn
-            return Task.FromResult<ActionResult<IEnumerable<KPIDefinition>>>(BadRequest(new 
-            { 
+            return Task.FromResult<ActionResult<IEnumerable<KPIDefinition>>>(BadRequest(new
+            {
                 Message = "API tạm thời không khả dụng - đang cập nhật dữ liệu mới cho 23 vai trò chuẩn",
                 RequestedCBType = cbType,
                 Status = "Under maintenance"
             }));
-            
+
             /*
             // LOGIC CŨ ĐÃ ĐƯỢC DỌN SẠCH:
             if (string.IsNullOrEmpty(cbType))
@@ -159,16 +267,18 @@ namespace TinhKhoanApp.Api.Controllers
                 await _context.SaveChangesAsync();
 
                 var count = await _context.KPIDefinitions.CountAsync();
-                return Ok(new { 
-                    message = "Đồng bộ dữ liệu KPI từ seed thành công", 
-                    totalKPIs = count 
+                return Ok(new
+                {
+                    message = "Đồng bộ dữ liệu KPI từ seed thành công",
+                    totalKPIs = count
                 });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { 
-                    message = "Lỗi khi đồng bộ dữ liệu KPI", 
-                    error = ex.Message 
+                return StatusCode(500, new
+                {
+                    message = "Lỗi khi đồng bộ dữ liệu KPI",
+                    error = ex.Message
                 });
             }
         }
@@ -180,18 +290,18 @@ namespace TinhKhoanApp.Api.Controllers
             return Task.FromResult<IActionResult>(BadRequest($"Chức năng reset KPI tạm thời không khả dụng - đang cập nhật dữ liệu mới cho vai trò: {cbType}"));
         }
 
-        // POST: api/KPIDefinitions/reset-kpi-by-cb-type  
+        // POST: api/KPIDefinitions/reset-kpi-by-cb-type
         [HttpPost("reset-kpi-by-cb-type")]
         public Task<IActionResult> ResetKPIsByCBTypeEndpoint([FromBody] dynamic request)
         {
             // TẠM THỜI VÔ HIỆU HÓA - Đang dọn sạch logic reset CBType cũ
             // Sẽ được thay thế bằng API mới cho 23 vai trò chuẩn
-            return Task.FromResult<IActionResult>(BadRequest(new 
-            { 
+            return Task.FromResult<IActionResult>(BadRequest(new
+            {
                 Message = "API reset KPI tạm thời không khả dụng - đang cập nhật dữ liệu mới cho 23 vai trò chuẩn",
                 Status = "Under maintenance"
             }));
-            
+
             /*
             // LOGIC CŨ ĐÃ ĐƯỢC DỌN SẠCH:
             try
@@ -212,7 +322,7 @@ namespace TinhKhoanApp.Api.Controllers
 
         // TẠM THỜI VÔ HIỆU HÓA - Đang dọn sạch các endpoint KPI cũ theo vai trò
         // Sẽ được thay thế bằng endpoints mới cho 23 vai trò chuẩn
-        
+
         /*
         // Auto-generated endpoints for each CB type - ĐÃ ĐƯỢC DỌNG SẠCH
         // Các endpoints này sẽ được thay thế bằng API mới cho 23 vai trò chuẩn
@@ -226,10 +336,10 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 // TẠM THỜI VÔ HIỆU HÓA - Đang dọn sạch dữ liệu CBType cũ
                 // Sẽ được thay thế bằng API mới cho 23 vai trò chuẩn
-                
+
                 var cbTypes = new List<object>
                 {
-                    new { 
+                    new {
                         Message = "API đang được cập nhật với dữ liệu mới cho 23 vai trò chuẩn",
                         Status = "Under maintenance"
                     }
