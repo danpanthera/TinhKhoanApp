@@ -1686,7 +1686,7 @@ const closeSmartImportModal = () => {
 const handleSmartFileSelect = (event) => {
   const files = event.target.files
   if (files.length === 0) return
-  
+
   smartSelectedFiles.value = Array.from(files)
 }
 
@@ -1695,7 +1695,7 @@ const handleSmartFileDrop = (event) => {
   isDragOver.value = false
   const files = event.dataTransfer.files
   if (files.length === 0) return
-  
+
   smartSelectedFiles.value = Array.from(files)
 }
 
@@ -1712,12 +1712,6 @@ const detectCategory = (fileName) => {
 // Extract date từ filename
 const extractDateFromFileName = (fileName) => {
   return smartImportService.extractDateFromFileName(fileName)
-}
-
-// Format date để hiển thị
-const formatDate = (date) => {
-  if (!date) return ''
-  return new Date(date).toLocaleDateString('vi-VN')
 }
 
 // Bắt đầu Smart Import
@@ -1756,10 +1750,10 @@ const startSmartImport = async () => {
     )
 
     smartImportResults.value = results
-    
+
     if (results.successCount > 0) {
       successMessage.value = `✅ Smart Import hoàn thành! ${results.successCount}/${results.totalFiles} file thành công`
-      
+
       // Refresh data sau khi import thành công
       await refreshAllData()
     }
