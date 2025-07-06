@@ -101,7 +101,6 @@ namespace TinhKhoanApp.Api.Controllers
             };
         }
 
-        // ... (các phương thức GetUnit(id), PostUnit, PutUnit, DeleteUnit giữ nguyên, chúng vẫn làm việc với model Unit đầy đủ) ...
         // GET: api/Units/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Unit>> GetUnit(int id) // Get chi tiết vẫn trả về Unit đầy đủ
@@ -237,6 +236,51 @@ namespace TinhKhoanApp.Api.Controllers
             _context.Units.Remove(unit);
             await _context.SaveChangesAsync();
             return NoContent();
+        }
+
+        // POST: api/Units/restore-original-data (Admin only)
+        [HttpPost("restore-original-data")]
+        public async Task<ActionResult> RestoreOriginalData()
+        {
+            try
+            {
+                // Đọc script SQL từ file
+                var scriptPath = Path.Combine(Directory.GetCurrentDirectory(), "restore_original_data.sql");
+                if (!System.IO.File.Exists(scriptPath))
+                {
+                    return BadRequest(new { message = "Script file not found: restore_original_data.sql" });
+                }
+
+                var sqlScript = await System.IO.File.ReadAllTextAsync(scriptPath);
+
+                // Execute SQL script
+                await _context.Database.ExecuteSqlRawAsync(sqlScript);
+
+                // Verify results
+                var unitsCount = await _context.Units.CountAsync(u => !u.IsDeleted);
+                var positionsCount = await _context.Positions.CountAsync();
+                var employeesCount = await _context.Employees.CountAsync(e => e.IsActive);
+
+                return Ok(new
+                {
+                    message = "✅ Đã khôi phục dữ liệu gốc thành công!",
+                    results = new
+                    {
+                        units = unitsCount,
+                        positions = positionsCount,
+                        employees = employeesCount
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    message = "❌ Lỗi khi khôi phục dữ liệu",
+                    error = ex.Message,
+                    details = ex.ToString()
+                });
+            }
         }
     }
 }

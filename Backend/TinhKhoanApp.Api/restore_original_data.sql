@@ -92,9 +92,7 @@ INSERT INTO Employees (
     PhoneNumber,
     IsActive,
     UnitId,
-    PositionId,
-    CreatedAt,
-    UpdatedAt
+    PositionId
 ) VALUES (
     'ADMIN001',
     '999999999',
@@ -105,9 +103,7 @@ INSERT INTO Employees (
     '0999999999',
     1,
     1, -- Chi nhánh tỉnh Lai Châu
-    1, -- Giám đốc
-    GETDATE(),
-    GETDATE()
+    1 -- Giám đốc
 );
 
 -- Tạo thêm vài nhân viên mẫu
@@ -121,15 +117,13 @@ INSERT INTO Employees (
     PhoneNumber,
     IsActive,
     UnitId,
-    PositionId,
-    CreatedAt,
-    UpdatedAt
+    PositionId
 ) VALUES
-('LC001', '78001001', N'Nguyễn Văn An', 'nvan', 'password_hash', 'nvan@agribank.com.vn', '0987654321', 1, 2, 2, GETDATE(), GETDATE()),
-('LC002', '78001002', N'Trần Thị Bình', 'ttbinh', 'password_hash', 'ttbinh@agribank.com.vn', '0987654322', 1, 3, 3, GETDATE(), GETDATE()),
-('LC003', '78001003', N'Lê Văn Cường', 'lvcuong', 'password_hash', 'lvcuong@agribank.com.vn', '0987654323', 1, 4, 3, GETDATE(), GETDATE()),
-('LC004', '78001004', N'Phạm Thị Dung', 'ptdung', 'password_hash', 'ptdung@agribank.com.vn', '0987654324', 1, 5, 4, GETDATE(), GETDATE()),
-('LC005', '78001005', N'Hoàng Văn Em', 'hvem', 'password_hash', 'hvem@agribank.com.vn', '0987654325', 1, 6, 7, GETDATE(), GETDATE());
+('LC001', '78001001', N'Nguyễn Văn An', 'nvan', 'password_hash', 'nvan@agribank.com.vn', '0987654321', 1, 2, 2),
+('LC002', '78001002', N'Trần Thị Bình', 'ttbinh', 'password_hash', 'ttbinh@agribank.com.vn', '0987654322', 1, 3, 3),
+('LC003', '78001003', N'Lê Văn Cường', 'lvcuong', 'password_hash', 'lvcuong@agribank.com.vn', '0987654323', 1, 4, 3),
+('LC004', '78001004', N'Phạm Thị Dung', 'ptdung', 'password_hash', 'ptdung@agribank.com.vn', '0987654324', 1, 5, 4),
+('LC005', '78001005', N'Hoàng Văn Em', 'hvem', 'password_hash', 'hvem@agribank.com.vn', '0987654325', 1, 6, 7);
 
 PRINT '✅ Đã tạo admin user và 5 nhân viên mẫu';
 
