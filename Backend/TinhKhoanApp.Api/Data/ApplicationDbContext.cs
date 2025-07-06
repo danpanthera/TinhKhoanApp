@@ -95,6 +95,7 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         // Tuân thủ Temporal Tables + Columnstore Indexes
         public DbSet<DataTables.DB01> DB01s { get; set; }
         public DbSet<DataTables.DP01> DP01NewTables { get; set; }
+        public DbSet<DataTables.DP01> DP01_News { get; set; } // Thêm DbSet riêng cho NguonVonController
         public DbSet<DataTables.DPDA> DPDAs { get; set; }
         public DbSet<DataTables.EI01> EI01s { get; set; }
         public DbSet<DataTables.GL01> GL01s { get; set; }
@@ -449,6 +450,10 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
             // 🆕 Cấu hình Temporal Tables cho các bảng dữ liệu mới
             // Mỗi bảng sẽ có Temporal Tables + Columnstore Indexes tự động
             ConfigureNewDataTables(modelBuilder);
+
+            // ⚠️ TEMPORARY FIX: Map DP01_News to same table as DP01NewTables cho NguonVonController
+            modelBuilder.Entity<DataTables.DP01>()
+                .ToTable("DP01_New"); // Both DbSets map to same table
         }
 
         // 🔧 Helper method để cấu hình Temporal Table

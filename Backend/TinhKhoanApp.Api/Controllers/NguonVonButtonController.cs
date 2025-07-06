@@ -195,7 +195,7 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 _logger.LogInformation("📊 Đang tính cho chi nhánh: {MaCN} ngày {Date}", maCN, ngayDLFilter);
 
-                // Query dữ liệu từ bảng DP01_New theo yêu cầu của anh
+                // Query dữ liệu từ bảng DP01_New (NEW TABLE) - using smart import data
                 var query = _context.DP01_News
                     .Where(d => d.MA_CN == maCN && d.NgayDL == ngayDLFilter)
                     .Where(d =>
@@ -261,7 +261,7 @@ namespace TinhKhoanApp.Api.Controllers
             _logger.LogInformation("💰 Tính nguồn vốn cho {UnitName} (MA_CN: {MaCN}) ngày {NgayDL}",
                 branchInfo.DisplayName, branchInfo.MaCN, ngayDLFilter);
 
-            // Query dữ liệu từ bảng DP01_New theo yêu cầu của anh
+            // Query dữ liệu từ bảng DP01_New (NEW TABLE) - using smart import data
             var query = _context.DP01_News
                 .Where(d => d.MA_CN == branchInfo.MaCN && d.NgayDL == ngayDLFilter);
 
@@ -433,12 +433,12 @@ namespace TinhKhoanApp.Api.Controllers
                     branchInfo.MaCN, branchInfo.MaPGD, ngayDL);
 
                 // Query step by step để debug
-                var allRecords = await _context.DP01_News
-                    .Where(d => d.MA_CN == branchInfo.MaCN && d.NgayDL == ngayDL)
+                var allRecords = await _context.DP01s
+                    .Where(d => d.MA_CN == branchInfo.MaCN && d.DATA_DATE == DateTime.ParseExact(ngayDL, "dd/MM/yyyy", null))
                     .CountAsync();
 
-                var afterAccountFilter = await _context.DP01_News
-                    .Where(d => d.MA_CN == branchInfo.MaCN && d.NgayDL == ngayDL)
+                var afterAccountFilter = await _context.DP01s
+                    .Where(d => d.MA_CN == branchInfo.MaCN && d.DATA_DATE == DateTime.ParseExact(ngayDL, "dd/MM/yyyy", null))
                     .Where(d =>
                         !d.TAI_KHOAN_HACH_TOAN.StartsWith("40") &&
                         !d.TAI_KHOAN_HACH_TOAN.StartsWith("41") &&
@@ -447,8 +447,8 @@ namespace TinhKhoanApp.Api.Controllers
                     )
                     .CountAsync();
 
-                var finalQuery = _context.DP01_News
-                    .Where(d => d.MA_CN == branchInfo.MaCN && d.NgayDL == ngayDL)
+                var finalQuery = _context.DP01s
+                    .Where(d => d.MA_CN == branchInfo.MaCN && d.DATA_DATE == DateTime.ParseExact(ngayDL, "dd/MM/yyyy", null))
                     .Where(d =>
                         !d.TAI_KHOAN_HACH_TOAN.StartsWith("40") &&
                         !d.TAI_KHOAN_HACH_TOAN.StartsWith("41") &&
@@ -464,8 +464,8 @@ namespace TinhKhoanApp.Api.Controllers
                 var finalCount = await finalQuery.CountAsync();
                 var totalBalance = await finalQuery.SumAsync(d => d.CURRENT_BALANCE ?? 0);
 
-                var excludedAccounts = await _context.DP01_News
-                    .Where(d => d.MA_CN == branchInfo.MaCN && d.NgayDL == ngayDL)
+                var excludedAccounts = await _context.DP01s
+                    .Where(d => d.MA_CN == branchInfo.MaCN && d.DATA_DATE == DateTime.ParseExact(ngayDL, "dd/MM/yyyy", null))
                     .Where(d =>
                         d.TAI_KHOAN_HACH_TOAN.StartsWith("40") ||
                         d.TAI_KHOAN_HACH_TOAN.StartsWith("41") ||
@@ -531,6 +531,314 @@ namespace TinhKhoanApp.Api.Controllers
                 return StatusCode(500, new { success = false, message = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Debug: Kiểm tra dữ liệu thực tế trong bảng DP01 cũ
+        /// </summary>
+        [HttpGet("debug/dp01-data")]
+        public async Task<IActionResult> GetDP01Data()
+        {
+            try
+            {
+                // Lấy các mã chi nhánh có trong DP01
+                var branchCodes = await _context.DP01s
+                    .Select(x => x.MA_CN)
+                    .Where(x => x != null)
+                    .Distinct()
+                    .OrderBy(x => x)
+                    .ToListAsync();
+
+                // Lấy các ngày có data, đặc biệt là 2024
+                var datesIn2024 = await _context.DP01s
+                    .Where(x => x.DATA_DATE.Year == 2024)
+                    .Select(x => x.DATA_DATE)
+                    .Distinct()
+                    .OrderByDescending(x => x)
+                    .Take(20)
+                    .ToListAsync();
+
+                // Kiểm tra đặc biệt cho MA_CN 7800
+                var hoisoData = await _context.DP01s
+                    .Where(x => x.MA_CN == "7800")
+                    .Select(x => new { x.DATA_DATE, x.FileName })
+                    .Distinct()
+                    .OrderByDescending(x => x.DATA_DATE)
+                    .Take(10)
+                    .ToListAsync();
+
+                // Tổng số bản ghi trong DP01
+                var totalRecords = await _context.DP01s.CountAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    totalRecords = totalRecords,
+                    branchCodes = branchCodes,
+                    datesIn2024 = datesIn2024.Select(d => d.ToString("dd/MM/yyyy")).ToList(),
+                    hoisoData = hoisoData.Select(x => new
+                    {
+                        date = x.DATA_DATE.ToString("dd/MM/yyyy"),
+                        fileName = x.FileName
+                    }).ToList(),
+                    message = "Thông tin dữ liệu bảng DP01 cũ"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    error = ex.Message,
+                    message = "Lỗi khi truy vấn bảng DP01"
+                });
+            }
+        }
+
+        /// <summary>
+        /// Debug: Kiểm tra dữ liệu trong bảng ImportedDataRecords
+        /// </summary>
+        [HttpGet("debug/imported-data")]
+        public async Task<IActionResult> GetImportedDataInfo()
+        {
+            try
+            {
+                // Lấy tổng số bản ghi
+                var totalRecords = await _context.ImportedDataRecords.CountAsync();
+
+                // Lấy thống kê theo file type
+                var fileTypes = await _context.ImportedDataRecords
+                    .GroupBy(x => x.FileType)
+                    .Select(g => new
+                    {
+                        FileType = g.Key,
+                        Count = g.Count(),
+                        LatestImport = g.Max(x => x.ImportDate)
+                    })
+                    .OrderByDescending(x => x.Count)
+                    .ToListAsync();
+
+                // Lấy các file DP01 cụ thể
+                var dp01Files = await _context.ImportedDataRecords
+                    .Where(x => x.FileType == "DP01" || x.FileName.Contains("DP01") || x.FileName.Contains("dp01"))
+                    .Select(x => new
+                    {
+                        x.FileName,
+                        x.ImportDate,
+                        x.StatementDate,
+                        x.RecordsCount,
+                        x.Status
+                    })
+                    .OrderByDescending(x => x.StatementDate)
+                    .Take(20)
+                    .ToListAsync();
+
+                // Kiểm tra dữ liệu 2024
+                var data2024 = await _context.ImportedDataRecords
+                    .Where(x => x.StatementDate.HasValue && x.StatementDate.Value.Year == 2024)
+                    .GroupBy(x => x.FileType)
+                    .Select(g => new
+                    {
+                        FileType = g.Key,
+                        Count = g.Count(),
+                        LatestDate = g.Max(x => x.StatementDate)
+                    })
+                    .OrderBy(x => x.FileType)
+                    .ToListAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    totalRecords = totalRecords,
+                    fileTypeStatistics = fileTypes,
+                    dp01Files = dp01Files,
+                    data2024Statistics = data2024,
+                    message = "Thông tin dữ liệu trong bảng ImportedDataRecords"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    error = ex.Message,
+                    message = "Lỗi khi truy vấn ImportedDataRecords"
+                });
+            }
+        }
+
+        /// <summary>
+        /// Debug: Kiểm tra dữ liệu chi tiết trong ImportedDataItems (actual data records)
+        /// </summary>
+        [HttpGet("debug/imported-data-items")]
+        public async Task<IActionResult> GetImportedDataItems([FromQuery] string? fileType = "DP01")
+        {
+            try
+            {
+                var query = _context.ImportedDataItems.AsQueryable();
+
+                if (!string.IsNullOrEmpty(fileType))
+                {
+                    query = query.Where(x => x.ImportedDataRecord.FileType == fileType);
+                }
+
+                // Lấy sample data
+                var sampleData = await query
+                    .Include(x => x.ImportedDataRecord)
+                    .OrderByDescending(x => x.ImportedDataRecord.StatementDate)
+                    .Take(50)
+                    .Select(x => new
+                    {
+                        x.Id,
+                        x.RawData,
+                        x.ProcessedDate,
+                        FileInfo = new
+                        {
+                            x.ImportedDataRecord.FileName,
+                            x.ImportedDataRecord.FileType,
+                            x.ImportedDataRecord.StatementDate,
+                            x.ImportedDataRecord.ImportDate
+                        }
+                    })
+                    .ToListAsync();
+
+                // Thống kê theo năm
+                var yearStats = await query
+                    .Where(x => x.ImportedDataRecord.StatementDate.HasValue)
+                    .GroupBy(x => x.ImportedDataRecord.StatementDate.Value.Year)
+                    .Select(g => new
+                    {
+                        Year = g.Key,
+                        RecordCount = g.Count(),
+                        FileCount = g.Select(x => x.ImportedDataRecord.Id).Distinct().Count()
+                    })
+                    .OrderByDescending(x => x.Year)
+                    .ToListAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    sampleDataCount = sampleData.Count,
+                    sampleData = sampleData.Take(10).ToList(),
+                    yearStatistics = yearStats,
+                    filters = new { fileType },
+                    message = "Dữ liệu chi tiết từ ImportedDataItems"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    error = ex.Message,
+                    message = "Lỗi khi truy vấn ImportedDataItems"
+                });
+            }
+        }
+
+        /// <summary>
+        /// Debug: Kiểm tra tất cả các bảng dữ liệu có sẵn để tìm data 2024
+        /// </summary>
+        [HttpGet("debug/all-tables-summary")]
+        public async Task<IActionResult> GetAllTablesSummary()
+        {
+            try
+            {
+                var summary = new List<object>();
+
+                // Kiểm tra DP01s (old table)
+                var dp01Count = await _context.DP01s.CountAsync();
+                var dp01_2024 = await _context.DP01s.Where(x => x.DATA_DATE.Year == 2024).CountAsync();
+                summary.Add(new { TableName = "DP01s", TotalRecords = dp01Count, Records2024 = dp01_2024 });
+
+                // Kiểm tra DP01NewTables (new table)
+                var dp01NewCount = await _context.DP01NewTables.CountAsync();
+                var dp01New_2024 = await _context.DP01NewTables.Where(x => x.NgayDL.Contains("2024")).CountAsync();
+                summary.Add(new { TableName = "DP01NewTables", TotalRecords = dp01NewCount, Records2024 = dp01New_2024 });
+
+                // Kiểm tra LN01s
+                var ln01Count = await _context.LN01s.CountAsync();
+                var ln01_2024 = await _context.LN01s.Where(x => x.NgayDL.Contains("2024")).CountAsync();
+                summary.Add(new { TableName = "LN01s", TotalRecords = ln01Count, Records2024 = ln01_2024 });
+
+                // Kiểm tra GL01s
+                var gl01Count = await _context.GL01s.CountAsync();
+                var gl01_2024 = await _context.GL01s.Where(x => x.NgayDL.Contains("2024")).CountAsync();
+                summary.Add(new { TableName = "GL01s", TotalRecords = gl01Count, Records2024 = gl01_2024 });
+
+                // Kiểm tra ImportedDataRecords
+                var importedCount = await _context.ImportedDataRecords.CountAsync();
+                var imported_2024 = await _context.ImportedDataRecords
+                    .Where(x => x.StatementDate.HasValue && x.StatementDate.Value.Year == 2024)
+                    .CountAsync();
+                summary.Add(new { TableName = "ImportedDataRecords", TotalRecords = importedCount, Records2024 = imported_2024 });
+
+                // Tìm bảng nào có nhiều data nhất cho 2024
+                var bestTable = summary.OrderByDescending(x => ((dynamic)x).Records2024).FirstOrDefault();
+
+                return Ok(new
+                {
+                    success = true,
+                    allTablesStatus = summary,
+                    recommendation = bestTable != null ? $"Bảng {((dynamic)bestTable).TableName} có nhiều data 2024 nhất ({((dynamic)bestTable).Records2024} records)" : "Không tìm thấy data 2024",
+                    message = "Tóm tắt tất cả các bảng dữ liệu"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    error = ex.Message,
+                    message = "Lỗi khi kiểm tra các bảng dữ liệu"
+                });
+            }
+        }
+
+        /// <summary>
+        /// Debug: Raw SQL query to check DP01_New table directly
+        /// </summary>
+        [HttpGet("debug/raw-dp01-check")]
+        public async Task<IActionResult> GetRawDP01Check()
+        {
+            try
+            {
+                // Direct count query
+                var totalCount = await _context.DP01_News.CountAsync();
+
+                // Get sample records with all fields
+                var sampleRecords = await _context.DP01_News
+                    .OrderByDescending(d => d.CreatedDate)
+                    .Take(5)
+                    .ToListAsync();
+
+                // Check unique NgayDL values
+                var uniqueDates = await _context.DP01_News
+                    .Select(d => d.NgayDL)
+                    .Distinct()
+                    .ToListAsync();
+
+                // Check unique MA_CN values
+                var uniqueBranches = await _context.DP01_News
+                    .Select(d => d.MA_CN)
+                    .Distinct()
+                    .ToListAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    totalRecords = totalCount,
+                    sampleRecords = sampleRecords,
+                    uniqueDates = uniqueDates,
+                    uniqueBranches = uniqueBranches,
+                    message = "Raw DP01_New table check"
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
     }
 
     /// <summary>

@@ -102,6 +102,9 @@ internal class Program
         // 💰 Đăng ký service tính toán nguồn vốn từ DP01 (dữ liệu thô)
         builder.Services.AddScoped<IRawDataService, RawDataService>();
 
+        // 🚀 NEW: Smart Data Import Service for automatic file routing
+        builder.Services.AddScoped<ISmartDataImportService, SmartDataImportService>();
+
         // 4. Đăng ký các dịch vụ cho Swagger/OpenAPI (để tạo tài liệu API tự động)
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();

@@ -918,7 +918,7 @@ const calculateAll = async () => {
   await triggerCalculation();
 };
 
-// 2. Tính Nguồn vốn - Sử dụng API mới theo yêu cầu của anh
+// 2. Tính Nguồn vốn - Sử dụng API mới đã được refactor hoàn toàn
 const calculateNguonVon = async () => {
   calculating.value = true;
   errorMessage.value = '';
@@ -935,7 +935,7 @@ const calculateNguonVon = async () => {
         throw new Error('Không tìm thấy thông tin đơn vị được chọn');
       }
 
-      // Mapping từ id trong units đến unitKey trong API
+      // Mapping từ id trong units đến unitKey trong API - Updated theo backend mới
       const unitKeyMapping = {
         'HoiSo': 'HoiSo',
         'CnBinhLu': 'CnBinhLu',
@@ -945,7 +945,7 @@ const calculateNguonVon = async () => {
         'CnThanUyen': 'CnThanUyen',
         'CnDoanKet': 'CnDoanKet',
         'CnTanUyen': 'CnTanUyen',
-        'CnNamHang': 'CnNamHang',
+        'CnNamHang': 'CnNamHang', // Fixed: Theo API response thực tế từ backend
         'CnPhongThoPgdSo5': 'CnPhongTho-PGD5',
         'CnThanUyenPgdSo6': 'CnThanUyen-PGD6',
         'CnDoanKetPgdSo1': 'CnDoanKet-PGD1',
@@ -957,27 +957,57 @@ const calculateNguonVon = async () => {
       displayName = selectedUnit.name;
     }
 
-    // Xác định ngày tính toán
-    let targetDate = new Date();
+    // Helper function để format ngày theo dd/MM/yyyy
+    const formatDateForBackend = (date) => {
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    };
+
+    // Xây dựng query parameters theo logic mới của backend
+    let queryParams = new URLSearchParams();
+    let calculationDescription = '';
+
     if (periodType.value === 'DATE' && selectedDate.value) {
-      targetDate = new Date(selectedDate.value);
+      // Ngày cụ thể
+      const targetDate = new Date(selectedDate.value);
+      queryParams.set('targetDate', formatDateForBackend(targetDate));
+      calculationDescription = `ngày ${formatDateForBackend(targetDate)}`;
     } else if (periodType.value === 'MONTH' && selectedYear.value && selectedPeriod.value) {
-      targetDate = new Date(selectedYear.value, selectedPeriod.value - 1, 1);
+      // Tháng - backend sẽ tự động lấy ngày cuối tháng
+      const monthStr = String(selectedPeriod.value).padStart(2, '0');
+      queryParams.set('targetMonth', `${monthStr}/${selectedYear.value}`);
+      calculationDescription = `tháng ${monthStr}/${selectedYear.value}`;
     } else if (periodType.value === 'QUARTER' && selectedYear.value && selectedPeriod.value) {
+      // Quý - tính ra tháng cuối quý
       const quarterEndMonth = selectedPeriod.value * 3;
-      targetDate = new Date(selectedYear.value, quarterEndMonth - 1, 1);
+      const monthStr = String(quarterEndMonth).padStart(2, '0');
+      queryParams.set('targetMonth', `${monthStr}/${selectedYear.value}`);
+      calculationDescription = `quý ${selectedPeriod.value}/${selectedYear.value}`;
     } else if (selectedYear.value) {
-      targetDate = new Date(selectedYear.value, 0, 1);
+      // Năm - backend sẽ tự động lấy 31/12/year
+      queryParams.set('targetYear', selectedYear.value.toString());
+      calculationDescription = `năm ${selectedYear.value}`;
+    } else {
+      // Mặc định - ngày hiện tại
+      const today = new Date();
+      queryParams.set('targetDate', formatDateForBackend(today));
+      calculationDescription = `ngày hiện tại (${formatDateForBackend(today)})`;
     }
 
-    console.log('💰 Tính Nguồn vốn:', {
+    const apiUrl = `/api/NguonVonButton/calculate/${unitKey}?${queryParams.toString()}`;
+
+    console.log('💰 Tính Nguồn vốn với API mới:', {
       unitKey,
       displayName,
-      targetDate: targetDate.toISOString()
+      queryParams: queryParams.toString(),
+      calculationDescription,
+      apiUrl
     });
 
-    // Gọi API mới để tính Nguồn vốn
-    const response = await fetch(`/api/NguonVonButton/calculate/${unitKey}?targetDate=${targetDate.toISOString()}`, {
+    // Gọi API đã được refactor hoàn toàn
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -985,14 +1015,14 @@ const calculateNguonVon = async () => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      const errorData = await response.json().catch(() => null);
+      throw new Error(errorData?.message || `HTTP error! status: ${response.status}`);
     }
 
     const result = await response.json();
 
     if (result.success && result.data) {
-      // Cập nhật kết quả vào UI
+      // Cập nhật kết quả vào UI với structure mới
       calculatedIndicators.value[0].value = result.data.totalNguonVonTrieuVND;
       calculatedIndicators.value[0].calculated = true;
       calculatedIndicators.value[0].details = {
@@ -1002,12 +1032,13 @@ const calculateNguonVon = async () => {
         unitKey: result.data.unitKey,
         unitName: result.data.unitName,
         recordCount: result.data.recordCount,
-        calculatedDate: result.data.calculationDate,
-        topAccounts: result.data.topAccounts
+        calculationDate: result.data.calculationDate,
+        topAccounts: result.data.topAccounts,
+        description: calculationDescription
       };
 
       showCalculationResults.value = true;
-      successMessage.value = `✅ ${result.message}: ${result.data.totalNguonVonTrieuVND.toLocaleString()} triệu VND (${result.data.recordCount?.toLocaleString() || 0} bản ghi)`;
+      successMessage.value = `✅ ${result.message}: ${result.data.totalNguonVonTrieuVND.toLocaleString()} triệu VND (${result.data.recordCount?.toLocaleString() || 0} bản ghi) - ${calculationDescription}`;
     } else {
       throw new Error(result.message || 'Tính toán thất bại');
     }

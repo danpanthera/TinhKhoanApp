@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TinhKhoanApp.Api.Data;
@@ -223,8 +224,7 @@ namespace TinhKhoanApp.Api.Services
             var processedCount = 0;
             var entitiesToAdd = new List<TinhKhoanApp.Api.Models.DataTables.LN01>();
 
-            // Format statement date as dd/MM/yyyy for NgayDL field
-            var ngayDL = statementDate.ToString("dd/MM/yyyy");
+            _logger.LogInformation("🔄 [LN01_IMPORT] Bắt đầu xử lý {Count} dòng dữ liệu, FileName: {FileName}", dataItems.Count, fileName);
 
             foreach (var item in dataItems)
             {
@@ -234,6 +234,11 @@ namespace TinhKhoanApp.Api.Services
 
                     var rowData = JsonSerializer.Deserialize<Dictionary<string, object>>(item.RawData);
                     if (rowData == null || !rowData.Any()) continue;
+
+                    // Ưu tiên lấy NGAY_DL từ file CSV, nếu không có thì dùng statementDate
+                    string ngayDL = rowData.ContainsKey("NGAY_DL") && !string.IsNullOrWhiteSpace(rowData["NGAY_DL"]?.ToString())
+                        ? rowData["NGAY_DL"]?.ToString() ?? statementDate.ToString("dd/MM/yyyy")
+                        : statementDate.ToString("dd/MM/yyyy");
 
                     // Create new LN01 entity with proper mapping
                     var ln01Entity = new TinhKhoanApp.Api.Models.DataTables.LN01
@@ -256,6 +261,11 @@ namespace TinhKhoanApp.Api.Services
                         TRANG_THAI = GetStringValue(rowData, "TRANG_THAI")
                     };
 
+                    // Log chi tiết từng dòng để debug mapping
+                    _logger.LogDebug("📊 [LN01_ROW_{RowNum}] NgayDL={NgayDL}, MA_CN={MaCN}, MA_KH={MaKH}, SO_HD={SoHD}, DU_NO={DuNo}",
+                        processedCount + 1, ln01Entity.NgayDL, ln01Entity.MA_CN, ln01Entity.MA_KH,
+                        ln01Entity.SO_HD_CHO_VAY, ln01Entity.DU_NO_GOC);
+
                     entitiesToAdd.Add(ln01Entity);
                     processedCount++;
 
@@ -264,13 +274,14 @@ namespace TinhKhoanApp.Api.Services
                     {
                         _context.LN01s.AddRange(entitiesToAdd);
                         await _context.SaveChangesAsync();
+                        _logger.LogInformation("💾 [LN01_BATCH] Đã lưu {Count} bản ghi vào database", entitiesToAdd.Count);
                         entitiesToAdd.Clear();
                     }
                 }
                 catch (Exception ex)
                 {
                     result.Errors.Add($"Row {processedCount + 1} error: {ex.Message}");
-                    _logger.LogWarning("Error processing LN01 row: {Error}", ex.Message);
+                    _logger.LogWarning("⚠️ [LN01_ERROR] Lỗi xử lý dòng {RowNum}: {Error}", processedCount + 1, ex.Message);
                 }
             }
 
@@ -279,13 +290,14 @@ namespace TinhKhoanApp.Api.Services
             {
                 _context.LN01s.AddRange(entitiesToAdd);
                 await _context.SaveChangesAsync();
+                _logger.LogInformation("💾 [LN01_FINAL] Đã lưu {Count} bản ghi cuối cùng vào database", entitiesToAdd.Count);
             }
 
             result.Success = true;
             result.ProcessedRecords = processedCount;
             result.Message = $"Successfully processed {processedCount} LN01 records to database";
 
-            _logger.LogInformation("✅ Processed {Count} LN01 records with batch ID {BatchId}", processedCount, batchId);
+            _logger.LogInformation("✅ [LN01_COMPLETE] Đã xử lý xong {Count} bản ghi LN01 với BatchId: {BatchId}", processedCount, batchId);
         }
 
         private async Task ProcessLN02ToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName)
@@ -577,8 +589,7 @@ namespace TinhKhoanApp.Api.Services
             var processedCount = 0;
             var entitiesToAdd = new List<TinhKhoanApp.Api.Models.DataTables.DP01>();
 
-            // Format statement date as dd/MM/yyyy for NgayDL field
-            var ngayDL = statementDate.ToString("dd/MM/yyyy");
+            _logger.LogInformation("🔄 [DP01_IMPORT] Bắt đầu xử lý {Count} dòng dữ liệu, FileName: {FileName}", dataItems.Count, fileName);
 
             foreach (var item in dataItems)
             {
@@ -589,14 +600,17 @@ namespace TinhKhoanApp.Api.Services
                     var rowData = JsonSerializer.Deserialize<Dictionary<string, object>>(item.RawData);
                     if (rowData == null || !rowData.Any()) continue;
 
-                    // Create new DP01 entity with proper mapping
+                    // Lấy NgayDL từ filename theo quy tắc pattern *yyyymmdd.csv -> dd/MM/yyyy
+                    string ngayDL = ExtractNgayDLFromFileName(fileName);
+
+                    // Tạo entity mới với mapping đầy đủ các trường
                     var dp01Entity = new TinhKhoanApp.Api.Models.DataTables.DP01
                     {
                         NgayDL = ngayDL,
                         FileName = fileName,
                         CreatedDate = DateTime.Now,
 
-                        // Map CSV columns to model properties
+                        // Map CSV columns to model properties - giữ nguyên tên cột từ CSV
                         MA_CN = GetStringValue(rowData, "MA_CN"),
                         MA_PGD = GetStringValue(rowData, "MA_PGD"),
                         TAI_KHOAN_HACH_TOAN = GetStringValue(rowData, "TAI_KHOAN_HACH_TOAN"),
@@ -607,36 +621,42 @@ namespace TinhKhoanApp.Api.Services
                         SO_DU_CUOI_KY = GetDecimalValue(rowData, "SO_DU_CUOI_KY")
                     };
 
+                    // Log chi tiết từng dòng để debug mapping
+                    _logger.LogInformation("📊 [DP01_ROW_{RowNum}] NgayDL={NgayDL}, MA_CN={MaCN}, TAI_KHOAN={TaiKhoan}, BALANCE={Balance}",
+                        processedCount + 1, dp01Entity.NgayDL, dp01Entity.MA_CN, dp01Entity.TAI_KHOAN_HACH_TOAN, dp01Entity.CURRENT_BALANCE);
+
                     entitiesToAdd.Add(dp01Entity);
                     processedCount++;
 
-                    // Batch insert for performance - process in chunks of 1000
+                    // Batch insert cho hiệu năng - xử lý theo từng chunk 1000 bản ghi
                     if (entitiesToAdd.Count >= 1000)
                     {
-                        _context.DP01NewTables.AddRange(entitiesToAdd);
+                        _context.DP01_News.AddRange(entitiesToAdd);
                         await _context.SaveChangesAsync();
+                        _logger.LogInformation("💾 [DP01_BATCH] Đã lưu {Count} bản ghi vào database", entitiesToAdd.Count);
                         entitiesToAdd.Clear();
                     }
                 }
                 catch (Exception ex)
                 {
                     result.Errors.Add($"Row {processedCount + 1} error: {ex.Message}");
-                    _logger.LogWarning("Error processing DP01 row: {Error}", ex.Message);
+                    _logger.LogWarning("⚠️ [DP01_ERROR] Lỗi xử lý dòng {RowNum}: {Error}", processedCount + 1, ex.Message);
                 }
             }
 
-            // Insert remaining entities
+            // Insert các bản ghi còn lại
             if (entitiesToAdd.Any())
             {
-                _context.DP01NewTables.AddRange(entitiesToAdd);
+                _context.DP01_News.AddRange(entitiesToAdd);
                 await _context.SaveChangesAsync();
+                _logger.LogInformation("💾 [DP01_FINAL] Đã lưu {Count} bản ghi cuối cùng vào database", entitiesToAdd.Count);
             }
 
             result.Success = true;
             result.ProcessedRecords = processedCount;
             result.Message = $"Successfully processed {processedCount} DP01 records to database";
 
-            _logger.LogInformation("✅ Processed {Count} DP01 records with batch ID {BatchId}", processedCount, batchId);
+            _logger.LogInformation("✅ [DP01_COMPLETE] Đã xử lý xong {Count} bản ghi DP01 với BatchId: {BatchId}", processedCount, batchId);
         }
 
         private async Task ProcessEI01ToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName)
@@ -990,6 +1010,26 @@ namespace TinhKhoanApp.Api.Services
             var processedCount = 0;
             var entitiesToAdd = new List<TinhKhoanApp.Api.Models.DataTables.DT_KHKD1>();
 
+            _logger.LogInformation("🔄 [DT_KHKD1_IMPORT] Bắt đầu xử lý {Count} dòng dữ liệu từ file đặc biệt, FileName: {FileName}",
+                dataItems.Count, fileName);
+
+            // Extract year and month from filename or statement date
+            int year = statementDate.Year;
+            int month = statementDate.Month;
+            // Try to extract from filename, format: *YYYYMM*
+            var dateMatch = Regex.Match(fileName, @"(\d{4})(\d{2})");
+            if (dateMatch.Success && dateMatch.Groups.Count >= 3)
+            {
+                if (int.TryParse(dateMatch.Groups[1].Value, out int fileYear))
+                {
+                    year = fileYear;
+                }
+                if (int.TryParse(dateMatch.Groups[2].Value, out int fileMonth))
+                {
+                    month = fileMonth;
+                }
+            }
+
             // Format statement date as dd/MM/yyyy for NgayDL field
             var ngayDL = statementDate.ToString("dd/MM/yyyy");
 
@@ -1008,6 +1048,9 @@ namespace TinhKhoanApp.Api.Services
                         NgayDL = ngayDL,
                         FileName = fileName,
                         CreatedDate = DateTime.Now,
+                        YEAR = year,  // Use extracted year
+                        MONTH = month, // Use extracted month
+                        QUARTER = (month - 1) / 3 + 1, // Calculate quarter from month
 
                         // Map CSV columns to model properties
                         BRCD = GetStringValue(rowData, "BRCD"),
@@ -1020,11 +1063,13 @@ namespace TinhKhoanApp.Api.Services
                         ACTUAL_YEAR = GetDecimalValue(rowData, "ACTUAL_YEAR"),
                         ACTUAL_QUARTER = GetDecimalValue(rowData, "ACTUAL_QUARTER"),
                         ACTUAL_MONTH = GetDecimalValue(rowData, "ACTUAL_MONTH"),
-                        ACHIEVEMENT_RATE = GetDecimalValue(rowData, "ACHIEVEMENT_RATE"),
-                        YEAR = GetIntValue(rowData, "YEAR"),
-                        QUARTER = GetIntValue(rowData, "QUARTER"),
-                        MONTH = GetIntValue(rowData, "MONTH")
+                        ACHIEVEMENT_RATE = GetDecimalValue(rowData, "ACHIEVEMENT_RATE")
                     };
+
+                    // Log chi tiết từng dòng để debug mapping
+                    _logger.LogDebug("📊 [DT_KHKD1_ROW_{RowNum}] NgayDL={NgayDL}, BRCD={BRCD}, INDICATOR_NAME={INDICATOR_NAME}, YEAR={YEAR}, MONTH={MONTH}",
+                        processedCount + 1, dtKhkd1Entity.NgayDL, dtKhkd1Entity.BRCD, dtKhkd1Entity.INDICATOR_NAME,
+                        dtKhkd1Entity.YEAR, dtKhkd1Entity.MONTH);
 
                     entitiesToAdd.Add(dtKhkd1Entity);
                     processedCount++;
@@ -1034,13 +1079,14 @@ namespace TinhKhoanApp.Api.Services
                     {
                         _context.DT_KHKD1s.AddRange(entitiesToAdd);
                         await _context.SaveChangesAsync();
+                        _logger.LogInformation("💾 [DT_KHKD1_BATCH] Đã lưu {Count} bản ghi vào database", entitiesToAdd.Count);
                         entitiesToAdd.Clear();
                     }
                 }
                 catch (Exception ex)
                 {
                     result.Errors.Add($"Row {processedCount + 1} error: {ex.Message}");
-                    _logger.LogWarning("Error processing DT_KHKD1 row: {Error}", ex.Message);
+                    _logger.LogWarning("⚠️ [DT_KHKD1_ERROR] Lỗi xử lý dòng {RowNum}: {Error}", processedCount + 1, ex.Message);
                 }
             }
 
@@ -1049,13 +1095,15 @@ namespace TinhKhoanApp.Api.Services
             {
                 _context.DT_KHKD1s.AddRange(entitiesToAdd);
                 await _context.SaveChangesAsync();
+                _logger.LogInformation("💾 [DT_KHKD1_FINAL] Đã lưu {Count} bản ghi cuối cùng vào database", entitiesToAdd.Count);
             }
 
             result.Success = true;
             result.ProcessedRecords = processedCount;
             result.Message = $"Successfully processed {processedCount} DT_KHKD1 records to database";
 
-            _logger.LogInformation("✅ Processed {Count} DT_KHKD1 records with batch ID {BatchId}", processedCount, batchId);
+            _logger.LogInformation("✅ [DT_KHKD1_COMPLETE] Đã xử lý xong {Count} bản ghi DT_KHKD1 với BatchId: {BatchId}",
+                processedCount, batchId);
         }
 
         #endregion
@@ -1102,6 +1150,57 @@ namespace TinhKhoanApp.Api.Services
                 return result;
 
             return null;
+        }
+
+        /// <summary>
+        /// Extract NgayDL từ filename theo pattern *yyyymmdd.csv và format về dd/MM/yyyy
+        /// </summary>
+        private string ExtractNgayDLFromFileName(string fileName)
+        {
+            _logger.LogInformation("🔍 [EXTRACT_DEBUG] Bắt đầu extract NgayDL từ filename: {FileName}", fileName);
+            
+            try
+            {
+                // Pattern để extract date: *20241231.csv -> 31/12/2024
+                var datePattern = @"(\d{4})(\d{2})(\d{2})";
+                var match = Regex.Match(fileName, datePattern);
+
+                _logger.LogInformation("🔍 [EXTRACT_DEBUG] Pattern: {Pattern}, Match: {Success}, Groups: {GroupCount}", 
+                    datePattern, match.Success, match.Groups.Count);
+
+                if (match.Success && match.Groups.Count >= 4)
+                {
+                    var year = match.Groups[1].Value;
+                    var month = match.Groups[2].Value;
+                    var day = match.Groups[3].Value;
+
+                    _logger.LogInformation("🔍 [EXTRACT_DEBUG] Extracted: Year={Year}, Month={Month}, Day={Day}", year, month, day);
+
+                    // Validate và parse date từ format yyyymmdd
+                    if (DateTime.TryParseExact($"{year}-{month}-{day}", "yyyy-MM-dd", null,
+                        System.Globalization.DateTimeStyles.None, out DateTime parsedDate))
+                    {
+                        var formattedDate = parsedDate.ToString("dd/MM/yyyy");
+                        _logger.LogInformation("📅 [EXTRACT_DATE] Filename: {FileName} -> {Year}-{Month}-{Day} -> {FormattedDate}", 
+                            fileName, year, month, day, formattedDate);
+                        return formattedDate;
+                    }
+                    else
+                    {
+                        _logger.LogWarning("⚠️ [EXTRACT_DEBUG] Parse date failed for {Year}-{Month}-{Day}", year, month, day);
+                    }
+                }
+
+                // Fallback to current date if pattern not found
+                var fallback = DateTime.Now.ToString("dd/MM/yyyy");
+                _logger.LogWarning("⚠️ [EXTRACT_DATE] Không extract được date từ filename {FileName}, pattern not match, dùng fallback: {Date}", fileName, fallback);
+                return fallback;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("⚠️ Không thể extract NgayDL từ filename {FileName}: {Error}", fileName, ex.Message);
+                return DateTime.Now.ToString("dd/MM/yyyy");
+            }
         }
 
         #endregion

@@ -32,7 +32,7 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 // Truy vấn trực tiếp từ bảng LN01 mới
                 var lnData = await _context.LN01s
-                    .Where(x => x.MA_CHI_NHANH == "7808" &&
+                    .Where(x => x.MA_CN == "7808" &&
                                x.NgayDL == "30/04/2025" || x.NgayDL == "31/05/2025")
                     .OrderByDescending(x => x.NgayDL)
                     .ToListAsync();
@@ -95,7 +95,7 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 var totalRecords = await _context.LN01s.CountAsync();
-                var uniqueBranches = await _context.LN01s.Select(x => x.MA_CHI_NHANH).Distinct().CountAsync();
+                var uniqueBranches = await _context.LN01s.Select(x => x.MA_CN).Distinct().CountAsync();
                 var latestDate = await _context.LN01s.OrderByDescending(x => x.NgayDL).Select(x => x.NgayDL).FirstOrDefaultAsync();
 
                 return Ok(new
@@ -112,24 +112,6 @@ namespace TinhKhoanApp.Api.Controllers
                 return StatusCode(500, new {
                     error = "Lỗi khi truy vấn thống kê LN01",
                     details = ex.Message
-                });
-            }
-        }
-                };
-
-                return Ok(new
-                {
-                    Summary = summary,
-                    Changes = detailedChanges
-                });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    Error = "Lỗi khi lấy dữ liệu thay đổi",
-                    Message = ex.Message,
-                    Details = ex.InnerException?.Message
                 });
             }
         }
