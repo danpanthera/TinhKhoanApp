@@ -119,41 +119,41 @@ namespace TinhKhoanApp.Api.Services
                 switch (category.ToUpper())
                 {
                     case "LN01":
-                        await ProcessLN01ToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName);
+                        await ProcessLN01ToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName, effectiveNgayDL);
                         break;
                     case "LN02":
-                        await ProcessLN02ToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName);
+                        await ProcessLN02ToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName, effectiveNgayDL);
                         break;
                     case "LN03":
-                        await ProcessLN03ToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName);
+                        await ProcessLN03ToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName, effectiveNgayDL);
                         break;
                     case "DB01":
-                        await ProcessDB01ToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName);
+                        await ProcessDB01ToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName, effectiveNgayDL);
                         break;
                     case "DPDA":
-                        await ProcessDPDAToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName);
+                        await ProcessDPDAToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName, effectiveNgayDL);
                         break;
                     case "DP01":
                         await ProcessDP01ToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName, effectiveNgayDL);
                         break;
                     case "EI01":
-                        await ProcessEI01ToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName);
+                        await ProcessEI01ToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName, effectiveNgayDL);
                         break;
                     case "GL01":
-                        await ProcessGL01ToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName);
+                        await ProcessGL01ToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName, effectiveNgayDL);
                         break;
                     case "GL41":
-                        await ProcessGL41ToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName);
+                        await ProcessGL41ToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName, effectiveNgayDL);
                         break;
                     case "KH03":
-                        await ProcessKH03ToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName);
+                        await ProcessKH03ToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName, effectiveNgayDL);
                         break;
                     case "RR01":
-                        await ProcessRR01ToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName);
+                        await ProcessRR01ToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName, effectiveNgayDL);
                         break;
                     case "7800_DT_KHKD1":
                     case "DT_KHKD1":
-                        await ProcessDT_KHKD1ToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName);
+                        await ProcessDT_KHKD1ToNewTableAsync(importedRecord.ImportedDataItems, batchId, effectiveStatementDate, result, importedRecord.FileName, effectiveNgayDL);
                         break;
                     default:
                         result.Message = $"Category '{category}' is not supported yet";
@@ -228,7 +228,7 @@ namespace TinhKhoanApp.Api.Services
 
         #region New Processing Methods for Separate Data Tables
 
-        private async Task ProcessLN01ToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName)
+        private async Task ProcessLN01ToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName, string ngayDL)
         {
             result.TableName = "LN01";
             var processedCount = 0;
@@ -245,15 +245,13 @@ namespace TinhKhoanApp.Api.Services
                     var rowData = JsonSerializer.Deserialize<Dictionary<string, object>>(item.RawData);
                     if (rowData == null || !rowData.Any()) continue;
 
-                    // Ưu tiên lấy NGAY_DL từ file CSV, nếu không có thì dùng statementDate
-                    string ngayDL = rowData.ContainsKey("NGAY_DL") && !string.IsNullOrWhiteSpace(rowData["NGAY_DL"]?.ToString())
-                        ? rowData["NGAY_DL"]?.ToString() ?? statementDate.ToString("dd/MM/yyyy")
-                        : statementDate.ToString("dd/MM/yyyy");
+                    // Sử dụng NgayDL đã được extract từ filename (parameter)
+                    _logger.LogInformation("📅 [LN01_IMPORT] Using NgayDL: {NgayDL} for row {RowNum}", ngayDL, processedCount + 1);
 
                     // Create new LN01 entity with proper mapping
                     var ln01Entity = new TinhKhoanApp.Api.Models.DataTables.LN01
                     {
-                        NgayDL = ngayDL,
+                        NgayDL = ngayDL, // Sử dụng NgayDL từ filename
                         FileName = fileName,
                         CreatedDate = DateTime.Now,
 
@@ -310,14 +308,13 @@ namespace TinhKhoanApp.Api.Services
             _logger.LogInformation("✅ [LN01_COMPLETE] Đã xử lý xong {Count} bản ghi LN01 với BatchId: {BatchId}", processedCount, batchId);
         }
 
-        private async Task ProcessLN02ToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName)
+        private async Task ProcessLN02ToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName, string ngayDL)
         {
             result.TableName = "LN02";
             var processedCount = 0;
             var entitiesToAdd = new List<TinhKhoanApp.Api.Models.DataTables.LN02>();
 
-            // Format statement date as dd/MM/yyyy for NgayDL field
-            var ngayDL = statementDate.ToString("dd/MM/yyyy");
+            _logger.LogInformation("🔄 [LN02_IMPORT] Using NgayDL: {NgayDL} for {Count} records", ngayDL, dataItems.Count);
 
             foreach (var item in dataItems)
             {
@@ -331,7 +328,7 @@ namespace TinhKhoanApp.Api.Services
                     // Create new LN02 entity with proper mapping
                     var ln02Entity = new TinhKhoanApp.Api.Models.DataTables.LN02
                     {
-                        NgayDL = ngayDL,
+                        NgayDL = ngayDL, // Sử dụng NgayDL từ filename
                         FileName = fileName,
                         CreatedDate = DateTime.Now,
 
@@ -381,14 +378,13 @@ namespace TinhKhoanApp.Api.Services
             _logger.LogInformation("✅ Processed {Count} LN02 records with batch ID {BatchId}", processedCount, batchId);
         }
 
-        private async Task ProcessDB01ToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName)
+        private async Task ProcessDB01ToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName, string ngayDL)
         {
             result.TableName = "DB01";
             var processedCount = 0;
             var entitiesToAdd = new List<TinhKhoanApp.Api.Models.DataTables.DB01>();
 
-            // Format statement date as dd/MM/yyyy for NgayDL field
-            var ngayDL = statementDate.ToString("dd/MM/yyyy");
+            _logger.LogInformation("🔄 [DB01_IMPORT] Using NgayDL: {NgayDL} for {Count} records", ngayDL, dataItems.Count);
 
             foreach (var item in dataItems)
             {
@@ -402,7 +398,7 @@ namespace TinhKhoanApp.Api.Services
                     // Create new DB01 entity with proper mapping
                     var db01Entity = new TinhKhoanApp.Api.Models.DataTables.DB01
                     {
-                        NgayDL = ngayDL,
+                        NgayDL = ngayDL, // Sử dụng NgayDL từ filename
                         FileName = fileName,
                         CreatedDate = DateTime.Now,
 
@@ -451,14 +447,11 @@ namespace TinhKhoanApp.Api.Services
         }
 
         // Complete mapping implementations for remaining table types
-        private async Task ProcessLN03ToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName)
+        private async Task ProcessLN03ToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName, string ngayDL)
         {
             result.TableName = "LN03";
             var processedCount = 0;
             var entitiesToAdd = new List<TinhKhoanApp.Api.Models.DataTables.LN03>();
-
-            // Format statement date as dd/MM/yyyy for NgayDL field
-            var ngayDL = statementDate.ToString("dd/MM/yyyy");
 
             foreach (var item in dataItems)
             {
@@ -523,14 +516,11 @@ namespace TinhKhoanApp.Api.Services
             _logger.LogInformation("✅ Processed {Count} LN03 records with batch ID {BatchId}", processedCount, batchId);
         }
 
-        private async Task ProcessDPDAToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName)
+        private async Task ProcessDPDAToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName, string ngayDL)
         {
             result.TableName = "DPDA";
             var processedCount = 0;
             var entitiesToAdd = new List<TinhKhoanApp.Api.Models.DataTables.DPDA>();
-
-            // Format statement date as dd/MM/yyyy for NgayDL field
-            var ngayDL = statementDate.ToString("dd/MM/yyyy");
 
             foreach (var item in dataItems)
             {
@@ -669,14 +659,11 @@ namespace TinhKhoanApp.Api.Services
             _logger.LogInformation("✅ [DP01_COMPLETE] Đã xử lý xong {Count} bản ghi DP01 với BatchId: {BatchId}", processedCount, batchId);
         }
 
-        private async Task ProcessEI01ToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName)
+        private async Task ProcessEI01ToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName, string ngayDL)
         {
             result.TableName = "EI01";
             var processedCount = 0;
             var entitiesToAdd = new List<TinhKhoanApp.Api.Models.DataTables.EI01>();
-
-            // Format statement date as dd/MM/yyyy for NgayDL field
-            var ngayDL = statementDate.ToString("dd/MM/yyyy");
 
             foreach (var item in dataItems)
             {
@@ -737,14 +724,11 @@ namespace TinhKhoanApp.Api.Services
             _logger.LogInformation("✅ Processed {Count} EI01 records with batch ID {BatchId}", processedCount, batchId);
         }
 
-        private async Task ProcessGL01ToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName)
+        private async Task ProcessGL01ToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName, string ngayDL)
         {
             result.TableName = "GL01";
             var processedCount = 0;
             var entitiesToAdd = new List<TinhKhoanApp.Api.Models.DataTables.GL01>();
-
-            // Format statement date as dd/MM/yyyy for NgayDL field
-            var ngayDL = statementDate.ToString("dd/MM/yyyy");
 
             foreach (var item in dataItems)
             {
@@ -805,14 +789,11 @@ namespace TinhKhoanApp.Api.Services
             _logger.LogInformation("✅ Processed {Count} GL01 records with batch ID {BatchId}", processedCount, batchId);
         }
 
-        private async Task ProcessGL41ToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName)
+        private async Task ProcessGL41ToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName, string ngayDL)
         {
             result.TableName = "GL41";
             var processedCount = 0;
             var entitiesToAdd = new List<TinhKhoanApp.Api.Models.DataTables.GL41>();
-
-            // Format statement date as dd/MM/yyyy for NgayDL field
-            var ngayDL = statementDate.ToString("dd/MM/yyyy");
 
             foreach (var item in dataItems)
             {
@@ -875,14 +856,11 @@ namespace TinhKhoanApp.Api.Services
             _logger.LogInformation("✅ Processed {Count} GL41 records with batch ID {BatchId}", processedCount, batchId);
         }
 
-        private async Task ProcessKH03ToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName)
+        private async Task ProcessKH03ToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName, string ngayDL)
         {
             result.TableName = "KH03";
             var processedCount = 0;
             var entitiesToAdd = new List<TinhKhoanApp.Api.Models.DataTables.KH03>();
-
-            // Format statement date as dd/MM/yyyy for NgayDL field
-            var ngayDL = statementDate.ToString("dd/MM/yyyy");
 
             foreach (var item in dataItems)
             {
@@ -946,14 +924,11 @@ namespace TinhKhoanApp.Api.Services
             _logger.LogInformation("✅ Processed {Count} KH03 records with batch ID {BatchId}", processedCount, batchId);
         }
 
-        private async Task ProcessRR01ToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName)
+        private async Task ProcessRR01ToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName, string ngayDL)
         {
             result.TableName = "RR01";
             var processedCount = 0;
             var entitiesToAdd = new List<TinhKhoanApp.Api.Models.DataTables.RR01>();
-
-            // Format statement date as dd/MM/yyyy for NgayDL field
-            var ngayDL = statementDate.ToString("dd/MM/yyyy");
 
             foreach (var item in dataItems)
             {
@@ -1014,7 +989,7 @@ namespace TinhKhoanApp.Api.Services
             _logger.LogInformation("✅ Processed {Count} RR01 records with batch ID {BatchId}", processedCount, batchId);
         }
 
-        private async Task ProcessDT_KHKD1ToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName)
+        private async Task ProcessDT_KHKD1ToNewTableAsync(ICollection<ImportedDataItem> dataItems, string batchId, DateTime statementDate, ProcessingResult result, string fileName, string ngayDL)
         {
             result.TableName = "DT_KHKD1";
             var processedCount = 0;
@@ -1039,9 +1014,6 @@ namespace TinhKhoanApp.Api.Services
                     month = fileMonth;
                 }
             }
-
-            // Format statement date as dd/MM/yyyy for NgayDL field
-            var ngayDL = statementDate.ToString("dd/MM/yyyy");
 
             foreach (var item in dataItems)
             {
