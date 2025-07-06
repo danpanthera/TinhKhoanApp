@@ -62,6 +62,9 @@
       <div class="bulk-actions-section">
         <h3>⚡ Thao tác hàng loạt</h3>
         <div class="bulk-actions">
+          <button @click="openSmartImportModal" class="btn-smart-import" :disabled="loading">
+            🧠 Smart Import
+          </button>
           <button @click="clearAllData" class="btn-clear-all" :disabled="loading">
             🗑️ Xóa toàn bộ dữ liệu
           </button>
@@ -405,6 +408,137 @@
         </div>
       </div>
     </div>
+
+    <!-- Smart Import Modal -->
+    <div v-if="showSmartImportModal" class="modal-overlay" @click="closeSmartImportModal">
+      <div class="modal-content smart-import-modal" @click.stop>
+        <div class="modal-header">
+          <h3>🧠 Smart Import - Tự động phân loại dữ liệu</h3>
+          <button class="modal-close" @click="closeSmartImportModal">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="smart-import-info">
+            <div class="feature-highlights">
+              <h4>✨ Tính năng Smart Import:</h4>
+              <ul>
+                <li>🔍 <strong>Tự động phân loại</strong> file dựa trên tên file</li>
+                <li>📅 <strong>Tự động extract</strong> ngày dữ liệu từ filename (pattern: *yyyymmdd.csv*)</li>
+                <li>🎯 <strong>Import trực tiếp</strong> vào đúng bảng dữ liệu thô</li>
+                <li>⚡ <strong>Xử lý hàng loạt</strong> nhiều file cùng lúc</li>
+                <li>📊 <strong>Báo cáo chi tiết</strong> kết quả import</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="smart-upload-section">
+            <div class="date-input-section">
+              <label for="smartStatementDate">📅 Ngày sao kê (tùy chọn):</label>
+              <input
+                id="smartStatementDate"
+                v-model="smartStatementDate"
+                type="date"
+                class="date-input agribank-date-input"
+                title="Nếu không chọn, hệ thống sẽ tự động extract từ tên file"
+              />
+              <small class="date-help">💡 Để trống để hệ thống tự động extract từ tên file</small>
+            </div>
+
+            <div class="file-drop-area"
+                 :class="{ 'drag-over': isDragOver }"
+                 @dragover.prevent="isDragOver = true"
+                 @dragleave.prevent="isDragOver = false"
+                 @drop.prevent="handleSmartFileDrop">
+              <div class="drop-content">
+                <div class="upload-icon">📁</div>
+                <p class="drop-text">Kéo thả file vào đây hoặc</p>
+                <button type="button" class="btn-select-files" @click="$refs.smartFileInput.click()">
+                  Chọn file
+                </button>
+                <input
+                  ref="smartFileInput"
+                  type="file"
+                  multiple
+                  accept=".csv,.xlsx,.xls"
+                  style="display: none"
+                  @change="handleSmartFileSelect"
+                />
+              </div>
+            </div>
+
+            <div v-if="smartSelectedFiles.length > 0" class="selected-files-list">
+              <h4>📋 File đã chọn ({{ smartSelectedFiles.length }}):</h4>
+              <div class="files-preview">
+                <div v-for="(file, index) in smartSelectedFiles" :key="index" class="file-item">
+                  <div class="file-info">
+                    <span class="file-name">{{ file.name }}</span>
+                    <span class="file-size">({{ formatFileSize(file.size) }})</span>
+                    <span class="detected-category" :class="'category-' + detectCategory(file.name)">
+                      {{ detectCategory(file.name) }}
+                    </span>
+                    <span v-if="extractDateFromFileName(file.name)" class="detected-date">
+                      📅 {{ formatDate(extractDateFromFileName(file.name)) }}
+                    </span>
+                  </div>
+                  <button @click="removeSmartFile(index)" class="btn-remove-file">×</button>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="smartUploading" class="smart-upload-progress">
+              <div class="progress-header">
+                <h4>🚀 Đang xử lý Smart Import...</h4>
+                <span class="progress-text">{{ smartUploadProgress.current }}/{{ smartUploadProgress.total }}</span>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar" :style="{ width: smartUploadProgress.percentage + '%' }"></div>
+              </div>
+              <p class="current-file">📤 {{ smartUploadProgress.currentFile }}</p>
+            </div>
+
+            <div v-if="smartImportResults && smartImportResults.results" class="smart-import-results">
+              <h4>📊 Kết quả Smart Import:</h4>
+              <div class="results-summary">
+                <div class="result-stats">
+                  <span class="stat success">✅ Thành công: {{ smartImportResults.successCount }}</span>
+                  <span class="stat error">❌ Lỗi: {{ smartImportResults.failureCount }}</span>
+                  <span class="stat total">📁 Tổng: {{ smartImportResults.totalFiles }}</span>
+                </div>
+              </div>
+              <div class="results-detail">
+                <div v-for="result in smartImportResults.results" :key="result.index"
+                     class="result-item" :class="{ success: result.success, error: !result.success }">
+                  <div class="result-status">
+                    {{ result.success ? '✅' : '❌' }}
+                  </div>
+                  <div class="result-info">
+                    <strong>{{ result.fileName }}</strong>
+                    <div v-if="result.success" class="success-details">
+                      <span>Category: {{ result.result?.detectedCategory || 'N/A' }}</span>
+                      <span>Records: {{ result.result?.importedRecords || 0 }}</span>
+                    </div>
+                    <div v-else class="error-details">
+                      <span class="error-message">{{ result.error }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button @click="closeSmartImportModal" class="btn-cancel" :disabled="smartUploading">
+            Đóng
+          </button>
+          <button
+            @click="startSmartImport"
+            class="btn-smart-upload"
+            :disabled="smartSelectedFiles.length === 0 || smartUploading"
+          >
+            🚀 Bắt đầu Smart Import
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -437,6 +571,21 @@ const selectedDataType = ref(null)
 const selectedFiles = ref([])
 const importNotes = ref('')
 const uploading = ref(false)
+
+// Smart Import state
+const showSmartImportModal = ref(false)
+const smartSelectedFiles = ref([])
+const smartStatementDate = ref('')
+const smartUploading = ref(false)
+const smartImportResults = ref(null)
+const smartUploadProgress = ref({
+  current: 0,
+  total: 0,
+  percentage: 0,
+  currentFile: ''
+})
+const isDragOver = ref(false)
+
 // State cho upload progress tracking chi tiết
 const uploadProgress = ref(0)
 const currentUploadingFile = ref('')
@@ -1512,6 +1661,121 @@ const formatCellValue = (value) => {
 
   return String(value)
 }
+
+// ==================== SMART IMPORT METHODS ====================
+
+// Mở modal Smart Import
+const openSmartImportModal = () => {
+  showSmartImportModal.value = true
+  smartSelectedFiles.value = []
+  smartImportResults.value = null
+  smartUploadProgress.value = { current: 0, total: 0, percentage: 0, currentFile: '' }
+}
+
+// Đóng modal Smart Import
+const closeSmartImportModal = () => {
+  if (!smartUploading.value) {
+    showSmartImportModal.value = false
+    smartSelectedFiles.value = []
+    smartImportResults.value = null
+    smartStatementDate.value = ''
+  }
+}
+
+// Xử lý chọn file Smart Import
+const handleSmartFileSelect = (event) => {
+  const files = event.target.files
+  if (files.length === 0) return
+  
+  smartSelectedFiles.value = Array.from(files)
+}
+
+// Xử lý kéo thả file
+const handleSmartFileDrop = (event) => {
+  isDragOver.value = false
+  const files = event.dataTransfer.files
+  if (files.length === 0) return
+  
+  smartSelectedFiles.value = Array.from(files)
+}
+
+// Xóa file khỏi danh sách
+const removeSmartFile = (index) => {
+  smartSelectedFiles.value.splice(index, 1)
+}
+
+// Detect category từ filename
+const detectCategory = (fileName) => {
+  return smartImportService.detectCategoryFromFileName(fileName)
+}
+
+// Extract date từ filename
+const extractDateFromFileName = (fileName) => {
+  return smartImportService.extractDateFromFileName(fileName)
+}
+
+// Format date để hiển thị
+const formatDate = (date) => {
+  if (!date) return ''
+  return new Date(date).toLocaleDateString('vi-VN')
+}
+
+// Bắt đầu Smart Import
+const startSmartImport = async () => {
+  if (smartSelectedFiles.value.length === 0) {
+    errorMessage.value = 'Vui lòng chọn ít nhất một file'
+    return
+  }
+
+  smartUploading.value = true
+  smartImportResults.value = null
+  errorMessage.value = ''
+  successMessage.value = ''
+
+  try {
+    // Prepare statement date
+    let statementDate = null
+    if (smartStatementDate.value) {
+      statementDate = new Date(smartStatementDate.value)
+    }
+
+    // Setup progress tracking
+    smartUploadProgress.value = {
+      current: 0,
+      total: smartSelectedFiles.value.length,
+      percentage: 0,
+      currentFile: ''
+    }
+
+    console.log('🧠 Starting Smart Import with', smartSelectedFiles.value.length, 'files')
+
+    // Call Smart Import Service
+    const results = await smartImportService.uploadSmartFiles(
+      smartSelectedFiles.value,
+      statementDate
+    )
+
+    smartImportResults.value = results
+    
+    if (results.successCount > 0) {
+      successMessage.value = `✅ Smart Import hoàn thành! ${results.successCount}/${results.totalFiles} file thành công`
+      
+      // Refresh data sau khi import thành công
+      await refreshAllData()
+    }
+
+    if (results.failureCount > 0) {
+      errorMessage.value = `⚠️ ${results.failureCount}/${results.totalFiles} file import thất bại. Xem chi tiết bên dưới.`
+    }
+
+  } catch (error) {
+    console.error('🔥 Smart Import error:', error)
+    errorMessage.value = `Lỗi Smart Import: ${error.message}`
+  } finally {
+    smartUploading.value = false
+    smartUploadProgress.value.percentage = 100
+  }
+}
 </script>
 
 <style scoped>
@@ -2380,5 +2644,416 @@ const formatCellValue = (value) => {
   padding: 5px 10px;
   border-radius: 4px;
   border-left: 3px solid #8B1538;
+}
+
+/* ==================== SMART IMPORT STYLES ==================== */
+
+.btn-smart-import {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+}
+
+.btn-smart-import:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,123,255,0.4);
+}
+
+.btn-smart-import:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.smart-import-modal {
+  max-width: 900px;
+  width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.smart-import-info {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border: 1px solid #2196f3;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.feature-highlights h4 {
+  color: #1976d2;
+  margin-bottom: 12px;
+  font-size: 1.1rem;
+}
+
+.feature-highlights ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.feature-highlights li {
+  margin-bottom: 8px;
+  color: #424242;
+  line-height: 1.5;
+}
+
+.date-input-section {
+  margin-bottom: 20px;
+}
+
+.date-input-section label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #333;
+}
+
+.date-help {
+  display: block;
+  margin-top: 4px;
+  color: #666;
+  font-style: italic;
+}
+
+.file-drop-area {
+  border: 3px dashed #ddd;
+  border-radius: 12px;
+  padding: 40px 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+  background: #fafafa;
+  cursor: pointer;
+}
+
+.file-drop-area.drag-over {
+  border-color: #007bff;
+  background: #e3f2fd;
+  transform: scale(1.02);
+}
+
+.file-drop-area:hover {
+  border-color: #007bff;
+  background: #f0f8ff;
+}
+
+.drop-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.upload-icon {
+  font-size: 48px;
+  color: #999;
+}
+
+.drop-text {
+  font-size: 1.1rem;
+  color: #666;
+  margin: 0;
+}
+
+.btn-select-files {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-select-files:hover {
+  background: #0056b3;
+}
+
+.selected-files-list {
+  margin-top: 20px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.selected-files-list h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.files-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.file-item {
+  display: flex;
+  justify-content: between;
+  align-items: center;
+  padding: 12px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.file-item:hover {
+  border-color: #007bff;
+  box-shadow: 0 2px 4px rgba(0,123,255,0.1);
+}
+
+.file-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.file-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.file-size {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.detected-category {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 12px;
+  display: inline-block;
+  width: fit-content;
+}
+
+.category-DP01 { background: #e3f2fd; color: #1976d2; }
+.category-LN01 { background: #e8f5e8; color: #388e3c; }
+.category-LN02 { background: #e8f5e8; color: #388e3c; }
+.category-LN03 { background: #e8f5e8; color: #388e3c; }
+.category-GL01 { background: #fff3e0; color: #f57c00; }
+.category-GL41 { background: #fff3e0; color: #f57c00; }
+.category-DB01 { background: #fce4ec; color: #c2185b; }
+.category-DPDA { background: #e3f2fd; color: #1976d2; }
+.category-EI01 { background: #f3e5f5; color: #7b1fa2; }
+.category-KH03 { background: #e0f2f1; color: #00695c; }
+.category-RR01 { background: #ffebee; color: #d32f2f; }
+.category-DT_KHKD1 { background: #e8eaf6; color: #3f51b5; }
+.category-UNKNOWN { background: #f5f5f5; color: #757575; }
+
+.detected-date {
+  font-size: 0.85rem;
+  color: #666;
+  font-style: italic;
+}
+
+.btn-remove-file {
+  background: #ff4444;
+  color: white;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.btn-remove-file:hover {
+  background: #cc0000;
+  transform: scale(1.1);
+}
+
+.smart-upload-progress {
+  margin-top: 20px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.progress-header h4 {
+  margin: 0;
+  color: #007bff;
+}
+
+.progress-text {
+  font-weight: 600;
+  color: #666;
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #007bff, #0056b3);
+  transition: width 0.3s ease;
+}
+
+.current-file {
+  margin: 0;
+  color: #666;
+  font-style: italic;
+}
+
+.smart-import-results {
+  margin-top: 20px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.smart-import-results h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.results-summary {
+  margin-bottom: 20px;
+}
+
+.result-stats {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.stat.success {
+  background: #d4edda;
+  color: #155724;
+}
+
+.stat.error {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.stat.total {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.results-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.result-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+.result-item.success {
+  background: #d4edda;
+  border-color: #c3e6cb;
+}
+
+.result-item.error {
+  background: #f8d7da;
+  border-color: #f5c6cb;
+}
+
+.result-status {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.result-info {
+  flex: 1;
+}
+
+.result-info strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.success-details,
+.error-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.9rem;
+}
+
+.success-details span {
+  color: #155724;
+}
+
+.error-message {
+  color: #721c24;
+  font-style: italic;
+}
+
+.btn-smart-upload {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-smart-upload:hover:not(:disabled) {
+  background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(40,167,69,0.3);
+}
+
+.btn-smart-upload:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 </style>
