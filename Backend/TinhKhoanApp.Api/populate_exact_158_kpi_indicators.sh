@@ -11,27 +11,27 @@ reset_table_indicators() {
     local table_name="$1"
     shift
     local indicators=("$@")
-    
+
     echo "🗑️  Xóa toàn bộ chỉ tiêu của bảng: $table_name"
-    
+
     # Get TableId
     local table_id=$(curl -s "$API_BASE/KpiAssignment/tables" | jq -r ".[] | select(.TableName == \"$table_name\") | .Id")
-    
+
     if [ -z "$table_id" ]; then
         echo "    ❌ Không tìm thấy TableId cho $table_name"
         return 1
     fi
-    
+
     # Xóa tất cả indicators hiện tại (nếu có API để xóa)
     echo "    📋 Tạo lại chỉ tiêu mới cho $table_name:"
-    
+
     # Tạo các indicators mới
     local index=1
     for indicator in "${indicators[@]}"; do
         IFS='|' read -r name score unit <<< "$indicator"
-        
+
         echo "      $index. $name ($score điểm, $unit)"
-        
+
         JSON_PAYLOAD=$(cat <<EOF
 {
     "TableId": $table_id,
@@ -42,15 +42,15 @@ reset_table_indicators() {
 }
 EOF
 )
-        
+
         RESPONSE=$(curl -s -X POST "$API_BASE/KpiAssignment/indicators" \
             -H "Content-Type: application/json" \
             -d "$JSON_PAYLOAD")
-        
+
         if [[ "$RESPONSE" == *"error"* || "$RESPONSE" == *"Error"* ]]; then
             echo "        ❌ Lỗi: $RESPONSE"
         fi
-        
+
         ((index++))
     done
     echo ""

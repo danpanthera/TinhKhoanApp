@@ -16,12 +16,12 @@ for i in {1..23}; do
     table_name=$(echo "$table_info" | jq -r '.TableName // "N/A"')
     description=$(echo "$table_info" | jq -r '.Description // "N/A"')
     indicator_count=$(echo "$table_info" | jq '.Indicators | length // 0')
-    
+
     if [ "$table_name" != "N/A" ] && [ "$indicator_count" -gt 0 ]; then
         printf "  %2d. %-25s | %2s chỉ tiêu | %s\n" "$i" "$table_name" "$indicator_count" "$description"
         total_indicators=$((total_indicators + indicator_count))
         employee_tables=$((employee_tables + 1))
-        
+
         # Hiển thị tên các chỉ tiêu mới (OrderIndex >= 17)
         new_indicators=$(echo "$table_info" | jq -r '.Indicators[] | select(.OrderIndex >= 17) | "     - " + .IndicatorName + " (" + (.MaxScore | tostring) + " " + .Unit + ")"')
         if [ ! -z "$new_indicators" ]; then
