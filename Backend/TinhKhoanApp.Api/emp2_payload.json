@@ -1,0 +1,15 @@
+{
+  "Id": 2,
+  "EmployeeCode": "LC001",
+  "CBCode": "78001001",
+  "FullName": "Nguyễn Văn An",
+  "Username": "nvan",
+  "Email": "nvan@agribank.com.vn",
+  "PhoneNumber": "0987654321",
+  "IsActive": true,
+  "UnitId": 2,
+  "PositionId": 2,
+  "RoleIds": [
+    18
+  ]
+}
