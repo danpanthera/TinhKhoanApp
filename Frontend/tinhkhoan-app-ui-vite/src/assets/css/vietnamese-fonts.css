@@ -1,0 +1,91 @@
+/* =============================================================
+ * FONT TIẾNG VIỆT TỐI ƯU CHO TINHKHOAN APP
+ * Hỗ trợ đầy đủ dấu tiếng Việt và emojis
+ * =============================================================*/
+
+/* 🇻🇳 Font stack chính cho toàn bộ ứng dụng */
+:root {
+  --font-primary: 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Arial', 'Noto Sans', 'Liberation Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji';
+  --font-heading: 'Montserrat', 'Roboto', 'Segoe UI', 'Arial', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+  --font-inter: 'Inter', 'Roboto', 'Segoe UI', 'Arial', sans-serif;
+}
+
+/* Base font cho toàn bộ ứng dụng */
+* {
+  font-family: var(--font-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Heading fonts */
+h1, h2, h3, h4, h5, h6, 
+.heading, .title, .page-title {
+  font-family: var(--font-heading);
+  font-weight: 600;
+}
+
+/* Monospace fonts */
+code, pre, .code, .monospace,
+.json-display, .sql-display {
+  font-family: var(--font-mono);
+}
+
+/* Inter font cho UI elements */
+.ui-element, .form-element, .button-text,
+.table-content, .card-content {
+  font-family: var(--font-inter);
+}
+
+/* Đảm bảo UTF-8 encoding cho tiếng Việt */
+body {
+  unicode-bidi: normal;
+  -webkit-text-size-adjust: 100%;
+  direction: ltr;
+}
+
+/* Font size tối ưu cho tiếng Việt */
+body {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Responsive font sizing */
+@media (max-width: 768px) {
+  body {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  * {
+    -webkit-font-smoothing: subpixel-antialiased;
+  }
+}
+
+/* Dark mode font adjustments */
+@media (prefers-color-scheme: dark) {
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Print styles */
+@media print {
+  * {
+    font-family: 'Times New Roman', serif;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

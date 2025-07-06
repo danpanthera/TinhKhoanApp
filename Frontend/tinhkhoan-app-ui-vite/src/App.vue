@@ -693,12 +693,15 @@ body, html {
 }
 
 #app {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  /* 🇻🇳 Font stack tối ưu cho tiếng Việt */
+  font-family: 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Arial', 'Noto Sans', 'Liberation Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
   height: 100vh;
   width: 100vw;
+  /* 🇻🇳 Đảm bảo hỗ trợ Unicode tiếng Việt */
+  text-rendering: optimizeLegibility;
 }
 
 /* App Container */

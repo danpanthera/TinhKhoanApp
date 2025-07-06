@@ -1054,7 +1054,8 @@ watch(selectedBranchId, (newVal) => {
   max-width: 900px;
   margin: 20px auto;
   padding: 20px;
-  font-family: Avenir, Helvetica, Arial, sans-serif;
+  /* 🇻🇳 Sử dụng font tiếng Việt tối ưu */
+  font-family: var(--font-primary, 'Roboto', 'Segoe UI', 'Arial', sans-serif);
   color: #2c3e50;
   background-color: #fff;
   border-radius: 8px;

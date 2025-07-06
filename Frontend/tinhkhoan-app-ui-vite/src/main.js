@@ -8,6 +8,8 @@ import Vue3Toastify from 'vue3-toastify';
 import ElementPlus from 'element-plus';
 import 'element-plus/dist/index.css';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
+// 🇻🇳 Import Vietnamese fonts CSS FIRST (highest priority)
+import './assets/css/vietnamese-fonts.css';
 // Import Agribank theme CSS
 import './assets/css/agribank-theme.css';
 // Import theme store để khởi tạo theme
