@@ -90,31 +90,71 @@ sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C
 
 **✅ HOÀN THÀNH:** Đã xóa toàn bộ dữ liệu liên quan đến Đơn vị (Units) và Vai trò (Roles)
 
-#### Quy trình xóa an toàn:
-1. **Backup dữ liệu:** Tạo backup với timestamp `UnitsBackup_20250706_201639`, `RolesBackup_20250706_201639`
-2. **Xóa theo thứ tự đúng:** 
-   - EmployeeRoles (quan hệ nhiều-nhiều)
-   - EmployeeKpiAssignments, BranchKpiAssignments (KPI assignments)
-   - Cập nhật Employees.UnitId = NULL (tránh foreign key conflict)
-   - Xóa child Units (ParentUnitId IS NOT NULL)
-   - Xóa parent Units (ParentUnitId IS NULL)
-   - Xóa tất cả Roles
-3. **Reset Identity:** DBCC CHECKIDENT cho Units và Roles về 0
+### QUY ƯỚC MÃ CHI NHÁNH (MA_CN) theo tên gọi như sau:
+cấu trúc như sau: Tên, code, MA_CN
++ Hội Sở, HoiSo, 7800
++ Bình Lư, BinhLu, 7801
++ Phong Thổ, PhongTho, 7802
++ Sìn Hồ, SinHo, 7803
++ Bum Tở, BumTo, 7804
++ Than Uyên, ThanUyen, 7805
++ Doan Kết, DoanKet, 7806
++ Tân Uyên, TanUyen, 7807
++ Nậm Hàng, NamHang, 7808
++ Toàn tỉnh, ToanTinh, Tổng của 9 Chi nhánh từ Hội Sở -> Nậm Hàng
 
-#### Kết quả:
-- **Units:** 46 → 0 ✅
-- **Roles:** 23 → 0 ✅
-- **Frontend:** Hiển thị danh sách trống ✅
-- **Backend API:** Trả về arrays rỗng ✅
+### 🏢 **TẠO CẤU TRÚC 46 ĐƠN VỊ - 06/07/2025**
 
-#### API Endpoints mới:
-- `POST /api/Maintenance/backup-units-roles` - Tạo backup
-- `POST /api/Maintenance/delete-units-roles` - Xóa dữ liệu
+**✅ HOÀN THÀNH:** Đã tạo thành công 46 đơn vị theo cấu trúc hierarchical
 
-#### Files tạo:
-- `MaintenanceController.cs` - Controller xử lý maintenance
-- `backup_units_roles_data.sql` - Script backup thủ công
-- `delete_units_roles_data.sql` - Script xóa thủ công
-- `delete_units_roles.sh` - Bash script automation
+#### Cấu trúc tổ chức:
+```
+Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
+├── Hội Sở (ID=2, CNL1)
+│   ├── Ban Giám đốc (ID=3, PNVL1)
+│   ├── Phòng Khách hàng Doanh nghiệp (ID=4, PNVL1)
+│   ├── Phòng Khách hàng Cá nhân (ID=5, PNVL1)
+│   ├── Phòng Kế toán & Ngân quỹ (ID=6, PNVL1)
+│   ├── Phòng Tổng hợp (ID=7, PNVL1)
+│   ├── Phòng Kế hoạch & Quản lý rủi ro (ID=8, PNVL1)
+│   └── Phòng Kiểm tra giám sát (ID=9, PNVL1)
+├── Chi nhánh Bình Lư (ID=10, CNL2)
+│   ├── Ban Giám đốc (PNVL2)
+│   ├── Phòng Kế toán & Ngân quỹ (PNVL2)
+│   └── Phòng Khách hàng (PNVL2)
+├── Chi nhánh Phong Thổ (ID=11, CNL2)
+│   ├── Ban Giám đốc, Phòng KT&NQ, Phòng KH (PNVL2)
+│   └── Phòng giao dịch Số 5 (PGDL2)
+├── Chi nhánh Sìn Hồ (ID=12, CNL2)
+├── Chi nhánh Bum Tở (ID=13, CNL2)
+├── Chi nhánh Than Uyên (ID=14, CNL2)
+│   └── + Phòng giao dịch số 6 (PGDL2)
+├── Chi nhánh Đoàn Kết (ID=15, CNL2)
+│   ├── + Phòng giao dịch số 1 (PGDL2)
+│   └── + Phòng giao dịch số 2 (PGDL2)
+├── Chi nhánh Tân Uyên (ID=16, CNL2)
+│   └── + Phòng giao dịch số 3 (PGDL2)
+└── Chi nhánh Nậm Hàng (ID=17, CNL2)
+```
 
-**🎯 Mục đích:** Chuẩn bị clean slate để import dữ liệu mới hoặc test hệ thống với dữ liệu trống.
+#### Thống kê:
+- **CNL1:** 2 đơn vị (Lai Châu, Hội Sở)
+- **CNL2:** 8 chi nhánh cấp 2
+- **PNVL1:** 7 phòng ban Hội Sở
+- **PNVL2:** 25 phòng ban chi nhánh 
+- **PGDL2:** 4 phòng giao dịch
+- **Tổng:** 46 đơn vị ✅
+
+#### Công cụ sử dụng:
+- **Shell script:** `create_46_units.sh` - Automation tạo toàn bộ cấu trúc
+- **API Units:** POST `/api/units` - Tạo từng đơn vị với parentUnitId
+- **MaintenanceController:** Backup và management endpoints
+- **Verification:** JSON validation và count checking
+
+#### Đặc điểm kỹ thuật:
+- **Auto-increment ID:** Database tự động gán ID tuần tự
+- **Parent-Child relationships:** Cấu trúc cây hoàn chỉnh
+- **Unicode support:** Tên tiếng Việt hiển thị đúng
+- **API compatible:** Frontend có thể fetch và hiển thị đầy đủ
+
+**🎯 Status:** Sẵn sàng cho việc gán Roles và Employees vào từng đơn vị.
