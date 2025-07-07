@@ -21,16 +21,16 @@
     <!-- Debug removed -->
 
     <ul v-if="roleStore.roles.length > 0 && !roleStore.isLoading">
-      <li v-for="role in roleStore.allRoles" :key="role.id" class="list-item">
+      <li v-for="role in roleStore.allRoles" :key="role.Id" class="list-item">
         <div class="item-info">
-          <strong>{{ role.name }}</strong>
-          <span class="item-details" v-if="role.description"
-            >(Mô tả: {{ role.description }})</span
+          <strong>{{ role.Name }}</strong>
+          <span class="item-details" v-if="role.Description"
+            >(Mô tả: {{ role.Description }})</span
           >
         </div>
         <div class="actions">
           <button @click="startEditRole(role)" class="edit-btn">Sửa</button>
-          <button @click="confirmDeleteRole(role.id)" class="delete-btn">
+          <button @click="confirmDeleteRole(role.Id)" class="delete-btn">
             Xóa
           </button>
         </div>
@@ -53,8 +53,8 @@
           <input
             type="text"
             id="roleName"
-            :value="currentRole.name"
-            @input="currentRole.name = $event.target.value"
+            :value="currentRole.Name"
+            @input="currentRole.Name = $event.target.value"
             required
           />
         </div>
@@ -63,8 +63,8 @@
           <input
             type="text"
             id="roleDescription"
-            :value="currentRole.description"
-            @input="currentRole.description = $event.target.value"
+            :value="currentRole.Description"
+            @input="currentRole.Description = $event.target.value"
             placeholder="Mô tả chi tiết (nếu có)"
           />
         </div>
@@ -105,9 +105,9 @@ import { useRoleStore } from "../stores/roleStore.js";
 const roleStore = useRoleStore();
 
 const currentRole = ref({
-  id: null,
-  name: "",
-  description: "",
+  Id: null,
+  Name: "",
+  Description: "",
 });
 
 const isEditing = ref(false);
@@ -142,18 +142,18 @@ const handleSubmitRole = async () => {
   roleStore.error = null;
 
   const nameFromInput =
-    typeof currentRole.value.name === "string"
-      ? currentRole.value.name.trim()
+    typeof currentRole.value.Name === "string"
+      ? currentRole.value.Name.trim()
       : "";
   const descriptionFromInput =
-    typeof currentRole.value.description === "string"
-      ? currentRole.value.description.trim()
+    typeof currentRole.value.Description === "string"
+      ? currentRole.value.Description.trim()
       : "";
 
   const roleDataToValidateAndSubmit = {
     ...currentRole.value,
-    name: nameFromInput,
-    description: descriptionFromInput,
+    Name: nameFromInput,
+    Description: descriptionFromInput,
   };
 
   console.log("--- Bắt đầu handleSubmitRole (Vai trò) ---");
@@ -162,14 +162,14 @@ const handleSubmitRole = async () => {
     JSON.parse(JSON.stringify(roleDataToValidateAndSubmit))
   );
 
-  if (!roleDataToValidateAndSubmit.name) {
+  if (!roleDataToValidateAndSubmit.Name) {
     formError.value = "Tên vai trò không được để trống!";
     console.log("VALIDATION FAIL (Client-side): Tên vai trò trống.");
     return;
   }
   console.log("VALIDATION PASS (Client-side): Tên vai trò hợp lệ.");
 
-  if (isEditing.value && roleDataToValidateAndSubmit.id !== null) {
+  if (isEditing.value && roleDataToValidateAndSubmit.Id !== null) {
     try {
       await roleStore.updateRole(roleDataToValidateAndSubmit);
       alert("Cập nhật vai trò thành công!");
@@ -180,7 +180,7 @@ const handleSubmitRole = async () => {
   } else {
     try {
       // eslint-disable-next-line no-unused-vars
-      const { id, ...newRoleData } = roleDataToValidateAndSubmit;
+      const { Id, ...newRoleData } = roleDataToValidateAndSubmit;
       await roleStore.createRole(newRoleData);
       alert("Thêm vai trò thành công!");
       resetForm();
@@ -210,9 +210,9 @@ const cancelEdit = () => {
 
 const resetForm = () => {
   currentRole.value = {
-    id: null,
-    name: "",
-    description: "",
+    Id: null,
+    Name: "",
+    Description: "",
   };
 };
 

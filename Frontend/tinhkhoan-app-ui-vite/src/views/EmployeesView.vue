@@ -90,37 +90,37 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="employee in pagedEmployees" :key="employee.id"
-              :class="{ 'selected-row': selectedEmployeeIds.includes(employee.id) }">
+          <tr v-for="employee in pagedEmployees" :key="employee.Id"
+              :class="{ 'selected-row': selectedEmployeeIds.includes(employee.Id) }">
             <td class="checkbox-cell">
               <input
                 type="checkbox"
-                :value="employee.id"
+                :value="employee.Id"
                 v-model="selectedEmployeeIds"
-                :disabled="employee.username === 'admin'"
-                :title="employee.username === 'admin' ? 'Không thể chọn tài khoản admin' : 'Chọn nhân viên này'"
+                :disabled="employee.Username === 'admin'"
+                :title="employee.Username === 'admin' ? 'Không thể chọn tài khoản admin' : 'Chọn nhân viên này'"
               />
             </td>
             <td class="action-cell">
               <button @click="startEditEmployee(employee)" class="edit-btn">Sửa</button>
               <button
-                @click="confirmDeleteEmployee(employee.id)"
+                @click="confirmDeleteEmployee(employee.Id)"
                 class="delete-btn"
-                :disabled="employee.username === 'admin'"
-                :title="employee.username === 'admin' ? 'Không thể xóa tài khoản admin' : 'Xóa nhân viên'"
+                :disabled="employee.Username === 'admin'"
+                :title="employee.Username === 'admin' ? 'Không thể xóa tài khoản admin' : 'Xóa nhân viên'"
               >Xóa</button>
             </td>
-            <td>{{ employee.employeeCode }}</td>
-            <td>{{ employee.cbCode || 'Chưa có mã CB' }}</td>
-            <td>{{ employee.fullName }}</td>
-            <td>{{ employee.username }}</td>
-            <td>{{ unitStore.allUnits.find(u => u.id === (unitStore.allUnits.find(x => x.id === employee.unitId)?.parentUnitId))?.name || 'N/A' }}</td>
-            <td>{{ unitStore.allUnits.find(u => u.id === employee.unitId)?.name || 'N/A' }}</td>
-            <td>{{ employee.position?.name || (positionStore.allPositions.find(p => p.id === employee.positionId)?.name || 'N/A') }}</td>
+            <td>{{ employee.EmployeeCode }}</td>
+            <td>{{ employee.CBCode || 'Chưa có mã CB' }}</td>
+            <td>{{ employee.FullName }}</td>
+            <td>{{ employee.Username }}</td>
+            <td>{{ unitStore.allUnits.find(u => u.Id === (unitStore.allUnits.find(x => x.Id === employee.UnitId)?.ParentUnitId))?.Name || 'N/A' }}</td>
+            <td>{{ unitStore.allUnits.find(u => u.Id === employee.UnitId)?.Name || 'N/A' }}</td>
+            <td>{{ employee.PositionName || (positionStore.allPositions.find(p => p.Id === employee.PositionId)?.Name || 'N/A') }}</td>
             <td>{{ getRoleNames(employee) }}</td>
-            <td>{{ employee.email }}</td>
-            <td>{{ employee.phoneNumber }}</td>
-            <td>{{ employee.isActive ? 'Hoạt động' : 'Không hoạt động' }}</td>
+            <td>{{ employee.Email }}</td>
+            <td>{{ employee.PhoneNumber }}</td>
+            <td>{{ employee.IsActive ? 'Hoạt động' : 'Không hoạt động' }}</td>
           </tr>
         </tbody>
       </table>
@@ -234,8 +234,8 @@
               required
             >
               <option :value="null" disabled>-- Chọn Chi nhánh --</option>
-              <option v-for="branch in branchOptions" :key="branch.id" :value="branch.id">
-                {{ branch.name }} ({{ branch.code }})
+              <option v-for="branch in branchOptions" :key="branch.Id || branch.id" :value="branch.Id || branch.id">
+                {{ (branch.Name || branch.name) }} ({{ (branch.Code || branch.code) }})
               </option>
             </select>
           </div>
@@ -248,8 +248,8 @@
               required
             >
               <option :value="null" disabled>-- Chọn Phòng nghiệp vụ --</option>
-              <option v-for="dept in departmentOptions" :key="dept.id" :value="dept.id">
-                {{ dept.name }} ({{ dept.code }})
+              <option v-for="dept in departmentOptions" :key="dept.Id || dept.id" :value="dept.Id || dept.id">
+                {{ (dept.Name || dept.name) }} ({{ (dept.Code || dept.code) }})
               </option>
             </select>
           </div>
@@ -269,10 +269,10 @@
               <option :value="null" disabled>-- Chọn Chức vụ --</option>
               <option
                 v-for="position in positionStore.allPositions"
-                :key="position.id"
-                :value="position.id"
+                :key="position.Id || position.id"
+                :value="position.Id || position.id"
               >
-                {{ position.name }}
+                {{ position.Name || position.name }}
               </option>
             </select>
           </div>
@@ -292,18 +292,18 @@
               <div v-if="isRoleDropdownOpen" class="role-dropdown-menu">
                 <div
                   v-for="role in roleStore.allRoles"
-                  :key="role.id"
+                  :key="role.Id"
                   class="role-option"
-                  @click="toggleRoleSelection(role.id)"
+                  @click="toggleRoleSelection(getId(role))"
                 >
                   <input
                     type="checkbox"
-                    :checked="isRoleSelected(role.id)"
+                    :checked="isRoleSelected(getId(role))"
                     @click.stop
-                    @change="toggleRoleSelection(role.id)"
+                    @change="toggleRoleSelection(getId(role))"
                   />
-                  <label>{{ role.name }}</label>
-                  <small v-if="role.description" class="role-description">{{ role.description }}</small>
+                  <label>{{ getName(role) }}</label>
+                  <small v-if="safeGet(role, 'Description')" class="role-description">{{ safeGet(role, 'Description') }}</small>
                 </div>
                 <div v-if="roleStore.allRoles.length === 0" class="no-roles">
                   Không có vai trò nào
@@ -364,6 +364,7 @@ import { useEmployeeStore } from "../stores/employeeStore.js";
 import { usePositionStore } from "../stores/positionStore.js";
 import { useRoleStore } from "../stores/roleStore.js";
 import { useUnitStore } from "../stores/unitStore.js";
+import { getId, getName, safeGet } from "../utils/casingSafeAccess.js";
 
 const employeeStore = useEmployeeStore();
 const unitStore = useUnitStore();
@@ -439,6 +440,8 @@ const displayError = computed(() => {
 
 // Updated branchOptions: Custom ordering to match EmployeeKpiAssignmentView
 const branchOptions = computed(() => {
+  console.log('🔍 branchOptions computed - unitStore.allUnits:', unitStore.allUnits);
+
   // Định nghĩa thứ tự theo yêu cầu (cập nhật tên mới): CnLaiChau, CnBinhLu, CnPhongTho, CnSinHo, CnBumTo, CnThanUyen, CnDoanKet, CnTanUyen, CnNamHang
   const customOrder = [
     'CnLaiChau',     // Chi nhánh tỉnh Lai Châu
@@ -452,14 +455,14 @@ const branchOptions = computed(() => {
     'CnNamHang'      // Chi nhánh Nậm Hàng
   ];
 
-  return unitStore.allUnits
+  const branches = unitStore.allUnits
     .filter(u => {
-      const type = (u.type || '').toUpperCase();
+      const type = ((u.Type || u.type) || '').toUpperCase();
       return type === 'CNL1' || type === 'CNL2';
     })
     .sort((a, b) => {
-      const indexA = customOrder.indexOf(a.code);
-      const indexB = customOrder.indexOf(b.code);
+      const indexA = customOrder.indexOf(a.Code || a.code);
+      const indexB = customOrder.indexOf(b.Code || b.code);
 
       // Nếu cả hai đều có trong custom order, sắp xếp theo thứ tự đó
       if (indexA !== -1 && indexB !== -1) {
@@ -471,27 +474,39 @@ const branchOptions = computed(() => {
       if (indexB !== -1) return 1;
 
       // Nếu cả hai đều không có trong custom order, sắp xếp theo tên
-      return (a.name || '').localeCompare(b.name || '');
+      return ((a.Name || a.name) || '').localeCompare((b.Name || b.name) || '');
     });
+
+  console.log('🔍 branchOptions result:', branches);
+  return branches;
 });
 
 // Sửa departmentOptions: lọc phòng nghiệp vụ theo loại chi nhánh đã chọn với sắp xếp theo thứ tự yêu cầu
 const departmentOptions = computed(() => {
+  console.log('🔍 departmentOptions computed - selectedBranchId:', selectedBranchId.value);
+
   if (!selectedBranchId.value) return [];
-  const branch = unitStore.allUnits.find(u => u.id === Number(selectedBranchId.value));
+  const branch = unitStore.allUnits.find(u => (u.Id || u.id) === Number(selectedBranchId.value));
+
+  console.log('🔍 departmentOptions - found branch:', branch);
+
   if (!branch) return [];
 
   // Lấy các phòng nghiệp vụ con của chi nhánh đã chọn
-  const children = unitStore.allUnits.filter(u => u.parentUnitId === branch.id);
+  const children = unitStore.allUnits.filter(u => (u.ParentUnitId || u.parentUnitId) === (branch.Id || branch.id));
+
+  console.log('🔍 departmentOptions - children units:', children);
 
   // Lọc chỉ lấy các phòng nghiệp vụ (PNVL1, PNVL2) và phòng giao dịch (PGD), loại bỏ các chi nhánh con (CNL2)
   const departments = children.filter(u => {
-    const unitType = (u.type || '').toUpperCase();
+    const unitType = ((u.Type || u.type) || '').toUpperCase();
     return unitType.includes('PNVL') || unitType === 'PGD';
   });
 
+  console.log('🔍 departmentOptions - filtered departments:', departments);
+
   // Sắp xếp theo thứ tự: Ban Giám đốc, Phòng Khách hàng, Phòng Kế toán & Ngân quỹ, Phòng giao dịch
-  return departments.sort((a, b) => {
+  const result = departments.sort((a, b) => {
     const getOrder = (name) => {
       const lowerName = (name || '').toLowerCase();
       if (lowerName.includes('ban giám đốc')) return 1;
@@ -501,8 +516,11 @@ const departmentOptions = computed(() => {
       return 999;
     };
 
-    return getOrder(a.name) - getOrder(b.name);
+    return getOrder((a.Name || a.name)) - getOrder((b.Name || b.name));
   });
+
+  console.log('🔍 departmentOptions final result:', result);
+  return result;
 });
 
 // Thêm biến selectedBranchId để điều khiển chọn branch
@@ -511,9 +529,9 @@ const selectedBranchId = ref(null); // Sửa từ undefined thành null
 // Lấy danh sách phòng nghiệp vụ con của branch đã chọn (debug)
 const branchChildren = computed(() => {
   if (!selectedBranchId.value && selectedBranchId.value !== 0) return [];
-  const branch = unitStore.allUnits.find(u => u.id === Number(selectedBranchId.value));
+  const branch = unitStore.allUnits.find(u => (u.Id || u.id) === Number(selectedBranchId.value));
   if (!branch) return [];
-  return unitStore.allUnits.filter(u => u.parentUnitId === branch.id);
+  return unitStore.allUnits.filter(u => (u.ParentUnitId || u.parentUnitId) === (branch.Id || branch.id));
 });
 
 // Đảm bảo selectedBranchId luôn là kiểu number hoặc null
@@ -526,9 +544,9 @@ watch(selectedBranchId, (val, oldVal) => {
 
 // Khi edit hoặc thêm mới, đồng bộ selectedBranchId với unitId của employee (nếu có)
 function syncSelectedBranchWithEmployeeUnit() {
-  const dept = unitStore.allUnits.find(u => u.id === currentEmployee.value.unitId);
-  if (dept && dept.parentUnitId) {
-    selectedBranchId.value = dept.parentUnitId;
+  const dept = unitStore.allUnits.find(u => (u.Id || u.id) === currentEmployee.value.unitId);
+  if (dept && (dept.ParentUnitId || dept.parentUnitId)) {
+    selectedBranchId.value = dept.ParentUnitId || dept.parentUnitId;
   } else {
     selectedBranchId.value = null;
   }
@@ -550,7 +568,7 @@ const startEditEmployee = async (employee) => {
 
   // Fetch chi tiết nhân viên để lấy passwordHash gốc
   try {
-    const detail = await employeeStore.fetchEmployeeDetail(employee.id);
+    const detail = await employeeStore.fetchEmployeeDetail(employee.Id);
     // Chỉ merge các trường primitive, loại bỏ object reference
     currentEmployee.value = extractEmployeePrimitives({ ...employee, ...detail });
     originalPasswordHash.value = detail.passwordHash || "";
@@ -567,10 +585,10 @@ const startEditEmployee = async (employee) => {
 
   // Đồng bộ selectedBranchId
   syncSelectedBranchWithEmployeeUnit();
-  // Đồng bộ selectedBranchId
-  const dept = unitStore.allUnits.find(u => u.id === currentEmployee.value.unitId);
-  if (dept && dept.parentUnitId) {
-    selectedBranchId.value = dept.parentUnitId;
+  // Đồng bộ selectedBranchId (backup logic)
+  const dept = unitStore.allUnits.find(u => (u.Id || u.id) === currentEmployee.value.unitId);
+  if (dept && (dept.ParentUnitId || dept.parentUnitId)) {
+    selectedBranchId.value = dept.ParentUnitId || dept.parentUnitId;
   } else {
     selectedBranchId.value = null;
   }
@@ -629,27 +647,27 @@ function extractEmployeePrimitives(employee) {
     roleIds = employee.roleIds.filter(id => id && !isNaN(Number(id))).map(id => Number(id));
   } else if (employee.roles && employee.roles.$values && Array.isArray(employee.roles.$values)) {
     // Handle case where roles is an object with $values array (current API format)
-    roleIds = employee.roles.$values.map(role => role.id).filter(id => id && !isNaN(Number(id))).map(id => Number(id));
+    roleIds = employee.roles.$values.map(role => role.Id || role.id).filter(id => id && !isNaN(Number(id))).map(id => Number(id));
   } else if (employee.roles && Array.isArray(employee.roles)) {
     // Handle case where roles array contains role objects directly
-    roleIds = employee.roles.map(role => role.id).filter(id => id && !isNaN(Number(id))).map(id => Number(id));
+    roleIds = employee.roles.map(role => getId(role)).filter(id => id && !isNaN(Number(id))).map(id => Number(id));
   }
 
   console.log('🔍 extractEmployeePrimitives - employee:', employee);
   console.log('🔍 extractEmployeePrimitives - extracted roleIds:', roleIds);
 
   return {
-    id: employee.id ?? null,
-    employeeCode: employee.employeeCode ?? '',
-    cbCode: employee.cbCode ?? '',
-    fullName: employee.fullName ?? '',
-    username: employee.username ?? '',
-    passwordHash: employee.passwordHash ?? '',
-    email: employee.email ?? '',
-    phoneNumber: employee.phoneNumber ?? '',
-    isActive: typeof employee.isActive === 'boolean' ? employee.isActive : true,
-    unitId: employee.unitId ?? null,
-    positionId: employee.positionId ?? null,
+    id: getId(employee),
+    employeeCode: safeGet(employee, 'EmployeeCode'),
+    cbCode: safeGet(employee, 'CBCode'),
+    fullName: safeGet(employee, 'FullName'),
+    username: safeGet(employee, 'Username'),
+    passwordHash: safeGet(employee, 'PasswordHash'),
+    email: safeGet(employee, 'Email'),
+    phoneNumber: safeGet(employee, 'PhoneNumber'),
+    isActive: typeof employee.IsActive === 'boolean' ? employee.IsActive : (typeof employee.isActive === 'boolean' ? employee.isActive : true),
+    unitId: safeGet(employee, 'UnitId'),
+    positionId: safeGet(employee, 'PositionId'),
     roleIds: roleIds,
   };
 }
@@ -946,11 +964,11 @@ const getSelectedRolesText = () => {
   }
 
   const selectedRoles = roleStore.allRoles.filter(role =>
-    currentEmployee.value.roleIds.includes(role.id)
+    currentEmployee.value.roleIds.includes(role.Id || role.id)
   );
 
     if (selectedRoles.length === 1) {
-    return selectedRoles[0].name;
+    return selectedRoles[0].Name || selectedRoles[0].name;
   } else if (selectedRoles.length > 1) {
     return `${selectedRoles.length} vai trò đã chọn`;
   }
