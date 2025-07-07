@@ -133,16 +133,21 @@ export const kpiAssignmentService = {
     const response = await api.get(`/KpiAssignment/tables/${tableId}`);
     const tableData = response.data;
 
-    if (tableData && tableData.indicators) {
+    // Handle both PascalCase (backend) and camelCase (frontend) indicators
+    const indicators = tableData.Indicators || tableData.indicators;
+    if (indicators) {
       let indicatorsData = [];
 
-      if (Array.isArray(tableData.indicators.$values)) {
-        indicatorsData = tableData.indicators.$values;
-      } else if (Array.isArray(tableData.indicators)) {
-        indicatorsData = tableData.indicators;
+      if (Array.isArray(indicators.$values)) {
+        indicatorsData = indicators.$values;
+      } else if (Array.isArray(indicators)) {
+        indicatorsData = indicators;
       }
 
-      tableData.indicators = indicatorsData.sort((a, b) => a.orderIndex - b.orderIndex);
+      // Sort by OrderIndex (PascalCase) or orderIndex (camelCase) 
+      tableData.indicators = indicatorsData.sort((a, b) => (a.OrderIndex || a.orderIndex || 0) - (b.OrderIndex || b.orderIndex || 0));
+    } else {
+      tableData.indicators = [];
     }
 
     return tableData;

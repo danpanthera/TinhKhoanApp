@@ -163,15 +163,15 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(indicator, index) in indicators" :key="indicator.Id">
+                  <tr v-for="(indicator, index) in indicators" :key="getId(indicator)">
                     <td>{{ index + 1 }}</td>
-                    <td class="indicator-name">{{ indicator.indicatorName }}</td>
-                    <td class="max-score">{{ indicator.maxScore }}</td>
-                    <td class="unit">{{ indicator.unit }}</td>
-                    <td class="order">{{ indicator.orderIndex }}</td>
+                    <td class="indicator-name">{{ safeGet(indicator, 'IndicatorName') }}</td>
+                    <td class="max-score">{{ safeGet(indicator, 'MaxScore') }}</td>
+                    <td class="unit">{{ safeGet(indicator, 'Unit') }}</td>
+                    <td class="order">{{ safeGet(indicator, 'OrderIndex') }}</td>
                     <td class="status">
-                      <span :class="{ active: indicator.isActive, inactive: !indicator.isActive }">
-                        {{ indicator.isActive ? 'Hoạt động' : 'Không hoạt động' }}
+                      <span :class="{ active: safeGet(indicator, 'IsActive'), inactive: !safeGet(indicator, 'IsActive') }">
+                        {{ safeGet(indicator, 'IsActive') ? 'Hoạt động' : 'Không hoạt động' }}
                       </span>
                     </td>
                     <td class="actions">
@@ -636,6 +636,7 @@ import { computed, nextTick, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { kpiAssignmentService } from '../services/kpiAssignmentService';
 import { useNumberInput } from '../utils/numberFormat';
+import { getId, getName, safeGet } from '../utils/casingSafeAccess.js';
 
 const router = useRouter();
 
@@ -705,11 +706,11 @@ const filteredKpiTables = computed(() => {
 });
 
 const activeIndicatorsCount = computed(() => {
-  return indicators.value.filter(indicator => indicator.isActive).length;
+  return indicators.value.filter(indicator => safeGet(indicator, 'IsActive')).length;
 });
 
 const totalMaxScore = computed(() => {
-  return indicators.value.reduce((sum, indicator) => sum + (indicator.maxScore || 0), 0);
+  return indicators.value.reduce((sum, indicator) => sum + (safeGet(indicator, 'MaxScore') || 0), 0);
 });
 
 // Score validation methods
