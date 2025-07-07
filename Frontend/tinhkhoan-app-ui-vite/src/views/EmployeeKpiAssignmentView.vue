@@ -283,10 +283,10 @@
 </template>
 
 <script setup>
-import api from '@/services/api';
-import { logApiResponse, normalizeNetArray } from '@/utils/apiHelpers';
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import api from '../services/api.js';
+import { logApiResponse, normalizeNetArray } from '../utils/apiHelpers.js';
 import { useNumberInput } from '../utils/numberFormat';
 
 const router = useRouter();

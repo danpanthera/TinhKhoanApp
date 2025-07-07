@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import apiClient from "@/services/api";
+import apiClient from "../services/api.js";
 
 export const useEmployeeStore = defineStore("employee", {
   state: () => ({
@@ -18,7 +18,7 @@ export const useEmployeeStore = defineStore("employee", {
       try {
         const response = await apiClient.get("/Employees");
         let employeesData = [];
-        
+
         // Xử lý định dạng dữ liệu từ API
         if (response.data && Array.isArray(response.data.$values)) {
           employeesData = response.data.$values;
@@ -31,7 +31,7 @@ export const useEmployeeStore = defineStore("employee", {
             employeesData = [response.data];
           }
         }
-        
+
         if (employeesData.length === 0) {
           this.error = "Dữ liệu nhân viên nhận được không đúng định dạng.";
           return;
@@ -102,26 +102,26 @@ export const useEmployeeStore = defineStore("employee", {
       try {
         // Gửi request tạo nhân viên mới
         const response = await apiClient.post("/Employees", employeeData);
-        
+
         if (!response.data || !response.data.id) {
           throw new Error("API trả về dữ liệu không hợp lệ");
         }
-        
+
         // Tải lại danh sách và kiểm tra nhân viên mới
         await this.fetchEmployees();
-        
+
         // Kiểm tra xem nhân viên mới có trong danh sách không
         const newEmployee = this.employees.find(e => e.id === response.data.id);
         if (!newEmployee) {
           console.error("Không tìm thấy nhân viên mới trong danh sách sau khi tải lại");
         }
-        
+
         return response.data;
       } catch (err) {
-        const errorMessage = err.response?.data?.message || 
+        const errorMessage = err.response?.data?.message ||
                            err.response?.data?.title ||
                            (err.response?.data?.errors ? JSON.stringify(err.response.data.errors) : err.message);
-        
+
         this.error = "Không thể tạo nhân viên. Lỗi: " + errorMessage;
         console.error("Lỗi khi createEmployee:", err);
         throw err;
@@ -136,22 +136,22 @@ export const useEmployeeStore = defineStore("employee", {
       try {
         // Make sure we include passwordHash if it exists on the current employee
         const currentEmployee = await this.fetchEmployeeDetail(employeeData.id).catch(() => null);
-        
+
         // If we can't get the current employee, proceed with the update as is
         // If we have the current employee and it has a passwordHash, include it
         const dataToSend = {
           ...employeeData,
           passwordHash: currentEmployee?.passwordHash || employeeData.passwordHash
         };
-        
+
         // Gửi request cập nhật nhân viên
         const response = await apiClient.put(`/Employees/${employeeData.id}`, dataToSend);
         await this.fetchEmployees();
       } catch (err) {
-        const errorMessage = err.response?.data?.message || 
+        const errorMessage = err.response?.data?.message ||
                            err.response?.data?.title ||
                            (err.response?.data?.errors ? JSON.stringify(err.response.data.errors) : err.message);
-        
+
         this.error = "Không thể cập nhật nhân viên. Lỗi: " + errorMessage;
         console.error("Lỗi khi updateEmployee:", err);
         throw err;
@@ -167,10 +167,10 @@ export const useEmployeeStore = defineStore("employee", {
         await apiClient.delete(`/Employees/${employeeId}`);
         this.employees = this.employees.filter(e => e.id !== employeeId);
       } catch (err) {
-        const errorMessage = err.response?.data?.message || 
+        const errorMessage = err.response?.data?.message ||
                            err.response?.data?.title ||
                            err.message;
-        
+
         this.error = "Không thể xóa nhân viên. Lỗi: " + errorMessage;
         console.error("Lỗi khi deleteEmployee:", err);
         throw err;
@@ -187,16 +187,16 @@ export const useEmployeeStore = defineStore("employee", {
         const response = await apiClient.delete("/Employees/bulk", {
           data: employeeIds // Gửi array IDs trong body
         });
-        
+
         // Cập nhật state local bằng cách loại bỏ các nhân viên đã xóa
         this.employees = this.employees.filter(e => !employeeIds.includes(e.id));
-        
+
         return response.data;
       } catch (err) {
-        const errorMessage = err.response?.data?.message || 
+        const errorMessage = err.response?.data?.message ||
                            err.response?.data?.title ||
                            err.message;
-        
+
         this.error = "Không thể xóa nhân viên. Lỗi: " + errorMessage;
         console.error("Lỗi khi deleteMultipleEmployees:", err);
         throw err;

@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import apiClient from "@/services/api";
+import apiClient from "../services/api.js";
 
 export const useKhoanPeriodStore = defineStore("khoanPeriod", {
   // State

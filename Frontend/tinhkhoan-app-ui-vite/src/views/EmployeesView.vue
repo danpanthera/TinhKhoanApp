@@ -359,11 +359,11 @@
 </template>
 
 <script setup>
-import { useEmployeeStore } from "@/stores/employeeStore";
-import { usePositionStore } from "@/stores/positionStore";
-import { useRoleStore } from "@/stores/roleStore";
-import { useUnitStore } from "@/stores/unitStore";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { useEmployeeStore } from "../stores/employeeStore.js";
+import { usePositionStore } from "../stores/positionStore.js";
+import { useRoleStore } from "../stores/roleStore.js";
+import { useUnitStore } from "../stores/unitStore.js";
 
 const employeeStore = useEmployeeStore();
 const unitStore = useUnitStore();

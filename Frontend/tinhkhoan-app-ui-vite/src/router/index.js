@@ -29,6 +29,12 @@ const routes = [
     name: "login",
     component: LoginView,
   },
+  // 🔍 Debug route for testing stores
+  {
+    path: "/store-debug",
+    name: "store-debug",
+    component: () => import("../components/StoreDebugPanel.vue"),
+  },
   {
     path: "/about",
     name: "about",
@@ -146,6 +152,12 @@ const routes = [
     component: () =>
       import(/* webpackChunkName: "admin" */ "../components/PerformanceDashboard.vue"),
     meta: { requiresAuth: true }
+  },
+  {
+    path: "/debug-api",
+    name: "debug-api",
+    component: () =>
+      import(/* webpackChunkName: "debug" */ "../components/DebugAPIComponent.vue"),
   },
   // === DASHBOARD ROUTES ===
   {

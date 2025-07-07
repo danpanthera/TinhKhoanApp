@@ -21,8 +21,8 @@
         <div class="sync-text">
           <strong v-if="offlineStore.syncInProgress">Đang đồng bộ...</strong>
           <strong v-else>{{ offlineStore.pendingActions.length }} hành động chờ</strong>
-          <button 
-            v-if="!offlineStore.syncInProgress && offlineStore.isOnline" 
+          <button
+            v-if="!offlineStore.syncInProgress && offlineStore.isOnline"
             @click="manualSync"
             class="sync-btn"
           >
@@ -39,7 +39,7 @@
         <i :class="networkIcon"></i>
         <span class="network-text">{{ networkStatus }}</span>
       </div>
-      
+
       <!-- Detailed Panel -->
       <div v-if="showDetails" class="network-details">
         <div class="detail-header">
@@ -48,26 +48,26 @@
             <i class="fas fa-times"></i>
           </button>
         </div>
-        
+
         <div class="detail-body">
           <div class="detail-item">
             <i :class="networkIcon"></i>
             <span>{{ detailedStatus }}</span>
           </div>
-          
+
           <div v-if="offlineStore.lastSyncTime" class="detail-item">
             <i class="fas fa-clock"></i>
             <span>Đồng bộ cuối: {{ formattedLastSync }}</span>
           </div>
-          
+
           <div v-if="offlineStore.hasPendingActions" class="detail-item">
             <i class="fas fa-exclamation-triangle"></i>
             <span>{{ offlineStore.pendingActions.length }} hành động chờ đồng bộ</span>
           </div>
         </div>
-        
+
         <div class="detail-actions">
-          <button 
+          <button
             v-if="offlineStore.isOnline && offlineStore.hasPendingActions"
             @click="manualSync"
             :disabled="offlineStore.syncInProgress"
@@ -76,8 +76,8 @@
             <i class="fas fa-sync-alt" :class="{ spinning: offlineStore.syncInProgress }"></i>
             {{ offlineStore.syncInProgress ? 'Đang đồng bộ...' : 'Đồng bộ ngay' }}
           </button>
-          
-          <button 
+
+          <button
             v-if="offlineStore.hasPendingActions"
             @click="clearPending"
             :disabled="offlineStore.syncInProgress"
@@ -86,8 +86,8 @@
             <i class="fas fa-trash"></i>
             Xóa hành động chờ
           </button>
-          
-          <button 
+
+          <button
             @click="clearCache"
             class="action-btn secondary"
           >
@@ -109,9 +109,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { useOfflineStore } from '@/stores/offlineStore';
-import { toast } from 'vue3-toastify';
+import { computed, ref } from 'vue';
+import { useOfflineStore } from '../stores/offlineStore.js';
 
 const offlineStore = useOfflineStore();
 const showDetails = ref(false);
@@ -140,18 +139,18 @@ const detailedStatus = computed(() => {
 
 const formattedLastSync = computed(() => {
   if (!offlineStore.lastSyncTime) return 'Chưa bao giờ';
-  
+
   const date = new Date(offlineStore.lastSyncTime);
   const now = new Date();
   const diffMs = now - date;
   const diffMinutes = Math.floor(diffMs / (1000 * 60));
-  
+
   if (diffMinutes < 1) return 'Vừa xong';
   if (diffMinutes < 60) return `${diffMinutes} phút trước`;
-  
+
   const diffHours = Math.floor(diffMinutes / 60);
   if (diffHours < 24) return `${diffHours} giờ trước`;
-  
+
   const diffDays = Math.floor(diffHours / 24);
   return `${diffDays} ngày trước`;
 });
@@ -492,22 +491,22 @@ const clearCache = async () => {
     bottom: 80px;
     left: 10px;
   }
-  
+
   .network-details {
     min-width: 250px;
   }
-  
+
   .offline-content {
     padding: 10px 15px;
     gap: 10px;
   }
-  
+
   .sync-indicator {
     left: 10px;
     right: 10px;
     transform: none;
   }
-  
+
   .sync-toast {
     left: 10px;
     right: 10px;
@@ -520,12 +519,12 @@ const clearCache = async () => {
     min-width: calc(100vw - 40px);
     left: -10px;
   }
-  
+
   .offline-text {
     align-items: center;
     text-align: center;
   }
-  
+
   .sync-content {
     flex-direction: column;
     gap: 6px;

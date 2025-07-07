@@ -99,8 +99,8 @@
 </template>
 
 <script setup>
-import { useRoleStore } from "@/stores/roleStore";
 import { onMounted, ref } from "vue";
+import { useRoleStore } from "../stores/roleStore.js";
 
 const roleStore = useRoleStore();
 

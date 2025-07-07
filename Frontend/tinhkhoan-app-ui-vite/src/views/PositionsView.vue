@@ -110,8 +110,8 @@
 </template>
 
 <script setup>
-import { usePositionStore } from "@/stores/positionStore";
 import { onMounted, ref } from "vue";
+import { usePositionStore } from "../stores/positionStore.js";
 
 const positionStore = usePositionStore();
 

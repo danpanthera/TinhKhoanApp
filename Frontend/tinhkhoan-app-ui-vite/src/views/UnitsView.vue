@@ -2,6 +2,19 @@
   <div class="units-view">
     <h1>Danh sách Đơn vị</h1>
 
+    <!-- 🔍 Debug Info Panel -->
+    <div style="background: #e3f2fd; border: 2px solid #1976d2; padding: 15px; margin: 15px 0; border-radius: 8px; font-family: monospace;">
+      <h3 style="margin: 0 0 10px 0; color: #1976d2;">🔍 DEBUG INFO</h3>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px;">
+        <div><strong>Store Loading:</strong> {{ unitStore.isLoading }}</div>
+        <div><strong>Store Error:</strong> {{ unitStore.error || 'None' }}</div>
+        <div><strong>All Units Count:</strong> {{ unitStore.allUnits.length }}</div>
+        <div><strong>Branches Count:</strong> {{ branches.length }}</div>
+        <div style="grid-column: 1/-1;"><strong>First Unit:</strong> {{ JSON.stringify(unitStore.allUnits[0] || {}) }}</div>
+      </div>
+      <button @click="loadUnits" style="margin-top: 10px; background: #1976d2; color: white; border: none; padding: 8px 16px; border-radius: 4px;">🔄 Reload Units</button>
+    </div>
+
     <!-- Section quản lý đơn vị được chọn -->
     <div class="selection-management" style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e9ecef;">
       <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 16px;">
@@ -327,9 +340,9 @@
 </template>
 
 <script setup>
-import { useUnitStore } from "@/stores/unitStore";
 import { computed, defineComponent, h, nextTick, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useUnitStore } from "../stores/unitStore.js";
 import { useNumberInput } from '../utils/numberFormat';
 
 const router = useRouter();

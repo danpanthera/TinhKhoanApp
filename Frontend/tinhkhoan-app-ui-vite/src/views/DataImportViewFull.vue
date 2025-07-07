@@ -566,11 +566,11 @@
 </template>
 
 <script setup>
-import api from '@/services/api'; // ✅ Import api để sử dụng trong fallback strategy
-import audioService from '@/services/audioService';
-import rawDataService from '@/services/rawDataService';
-import smartImportService from '@/services/smartImportService';
 import { computed, ref } from 'vue';
+import api from '../services/api.js'; // ✅ Import api để sử dụng trong fallback strategy
+import audioService from '../services/audioService.js';
+import rawDataService from '../services/rawDataService.js';
+import smartImportService from '../services/smartImportService.js';
 
 // Reactive state
 const loading = ref(false)

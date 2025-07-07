@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import apiClient from "@/services/api"; // Import instance Axios đã tạo
+import apiClient from "../services/api.js"; // Import instance Axios đã tạo
 
 export const useUnitStore = defineStore("unit", {
   // State: Nơi lưu trữ dữ liệu
@@ -23,9 +23,11 @@ export const useUnitStore = defineStore("unit", {
       this.error = null;
       try {
         console.log('📡 Calling API: /Units');
+        console.log('📡 Base URL:', import.meta.env.VITE_API_BASE_URL);
         const response = await apiClient.get("/Units");
         console.log('📨 API Response received:', response.status, response.data);
-        
+        console.log('📨 Response headers:', response.headers);
+
         let unitsData = [];
         if (response.data && Array.isArray(response.data.$values)) {
           console.log('✅ Found $values array with length:', response.data.$values.length);
@@ -41,7 +43,7 @@ export const useUnitStore = defineStore("unit", {
             unitsData = [response.data];
           }
         }
-        
+
         console.log('📊 Final unitsData length:', unitsData.length);
         if (unitsData.length === 0) {
           console.error("❌ Dữ liệu đơn vị không hợp lệ:", response.data);

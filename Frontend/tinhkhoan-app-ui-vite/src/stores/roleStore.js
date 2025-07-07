@@ -1,5 +1,5 @@
-import apiClient from "@/services/api"; // Import instance Axios đã tạo
 import { defineStore } from "pinia";
+import apiClient from "../services/api.js"; // Import instance Axios đã tạo
 
 export const useRoleStore = defineStore("role", {
   // State: Nơi lưu trữ dữ liệu
