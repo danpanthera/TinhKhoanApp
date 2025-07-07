@@ -27,29 +27,29 @@ backup_file() {
 fix_patterns_in_file() {
     local file="$1"
     local changes=0
-    
+
     if [ ! -f "$file" ]; then
         echo -e "  ❌ File not found: ${RED}$file${NC}"
         return 1
     fi
-    
+
     echo -n "  🔧 Fixing patterns in $(basename $file): "
-    
+
     # Backup original file
     backup_file "$file"
-    
+
     # Apply fixes with sed (safer than manual editing)
     # Fix .id with getId() helper calls
     sed -i '' 's/\.id\([^a-zA-Z]\)/\.Id\1/g' "$file" && changes=$((changes + 1))
-    
-    # Fix .name with getName() helper calls  
+
+    # Fix .name with getName() helper calls
     sed -i '' 's/\.name\([^a-zA-Z]\)/\.Name\1/g' "$file" && changes=$((changes + 1))
-    
+
     # Fix common field patterns
     sed -i '' 's/\.type\([^a-zA-Z]\)/\.Type\1/g' "$file" && changes=$((changes + 1))
     sed -i '' 's/\.status\([^a-zA-Z]\)/\.Status\1/g' "$file" && changes=$((changes + 1))
     sed -i '' 's/\.code\([^a-zA-Z]\)/\.Code\1/g' "$file" && changes=$((changes + 1))
-    
+
     if [ "$changes" -gt 0 ]; then
         echo -e "${GREEN}✅ Fixed $changes patterns${NC}"
         return 0

@@ -144,7 +144,7 @@ export const kpiAssignmentService = {
         indicatorsData = indicators;
       }
 
-      // Sort by OrderIndex (PascalCase) or orderIndex (camelCase) 
+      // Sort by OrderIndex (PascalCase) or orderIndex (camelCase)
       tableData.indicators = indicatorsData.sort((a, b) => (a.OrderIndex || a.orderIndex || 0) - (b.OrderIndex || b.orderIndex || 0));
     } else {
       tableData.indicators = [];

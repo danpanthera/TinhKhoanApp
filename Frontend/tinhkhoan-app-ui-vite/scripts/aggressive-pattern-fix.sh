@@ -26,13 +26,13 @@ problem_files=(
 # Function to add helper import if not exists
 add_helper_import() {
     local file="$1"
-    
+
     if ! grep -q "casingSafeAccess" "$file"; then
         echo -n "    📦 Adding helper import: "
-        
+
         # Find the line with other imports
         import_line=$(grep -n "import.*from.*vue" "$file" | head -n1 | cut -d: -f1)
-        
+
         if [ -n "$import_line" ]; then
             # Add helper import after Vue imports
             sed -i '' "${import_line}a\\
@@ -50,58 +50,58 @@ import { getId, getName, safeGet, ensurePascalCase } from \"../utils/casingSafeA
 # Function to fix patterns more aggressively
 aggressive_fix() {
     local file="$1"
-    
+
     echo -e "  🎯 Processing: ${BLUE}$(basename $file)${NC}"
-    
+
     if [ ! -f "$file" ]; then
         echo -e "    ❌ File not found: ${RED}$file${NC}"
         return 1
     fi
-    
+
     # Backup
     cp "$file" "${file}.backup.$(date +%Y%m%d_%H%M%S)"
-    
+
     # Add helper import
     add_helper_import "$file"
-    
+
     # Count before
     before_id=$(grep -c "\.Id[^a-zA-Z]" "$file" 2>/dev/null || echo 0)
     before_name=$(grep -c "\.Name[^a-zA-Z]" "$file" 2>/dev/null || echo 0)
-    
+
     echo -n "    🔧 Applying fixes: "
-    
+
     # More specific pattern fixes
     changes=0
-    
+
     # Fix .id patterns (not already .Id)
     if sed -i '' 's/\([^\.]\)\.id\([^a-zA-Z]\)/\1.Id\2/g' "$file"; then
         changes=$((changes + 1))
     fi
-    
-    # Fix .name patterns (not already .Name)  
+
+    # Fix .name patterns (not already .Name)
     if sed -i '' 's/\([^\.]\)\.name\([^a-zA-Z]\)/\1.Name\2/g' "$file"; then
         changes=$((changes + 1))
     fi
-    
+
     # Fix other common patterns
     sed -i '' 's/\([^\.]\)\.type\([^a-zA-Z]\)/\1.Type\2/g' "$file"
     sed -i '' 's/\([^\.]\)\.status\([^a-zA-Z]\)/\1.Status\2/g' "$file"
     sed -i '' 's/\([^\.]\)\.code\([^a-zA-Z]\)/\1.Code\2/g' "$file"
     sed -i '' 's/\([^\.]\)\.value\([^a-zA-Z]\)/\1.Value\2/g' "$file"
-    
+
     # Count after
     after_id=$(grep -c "\.Id[^a-zA-Z]" "$file" 2>/dev/null || echo 0)
     after_name=$(grep -c "\.Name[^a-zA-Z]" "$file" 2>/dev/null || echo 0)
-    
+
     improvement_id=$((after_id - before_id))
     improvement_name=$((after_name - before_name))
-    
+
     if [ "$improvement_id" -gt 0 ] || [ "$improvement_name" -gt 0 ]; then
         echo -e "${GREEN}✅ Improved (+$improvement_id .Id, +$improvement_name .Name)${NC}"
     else
         echo -e "${YELLOW}⚠️  No improvements detected${NC}"
     fi
-    
+
     return 0
 }
 

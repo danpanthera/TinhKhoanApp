@@ -475,7 +475,6 @@
 
 <script setup>
 import { computed, onMounted, ref } from 'vue';
-import { getId, getName, safeGet, ensurePascalCase } from "../utils/casingSafeAccess.js";
 import { useRouter } from 'vue-router';
 import api from '../services/api';
 import { isAuthenticated } from '../services/auth';

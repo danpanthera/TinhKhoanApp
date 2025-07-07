@@ -75,7 +75,6 @@
                   :value="table.Id || table.Id"
                 >
                   {{ (table.Description || table.description || table.TableName || table.tableName) }} ({{ getIndicatorCount(table.Id || table.Id) }} chỉ tiêu)
-                  <span class="table-code">{{ table.TableType || table.tableType }}</span>
                 </option>
               </select>
             </div>
@@ -88,7 +87,7 @@
                 <div class="detail-item">
                   <span class="label">Loại:</span>
                   <span class="value">
-                    {{ getTableTypeName(selectedTable.TableType || selectedTable.tableType) }}
+                    {{ getTableTypeName(selectedTable.TableType || selectedTable.tableType, selectedTable.TableName || selectedTable.tableName, selectedTable.Description || selectedTable.description) }}
                     <span class="table-code">{{ selectedTable.TableType || selectedTable.tableType }}</span>
                   </span>
                 </div>
@@ -635,8 +634,8 @@
 import { computed, nextTick, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { kpiAssignmentService } from '../services/kpiAssignmentService';
+import { getId, safeGet } from '../utils/casingSafeAccess.js';
 import { useNumberInput } from '../utils/numberFormat';
-import { getId, getName, safeGet } from '../utils/casingSafeAccess.js';
 
 const router = useRouter();
 
@@ -692,15 +691,35 @@ const selectedTable = computed(() => {
 // Filter tables based on active tab using Category field
 const filteredKpiTables = computed(() => {
   if (activeTab.value === 'employee') {
-    // Filter for employee tables using Category field
-    return kpiTables.value.filter(table =>
-      (table.Category || table.category) === 'CANBO'
-    );
+    // Filter for employee tables using Category field and sort alphabetically by Description
+    return kpiTables.value
+      .filter(table => (table.Category || table.category) === 'CANBO')
+      .sort((a, b) => {
+        const nameA = (a.Description || a.description || a.TableName || a.tableName || '').toLowerCase();
+        const nameB = (b.Description || b.description || b.TableName || b.tableName || '').toLowerCase();
+        return nameA.localeCompare(nameB, 'vi', { numeric: true });
+      });
   } else if (activeTab.value === 'branch') {
-    // Filter for branch tables using Category field
-    return kpiTables.value.filter(table =>
-      (table.Category || table.category) === 'CHINHANH'
-    );
+    // Filter for branch tables and sort by specific order based on TableName
+    const branchOrder = ['KPI_HoiSo', 'KPI_CnBinhLu', 'KPI_CnPhongTho', 'KPI_CnSinHo', 'KPI_CnBumTo', 'KPI_CnThanUyen', 'KPI_CnDoanKet', 'KPI_CnTanUyen', 'KPI_CnNamHang'];
+    return kpiTables.value
+      .filter(table => (table.Category || table.category) === 'CHINHANH')
+      .sort((a, b) => {
+        const nameA = a.TableName || a.tableName || '';
+        const nameB = b.TableName || b.tableName || '';
+        const indexA = branchOrder.indexOf(nameA);
+        const indexB = branchOrder.indexOf(nameB);
+
+        // If both are in the predefined order, sort by index
+        if (indexA !== -1 && indexB !== -1) {
+          return indexA - indexB;
+        }
+        // If only one is in the predefined order, prioritize it
+        if (indexA !== -1) return -1;
+        if (indexB !== -1) return 1;
+        // If neither is in the predefined order, sort alphabetically
+        return nameA.localeCompare(nameB);
+      });
   }
   return kpiTables.value;
 });
@@ -811,33 +830,41 @@ const getIndicatorCount = (tableId) => {
   return (table?.IndicatorCount ?? table?.indicatorCount) ?? 0;
 };
 
-const getTableTypeName = (tableType) => {
+const getTableTypeName = (tableType, tableName, description) => {
+  // For branch tables, use the description directly
+  if (tableName && tableName.startsWith('KPI_')) {
+    return description || tableName;
+  }
+
+  // For employee tables, use the type mapping
   const typeNames = {
-    0: 'Trưởng phòng KHDN',
-    1: 'Phó trưởng phòng KHDN',
-    2: 'Trưởng phòng KTNQ',
-    3: 'Phó trưởng phòng KTNQ',
-    4: 'Trưởng phòng QHKH',
-    5: 'Phó trưởng phòng QHKH',
-    6: 'Trưởng phòng NSQL',
-    7: 'Phó trưởng phòng NSQL',
-    8: 'Trưởng phòng ANTT',
-    9: 'Phó trưởng phòng ANTT',
-    10: 'Trưởng phòng VH',
-    11: 'Phó trưởng phòng VH',
-    12: 'Chuyên viên KHDN',
-    13: 'Chuyên viên KTNQ',
-    14: 'Chuyên viên QHKH',
-    15: 'Chuyên viên NSQL',
-    16: 'Chuyên viên ANTT',
-    17: 'Chuyên viên VH',
-    18: 'Giao dịch viên',
-    19: 'Thủ quỹ',
-    20: 'Phó phòng KTNQ Chi nhánh Loại 1',
-    21: 'Phó phòng KTNQ Chi nhánh Loại 2',
-    22: 'Phó phòng KTNQ Chi nhánh Loại 2'
+    // Cán bộ tables
+    'TruongphongKhdn': 'Trưởng phòng KHDN',
+    'TruongphongKhcn': 'Trưởng phòng KHCN',
+    'PhophongKhdn': 'Phó phòng KHDN',
+    'PhophongKhcn': 'Phó phòng KHCN',
+    'TruongphongKhqlrr': 'Trưởng phòng KH&QLRR',
+    'PhophongKhqlrr': 'Phó phòng KH&QLRR',
+    'Cbtd': 'Cán bộ tín dụng',
+    'TruongphongKtnqCnl1': 'Trưởng phòng KTNQ CNL1',
+    'PhophongKtnqCnl1': 'Phó phòng KTNQ CNL1',
+    'Gdv': 'Giao dịch viên',
+    'TqHkKtnb': 'Thủ quỹ | Hậu kiểm | KTNB',
+    'TruongphongItThKtgs': 'Trưởng phó IT | Tổng hợp | KTGS',
+    'CbItThKtgsKhqlrr': 'Cán bộ IT | Tổng hợp | KTGS | KH&QLRR',
+    'GiamdocPgd': 'Giám đốc Phòng giao dịch',
+    'PhogiamdocPgd': 'Phó giám đốc Phòng giao dịch',
+    'PhogiamdocPgdCbtd': 'Phó giám đốc PGD kiêm CBTD',
+    'GiamdocCnl2': 'Giám đốc CNL2',
+    'PhogiamdocCnl2Td': 'Phó giám đốc CNL2 phụ trách TD',
+    'PhogiamdocCnl2Kt': 'Phó giám đốc CNL2 phụ trách KT',
+    'TruongphongKhCnl2': 'Trưởng phòng KH CNL2',
+    'PhophongKhCnl2': 'Phó phòng KH CNL2',
+    'TruongphongKtnqCnl2': 'Trưởng phòng KTNQ CNL2',
+    'PhophongKtnqCnl2': 'Phó phòng KTNQ CNL2'
   };
-  return typeNames[tableType] || `Type ${tableType}`;
+
+  return description || typeNames[tableType] || `${tableType}`;
 };
 
 const formatDate = (dateString) => {
