@@ -11,9 +11,9 @@
         <el-select v-model="selectedIndicators" multiple placeholder="Chọn chỉ tiêu" style="width: 300px">
           <el-option
             v-for="indicator in indicators"
-            :key="indicator.Code"
-            :label="indicator.Name"
-            :value="indicator.Code"
+            :key="indicator.code"
+            :label="indicator.name"
+            :value="indicator.code"
           />
         </el-select>
 
@@ -124,7 +124,7 @@
                 </div>
                 <div class="card-content">
                   <div class="card-title">Đơn vị xuất sắc nhất</div>
-                  <div class="card-value">{{ getBestUnit().Name }}</div>
+                  <div class="card-value">{{ getBestUnit().name }}</div>
                   <div class="card-subtitle">{{ getBestUnit().score }}/100 điểm</div>
                 </div>
               </div>
@@ -156,7 +156,7 @@
             <div class="insights">
               <h5>Nhận xét từ dữ liệu</h5>
               <ul class="insight-list">
-                <li v-for="insight in performanceInsights" :key="insight.Id">
+                <li v-for="insight in performanceInsights" :key="insight.id">
                   <i :class="insight.icon" :style="{ color: insight.color }"></i>
                   {{ insight.text }}
                 </li>
@@ -322,8 +322,8 @@ const getRankingTitle = () => {
 };
 
 const getIndicatorName = (code) => {
-  const indicator = props.indicators.find(i => i.Code === code);
-  return indicator ? indicator.Name : code;
+  const indicator = props.indicators.find(i => i.code === code);
+  return indicator ? indicator.name : code;
 };
 
 const formatCellValue = (value, indicator) => {
@@ -331,7 +331,7 @@ const formatCellValue = (value, indicator) => {
     return value.toFixed(1) + '%';
   }
 
-  const indicatorObj = props.indicators.find(i => i.Code === indicator);
+  const indicatorObj = props.indicators.find(i => i.code === indicator);
   if (indicatorObj?.unit === '%') {
     return value.toFixed(2) + '%';
   }

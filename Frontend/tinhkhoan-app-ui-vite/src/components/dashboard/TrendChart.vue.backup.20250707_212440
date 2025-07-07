@@ -164,10 +164,10 @@ const generateSeries = () => {
   if (!props.data.datasets) return [];
 
   return props.data.datasets.map(dataset => {
-    const isPercentage = dataset.Name.includes('Tỷ lệ') || dataset.Name.includes('%');
+    const isPercentage = dataset.name.includes('Tỷ lệ') || dataset.name.includes('%');
 
     return {
-      name: dataset.Name,
+      name: dataset.name,
       type: 'line',
       yAxisIndex: isPercentage ? 1 : 0,
       data: dataset.data,

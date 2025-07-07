@@ -15,7 +15,7 @@
           <i :class="indicator.icon"></i>
         </div>
         <div class="card-title">
-          <h4>{{ indicator.Name }}</h4>
+          <h4>{{ indicator.name }}</h4>
           <span class="unit">{{ indicator.unit }}</span>
         </div>
         <div class="status-badge" :class="statusClass">
@@ -124,7 +124,7 @@ const completionRate = computed(() => {
   if (!props.indicator.planValue || props.indicator.planValue === 0) return 0;
   
   // Special logic for bad debt ratio (lower is better)
-  if (props.indicator.Code === 'TyLeNoXau') {
+  if (props.indicator.code === 'TyLeNoXau') {
     if (props.indicator.actualValue <= props.indicator.planValue) {
       return 100; // Target achieved
     }
@@ -315,7 +315,7 @@ const formatDate = (date) => {
   font-weight: 500;
 }
 
-.Status-badge {
+.status-badge {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -325,17 +325,17 @@ const formatDate = (date) => {
   font-size: 14px;
 }
 
-.Status-badge.success {
+.status-badge.success {
   background-color: #f0f9ff;
   color: #67C23A;
 }
 
-.Status-badge.warning {
+.status-badge.warning {
   background-color: #fdf6ec;
   color: #E6A23C;
 }
 
-.Status-badge.danger {
+.status-badge.danger {
   background-color: #fef0f0;
   color: #F56C6C;
 }

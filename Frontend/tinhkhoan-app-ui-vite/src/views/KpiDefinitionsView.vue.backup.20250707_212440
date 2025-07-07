@@ -491,7 +491,7 @@
                     :value="indicator.Name"
                   >
                     {{ indicator.Name }}
-                    <span v-if="indicator.Code"> ({{ indicator.Code }})</span>
+                    <span v-if="indicator.code"> ({{ indicator.code }})</span>
                   </option>
                 </select>
                 <small class="form-help">Chỉ hiển thị các chỉ tiêu từ bảng KPI Chi nhánh</small>

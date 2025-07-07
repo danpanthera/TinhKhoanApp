@@ -28,11 +28,11 @@
         class="list-item"
       >
         <div class="item-info">
-          <strong>{{ period.Name }}</strong>
+          <strong>{{ period.name }}</strong>
           <span class="item-details">
             <div class="period-type">📊 Loại: <strong>{{ period.typeDisplay || period.Type }}</strong></div>
             <div class="period-dates">📅 Thời gian: {{ formatDate(period.StartDate || period.startDate) }} → {{ formatDate(period.EndDate || period.endDate) }}</div>
-            <div class="period-status">🏷️ Trạng thái: <span class="status-badge" :class="getStatusClass(period.Status || period.Status)">{{ period.statusDisplay || period.Status }}</span></div>
+            <div class="period-status">🏷️ Trạng thái: <span class="status-badge" :class="getStatusClass(period.Status || period.status)">{{ period.statusDisplay || period.Status }}</span></div>
           </span>
         </div>
         <div class="actions">
@@ -69,13 +69,13 @@
           <input
             type="text"
             id="periodName"
-            v-model.trim="currentKhoanPeriod.Name"
+            v-model.trim="currentKhoanPeriod.name"
             required
           />
         </div>
         <div class="form-group">
           <label for="periodType">Loại Kỳ:</label>
-          <select id="periodType" v-model="currentKhoanPeriod.Type" required>
+          <select id="periodType" v-model="currentKhoanPeriod.type" required>
             <option :value="null" disabled>-- Chọn Loại Kỳ --</option>
             <option value="MONTHLY">Tháng</option>
             <option value="QUARTERLY">Quý</option>
@@ -104,7 +104,7 @@
           <label for="periodStatus">Trạng thái:</label>
           <select
             id="periodStatus"
-            v-model="currentKhoanPeriod.Status"
+            v-model="currentKhoanPeriod.status"
             required
           >
             <option :value="null" disabled>-- Chọn Trạng thái --</option>
@@ -234,11 +234,11 @@ const handleSubmitKhoanPeriod = async () => {
   let dataToSubmit = { ...currentKhoanPeriod.value };
 
   // Client-side Validation
-  if (!dataToSubmit.Name?.trim()) {
+  if (!dataToSubmit.name?.trim()) {
     formError.value = "Tên Kỳ Khoán không được để trống!";
     return;
   }
-  if (!dataToSubmit.Type) {
+  if (!dataToSubmit.type) {
     formError.value = "Vui lòng chọn Loại Kỳ Khoán.";
     return;
   }
@@ -254,7 +254,7 @@ const handleSubmitKhoanPeriod = async () => {
     formError.value = "Ngày Kết thúc phải sau Ngày Bắt đầu.";
     return;
   }
-  if (!dataToSubmit.Status) {
+  if (!dataToSubmit.status) {
     formError.value = "Vui lòng chọn Trạng thái.";
     return;
   }
@@ -281,7 +281,7 @@ const handleSubmitKhoanPeriod = async () => {
       //await khoanPeriodStore.createKhoanPeriod(newPeriodData);
       const newPeriodData = { ...dataToSubmit };
       // Remove both camelCase and PascalCase ID fields to let backend generate new ID
-      delete newPeriodData.Id;
+      delete newPeriodData.id;
       delete newPeriodData.Id;
       await khoanPeriodStore.createKhoanPeriod(newPeriodData);
       alert("Thêm Kỳ Khoán thành công!");
@@ -576,31 +576,31 @@ button.action-button:hover:not(:disabled) {
 }
 
 /* Status badge styles */
-.Status-draft {
+.status-draft {
   background-color: #3498db;
   color: white;
 }
-.Status-open {
+.status-open {
   background-color: #2ecc71;
   color: white;
 }
-.Status-processing {
+.status-processing {
   background-color: #f39c12;
   color: white;
 }
-.Status-pending {
+.status-pending {
   background-color: #e67e22;
   color: white;
 }
-.Status-closed {
+.status-closed {
   background-color: #e74c3c;
   color: white;
 }
-.Status-archived {
+.status-archived {
   background-color: #95a5a6;
   color: white;
 }
-.Status-default {
+.status-default {
   background-color: #bdc3c7;
   color: white;
 }

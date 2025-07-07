@@ -69,7 +69,7 @@ export const useEmployeeStore = defineStore("employee", {
         // Gửi request tạo nhân viên mới
         const response = await apiClient.post("/Employees", employeeData);
 
-        if (!response.data || !response.data.Id) {
+        if (!response.data || !response.data.id) {
           throw new Error("API trả về dữ liệu không hợp lệ");
         }
 
@@ -77,7 +77,7 @@ export const useEmployeeStore = defineStore("employee", {
         await this.fetchEmployees();
 
         // Kiểm tra xem nhân viên mới có trong danh sách không
-        const newEmployee = this.employees.find(e => e.Id === response.data.Id);
+        const newEmployee = this.employees.find(e => e.id === response.data.id);
         if (!newEmployee) {
           console.error("Không tìm thấy nhân viên mới trong danh sách sau khi tải lại");
         }
@@ -101,7 +101,7 @@ export const useEmployeeStore = defineStore("employee", {
       this.error = null;
       try {
         // Make sure we include passwordHash if it exists on the current employee
-        const currentEmployee = await this.fetchEmployeeDetail(employeeData.Id).catch(() => null);
+        const currentEmployee = await this.fetchEmployeeDetail(employeeData.id).catch(() => null);
 
         // If we can't get the current employee, proceed with the update as is
         // If we have the current employee and it has a passwordHash, include it
@@ -111,7 +111,7 @@ export const useEmployeeStore = defineStore("employee", {
         };
 
         // Gửi request cập nhật nhân viên
-        const response = await apiClient.put(`/Employees/${employeeData.Id}`, dataToSend);
+        const response = await apiClient.put(`/Employees/${employeeData.id}`, dataToSend);
         await this.fetchEmployees();
       } catch (err) {
         const errorMessage = err.response?.data?.message ||
@@ -131,7 +131,7 @@ export const useEmployeeStore = defineStore("employee", {
       this.error = null;
       try {
         await apiClient.delete(`/Employees/${employeeId}`);
-        this.employees = this.employees.filter(e => e.Id !== employeeId);
+        this.employees = this.employees.filter(e => e.id !== employeeId);
       } catch (err) {
         const errorMessage = err.response?.data?.message ||
                            err.response?.data?.title ||
@@ -155,7 +155,7 @@ export const useEmployeeStore = defineStore("employee", {
         });
 
         // Cập nhật state local bằng cách loại bỏ các nhân viên đã xóa
-        this.employees = this.employees.filter(e => !employeeIds.includes(e.Id));
+        this.employees = this.employees.filter(e => !employeeIds.includes(e.id));
 
         return response.data;
       } catch (err) {

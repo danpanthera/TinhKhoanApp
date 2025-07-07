@@ -41,7 +41,7 @@ const updateChart = () => {
 
   let option = {};
 
-  switch (props.Type) {
+  switch (props.type) {
     case 'bar':
       option = getBarChartOption();
       break;
@@ -60,7 +60,7 @@ const updateChart = () => {
 
 const getBarChartOption = () => {
   const indicators = ['HuyDong', 'DuNo', 'LoiNhuan'];
-  const units = props.data.map(item => item.Name);
+  const units = props.data.map(item => item.name);
 
   return {
     tooltip: {
@@ -236,7 +236,7 @@ const getRadarChartOption = () => {
           item.ThuDichVu || 0,
           item.ThuHoiXLRR || 0
         ],
-        name: item.Name,
+        name: item.name,
         itemStyle: {
           color: colors[index]
         },
@@ -302,7 +302,7 @@ const getPieChartOption = () => {
       },
       data: props.data.map((item, index) => ({
         value: item.HuyDong || 0,
-        name: item.Name,
+        name: item.name,
         itemStyle: {
           color: colors[index % colors.length]
         }
@@ -346,7 +346,7 @@ watch(() => props.data, () => {
   });
 }, { deep: true });
 
-watch(() => props.Type, () => {
+watch(() => props.type, () => {
   nextTick(() => {
     updateChart();
   });

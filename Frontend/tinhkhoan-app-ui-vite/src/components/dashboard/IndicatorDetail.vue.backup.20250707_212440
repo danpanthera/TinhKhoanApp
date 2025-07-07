@@ -5,7 +5,7 @@
       <div class="indicator-info">
         <i :class="indicator.icon" :style="{ color: indicator.color }" class="indicator-icon"></i>
         <div>
-          <h3>{{ indicator.Name }}</h3>
+          <h3>{{ indicator.name }}</h3>
           <p class="indicator-description">{{ indicator.description || 'Theo dõi hiệu quả hoạt động kinh doanh' }}</p>
         </div>
       </div>
@@ -84,7 +84,7 @@
             <trend-chart
               :data="detailTrendData"
               :height="350"
-              :indicators="[indicator.Code]"
+              :indicators="[indicator.code]"
               :metrics="selectedMetrics"
             />
           </div>
@@ -98,7 +98,7 @@
               :data="unitDetailData"
               :height="350"
               type="bar"
-              :indicator="indicator.Code"
+              :indicator="indicator.code"
             />
           </div>
         </el-col>
@@ -149,7 +149,7 @@
         </el-table-column>
         <el-table-column prop="vsStartYear" label="So với đầu năm" align="right" sortable width="140">
           <template #default="{ row }">
-            <span :class="getChangeClass(row.vsStartYear, indicator.Code)">
+            <span :class="getChangeClass(row.vsStartYear, indicator.code)">
               {{ row.vsStartYear >= 0 ? '+' : '' }}{{ formatValue(row.vsStartYear) }}
               ({{ row.vsStartYearPercent >= 0 ? '+' : '' }}{{ row.vsStartYearPercent.toFixed(1) }}%)
             </span>
@@ -157,7 +157,7 @@
         </el-table-column>
         <el-table-column prop="vsStartMonth" label="So với đầu tháng" align="right" sortable width="140">
           <template #default="{ row }">
-            <span :class="getChangeClass(row.vsStartMonth, indicator.Code)">
+            <span :class="getChangeClass(row.vsStartMonth, indicator.code)">
               {{ row.vsStartMonth >= 0 ? '+' : '' }}{{ formatValue(row.vsStartMonth) }}
               ({{ row.vsStartMonthPercent >= 0 ? '+' : '' }}{{ row.vsStartMonthPercent.toFixed(1) }}%)
             </span>
@@ -165,7 +165,7 @@
         </el-table-column>
         <el-table-column prop="yoyGrowth" label="So với cùng kỳ (%)" align="right" sortable width="140">
           <template #default="{ row }">
-            <span :class="getChangeClass(row.yoyGrowth, indicator.Code)">
+            <span :class="getChangeClass(row.yoyGrowth, indicator.code)">
               {{ row.yoyGrowth >= 0 ? '+' : '' }}{{ row.yoyGrowth }}%
             </span>
           </template>
@@ -390,7 +390,7 @@ watch([timeRange, selectedMetrics], () => {
 
 onMounted(() => {
   // Load initial data
-  console.log('IndicatorDetail mounted for:', props.indicator.Name);
+  console.log('IndicatorDetail mounted for:', props.indicator.name);
 });
 </script>
 

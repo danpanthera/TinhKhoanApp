@@ -62,13 +62,13 @@ async function testDirectAPI() {
   addLog('🧪 Testing direct API call...')
   try {
     const response = await fetch(`${baseURL}/units`)
-    addLog(`📡 Response status: ${response.Status}`)
+    addLog(`📡 Response status: ${response.status}`)
 
     const data = await response.json()
     addLog(`📊 Data type: ${typeof data}, Array: ${Array.isArray(data)}, Length: ${Array.isArray(data) ? data.length : 'N/A'}`)
 
     apiTestResult.value = {
-      status: response.Status,
+      status: response.status,
       headers: Object.fromEntries(response.headers.entries()),
       dataType: typeof data,
       isArray: Array.isArray(data),

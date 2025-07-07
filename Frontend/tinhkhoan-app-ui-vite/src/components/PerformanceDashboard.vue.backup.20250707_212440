@@ -177,7 +177,7 @@
           v-for="(activity, index) in recentActivity" 
           :key="index"
           class="activity-item"
-          :class="activity.Type"
+          :class="activity.type"
         >
           <span class="activity-time">{{ formatTime(activity.timestamp) }}</span>
           <span class="activity-message">{{ activity.message }}</span>

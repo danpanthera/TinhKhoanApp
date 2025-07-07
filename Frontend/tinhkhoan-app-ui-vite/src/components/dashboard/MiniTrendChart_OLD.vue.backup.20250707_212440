@@ -77,7 +77,7 @@ const drawChart = () => {
   const areaPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   const areaPoints = `M0,${height} L${points} L${width},${height} Z`;
   areaPath.setAttribute('d', areaPoints);
-  areaPath.setAttribute('fill', `url(#${gradient.Id})`);
+  areaPath.setAttribute('fill', `url(#${gradient.id})`);
   svg.appendChild(areaPath);
 
   // Create line path

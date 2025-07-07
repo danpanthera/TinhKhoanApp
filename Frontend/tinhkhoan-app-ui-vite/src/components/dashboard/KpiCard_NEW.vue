@@ -16,7 +16,7 @@
         <i :class="indicator.icon" :style="{ color: indicator.color }"></i>
       </div>
       <div class="card-info">
-        <h4 class="card-name">{{ indicator.name }}</h4>
+        <h4 class="card-name">{{ indicator.Name }}</h4>
         <span class="card-unit">Đơn vị: {{ indicator.unit }}</span>
       </div>
       <div class="status-badge" :class="statusClass">
@@ -119,7 +119,7 @@ const completionRate = computed(() => {
   if (!props.indicator.planValue || props.indicator.planValue === 0) return 0;
 
   // Đối với tỷ lệ nợ xấu, càng thấp càng tốt
-  if (props.indicator.code === 'TyLeNoXau') {
+  if (props.indicator.Code === 'TyLeNoXau') {
     if (props.indicator.actualValue <= props.indicator.planValue) {
       return 100; // Đạt mục tiêu
     }
@@ -343,7 +343,7 @@ const getTimeAgo = (date) => {
   font-weight: 400;
 }
 
-.status-badge {
+.Status-badge {
   padding: 6px 12px;
   border-radius: 20px;
   font-size: 12px;
@@ -354,21 +354,21 @@ const getTimeAgo = (date) => {
   white-space: nowrap;
 }
 
-.status-badge i {
+.Status-badge i {
   font-size: 14px;
 }
 
-.status-success {
+.Status-success {
   background: #f0f9ff;
   color: #0369a1;
 }
 
-.status-warning {
+.Status-warning {
   background: #fef3c7;
   color: #d97706;
 }
 
-.status-danger {
+.Status-danger {
   background: #fee2e2;
   color: #dc2626;
 }

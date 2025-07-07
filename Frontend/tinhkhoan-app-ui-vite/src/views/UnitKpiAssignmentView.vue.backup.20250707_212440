@@ -50,12 +50,12 @@
               <option value="">-- Chọn chi nhánh --</option>
               <optgroup label="Chi nhánh CNL1">
                 <option v-for="unit in cnl1Units" :key="unit.Id" :value="unit.Id">
-                  🏢 {{ unit.Name }} ({{ unit.Code }})
+                  🏢 {{ unit.Name }} ({{ unit.code }})
                 </option>
               </optgroup>
               <optgroup label="Chi nhánh CNL2" v-if="cnl2Units.length > 0">
                 <option v-for="unit in cnl2Units" :key="unit.Id" :value="unit.Id">
-                  🏢 {{ unit.Name }} ({{ unit.Code }}) - {{ getParentUnitCode(unit.parentUnitId) }}
+                  🏢 {{ unit.Name }} ({{ unit.code }}) - {{ getParentUnitCode(unit.parentUnitId) }}
                 </option>
               </optgroup>
             </select>
@@ -63,7 +63,7 @@
 
           <div class="alert-agribank alert-info" v-if="selectedBranch">
             <strong>📊 Đã chọn:</strong>
-            Chi nhánh "{{ selectedBranch.Name }}" ({{ selectedBranch.Code }})
+            Chi nhánh "{{ selectedBranch.Name }}" ({{ selectedBranch.code }})
             → <strong>{{ availableKpiIndicators.length }}</strong> chỉ tiêu KPI
           </div>
         </div>
@@ -404,7 +404,7 @@ async function onBranchChange() {
     console.log('📍 Selected branch details:', {
       id: branch.Id,
       name: branch.Name,
-      code: branch.Code,
+      code: branch.code,
       type: branch.type
     })
 
@@ -536,7 +536,7 @@ async function loadCurrentAssignments() {
 function getParentUnitCode(parentUnitId) {
   if (!parentUnitId) return ''
   const parent = units.value.find(u => u.Id === parentUnitId)
-  return parent ? parent.Code : ''
+  return parent ? parent.code : ''
 }
 
 function getFilledTargetsCount() {

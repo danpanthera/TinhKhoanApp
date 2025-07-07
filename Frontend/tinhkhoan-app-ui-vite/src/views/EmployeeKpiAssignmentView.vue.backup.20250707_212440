@@ -43,7 +43,7 @@
                 <select v-model="selectedBranchId" @change="onBranchChange" class="form-control">
                   <option value="">-- Tất cả chi nhánh --</option>
                   <option v-for="branch in branchOptions" :key="branch.Id" :value="branch.Id">
-                    🏢 {{ branch.Name }} ({{ branch.Code }})
+                    🏢 {{ branch.Name }} ({{ branch.code }})
                   </option>
                 </select>
               </div>
@@ -55,7 +55,7 @@
                 <select v-model="selectedDepartmentId" @change="onDepartmentChange" class="form-control">
                   <option value="">-- Tất cả phòng ban --</option>
                   <option v-for="dept in departmentOptions" :key="dept.Id" :value="dept.Id">
-                    🏬 {{ dept.Name }} ({{ dept.Code }})
+                    🏬 {{ dept.Name }} ({{ dept.code }})
                   </option>
                 </select>
               </div>
@@ -363,8 +363,8 @@ const branchOptions = computed(() => {
       return type === 'CNL1' || type === 'CNL2'
     })
     .sort((a, b) => {
-      const indexA = customOrder.indexOf(a.Code);
-      const indexB = customOrder.indexOf(b.Code);
+      const indexA = customOrder.indexOf(a.code);
+      const indexB = customOrder.indexOf(b.code);
 
       // Nếu cả hai đều có trong custom order, sắp xếp theo thứ tự đó
       if (indexA !== -1 && indexB !== -1) {
