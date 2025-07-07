@@ -88,7 +88,7 @@
                   <span class="label">Loại:</span>
                   <span class="value">
                     {{ getTableTypeName(selectedTable.TableType || selectedTable.tableType, selectedTable.TableName || selectedTable.tableName, selectedTable.Description || selectedTable.description) }}
-                    <span class="table-code">{{ selectedTable.TableType || selectedTable.tableType }}</span>
+                    <span class="table-code">{{ selectedTable.TableName || selectedTable.tableName }}</span>
                   </span>
                 </div>
                 <div class="detail-item">
@@ -836,9 +836,10 @@ const getTableTypeName = (tableType, tableName, description) => {
     return description || tableName;
   }
 
-  // For employee tables, use the type mapping
+  // For employee tables, use the TableName as the actual type (not TableType)
+  // TableName is the real identifier like "PhophongKtnqCnl2", "TruongphongKhdn", etc.
   const typeNames = {
-    // Cán bộ tables
+    // Cán bộ tables - mapped by actual TableName
     'TruongphongKhdn': 'Trưởng phòng KHDN',
     'TruongphongKhcn': 'Trưởng phòng KHCN',
     'PhophongKhdn': 'Phó phòng KHDN',
@@ -861,10 +862,13 @@ const getTableTypeName = (tableType, tableName, description) => {
     'TruongphongKhCnl2': 'Trưởng phòng KH CNL2',
     'PhophongKhCnl2': 'Phó phòng KH CNL2',
     'TruongphongKtnqCnl2': 'Trưởng phòng KTNQ CNL2',
-    'PhophongKtnqCnl2': 'Phó phòng KTNQ CNL2'
+    'PhophongKtnqCnl2': 'Phó phòng KTNQ CNL2',
+    'CanBoNghiepVuKhac': 'Cán bộ nghiệp vụ khác'
   };
 
-  return description || typeNames[tableType] || `${tableType}`;
+  // Use TableName instead of TableType for employee tables to get the correct type name
+  const realType = tableName || tableType;
+  return description || typeNames[realType] || `${realType}`;
 };
 
 const formatDate = (dateString) => {
