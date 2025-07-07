@@ -40,8 +40,9 @@ for store in "${stores[@]}"; do
         fi
 
         # Check for problematic patterns
-        camelcase_count=$(grep -c "\.id\|\.name\|\.type\|\.status" "$store" 2>/dev/null || echo 0)
-        if [ "$camelcase_count" -gt 0 ]; then
+        camelcase_count=$(grep -c "\.id\|\.name\|\.type\|\.status" "$store" 2>/dev/null || echo "0")
+        camelcase_count=$(echo "$camelcase_count" | head -n1)
+        if [ "$camelcase_count" -gt 0 ] 2>/dev/null; then
             echo -e "    ${RED}❌ Found $camelcase_count camelCase usages${NC}"
         fi
     else
@@ -68,12 +69,14 @@ for view in "${critical_views[@]}"; do
         echo -n "  📄 $(basename $view): "
 
         # Check template binding patterns
-        camelcase_template=$(grep -c "\.id\|\.name\|\.type\|\.status" "$view" 2>/dev/null || echo 0)
-        pascalcase_template=$(grep -c "\.Id\|\.Name\|\.Type\|\.Status" "$view" 2>/dev/null || echo 0)
+        camelcase_template=$(grep -c "\.id\|\.name\|\.type\|\.status" "$view" 2>/dev/null || echo "0")
+        pascalcase_template=$(grep -c "\.Id\|\.Name\|\.Type\|\.Status" "$view" 2>/dev/null || echo "0")
+        camelcase_template=$(echo "$camelcase_template" | head -n1)
+        pascalcase_template=$(echo "$pascalcase_template" | head -n1)
 
-        if [ "$pascalcase_template" -gt "$camelcase_template" ]; then
+        if [ "$pascalcase_template" -gt "$camelcase_template" ] 2>/dev/null; then
             echo -e "${GREEN}✅ Mostly PascalCase ($pascalcase_template vs $camelcase_template)${NC}"
-        elif [ "$camelcase_template" -gt "$pascalcase_template" ]; then
+        elif [ "$camelcase_template" -gt "$pascalcase_template" ] 2>/dev/null; then
             echo -e "${RED}❌ Mostly camelCase ($camelcase_template vs $pascalcase_template)${NC}"
         else
             echo -e "${YELLOW}⚠️  Mixed or no patterns${NC}"
@@ -102,8 +105,10 @@ for dir in "${component_dirs[@]}"; do
 
         while IFS= read -r component; do
             if [ -f "$component" ]; then
-                camelcase=$(grep -c "\.id\|\.name\|\.type\|\.status" "$component" 2>/dev/null || echo 0)
-                pascalcase=$(grep -c "\.Id\|\.Name\|\.Type\|\.Status" "$component" 2>/dev/null || echo 0)
+                camelcase=$(grep -c "\.id\|\.name\|\.type\|\.status" "$component" 2>/dev/null || echo "0")
+                pascalcase=$(grep -c "\.Id\|\.Name\|\.Type\|\.Status" "$component" 2>/dev/null || echo "0")
+                camelcase=$(echo "$camelcase" | head -n1)
+                pascalcase=$(echo "$pascalcase" | head -n1)
                 camelcase_total=$((camelcase_total + camelcase))
                 pascalcase_total=$((pascalcase_total + pascalcase))
             fi
@@ -187,9 +192,11 @@ done
 views_ok=0
 for view in "${critical_views[@]}"; do
     if [ -f "$view" ]; then
-        camelcase_template=$(grep -c "\.id\|\.name\|\.type\|\.status" "$view" 2>/dev/null || echo 0)
-        pascalcase_template=$(grep -c "\.Id\|\.Name\|\.Type\|\.Status" "$view" 2>/dev/null || echo 0)
-        if [ "$pascalcase_template" -gt "$camelcase_template" ]; then
+        camelcase_template=$(grep -c "\.id\|\.name\|\.type\|\.status" "$view" 2>/dev/null || echo "0")
+        pascalcase_template=$(grep -c "\.Id\|\.Name\|\.Type\|\.Status" "$view" 2>/dev/null || echo "0")
+        camelcase_template=$(echo "$camelcase_template" | head -n1)
+        pascalcase_template=$(echo "$pascalcase_template" | head -n1)
+        if [ "$pascalcase_template" -gt "$camelcase_template" ] 2>/dev/null; then
             views_ok=$((views_ok + 1))
         fi
     fi

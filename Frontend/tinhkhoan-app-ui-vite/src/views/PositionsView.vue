@@ -1,4 +1,4 @@
-<template>
+ß<template>
   <div class="positions-view">
     <h1>Quản lý Chức vụ</h1>
     <button
@@ -19,17 +19,17 @@
 
     <ul v-if="positionStore.positions.length > 0 && !positionStore.isLoading">
       <li
-        v-for="position in positionStore.allPositions"
-        :key="position.id"
+        v-for="position in sortedPositions"
+        :key="position.Id"
         class="list-item"
       >
         <div class="item-info">
           <div class="position-header">
-            <strong>{{ position.name }}</strong>
-            <span class="position-id">ID: {{ position.id }}</span>
+            <strong>{{ position.Name }}</strong>
+            <span class="position-id">ID: {{ position.Id }}</span>
           </div>
-          <span class="item-details" v-if="position.description"
-            >(Mô tả: {{ position.description }})</span
+          <span class="item-details" v-if="position.Description"
+            >(Mô tả: {{ position.Description }})</span
           >
         </div>
         <div class="actions">
@@ -37,7 +37,7 @@
             Sửa
           </button>
           <button
-            @click="deletePosition(position.id)"
+            @click="deletePosition(position.Id)"
             class="delete-btn"
           >
             Xóa
@@ -64,8 +64,8 @@
           <input
             type="text"
             id="positionName"
-            :value="currentPosition.name"
-            @input="currentPosition.name = $event.target.value"
+            :value="currentPosition.Name"
+            @input="currentPosition.Name = $event.target.value"
             required
           />
         </div>
@@ -74,8 +74,8 @@
           <input
             type="text"
             id="positionDescription"
-            :value="currentPosition.description"
-            @input="currentPosition.description = $event.target.value"
+            :value="currentPosition.Description"
+            @input="currentPosition.Description = $event.target.value"
             placeholder="Mô tả chi tiết (nếu có)"
           />
         </div>
@@ -110,15 +110,20 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { usePositionStore } from "../stores/positionStore.js";
 
 const positionStore = usePositionStore();
 
+// Computed property để sort positions theo ID
+const sortedPositions = computed(() => {
+  return [...positionStore.allPositions].sort((a, b) => (a.Id || 0) - (b.Id || 0));
+});
+
 const currentPosition = ref({
-  id: null,
-  name: "",
-  description: "",
+  Id: null,
+  Name: "",
+  Description: "",
 });
 
 const isEditing = ref(false);
@@ -141,18 +146,18 @@ const handleSubmitPosition = async () => {
   positionStore.error = null;
 
   const nameFromInput =
-    typeof currentPosition.value.name === "string"
-      ? currentPosition.value.name.trim()
+    typeof currentPosition.value.Name === "string"
+      ? currentPosition.value.Name.trim()
       : "";
   const descriptionFromInput =
-    typeof currentPosition.value.description === "string"
-      ? currentPosition.value.description.trim()
+    typeof currentPosition.value.Description === "string"
+      ? currentPosition.value.Description.trim()
       : "";
 
   const positionDataToValidateAndSubmit = {
     ...currentPosition.value,
-    name: nameFromInput,
-    description: descriptionFromInput,
+    Name: nameFromInput,
+    Description: descriptionFromInput,
   };
 
   console.log("--- Bắt đầu handleSubmitPosition (Chức vụ) ---");
@@ -165,7 +170,7 @@ const handleSubmitPosition = async () => {
     JSON.parse(JSON.stringify(positionDataToValidateAndSubmit))
   );
 
-  if (!positionDataToValidateAndSubmit.name) {
+  if (!positionDataToValidateAndSubmit.Name) {
     formError.value = "Tên chức vụ không được để trống!";
     console.log("VALIDATION FAIL (Client-side): Tên chức vụ trống.");
     return;
@@ -173,7 +178,7 @@ const handleSubmitPosition = async () => {
 
   console.log("VALIDATION PASS (Client-side): Tên chức vụ hợp lệ.");
 
-  if (isEditing.value && positionDataToValidateAndSubmit.id !== null) {
+  if (isEditing.value && positionDataToValidateAndSubmit.Id !== null) {
     try {
       await positionStore.updatePosition(positionDataToValidateAndSubmit);
       alert("Cập nhật chức vụ thành công!");
@@ -184,7 +189,7 @@ const handleSubmitPosition = async () => {
   } else {
     try {
       // eslint-disable-next-line no-unused-vars
-      const { id, ...newPositionData } = positionDataToValidateAndSubmit;
+      const { Id, ...newPositionData } = positionDataToValidateAndSubmit;
       await positionStore.createPosition(newPositionData);
       alert("Thêm chức vụ thành công!");
       resetForm();
@@ -214,9 +219,9 @@ const cancelEdit = () => {
 
 const resetForm = () => {
   currentPosition.value = {
-    id: null,
-    name: "",
-    description: "",
+    Id: null,
+    Name: "",
+    Description: "",
   };
 };
 

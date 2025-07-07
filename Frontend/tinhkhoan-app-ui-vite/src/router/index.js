@@ -35,6 +35,12 @@ const routes = [
     name: "store-debug",
     component: () => import("../components/StoreDebugPanel.vue"),
   },
+  // 🧪 Frontend debug route for testing API and stores
+  {
+    path: "/frontend-debug",
+    name: "frontend-debug",
+    component: () => import("../components/FrontendDebug.vue"),
+  },
   {
     path: "/about",
     name: "about",

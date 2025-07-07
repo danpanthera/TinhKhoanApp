@@ -110,7 +110,7 @@
         style="background: #fafdff; padding: 8px 0 8px 0; border: 1px solid #e0e0e0; border-radius: 6px; display: block; min-width: 0; overflow-x: visible;"
         class="tree-vertical"
       >
-        <template v-for="branch in branches" :key="branch.id">
+        <template v-for="branch in branches" :key="branch.Id">
           <li class="list-item branch-item branch-root tree-vertical-root" style="margin-bottom: 6px; min-height: 32px; font-size: 0.95em; max-width: none; white-space: normal; word-break: break-word; display: block; border-left: none; border-top: 5px solid #3498db; border-radius: 0; padding: 10px 12px;">
             <!-- Hàng thông tin chính -->
             <div class="branch-main-info" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
@@ -119,33 +119,33 @@
                 <input
                   v-if="isSelectionMode"
                   type="checkbox"
-                  :checked="selectedUnits.has(branch.id)"
-                  @change="toggleUnitSelection(branch.id)"
+                  :checked="selectedUnits.has(branch.Id)"
+                  @change="toggleUnitSelection(branch.Id)"
                   style="margin-right: 8px; transform: scale(1.2);"
                 />
                 <button
-                  v-if="hasChildrenForBranch(branch.id)"
-                  @click="toggleNode(branch.id)"
+                  v-if="hasChildrenForBranch(branch.Id)"
+                  @click="toggleNode(branch.Id)"
                   class="toggle-button-enhanced"
                   style="background: #3498db; border: none; padding: 4px 8px; cursor: pointer; font-size: 1.1em; color: white; font-weight: bold; margin-right: 6px; border-radius: 50%; transition: all 0.2s ease; min-width: 28px; min-height: 28px; text-align: center; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);"
                   @mouseover="$event.target.style.backgroundColor = '#2980b9'; $event.target.style.transform = 'scale(1.05)'"
                   @mouseout="$event.target.style.backgroundColor = '#3498db'; $event.target.style.transform = 'scale(1)'"
                 >
-                  {{ expandedNodes.has(branch.id) ? '−' : '+' }}
+                  {{ expandedNodes.has(branch.Id) ? '−' : '+' }}
                 </button>
                 <span v-else :style="{ marginRight: isSelectionMode ? '6px' : '34px' }"></span>
                 <span style="font-size: 1.1em;">🏢</span>
-                <strong style="font-size: 1.1em; color: #2c3e50;">{{ branch.name }}</strong>
+                <strong style="font-size: 1.1em; color: #2c3e50;">{{ branch.Name }}</strong>
               </div>
               <div class="actions" style="display: flex; gap: 8px; flex-shrink: 0;">
                 <button @click="startEditUnitWithModal(branch)" class="edit-btn">Sửa</button>
-                <button @click="confirmDeleteUnit(branch.id)" class="delete-btn">Xóa</button>
+                <button @click="confirmDeleteUnit(branch.Id)" class="delete-btn">Xóa</button>
               </div>
             </div>
             <!-- Hàng thông tin chi tiết -->
             <div class="branch-details" style="display: flex; align-items: center; gap: 12px; margin-left: 34px; font-size: 0.9em; color: #7f8c8d; flex-wrap: wrap;">
               <span style="background: #ecf0f1; padding: 2px 6px; border-radius: 3px;">
-                <strong>ID:</strong> {{ branch.id }}
+                <strong>ID:</strong> {{ branch.Id }}
               </span>
               <span style="background: #ecf0f1; padding: 2px 6px; border-radius: 3px;">
                 <strong>Mã:</strong> {{ branch.code }}
@@ -155,8 +155,8 @@
               </span>
             </div>
             <TreeDepartments
-              v-if="!hasChildrenForBranch(branch.id) || expandedNodes.has(branch.id)"
-              :parentId="branch.id"
+              v-if="hasChildrenForBranch(branch.Id) && expandedNodes.has(branch.Id)"
+              :parentId="branch.Id"
               :allUnits="unitStore.allUnits"
               :level="0"
               :isSelectionMode="isSelectionMode"
@@ -198,23 +198,23 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="unit in sortedAllUnits" :key="unit.id">
+          <tr v-for="unit in sortedAllUnits" :key="unit.Id">
             <td v-if="isSelectionMode" style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0; text-align: center;">
               <input
                 type="checkbox"
-                :checked="selectedUnits.has(unit.id)"
-                @change="toggleUnitSelection(unit.id)"
+                :checked="selectedUnits.has(unit.Id)"
+                @change="toggleUnitSelection(unit.Id)"
                 style="transform: scale(1.2);"
               />
             </td>
-            <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0;">{{ unit.id }}</td>
-            <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0;">{{ unit.code }}</td>
-            <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0;">{{ unit.name }}</td>
-            <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0;">{{ unit.type }}</td>
-            <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0;">{{ unit.parentUnitId ?? '-' }}</td>
+            <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0;">{{ unit.Id }}</td>
+            <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0;">{{ unit.Code }}</td>
+            <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0;">{{ unit.Name }}</td>
+            <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0;">{{ unit.Type }}</td>
+            <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0;">{{ unit.ParentUnitId ?? '-' }}</td>
             <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0;">
               <button @click="startEditUnitWithModal(unit)" class="edit-btn">Sửa</button>
-              <button @click="confirmDeleteUnit(unit.id)" class="delete-btn">Xóa</button>
+              <button @click="confirmDeleteUnit(unit.Id)" class="delete-btn">Xóa</button>
             </td>
           </tr>
         </tbody>
@@ -393,10 +393,10 @@ const canCreateCNL2 = computed(() => {
 const isAllVisibleSelected = computed(() => {
   if (viewMode.value === 'grid') {
     return sortedAllUnits.value.length > 0 &&
-           sortedAllUnits.value.every(unit => selectedUnits.value.has(unit.id));
+           sortedAllUnits.value.every(unit => selectedUnits.value.has(unit.Id));
   } else {
     return branches.value.length > 0 &&
-           branches.value.every(branch => selectedUnits.value.has(branch.id));
+           branches.value.every(branch => selectedUnits.value.has(branch.Id));
   }
 });
 
@@ -422,20 +422,20 @@ const toggleUnitSelection = (unitId) => {
 const selectAllVisible = () => {
   if (viewMode.value === 'grid') {
     sortedAllUnits.value.forEach(unit => {
-      selectedUnits.value.add(unit.id);
+      selectedUnits.value.add(unit.Id);
     });
   } else {
     // In tree view, select all branches and their children
     branches.value.forEach(branch => {
-      selectedUnits.value.add(branch.id);
+      selectedUnits.value.add(branch.Id);
       // Also select all children recursively
       const addChildrenRecursively = (parentId) => {
-        unitStore.allUnits.filter(u => u.parentUnitId === parentId).forEach(child => {
-          selectedUnits.value.add(child.id);
-          addChildrenRecursively(child.id);
+        unitStore.allUnits.filter(u => u.ParentUnitId === parentId).forEach(child => {
+          selectedUnits.value.add(child.Id);
+          addChildrenRecursively(child.Id);
         });
       };
-      addChildrenRecursively(branch.id);
+      addChildrenRecursively(branch.Id);
     });
   }
   // Trigger reactivity
@@ -511,12 +511,12 @@ const toggleSelectAllVisible = () => {
 
 // Function để kiểm tra xem một branch có children không
 const hasChildrenForBranch = (branchId) => {
-  return unitStore.allUnits.some(unit => unit.parentUnitId === branchId);
+  return unitStore.allUnits.some(unit => unit.ParentUnitId === branchId);
 };
 
 // Computed property để sort tất cả units theo ID cho grid view
 const sortedAllUnits = computed(() => {
-  return [...unitStore.allUnits].sort((a, b) => (a.id || 0) - (b.id || 0));
+  return [...unitStore.allUnits].sort((a, b) => (a.Id || 0) - (b.Id || 0));
 });
 
 function loadUnits() {
@@ -701,7 +701,7 @@ const handleSubmitUnit = async () => {
   if (
     isEditing.value &&
     unitDataForSubmission.id !== null &&
-    unitDataForSubmission.id !== undefined
+    unitDataForSubmissiongetId(.id !== undefined) !== null
   ) {
     try {
       await unitStore.updateUnit(unitDataForSubmission);
@@ -782,20 +782,20 @@ const confirmDeleteUnit = async (unitId) => {
 
 // Computed property cho các nhánh gốc (CNL1)
 const branches = computed(() => {
-  // Chỉ lấy các đơn vị CNL1 (parentUnitId null hoặc 0) làm root và sort theo ID
+  // Chỉ lấy các đơn vị CNL1 (ParentUnitId null hoặc 0) làm root và sort theo Id
   return unitStore.allUnits.filter(u => {
-    const type = (u.type || '').toUpperCase();
-    return type === 'CNL1' && (!u.parentUnitId || u.parentUnitId === 0);
-  }).sort((a, b) => (a.id || 0) - (b.id || 0));
+    const type = (u.Type || '').toUpperCase(); // ✅ Sử dụng u.Type thay vì u.type
+    return type === 'CNL1' && (!u.ParentUnitId || u.ParentUnitId === 0); // ✅ Sử dụng u.ParentUnitId
+  }).sort((a, b) => (a.Id || 0) - (b.Id || 0)); // ✅ Sử dụng a.Id và b.Id
 });
 
 // Computed property cho các phòng ban theo từng nhánh
 const departmentsByBranch = computed(() => {
   const map = {};
   unitStore.allUnits.forEach((u) => {
-    if (u.parentUnitId) {
-      if (!map[u.parentUnitId]) map[u.parentUnitId] = [];
-      map[u.parentUnitId].push(u);
+    if (u.ParentUnitId) { // ✅ Sử dụng u.ParentUnitId thay vì u.parentUnitId
+      if (!map[u.ParentUnitId]) map[u.ParentUnitId] = [];
+      map[u.ParentUnitId].push(u);
     }
   });
   // Sort từng nhóm department theo ID
@@ -936,13 +936,13 @@ const TreeDepartments = defineComponent({
     const safeAllUnits = computed(() => Array.isArray(props.allUnits) ? props.allUnits : []);
     const children = computed(() =>
       safeAllUnits.value
-        .filter(u => u.parentUnitId === safeParentId.value)
-        .sort((a, b) => (a.id || 0) - (b.id || 0))
+        .filter(u => u.ParentUnitId === safeParentId.value)
+        .sort((a, b) => (a.Id || 0) - (b.Id || 0))
     );
 
     // Check if a node has children
     const hasChildren = (unitId) => {
-      return safeAllUnits.value.some(u => u.parentUnitId === unitId);
+      return safeAllUnits.value.some(u => u.ParentUnitId === unitId);
     };
 
     // Check if a node is expanded
@@ -957,14 +957,14 @@ const TreeDepartments = defineComponent({
         style: 'margin: 2px 0 0 18px; padding-left: 0; transition: all 0.3s ease;'
       },
         children.value.map(dept => {
-          const hasChildNodes = hasChildren(dept.id);
-          const isNodeExpanded = isExpanded(dept.id);
+          const hasChildNodes = hasChildren(dept.Id);
+          const isNodeExpanded = isExpanded(dept.Id);
           const isLeafNode = !hasChildNodes;
 
           return h('li', {
             class: 'list-item department-item tree-node',
             style: 'margin-bottom: 4px; min-height: 32px; font-size: 0.92em; display: block; padding: 8px 12px; border-radius: 0 4px 4px 0;',
-            key: dept.id
+            key: dept.Id
           }, [
             // Hàng thông tin chính
             h('div', {
@@ -978,8 +978,8 @@ const TreeDepartments = defineComponent({
                 // Checkbox cho chế độ chọn
                 props.isSelectionMode ? h('input', {
                   type: 'checkbox',
-                  checked: props.selectedUnits.has(dept.id),
-                  onChange: () => emit('toggleSelection', dept.id),
+                  checked: props.selectedUnits.has(dept.Id),
+                  onChange: () => emit('toggleSelection', dept.Id),
                   style: 'margin-right: 6px; transform: scale(1.1);'
                 }) : null,
                 // Toggle button for nodes with children
@@ -1004,7 +1004,7 @@ const TreeDepartments = defineComponent({
                     justify-content: center;
                     box-shadow: 0 2px 4px rgba(39, 174, 96, 0.3);
                   `,
-                  onClick: () => emit('toggleNode', dept.id),
+                  onClick: () => emit('toggleNode', dept.Id),
                   onMouseover: (e) => {
                     e.target.style.backgroundColor = '#229954';
                     e.target.style.transform = 'scale(1.05)';
@@ -1017,14 +1017,14 @@ const TreeDepartments = defineComponent({
                   style: 'font-size: 0.9em; margin-right: 30px; color: #bdc3c7;'
                 }, isLeafNode ? '└─' : '├─'),
                 h('span', { style: 'font-size: 0.9em;' }, dept.type === 'CNL2' ? '🏢' : '🏬'),
-                h('strong', { style: 'font-size: 1em; color: #2c3e50;' }, dept.name)
+                h('strong', { style: 'font-size: 1em; color: #2c3e50;' }, dept.Name)
               ]),
               h('div', {
                 class: 'actions',
                 style: 'display: flex; gap: 6px; flex-shrink: 0;'
               }, [
                 h('button', { class: 'edit-btn', onClick: () => emit('editUnit', dept) }, 'Sửa'),
-                h('button', { class: 'delete-btn', onClick: () => emit('deleteUnit', dept.id) }, 'Xóa')
+                h('button', { class: 'delete-btn', onClick: () => emit('deleteUnit', dept.Id) }, 'Xóa')
               ])
             ]),
             // Hàng thông tin chi tiết
@@ -1034,17 +1034,17 @@ const TreeDepartments = defineComponent({
             }, [
               h('span', {
                 style: 'background: #f1f2f6; padding: 2px 5px; border-radius: 3px;'
-              }, `ID: ${dept.id}`),
+              }, `ID: ${dept.Id}`),
               h('span', {
                 style: 'background: #f1f2f6; padding: 2px 5px; border-radius: 3px;'
-              }, `Mã: ${dept.code}`),
+              }, `Mã: ${dept.Code}`),
               h('span', {
                 style: 'background: #f1f2f6; padding: 2px 5px; border-radius: 3px;'
-              }, `Loại: ${dept.type || 'Phòng nghiệp vụ'}`)
+              }, `Loại: ${dept.Type || 'Phòng nghiệp vụ'}`)
             ]),
             // Only render children if node is expanded and has children
             (hasChildNodes && isNodeExpanded) ? h(TreeDepartments, {
-              parentId: dept.id,
+              parentId: dept.Id,
               allUnits: safeAllUnits.value,
               level: props.level + 1,
               isSelectionMode: props.isSelectionMode,

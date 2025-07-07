@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Fix Verification</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        .test-button { margin: 5px; padding: 8px 15px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        .test-button:hover { background: #0056b3; }
+        .result { margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>Final Fix Verification - 07/07/2025</h1>
+
+    <div class="test-section">
+        <h2>1. ✅ Test Employee Edit Form (PascalCase Fix)</h2>
+        <button class="test-button" onclick="testEmployeeEdit()">Test Employee Form Mapping</button>
+        <div id="employee-edit-result" class="result">Click test to verify...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. ✅ Test Position Update (ID Fix)</h2>
+        <button class="test-button" onclick="testPositionUpdate()">Test Position ID Mapping</button>
+        <div id="position-update-result" class="result">Click test to verify...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. ✅ Test KPI Tables (Endpoint Fix)</h2>
+        <button class="test-button" onclick="testKpiTables()">Test KPI Tables API</button>
+        <div id="kpi-tables-result" class="result">Click test to verify...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. 🎯 Overall System Status</h2>
+        <button class="test-button" onclick="testOverallStatus()">Test All Systems</button>
+        <div id="overall-result" class="result">Click test for full verification...</div>
+    </div>
+
+    <script>
+        async function testEmployeeEdit() {
+            const resultDiv = document.getElementById('employee-edit-result');
+            try {
+                const response = await fetch('/api/Employees');
+                const employees = await response.json();
+
+                if (employees.length > 0) {
+                    const employee = employees[0];
+
+                    // Test extractEmployeePrimitives logic
+                    const extracted = {
+                        id: employee.Id || employee.id || null,
+                        employeeCode: employee.EmployeeCode || employee.employeeCode || '',
+                        fullName: employee.FullName || employee.fullName || '',
+                        username: employee.Username || employee.username || '',
+                        email: employee.Email || employee.email || '',
+                        unitId: employee.UnitId || employee.unitId || null,
+                        positionId: employee.PositionId || employee.positionId || null,
+                    };
+
+                    const hasRequiredFields = extracted.id && extracted.employeeCode && extracted.fullName && extracted.username;
+
+                    resultDiv.innerHTML = `
+                        <strong>✅ Employee Edit Test:</strong><br>
+                        <strong>Original API Data:</strong> ${JSON.stringify(employee, null, 2).substring(0, 200)}...<br>
+                        <strong>Extracted for Form:</strong> ${JSON.stringify(extracted, null, 2)}<br>
+                        <strong>Has Required Fields:</strong> ${hasRequiredFields ? '✅ YES' : '❌ NO'}<br>
+                        <strong>Status:</strong> ${hasRequiredFields ? 'Form should populate correctly' : 'Missing required fields'}
+                    `;
+                    resultDiv.className = hasRequiredFields ? 'result success' : 'result error';
+                } else {
+                    resultDiv.innerHTML = '<strong>⚠️ No employees found</strong>';
+                    resultDiv.className = 'result warning';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testPositionUpdate() {
+            const resultDiv = document.getElementById('position-update-result');
+            try {
+                const response = await fetch('/api/Positions');
+                const positions = await response.json();
+
+                if (positions.length > 0) {
+                    const position = positions[0];
+
+                    // Test ID extraction logic
+                    const positionId = position.Id || position.id;
+                    const hasValidId = positionId && !isNaN(Number(positionId));
+
+                    resultDiv.innerHTML = `
+                        <strong>✅ Position Update Test:</strong><br>
+                        <strong>Position Name:</strong> ${position.Name || position.name}<br>
+                        <strong>Position.Id:</strong> ${position.Id} (${typeof position.Id})<br>
+                        <strong>Position.id:</strong> ${position.id} (${typeof position.id})<br>
+                        <strong>Extracted ID:</strong> ${positionId} (${typeof positionId})<br>
+                        <strong>Valid for Update:</strong> ${hasValidId ? '✅ YES' : '❌ NO'}<br>
+                        <strong>Update URL would be:</strong> /api/Positions/${positionId}
+                    `;
+                    resultDiv.className = hasValidId ? 'result success' : 'result error';
+                } else {
+                    resultDiv.innerHTML = '<strong>⚠️ No positions found</strong>';
+                    resultDiv.className = 'result warning';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testKpiTables() {
+            const resultDiv = document.getElementById('kpi-tables-result');
+            try {
+                const response = await fetch('/api/KpiAssignment/tables');
+
+                if (response.ok) {
+                    const tables = await response.json();
+
+                    const employeeTables = tables.filter(t => t.Category === 'Dành cho Cán bộ' || t.tableType !== 'CHINHANH');
+                    const branchTables = tables.filter(t => t.Category === 'Dành cho Chi nhánh' || t.tableType === 'CHINHANH');
+
+                    resultDiv.innerHTML = `
+                        <strong>✅ KPI Tables Test:</strong><br>
+                        <strong>Total Tables:</strong> ${tables.length}<br>
+                        <strong>Employee Tables:</strong> ${employeeTables.length}<br>
+                        <strong>Branch Tables:</strong> ${branchTables.length}<br>
+                        <strong>Sample Table:</strong> ${JSON.stringify(tables[0], null, 2)}<br>
+                        <strong>Status:</strong> API endpoint working correctly!
+                    `;
+                    resultDiv.className = 'result success';
+                } else {
+                    resultDiv.innerHTML = `<strong>❌ API Error:</strong> ${response.status} ${response.statusText}`;
+                    resultDiv.className = 'result error';
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testOverallStatus() {
+            const resultDiv = document.getElementById('overall-result');
+            resultDiv.innerHTML = '<strong>🔄 Testing all systems...</strong>';
+
+            const tests = [
+                { name: 'Employees API', url: '/api/Employees' },
+                { name: 'Positions API', url: '/api/Positions' },
+                { name: 'KhoanPeriods API', url: '/api/KhoanPeriods' },
+                { name: 'KPI Tables API', url: '/api/KpiAssignment/tables' },
+                { name: 'Units API', url: '/api/Units' },
+                { name: 'Roles API', url: '/api/Roles' }
+            ];
+
+            let results = [];
+
+            for (const test of tests) {
+                try {
+                    const response = await fetch(test.url);
+                    if (response.ok) {
+                        const data = await response.json();
+                        results.push(`✅ ${test.name}: ${Array.isArray(data) ? data.length + ' records' : 'OK'}`);
+                    } else {
+                        results.push(`❌ ${test.name}: ${response.status} ${response.statusText}`);
+                    }
+                } catch (error) {
+                    results.push(`❌ ${test.name}: ${error.message}`);
+                }
+            }
+
+            const successCount = results.filter(r => r.startsWith('✅')).length;
+            const totalCount = results.length;
+
+            resultDiv.innerHTML = `
+                <strong>🎯 Overall System Status:</strong><br>
+                <strong>Success Rate:</strong> ${successCount}/${totalCount} (${Math.round(successCount/totalCount*100)}%)<br>
+                <br>
+                ${results.map(result => `<div>${result}</div>`).join('')}
+                <br>
+                <strong>Summary:</strong> ${successCount === totalCount ? '🎉 All systems operational!' : '⚠️ Some issues detected'}
+            `;
+            resultDiv.className = successCount === totalCount ? 'result success' : 'result warning';
+        }
+    </script>
+</body>
+</html>

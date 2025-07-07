@@ -30,8 +30,8 @@
             <label class="form-label">Kỳ khoán:</label>
             <select v-model="selectedPeriodId" @change="onPeriodChange" class="form-control">
               <option value="">-- Chọn kỳ khoán --</option>
-              <option v-for="period in khoanPeriods" :key="period.id" :value="period.id">
-                {{ period.name }} ({{ formatDate(period.startDate) }} - {{ formatDate(period.endDate) }})
+              <option v-for="period in khoanPeriods" :key="period.Id || period.Id" :value="period.Id || period.Id">
+                {{ period.Name || period.Name }} ({{ formatDate(period.StartDate || period.startDate) }} - {{ formatDate(period.EndDate || period.endDate) }})
               </option>
             </select>
           </div>
@@ -49,13 +49,13 @@
             <select v-model="selectedBranchId" @change="onBranchChange" class="form-control">
               <option value="">-- Chọn chi nhánh --</option>
               <optgroup label="Chi nhánh CNL1">
-                <option v-for="unit in cnl1Units" :key="unit.id" :value="unit.id">
-                  🏢 {{ unit.name }} ({{ unit.code }})
+                <option v-for="unit in cnl1Units" :key="unit.Id" :value="unit.Id">
+                  🏢 {{ unit.Name }} ({{ unit.code }})
                 </option>
               </optgroup>
               <optgroup label="Chi nhánh CNL2" v-if="cnl2Units.length > 0">
-                <option v-for="unit in cnl2Units" :key="unit.id" :value="unit.id">
-                  🏢 {{ unit.name }} ({{ unit.code }}) - {{ getParentUnitCode(unit.parentUnitId) }}
+                <option v-for="unit in cnl2Units" :key="unit.Id" :value="unit.Id">
+                  🏢 {{ unit.Name }} ({{ unit.code }}) - {{ getParentUnitCode(unit.parentUnitId) }}
                 </option>
               </optgroup>
             </select>
@@ -63,7 +63,7 @@
 
           <div class="alert-agribank alert-info" v-if="selectedBranch">
             <strong>📊 Đã chọn:</strong>
-            Chi nhánh "{{ selectedBranch.name }}" ({{ selectedBranch.code }})
+            Chi nhánh "{{ selectedBranch.Name }}" ({{ selectedBranch.code }})
             → <strong>{{ availableKpiIndicators.length }}</strong> chỉ tiêu KPI
           </div>
         </div>
@@ -103,7 +103,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(indicator, index) in availableKpiIndicators" :key="indicator.id">
+              <tr v-for="(indicator, index) in availableKpiIndicators" :key="indicator.Id">
                 <td>
                   <div style="display: flex; align-items: center; gap: 8px;">
                     <span class="badge-agribank badge-primary">{{ index + 1 }}</span>
@@ -116,12 +116,12 @@
                 <td>
                   <input
                     type="text"
-                    :value="formatNumber(kpiTargets[indicator.id] || 0)"
+                    :value="formatNumber(kpiTargets[indicator.Id] || 0)"
                     placeholder="Nhập mục tiêu"
                     class="form-control"
                     style="font-size: 0.85rem; padding: 8px 12px;"
-                    @input="(e) => handleKpiTargetInput(e, indicator.id)"
-                    @blur="(e) => handleKpiTargetBlur(e, indicator.id)"
+                    @input="(e) => handleKpiTargetInput(e, indicator.Id)"
+                    @blur="(e) => handleKpiTargetBlur(e, indicator.Id)"
                   />
                 </td>
                 <td style="text-align: center;">
@@ -156,7 +156,7 @@
                       ✏️
                     </button>
                     <button
-                      @click="clearIndicatorTarget(indicator.id)"
+                      @click="clearIndicatorTarget(indicator.Id)"
                       class="btn-agribank btn-outline"
                       style="padding: 4px 8px; font-size: 0.75rem; color: var(--danger-color); border-color: var(--danger-color);"
                       title="Xóa mục tiêu"
@@ -205,7 +205,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="assignment in currentAssignments" :key="assignment.id">
+              <tr v-for="assignment in currentAssignments" :key="assignment.Id">
                 <td>
                   <span class="font-weight-semibold">{{ assignment.indicatorName }}</span>
                 </td>
@@ -264,7 +264,7 @@ const currentAssignments = ref([])
 // CNL1: Chỉ có Hội Sở (1 đơn vị)
 const cnl1Units = computed(() => {
   const filtered = units.value.filter(unit => {
-    const type = (unit.type || '').toUpperCase()
+    const type = (unit.Type || '').toUpperCase()
     return type === 'CNL1'
   }).sort((a, b) => {
     // Primary sort: SortOrder (nulls last)
@@ -276,10 +276,10 @@ const cnl1Units = computed(() => {
     }
 
     // Secondary sort: Name
-    return (a.name || '').localeCompare(b.name || '');
+    return (a.Name || '').localeCompare(b.Name || '');
   })
 
-  console.log('🏢 CNL1 Units:', filtered.length, filtered.map(u => u.name))
+  console.log('🏢 CNL1 Units:', filtered.length, filtered.map(u => u.Name))
   return filtered
 })
 
@@ -287,7 +287,7 @@ const cnl1Units = computed(() => {
 const cnl2Units = computed(() => {
   const filtered = units.value
     .filter(unit => {
-      const type = (unit.type || '').toUpperCase()
+      const type = (unit.Type || '').toUpperCase()
       return type === 'CNL2'
     })
     .sort((a, b) => {
@@ -300,16 +300,16 @@ const cnl2Units = computed(() => {
       }
 
       // Nếu sortOrder bằng nhau thì sắp xếp theo tên
-      return (a.name || '').localeCompare(b.name || '');
+      return (a.Name || '').localeCompare(b.Name || '');
     })
 
-  console.log('🏢 CNL2 Units:', filtered.length, filtered.map(u => u.name))
+  console.log('🏢 CNL2 Units:', filtered.length, filtered.map(u => u.Name))
   return filtered
 })
 
 const selectedBranch = computed(() => {
   if (!selectedBranchId.value) return null
-  return units.value.find(u => u.id === parseInt(selectedBranchId.value))
+  return units.value.find(u => u.Id === parseInt(selectedBranchId.value))
 })
 
 const totalMaxScore = computed(() => {
@@ -351,7 +351,7 @@ async function loadInitialData() {
 
     console.log('✅ Loaded periods:', khoanPeriods.value.length)
     console.log('✅ Loaded units:', units.value.length)
-    console.log('✅ Units detail:', units.value.map(u => `${u.name} (${u.type})`))
+    console.log('✅ Units detail:', units.value.map(u => `${u.Name} (${u.Type})`))
     console.log('✅ Loaded KPI tables:', kpiTables.value.length)
 
   } catch (error) {
@@ -402,15 +402,15 @@ async function onBranchChange() {
     }
 
     console.log('📍 Selected branch details:', {
-      id: branch.id,
-      name: branch.name,
+      id: branch.Id,
+      name: branch.Name,
       code: branch.code,
       type: branch.type
     })
 
     // Find appropriate KPI table based on branch type
     let kpiTable = null
-    const branchType = (branch.type && typeof branch.type === 'string' ? branch.type : '').toUpperCase()
+    const branchType = (branch.Type && typeof branch.Type === 'string' ? branch.Type : '').toUpperCase()
     console.log('🔍 Branch type:', branchType)
     console.log('📊 Available KPI tables:', kpiTables.value.length)
 
@@ -425,7 +425,7 @@ async function onBranchChange() {
     )
     console.log('🏢 Branch KPI tables found:', branchTables.length)
     branchTables.forEach(table => {
-      console.log(`   📊 ${table.tableName} (ID: ${table.id}, Type: ${table.tableType || 'N/A'}, Category: ${table.category})`)
+      console.log(`   📊 ${table.tableName} (ID: ${table.Id}, Type: ${table.tableType || 'N/A'}, Category: ${table.category})`)
     })
 
     // Match branch type with KPI table
@@ -471,17 +471,17 @@ async function onBranchChange() {
 
     if (kpiTable) {
       console.log('✅ Selected KPI table:', {
-        id: kpiTable.id,
+        id: kpiTable.Id,
         name: kpiTable.tableName,
         type: kpiTable.tableType,
         category: kpiTable.category
       })
 
       console.log('🔄 Loading KPI indicators...')
-      const response = await api.get(`/KpiAssignment/tables/${kpiTable.id}`)
+      const response = await api.get(`/KpiAssignment/tables/${kpiTable.Id}`)
 
       // Use helper function to log API response
-      logApiResponse(`/KpiAssignment/tables/${kpiTable.id}`, response, 'indicators')
+      logApiResponse(`/KpiAssignment/tables/${kpiTable.Id}`, response, 'indicators')
 
       if (response.data && response.data.indicators) {
         // Use helper function to normalize .NET array format
@@ -501,7 +501,7 @@ async function onBranchChange() {
       }
     } else {
       console.log('❌ No suitable KPI table found for branch type:', branchType)
-      console.log('Available tables:', kpiTables.value.map(t => ({ id: t.id, name: t.tableName, category: t.category, type: t.tableType })))
+      console.log('Available tables:', kpiTables.value.map(t => ({ id: t.Id, name: t.tableName, category: t.category, type: t.tableType })))
       errorMessage.value = `Không tìm thấy bảng KPI phù hợp cho chi nhánh loại ${branchType}. Có ${kpiTables.value.length} bảng KPI tổng cộng.`
     }
 
@@ -511,7 +511,7 @@ async function onBranchChange() {
   } catch (error) {
     console.error('❌ Error loading branch KPI data:', error)
     console.error('Error details:', {
-      status: error.response?.status,
+      status: error.response?.Status,
       message: error.response?.data?.message || error.message,
       url: error.config?.url
     })
@@ -535,7 +535,7 @@ async function loadCurrentAssignments() {
 
 function getParentUnitCode(parentUnitId) {
   if (!parentUnitId) return ''
-  const parent = units.value.find(u => u.id === parentUnitId)
+  const parent = units.value.find(u => u.Id === parentUnitId)
   return parent ? parent.code : ''
 }
 
@@ -600,7 +600,7 @@ async function assignKPI() {
     // For now, we'll simulate success
     await new Promise(resolve => setTimeout(resolve, 1000))
 
-    successMessage.value = `Đã giao khoán KPI thành công cho chi nhánh "${selectedBranch.value.name}" với ${targets.length} chỉ tiêu`
+    successMessage.value = `Đã giao khoán KPI thành công cho chi nhánh "${selectedBranch.value.Name}" với ${targets.length} chỉ tiêu`
 
     // Reset targets
     kpiTargets.value = {}

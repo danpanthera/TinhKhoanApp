@@ -3,7 +3,7 @@ import api from './api';
 export const kpiAssignmentService = {
   // Get all KPI assignment tables
   async getTables() {
-    const response = await api.get('/kpiassignment/tables');
+    const response = await api.get('/KpiAssignment/tables');
 
     let tablesData = [];
     if (response.data && Array.isArray(response.data.$values)) {

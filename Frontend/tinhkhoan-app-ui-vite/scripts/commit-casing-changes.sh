@@ -40,7 +40,7 @@ else
     git commit -m "feat: Add PascalCase standardization helper utilities
 
 - Add casingSafeAccess.js helper for safe property access
-- Add casing-standardization-check.sh for project analysis  
+- Add casing-standardization-check.sh for project analysis
 - Add auto-casing-fix.sh for automated pattern fixes
 - Update all-fixes-summary.html with progress tracking
 
@@ -67,7 +67,7 @@ else
 
 - Import casingSafeAccess helper in all stores
 - Replace manual .Id||.id fallback with getId() helper
-- Use normalizeArray() for consistent data normalization  
+- Use normalizeArray() for consistent data normalization
 - Apply safeGet() for reliable property access
 - Maintain backward compatibility with camelCase
 
@@ -107,11 +107,11 @@ if [ "$remaining_changes" -gt 0 ]; then
     echo -e "  ${YELLOW}⚠️  $remaining_changes files still have uncommitted changes${NC}"
     echo "Remaining files:"
     git status --porcelain | head -10
-    
+
     if [ "$remaining_changes" -gt 10 ]; then
         echo "... and $((remaining_changes - 10)) more files"
     fi
-    
+
     echo ""
     echo "📋 Manual review recommended for:"
     echo "  - Complex template bindings"

@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import apiClient from "../services/api.js";
+import { getId } from "../utils/casingSafeAccess.js";
 
 export const useUnitStore = defineStore("unit", {
   // State: Nơi lưu trữ dữ liệu
@@ -37,7 +38,7 @@ export const useUnitStore = defineStore("unit", {
           unitsData = response.data;
         } else if (response.data && typeof response.data === "object") {
           console.log('⚠️ Response is object, trying to convert...');
-          if (response.data.$id && response.data.id) {
+          if (response.data.$id && getId(response.data)) {
             unitsData = [response.data];
           } else if (Object.keys(response.data).length > 0) {
             unitsData = [response.data];
@@ -108,7 +109,7 @@ export const useUnitStore = defineStore("unit", {
       this.isLoading = true;
       this.error = null;
       try {
-        await apiClient.put(`/Units/${unitData.id}`, unitData); // unitData gửi lên là Unit đầy đủ
+        await apiClient.put(`/Units/${getId(unitData)}`, unitData); // unitData gửi lên là Unit đầy đủ
 
         // Sau khi cập nhật, tải lại danh sách để đảm bảo dữ liệu hiển thị là mới nhất và đúng định dạng DTO
         await this.fetchUnits();
@@ -153,7 +154,7 @@ export const useUnitStore = defineStore("unit", {
       try {
         await apiClient.delete(`/Units/${unitId}`);
         // Xóa unit khỏi mảng state units dựa trên id
-        this.units = this.units.filter((u) => u.id !== unitId);
+        this.units = this.units.filter((u) => getId(u) !== unitId);
       } catch (err) {
         let errorMessage = "Không thể xóa đơn vị.";
         if (err.response && err.response.data) {

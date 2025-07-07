@@ -24,15 +24,15 @@
     >
       <li
         v-for="period in khoanPeriodStore.sortedKhoanPeriods"
-        :key="period.id"
+        :key="getId(period)"
         class="list-item"
       >
         <div class="item-info">
           <strong>{{ period.name }}</strong>
           <span class="item-details">
-            (Loại: {{ period.type }}, Trạng thái: {{ period.status }}) <br />
-            Từ: {{ formatDate(period.startDate) }} - Đến:
-            {{ formatDate(period.endDate) }}
+            <div class="period-type">📊 Loại: <strong>{{ period.typeDisplay || period.Type }}</strong></div>
+            <div class="period-dates">📅 Thời gian: {{ formatDate(period.StartDate || period.startDate) }} → {{ formatDate(period.EndDate || period.endDate) }}</div>
+            <div class="period-status">🏷️ Trạng thái: <span class="status-badge" :class="getStatusClass(period.Status || period.status)">{{ period.statusDisplay || period.Status }}</span></div>
           </span>
         </div>
         <div class="actions">
@@ -40,7 +40,7 @@
             Sửa
           </button>
           <button
-            @click="confirmDeleteKhoanPeriod(period.id)"
+            @click="confirmDeleteKhoanPeriod(period.Id)"
             class="delete-btn"
           >
             Xóa
@@ -151,6 +151,7 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { useKhoanPeriodStore } from "../stores/khoanPeriodStore.js";
+import { ensurePascalCase, getId, getName, safeGet } from "../utils/casingSafeAccess.js";
 
 const khoanPeriodStore = useKhoanPeriodStore();
 
@@ -200,10 +201,30 @@ const toDateInputValue = (dateString) => {
 const formatDate = (dateString) => {
   if (!dateString) return "";
   const date = new Date(dateString);
-  const year = date.getFullYear();
-  const month = ("0" + (date.getMonth() + 1)).slice(-2);
-  const day = ("0" + date.getDate()).slice(-2);
-  return `${year}-${month}-${day}`;
+  return date.toLocaleDateString('vi-VN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+};
+
+// Hàm lấy class CSS cho status badge
+const getStatusClass = (status) => {
+  const statusMap = {
+    'DRAFT': 'status-draft',
+    'OPEN': 'status-open',
+    'PROCESSING': 'status-processing',
+    'PENDINGAPPROVAL': 'status-pending',
+    'CLOSED': 'status-closed',
+    'ARCHIVED': 'status-archived',
+    'Nháp': 'status-draft',
+    'Mở': 'status-open',
+    'Tạm dừng': 'status-processing',
+    'Chờ duyệt': 'status-pending',
+    'Đóng': 'status-closed',
+    'Lưu trữ': 'status-archived'
+  };
+  return statusMap[status] || 'status-default';
 };
 
 const handleSubmitKhoanPeriod = async () => {
@@ -242,8 +263,12 @@ const handleSubmitKhoanPeriod = async () => {
   dataToSubmit.startDate = toDateInputValue(dataToSubmit.startDate);
   dataToSubmit.endDate = toDateInputValue(dataToSubmit.endDate);
 
-  if (isEditing.value && dataToSubmit.id !== null) {
+  console.log('🔍 handleSubmitKhoanPeriod - dataToSubmit:', dataToSubmit);
+  console.log('🔍 handleSubmitKhoanPeriod - isEditing:', isEditing.value);
+
+  if (isEditing.value && (getId(dataToSubmit) !== null && getId(dataToSubmit) !== undefined)) {
     try {
+      console.log('🔄 Calling updateKhoanPeriod with:', dataToSubmit);
       await khoanPeriodStore.updateKhoanPeriod(dataToSubmit);
       alert("Cập nhật Kỳ Khoán thành công!");
       cancelEdit();
@@ -255,7 +280,9 @@ const handleSubmitKhoanPeriod = async () => {
       //const { id, ...newPeriodData } = dataToSubmit;
       //await khoanPeriodStore.createKhoanPeriod(newPeriodData);
       const newPeriodData = { ...dataToSubmit };
+      // Remove both camelCase and PascalCase ID fields to let backend generate new ID
       delete newPeriodData.id;
+      delete newPeriodData.Id;
       await khoanPeriodStore.createKhoanPeriod(newPeriodData);
       alert("Thêm Kỳ Khoán thành công!");
       resetForm();
@@ -269,11 +296,47 @@ const startEditKhoanPeriod = (period) => {
   formError.value = null;
   khoanPeriodStore.error = null;
   isEditing.value = true;
-  currentKhoanPeriod.value = {
-    ...JSON.parse(JSON.stringify(period)),
-    startDate: toDateInputValue(period.startDate),
-    endDate: toDateInputValue(period.endDate),
+
+  // Backend returns string enums, map to frontend form values
+  // Type mapping: backend string → frontend form value
+  const typeMapping = {
+    'MONTHLY': 'MONTHLY',
+    'QUARTERLY': 'QUARTERLY',
+    'ANNUAL': 'ANNUAL',
+    // Handle numeric if needed
+    0: 'MONTHLY',
+    1: 'QUARTERLY',
+    2: 'ANNUAL'
   };
+
+  // Status mapping: backend string → frontend form value
+  const statusMapping = {
+    'DRAFT': 'DRAFT',
+    'OPEN': 'OPEN',
+    'PROCESSING': 'PROCESSING',
+    'PENDINGAPPROVAL': 'PENDINGAPPROVAL',
+    'CLOSED': 'CLOSED',
+    'ARCHIVED': 'ARCHIVED',
+    // Handle numeric if needed
+    0: 'DRAFT',
+    1: 'OPEN',
+    2: 'PROCESSING',
+    3: 'PENDINGAPPROVAL',
+    4: 'CLOSED',
+    5: 'ARCHIVED'
+  };
+
+  currentKhoanPeriod.value = {
+    ...ensurePascalCase(period),
+    id: getId(period), // Use helper to get ID safely
+    name: getName(period),
+    type: typeMapping[safeGet(period, 'Type')] || safeGet(period, 'Type'),
+    status: statusMapping[safeGet(period, 'Status')] || safeGet(period, 'Status'),
+    startDate: toDateInputValue(safeGet(period, 'StartDate')),
+    endDate: toDateInputValue(safeGet(period, 'EndDate')),
+  };
+  console.log('🔍 startEditKhoanPeriod - original period:', period);
+  console.log('🔍 startEditKhoanPeriod - currentKhoanPeriod:', currentKhoanPeriod.value);
 };
 
 const cancelEdit = () => {
@@ -366,10 +429,27 @@ ul {
 }
 
 .item-details {
-  font-size: 0.85em;
-  color: #7f8c8d;
-  display: block;
-  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.period-type, .period-dates, .period-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9em;
+}
+
+.period-type strong {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.period-dates {
+  color: #34495e;
+  font-weight: 500;
 }
 
 .actions {
@@ -493,5 +573,35 @@ button.action-button {
 }
 button.action-button:hover:not(:disabled) {
   background-color: #0056b3;
+}
+
+/* Status badge styles */
+.status-draft {
+  background-color: #3498db;
+  color: white;
+}
+.status-open {
+  background-color: #2ecc71;
+  color: white;
+}
+.status-processing {
+  background-color: #f39c12;
+  color: white;
+}
+.status-pending {
+  background-color: #e67e22;
+  color: white;
+}
+.status-closed {
+  background-color: #e74c3c;
+  color: white;
+}
+.status-archived {
+  background-color: #95a5a6;
+  color: white;
+}
+.status-default {
+  background-color: #bdc3c7;
+  color: white;
 }
 </style>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Force Test Employee Store</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .valid { background-color: #d4edda; border-color: #c3e6cb; }
+        .invalid { background-color: #f8d7da; border-color: #f5c6cb; }
+        pre { background: #f8f9fa; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Force Test Employee Store Logic</h1>
+    <button onclick="testStore()">Test Store Logic</button>
+    <div id="results"></div>
+
+    <script>
+        async function testStore() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>Testing...</p>';
+
+            try {
+                console.log('=== FORCE TEST EMPLOYEE STORE ===');
+
+                // Fetch dữ liệu trực tiếp
+                const response = await fetch('http://localhost:5055/api/Employees');
+                const data = await response.json();
+
+                console.log('API Response:', data);
+
+                // Exactly same logic as in employeeStore.js
+                let employeesData = [];
+                if (data && Array.isArray(data.$values)) {
+                    employeesData = data.$values;
+                    console.log('Using $values format');
+                } else if (Array.isArray(data)) {
+                    employeesData = data;
+                    console.log('Using direct array format');
+                } else if (data && typeof data === 'object') {
+                    if (data.$id && data.id) {
+                        employeesData = [data];
+                        console.log('Using single object with $id');
+                    } else if (Object.keys(data).length > 0) {
+                        employeesData = [data];
+                        console.log('Using single object');
+                    }
+                }
+
+                console.log('Processed employeesData:', employeesData);
+
+                if (employeesData.length === 0) {
+                    resultsDiv.innerHTML = '<p style="color: red;">No data to process!</p>';
+                    return;
+                }
+
+                const validEmployees = [];
+                const invalidEmployees = [];
+                let resultsHTML = '<h2>Processing Results:</h2>';
+
+                employeesData.forEach((employee, index) => {
+                    console.log(`Processing employee ${index + 1}:`, employee);
+
+                    const mapped = {
+                        Id: employee.Id,
+                        EmployeeCode: employee.EmployeeCode || '',
+                        CBCode: employee.CBCode || '',
+                        FullName: employee.FullName || '',
+                        Username: employee.Username || '',
+                        Email: employee.Email || '',
+                        PhoneNumber: employee.PhoneNumber || '',
+                        IsActive: employee.IsActive ?? true,
+                        UnitId: typeof employee.UnitId === 'number' ? employee.UnitId : null,
+                        UnitName: employee.UnitName || '',
+                        PositionId: typeof employee.PositionId === 'number' ? employee.PositionId : null,
+                        PositionName: employee.PositionName || '',
+                        Unit: employee.Unit || null,
+                        Position: employee.Position || null,
+                        Roles: employee.Roles || []
+                    };
+
+                    // New validation logic
+                    const isValid = Boolean(mapped.EmployeeCode && mapped.EmployeeCode.trim()) &&
+                                   Boolean(mapped.FullName && mapped.FullName.trim()) &&
+                                   Boolean(mapped.Username && mapped.Username.trim());
+
+                    console.log(`Employee ${index + 1} validation:`, isValid);
+                    console.log(`- EmployeeCode: "${mapped.EmployeeCode}" -> ${Boolean(mapped.EmployeeCode && mapped.EmployeeCode.trim())}`);
+                    console.log(`- FullName: "${mapped.FullName}" -> ${Boolean(mapped.FullName && mapped.FullName.trim())}`);
+                    console.log(`- Username: "${mapped.Username}" -> ${Boolean(mapped.Username && mapped.Username.trim())}`);
+
+                    if (isValid) {
+                        validEmployees.push(mapped);
+                        resultsHTML += `<div class="result valid">
+                            <h4>✅ Employee ${index + 1}: ${mapped.FullName}</h4>
+                            <p><strong>Code:</strong> ${mapped.EmployeeCode}</p>
+                            <p><strong>Username:</strong> ${mapped.Username}</p>
+                        </div>`;
+                    } else {
+                        const missingFields = [];
+                        if (!mapped.EmployeeCode || !mapped.EmployeeCode.trim()) missingFields.push('EmployeeCode');
+                        if (!mapped.FullName || !mapped.FullName.trim()) missingFields.push('FullName');
+                        if (!mapped.Username || !mapped.Username.trim()) missingFields.push('Username');
+
+                        invalidEmployees.push(mapped);
+                        resultsHTML += `<div class="result invalid">
+                            <h4>❌ Employee ${index + 1}: Invalid</h4>
+                            <p><strong>Missing fields:</strong> ${missingFields.join(', ')}</p>
+                            <p><strong>Code:</strong> "${mapped.EmployeeCode}"</p>
+                            <p><strong>FullName:</strong> "${mapped.FullName}"</p>
+                            <p><strong>Username:</strong> "${mapped.Username}"</p>
+                        </div>`;
+                    }
+                });
+
+                resultsHTML += `
+                    <h2>Summary:</h2>
+                    <p><strong>Total processed:</strong> ${employeesData.length}</p>
+                    <p><strong>Valid:</strong> ${validEmployees.length}</p>
+                    <p><strong>Invalid:</strong> ${invalidEmployees.length}</p>
+                `;
+
+                if (invalidEmployees.length > 0) {
+                    console.warn("Các bản ghi nhân viên bị loại bỏ do thiếu dữ liệu:", invalidEmployees);
+                    resultsHTML += `<h3 style="color: red;">Warning: ${invalidEmployees.length} employees were rejected!</h3>`;
+                } else {
+                    resultsHTML += `<h3 style="color: green;">✅ All employees are valid!</h3>`;
+                }
+
+                resultsDiv.innerHTML = resultsHTML;
+
+            } catch (error) {
+                console.error('Error:', error);
+                resultsDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

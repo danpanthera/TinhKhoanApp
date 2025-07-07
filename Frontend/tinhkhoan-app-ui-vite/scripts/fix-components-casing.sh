@@ -36,25 +36,25 @@ echo ""
 while IFS= read -r component; do
     if [ -f "$component" ]; then
         echo -e "🔧 Processing: ${BLUE}$component${NC}"
-        
+
         # Create backup
         cp "$component" "$BACKUP_DIR/$(basename $component).backup"
-        
+
         # Count before
         before_count=$(grep -c "\.id\|\.name\|\.type\|\.status" "$component" 2>/dev/null || echo 0)
-        
+
         # Apply targeted fixes for common patterns
         # Fix .name patterns (but not .name() method calls)
         sed -i '' 's/\.name\([^(a-zA-Z]\|$\)/.Name\1/g' "$component"
-        
+
         # Fix .id patterns (but be careful with .id() method calls)
         sed -i '' 's/\.id\([^(a-zA-Z]\|$\)/.Id\1/g' "$component"
-        
+
         # Count after
         after_count=$(grep -c "\.id\|\.name\|\.type\|\.status" "$component" 2>/dev/null || echo 0)
-        
+
         fixed_count=$((before_count - after_count))
-        
+
         if [ "$fixed_count" -gt 0 ]; then
             echo -e "  ${GREEN}✅ Fixed $fixed_count patterns${NC}"
         else

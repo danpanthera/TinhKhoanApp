@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Direct API Test</title>
+</head>
+<body>
+    <h1>Simple Direct API Test</h1>
+    <button onclick="directTest()">Test API Directly</button>
+    <div id="result"></div>
+
+    <script>
+        async function directTest() {
+            try {
+                const response = await fetch('http://localhost:5055/api/Employees');
+                const data = await response.json();
+
+                console.log('Direct API call result:', data);
+
+                const result = document.getElementById('result');
+                result.innerHTML = `
+                    <h2>Direct API Results:</h2>
+                    <p><strong>Status:</strong> ${response.status}</p>
+                    <p><strong>Total employees:</strong> ${data.length}</p>
+                    <h3>First 3 employees:</h3>
+                    <div style="font-family: monospace; white-space: pre-wrap;">${JSON.stringify(data.slice(0, 3), null, 2)}</div>
+                `;
+
+                // Test mapping exactly like in store
+                const mapped = data.map(emp => ({
+                    Id: emp.Id,
+                    EmployeeCode: emp.EmployeeCode || '',
+                    FullName: emp.FullName || '',
+                    Username: emp.Username || '',
+                    valid: Boolean(emp.EmployeeCode && emp.EmployeeCode.trim()) &&
+                           Boolean(emp.FullName && emp.FullName.trim()) &&
+                           Boolean(emp.Username && emp.Username.trim())
+                }));
+
+                const validCount = mapped.filter(e => e.valid).length;
+                const invalidCount = mapped.filter(e => !e.valid).length;
+
+                result.innerHTML += `
+                    <h3>Validation Results:</h3>
+                    <p><strong>Valid employees:</strong> ${validCount}</p>
+                    <p><strong>Invalid employees:</strong> ${invalidCount}</p>
+                    <h4>Detailed validation:</h4>
+                    <div style="font-family: monospace; white-space: pre-wrap;">${JSON.stringify(mapped, null, 2)}</div>
+                `;
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('result').innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
