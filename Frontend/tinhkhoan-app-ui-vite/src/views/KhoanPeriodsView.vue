@@ -151,7 +151,7 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
 import { useKhoanPeriodStore } from "../stores/khoanPeriodStore.js";
-import { ensurePascalCase, getId, getName, safeGet } from "../utils/casingSafeAccess.js";
+import { getId, getName, safeGet, toPascalCase } from "../utils/casingSafeAccess.js";
 
 const khoanPeriodStore = useKhoanPeriodStore();
 
@@ -327,7 +327,7 @@ const startEditKhoanPeriod = (period) => {
   };
 
   currentKhoanPeriod.value = {
-    ...ensurePascalCase(period),
+    ...toPascalCase(period),
     id: getId(period), // Use helper to get ID safely
     name: getName(period),
     type: typeMapping[safeGet(period, 'Type')] || safeGet(period, 'Type'),
