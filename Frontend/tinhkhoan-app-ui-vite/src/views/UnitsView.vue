@@ -343,6 +343,7 @@
 import { computed, defineComponent, h, nextTick, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUnitStore } from "../stores/unitStore.js";
+import { getId } from '../utils/casingSafeAccess.js';
 import { useNumberInput } from '../utils/numberFormat';
 
 const router = useRouter();
@@ -701,7 +702,7 @@ const handleSubmitUnit = async () => {
   if (
     isEditing.value &&
     unitDataForSubmission.id !== null &&
-    unitDataForSubmissiongetId(.id !== undefined) !== null
+    getId(unitDataForSubmission) !== null
   ) {
     try {
       await unitStore.updateUnit(unitDataForSubmission);
