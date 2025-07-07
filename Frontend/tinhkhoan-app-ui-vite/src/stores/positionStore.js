@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import apiClient from "../services/api.js"; // Import instance Axios đã tạo
+import { getId, normalizeArray } from "../utils/casingSafeAccess.js";
 
 export const usePositionStore = defineStore("position", {
   // State: Nơi lưu trữ dữ liệu
@@ -11,7 +12,7 @@ export const usePositionStore = defineStore("position", {
 
   // Getters: Cho phép lấy dữ liệu từ state
   getters: {
-    allPositions: (state) => [...state.positions].sort((a, b) => a.id - b.id),
+    allPositions: (state) => [...state.positions].sort((a, b) => getId(a) - getId(b)),
     positionCount: (state) => state.positions.length,
   },
 
@@ -28,7 +29,7 @@ export const usePositionStore = defineStore("position", {
         } else if (Array.isArray(response.data)) {
           positionsData = response.data;
         } else if (response.data && typeof response.data === "object") {
-          if (response.data.$id && response.data.id) {
+          if (response.data.$id && getId(response.data)) {
             positionsData = [response.data];
           } else if (Object.keys(response.data).length > 0) {
             positionsData = [response.data];
@@ -40,7 +41,7 @@ export const usePositionStore = defineStore("position", {
           this.error = "Dữ liệu chức vụ nhận được không đúng định dạng.";
           return;
         }
-        this.positions = positionsData;
+        this.positions = normalizeArray(positionsData);
       } catch (err) {
         this.positions = [];
         this.error =
@@ -84,9 +85,10 @@ export const usePositionStore = defineStore("position", {
       this.isLoading = true;
       this.error = null;
       try {
-        await apiClient.put(`/Positions/${positionData.id}`, positionData); // Gọi API PUT /api/Positions/{id}
+        const positionId = getId(positionData);
+        await apiClient.put(`/Positions/${positionId}`, positionData); // Gọi API PUT /api/Positions/{id}
 
-        const index = this.positions.findIndex((p) => p.id === positionData.id);
+        const index = this.positions.findIndex((p) => getId(p) === positionId);
         if (index !== -1) {
           this.positions[index] = { ...this.positions[index], ...positionData };
         }
@@ -114,7 +116,7 @@ export const usePositionStore = defineStore("position", {
       this.error = null;
       try {
         await apiClient.delete(`/Positions/${positionId}`); // Gọi API DELETE /api/Positions/{id}
-        this.positions = this.positions.filter((p) => p.id !== positionId);
+        this.positions = this.positions.filter((p) => getId(p) !== positionId);
       } catch (err) {
         this.error =
           "Không thể xóa chức vụ. Lỗi: " +

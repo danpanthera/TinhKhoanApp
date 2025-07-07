@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import apiClient from "../services/api.js"; // Import instance Axios đã tạo
+import { getId, normalizeArray } from "../utils/casingSafeAccess.js";
 
 export const useRoleStore = defineStore("role", {
   // State: Nơi lưu trữ dữ liệu
@@ -34,10 +35,10 @@ export const useRoleStore = defineStore("role", {
 
         if (response.data && Array.isArray(response.data.$values)) {
           console.log('✅ Using $values format, length:', response.data.$values.length);
-          this.roles = response.data.$values;
+          this.roles = normalizeArray(response.data.$values);
         } else if (Array.isArray(response.data)) {
           console.log('✅ Using direct array format, length:', response.data.length);
-          this.roles = response.data;
+          this.roles = normalizeArray(response.data);
         } else {
           console.error(
             "❌ Dữ liệu trả về từ API fetchRoles không phải là mảng hoặc không có trường $values hợp lệ:",
@@ -96,9 +97,10 @@ export const useRoleStore = defineStore("role", {
       this.isLoading = true;
       this.error = null;
       try {
-        await apiClient.put(`/Roles/${roleData.id}`, roleData); // Gọi API PUT /api/Roles/{id}
+        const roleId = getId(roleData);
+        await apiClient.put(`/Roles/${roleId}`, roleData); // Gọi API PUT /api/Roles/{id}
 
-        const index = this.roles.findIndex((r) => r.id === roleData.id);
+        const index = this.roles.findIndex((r) => getId(r) === roleId);
         if (index !== -1) {
           this.roles[index] = { ...this.roles[index], ...roleData };
         }
@@ -126,7 +128,7 @@ export const useRoleStore = defineStore("role", {
       this.error = null;
       try {
         await apiClient.delete(`/Roles/${roleId}`); // Gọi API DELETE /api/Roles/{id}
-        this.roles = this.roles.filter((r) => r.id !== roleId);
+        this.roles = this.roles.filter((r) => getId(r) !== roleId);
       } catch (err) {
         this.error =
           "Không thể xóa vai trò. Lỗi: " +

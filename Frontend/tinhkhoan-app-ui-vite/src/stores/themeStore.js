@@ -1,4 +1,5 @@
 // Store quản lý theme cho ứng dụng
+import { normalizeArray, getId, getName, getType, getStatus } from "../utils/casingSafeAccess.js";
 import { defineStore } from 'pinia';
 import { ref, watch } from 'vue';
 

@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import apiClient from "../services/api.js"; // Import instance Axios đã tạo
+import apiClient from "../services/api.js";
 
 export const useUnitStore = defineStore("unit", {
   // State: Nơi lưu trữ dữ liệu

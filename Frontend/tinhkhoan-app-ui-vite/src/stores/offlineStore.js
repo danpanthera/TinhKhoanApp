@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { normalizeArray, getId, getName, getType, getStatus } from "../utils/casingSafeAccess.js";
 import { ref, computed } from 'vue';
 import { toast } from 'vue3-toastify';
 
@@ -102,12 +103,12 @@ export const useOfflineStore = defineStore('offline', () => {
 
         if (response.ok) {
           successCount++;
-          console.log('🔧 Offline Store: Sync success for action:', action.id);
+          console.log('🔧 Offline Store: Sync success for action:', action.Id);
         } else {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          throw new Error(`HTTP ${response.Status}: ${response.statusText}`);
         }
       } catch (error) {
-        console.error('🔧 Offline Store: Sync failed for action:', action.id, error);
+        console.error('🔧 Offline Store: Sync failed for action:', action.Id, error);
         failedActions.push(action);
       }
     }
@@ -140,7 +141,7 @@ export const useOfflineStore = defineStore('offline', () => {
 
   // Xóa pending action
   const removePendingAction = (actionId) => {
-    pendingActions.value = pendingActions.value.filter(action => action.id !== actionId);
+    pendingActions.value = pendingActions.value.filter(action => action.Id !== actionId);
     savePendingActionsToStorage();
   };
 

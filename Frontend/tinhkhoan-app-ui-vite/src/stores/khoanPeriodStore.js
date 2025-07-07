@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import apiClient from "../services/api.js";
+import { getStatus, getType, normalizeArray } from "../utils/casingSafeAccess.js";
 
 export const useKhoanPeriodStore = defineStore("khoanPeriod", {
   // State
@@ -15,7 +16,7 @@ export const useKhoanPeriodStore = defineStore("khoanPeriod", {
     // Sắp xếp theo ngày bắt đầu giảm dần để kỳ mới nhất lên đầu
     sortedKhoanPeriods: (state) => {
       return [...state.khoanPeriods].sort(
-        (a, b) => new Date(b.startDate) - new Date(a.startDate)
+        (a, b) => new Date(b.StartDate || b.startDate) - new Date(a.StartDate || a.startDate)
       );
     },
     khoanPeriodCount: (state) => state.khoanPeriods.length,
@@ -23,19 +24,101 @@ export const useKhoanPeriodStore = defineStore("khoanPeriod", {
 
   // Actions
   actions: {
+    // Helper methods for mapping between frontend and backend formats
+    mapTypeToEnum(type) {
+      const typeMap = {
+        'Tháng': 'MONTHLY',
+        'Quý': 'QUARTERLY',
+        'Năm': 'ANNUAL',
+        'MONTHLY': 'MONTHLY',
+        'QUARTERLY': 'QUARTERLY',
+        'ANNUAL': 'ANNUAL',
+        // Handle numeric values if needed (convert to string enum)
+        0: 'MONTHLY', 1: 'QUARTERLY', 2: 'ANNUAL'
+      };
+      return typeMap[type] || 'MONTHLY'; // Default to MONTHLY
+    },
+
+    mapStatusToEnum(status) {
+      const statusMap = {
+        'Nháp': 'DRAFT',
+        'Mở': 'OPEN',
+        'Tạm dừng': 'PROCESSING',
+        'Chờ duyệt': 'PENDINGAPPROVAL',
+        'Đóng': 'CLOSED',
+        'Lưu trữ': 'ARCHIVED',
+        'DRAFT': 'DRAFT',
+        'OPEN': 'OPEN',
+        'PROCESSING': 'PROCESSING',
+        'PENDINGAPPROVAL': 'PENDINGAPPROVAL',
+        'CLOSED': 'CLOSED',
+        'ARCHIVED': 'ARCHIVED',
+        // Handle numeric values if needed (convert to string enum)
+        0: 'DRAFT', 1: 'OPEN', 2: 'PROCESSING', 3: 'PENDINGAPPROVAL', 4: 'CLOSED', 5: 'ARCHIVED'
+      };
+      return statusMap[status] || 'DRAFT'; // Default to DRAFT
+    },
+
+    // Helper methods for mapping from backend to frontend display
+    mapTypeFromEnum(type) {
+      const typeMap = {
+        // Backend returns string enum values
+        'MONTHLY': 'Tháng',
+        'QUARTERLY': 'Quý',
+        'ANNUAL': 'Năm',
+        // Handle numeric values if needed
+        0: 'Tháng',    // MONTHLY
+        1: 'Quý',      // QUARTERLY
+        2: 'Năm',      // ANNUAL
+      };
+      return typeMap[type] || type;
+    },
+
+    mapStatusFromEnum(status) {
+      const statusMap = {
+        // Backend returns string enum values
+        'DRAFT': 'Nháp',
+        'OPEN': 'Mở',
+        'PROCESSING': 'Tạm dừng',
+        'PENDINGAPPROVAL': 'Chờ duyệt',
+        'CLOSED': 'Đóng',
+        'ARCHIVED': 'Lưu trữ',
+        // Handle numeric values if needed
+        0: 'Nháp',          // DRAFT
+        1: 'Mở',            // OPEN
+        2: 'Tạm dừng',      // PROCESSING
+        3: 'Chờ duyệt',     // PENDINGAPPROVAL
+        4: 'Đóng',          // CLOSED
+        5: 'Lưu trữ',       // ARCHIVED
+      };
+      return statusMap[status] || status;
+    },
+
     async fetchKhoanPeriods() {
       this.isLoading = true;
       this.error = null;
       try {
         const response = await apiClient.get("/KhoanPeriods");
+        let rawData = [];
         if (response.data && Array.isArray(response.data.$values)) {
-          this.khoanPeriods = response.data.$values;
+          rawData = response.data.$values;
         } else if (Array.isArray(response.data)) {
-          this.khoanPeriods = response.data;
+          rawData = response.data;
         } else {
           this.khoanPeriods = [];
           this.error = "Dữ liệu Kỳ Khoán nhận được không đúng định dạng.";
+          return;
         }
+
+        // Map backend enum data to frontend display format and normalize casing
+        this.khoanPeriods = normalizeArray(rawData).map(period => ({
+          ...period,
+          typeDisplay: this.mapTypeFromEnum(getType(period)),
+          statusDisplay: this.mapStatusFromEnum(getStatus(period))
+        }));
+
+        console.log('🔄 fetchKhoanPeriods - raw data:', rawData);
+        console.log('🔄 fetchKhoanPeriods - mapped data:', this.khoanPeriods);
       } catch (err) {
         this.khoanPeriods = [];
         this.error =
@@ -72,7 +155,23 @@ export const useKhoanPeriodStore = defineStore("khoanPeriod", {
       this.isLoading = true;
       this.error = null;
       try {
-        await apiClient.put(`/KhoanPeriods/${periodData.id}`, periodData);
+        const periodId = getId(periodData);
+
+        // Map frontend data to backend format (PascalCase and proper enums)
+        const updateData = {
+          Id: periodId,  // Ensure ID is integer
+          Name: getName(periodData),
+          Type: this.mapTypeToEnum(getType(periodData)),
+          StartDate: periodData.StartDate || periodData.startDate,
+          EndDate: periodData.EndDate || periodData.endDate,
+          Status: this.mapStatusToEnum(getStatus(periodData)),
+        };
+
+        console.log('🔄 updateKhoanPeriod - original data:', periodData);
+        console.log('🔄 updateKhoanPeriod - mapped data:', updateData);
+        console.log('🔄 updateKhoanPeriod - periodId:', periodId, 'type:', typeof periodId);
+
+        await apiClient.put(`/KhoanPeriods/${periodId}`, updateData);
         await this.fetchKhoanPeriods(); // Fetch lại để cập nhật
       } catch (err) {
         this.error =
@@ -94,7 +193,7 @@ export const useKhoanPeriodStore = defineStore("khoanPeriod", {
       try {
         await apiClient.delete(`/KhoanPeriods/${periodId}`);
         // Xóa khỏi state hoặc fetch lại
-        this.khoanPeriods = this.khoanPeriods.filter((p) => p.id !== periodId);
+        this.khoanPeriods = this.khoanPeriods.filter((p) => getId(p) !== periodId);
         // Hoặc await this.fetchKhoanPeriods();
       } catch (err) {
         this.error =

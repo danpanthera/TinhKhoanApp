@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import apiClient from "../services/api.js";
+import { getId, normalizeArray, safeGet } from "../utils/casingSafeAccess.js";
 
 export const useEmployeeStore = defineStore("employee", {
   state: () => ({
@@ -10,83 +11,48 @@ export const useEmployeeStore = defineStore("employee", {
   getters: {
     allEmployees: (state) => state.employees,
     employeeCount: (state) => state.employees.length,
+    // Safe getters using utility functions
+    activeEmployees: (state) => state.employees.filter(emp => safeGet(emp, 'IsActive') === true),
+    employeesByUnit: (state) => (unitId) => state.employees.filter(emp => getId(emp) === unitId),
   },
   actions: {
     async fetchEmployees() {
+      console.log('🔍 Starting fetchEmployees...');
       this.isLoading = true;
       this.error = null;
       try {
         const response = await apiClient.get("/Employees");
+        console.log('📡 API Response:', response.data);
         let employeesData = [];
 
         // Xử lý định dạng dữ liệu từ API
         if (response.data && Array.isArray(response.data.$values)) {
           employeesData = response.data.$values;
+          console.log('📋 Using $values format, count:', employeesData.length);
         } else if (Array.isArray(response.data)) {
           employeesData = response.data;
+          console.log('📋 Using direct array format, count:', employeesData.length);
         } else if (response.data && typeof response.data === 'object') {
-          if (response.data.$id && response.data.id) {
+          if (response.data.$id && getId(response.data)) {
             employeesData = [response.data];
+            console.log('📋 Using single object with $id');
           } else if (Object.keys(response.data).length > 0) {
             employeesData = [response.data];
+            console.log('📋 Using single object');
           }
         }
 
+        console.log('📊 Final employeesData count:', employeesData.length);
+
         if (employeesData.length === 0) {
           this.error = "Dữ liệu nhân viên nhận được không đúng định dạng.";
+          console.error('❌ No employee data to process!');
           return;
         }
-        // Lọc và mapping an toàn
-        const validEmployees = [];
-        const invalidEmployees = [];
-        employeesData.forEach(employee => {
-          const mapped = {
-            id: employee.id,
-            employeeCode: employee.employeeCode || '',
-            cbCode: employee.cbCode || employee.CBCode || '', // Support both cases
-            fullName: employee.fullName || '',
-            username: employee.username || '',
-            email: employee.email || '',
-            phoneNumber: employee.phoneNumber || '',
-            isActive: employee.isActive ?? true,
-            unitId: typeof employee.unitId === 'number' ? employee.unitId : null,
-            positionId: typeof employee.positionId === 'number' ? employee.positionId : null,
-            unit: employee.unit || null,
-            position: employee.position || null,
-            // Handle roles from new API structure - support both $values and direct array formats
-            roles: (() => {
-              if (employee.roles && employee.roles.$values && Array.isArray(employee.roles.$values)) {
-                return employee.roles.$values;
-              } else if (employee.roles && Array.isArray(employee.roles)) {
-                return employee.roles;
-              }
-              return [];
-            })(),
-            // Create employeeRoles structure for backward compatibility
-            employeeRoles: (() => {
-              let rolesArray = [];
-              if (employee.roles && employee.roles.$values && Array.isArray(employee.roles.$values)) {
-                rolesArray = employee.roles.$values;
-              } else if (employee.roles && Array.isArray(employee.roles)) {
-                rolesArray = employee.roles;
-              }
-              return rolesArray.map(role => ({
-                roleId: role.id,
-                role: role
-              }));
-            })()
-          };
-          if (mapped.employeeCode && mapped.fullName && mapped.username) {
-            validEmployees.push(mapped);
-          } else {
-            invalidEmployees.push(mapped);
-          }
-        });
-        // Lưu trữ nhân viên hợp lệ và thông báo nếu có lỗi
-        if (invalidEmployees.length > 0) {
-          console.warn("Các bản ghi nhân viên bị loại bỏ do thiếu dữ liệu:", invalidEmployees);
-        }
-        this.employees = validEmployees;
+
+        // Normalize array để đảm bảo PascalCase properties
+        this.employees = normalizeArray(employeesData);
+        console.log('✅ Employees normalized and stored:', this.employees.length);
       } catch (err) {
         this.employees = [];
         this.error = "Không thể tải danh sách nhân viên. Lỗi: " + (err.response?.data?.message || err.message);
