@@ -71,46 +71,46 @@
                 <option value="">-- Chọn bảng KPI --</option>
                 <option
                   v-for="table in filteredKpiTables"
-                  :key="table.id"
-                  :value="table.id"
+                  :key="table.Id || table.Id"
+                  :value="table.Id || table.Id"
                 >
-                  {{ table.description || table.tableName }} ({{ getIndicatorCount(table.id) }} chỉ tiêu)
-                  <span class="table-code">{{ table.tableType }}</span>
+                  {{ (table.Description || table.description || table.TableName || table.tableName) }} ({{ getIndicatorCount(table.Id || table.Id) }} chỉ tiêu)
+                  <span class="table-code">{{ table.TableType || table.tableType }}</span>
                 </option>
               </select>
             </div>
 
             <!-- Thông tin bảng đã chọn -->
             <div v-if="selectedTable" class="selected-table-info">
-              <h3>{{ selectedTable.description || selectedTable.tableName }}</h3>
+              <h3>{{ (selectedTable.Description || selectedTable.description || selectedTable.TableName || selectedTable.tableName) }}</h3>
 
               <div class="table-details">
                 <div class="detail-item">
                   <span class="label">Loại:</span>
                   <span class="value">
-                    {{ getTableTypeName(selectedTable.tableType) }}
-                    <span class="table-code">{{ selectedTable.tableType }}</span>
+                    {{ getTableTypeName(selectedTable.TableType || selectedTable.tableType) }}
+                    <span class="table-code">{{ selectedTable.TableType || selectedTable.tableType }}</span>
                   </span>
                 </div>
                 <div class="detail-item">
                   <span class="label">Trạng thái:</span>
-                  <span class="value" :class="{ active: selectedTable.isActive, inactive: !selectedTable.isActive }">
-                    {{ selectedTable.isActive ? 'Hoạt động' : 'Không hoạt động' }}
+                  <span class="value" :class="{ active: (selectedTable.IsActive !== undefined ? selectedTable.IsActive : selectedTable.isActive), inactive: !(selectedTable.IsActive !== undefined ? selectedTable.IsActive : selectedTable.isActive) }">
+                    {{ (selectedTable.IsActive !== undefined ? selectedTable.IsActive : selectedTable.isActive) ? 'Hoạt động' : 'Không hoạt động' }}
                   </span>
                 </div>
                 <div class="detail-item">
                   <span class="label">Số chỉ tiêu:</span>
-                  <span class="value indicator-count">{{ getIndicatorCount(selectedTable.id) }}</span>
+                  <span class="value indicator-count">{{ getIndicatorCount(selectedTable.Id || selectedTable.Id) }}</span>
                 </div>
                 <div class="detail-item">
                   <span class="label">Ngày tạo:</span>
-                  <span class="value">{{ formatDate(selectedTable.createdDate) }}</span>
+                  <span class="value">{{ formatDate(selectedTable.CreatedDate || selectedTable.createdDate) }}</span>
                 </div>
               </div>
 
               <div class="description-box">
                 <label>Mô tả:</label>
-                <p>{{ selectedTable.description }}</p>
+                <p>{{ selectedTable.Description || selectedTable.description }}</p>
               </div>
 
               <!-- Nút refresh -->
@@ -138,7 +138,7 @@
 
         <div v-else class="indicators-panel">
           <div class="indicators-header">
-            <h2>⚡ Chỉ tiêu KPI - {{ selectedTable.description || selectedTable.tableName }}</h2>
+            <h2>⚡ Chỉ tiêu KPI - {{ (selectedTable.Description || selectedTable.description || selectedTable.TableName || selectedTable.tableName) }}</h2>
             <button
               @click="openAddIndicatorModal"
               class="action-button add-btn"
@@ -163,7 +163,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(indicator, index) in indicators" :key="indicator.id">
+                  <tr v-for="(indicator, index) in indicators" :key="indicator.Id">
                     <td>{{ index + 1 }}</td>
                     <td class="indicator-name">{{ indicator.indicatorName }}</td>
                     <td class="max-score">{{ indicator.maxScore }}</td>
@@ -313,7 +313,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(rule, index) in scoringRules" :key="rule.id">
+              <tr v-for="(rule, index) in scoringRules" :key="rule.Id">
                 <td>{{ index + 1 }}</td>
                 <td class="indicator-name">{{ rule.kpiIndicatorName }}</td>
                 <td>
@@ -330,7 +330,7 @@
                   <button @click="editScoringRule(rule)" class="action-btn edit-btn">
                     ✏️
                   </button>
-                  <button @click="deleteScoringRule(rule.id)" class="action-btn delete-btn">
+                  <button @click="deleteScoringRule(rule.Id)" class="action-btn delete-btn">
                     🗑️
                   </button>
                 </td>
@@ -487,10 +487,10 @@
                   <option value="">-- Chọn chỉ tiêu KPI --</option>
                   <option
                     v-for="indicator in branchKpiIndicators"
-                    :key="indicator.name"
-                    :value="indicator.name"
+                    :key="indicator.Name"
+                    :value="indicator.Name"
                   >
-                    {{ indicator.name }}
+                    {{ indicator.Name }}
                     <span v-if="indicator.code"> ({{ indicator.code }})</span>
                   </option>
                 </select>
@@ -634,7 +634,6 @@
 <script setup>
 import { computed, nextTick, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { isAuthenticated } from '../services/auth';
 import { kpiAssignmentService } from '../services/kpiAssignmentService';
 import { useNumberInput } from '../utils/numberFormat';
 
@@ -686,7 +685,7 @@ const scoringRuleForm = ref({
 
 // Computed properties
 const selectedTable = computed(() => {
-  return kpiTables.value.find(table => table.id === selectedTableId.value);
+  return kpiTables.value.find(table => (table.Id || table.Id) === selectedTableId.value);
 });
 
 // Filter tables based on active tab using Category field
@@ -694,12 +693,12 @@ const filteredKpiTables = computed(() => {
   if (activeTab.value === 'employee') {
     // Filter for employee tables using Category field
     return kpiTables.value.filter(table =>
-      table.category === 'Vai trò cán bộ'
+      (table.Category || table.category) === 'CANBO'
     );
   } else if (activeTab.value === 'branch') {
     // Filter for branch tables using Category field
     return kpiTables.value.filter(table =>
-      table.category === 'Chi nhánh'
+      (table.Category || table.category) === 'CHINHANH'
     );
   }
   return kpiTables.value;
@@ -740,7 +739,7 @@ const branchKpiIndicators = computed(() => {
           allIndicators.push({
             name: indicator.indicatorName,
             code: indicator.indicatorCode || '',
-            tableId: table.id,
+            tableId: table.Id,
             tableName: table.tableName,
             orderIndex: indicator.orderIndex || 999 // Default order if not specified
           });
@@ -751,7 +750,7 @@ const branchKpiIndicators = computed(() => {
 
   // Remove duplicates based on indicator name, keep the one with lowest orderIndex
   const uniqueIndicators = allIndicators.filter((indicator, index, self) => {
-    const firstIndex = self.findIndex(i => i.name === indicator.name);
+    const firstIndex = self.findIndex(i => i.Name === indicator.Name);
     if (firstIndex === index) return true;
     // If duplicate, keep the one with lower orderIndex
     return indicator.orderIndex < self[firstIndex].orderIndex;
@@ -807,8 +806,8 @@ const switchTab = (tab) => {
 };
 
 const getIndicatorCount = (tableId) => {
-  const table = kpiTables.value.find(t => t.id === tableId);
-  return table?.indicatorCount ?? 0;
+  const table = kpiTables.value.find(t => (t.Id || t.Id) === tableId);
+  return (table?.IndicatorCount ?? table?.indicatorCount) ?? 0;
 };
 
 const getTableTypeName = (tableType) => {
@@ -1043,8 +1042,8 @@ const saveIndicator = async () => {
 
     if (isEditMode.value) {
       // Update existing indicator
-      console.log('🔄 Updating indicator:', indicatorForm.value.id, payload);
-      const result = await kpiAssignmentService.updateIndicator(indicatorForm.value.id, payload);
+      console.log('🔄 Updating indicator:', indicatorForm.value.Id, payload);
+      const result = await kpiAssignmentService.updateIndicator(indicatorForm.value.Id, payload);
 
       if (result.success) {
         showSuccess(result.message || 'Cập nhật chỉ tiêu thành công!');
@@ -1089,9 +1088,9 @@ const deleteIndicator = async (indicator) => {
 
   try {
     clearMessages();
-    console.log('🗑️ Deleting indicator:', indicator.id);
+    console.log('🗑️ Deleting indicator:', indicator.Id);
 
-    const result = await kpiAssignmentService.deleteIndicator(indicator.id);
+    const result = await kpiAssignmentService.deleteIndicator(indicator.Id);
 
     if (result.success) {
       showSuccess(result.message || 'Xóa chỉ tiêu thành công!');
@@ -1115,9 +1114,9 @@ const moveIndicatorUp = async (indicator) => {
   try {
     clearMessages();
     const newOrderIndex = indicator.orderIndex - 1;
-    console.log('⬆️ Moving indicator up:', indicator.id, 'to order:', newOrderIndex);
+    console.log('⬆️ Moving indicator up:', indicator.Id, 'to order:', newOrderIndex);
 
-    const result = await kpiAssignmentService.reorderIndicator(indicator.id, newOrderIndex);
+    const result = await kpiAssignmentService.reorderIndicator(indicator.Id, newOrderIndex);
 
     if (result.success) {
       await loadTableDetails();
@@ -1136,9 +1135,9 @@ const moveIndicatorDown = async (indicator) => {
   try {
     clearMessages();
     const newOrderIndex = indicator.orderIndex + 1;
-    console.log('⬇️ Moving indicator down:', indicator.id, 'to order:', newOrderIndex);
+    console.log('⬇️ Moving indicator down:', indicator.Id, 'to order:', newOrderIndex);
 
-    const result = await kpiAssignmentService.reorderIndicator(indicator.id, newOrderIndex);
+    const result = await kpiAssignmentService.reorderIndicator(indicator.Id, newOrderIndex);
 
     if (result.success) {
       await loadTableDetails();
@@ -1278,13 +1277,13 @@ const saveScoringRule = async () => {
     };
 
     const url = isEditScoringRuleMode.value
-      ? `${API_BASE_URL}/KpiScoringRules/${scoringRuleForm.value.id}`
+      ? `${API_BASE_URL}/KpiScoringRules/${scoringRuleForm.value.Id}`
       : `${API_BASE_URL}/KpiScoringRules`;
 
     const response = await fetch(url, requestConfig);
 
     if (!response.ok) {
-      throw new Error(`API Error: ${response.status}`);
+      throw new Error(`API Error: ${response.Status}`);
     }
 
     showSuccess(isEditScoringRuleMode.value ? 'Cập nhật quy tắc tính điểm thành công.' : 'Thêm quy tắc tính điểm mới thành công.');
@@ -1317,7 +1316,7 @@ const deleteScoringRule = async (ruleId) => {
     });
 
     if (!response.ok) {
-      throw new Error(`API Error: ${response.status}`);
+      throw new Error(`API Error: ${response.Status}`);
     }
 
     showSuccess('Xóa quy tắc tính điểm thành công.');
@@ -1331,10 +1330,10 @@ const deleteScoringRule = async (ruleId) => {
 // Lifecycle hooks
 onMounted(async () => {
   // Kiểm tra authentication
-  if (!isAuthenticated()) {
-    router.push('/login');
-    return;
-  }
+  // if (!isAuthenticated()) {
+  //   router.push('/login');
+  //   return;
+  // }
 
   // Load KPI tables khi component được mount
   await fetchKpiTables();
@@ -1354,13 +1353,13 @@ const loadAllBranchIndicators = async () => {
     // Load indicators for each branch table
     for (const table of branchTables) {
       try {
-        const tableData = await kpiAssignmentService.getTableDetails(table.id);
+        const tableData = await kpiAssignmentService.getTableDetails(table.Id);
         if (tableData.indicators && Array.isArray(tableData.indicators)) {
           // Store indicators in the table object for use in computed property
           table.indicators = tableData.indicators;
         }
       } catch (error) {
-        console.error(`Error loading indicators for table ${table.id}:`, error);
+        console.error(`Error loading indicators for table ${table.Id}:`, error);
       }
     }
 

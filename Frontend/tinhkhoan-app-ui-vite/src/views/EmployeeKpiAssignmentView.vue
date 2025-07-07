@@ -22,8 +22,8 @@
             <label class="form-label">Kỳ khoán:</label>
             <select v-model="selectedPeriodId" class="form-control">
               <option value="">-- Chọn kỳ khoán --</option>
-              <option v-for="period in khoanPeriods" :key="period.id" :value="period.id">
-                {{ period.name }} ({{ formatDate(period.startDate) }} - {{ formatDate(period.endDate) }})
+              <option v-for="period in khoanPeriods" :key="getId(period)" :value="getId(period)">
+                {{ getName(period) }} ({{ formatDate(safeGet(period, 'StartDate')) }} - {{ formatDate(safeGet(period, 'EndDate')) }})
               </option>
             </select>
           </div>
@@ -42,8 +42,8 @@
                 <label class="form-label">🏢 Chi nhánh:</label>
                 <select v-model="selectedBranchId" @change="onBranchChange" class="form-control">
                   <option value="">-- Tất cả chi nhánh --</option>
-                  <option v-for="branch in branchOptions" :key="branch.id" :value="branch.id">
-                    🏢 {{ branch.name }} ({{ branch.code }})
+                  <option v-for="branch in branchOptions" :key="branch.Id" :value="branch.Id">
+                    🏢 {{ branch.Name }} ({{ branch.code }})
                   </option>
                 </select>
               </div>
@@ -54,8 +54,8 @@
                 <label class="form-label">🏬 Phòng ban:</label>
                 <select v-model="selectedDepartmentId" @change="onDepartmentChange" class="form-control">
                   <option value="">-- Tất cả phòng ban --</option>
-                  <option v-for="dept in departmentOptions" :key="dept.id" :value="dept.id">
-                    🏬 {{ dept.name }} ({{ dept.code }})
+                  <option v-for="dept in departmentOptions" :key="dept.Id" :value="dept.Id">
+                    🏬 {{ dept.Name }} ({{ dept.code }})
                   </option>
                 </select>
               </div>
@@ -100,11 +100,11 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="employee in filteredEmployees" :key="employee.id">
+              <tr v-for="employee in filteredEmployees" :key="employee.Id">
                 <td style="text-align: center;">
                   <input
                     type="checkbox"
-                    :value="employee.id"
+                    :value="employee.Id"
                     v-model="selectedEmployeeIds"
                     @change="validateEmployeeRoles"
                   />
@@ -157,7 +157,7 @@
             <label class="form-label">📋 Bảng KPI:</label>
             <select v-model="selectedTableId" @change="onTableChange" class="form-control">
               <option value="">-- Chọn bảng KPI --</option>
-              <option v-for="table in staffKpiTables" :key="table.id" :value="table.id">
+              <option v-for="table in staffKpiTables" :key="table.Id" :value="table.Id">
                 📊 {{ table.description || table.tableName }} ({{ table.indicatorCount }} chỉ tiêu)
               </option>
             </select>
@@ -192,7 +192,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(indicator, index) in indicators" :key="indicator.id">
+              <tr v-for="(indicator, index) in indicators" :key="indicator.Id">
                 <td>
                   <div style="display: flex; align-items: center; gap: 8px;">
                     <span class="badge-agribank badge-primary">{{ index + 1 }}</span>
@@ -205,16 +205,16 @@
                 <td>
                   <input
                     type="text"
-                    :value="formatNumber(targetValues[indicator.id] || 0)"
-                    @input="(e) => handleTargetInput(e, indicator.id)"
-                    @blur="(e) => handleTargetBlur(e, indicator.id)"
+                    :value="formatNumber(targetValues[indicator.Id] || 0)"
+                    @input="(e) => handleTargetInput(e, indicator.Id)"
+                    @blur="(e) => handleTargetBlur(e, indicator.Id)"
                     placeholder="Nhập mục tiêu"
                     class="form-control"
                     style="font-size: 0.85rem; padding: 8px 12px;"
-                    :class="{ 'error': targetErrors[indicator.id] }"
+                    :class="{ 'error': targetErrors[indicator.Id] }"
                   />
-                  <div v-if="targetErrors[indicator.id]" class="text-danger" style="font-size: 0.75rem; margin-top: 4px;">
-                    {{ targetErrors[indicator.id] }}
+                  <div v-if="targetErrors[indicator.Id]" class="text-danger" style="font-size: 0.75rem; margin-top: 4px;">
+                    {{ targetErrors[indicator.Id] }}
                   </div>
                 </td>
                 <td style="text-align: center;">
@@ -249,7 +249,7 @@
                       ✏️
                     </button>
                     <button
-                      @click="clearIndicatorTarget(indicator.id)"
+                      @click="clearIndicatorTarget(indicator.Id)"
                       class="btn-agribank btn-outline"
                       style="padding: 4px 8px; font-size: 0.75rem; color: var(--danger-color); border-color: var(--danger-color);"
                       title="Xóa mục tiêu"
@@ -287,6 +287,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../services/api.js';
 import { logApiResponse, normalizeNetArray } from '../utils/apiHelpers.js';
+import { getId, getName, safeGet } from '../utils/casingSafeAccess.js';
 import { useNumberInput } from '../utils/numberFormat';
 
 const router = useRouter();
@@ -338,7 +339,7 @@ const staffKpiTables = computed(() => {
 // Bảng KPI đã chọn
 const selectedKpiTable = computed(() => {
   if (!selectedTableId.value) return null
-  return kpiTables.value.find(table => table.id === parseInt(selectedTableId.value))
+  return kpiTables.value.find(table => table.Id === parseInt(selectedTableId.value))
 })
 
 // Updated branchOptions: Custom ordering as requested
@@ -358,7 +359,7 @@ const branchOptions = computed(() => {
 
   return units.value
     .filter(unit => {
-      const type = (unit.type || '').toUpperCase()
+      const type = (unit.Type || '').toUpperCase()
       return type === 'CNL1' || type === 'CNL2'
     })
     .sort((a, b) => {
@@ -375,18 +376,18 @@ const branchOptions = computed(() => {
       if (indexB !== -1) return 1;
 
       // Nếu cả hai đều không có trong custom order, sắp xếp theo tên
-      return (a.name || '').localeCompare(b.name || '');
+      return (a.Name || '').localeCompare(b.Name || '');
     })
 })
 
 const departmentOptions = computed(() => {
   if (!selectedBranchId.value) return []
 
-  const branch = units.value.find(u => u.id === parseInt(selectedBranchId.value))
+  const branch = units.value.find(u => u.Id === parseInt(selectedBranchId.value))
   if (!branch) return []
 
-  const children = units.value.filter(u => u.parentUnitId === branch.id)
-  const branchType = (branch.type || '').toUpperCase()
+  const children = units.value.filter(u => u.parentUnitId === branch.Id)
+  const branchType = (branch.Type || '').toUpperCase()
 
   const getDepartmentSortOrder = (name) => {
     const lowerName = (name || '').toLowerCase()
@@ -399,14 +400,14 @@ const departmentOptions = computed(() => {
 
   if (branchType === 'CNL1') {
     return children.filter(u => {
-      const unitType = (u.type || '').toUpperCase()
+      const unitType = (u.Type || '').toUpperCase()
       return unitType === 'PNVL1'
-    }).sort((a, b) => getDepartmentSortOrder(a.name) - getDepartmentSortOrder(b.name))
+    }).sort((a, b) => getDepartmentSortOrder(a.Name) - getDepartmentSortOrder(b.Name))
   } else if (branchType === 'CNL2') {
     return children.filter(u => {
-      const unitType = (u.type || '').toUpperCase()
+      const unitType = (u.Type || '').toUpperCase()
       return unitType === 'PNVL2' || unitType === 'PGDL2'
-    }).sort((a, b) => getDepartmentSortOrder(a.name) - getDepartmentSortOrder(b.name))
+    }).sort((a, b) => getDepartmentSortOrder(a.Name) - getDepartmentSortOrder(b.Name))
   }
 
   return []
@@ -418,15 +419,15 @@ const filteredEmployees = computed(() => {
   if (selectedBranchId.value) {
     const branchId = parseInt(selectedBranchId.value)
     filtered = filtered.filter(emp => {
-      const empUnit = units.value.find(u => u.id === emp.unitId)
+      const empUnit = units.value.find(u => u.Id === emp.unitId)
       if (!empUnit) return false
 
-      if (empUnit.id === branchId) return true
+      if (empUnit.Id === branchId) return true
 
       let parent = empUnit
       while (parent && parent.parentUnitId) {
-        parent = units.value.find(u => u.id === parent.parentUnitId)
-        if (parent && parent.id === branchId) return true
+        parent = units.value.find(u => u.Id === parent.parentUnitId)
+        if (parent && parent.Id === branchId) return true
       }
 
       return false
@@ -436,15 +437,15 @@ const filteredEmployees = computed(() => {
   if (selectedDepartmentId.value) {
     const deptId = parseInt(selectedDepartmentId.value)
     filtered = filtered.filter(emp => {
-      const empUnit = units.value.find(u => u.id === emp.unitId)
+      const empUnit = units.value.find(u => u.Id === emp.unitId)
       if (!empUnit) return false
 
-      if (empUnit.id === deptId) return true
+      if (empUnit.Id === deptId) return true
 
       let parent = empUnit
       while (parent && parent.parentUnitId) {
-        parent = units.value.find(u => u.id === parent.parentUnitId)
-        if (parent && parent.id === deptId) return true
+        parent = units.value.find(u => u.Id === parent.parentUnitId)
+        if (parent && parent.Id === deptId) return true
       }
 
       return false
@@ -458,7 +459,7 @@ const filteredEmployeesCount = computed(() => filteredEmployees.value.length)
 
 const areAllEmployeesSelected = computed(() => {
   return filteredEmployees.value.length > 0 &&
-         filteredEmployees.value.every(emp => selectedEmployeeIds.value.includes(emp.id))
+         filteredEmployees.value.every(emp => selectedEmployeeIds.value.includes(emp.Id))
 })
 
 const areSomeEmployeesSelected = computed(() => {
@@ -541,7 +542,7 @@ async function loadTableDetails() {
   } catch (error) {
     console.error('❌ Error loading table details:', error)
     console.error('Error details:', {
-      status: error.response?.status,
+      status: error.response?.Status,
       message: error.response?.data?.message || error.message,
       url: error.config?.url
     })
@@ -565,7 +566,7 @@ function onTableChange() {
   }
 
   // Log để debug
-  const table = kpiTables.value.find(t => t.id === parseInt(selectedTableId.value))
+  const table = kpiTables.value.find(t => t.Id === parseInt(selectedTableId.value))
   console.log('Selected KPI table:', table)
 }
 
@@ -575,7 +576,7 @@ function onBranchChange() {
   selectedEmployeeIds.value = []
 
   // Log để debug
-  const branch = units.value.find(u => u.id === parseInt(selectedBranchId.value))
+  const branch = units.value.find(u => u.Id === parseInt(selectedBranchId.value))
   console.log('Selected branch:', branch)
   console.log('Available KPI tables:', kpiTables.value.length)
 }
@@ -585,7 +586,7 @@ function onDepartmentChange() {
   selectedEmployeeIds.value = []
 
   // Log để debug
-  const dept = units.value.find(u => u.id === parseInt(selectedDepartmentId.value))
+  const dept = units.value.find(u => u.Id === parseInt(selectedDepartmentId.value))
   console.log('Selected department:', dept)
 }
 
@@ -625,11 +626,11 @@ function autoSelectKpiTable() {
   }
 
   console.log('🎯 Auto-selecting KPI table...')
-  console.log('Available KPI tables:', kpiTables.value.map(t => ({ id: t.id, name: t.tableName, category: t.category, type: t.tableType })))
+  console.log('Available KPI tables:', kpiTables.value.map(t => ({ id: t.Id, name: t.tableName, category: t.category, type: t.tableType })))
 
   // Get first selected employee to determine role
   const firstEmployeeId = selectedEmployeeIds.value[0]
-  const employee = employees.value.find(e => e.id === firstEmployeeId)
+  const employee = employees.value.find(e => e.Id === firstEmployeeId)
 
   if (!employee) {
     console.log('❌ Employee not found:', firstEmployeeId)
@@ -637,7 +638,7 @@ function autoSelectKpiTable() {
   }
 
   console.log('👤 First employee:', {
-    id: employee.id,
+    id: employee.Id,
     name: employee.fullName,
     position: employee.positionName,
     role: employee.roleName,
@@ -653,7 +654,7 @@ function autoSelectKpiTable() {
 
   console.log('� Employee KPI tables found:', employeeTables.length)
   employeeTables.forEach(table => {
-    console.log(`   📊 ${table.tableName} (ID: ${table.id}, Type: ${table.tableType || 'N/A'})`)
+    console.log(`   📊 ${table.tableName} (ID: ${table.Id}, Type: ${table.tableType || 'N/A'})`)
   })
 
   // Find appropriate KPI table based on employee role
@@ -716,18 +717,18 @@ function autoSelectKpiTable() {
 
   if (suitableTable) {
     console.log('✅ Auto-selected KPI table:', {
-      id: suitableTable.id,
+      id: suitableTable.Id,
       name: suitableTable.tableName,
       category: suitableTable.category
     })
-    selectedTableId.value = suitableTable.id.toString()
+    selectedTableId.value = suitableTable.Id.toString()
     // Force load table details with a slight delay to ensure state is updated
     setTimeout(() => {
       loadTableDetails()
     }, 100)
   } else {
     console.log('❌ No suitable KPI table found')
-    console.log('Available tables:', kpiTables.value.map(t => ({ id: t.id, name: t.tableName, category: t.category })))
+    console.log('Available tables:', kpiTables.value.map(t => ({ id: t.Id, name: t.tableName, category: t.category })))
 
     // Show user message
     errorMessage.value = 'Không tìm thấy bảng KPI phù hợp. Vui lòng chọn bảng KPI thủ công.'
@@ -738,7 +739,7 @@ function toggleAllEmployees() {
   if (areAllEmployeesSelected.value) {
     selectedEmployeeIds.value = []
   } else {
-    selectedEmployeeIds.value = filteredEmployees.value.map(emp => emp.id)
+    selectedEmployeeIds.value = filteredEmployees.value.map(emp => emp.Id)
   }
   validateEmployeeRoles()
 }
@@ -753,19 +754,19 @@ function removeEmployee(empId) {
 
 function getBranchName() {
   if (!selectedBranchId.value) return ''
-  const branch = units.value.find(u => u.id === parseInt(selectedBranchId.value))
-  return branch ? branch.name : ''
+  const branch = units.value.find(u => u.Id === parseInt(selectedBranchId.value))
+  return branch ? branch.Name : ''
 }
 
 function getDepartmentName() {
   if (!selectedDepartmentId.value) return ''
-  const dept = units.value.find(u => u.id === parseInt(selectedDepartmentId.value))
-  return dept ? dept.name : ''
+  const dept = units.value.find(u => u.Id === parseInt(selectedDepartmentId.value))
+  return dept ? dept.Name : ''
 }
 
 function getUnitName(unitId) {
-  const unit = units.value.find(u => u.id === unitId)
-  return unit ? unit.name : 'N/A'
+  const unit = units.value.find(u => u.Id === unitId)
+  return unit ? unit.Name : 'N/A'
 }
 
 function getEmployeeRole(employee) {
@@ -773,7 +774,7 @@ function getEmployeeRole(employee) {
 }
 
 function getEmployeeShortName(empId) {
-  const emp = employees.value.find(e => e.id === empId)
+  const emp = employees.value.find(e => e.Id === empId)
   if (!emp) return 'N/A'
 
   const names = emp.fullName.split(' ')
@@ -784,7 +785,7 @@ function getEmployeeShortName(empId) {
 }
 
 function getKpiTableTitle() {
-  const table = kpiTables.value.find(t => t.id === parseInt(selectedTableId.value))
+  const table = kpiTables.value.find(t => t.Id === parseInt(selectedTableId.value))
   return table ? (table.description || table.tableName) : 'Bảng KPI'
 }
 
