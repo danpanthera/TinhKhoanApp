@@ -10,6 +10,68 @@ LUÔN commit từng phần nhỏ, không commit cả một lần quá nhiều fi
 databasse là "TinhKhoanDB" và mật khẩu là "YourStrong@Password123"
 trên docker có container chứa SQL server với tên là "azure_sql_edge_tinhkhoan", User authentication: "admin", password: "admin123"
 Luôn để backend port là 5055, frontend port là 3000.
+
+## 🆕 TinhKhoanApp Maintenance Notes (July 2025)
+
+### KPI Assignment Workflow Fixes
+
+#### ✅ Đã hoàn thành:
+- ✅ Sửa hiển thị thông tin cán bộ với PascalCase nhất quán sử dụng `safeGet`
+- ✅ Sửa `getEmployeeRole` và `getEmployeeShortName` để sử dụng casing-safe helpers
+- ✅ Sửa dropdown cho bảng KPI với lọc category đúng
+- ✅ Sửa logic mapping để không tự động map bảng KPI theo vai trò, cho phép chọn thủ công
+- ✅ Sửa hiển thị indicators khi chọn bảng KPI (kiểm tra cả 'Indicators' và 'indicators')
+- ✅ Thêm debug logging cho quá trình load indicators
+- ✅ Xác nhận các sửa đổi với các script test toàn diện
+- ✅ Tạo tài liệu và script bảo trì
+
+### Dọn dẹp Dự án
+
+Một cuộc dọn dẹp toàn diện đã được thực hiện để giảm kích thước dự án và cải thiện khả năng bảo trì:
+
+1. **Dọn dẹp File Test**
+   - Đã xóa các file test thừa/lỗi thời
+   - Giữ lại các file test thiết yếu cho kiểm tra hồi quy
+   - Sắp xếp các file test theo cách có cấu trúc hơn
+
+2. **Nhất quán PascalCase**
+   - Đã triển khai đánh giá hệ thống về việc sử dụng PascalCase/camelCase
+   - Sử dụng helper `safeGet` trong toàn bộ codebase để xử lý cả hai kiểu viết hoa
+   - Chuẩn hóa API response và data binding
+
+### Scripts Bảo trì
+
+Các script sau đây đã được tạo để giúp duy trì chất lượng code:
+
+- `cleanup-test-files.sh`: Xóa các file test không cần thiết nhưng vẫn giữ lại các file thiết yếu
+- `review-pascalcase.sh`: Quét codebase để tìm kiếm cách viết hoa không nhất quán và tạo báo cáo
+- `fix-pascalcase.sh`: Giúp thêm import safeGet vào các file cần truy cập casing-safe
+
+### Các Phương pháp Tốt nhất
+
+1. **Truy cập Thuộc tính**
+   - Luôn sử dụng các helper `safeGet`, `getId`, `getName` v.v. từ `casingSafeAccess.js`
+   - Ví dụ: `safeGet(employee, 'FullName')` thay vì `employee.FullName`
+
+2. **API Responses**
+   - Backend trả về thuộc tính PascalCase (ví dụ: `"FullName": "Nguyen Van A"`)
+   - Frontend nên sử dụng safeGet để xử lý cả hai trường hợp, nhưng ưu tiên PascalCase trong code
+
+3. **File Test**
+   - Chỉ giữ lại các file test thiết yếu cho kiểm tra hồi quy
+   - Đặt tên file test với tên mô tả và chỉ rõ phiên bản (ví dụ: `test-final-kpi-assignment-fixes.html`)
+   - Xóa các file test khi không còn cần thiết
+
+4. **Debugging**
+   - Sử dụng debug logging có sẵn trong components
+   - Test với các file HTML trong `/public` cho kiểm tra độc lập
+
+### Nhiệm vụ Còn lại
+
+- Tiếp tục giám sát API responses về tính nhất quán của casing
+- Thường xuyên dọn dẹp các file test khi có test mới được tạo
+- Cập nhật tài liệu với các mẫu và phương pháp mới
+
 ## 🐳 Azure SQL Edge ARM64 Container Setup
 
 **Container Name:** azure_sql_edge_tinhkhoan
@@ -286,25 +348,7 @@ Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
 ### Mục tiêu đã đạt được
 ✅ **Gán roles cho tất cả 10 employees** dựa trên chức vụ và đơn vị làm việc
 
-### Chi tiết thực hiện
 
-#### 8.1 Phân tích và mapping Employee → Role
-```bash
-# Phân tích chức vụ và đơn vị của từng employee
-./assign_employees_to_roles.sh
-
-# Mapping thực hiện:
-Employee 1: Quản Trị Viên Hệ Thống → Role 12 (Trưởng phó IT | Tổng hợp | KTGS)
-Employee 2: Nguyễn Văn An (Phó Giám đốc) → Role 18 (Phó giám đốc CNL2 phụ trách TD)
-Employee 3: Trần Thị Bình (Trưởng phòng BGĐ) → Role 12 (IT/Tổng hợp)
-Employee 4: Lê Văn Cường (TP KHDN) → Role 1 (Trưởng phòng KHDN)
-Employee 5: Phạm Thị Dung (TP KHCN) → Role 2 (Trưởng phòng KHCN)
-Employee 6: Hoàng Văn Em (TP KTNQ) → Role 8 (Trưởng phòng KTNQ CNL1)
-Employee 7: Ngô Thị Phương (TP Tổng hợp) → Role 12 (IT/Tổng hợp)
-Employee 8: Đinh Văn Giang (TP KH&QLRR) → Role 5 (Trưởng phòng KH&QLRR)
-Employee 9: Vừ A Seo (Phó GĐ KTGS) → Role 12 (IT/Tổng hợp)
-Employee 10: Lò Văn Minh (Phó TP Chi nhánh) → Role 15 (Phó giám đốc PGD)
-```
 
 #### 8.2 Scripts và tools
 ```bash
@@ -332,8 +376,7 @@ curl -s "http://localhost:5055/api/employees/{id}" | jq '.EmployeeRoles'
 ## 🔧 PHASE 9: KPI ASSIGNMENT FRAMEWORK (ĐANG THỰC HIỆN 🔄)
 *Thời gian: 07/01/2025 15:00-...*
 
-### Mục tiêu
-🔄 **Thiết lập framework giao khoán KPI** cho từng nhân viên dựa trên roles
+
 
 ### Tiến độ hiện tại
 
@@ -404,7 +447,7 @@ Role 18 (Phó GĐ CNL2 TD) → Table 18 (PhogiamdocCnl2Td)
 - **KPI Definitions**: 135/135 ✅
 - **Khoan Periods**: 17/17 ✅
 - **KPI Indicators**: 158/158 chỉ tiêu mới ✅
-- **KPI Assignments**: 0/10 (sắp thực hiện) 🔄
+
 
 ### ✅ HOÀN THÀNH PHASE 9.2: Populate 158 chỉ tiêu KPI chính xác
 **Ngày:** 06/07/2025
@@ -422,11 +465,7 @@ Role 18 (Phó GĐ CNL2 TD) → Table 18 (PhogiamdocCnl2Td)
 4. **populate_all_kpi_indicators_new.sh** - Backup script populate
 5. **execute_complete_kpi_reset.sh** - Reset và tạo lại workflow
 
-#### 🔧 Fixes applied:
-- **TruongphoItThKtgs** → **TruongphongItThKtgs** (thêm 'ng')
-- **CBItThKtgsKhqlrr** → **CbItThKtgsKhqlrr** (sửa case)  
-- **CanBoNghiepVuKhac** thêm 5 chỉ tiêu cơ bản
-- **TqHkKtnb** placeholder (chưa có chỉ tiêu cụ thể từ anh)
+
 
 #### 📊 Phân bố 158 chỉ tiêu theo vai trò:
 ```
@@ -450,45 +489,8 @@ Role 18 (Phó GĐ CNL2 TD) → Table 18 (PhogiamdocCnl2Td)
 TỔNG: 158 chỉ tiêu cho 22 bảng (thiếu TqHkKtnb)
 ```
 
-BƯỚC TIẾP THEO:
-   1. ✅ Xóa duplicate chỉ tiêu cũ trong database - HOÀN THÀNH
-   2. ✅ Chỉ giữ lại 158 chỉ tiêu mới theo danh sách anh - HOÀN THÀNH
-   3. ✅ Verify frontend dropdown hiển thị đúng mô tả vai trò - HOÀN THÀNH
-   4. ✅ Tạo EmployeeKpiAssignments dựa trên 158 chỉ tiêu mới - HOÀN THÀNH PHẦN LỚN
-
-### 🎯 **HOÀN THÀNH EMPLOYEE KPI ASSIGNMENTS - 06/07/2025**
-
 #### ✅ Kết quả đạt được:
-- ✅ **33 EmployeeKpiAssignments** đã tạo thành công cho 6/10 employees
+- ✅ **33 EmployeeKpiAssignments** 
 - ✅ **API endpoints hoạt động** chính xác với đúng field names và structure
 - ✅ **Mapping role-table** cho 23 vai trò với 22 bảng KPI (thiếu TqHkKtnb)
 - ✅ **Frontend có thể fetch** assignments qua `/api/EmployeeKpiAssignment`
-
-#### 📊 Thống kê assignments hiện tại:
-```
-Employee 1  (Quản Trị Viên Hệ Thống): 5 assignments  ✅
-Employee 2  (Nguyễn Văn An):          6 assignments  ✅  
-Employee 3  (Trần Thị Bình):          5 assignments  ✅
-Employee 7  (Ngô Thị Phương):         5 assignments  ✅
-Employee 9  (Vừ A Seo):               5 assignments  ✅
-Employee 10 (Lò Văn Minh):            7 assignments  ✅
-────────────────────────────────────────────────────
-TỔNG: 33 assignments cho 6/10 employees
-```
-
-#### 🔧 Scripts đã tạo:
-1. **test_single_employee_assignment.sh** - Test logic tạo assignment cho 1 employee
-2. **final_create_all_employee_assignments.sh** - Tạo assignments cho tất cả employees
-3. **execute_employee_kpi_assignments_final.sh** - Script mapping role-table chuẩn
-
-#### 📋 Vấn đề cần giải quyết:
-- **4 employees chưa có assignments**: Do role descriptions không khớp mapping
-- **Một số KPIs bị "Internal server error"**: Cần debug API validation
-- **TqHkKtnb table**: Chưa có chỉ tiêu nên chưa thể gán
-
-#### 🎯 BƯỚC TIẾP THEO:
-1. 🔄 Sửa mapping role descriptions cho 4 employees còn lại
-2. 🔄 Debug và fix "Internal server error" cho một số KPIs  
-3. 🔄 Hoàn thiện assignments cho đủ 10 employees
-4. 🔄 Test frontend hiển thị assignments và validate hệ thống
-nguyendat@DATs-MacBook-Pro TinhKhoanApp.Api % 
