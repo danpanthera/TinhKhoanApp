@@ -562,18 +562,27 @@ async function loadTableDetails() {
     const indicatorsData = response.data?.indicators || response.data?.Indicators
     if (response.data && indicatorsData) {
       // Use helper function to normalize .NET array format
-      indicators.value = normalizeNetArray(indicatorsData)
+      const normalizedData = normalizeNetArray(indicatorsData)
+      console.log('🔄 Raw indicators data:', indicatorsData)
+      console.log('🔄 Normalized data:', normalizedData)
+      console.log('🔄 Normalized data length:', normalizedData.length)
+
+      indicators.value = normalizedData
       console.log('✅ Loaded KPI indicators:', indicators.value.length)
+      console.log('✅ Indicators array:', indicators.value)
 
       // Log first few indicators for debugging
       if (indicators.value.length > 0) {
         console.log('📋 Sample indicators:')
         indicators.value.slice(0, 3).forEach((ind, idx) => {
-          console.log(`   ${idx + 1}. ${ind.indicatorName} (${ind.maxScore} points, ${ind.unit || 'N/A'})`)
+          console.log(`   ${idx + 1}. ${ind.indicatorName || ind.IndicatorName} (${ind.maxScore || ind.MaxScore} points, ${ind.unit || ind.Unit || 'N/A'})`)
         })
+      } else {
+        console.log('⚠️ Indicators array is empty after normalization')
       }
     } else {
       console.log('⚠️ API response missing indicators array')
+      console.log('🔍 Response data keys:', Object.keys(response.data || {}))
       indicators.value = []
     }
 

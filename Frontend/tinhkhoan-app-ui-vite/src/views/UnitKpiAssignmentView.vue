@@ -469,20 +469,29 @@ async function onBranchChange() {
       // Use helper function to log API response
       logApiResponse(`/KpiAssignment/tables/${kpiTable.Id}`, response, 'indicators')
 
-      if (response.data && response.data.indicators) {
+      // Handle both 'indicators' (lowercase) and 'Indicators' (PascalCase) from API
+      const indicatorsData = response.data?.indicators || response.data?.Indicators
+      if (response.data && indicatorsData) {
         // Use helper function to normalize .NET array format
-        availableKpiIndicators.value = normalizeNetArray(response.data.indicators)
+        const normalizedData = normalizeNetArray(indicatorsData)
+        console.log('🔄 Raw indicators data:', indicatorsData)
+        console.log('🔄 Normalized data:', normalizedData)
+
+        availableKpiIndicators.value = normalizedData
         console.log('✅ Loaded KPI indicators:', availableKpiIndicators.value.length)
 
         // Log sample indicators
         if (availableKpiIndicators.value.length > 0) {
           console.log('📋 Sample indicators:')
           availableKpiIndicators.value.slice(0, 3).forEach((ind, idx) => {
-            console.log(`   ${idx + 1}. ${ind.indicatorName} (${ind.maxScore} points, ${ind.unit || 'N/A'})`)
+            console.log(`   ${idx + 1}. ${ind.indicatorName || ind.IndicatorName} (${ind.maxScore || ind.MaxScore} points, ${ind.unit || ind.Unit || 'N/A'})`)
           })
+        } else {
+          console.log('⚠️ Indicators array is empty after normalization')
         }
       } else {
         console.log('⚠️ API response missing indicators array')
+        console.log('🔍 Response data keys:', Object.keys(response.data || {}))
         availableKpiIndicators.value = []
       }
     } else {
