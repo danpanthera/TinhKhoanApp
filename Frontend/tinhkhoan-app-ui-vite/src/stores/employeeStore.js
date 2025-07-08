@@ -110,8 +110,16 @@ export const useEmployeeStore = defineStore("employee", {
           passwordHash: currentEmployee?.passwordHash || employeeData.passwordHash
         };
 
+        // Get employee ID - try both cases for compatibility
+        const employeeId = employeeData.Id || employeeData.id;
+        
+        if (!employeeId) {
+          throw new Error("Employee ID is required for update");
+        }
+
         // Gửi request cập nhật nhân viên
-        const response = await apiClient.put(`/Employees/${employeeData.Id}`, dataToSend);
+        console.log("🔍 Updating employee with ID:", employeeId);
+        const response = await apiClient.put(`/Employees/${employeeId}`, dataToSend);
         await this.fetchEmployees();
       } catch (err) {
         const errorMessage = err.response?.data?.message ||

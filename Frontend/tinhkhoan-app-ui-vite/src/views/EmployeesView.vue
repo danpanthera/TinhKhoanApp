@@ -657,10 +657,14 @@ function extractEmployeePrimitives(employee) {
   console.log('🔍 extractEmployeePrimitives - employee:', employee);
   console.log('🔍 extractEmployeePrimitives - extracted roleIds:', roleIds);
 
+  const extractedId = getId(employee);
+  console.log('🔍 extractEmployeePrimitives - extracted ID:', extractedId);
+
   return {
-    id: getId(employee),
+    id: extractedId,
+    Id: extractedId, // Compatibility - include both cases
     employeeCode: safeGet(employee, 'EmployeeCode'),
-    cbCode: safeGet(employee, 'CBCode'),
+    cbCode: safeGet(employee, 'CBCode') || safeGet(employee, 'cbCode') || '',
     fullName: safeGet(employee, 'FullName'),
     username: safeGet(employee, 'Username'),
     passwordHash: safeGet(employee, 'PasswordHash'),
@@ -766,9 +770,10 @@ const handleSubmitEmployee = async () => {
   console.log("--- Bắt đầu handleSubmitEmployee (Nhân viên) ---");
   console.log("Chế độ sửa:", isEditing.value);
   console.log("🔍 CB Code trước khi submit:", currentEmployee.value.cbCode);
+  console.log("🔍 Employee ID trước khi submit:", dataToProcess.id);
   console.log("Dữ liệu sau khi trim và chuẩn bị (dataToProcess):", JSON.parse(JSON.stringify(dataToProcess)));
 
-  if (isEditing.value && dataToProcess.Id !== null) {
+  if (isEditing.value && dataToProcess.id !== null && dataToProcess.id !== undefined) {
     try {
       // If not entering new password, always send original passwordHash
       const updateData = { ...dataToProcess };
