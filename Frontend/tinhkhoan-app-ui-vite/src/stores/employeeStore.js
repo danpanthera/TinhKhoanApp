@@ -112,7 +112,7 @@ export const useEmployeeStore = defineStore("employee", {
 
         // Get employee ID - try both cases for compatibility
         const employeeId = employeeData.Id || employeeData.id;
-        
+
         if (!employeeId) {
           throw new Error("Employee ID is required for update");
         }

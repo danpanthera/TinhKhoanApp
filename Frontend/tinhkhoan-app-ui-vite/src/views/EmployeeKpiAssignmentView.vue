@@ -342,19 +342,19 @@ const selectedKpiTable = computed(() => {
   return kpiTables.value.find(table => table.Id === parseInt(selectedTableId.value))
 })
 
-// Updated branchOptions: Custom ordering as requested
+// Updated branchOptions: Custom ordering theo yêu cầu Hội Sở → Nậm Hàng
 const branchOptions = computed(() => {
-  // Định nghĩa thứ tự theo yêu cầu (cập nhật tên mới): CnLaiChau, CnBinhLu, CnPhongTho, CnSinHo, CnBumTo, CnThanUyen, CnDoanKet, CnTanUyen, CnNamHang
+  // Định nghĩa thứ tự theo yêu cầu: Hội Sở → Bình Lư → Phong Thổ → Sìn Hồ → Bum Tở → Than Uyên → Đoàn Kết → Tân Uyên → Nậm Hàng
   const customOrder = [
-    'CnLaiChau',     // Chi nhánh tỉnh Lai Châu
-    'CnBinhLu',      // Chi nhánh Bình Lư
-    'CnPhongTho',    // Chi nhánh Phong Thổ
-    'CnSinHo',       // Chi nhánh Sìn Hồ
-    'CnBumTo',       // Chi nhánh Bum Tở
-    'CnThanUyen',    // Chi nhánh Than Uyên
-    'CnDoanKet',     // Chi nhánh Đoàn Kết
-    'CnTanUyen',     // Chi nhánh Tân Uyên
-    'CnNamHang'      // Chi nhánh Nậm Hàng
+    'HoiSo',         // Hội Sở (ID=2)
+    'BinhLu',        // Chi nhánh Bình Lư (ID=10)  
+    'PhongTho',      // Chi nhánh Phong Thổ (ID=11)
+    'SinHo',         // Chi nhánh Sìn Hồ (ID=12)
+    'BumTo',         // Chi nhánh Bum Tở (ID=13)
+    'ThanUyen',      // Chi nhánh Than Uyên (ID=14)
+    'DoanKet',       // Chi nhánh Đoàn Kết (ID=15)
+    'TanUyen',       // Chi nhánh Tân Uyên (ID=16)
+    'NamHang'        // Chi nhánh Nậm Hàng (ID=17)
   ];
 
   return units.value
@@ -363,20 +363,25 @@ const branchOptions = computed(() => {
       return type === 'CNL1' || type === 'CNL2'
     })
     .sort((a, b) => {
-      const indexA = customOrder.indexOf(a.Code);
-      const indexB = customOrder.indexOf(b.Code);
+      // Function để map Name thành customOrder index
+      const getOrderIndex = (unitName) => {
+        const name = (unitName || '').toLowerCase();
+        if (name.includes('hội sở')) return 0;
+        if (name.includes('bình lư')) return 1;
+        if (name.includes('phong thổ')) return 2;
+        if (name.includes('sìn hồ')) return 3;
+        if (name.includes('bum tở')) return 4;
+        if (name.includes('than uyên')) return 5;
+        if (name.includes('đoàn kết')) return 6;
+        if (name.includes('tân uyên')) return 7;
+        if (name.includes('nậm hàng')) return 8;
+        return 999; // Unknown units go to the end
+      };
 
-      // Nếu cả hai đều có trong custom order, sắp xếp theo thứ tự đó
-      if (indexA !== -1 && indexB !== -1) {
-        return indexA - indexB;
-      }
+      const indexA = getOrderIndex(a.Name || a.Name);
+      const indexB = getOrderIndex(b.Name || b.Name);
 
-      // Nếu chỉ có một trong hai có trong custom order, ưu tiên cái đó
-      if (indexA !== -1) return -1;
-      if (indexB !== -1) return 1;
-
-      // Nếu cả hai đều không có trong custom order, sắp xếp theo tên
-      return (a.Name || '').localeCompare(b.Name || '');
+      return indexA - indexB;
     })
 })
 
