@@ -711,7 +711,7 @@ const handleSubmitEmployee = async () => {
 
   // Validate cbCode: only numbers and exactly 9 characters
   if (!dataToProcess.cbCode || !/^\d{9}$/.test(dataToProcess.cbCode)) {
-    formError.value = "Mã CB phải là 9 chữ số";
+    formError.value = `Mã CB phải là đúng 9 chữ số (hiện tại: "${dataToProcess.cbCode || ''}" - ${(dataToProcess.cbCode || '').length} ký tự)`;
     return;
   }
 

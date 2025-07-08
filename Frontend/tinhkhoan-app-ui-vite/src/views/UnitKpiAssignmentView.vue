@@ -55,7 +55,7 @@
               </optgroup>
               <optgroup label="Chi nhánh CNL2" v-if="cnl2Units.length > 0">
                 <option v-for="unit in cnl2Units" :key="unit.Id" :value="unit.Id">
-                  🏢 {{ unit.Name }} ({{ unit.Code }}) - {{ getParentUnitCode(unit.parentUnitId) }}
+                  🏢 {{ unit.Name }} ({{ unit.Code }}) - {{ getParentUnitCode(unit.ParentUnitId || unit.parentUnitId) }}
                 </option>
               </optgroup>
             </select>
