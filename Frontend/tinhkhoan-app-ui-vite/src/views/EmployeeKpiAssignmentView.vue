@@ -111,18 +111,18 @@
                 </td>
                 <td>
                   <div>
-                    <div class="font-weight-semibold">{{ employee.fullName }}</div>
-                    <small class="text-muted">{{ employee.employeeCode }}</small>
+                    <div class="font-weight-semibold">{{ safeGet(employee, 'FullName') }}</div>
+                    <small class="text-muted">{{ safeGet(employee, 'EmployeeCode') }}</small>
                   </div>
                 </td>
                 <td>
                   <span class="badge-agribank badge-danger">{{ getEmployeeRole(employee) }}</span>
                 </td>
                 <td>
-                  <span class="text-secondary">{{ getUnitName(employee.unitId) }}</span>
+                  <span class="text-secondary">{{ getUnitName(safeGet(employee, 'UnitId')) }}</span>
                 </td>
                 <td>
-                  <span class="text-secondary">{{ employee.positionName || 'N/A' }}</span>
+                  <span class="text-secondary">{{ safeGet(employee, 'PositionName') || 'N/A' }}</span>
                 </td>
               </tr>
             </tbody>
@@ -157,15 +157,15 @@
             <label class="form-label">📋 Bảng KPI:</label>
             <select v-model="selectedTableId" @change="onTableChange" class="form-control">
               <option value="">-- Chọn bảng KPI --</option>
-              <option v-for="table in staffKpiTables" :key="table.Id" :value="table.Id">
-                📊 {{ table.description || table.tableName }} ({{ table.indicatorCount }} chỉ tiêu)
+              <option v-for="table in staffKpiTables" :key="getId(table)" :value="getId(table)">
+                📊 {{ safeGet(table, 'Description') || safeGet(table, 'TableName') }} ({{ safeGet(table, 'IndicatorCount') }} chỉ tiêu)
               </option>
             </select>
           </div>
 
           <div class="alert-agribank alert-info" v-if="selectedTableId && selectedKpiTable">
             <strong>📊 Đã chọn:</strong>
-            "{{ selectedKpiTable.description || selectedKpiTable.tableName }}" → <strong>{{ selectedKpiTable.indicatorCount }}</strong> chỉ tiêu KPI
+            "{{ safeGet(selectedKpiTable, 'Description') || safeGet(selectedKpiTable, 'TableName') }}" → <strong>{{ safeGet(selectedKpiTable, 'IndicatorCount') }}</strong> chỉ tiêu KPI
           </div>
         </div>
       </div>
@@ -331,15 +331,27 @@ const handleTargetBlur = (event, indicatorId) => {
 // Computed properties cho bộ lọc
 // Lọc 23 bảng KPI dành cho Cán bộ
 const staffKpiTables = computed(() => {
-  return kpiTables.value
-    .filter(table => table.category === 'Vai trò cán bộ')
-    .sort((a, b) => (a.description || a.tableName || '').localeCompare(b.description || b.tableName || ''))
+  console.log('🔍 Filtering KPI tables, total:', kpiTables.value.length)
+  const filtered = kpiTables.value
+    .filter(table => {
+      const category = safeGet(table, 'Category')
+      console.log(`Table ${safeGet(table, 'TableName')}: category = "${category}"`)
+      return category === 'CANBO'
+    })
+    .sort((a, b) => {
+      const descA = safeGet(a, 'Description') || safeGet(a, 'TableName') || ''
+      const descB = safeGet(b, 'Description') || safeGet(b, 'TableName') || ''
+      return descA.localeCompare(descB)
+    })
+
+  console.log('✅ Filtered staff KPI tables:', filtered.length)
+  return filtered
 })
 
 // Bảng KPI đã chọn
 const selectedKpiTable = computed(() => {
   if (!selectedTableId.value) return null
-  return kpiTables.value.find(table => table.Id === parseInt(selectedTableId.value))
+  return kpiTables.value.find(table => getId(table) === parseInt(selectedTableId.value))
 })
 
 // Updated branchOptions: Custom ordering theo yêu cầu Hội Sở → Nậm Hàng
@@ -430,7 +442,7 @@ const filteredEmployees = computed(() => {
       // Use casing-safe helper to get unitId (supports both UnitId and unitId)
       const empUnitId = safeGet(emp, 'UnitId')
       const empUnit = units.value.find(u => getId(u) === empUnitId)
-      
+
       if (!empUnit) {
         console.log(`❌ Employee ${safeGet(emp, 'FullName')} has no matching unit (UnitId: ${empUnitId})`)
         return false
@@ -463,7 +475,7 @@ const filteredEmployees = computed(() => {
       // Use casing-safe helper to get unitId (supports both UnitId and unitId)
       const empUnitId = safeGet(emp, 'UnitId')
       const empUnit = units.value.find(u => getId(u) === empUnitId)
-      
+
       if (!empUnit) return false
 
       // Direct match
@@ -803,18 +815,29 @@ function getUnitName(unitId) {
 }
 
 function getEmployeeRole(employee) {
-  return employee.roleName || employee.positionName || 'Cán bộ'
+  // Check for role name from EmployeeRoles array
+  const roles = safeGet(employee, 'EmployeeRoles') || []
+  if (roles.length > 0) {
+    const role = roles[0]
+    return safeGet(role, 'Description') || safeGet(role, 'Name') || 'Cán bộ'
+  }
+
+  // Fallback to position name or default
+  return safeGet(employee, 'PositionName') || 'Cán bộ'
 }
 
 function getEmployeeShortName(empId) {
-  const emp = employees.value.find(e => e.Id === empId)
+  const emp = employees.value.find(e => getId(e) === empId)
   if (!emp) return 'N/A'
 
-  const names = emp.fullName.split(' ')
+  const fullName = safeGet(emp, 'FullName')
+  if (!fullName) return 'N/A'
+
+  const names = fullName.split(' ')
   if (names.length >= 2) {
     return names[names.length - 2] + ' ' + names[names.length - 1]
   }
-  return emp.fullName
+  return fullName
 }
 
 function getKpiTableTitle() {

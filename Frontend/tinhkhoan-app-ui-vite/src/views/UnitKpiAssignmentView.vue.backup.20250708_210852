@@ -405,27 +405,29 @@ async function onBranchChange() {
 
     // Find appropriate KPI table based on branch type
     let kpiTable = null
-    const branchType = (branch.Type && typeof branch.Type === 'string' ? branch.Type : '').toUpperCase()
-    console.log('🔍 Branch type:', branchType)
-    console.log('📊 Available KPI tables:', kpiTables.value.length)
+    console.log(' Available KPI tables:', kpiTables.value.length)
 
-    // Log all available branch tables
-    const branchTables = kpiTables.value.filter(t =>
-      t && t.Category === 'CHINHANH'
-    )
+    // Get all branch KPI tables (category = "CHINHANH")
+    const branchTables = kpiTables.value.filter(t => {
+      const category = safeGet(t, 'Category')
+      return category === 'CHINHANH'
+    })
+
     console.log('🏢 Branch KPI tables found:', branchTables.length)
     branchTables.forEach(table => {
-      console.log(`   📊 ${table.TableName} (ID: ${table.Id}, Description: ${table.Description}, Category: ${table.Category})`)
+      console.log(`   📊 ${safeGet(table, 'TableName')} (ID: ${getId(table)}, Description: ${safeGet(table, 'Description')})`)
     })
 
     // Match branch name with KPI table
-    const branchName = branch.Name || ''
-    console.log('🔍 Looking for KPI table for branch:', branchName)
+    const branchName = getName(branch) || ''
+    const branchCode = safeGet(branch, 'Code') || ''
 
-    // Find matching KPI table based on branch name
+    console.log('🔍 Looking for KPI table for branch:', branchName, 'Code:', branchCode)
+
+    // Find matching KPI table based on branch name/code
     kpiTable = branchTables.find(t => {
-      const tableName = t.TableName || ''
-      const description = t.Description || ''
+      const tableName = safeGet(t, 'TableName') || ''
+      const description = safeGet(t, 'Description') || ''
 
       // Match by branch name patterns
       if (branchName.includes('Hội Sở') && tableName.includes('HoiSo')) return true
@@ -444,23 +446,32 @@ async function onBranchChange() {
     if (!kpiTable) {
       // Fallback: try to match by description
       kpiTable = branchTables.find(t => {
-        const description = t.Description || ''
+        const description = safeGet(t, 'Description') || ''
         return description.toLowerCase().includes(branchName.toLowerCase())
       })
+    }
+      console.log('🔍 No direct match, trying fallback patterns...')
+      // Look for any table containing branch-related keywords
+      kpiTable = branchTables.find(t =>
+        safeStringIncludes(t.tableName, 'chi nhánh') ||
+        safeStringIncludes(t.tableName, 'cnl') ||
+        safeStringIncludes(t.tableType, 'cnl')
+      )
+      console.log('🎯 Fallback search found:', kpiTable?.tableName || 'None')
     }
 
     // Fallback to first available branch table
     if (!kpiTable && branchTables.length > 0) {
       kpiTable = branchTables[0]
-      console.log('⚠️ No specific match, using first branch table as fallback:', kpiTable.TableName)
+      console.log('⚠️ No specific match, using first branch table as fallback:', kpiTable.tableName)
     }
 
     if (kpiTable) {
       console.log('✅ Selected KPI table:', {
         id: kpiTable.Id,
-        name: kpiTable.TableName,
-        description: kpiTable.Description,
-        category: kpiTable.Category
+        name: kpiTable.tableName,
+        type: kpiTable.tableType,
+        category: kpiTable.category
       })
 
       console.log('🔄 Loading KPI indicators...')
@@ -486,9 +497,9 @@ async function onBranchChange() {
         availableKpiIndicators.value = []
       }
     } else {
-      console.log('❌ No suitable KPI table found for branch:', branchName)
-      console.log('Available branch tables:', branchTables.map(t => ({ id: t.Id, name: t.TableName, description: t.Description })))
-      errorMessage.value = `Không tìm thấy bảng KPI phù hợp cho chi nhánh "${branchName}". Có ${branchTables.length} bảng KPI chi nhánh.`
+      console.log('❌ No suitable KPI table found for branch type:', branchType)
+      console.log('Available tables:', kpiTables.value.map(t => ({ id: t.Id, name: t.tableName, category: t.category, type: t.tableType })))
+      errorMessage.value = `Không tìm thấy bảng KPI phù hợp cho chi nhánh loại ${branchType}. Có ${kpiTables.value.length} bảng KPI tổng cộng.`
     }
 
     // Load current assignments
