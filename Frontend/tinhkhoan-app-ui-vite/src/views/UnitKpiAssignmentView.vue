@@ -261,29 +261,30 @@ const kpiTargets = ref({})
 const currentAssignments = ref([])
 
 // Computed properties
-// CNL1: Chỉ có Hội Sở (1 đơn vị)
+// CNL1: Hội Sở và Lai Châu với custom ordering
 const cnl1Units = computed(() => {
   const filtered = units.value.filter(unit => {
     const type = (unit.Type || '').toUpperCase()
     return type === 'CNL1'
   }).sort((a, b) => {
-    // Primary sort: SortOrder (nulls last)
-    const sortOrderA = a.sortOrder ?? Number.MAX_SAFE_INTEGER;
-    const sortOrderB = b.sortOrder ?? Number.MAX_SAFE_INTEGER;
+    // Custom ordering function theo yêu cầu Hội Sở → Nậm Hàng
+    const getOrderIndex = (unitName) => {
+      const name = (unitName || '').toLowerCase();
+      if (name.includes('hội sở')) return 0;
+      if (name.includes('lai châu')) return 1;
+      return 999; // Unknown units go to the end
+    };
 
-    if (sortOrderA !== sortOrderB) {
-      return sortOrderA - sortOrderB;
-    }
-
-    // Secondary sort: Name
-    return (a.Name || '').localeCompare(b.Name || '');
+    const indexA = getOrderIndex(a.Name);
+    const indexB = getOrderIndex(b.Name);
+    return indexA - indexB;
   })
 
   console.log('🏢 CNL1 Units:', filtered.length, filtered.map(u => u.Name))
   return filtered
 })
 
-// CNL2: 8 CN + 5 PGD = 13 đơn vị (sắp xếp theo sortOrder)
+// CNL2: 8 chi nhánh với custom ordering theo yêu cầu Hội Sở → Nậm Hàng
 const cnl2Units = computed(() => {
   const filtered = units.value
     .filter(unit => {
@@ -291,16 +292,24 @@ const cnl2Units = computed(() => {
       return type === 'CNL2'
     })
     .sort((a, b) => {
-      // Sắp xếp theo sortOrder
-      const sortOrderA = a.sortOrder ?? Number.MAX_SAFE_INTEGER;
-      const sortOrderB = b.sortOrder ?? Number.MAX_SAFE_INTEGER;
+      // Custom ordering function theo yêu cầu Hội Sở → Nậm Hàng
+      const getOrderIndex = (unitName) => {
+        const name = (unitName || '').toLowerCase();
+        if (name.includes('hội sở')) return 0;
+        if (name.includes('bình lư')) return 1;
+        if (name.includes('phong thổ')) return 2;
+        if (name.includes('sìn hồ')) return 3;
+        if (name.includes('bum tở')) return 4;
+        if (name.includes('than uyên')) return 5;
+        if (name.includes('đoàn kết')) return 6;
+        if (name.includes('tân uyên')) return 7;
+        if (name.includes('nậm hàng')) return 8;
+        return 999; // Unknown units go to the end
+      };
 
-      if (sortOrderA !== sortOrderB) {
-        return sortOrderA - sortOrderB;
-      }
-
-      // Nếu sortOrder bằng nhau thì sắp xếp theo tên
-      return (a.Name || '').localeCompare(b.Name || '');
+      const indexA = getOrderIndex(a.Name);
+      const indexB = getOrderIndex(b.Name);
+      return indexA - indexB;
     })
 
   console.log('🏢 CNL2 Units:', filtered.length, filtered.map(u => u.Name))
@@ -322,40 +331,26 @@ async function loadInitialData() {
   errorMessage.value = ''
 
   try {
-    const [periodsResponse, tablesResponse] = await Promise.all([
+    const [periodsResponse, tablesResponse, unitsResponse] = await Promise.all([
       api.get('/KhoanPeriods'),
-      api.get('/KpiAssignment/tables')
+      api.get('/KpiAssignment/tables'),
+      api.get('/units')
     ])
 
     khoanPeriods.value = periodsResponse.data || []
-
-    // Sử dụng danh sách 15 chi nhánh chuẩn hóa giống CalculationDashboard (cập nhật tên mới)
-    units.value = [
-      { id: 1, name: 'Hội Sở', code: 'HoiSo', type: 'CNL1', sortOrder: 1 },
-      { id: 2, name: 'CN Bình Lư', code: 'CnBinhLu', type: 'CNL2', sortOrder: 2 },
-      { id: 3, name: 'CN Phong Thổ', code: 'CnPhongTho', type: 'CNL2', sortOrder: 3 },
-      { id: 4, name: 'CN Sin Hồ', code: 'CnSinHo', type: 'CNL2', sortOrder: 4 },
-      { id: 5, name: 'CN Bum Tở', code: 'CnBumTo', type: 'CNL2', sortOrder: 5 },
-      { id: 6, name: 'CN Than Uyên', code: 'CnThanUyen', type: 'CNL2', sortOrder: 6 },
-      { id: 7, name: 'CN Đoàn Kết', code: 'CnDoanKet', type: 'CNL2', sortOrder: 7 },
-      { id: 8, name: 'CN Tân Uyên', code: 'CnTanUyen', type: 'CNL2', sortOrder: 8 },
-      { id: 9, name: 'CN Nậm Hàng', code: 'CnNamHang', type: 'CNL2', sortOrder: 9 },
-      { id: 10, name: 'CN Phong Thổ - PGD Số 5', code: 'CnPhongThoPgdSo5', type: 'CNL2', sortOrder: 10, parentUnitId: 3 },
-      { id: 11, name: 'CN Than Uyên - PGD Số 6', code: 'CnThanUyenPgdSo6', type: 'CNL2', sortOrder: 11, parentUnitId: 6 },
-      { id: 12, name: 'CN Đoàn Kết - PGD Số 1', code: 'CnDoanKetPgdSo1', type: 'CNL2', sortOrder: 12, parentUnitId: 7 },
-      { id: 13, name: 'CN Đoàn Kết - PGD Số 2', code: 'CnDoanKetPgdSo2', type: 'CNL2', sortOrder: 13, parentUnitId: 7 },
-      { id: 14, name: 'CN Tân Uyên - PGD Số 3', code: 'CnTanUyenPgdSo3', type: 'CNL2', sortOrder: 14, parentUnitId: 8 }
-    ]
-
     kpiTables.value = tablesResponse.data || []
+    
+    // Load real units from API instead of hardcoded
+    units.value = unitsResponse.data || []
 
-    console.log('✅ Loaded periods:', khoanPeriods.value.length)
-    console.log('✅ Loaded units:', units.value.length)
-    console.log('✅ Units detail:', units.value.map(u => `${u.Name} (${u.Type})`))
-    console.log('✅ Loaded KPI tables:', kpiTables.value.length)
+    console.log('📊 Unit KPI Assignment data loaded:')
+    console.log('   Periods:', khoanPeriods.value.length)
+    console.log('   KPI Tables:', kpiTables.value.length)
+    console.log('   Units:', units.value.length)
+    console.log('   Units detail:', units.value.map(u => `${u.Name} (${u.Type})`))
 
   } catch (error) {
-    console.error('Error loading initial data:', error)
+    console.error('❌ Error loading initial data:', error)
     errorMessage.value = 'Không thể tải dữ liệu: ' + (error.response?.data?.message || error.message)
   } finally {
     loading.value = false

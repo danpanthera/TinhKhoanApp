@@ -347,7 +347,7 @@ const branchOptions = computed(() => {
   // Định nghĩa thứ tự theo yêu cầu: Hội Sở → Bình Lư → Phong Thổ → Sìn Hồ → Bum Tở → Than Uyên → Đoàn Kết → Tân Uyên → Nậm Hàng
   const customOrder = [
     'HoiSo',         // Hội Sở (ID=2)
-    'BinhLu',        // Chi nhánh Bình Lư (ID=10)  
+    'BinhLu',        // Chi nhánh Bình Lư (ID=10)
     'PhongTho',      // Chi nhánh Phong Thổ (ID=11)
     'SinHo',         // Chi nhánh Sìn Hồ (ID=12)
     'BumTo',         // Chi nhánh Bum Tở (ID=13)
@@ -427,16 +427,30 @@ const filteredEmployees = computed(() => {
   if (selectedBranchId.value) {
     const branchId = parseInt(selectedBranchId.value)
     filtered = filtered.filter(emp => {
-      const empUnit = units.value.find(u => u.Id === emp.unitId)
-      if (!empUnit) return false
+      // Use casing-safe helper to get unitId (supports both UnitId and unitId)
+      const empUnitId = safeGet(emp, 'UnitId')
+      const empUnit = units.value.find(u => getId(u) === empUnitId)
+      
+      if (!empUnit) {
+        console.log(`❌ Employee ${safeGet(emp, 'FullName')} has no matching unit (UnitId: ${empUnitId})`)
+        return false
+      }
 
-      if (empUnit.Id === branchId) return true
+      // Direct match
+      if (getId(empUnit) === branchId) {
+        console.log(`✅ Direct match: ${safeGet(emp, 'FullName')} in ${getName(empUnit)}`)
+        return true
+      }
 
+      // Check parent hierarchy using casing-safe helpers
       let parent = empUnit
-      while (parent && (parent.ParentUnitId || parent.parentUnitId)) {
-        const parentId = parent.ParentUnitId || parent.parentUnitId
-        parent = units.value.find(u => u.Id === parentId)
-        if (parent && parent.Id === branchId) return true
+      while (parent && safeGet(parent, 'ParentUnitId')) {
+        const parentId = safeGet(parent, 'ParentUnitId')
+        parent = units.value.find(u => getId(u) === parentId)
+        if (parent && getId(parent) === branchId) {
+          console.log(`✅ Parent match: ${safeGet(emp, 'FullName')} in ${getName(empUnit)} → parent ${getName(parent)}`)
+          return true
+        }
       }
 
       return false
@@ -446,23 +460,32 @@ const filteredEmployees = computed(() => {
   if (selectedDepartmentId.value) {
     const deptId = parseInt(selectedDepartmentId.value)
     filtered = filtered.filter(emp => {
-      const empUnit = units.value.find(u => u.Id === emp.unitId)
+      // Use casing-safe helper to get unitId (supports both UnitId and unitId)
+      const empUnitId = safeGet(emp, 'UnitId')
+      const empUnit = units.value.find(u => getId(u) === empUnitId)
+      
       if (!empUnit) return false
 
-      if (empUnit.Id === deptId) return true
+      // Direct match
+      if (getId(empUnit) === deptId) return true
 
+      // Check parent hierarchy using casing-safe helpers
       let parent = empUnit
-      while (parent && (parent.ParentUnitId || parent.parentUnitId)) {
-        const parentId = parent.ParentUnitId || parent.parentUnitId
-        parent = units.value.find(u => u.Id === parentId)
-        if (parent && parent.Id === deptId) return true
+      while (parent && safeGet(parent, 'ParentUnitId')) {
+        const parentId = safeGet(parent, 'ParentUnitId')
+        parent = units.value.find(u => getId(u) === parentId)
+        if (parent && getId(parent) === deptId) return true
       }
 
       return false
     })
   }
 
-  return filtered.filter(emp => emp.fullName && emp.fullName.trim() !== '')
+  // Use casing-safe helper for employee name
+  return filtered.filter(emp => {
+    const name = safeGet(emp, 'FullName')
+    return name && name.trim() !== ''
+  })
 })
 
 const filteredEmployeesCount = computed(() => filteredEmployees.value.length)
