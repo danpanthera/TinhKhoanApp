@@ -386,7 +386,10 @@ const departmentOptions = computed(() => {
   const branch = units.value.find(u => u.Id === parseInt(selectedBranchId.value))
   if (!branch) return []
 
-  const children = units.value.filter(u => u.parentUnitId === branch.Id)
+  // Support both ParentUnitId and parentUnitId casing
+  const children = units.value.filter(u =>
+    (u.ParentUnitId === branch.Id) || (u.parentUnitId === branch.Id)
+  )
   const branchType = (branch.Type || '').toUpperCase()
 
   const getDepartmentSortOrder = (name) => {
@@ -425,8 +428,9 @@ const filteredEmployees = computed(() => {
       if (empUnit.Id === branchId) return true
 
       let parent = empUnit
-      while (parent && parent.parentUnitId) {
-        parent = units.value.find(u => u.Id === parent.parentUnitId)
+      while (parent && (parent.ParentUnitId || parent.parentUnitId)) {
+        const parentId = parent.ParentUnitId || parent.parentUnitId
+        parent = units.value.find(u => u.Id === parentId)
         if (parent && parent.Id === branchId) return true
       }
 
@@ -443,8 +447,9 @@ const filteredEmployees = computed(() => {
       if (empUnit.Id === deptId) return true
 
       let parent = empUnit
-      while (parent && parent.parentUnitId) {
-        parent = units.value.find(u => u.Id === parent.parentUnitId)
+      while (parent && (parent.ParentUnitId || parent.parentUnitId)) {
+        const parentId = parent.ParentUnitId || parent.parentUnitId
+        parent = units.value.find(u => u.Id === parentId)
         if (parent && parent.Id === deptId) return true
       }
 

@@ -159,12 +159,13 @@
             <input
               type="text"
               id="cbCode"
-              :value="currentEmployee.cbCode"
-              @input="onInputNumberOnly('cbCode', $event)"
+              v-model="currentEmployee.cbCode"
+              @input="onCBCodeInput"
               required
               pattern="[0-9]*"
               inputmode="numeric"
               maxlength="9"
+              placeholder="Nhập 9 chữ số"
             />
           </div>
         </div>
@@ -982,6 +983,14 @@ const getSelectedRolesText = () => {
 function onInputNumberOnly(field, event) {
   let val = event.target.value.replace(/[^0-9]/g, '');
   currentEmployee.value[field] = val;
+}
+
+function onCBCodeInput(event) {
+  let val = event.target.value.replace(/[^0-9]/g, '');
+  if (val.length > 9) {
+    val = val.substring(0, 9);
+  }
+  currentEmployee.value.cbCode = val;
 }
 
 function onInputTextOnly(field, event) {
