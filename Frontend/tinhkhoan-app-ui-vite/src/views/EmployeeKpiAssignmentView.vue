@@ -558,9 +558,11 @@ async function loadTableDetails() {
     // Use helper function to log API response
     logApiResponse(`/KpiAssignment/tables/${selectedTableId.value}`, response, 'indicators')
 
-    if (response.data && response.data.indicators) {
+    // Handle both 'indicators' (lowercase) and 'Indicators' (PascalCase) from API
+    const indicatorsData = response.data?.indicators || response.data?.Indicators
+    if (response.data && indicatorsData) {
       // Use helper function to normalize .NET array format
-      indicators.value = normalizeNetArray(response.data.indicators)
+      indicators.value = normalizeNetArray(indicatorsData)
       console.log('✅ Loaded KPI indicators:', indicators.value.length)
 
       // Log first few indicators for debugging
@@ -644,8 +646,9 @@ function validateEmployeeRoles() {
   // Auto-select appropriate KPI table when employees are selected
   if (selectedEmployeeIds.value.length > 0) {
     if (!selectedTableId.value) {
-      console.log('🎯 No table selected, trying to auto-select...')
-      autoSelectKpiTable()
+      console.log('ℹ️ No table selected. User should manually select a KPI table from dropdown.')
+      // Note: We no longer auto-select to let users choose their own KPI table
+      // autoSelectKpiTable()
     } else {
       console.log('✅ Table already selected, ensuring indicators are loaded...')
       // Force reload table details to ensure indicators are displayed
@@ -663,7 +666,9 @@ function validateEmployeeRoles() {
   }
 }
 
-// New function to auto-select KPI table based on selected employees
+// Auto-select KPI table function (DISABLED - users should manually select)
+// This function was previously used to auto-match KPI tables based on employee roles
+// but has been disabled to allow users full control over KPI table selection
 function autoSelectKpiTable() {
   if (selectedEmployeeIds.value.length === 0) {
     console.log('❌ No employees selected, cannot auto-select table')
@@ -1006,8 +1011,9 @@ watch([selectedEmployeeIds, selectedTableId], ([newEmployeeIds, newTableId]) => 
     console.log('✅ Both employees and table selected, loading KPI details...')
     loadTableDetails()
   } else if (newEmployeeIds.length > 0 && !newTableId) {
-    console.log('🎯 Employees selected but no table, trying auto-select...')
-    autoSelectKpiTable()
+    console.log('ℹ️ Employees selected but no table. User should manually select KPI table from dropdown.')
+    // Note: We no longer auto-select to let users choose their own KPI table
+    // autoSelectKpiTable()
   }
 }, { immediate: false })
 
