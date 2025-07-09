@@ -274,7 +274,7 @@ Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
 | 7 | Cbtd | Cán bộ tín dụng |
 | 8 | TruongphongKtnqCnl1 | Trưởng phòng KTNQ CNL1 |
 | 9 | PhophongKtnqCnl1 | Phó phòng KTNQ CNL1 |
-| 10 | Gdv | Giao dịch viên |
+| 10 | Gdv | GDV | Giao dịch viên |
 | 11 | TqHkKtnb | Thủ quỹ \| Hậu kiểm \| KTNB |
 | 12 | TruongphoItThKtgs | Trưởng phó IT \| Tổng hợp \| KTGS |
 | 13 | CBItThKtgsKhqlrr | Cán bộ IT \| Tổng hợp \| KTGS \| KH&QLRR |
@@ -489,6 +489,7 @@ TỔNG: 158 chỉ tiêu cho 22 bảng (thiếu TqHkKtnb)
 - ✅ **Fix hiển thị cột KPI**: Sửa template Vue để dùng PascalCase (`IndicatorName`, `MaxScore`, `Unit`)
 - ✅ **Sử dụng safeGet helper**: Đảm bảo tương thích với cả PascalCase và camelCase
 - ✅ **Fix cho cả Employee và Unit views**: Cập nhật EmployeeKpiAssignmentView.vue và UnitKpiAssignmentView.vue
+- ✅ **Fix lỗi safeGet import**: Thêm import safeGet vào UnitKpiAssignmentView.vue
 - ✅ **Test và verify**: Tạo file test để kiểm tra hoạt động
 
 #### 🔧 Chi tiết sửa chữa:
@@ -496,14 +497,20 @@ TỔNG: 158 chỉ tiêu cho 22 bảng (thiếu TqHkKtnb)
 2. **Score display**: Thay đổi từ `indicator.maxScore` → `safeGet(indicator, 'MaxScore')`
 3. **Unit display**: Thay đổi từ `indicator.unit` → `safeGet(indicator, 'Unit')`
 4. **Method update**: Cập nhật `getIndicatorUnit()` method để dùng `safeGet`
+5. **Import fix**: Thêm `import { getId, getName, safeGet } from '../utils/casingSafeAccess.js'` vào UnitKpiAssignmentView.vue
 
 #### 📋 Files đã sửa:
 - `/src/views/EmployeeKpiAssignmentView.vue` - Template KPI indicators table
-- `/src/views/UnitKpiAssignmentView.vue` - Template unit KPI table  
-- `/public/test-kpi-indicators-fix.html` - File test verification
+- `/src/views/UnitKpiAssignmentView.vue` - Template unit KPI table + fix import safeGet
+- `/public/test-kpi-indicators-fix.html` - File test verification  
+- `/scripts/test-unit-kpi-indicators-fix.sh` - Script test unit KPI indicators
 
 #### 🌟 Kết quả:
-- **Chỉ tiêu KPI**: Hiển thị đúng tên chỉ tiêu
-- **Điểm**: Hiển thị đúng điểm tối đa (MaxScore)
-- **Đơn vị**: Hiển thị đúng đơn vị đo lường (Unit)
+- **Chỉ tiêu KPI**: Hiển thị đúng tên chỉ tiêu cho cả cán bộ và chi nhánh
+- **Điểm**: Hiển thị đúng điểm tối đa (MaxScore) cho cả cán bộ và chi nhánh
+- **Đơn vị**: Hiển thị đúng đơn vị đo lường (Unit) cho cả cán bộ và chi nhánh
 - **Tương thích**: Hoạt động với cả PascalCase (backend) và camelCase (legacy)
+- **Lỗi safeGet**: Đã sửa lỗi "safeGet is not a function" trong UnitKpiAssignmentView.vue
+
+#### 🎯 Status: HOÀN THÀNH ✅
+Workflow giao khoán KPI cho cả cán bộ và chi nhánh đã hoạt động đúng, hiển thị đầy đủ thông tin KPI indicators.
