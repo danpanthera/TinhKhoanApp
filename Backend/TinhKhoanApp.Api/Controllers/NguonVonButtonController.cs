@@ -667,7 +667,8 @@ namespace TinhKhoanApp.Api.Controllers
         }
 
         /// <summary>
-        /// Debug: Kiểm tra dữ liệu chi tiết trong ImportedDataItems (actual data records)
+        /// 🔄 LEGACY DEBUG: Kiểm tra dữ liệu chi tiết trong ImportedDataItems (actual data records)
+        /// NOTE: Sử dụng cho legacy data only, new workflow sẽ query trực tiếp từ bảng DP01
         /// </summary>
         [HttpGet("debug/imported-data-items")]
         public async Task<IActionResult> GetImportedDataItems([FromQuery] string? fileType = "DP01")

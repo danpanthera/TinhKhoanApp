@@ -109,6 +109,9 @@ internal class Program
         builder.WebHost.ConfigureKestrel(options =>
         {
             options.Limits.MaxRequestBodySize = 500_000_000; // 500MB
+            // 🕐 Thêm timeout configuration cho file upload lớn
+            options.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes(10);
+            options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(10);
         });        // 3.5. Đăng ký các business services        builder.Services.AddScoped<IKpiScoringService, KpiScoringService>();
         builder.Services.AddScoped<IEmployeeKpiAssignmentService, EmployeeKpiAssignmentService>();
         builder.Services.AddScoped<UnitKpiScoringService>();
@@ -120,6 +123,9 @@ internal class Program
 
         // 🚀 NEW: Smart Data Import Service for automatic file routing
         builder.Services.AddScoped<ISmartDataImportService, SmartDataImportService>();
+
+        // 🏆 NEW: Direct Import Service - Import trực tiếp vào bảng riêng, bỏ ImportedDataItems
+        builder.Services.AddScoped<IDirectImportService, DirectImportService>();
 
         // 4. Đăng ký các dịch vụ cho Swagger/OpenAPI (để tạo tài liệu API tự động)
         builder.Services.AddEndpointsApiExplorer();

@@ -54,12 +54,12 @@ class SmartImportService {
       formData.append('statementDate', statementDate.toISOString())
     }
 
-    const response = await apiClient.post('/SmartDataImport/upload', formData, {
+    const response = await apiClient.post('/DirectImport/smart', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
-        // � Removed Accept-Encoding - Browser handles this automatically
+        // 🚀 Removed Accept-Encoding - Browser handles this automatically
       },
-      timeout: 60000, // 🚀 Giảm xuống 1 phút cho file nhỏ
+      timeout: 300000, // 🚀 Tăng lên 5 phút cho smart upload
       onUploadProgress: (progressEvent) => {
         if (progressCallback && progressEvent.total) {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
@@ -89,12 +89,12 @@ class SmartImportService {
       formData.append('statementDate', statementDate.toISOString())
     }
 
-    const response = await apiClient.post('/SmartDataImport/upload', formData, {
+    const response = await apiClient.post('/DirectImport/smart', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
-        // � Removed Accept-Encoding - Browser handles this automatically
+        // 🚀 Removed Accept-Encoding - Browser handles this automatically
       },
-      timeout: 180000, // 🚀 Giảm xuống 3 phút cho file lớn
+      timeout: 600000, // 🚀 Tăng lên 10 phút cho file lớn
       onUploadProgress: (progressEvent) => {
         if (progressCallback && progressEvent.total) {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)

@@ -4,7 +4,6 @@ using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models;
 using TinhKhoanApp.Api.Models.Validation;
 using TinhKhoanApp.Api.Services;
-using TinhKhoanApp.Api.Services.Interfaces; // 🆕 NEW: For IDirectImportService
 using TinhKhoanApp.Api.Utils; // 🕐 Thêm Utils cho VietnamDateTime
 using ClosedXML.Excel;
 using System.Text.RegularExpressions;
@@ -26,7 +25,6 @@ namespace TinhKhoanApp.Api.Controllers
         private readonly ILogger<RawDataController> _logger;
         private readonly IConfiguration _configuration; // 🔥 Thêm Configuration để lấy connection string
         private readonly IRawDataProcessingService _processingService; // 🔥 Inject processing service
-        private readonly IDirectImportService _directImportService; // 🆕 NEW: Direct import service
         private readonly IFileNameParsingService _fileNameParsingService; // 🔧 CHUẨN HÓA: Inject filename parsing service
         private readonly ILegacyExcelReaderService _legacyExcelReaderService; // 📊 Inject legacy Excel reader service
 
@@ -49,13 +47,12 @@ namespace TinhKhoanApp.Api.Controllers
             { "GL41", "Bảng cân đối - Báo cáo tài chính" }
         };
 
-        public RawDataController(ApplicationDbContext context, ILogger<RawDataController> logger, IConfiguration configuration, IRawDataProcessingService processingService, IDirectImportService directImportService, IFileNameParsingService fileNameParsingService, ILegacyExcelReaderService legacyExcelReaderService)
+        public RawDataController(ApplicationDbContext context, ILogger<RawDataController> logger, IConfiguration configuration, IRawDataProcessingService processingService, IFileNameParsingService fileNameParsingService, ILegacyExcelReaderService legacyExcelReaderService)
         {
             _context = context;
             _logger = logger;
             _configuration = configuration; // 🔥 Inject configuration để lấy connection string
             _processingService = processingService; // 🔥 Inject processing service
-            _directImportService = directImportService; // 🆕 NEW: Inject direct import service
             _fileNameParsingService = fileNameParsingService; // 🔧 CHUẨN HÓA: Inject filename parsing service
             _legacyExcelReaderService = legacyExcelReaderService; // 📊 Inject legacy Excel reader service
         }
@@ -2541,20 +2538,20 @@ namespace TinhKhoanApp.Api.Controllers
                     return;
                 }
 
-                // 🆕 NEW: Use ProcessDirectImportRecordAsync for new workflow
-                var processingResult = await _processingService.ProcessDirectImportRecordAsync(
-                    importedDataRecordId, dataType.ToUpper());
+                // Sử dụng injected processing service
+                var processingResult = await _processingService.ProcessImportedDataToHistoryAsync(
+                    importedDataRecordId, dataType.ToUpper(), statementDate);
 
                 if (processingResult.Success)
                 {
-                    _logger.LogInformation("✅ Auto-process thành công cho ImportId: {ImportId}, Table: {Table}",
-                        importedDataRecordId, processingResult.TableName);
+                    _logger.LogInformation("✅ Auto-process thành công cho ImportId: {ImportId}, Processed: {ProcessedCount} records",
+                        importedDataRecordId, processingResult.ProcessedRecords);
 
                     // Cập nhật status trong database nếu cần
                     var importRecord = await _context.ImportedDataRecords.FindAsync(importedDataRecordId);
                     if (importRecord != null)
                     {
-                        importRecord.Notes = $"{importRecord.Notes} | Auto-processed to {processingResult.TableName}";
+                        importRecord.Notes = $"{importRecord.Notes} | Auto-processed: {processingResult.ProcessedRecords} records";
                         await _context.SaveChangesAsync();
                     }
                 }

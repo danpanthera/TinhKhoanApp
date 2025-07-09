@@ -78,8 +78,7 @@ namespace TinhKhoanApp.Api.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new
-                {
+                return StatusCode(500, new {
                     error = "Lỗi khi truy vấn dữ liệu LN01",
                     details = ex.Message,
                     source = "LN01 Table"
@@ -110,8 +109,7 @@ namespace TinhKhoanApp.Api.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new
-                {
+                return StatusCode(500, new {
                     error = "Lỗi khi truy vấn thống kê LN01",
                     details = ex.Message
                 });
@@ -448,28 +446,28 @@ namespace TinhKhoanApp.Api.Controllers
                     }
                 };
 
-                // Nếu có cả hai file, lấy sample data để so sánh từ bảng LN01
+                // Nếu có cả hai file, lấy sample data để so sánh
                 if (april30Record != null && may31Record != null)
                 {
-                    var april30Data = await _context.LN01s
-                        .Where(x => x.NgayDL == "30/04/2025" && x.MA_CN == "7808")
+                    var april30Data = await _context.ImportedDataItems
+                        .Where(x => x.ImportedDataRecordId == april30Record.Id)
                         .Take(20)
                         .Select(x => new
                         {
                             Id = x.Id,
-                            RawData = $"Branch: {x.MA_CN}, Customer: {x.MA_KH}, Contract: {x.SO_HD_CHO_VAY}, Amount: {x.DU_NO_GOC}",
-                            ProcessedDate = x.CreatedDate.ToString("dd/MM/yyyy HH:mm:ss")
+                            RawData = x.RawData,
+                            ProcessedDate = x.ProcessedDate.ToString("dd/MM/yyyy HH:mm:ss")
                         })
                         .ToListAsync();
 
-                    var may31Data = await _context.LN01s
-                        .Where(x => x.NgayDL == "31/05/2025" && x.MA_CN == "7808")
+                    var may31Data = await _context.ImportedDataItems
+                        .Where(x => x.ImportedDataRecordId == may31Record.Id)
                         .Take(20)
                         .Select(x => new
                         {
                             Id = x.Id,
-                            RawData = $"Branch: {x.MA_CN}, Customer: {x.MA_KH}, Contract: {x.SO_HD_CHO_VAY}, Amount: {x.DU_NO_GOC}",
-                            ProcessedDate = x.CreatedDate.ToString("dd/MM/yyyy HH:mm:ss")
+                            RawData = x.RawData,
+                            ProcessedDate = x.ProcessedDate.ToString("dd/MM/yyyy HH:mm:ss")
                         })
                         .ToListAsync();
 
@@ -517,14 +515,14 @@ namespace TinhKhoanApp.Api.Controllers
 
                 foreach (var file in allFiles)
                 {
-                    // Lấy một vài bản ghi mẫu từ bảng LN01 dựa vào ngày và chi nhánh
-                    var sampleData = await _context.LN01s
-                        .Where(x => x.MA_CN == "7808" && x.FileName == file.FileName)
+                    // Lấy một vài bản ghi mẫu từ mỗi file
+                    var sampleData = await _context.ImportedDataItems
+                        .Where(x => x.ImportedDataRecordId == file.Id)
                         .Take(5)
                         .Select(x => new
                         {
-                            RawData = $"Branch: {x.MA_CN}, Customer: {x.MA_KH}, Contract: {x.SO_HD_CHO_VAY}",
-                            ProcessedDate = x.CreatedDate.ToString("dd/MM/yyyy HH:mm:ss")
+                            RawData = x.RawData.Length > 100 ? x.RawData.Substring(0, 100) + "..." : x.RawData,
+                            ProcessedDate = x.ProcessedDate.ToString("dd/MM/yyyy HH:mm:ss")
                         })
                         .ToListAsync();
 
@@ -584,23 +582,41 @@ namespace TinhKhoanApp.Api.Controllers
                 int stt = 1;
                 foreach (var file in allFiles)
                 {
-                    // Lấy tất cả dữ liệu chi tiết từ bảng LN01 cho file này
-                    var detailData = await _context.LN01s
-                        .Where(x => x.FileName == file.FileName && x.MA_CN == "7808")
+                    // Lấy tất cả dữ liệu chi tiết từ file này
+                    var detailData = await _context.ImportedDataItems
+                        .Where(x => x.ImportedDataRecordId == file.Id)
+                        .Select(x => x.RawData)
                         .ToListAsync();
 
-                    foreach (var lnRecord in detailData)
+                    foreach (var rawData in detailData)
                     {
                         try
                         {
-                            // Escape CSV special characters
-                            var custName = EscapeCSVField(lnRecord.MA_KH ?? "");
-                            var loanType = EscapeCSVField(lnRecord.LOAI_HINH_CHO_VAY ?? "");
-                            var officerName = EscapeCSVField("");
-                            var province = EscapeCSVField("");
-                            var district = EscapeCSVField("");
+                            // Parse JSON để lấy thông tin chi tiết
+                            var jsonDoc = JsonDocument.Parse(rawData);
+                            var root = jsonDoc.RootElement;
 
-                            csvData.AppendLine($"{stt},{file.FileName},{file.StatementDate?.ToString("dd/MM/yyyy")},{file.ImportDate:dd/MM/yyyy HH:mm:ss},{file.RecordsCount},{file.Status},{file.ImportedBy},{lnRecord.MA_KH},{custName},{lnRecord.SO_HD_CHO_VAY},{lnRecord.MA_CN},{lnRecord.DU_NO_GOC},{loanType},{lnRecord.LAI_SUAT_CHO_VAY},{officerName},{lnRecord.NGAY_DEN_HAN?.ToString("dd/MM/yyyy")},{province},{district},{lnRecord.NGAY_GIAI_NGAN?.ToString("dd/MM/yyyy")}");
+                            var custSeq = root.TryGetProperty("CUSTSEQ", out var custSeqProp) ? custSeqProp.GetString() : "";
+                            var custName = root.TryGetProperty("CUSTNM", out var custNameProp) ? custNameProp.GetString() : "";
+                            var account = root.TryGetProperty("TAI_KHOAN", out var accountProp) ? accountProp.GetString() : "";
+                            var currency = root.TryGetProperty("CCY", out var ccyProp) ? ccyProp.GetString() : "";
+                            var debtAmount = root.TryGetProperty("DU_NO", out var debtProp) ? debtProp.GetString() : "";
+                            var loanType = root.TryGetProperty("LOAN_TYPE", out var loanTypeProp) ? loanTypeProp.GetString() : "";
+                            var interestRate = root.TryGetProperty("INTEREST_RATE", out var rateProp) ? rateProp.GetString() : "";
+                            var officerName = root.TryGetProperty("OFFICER_NAME", out var officerProp) ? officerProp.GetString() : "";
+                            var nextRepayDate = root.TryGetProperty("NEXT_REPAY_DATE", out var nextRepayProp) ? nextRepayProp.GetString() : "";
+                            var province = root.TryGetProperty("LCLPROVINNM", out var provinceProp) ? provinceProp.GetString() : "";
+                            var district = root.TryGetProperty("LCLDISTNM", out var districtProp) ? districtProp.GetString() : "";
+                            var lastRepayDate = root.TryGetProperty("LAST_REPAY_DATE", out var lastRepayProp) ? lastRepayProp.GetString() : "";
+
+                            // Escape CSV special characters
+                            custName = EscapeCSVField(custName);
+                            loanType = EscapeCSVField(loanType);
+                            officerName = EscapeCSVField(officerName);
+                            province = EscapeCSVField(province);
+                            district = EscapeCSVField(district);
+
+                            csvData.AppendLine($"{stt},{file.FileName},{file.StatementDate?.ToString("dd/MM/yyyy")},{file.ImportDate:dd/MM/yyyy HH:mm:ss},{file.RecordsCount},{file.Status},{file.ImportedBy},{custSeq},{custName},{account},{currency},{debtAmount},{loanType},{interestRate},{officerName},{nextRepayDate},{province},{district},{lastRepayDate}");
                             stt++;
                         }
                         catch (JsonException)
@@ -709,26 +725,28 @@ namespace TinhKhoanApp.Api.Controllers
                 // Header cho CSV so sánh
                 csvData.AppendLine("Type,FileName,StatementDate,CustomerSeq,CustomerName,AccountNumber,Currency,DebtAmount,LoanType,InterestRate,OfficerName,Province,District,LastRepayDate");
 
-                // Lấy dữ liệu từ bảng LN01 tháng 4
-                var april30Data = await _context.LN01s
-                    .Where(x => x.NgayDL == "30/04/2025" && x.MA_CN == "7808")
+                // Lấy dữ liệu từ file tháng 4
+                var april30Data = await _context.ImportedDataItems
+                    .Where(x => x.ImportedDataRecordId == april30Record.Id)
+                    .Select(x => x.RawData)
                     .ToListAsync();
 
-                // Lấy dữ liệu từ bảng LN01 tháng 5
-                var may31Data = await _context.LN01s
-                    .Where(x => x.NgayDL == "31/05/2025" && x.MA_CN == "7808")
+                // Lấy dữ liệu từ file tháng 5
+                var may31Data = await _context.ImportedDataItems
+                    .Where(x => x.ImportedDataRecordId == may31Record.Id)
+                    .Select(x => x.RawData)
                     .ToListAsync();
 
                 // Xuất dữ liệu tháng 4
-                foreach (var lnRecord in april30Data.Take(100)) // Giới hạn 100 bản ghi đầu tiên
+                foreach (var rawData in april30Data.Take(100)) // Giới hạn 100 bản ghi đầu tiên
                 {
-                    AddLN01DataRowToCSV(csvData, "30/04/2025", april30Record.FileName, lnRecord);
+                    AddDataRowToCSV(csvData, "30/04/2025", april30Record.FileName, rawData);
                 }
 
                 // Xuất dữ liệu tháng 5
-                foreach (var lnRecord in may31Data.Take(100)) // Giới hạn 100 bản ghi đầu tiên
+                foreach (var rawData in may31Data.Take(100)) // Giới hạn 100 bản ghi đầu tiên
                 {
-                    AddLN01DataRowToCSV(csvData, "31/05/2025", may31Record.FileName, lnRecord);
+                    AddDataRowToCSV(csvData, "31/05/2025", may31Record.FileName, rawData);
                 }
 
                 var csvBytes = Encoding.UTF8.GetBytes(csvData.ToString());
@@ -744,28 +762,6 @@ namespace TinhKhoanApp.Api.Controllers
                     Message = ex.Message,
                     Details = ex.InnerException?.Message
                 });
-            }
-        }
-
-        /// <summary>
-        /// Helper method để thêm dữ liệu LN01 vào CSV so sánh
-        /// </summary>
-        private void AddLN01DataRowToCSV(StringBuilder csvData, string type, string fileName, LN01 lnRecord)
-        {
-            try
-            {
-                // Escape CSV special characters
-                var custName = EscapeCSVField(lnRecord.MA_KH ?? "");
-                var loanType = EscapeCSVField(lnRecord.LOAI_HINH_CHO_VAY ?? "");
-                var officerName = EscapeCSVField("");
-                var province = EscapeCSVField("");
-                var district = EscapeCSVField("");
-
-                csvData.AppendLine($"{type},{fileName},{type},{lnRecord.MA_KH},{custName},{lnRecord.SO_HD_CHO_VAY},{lnRecord.MA_CN},{lnRecord.DU_NO_GOC},{loanType},{lnRecord.LAI_SUAT_CHO_VAY},{officerName},{province},{district},{lnRecord.NGAY_GIAI_NGAN?.ToString("dd/MM/yyyy")}");
-            }
-            catch (Exception)
-            {
-                csvData.AppendLine($"{type},{fileName},{type},,,,,,,,,,,");
             }
         }
 

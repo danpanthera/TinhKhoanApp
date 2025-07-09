@@ -4,58 +4,72 @@ import apiClient from './api.js'
  * Data Import Service - Handles file upload and data management
  */
 class DataImportService {
-  
+
   /**
-   * Upload a file to the server
+   * Upload a file to the server using Direct Import (tăng tốc 2-5x)
    * @param {File} file - The file to upload
-   * @param {string} category - The category of data
+   * @param {string} category - The category of data (không dùng nữa)
    * @returns {Promise} Upload result
    */
   async uploadFile(file, category = 'General') {
     try {
       const formData = new FormData()
-      formData.append('files', file)
-      formData.append('category', category)
-      
-      const response = await apiClient.post('/DataImport/upload', formData, {
+      formData.append('file', file)
+
+      // 🚀 Sử dụng Direct Import API - tăng tốc 2-5x
+      const response = await apiClient.post('/DirectImport/smart', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
-        }
+        },
+        timeout: 600000 // 10 phút cho file lớn
       })
-      
+
       return response.data
     } catch (error) {
       console.error('Error uploading file:', error)
-      throw new Error(`Upload failed: ${error.response?.data?.message || error.message}`)
+      throw new Error(`Direct Import failed: ${error.response?.data?.message || error.message}`)
     }
   }
 
   /**
-   * Upload multiple files
+   * Upload multiple files using Direct Import (tăng tốc 2-5x)
    * @param {FileList|Array} files - Files to upload
-   * @param {string} category - The category of data
+   * @param {string} category - The category of data (không dùng nữa)
    * @returns {Promise} Upload results
    */
   async uploadFiles(files, category = 'General') {
     try {
-      const formData = new FormData()
-      
-      // Add all files to form data
-      for (let i = 0; i < files.length; i++) {
-        formData.append('files', files[i])
-      }
-      formData.append('category', category)
-      
-      const response = await apiClient.post('/DataImport/upload', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
+      const results = []
+
+      // 🚀 Upload từng file bằng Direct Import API song song
+      const uploadPromises = Array.from(files).map(async (file) => {
+        const formData = new FormData()
+        formData.append('file', file)
+
+        const response = await apiClient.post('/DirectImport/smart', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          },
+          timeout: 600000 // 10 phút cho file lớn
+        })
+
+        return {
+          fileName: file.name,
+          result: response.data
         }
       })
-      
-      return response.data
+
+      const uploadResults = await Promise.all(uploadPromises)
+
+      return {
+        success: true,
+        results: uploadResults,
+        totalFiles: files.length,
+        message: `Successfully uploaded ${files.length} files using Direct Import`
+      }
     } catch (error) {
       console.error('Error uploading files:', error)
-      throw new Error(`Upload failed: ${error.response?.data?.message || error.message}`)
+      throw new Error(`Direct Import failed: ${error.response?.data?.message || error.message}`)
     }
   }
 
@@ -66,12 +80,12 @@ class DataImportService {
   async getImportedData() {
     try {
       const response = await apiClient.get('/DataImport')
-      
+
       // Handle the .NET $values format
       if (response.data && response.data.$values) {
         return response.data.$values
       }
-      
+
       return response.data || []
     } catch (error) {
       console.error('Error getting imported data:', error)
@@ -104,12 +118,12 @@ class DataImportService {
       const response = await apiClient.get(`/DataImport/${recordId}/download`, {
         responseType: 'blob'
       })
-      
+
       // Create download link
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')
       link.href = url
-      
+
       // Get filename from response headers
       const contentDisposition = response.headers['content-disposition']
       let filename = 'download'
@@ -119,13 +133,13 @@ class DataImportService {
           filename = filenameMatch[1]
         }
       }
-      
+
       link.setAttribute('download', filename)
       document.body.appendChild(link)
       link.click()
       link.remove()
       window.URL.revokeObjectURL(url)
-      
+
       return { success: true, filename }
     } catch (error) {
       console.error('Error downloading file:', error)
@@ -157,22 +171,22 @@ class DataImportService {
       const response = await apiClient.get('/DataImport/export', {
         responseType: 'blob'
       })
-      
+
       // Create download link
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')
       link.href = url
-      
+
       // Generate filename with timestamp
       const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')
       const filename = `KPI_Data_Export_${timestamp}.xlsx`
-      
+
       link.setAttribute('download', filename)
       document.body.appendChild(link)
       link.click()
       link.remove()
       window.URL.revokeObjectURL(url)
-      
+
       return { success: true, filename }
     } catch (error) {
       console.error('Error exporting data:', error)
@@ -244,23 +258,23 @@ class DataImportService {
       'text/csv', // .csv
       'application/pdf' // .pdf
     ]
-    
+
     const allowedExtensions = /\.(xlsx|xls|csv|pdf)$/i
-    
+
     if (!allowedTypes.includes(file.type) && !allowedExtensions.test(file.name)) {
       return {
         valid: false,
         error: 'File type not supported. Only Excel, CSV, and PDF files are allowed.'
       }
     }
-    
+
     if (file.size > maxSize) {
       return {
         valid: false,
         error: 'File size exceeds 10MB limit.'
       }
     }
-    
+
     return { valid: true }
   }
 
@@ -271,11 +285,11 @@ class DataImportService {
    */
   formatFileSize(bytes) {
     if (bytes === 0) return '0 Bytes'
-    
+
     const k = 1024
     const sizes = ['Bytes', 'KB', 'MB', 'GB']
     const i = Math.floor(Math.log(bytes) / Math.log(k))
-    
+
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
   }
 

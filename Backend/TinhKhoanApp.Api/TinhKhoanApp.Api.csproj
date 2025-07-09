@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="ClosedXML" Version="0.105.0" />
+    <PackageReference Include="CsvHelper" Version="33.1.0" />
     <PackageReference Include="Dapper" Version="2.1.66" />
     <PackageReference Include="ExcelDataReader" Version="3.7.0" />
     <PackageReference Include="ExcelDataReader.DataSet" Version="3.7.0" />    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.4" />
@@ -26,6 +27,13 @@
     <PackageReference Include="NPOI" Version="2.7.3" />
     <PackageReference Include="StackExchange.Redis" Version="2.8.41" />    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageReference Include="EPPlus" Version="8.0.5" />
-    <PackageReference Include="QuestPDF" Version="2024.3.0" /></ItemGroup>
+    <PackageReference Include="QuestPDF" Version="2024.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Exclude backup directories and files from build -->
+    <Compile Remove="backup_importeddataitems_20250709_201445/**" />
+    <None Include="backup_importeddataitems_20250709_201445/**" />
+  </ItemGroup>
 
 </Project>

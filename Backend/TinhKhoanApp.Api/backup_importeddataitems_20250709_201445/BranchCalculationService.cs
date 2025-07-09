@@ -548,49 +548,46 @@ namespace TinhKhoanApp.Api.Services
                 _logger.LogInformation("🔍 Tìm dữ liệu DP01 cho chi nhánh {BranchCode}, PGD {PgdCode}, ngày {Date}",
                     branchCode, pgdCode ?? "NULL", date?.ToString("dd/MM/yyyy") ?? "latest");
 
-                // Xây dựng query cho bảng DP01 trực tiếp
-                var query = _context.DP01s.AsQueryable();
-
-                // Lọc theo chi nhánh
-                query = query.Where(x => x.MA_CN == branchCode);
+                // Xây dựng query cho ImportedDataRecords có category DP01
+                var query = _context.ImportedDataRecords.Where(x => x.Category == "DP01");
 
                 // Lọc theo ngày nếu có tham số date
                 if (date.HasValue)
                 {
-                    var targetDate = date.Value.ToString("dd/MM/yyyy");
-                    _logger.LogInformation("🎯 Filter by specific date: {Date}", targetDate);
-                    query = query.Where(x => x.NgayDL == targetDate);
+                    // Debug log ngày được filter
+                    _logger.LogInformation("🎯 Filter by specific date: {Date} (Date component: {DateOnly})",
+                        date.Value.ToString("yyyy-MM-dd HH:mm:ss"), date.Value.Date.ToString("yyyy-MM-dd"));
+
+                    // Tìm dữ liệu cho ngày cụ thể
+                    query = query.Where(x => x.StatementDate.HasValue && x.StatementDate.Value.Date == date.Value.Date);
                 }
                 else
                 {
                     _logger.LogInformation("📅 No date specified, finding latest date...");
 
                     // Nếu không có tham số date, lấy ngày gần nhất
-                    var latestDate = await _context.DP01s
-                        .Where(x => x.MA_CN == branchCode && !string.IsNullOrEmpty(x.NgayDL))
-                        .Select(x => x.NgayDL)
-                        .Distinct()
-                        .OrderByDescending(x => x)
-                        .FirstOrDefaultAsync();
+                    var latestDate = await _context.ImportedDataRecords
+                        .Where(x => x.Category == "DP01" && x.StatementDate.HasValue)
+                        .MaxAsync(x => x.StatementDate);
 
-                    if (!string.IsNullOrEmpty(latestDate))
+                    if (latestDate.HasValue)
                     {
-                        query = query.Where(x => x.NgayDL == latestDate);
-                        _logger.LogInformation("📅 Sử dụng ngày gần nhất: {LatestDate}", latestDate);
+                        query = query.Where(x => x.StatementDate.HasValue && x.StatementDate.Value.Date == latestDate.Value.Date);
+                        _logger.LogInformation("📅 Sử dụng ngày gần nhất: {LatestDate}", latestDate.Value.ToString("dd/MM/yyyy"));
                     }
                     else
                     {
-                        _logger.LogWarning("❌ Không tìm thấy NgayDL nào trong bảng DP01");
+                        _logger.LogWarning("❌ Không tìm thấy StatementDate nào trong database");
                     }
                 }
 
                 // Debug: Log chi tiết thông tin filter
-                _logger.LogInformation("🔍 DEBUG Filter details - Date param: {Date}, HasValue: {HasValue}",
+                _logger.LogInformation("🔍 DEBUG Filter details - Date param: {Date}, HasValue: {HasValue}, Category: DP01",
                     date?.ToString("yyyy-MM-dd HH:mm:ss") ?? "NULL", date.HasValue);
 
                 var dp01Records = await query.ToListAsync();
 
-                _logger.LogInformation("📄 Tìm thấy {Count} records DP01 trong bảng cho điều kiện lọc", dp01Records.Count);
+                _logger.LogInformation("📄 Tìm thấy {Count} records DP01 trong database cho điều kiện lọc", dp01Records.Count);
 
                 if (!dp01Records.Any())
                 {
@@ -609,56 +606,82 @@ namespace TinhKhoanApp.Api.Services
                     processedRecords++;
                     _logger.LogInformation("🔧 Xử lý record {Index}/{Total}: {FileName}", processedRecords, dp01Records.Count, record.FileName);
 
-                    var items = dp01Records; // Sử dụng trực tiếp dữ liệu từ bảng DP01
+                    var items = await _context.ImportedDataItems
+                        .Where(x => x.ImportedDataRecordId == record.Id)
+                        .Select(x => x.RawData)
+                        .ToListAsync();
 
                     totalItems += items.Count;
                     _logger.LogInformation("📊 Record {FileName} có {ItemCount} items", record.FileName, items.Count);
 
-                    foreach (var dp01Record in items)
+                    foreach (var rawData in items)
                     {
-                        // Kiểm tra MA_CN và MA_PGD trực tiếp từ model
-                        var maCn = dp01Record.MA_CN ?? "";
-                        var maPgd = dp01Record.MA_PGD ?? "";
-                        var taiKhoanHachToan = dp01Record.TAI_KHOAN_HACH_TOAN ?? "";
-                        var currentBalance = dp01Record.CURRENT_BALANCE ?? 0;
+                        try
+                        {
+                            var jsonDoc = JsonDocument.Parse(rawData);
+                            var root = jsonDoc.RootElement;
 
-                        // Lọc theo chi nhánh và PGD
-                        bool pgdMatch;
-                        if (pgdCode == "00" || string.IsNullOrEmpty(pgdCode))
-                        {
-                            // Chi nhánh chính (PGD "00") - lấy TẤT CẢ dữ liệu của chi nhánh
-                            // Bao gồm: chi nhánh chính + tất cả PGD trực thuộc (01, 02, 03...)
-                            pgdMatch = true;
-                        }
-                        else
-                        {
-                            // PGD cụ thể (01, 02, 03...) - chỉ lấy dữ liệu của PGD đó
-                            pgdMatch = maPgd == pgdCode;
-                        }
+                            // Kiểm tra MA_CN và MA_PGD
+                            var maCn = root.TryGetProperty("MA_CN", out var maCnProp) ? maCnProp.GetString() : "";
+                            var maPgd = root.TryGetProperty("MA_PGD", out var maPgdProp) ? maPgdProp.GetString() : "";
+                            var taiKhoanHachToan = root.TryGetProperty("TAI_KHOAN_HACH_TOAN", out var tkProp) ? tkProp.GetString() : "";
 
-                        if (maCn == branchCode && pgdMatch && !string.IsNullOrEmpty(taiKhoanHachToan))
-                        {
-                            matchedItems++;
-                            allItems.Add(new
+                            // Parse CURRENT_BALANCE - có thể là string hoặc number
+                            decimal currentBalance = 0;
+                            if (root.TryGetProperty("CURRENT_BALANCE", out var balanceProp))
                             {
-                                MA_CN = maCn,
-                                MA_PGD = maPgd,
-                                TAI_KHOAN_HACH_TOAN = taiKhoanHachToan,
-                                CURRENT_BALANCE = currentBalance
-                            });
-
-                            // Log 3 items đầu để debug
-                            if (matchedItems <= 3)
-                            {
-                                _logger.LogInformation("✅ Match #{Index}: MA_CN={MaCn}, MA_PGD={MaPgd}, TK={TK}, Balance={Balance}",
-                                    matchedItems, maCn, maPgd, taiKhoanHachToan, currentBalance);
+                                if (balanceProp.ValueKind == JsonValueKind.Number)
+                                {
+                                    currentBalance = balanceProp.GetDecimal();
+                                }
+                                else if (balanceProp.ValueKind == JsonValueKind.String)
+                                {
+                                    decimal.TryParse(balanceProp.GetString(), out currentBalance);
+                                }
                             }
+
+                            // Lọc theo chi nhánh và PGD
+                            bool pgdMatch;
+                            if (pgdCode == "00")
+                            {
+                                // Chi nhánh chính (PGD "00") - lấy TẤT CẢ dữ liệu của chi nhánh
+                                // Bao gồm: chi nhánh chính + tất cả PGD trực thuộc (01, 02, 03...)
+                                pgdMatch = true;
+                            }
+                            else
+                            {
+                                // PGD cụ thể (01, 02, 03...) - chỉ lấy dữ liệu của PGD đó
+                                pgdMatch = maPgd == pgdCode;
+                            }
+
+                            if (maCn == branchCode && pgdMatch && !string.IsNullOrEmpty(taiKhoanHachToan))
+                            {
+                                matchedItems++;
+                                allItems.Add(new
+                                {
+                                    MA_CN = maCn,
+                                    MA_PGD = maPgd,
+                                    TAI_KHOAN_HACH_TOAN = taiKhoanHachToan,
+                                    CURRENT_BALANCE = currentBalance
+                                });
+
+                                // Log 3 items đầu để debug
+                                if (matchedItems <= 3)
+                                {
+                                    _logger.LogInformation("✅ Match #{Index}: MA_CN={MaCn}, MA_PGD={MaPgd}, TK={TK}, Balance={Balance}",
+                                        matchedItems, maCn, maPgd, taiKhoanHachToan, currentBalance);
+                                }
+                            }
+                        }
+                        catch (JsonException ex)
+                        {
+                            _logger.LogWarning("❌ JSON parse error: {Error}", ex.Message);
                         }
                     }
                 }
 
                 _logger.LogInformation("📈 Kết quả: Tổng {TotalItems} items, Matched {MatchedItems} items cho {BranchCode}",
-                    processedRecords, matchedItems, branchCode);
+                    totalItems, matchedItems, branchCode);
 
                 return allItems;
             }

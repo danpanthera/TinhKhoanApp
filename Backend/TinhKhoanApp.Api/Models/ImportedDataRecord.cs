@@ -51,12 +51,7 @@ namespace TinhKhoanApp.Api.Models
         // 🕒 Temporal Table columns sẽ được quản lý bởi EF Core như shadow properties
         // Không cần khai báo ở đây, sẽ được cấu hình trong OnModelCreating
 
-        // Navigation property
-        public virtual ICollection<ImportedDataItem> ImportedDataItems { get; set; }
-
-        public ImportedDataRecord()
-        {
-            ImportedDataItems = new HashSet<ImportedDataItem>();
-        }
+        // ✅ CLEANED: Removed ImportedDataItems navigation property for Direct Import workflow
+        // Data is now stored directly in specific tables (DP01, LN01, etc.)
     }
 }

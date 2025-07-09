@@ -6,6 +6,11 @@ using System.Text.Json;
 
 namespace TinhKhoanApp.Api.Controllers
 {
+    /// <summary>
+    /// 🔄 LEGACY CONTROLLER: Quản lý ImportedDataItems từ legacy import workflow
+    /// Sử dụng cho backward compatibility và data management
+    /// NEW WORKFLOW: Sử dụng DirectImportController thay thế
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class ImportedDataController : ControllerBase
@@ -218,6 +223,35 @@ namespace TinhKhoanApp.Api.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Lỗi khi check DP01", error = ex.Message });
+            }
+        }
+
+        [HttpGet("dp01-new-count")]
+        public async Task<IActionResult> GetDP01NewCount()
+        {
+            try
+            {
+                var count = await _context.DP01_News.CountAsync();
+                var sampleData = await _context.DP01_News.Take(5).ToListAsync();
+
+                return Ok(new
+                {
+                    count = count,
+                    message = $"Có {count:N0} bản ghi DP01_New",
+                    sampleData = sampleData.Select(d => new
+                    {
+                        d.Id,
+                        d.NgayDL,
+                        d.MA_CN,
+                        d.MA_PGD,
+                        d.TAI_KHOAN_HACH_TOAN,
+                        d.CURRENT_BALANCE
+                    })
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi kiểm tra DP01_New", error = ex.Message });
             }
         }
     }

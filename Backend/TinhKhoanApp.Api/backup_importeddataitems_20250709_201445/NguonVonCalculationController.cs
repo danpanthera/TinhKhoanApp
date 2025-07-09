@@ -124,19 +124,71 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                // Query directly from DP01 table
-                var dp01Data = await _context.DP01s
-                    .Where(x => x.MA_CN == branchCode && (pgdCode == null || x.MA_PGD == pgdCode))
-                    .Select(x => new
-                    {
-                        MA_CN = x.MA_CN,
-                        MA_PGD = x.MA_PGD,
-                        TAI_KHOAN_HACH_TOAN = x.TAI_KHOAN_HACH_TOAN,
-                        CURRENT_BALANCE = x.CURRENT_BALANCE ?? 0
-                    })
+                // TODO: Khi có bảng DP01 thực tế, thay thế query này
+                // Hiện tại tìm trong ImportedDataRecords và ImportedDataItems có category DP01
+                var dp01Records = await _context.ImportedDataRecords
+                    .Where(x => x.Category == "DP01" && x.FileName.Contains(branchCode))
                     .ToListAsync();
 
-                return dp01Data.Cast<dynamic>().ToList();
+                if (!dp01Records.Any())
+                {
+                    return new List<dynamic>();
+                }
+
+                var allItems = new List<dynamic>();
+                foreach (var record in dp01Records)
+                {
+                    var items = await _context.ImportedDataItems
+                        .Where(x => x.ImportedDataRecordId == record.Id)
+                        .Select(x => x.RawData)
+                        .ToListAsync();
+
+                    foreach (var rawData in items)
+                    {
+                        try
+                        {
+                            var jsonDoc = JsonDocument.Parse(rawData);
+                            var root = jsonDoc.RootElement;
+
+                            // Kiểm tra MA_CN và MA_PGD
+                            var maCn = root.TryGetProperty("MA_CN", out var maCnProp) ? maCnProp.GetString() : "";
+                            var maPgd = root.TryGetProperty("MA_PGD", out var maPgdProp) ? maPgdProp.GetString() : "";
+
+                            if (maCn == branchCode && (pgdCode == null || maPgd == pgdCode))
+                            {
+                                var taiKhoanHachToan = root.TryGetProperty("TAI_KHOAN_HACH_TOAN", out var tkProp) ? tkProp.GetString() : "";
+
+                                // Parse CURRENT_BALANCE - có thể là string hoặc number
+                                decimal currentBalance = 0;
+                                if (root.TryGetProperty("CURRENT_BALANCE", out var balanceProp))
+                                {
+                                    if (balanceProp.ValueKind == JsonValueKind.Number)
+                                    {
+                                        currentBalance = balanceProp.GetDecimal();
+                                    }
+                                    else if (balanceProp.ValueKind == JsonValueKind.String)
+                                    {
+                                        decimal.TryParse(balanceProp.GetString(), out currentBalance);
+                                    }
+                                }
+
+                                allItems.Add(new
+                                {
+                                    MA_CN = maCn,
+                                    MA_PGD = maPgd,
+                                    TAI_KHOAN_HACH_TOAN = taiKhoanHachToan,
+                                    CURRENT_BALANCE = currentBalance
+                                });
+                            }
+                        }
+                        catch (JsonException)
+                        {
+                            // Skip invalid JSON
+                        }
+                    }
+                }
+
+                return allItems;
             }
             catch (Exception ex)
             {

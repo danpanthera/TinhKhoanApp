@@ -45,7 +45,7 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
 
         // DbSets cho hệ thống Import dữ liệu
         public DbSet<ImportedDataRecord> ImportedDataRecords { get; set; }
-        public DbSet<ImportedDataItem> ImportedDataItems { get; set; }
+        // 🗑️ REMOVED: ImportedDataItem - Replaced with DirectImportService workflow
 
         // 🗄️ DbSets cho hệ thống Kho Dữ liệu Thô (Legacy)
         public DbSet<Models.RawDataImport> LegacyRawDataImports { get; set; }
@@ -388,51 +388,11 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
                       .HasDatabaseName("IX_ImportedDataRecords_ImportDate");
             });
 
-            // 📈 Cấu hình Temporal Tables cho ImportedDataItem với Columnstore Index
-            modelBuilder.Entity<ImportedDataItem>(entity =>
-            {
-                // Enable Temporal Table với shadow properties cho Big Data Analytics
-                entity.ToTable(tb => tb.IsTemporal(ttb =>
-                {
-                    ttb.UseHistoryTable("ImportedDataItems_History");
-                    ttb.HasPeriodStart("SysStartTime").HasColumnName("SysStartTime");
-                    ttb.HasPeriodEnd("SysEndTime").HasColumnName("SysEndTime");
-                }));
-
-                // ⚠️ QUAN TRỌNG: Định nghĩa shadow properties cho temporal columns
-                entity.Property<DateTime>("SysStartTime").HasColumnName("SysStartTime");
-                entity.Property<DateTime>("SysEndTime").HasColumnName("SysEndTime");
-
-                // Indexes cho analytics performance với Columnstore optimization
-                entity.HasIndex(e => e.ProcessedDate)
-                      .HasDatabaseName("IX_ImportedDataItems_ProcessedDate");
-
-                entity.HasIndex(e => e.ImportedDataRecordId)
-                      .HasDatabaseName("IX_ImportedDataItems_RecordId");
-
-                // Index kết hợp cho temporal queries
-                entity.HasIndex(e => new { e.ImportedDataRecordId, e.ProcessedDate })
-                      .HasDatabaseName("IX_ImportedDataItems_Record_Date");
-
-                // JSON indexing (SQL Server 2016+) cho RawData
-                entity.Property(e => e.RawData)
-                      .HasColumnType("nvarchar(max)");
-            });
+            // ✅ CLEANED: Removed ImportedDataItem configuration - using Direct Import workflow
 
             // 🎯 Custom SQL để tạo Columnstore Index (sẽ chạy qua migration)
-            // Columnstore Index cho analytics performance trên ImportedDataItems và History
-            // Em sẽ tạo migration riêng để:
-            // 1. CREATE NONCLUSTERED COLUMNSTORE INDEX IX_ImportedDataItems_Columnstore
-            //    ON ImportedDataItems (ImportedDataRecordId, ProcessedDate, RawData)
-            //    WHERE ProcessedDate >= '2024-01-01'
-            //
-            // 2. CREATE NONCLUSTERED COLUMNSTORE INDEX IX_ImportedDataItems_History_Columnstore
-            //    ON ImportedDataItems_History (ImportedDataRecordId, ProcessedDate, RawData, SysStartTime, SysEndTime)
-            //    WHERE ProcessedDate >= '2024-01-01'
-            //
-            // 3. CREATE NONCLUSTERED COLUMNSTORE INDEX IX_ImportedDataRecords_History_Columnstore
-            //    ON ImportedDataRecords_History (Category, ImportDate, StatementDate, Status, SysStartTime, SysEndTime)
-            //    WHERE ImportDate >= '2024-01-01'
+            // ✅ CLEANED: Removed ImportedDataItems Columnstore Index configuration
+            // Direct Import workflow stores data directly in specific tables with their own indexes
 
             // 🚀 === CẤU HÌNH TEMPORAL TABLES VỚI TÊN CỘT CSV GỐC ===
             // Sử dụng History models cho temporal configuration nhưng đảm bảo main table có tên cột đúng

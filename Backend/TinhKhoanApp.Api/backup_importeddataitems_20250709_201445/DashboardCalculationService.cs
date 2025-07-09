@@ -97,26 +97,51 @@ namespace TinhKhoanApp.Api.Services
                     throw new InvalidOperationException(errorMessage);
                 }
 
-                // Lấy dữ liệu chi tiết từ bảng DP01 mới nhất
-                var dp01Data = await _context.DP01s
-                    .Where(i => i.FileName == latestImportRecord.FileName)
+                // Lấy dữ liệu chi tiết từ file import mới nhất
+                var importedItems = await _context.ImportedDataItems
+                    .Where(i => i.ImportedDataRecordId == latestImportRecord.Id)
+                    .Select(i => i.RawData)
                     .ToListAsync();
 
                 decimal totalNguonVon = 0;
                 var excludedPrefixes = new[] { "2", "40", "41", "427" };
                 var processedRecords = 0;
 
-                foreach (var dp01Record in dp01Data)
+                foreach (var rawDataJson in importedItems)
                 {
                     try
                     {
+                        // Parse JSON data để lấy thông tin tài khoản và số dư
+                        var jsonDoc = JsonDocument.Parse(rawDataJson);
+                        var root = jsonDoc.RootElement;
+
                         // Lấy thông tin tài khoản hạch toán từ DP01
-                        string accountCode = dp01Record.TAI_KHOAN_HACH_TOAN ?? "";
+                        string accountCode = "";
+                        if (root.TryGetProperty("TAI_KHOAN_HACH_TOAN", out var taiKhoanElement))
+                        {
+                            accountCode = taiKhoanElement.GetString() ?? "";
+                        }
+                        else if (root.TryGetProperty("ACCOUNT_CODE", out var accountCodeElement))
+                        {
+                            accountCode = accountCodeElement.GetString() ?? "";
+                        }
 
                         if (string.IsNullOrEmpty(accountCode)) continue;
 
-                        // Kiểm tra chi nhánh
-                        string fileBranchCode = dp01Record.MA_CN ?? "";
+                        // Kiểm tra chi nhánh - DP01 có thể có MA_CN, BranchCode
+                        string fileBranchCode = "";
+                        if (root.TryGetProperty("MA_CN", out var maCnElement))
+                        {
+                            fileBranchCode = maCnElement.GetString() ?? "";
+                        }
+                        else if (root.TryGetProperty("BranchCode", out var branchCodeElement))
+                        {
+                            fileBranchCode = branchCodeElement.GetString() ?? "";
+                        }
+                        else if (root.TryGetProperty("BRANCH_CODE", out var legacyBranchElement))
+                        {
+                            fileBranchCode = legacyBranchElement.GetString() ?? "";
+                        }
 
                         // Kiểm tra có thuộc chi nhánh đang tính không
                         var belongsToBranch = fileBranchCode == branchCode;
@@ -126,14 +151,21 @@ namespace TinhKhoanApp.Api.Services
                         // Chỉ tính các tài khoản không thuộc danh sách loại trừ
                         if (!excludedPrefixes.Any(prefix => accountCode.StartsWith(prefix)))
                         {
-                            var balance = dp01Record.CURRENT_BALANCE ?? 0m;
-                            totalNguonVon += balance;
-                            processedRecords++;
+                            if (root.TryGetProperty("CURRENT_BALANCE", out var balanceElement) ||
+                                root.TryGetProperty("CurrentBalance", out balanceElement) ||
+                                root.TryGetProperty("current_balance", out balanceElement))
+                            {
+                                if (decimal.TryParse(balanceElement.GetString(), out var balance))
+                                {
+                                    totalNguonVon += balance;
+                                    processedRecords++;
+                                }
+                            }
                         }
                     }
-                    catch (Exception ex)
+                    catch (JsonException ex)
                     {
-                        _logger.LogWarning("Lỗi xử lý dữ liệu DP01: {Error}", ex.Message);
+                        _logger.LogWarning("Lỗi parse JSON dữ liệu import: {Error}", ex.Message);
                         continue;
                     }
                 }
@@ -217,42 +249,57 @@ namespace TinhKhoanApp.Api.Services
                     throw new InvalidOperationException(errorMessage);
                 }
 
-                // Lấy dữ liệu chi tiết từ bảng LN01 mới nhất
-                var ln01Data = await _context.LN01s
-                    .Where(i => i.FileName == latestImportRecord.FileName)
+                // Lấy dữ liệu chi tiết từ file import mới nhất
+                var importedItems = await _context.ImportedDataItems
+                    .Where(i => i.ImportedDataRecordId == latestImportRecord.Id)
+                    .Select(i => i.RawData)
                     .ToListAsync();
 
                 decimal totalDisbursement = 0;
                 var processedRecords = 0;
                 var nhomNoBreakdown = new Dictionary<string, decimal>();
 
-                foreach (var lnRecord in ln01Data)
+                foreach (var rawDataJson in importedItems)
                 {
                     try
                     {
+                        // Parse JSON data để lấy thông tin khoản vay
+                        var jsonDoc = JsonDocument.Parse(rawDataJson);
+                        var root = jsonDoc.RootElement;
+
                         // Kiểm tra có thuộc chi nhánh đang tính không
-                        var belongsToBranch = lnRecord.MA_CN == branchCode;
+                        var belongsToBranch = root.TryGetProperty("BRANCH_CODE", out var branchElement) &&
+                                            branchElement.GetString() == branchCode;
 
                         if (!belongsToBranch) continue;
 
-                        // Lấy số tiền giải ngân từ LN01
-                        var disbursement = lnRecord.SO_TIEN_CHO_VAY ?? 0m;
-                        if (disbursement > 0)
+                        // Lấy số tiền giải ngân
+                        if (root.TryGetProperty("DISBURSEMENT_AMOUNT", out var disbursementElement) ||
+                            root.TryGetProperty("DisbursementAmount", out disbursementElement) ||
+                            root.TryGetProperty("disbursement_amount", out disbursementElement))
                         {
-                            totalDisbursement += disbursement;
-                            processedRecords++;
+                            if (decimal.TryParse(disbursementElement.GetString(), out var disbursement))
+                            {
+                                totalDisbursement += disbursement;
+                                processedRecords++;
 
-                            // Phân tích theo loại hình cho vay (thay vì nhóm nợ)
-                            var loaiHinh = lnRecord.LOAI_HINH_CHO_VAY ?? "01"; // Default
+                                // Phân tích theo nhóm nợ
+                                var nhomNo = "01"; // Default
+                                if (root.TryGetProperty("NHOM_NO", out var nhomNoElement) ||
+                                    root.TryGetProperty("NhomNo", out nhomNoElement))
+                                {
+                                    nhomNo = nhomNoElement.GetString() ?? "01";
+                                }
 
-                            if (!nhomNoBreakdown.ContainsKey(loaiHinh))
-                                nhomNoBreakdown[loaiHinh] = 0;
-                            nhomNoBreakdown[loaiHinh] += disbursement;
+                                if (!nhomNoBreakdown.ContainsKey(nhomNo))
+                                    nhomNoBreakdown[nhomNo] = 0;
+                                nhomNoBreakdown[nhomNo] += disbursement;
+                            }
                         }
                     }
-                    catch (Exception ex)
+                    catch (JsonException ex)
                     {
-                        _logger.LogWarning("Lỗi xử lý dữ liệu LN01: {Error}", ex.Message);
+                        _logger.LogWarning("Lỗi parse JSON data LN01: {Error}", ex.Message);
                         continue;
                     }
                 }
@@ -332,9 +379,10 @@ namespace TinhKhoanApp.Api.Services
                     throw new InvalidOperationException(errorMessage);
                 }
 
-                // Lấy dữ liệu chi tiết từ bảng LN01 mới nhất
-                var ln01Data = await _context.LN01s
-                    .Where(i => i.FileName == latestImportRecord.FileName)
+                // Lấy dữ liệu chi tiết từ file import mới nhất
+                var importedItems = await _context.ImportedDataItems
+                    .Where(i => i.ImportedDataRecordId == latestImportRecord.Id)
+                    .Select(i => i.RawData)
                     .ToListAsync();
 
                 decimal totalDebt = 0;
@@ -343,45 +391,53 @@ namespace TinhKhoanApp.Api.Services
                 var nhomNoBreakdown = new Dictionary<string, decimal>();
                 var badDebtGroups = new[] { "03", "04", "05" };
 
-                foreach (var lnRecord in ln01Data)
+                foreach (var rawDataJson in importedItems)
                 {
                     try
                     {
+                        // Parse JSON data để lấy thông tin khoản vay
+                        var jsonDoc = JsonDocument.Parse(rawDataJson);
+                        var root = jsonDoc.RootElement;
+
                         // Kiểm tra có thuộc chi nhánh đang tính không
-                        var belongsToBranch = lnRecord.MA_CN == branchCode;
+                        var belongsToBranch = root.TryGetProperty("BRANCH_CODE", out var branchElement) &&
+                                            branchElement.GetString() == branchCode;
 
                         if (!belongsToBranch) continue;
 
-                        // Lấy số tiền dư nợ từ LN01
-                        var debtAmount = lnRecord.DU_NO_GOC ?? 0m;
-                        if (debtAmount > 0)
+                        // Lấy số tiền giải ngân và nhóm nợ
+                        if (root.TryGetProperty("DISBURSEMENT_AMOUNT", out var disbursementElement) ||
+                            root.TryGetProperty("DisbursementAmount", out disbursementElement) ||
+                            root.TryGetProperty("disbursement_amount", out disbursementElement))
                         {
-                            totalDebt += debtAmount;
-
-                            // Sử dụng trạng thái khoản vay để phân loại nợ xấu
-                            var trangThai = lnRecord.TRANG_THAI ?? "01"; // Default
-
-                            if (!nhomNoBreakdown.ContainsKey(trangThai))
-                                nhomNoBreakdown[trangThai] = 0;
-                            nhomNoBreakdown[trangThai] += debtAmount;
-
-                            // Tính nợ xấu (dựa trên trạng thái)
-                            // Giả định các trạng thái xấu: "03", "04", "05" hoặc chứa "bad", "overdue"
-                            var isBadDebt = badDebtGroups.Contains(trangThai) ||
-                                          (trangThai.ToLower().Contains("bad")) ||
-                                          (trangThai.ToLower().Contains("overdue"));
-
-                            if (isBadDebt)
+                            if (decimal.TryParse(disbursementElement.GetString(), out var disbursement))
                             {
-                                badDebt += debtAmount;
-                            }
+                                totalDebt += disbursement;
 
-                            processedRecords++;
+                                var nhomNo = "01"; // Default
+                                if (root.TryGetProperty("NHOM_NO", out var nhomNoElement) ||
+                                    root.TryGetProperty("NhomNo", out nhomNoElement))
+                                {
+                                    nhomNo = nhomNoElement.GetString() ?? "01";
+                                }
+
+                                if (!nhomNoBreakdown.ContainsKey(nhomNo))
+                                    nhomNoBreakdown[nhomNo] = 0;
+                                nhomNoBreakdown[nhomNo] += disbursement;
+
+                                // Tính nợ xấu (nhóm 3, 4, 5)
+                                if (badDebtGroups.Contains(nhomNo))
+                                {
+                                    badDebt += disbursement;
+                                }
+
+                                processedRecords++;
+                            }
                         }
                     }
-                    catch (Exception ex)
+                    catch (JsonException ex)
                     {
-                        _logger.LogWarning("Lỗi xử lý dữ liệu LN01: {Error}", ex.Message);
+                        _logger.LogWarning("Lỗi parse JSON data LN01: {Error}", ex.Message);
                         continue;
                     }
                 }
@@ -562,23 +618,34 @@ namespace TinhKhoanApp.Api.Services
                 _logger.LogInformation("Tính toán Thu dịch vụ cho {UnitName} (Code: {BranchCode}) ngày {Date}",
                     unit.Name, branchCode, date.ToString("yyyy-MM-dd"));
 
-                // Xác định ngày cụ thể cần tìm dữ liệu dựa trên chỉ tiêu lũy kế
+                // Xác định ngày cụ thể cần tìm file dựa trên chỉ tiêu lũy kế
                 var targetStatementDate = GetTargetStatementDate(date);
 
-                _logger.LogInformation("Tìm dữ liệu GL41 có NgayDL = {TargetDate}", targetStatementDate.Value.ToString("dd/MM/yyyy"));
+                _logger.LogInformation("Tìm file GL41 có StatementDate = {TargetDate}", targetStatementDate.Value.ToString("yyyy-MM-dd"));
 
-                // Lấy dữ liệu GL41 trực tiếp từ bảng với NgayDL = targetStatementDate và MA_CN
-                var gl41Records = await _context.GL41s
-                    .Where(g => g.NgayDL == targetStatementDate.Value.ToString("dd/MM/yyyy") && g.MA_CN == branchCode)
-                    .ToListAsync();
+                // Tìm file import GL41 có StatementDate chính xác
+                var latestImportRecord = await _context.ImportedDataRecords
+                    .Where(r => r.StatementDate.HasValue &&
+                               r.StatementDate.Value.Date == targetStatementDate.Value.Date &&
+                               r.Status == "Completed" &&
+                               (r.Category.Contains("GL41") || r.Category.Contains("Thu dịch vụ")))
+                    .OrderByDescending(r => r.ImportDate)
+                    .FirstOrDefaultAsync();
 
-                if (!gl41Records.Any())
+                if (latestImportRecord == null)
                 {
-                    var errorMessage = $"Không tìm thấy dữ liệu GL41 cho chi nhánh {branchCode} ngày {targetStatementDate:dd/MM/yyyy}";
+                    var errorMessage = $"Không tìm thấy file import GL41 cho ngày {targetStatementDate:yyyy-MM-dd}. Vui lòng kiểm tra dữ liệu đã được import chưa.";
                     _logger.LogWarning(errorMessage);
+
                     await SaveCalculationError("ThuDichVu", unitId, date, errorMessage, startTime);
                     throw new InvalidOperationException(errorMessage);
                 }
+
+                // Lấy dữ liệu chi tiết từ file import mới nhất
+                var importedItems = await _context.ImportedDataItems
+                    .Where(i => i.ImportedDataRecordId == latestImportRecord.Id)
+                    .Select(i => i.RawData)
+                    .ToListAsync();
 
                 decimal totalServiceRevenue = 0;
                 var processedRecords = 0;
@@ -586,17 +653,59 @@ namespace TinhKhoanApp.Api.Services
                 // Các tài khoản thu dịch vụ (có thể cần điều chỉnh theo thực tế)
                 var serviceRevenueAccounts = new[] { "7111", "7112", "7113", "7114", "7115", "7121", "7122" };
 
-                foreach (var record in gl41Records)
+                foreach (var rawDataJson in importedItems)
                 {
-                    var accountCode = record.SO_TK ?? "";
-
-                    // Chỉ tính các tài khoản thu dịch vụ
-                    if (serviceRevenueAccounts.Any(acc => accountCode.StartsWith(acc)))
+                    try
                     {
-                        // Thu dịch vụ = Credit - Debit
-                        var serviceAmount = (record.SO_PHAT_SINH_CO ?? 0) - (record.SO_PHAT_SINH_NO ?? 0);
-                        totalServiceRevenue += serviceAmount;
-                        processedRecords++;
+                        if (string.IsNullOrEmpty(rawDataJson)) continue;
+
+                        var jsonDoc = JsonDocument.Parse(rawDataJson);
+                        var root = jsonDoc.RootElement;
+
+                        // Kiểm tra có thuộc chi nhánh đang tính không
+                        var belongsToBranch = root.TryGetProperty("BRANCH_CODE", out var branchElement) &&
+                                            branchElement.GetString() == branchCode;
+
+                        if (!belongsToBranch) continue;
+
+                        // Lấy thông tin tài khoản
+                        if (root.TryGetProperty("ACCOUNT_CODE", out var accountCodeElement) ||
+                            root.TryGetProperty("AccountCode", out accountCodeElement) ||
+                            root.TryGetProperty("account_code", out accountCodeElement))
+                        {
+                            var accountCode = accountCodeElement.GetString() ?? "";
+
+                            // Chỉ tính các tài khoản thu dịch vụ
+                            if (serviceRevenueAccounts.Any(acc => accountCode.StartsWith(acc)))
+                            {
+                                // Lấy số dư Credit (thu nhập dịch vụ thường có Credit > Debit)
+                                decimal creditAmount = 0, debitAmount = 0;
+
+                                if (root.TryGetProperty("CREDIT_AMOUNT", out var creditElement) ||
+                                    root.TryGetProperty("CreditAmount", out creditElement) ||
+                                    root.TryGetProperty("credit_amount", out creditElement))
+                                {
+                                    decimal.TryParse(creditElement.GetString(), out creditAmount);
+                                }
+
+                                if (root.TryGetProperty("DEBIT_AMOUNT", out var debitElement) ||
+                                    root.TryGetProperty("DebitAmount", out debitElement) ||
+                                    root.TryGetProperty("debit_amount", out debitElement))
+                                {
+                                    decimal.TryParse(debitElement.GetString(), out debitAmount);
+                                }
+
+                                // Thu dịch vụ = Credit - Debit
+                                var serviceAmount = creditAmount - debitAmount;
+                                totalServiceRevenue += serviceAmount;
+                                processedRecords++;
+                            }
+                        }
+                    }
+                    catch (JsonException ex)
+                    {
+                        _logger.LogWarning("Lỗi parse JSON dữ liệu import: {Error}", ex.Message);
+                        continue;
                     }
                 }
 
@@ -604,9 +713,10 @@ namespace TinhKhoanApp.Api.Services
 
                 var calculationDetails = new
                 {
-                    Formula = "Tổng (Credit - Debit) từ các tài khoản thu dịch vụ trong bảng GL41",
-                    DataSource = "GL41 table",
-                    StatementDate = targetStatementDate,
+                    Formula = "Tổng (Credit - Debit) từ các tài khoản thu dịch vụ trong GL41",
+                    SourceFile = latestImportRecord.FileName,
+                    StatementDate = latestImportRecord.StatementDate,
+                    ImportDate = latestImportRecord.ImportDate,
                     TotalServiceRevenue = totalServiceRevenue,
                     FinalValue = finalValue,
                     Unit = "Triệu VND",
@@ -619,7 +729,7 @@ namespace TinhKhoanApp.Api.Services
 
                 await SaveCalculation("ThuDichVu", unitId, date, finalValue, calculationDetails, startTime);
 
-                _logger.LogInformation("Hoàn thành tính Thu dịch vụ: {Value} triệu VND (từ {Records} bản ghi)",
+                _logger.LogInformation("Hoàn thành tính Thu dịch vụ từ file GL41: {Value} triệu VND (từ {Records} bản ghi)",
                     finalValue, processedRecords);
                 return finalValue;
             }
@@ -654,20 +764,31 @@ namespace TinhKhoanApp.Api.Services
                 // Xác định ngày cụ thể cần tìm file dựa trên chỉ tiêu lũy kế
                 var targetStatementDate = GetTargetStatementDate(date);
 
-                _logger.LogInformation("Tìm dữ liệu GL41 có NgayDL = {TargetDate}", targetStatementDate.Value.ToString("dd/MM/yyyy"));
+                _logger.LogInformation("Tìm file GL41 có StatementDate = {TargetDate}", targetStatementDate.Value.ToString("yyyy-MM-dd"));
 
-                // Lấy dữ liệu GL41 trực tiếp từ bảng với NgayDL = targetStatementDate và MA_CN (mã chi nhánh)
-                var gl41Records = await _context.GL41s
-                    .Where(g => g.NgayDL == targetStatementDate.Value.ToString("dd/MM/yyyy") && g.MA_CN == branchCode)
-                    .ToListAsync();
+                // Tìm file import GL41 có StatementDate chính xác
+                var latestImportRecord = await _context.ImportedDataRecords
+                    .Where(r => r.StatementDate.HasValue &&
+                               r.StatementDate.Value.Date == targetStatementDate.Value.Date &&
+                               r.Status == "Completed" &&
+                               (r.Category.Contains("GL41") || r.Category.Contains("Lợi nhuận")))
+                    .OrderByDescending(r => r.ImportDate)
+                    .FirstOrDefaultAsync();
 
-                if (!gl41Records.Any())
+                if (latestImportRecord == null)
                 {
-                    var errorMessage = $"Không tìm thấy dữ liệu GL41 cho chi nhánh {branchCode} ngày {targetStatementDate:dd/MM/yyyy}. Vui lòng kiểm tra dữ liệu đã được import chưa.";
+                    var errorMessage = $"Không tìm thấy file import GL41 cho ngày {targetStatementDate:yyyy-MM-dd}. Vui lòng kiểm tra dữ liệu đã được import chưa.";
                     _logger.LogWarning(errorMessage);
+
                     await SaveCalculationError("LoiNhuan", unitId, date, errorMessage, startTime);
                     throw new InvalidOperationException(errorMessage);
                 }
+
+                // Lấy dữ liệu chi tiết từ file import mới nhất
+                var importedItems = await _context.ImportedDataItems
+                    .Where(i => i.ImportedDataRecordId == latestImportRecord.Id)
+                    .Select(i => i.RawData)
+                    .ToListAsync();
 
                 decimal totalRevenue = 0; // Thu nhập
                 decimal totalExpense = 0; // Chi phí
@@ -678,23 +799,63 @@ namespace TinhKhoanApp.Api.Services
                 // Chi phí (8 + 882)
                 var expenseAccounts = new[] { "8", "882" };
 
-                foreach (var record in gl41Records)
+                foreach (var rawDataJson in importedItems)
                 {
-                    var accountCode = record.SO_TK ?? "";
-
-                    // Tính thu nhập từ các tài khoản thu
-                    if (revenueAccounts.Any(acc => accountCode.StartsWith(acc)))
+                    try
                     {
-                        totalRevenue += (record.SO_PHAT_SINH_CO ?? 0) - (record.SO_PHAT_SINH_NO ?? 0); // Credit - Debit cho tài khoản thu
-                    }
+                        var jsonDoc = JsonDocument.Parse(rawDataJson);
+                        var root = jsonDoc.RootElement;
 
-                    // Tính chi phí từ các tài khoản chi
-                    if (expenseAccounts.Any(acc => accountCode.StartsWith(acc)))
+                        // Kiểm tra có thuộc chi nhánh đang tính không
+                        var belongsToBranch = root.TryGetProperty("BRANCH_CODE", out var branchElement) &&
+                                            branchElement.GetString() == branchCode;
+
+                        if (!belongsToBranch) continue;
+
+                        // Lấy thông tin tài khoản
+                        if (root.TryGetProperty("ACCOUNT_CODE", out var accountCodeElement) ||
+                            root.TryGetProperty("AccountCode", out accountCodeElement) ||
+                            root.TryGetProperty("account_code", out accountCodeElement))
+                        {
+                            var accountCode = accountCodeElement.GetString() ?? "";
+
+                            // Lấy số dư Credit và Debit
+                            decimal creditAmount = 0, debitAmount = 0;
+
+                            if (root.TryGetProperty("CREDIT_AMOUNT", out var creditElement) ||
+                                root.TryGetProperty("CreditAmount", out creditElement) ||
+                                root.TryGetProperty("credit_amount", out creditElement))
+                            {
+                                decimal.TryParse(creditElement.GetString(), out creditAmount);
+                            }
+
+                            if (root.TryGetProperty("DEBIT_AMOUNT", out var debitElement) ||
+                                root.TryGetProperty("DebitAmount", out debitElement) ||
+                                root.TryGetProperty("debit_amount", out debitElement))
+                            {
+                                decimal.TryParse(debitElement.GetString(), out debitAmount);
+                            }
+
+                            // Tính thu nhập từ các tài khoản thu
+                            if (revenueAccounts.Any(acc => accountCode.StartsWith(acc)))
+                            {
+                                totalRevenue += creditAmount - debitAmount; // Credit - Debit cho tài khoản thu
+                            }
+
+                            // Tính chi phí từ các tài khoản chi
+                            if (expenseAccounts.Any(acc => accountCode.StartsWith(acc)))
+                            {
+                                totalExpense += debitAmount - creditAmount; // Debit - Credit cho tài khoản chi
+                            }
+
+                            processedRecords++;
+                        }
+                    }
+                    catch (JsonException ex)
                     {
-                        totalExpense += (record.SO_PHAT_SINH_NO ?? 0) - (record.SO_PHAT_SINH_CO ?? 0); // Debit - Credit cho tài khoản chi
+                        _logger.LogWarning("Lỗi parse JSON dữ liệu import: {Error}", ex.Message);
+                        continue;
                     }
-
-                    processedRecords++;
                 }
 
                 var profit = totalRevenue - totalExpense;
@@ -702,9 +863,10 @@ namespace TinhKhoanApp.Api.Services
 
                 var calculationDetails = new
                 {
-                    Formula = "(TK 7+790001+8511) - (TK 8+882) từ bảng GL41",
-                    DataSource = "GL41 table",
-                    StatementDate = targetStatementDate,
+                    Formula = "(TK 7+790001+8511) - (TK 8+882) từ file GL41 mới nhất",
+                    SourceFile = latestImportRecord.FileName,
+                    StatementDate = latestImportRecord.StatementDate,
+                    ImportDate = latestImportRecord.ImportDate,
                     TotalRevenue = totalRevenue,
                     TotalExpense = totalExpense,
                     Profit = profit,
