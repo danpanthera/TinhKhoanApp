@@ -88,7 +88,26 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
-        // 📊 Legacy endpoints - Disabled for migration to DirectImportService
+        // � GET: api/DataImport/records - Get import records for Raw Data view
+        [HttpGet("records")]
+        public async Task<IActionResult> GetImportRecords()
+        {
+            try
+            {
+                _logger.LogInformation("📋 Getting import records for Raw Data view");
+
+                var records = await _directImportService.GetImportHistoryAsync();
+
+                return Ok(records);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error getting import records");
+                return StatusCode(500, new { message = "Error retrieving import records", error = ex.Message });
+            }
+        }
+
+        // �📊 Legacy endpoints - Disabled for migration to DirectImportService
         [HttpGet]
         [Obsolete("Use DirectImportService instead")]
         public async Task<IActionResult> GetImportedData()
@@ -96,7 +115,7 @@ namespace TinhKhoanApp.Api.Controllers
             return BadRequest(new
             {
                 message = "This endpoint is deprecated",
-                recommendation = "Use DirectImportService for new imports",
+                recommendation = "Use /api/DataImport/records for import history",
                 migrationStatus = "Legacy endpoints disabled for DirectImport migration"
             });
         }

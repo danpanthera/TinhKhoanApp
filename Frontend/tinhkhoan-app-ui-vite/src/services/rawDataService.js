@@ -3,14 +3,14 @@ import api from './api';
 
 class RawDataService {
   constructor() {
-    // ✅ FIX: Sửa baseURL thành /RawData không cần /api vì api.js đã có
-    this.baseURL = '/RawData';  // Controller route là api/RawData
+    // ✅ FIX: Chuyển sang endpoint DataImport/records vì RawData đã bị disabled
+    this.baseURL = '/DataImport/records';  // Sử dụng endpoint mới trong DataImportController
   }
 
   // 📋 Lấy danh sách tất cả dữ liệu thô đã import
   async getAllImports() {
     try {
-      // ✅ FIX: Gọi đúng endpoint RawData
+      // ✅ FIX: Gọi đúng endpoint DataImport/records
       console.log('📊 Calling API endpoint:', this.baseURL);
       const response = await api.get(this.baseURL);
 

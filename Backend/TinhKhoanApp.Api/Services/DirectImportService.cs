@@ -503,6 +503,50 @@ namespace TinhKhoanApp.Api.Services
             return record;
         }
 
+        /// <summary>
+        /// Lấy lịch sử import để hiển thị trong Raw Data view
+        /// </summary>
+        public async Task<List<object>> GetImportHistoryAsync()
+        {
+            try
+            {
+                var records = await _context.ImportedDataRecords
+                    .OrderByDescending(r => r.ImportDate)
+                    .Take(100) // Giới hạn 100 records gần nhất
+                    .Select(r => new
+                    {
+                        Id = r.Id,
+                        FileName = r.FileName,
+                        FileType = r.FileType,
+                        Category = r.Category,
+                        ImportDate = r.ImportDate,
+                        ImportedBy = r.ImportedBy,
+                        RecordsCount = r.RecordsCount,
+                        Status = r.Status,
+                        Notes = r.Notes,
+                        FileSizeDisplay = r.OriginalFileData != null ? FormatFileSize(r.OriginalFileData.Length) : "N/A",
+                        NgayDL = r.StatementDate != null ? r.StatementDate.Value.ToString("dd/MM/yyyy") : "N/A"
+                    })
+                    .ToListAsync();
+
+                _logger.LogInformation($"📋 Retrieved {records.Count} import history records");
+                return records.Cast<object>().ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error retrieving import history");
+                throw;
+            }
+        }
+
+        private static string FormatFileSize(long bytes)
+        {
+            if (bytes < 1024) return $"{bytes} B";
+            if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+            if (bytes < 1024 * 1024 * 1024) return $"{bytes / (1024.0 * 1024.0):F1} MB";
+            return $"{bytes / (1024.0 * 1024.0 * 1024.0):F1} GB";
+        }
+
         #endregion
     }
 }

@@ -264,7 +264,7 @@
                 <td><strong class="text-primary">🎯 TỔNG CỘNG</strong></td>
                 <td style="text-align: center;"><strong class="badge-agribank badge-primary">{{ getTotalMaxScore() }}</strong></td>
                 <td><strong class="text-secondary">{{ getTotalTargets() }} mục tiêu</strong></td>
-                <td style="text-align: center;"><strong class="badge-agribank badge-primary">Điểm</strong></td>
+                <td style="text-align: center;"><strong class="badge-agribank badge-success">{{ getTotalScore() }}</strong></td>
                 <td></td>
               </tr>
             </tbody>
@@ -942,6 +942,10 @@ function clearIndicatorTarget(indicatorId) {
 
 function getTotalMaxScore() {
   return indicators.value.reduce((sum, ind) => sum + (ind.maxScore || 0), 0)
+}
+
+function getTotalScore() {
+  return Object.values(targetValues.value).reduce((sum, score) => sum + (parseFloat(score) || 0), 0)
 }
 
 function getTotalTargets() {

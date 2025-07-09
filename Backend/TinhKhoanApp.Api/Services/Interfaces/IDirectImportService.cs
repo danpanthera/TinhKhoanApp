@@ -73,5 +73,10 @@ namespace TinhKhoanApp.Api.Services.Interfaces
         /// Import thông minh - tự động detect loại file và import trực tiếp
         /// </summary>
         Task<DirectImportResult> ImportSmartDirectAsync(IFormFile file, string? statementDate = null);
+
+        /// <summary>
+        /// Lấy lịch sử import để hiển thị trong Raw Data view
+        /// </summary>
+        Task<List<object>> GetImportHistoryAsync();
     }
 }

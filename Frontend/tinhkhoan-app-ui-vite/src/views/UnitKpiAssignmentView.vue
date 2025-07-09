@@ -171,7 +171,7 @@
                 <td><strong class="text-primary">🎯 TỔNG CỘNG</strong></td>
                 <td style="text-align: center;"><strong class="badge-agribank badge-primary">{{ totalMaxScore }}</strong></td>
                 <td><strong class="text-secondary">{{ getFilledTargetsCount() }} mục tiêu</strong></td>
-                <td style="text-align: center;"><strong class="badge-agribank badge-primary">Điểm</strong></td>
+                <td style="text-align: center;"><strong class="badge-agribank badge-success">{{ totalScore }}</strong></td>
                 <td></td>
               </tr>
             </tbody>
@@ -324,6 +324,10 @@ const selectedBranch = computed(() => {
 
 const totalMaxScore = computed(() => {
   return availableKpiIndicators.value.reduce((sum, indicator) => sum + (indicator.maxScore || 0), 0)
+})
+
+const totalScore = computed(() => {
+  return currentAssignments.value.reduce((sum, assignment) => sum + (parseFloat(assignment.score) || 0), 0)
 })
 
 // Methods
