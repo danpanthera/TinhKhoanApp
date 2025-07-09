@@ -482,3 +482,28 @@ TỔNG: 158 chỉ tiêu cho 22 bảng (thiếu TqHkKtnb)
 - ✅ **API endpoints hoạt động** chính xác với đúng field names và structure
 - ✅ **Mapping role-table** cho 23 vai trò với 22 bảng KPI (thiếu TqHkKtnb)
 - ✅ **Frontend có thể fetch** assignments qua `/api/EmployeeKpiAssignment`
+
+### ✅ HOÀN THÀNH FIX KPI INDICATORS DISPLAY (09/07/2025)
+
+#### 🎯 Vấn đề đã sửa:
+- ✅ **Fix hiển thị cột KPI**: Sửa template Vue để dùng PascalCase (`IndicatorName`, `MaxScore`, `Unit`)
+- ✅ **Sử dụng safeGet helper**: Đảm bảo tương thích với cả PascalCase và camelCase
+- ✅ **Fix cho cả Employee và Unit views**: Cập nhật EmployeeKpiAssignmentView.vue và UnitKpiAssignmentView.vue
+- ✅ **Test và verify**: Tạo file test để kiểm tra hoạt động
+
+#### 🔧 Chi tiết sửa chữa:
+1. **Template binding**: Thay đổi từ `indicator.indicatorName` → `safeGet(indicator, 'IndicatorName')`
+2. **Score display**: Thay đổi từ `indicator.maxScore` → `safeGet(indicator, 'MaxScore')`
+3. **Unit display**: Thay đổi từ `indicator.unit` → `safeGet(indicator, 'Unit')`
+4. **Method update**: Cập nhật `getIndicatorUnit()` method để dùng `safeGet`
+
+#### 📋 Files đã sửa:
+- `/src/views/EmployeeKpiAssignmentView.vue` - Template KPI indicators table
+- `/src/views/UnitKpiAssignmentView.vue` - Template unit KPI table  
+- `/public/test-kpi-indicators-fix.html` - File test verification
+
+#### 🌟 Kết quả:
+- **Chỉ tiêu KPI**: Hiển thị đúng tên chỉ tiêu
+- **Điểm**: Hiển thị đúng điểm tối đa (MaxScore)
+- **Đơn vị**: Hiển thị đúng đơn vị đo lường (Unit)
+- **Tương thích**: Hoạt động với cả PascalCase (backend) và camelCase (legacy)
