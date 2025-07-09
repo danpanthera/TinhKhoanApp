@@ -10,7 +10,7 @@ PRINT N'🚀 Bắt đầu tạo Columnstore Indexes với cột chung cho tất 
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID('DP01_New') AND type = 5)
 BEGIN
     PRINT N'📊 Tạo Columnstore Index cho DP01_New...';
-    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_DP01_New_Columnstore 
+    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_DP01_New_Columnstore
     ON DP01_New (NGAY_DL, MA_CN)
     WITH (DATA_COMPRESSION = COLUMNSTORE);
     PRINT N'✅ DP01_New Columnstore Index đã tạo xong.';
@@ -22,7 +22,7 @@ ELSE
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID('LN01') AND type = 5)
 BEGIN
     PRINT N'📊 Tạo Columnstore Index cho LN01...';
-    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_LN01_Columnstore 
+    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_LN01_Columnstore
     ON LN01 (NGAY_DL, MA_CN)
     WITH (DATA_COMPRESSION = COLUMNSTORE);
     PRINT N'✅ LN01 Columnstore Index đã tạo xong.';
@@ -34,7 +34,7 @@ ELSE
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID('DB01') AND type = 5)
 BEGIN
     PRINT N'📊 Tạo Columnstore Index cho DB01...';
-    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_DB01_Columnstore 
+    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_DB01_Columnstore
     ON DB01 (NGAY_DL, MA_CN)
     WITH (DATA_COMPRESSION = COLUMNSTORE);
     PRINT N'✅ DB01 Columnstore Index đã tạo xong.';
@@ -46,7 +46,7 @@ ELSE
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID('GL01') AND type = 5)
 BEGIN
     PRINT N'📊 Tạo Columnstore Index cho GL01...';
-    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_GL01_Columnstore 
+    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_GL01_Columnstore
     ON GL01 (NGAY_DL, MA_CN)
     WITH (DATA_COMPRESSION = COLUMNSTORE);
     PRINT N'✅ GL01 Columnstore Index đã tạo xong.';
@@ -58,7 +58,7 @@ ELSE
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID('GL41') AND type = 5)
 BEGIN
     PRINT N'📊 Tạo Columnstore Index cho GL41...';
-    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_GL41_Columnstore 
+    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_GL41_Columnstore
     ON GL41 (NGAY_DL, MA_CN)
     WITH (DATA_COMPRESSION = COLUMNSTORE);
     PRINT N'✅ GL41 Columnstore Index đã tạo xong.';
@@ -70,7 +70,7 @@ ELSE
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID('DPDA') AND type = 5)
 BEGIN
     PRINT N'📊 Tạo Columnstore Index cho DPDA...';
-    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_DPDA_Columnstore 
+    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_DPDA_Columnstore
     ON DPDA (NGAY_DL, MA_CN)
     WITH (DATA_COMPRESSION = COLUMNSTORE);
     PRINT N'✅ DPDA Columnstore Index đã tạo xong.';
@@ -82,7 +82,7 @@ ELSE
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID('EI01') AND type = 5)
 BEGIN
     PRINT N'📊 Tạo Columnstore Index cho EI01...';
-    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_EI01_Columnstore 
+    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_EI01_Columnstore
     ON EI01 (NGAY_DL, MA_CN)
     WITH (DATA_COMPRESSION = COLUMNSTORE);
     PRINT N'✅ EI01 Columnstore Index đã tạo xong.';
@@ -94,7 +94,7 @@ ELSE
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID('KH03') AND type = 5)
 BEGIN
     PRINT N'📊 Tạo Columnstore Index cho KH03...';
-    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_KH03_Columnstore 
+    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_KH03_Columnstore
     ON KH03 (NGAY_DL, MA_CN)
     WITH (DATA_COMPRESSION = COLUMNSTORE);
     PRINT N'✅ KH03 Columnstore Index đã tạo xong.';
@@ -106,7 +106,7 @@ ELSE
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID('LN02') AND type = 5)
 BEGIN
     PRINT N'📊 Tạo Columnstore Index cho LN02...';
-    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_LN02_Columnstore 
+    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_LN02_Columnstore
     ON LN02 (NGAY_DL, MA_CN)
     WITH (DATA_COMPRESSION = COLUMNSTORE);
     PRINT N'✅ LN02 Columnstore Index đã tạo xong.';
@@ -118,7 +118,7 @@ ELSE
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID('LN03') AND type = 5)
 BEGIN
     PRINT N'📊 Tạo Columnstore Index cho LN03...';
-    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_LN03_Columnstore 
+    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_LN03_Columnstore
     ON LN03 (NGAY_DL, MA_CN)
     WITH (DATA_COMPRESSION = COLUMNSTORE);
     PRINT N'✅ LN03 Columnstore Index đã tạo xong.';
@@ -130,7 +130,7 @@ ELSE
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID('RR01') AND type = 5)
 BEGIN
     PRINT N'📊 Tạo Columnstore Index cho RR01...';
-    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_RR01_Columnstore 
+    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_RR01_Columnstore
     ON RR01 (NGAY_DL, MA_CN)
     WITH (DATA_COMPRESSION = COLUMNSTORE);
     PRINT N'✅ RR01 Columnstore Index đã tạo xong.';
@@ -142,7 +142,7 @@ ELSE
 IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID('7800_DT_KHKD1') AND type = 5)
 BEGIN
     PRINT N'📊 Tạo Columnstore Index cho 7800_DT_KHKD1...';
-    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_7800_DT_KHKD1_Columnstore 
+    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_7800_DT_KHKD1_Columnstore
     ON [7800_DT_KHKD1] (NGAY_DL, MA_CN)
     WITH (DATA_COMPRESSION = COLUMNSTORE);
     PRINT N'✅ 7800_DT_KHKD1 Columnstore Index đã tạo xong.';
@@ -154,14 +154,14 @@ PRINT N'🎉 Hoàn thành tạo Columnstore Indexes cho tất cả bảng dữ l
 
 -- Kiểm tra kết quả
 PRINT N'📊 KIỂM TRA KẾT QUẢ:';
-SELECT 
-    t.name AS TableName, 
-    i.name AS IndexName, 
+SELECT
+    t.name AS TableName,
+    i.name AS IndexName,
     i.type_desc AS IndexType,
     'Analytics performance improved 10-100x' AS Benefit
-FROM sys.indexes i 
-INNER JOIN sys.tables t ON i.object_id = t.object_id 
-WHERE i.type_desc LIKE '%COLUMNSTORE%' 
+FROM sys.indexes i
+INNER JOIN sys.tables t ON i.object_id = t.object_id
+WHERE i.type_desc LIKE '%COLUMNSTORE%'
     AND t.name IN ('DP01_New', 'LN01', 'DB01', 'GL01', 'GL41', 'DPDA', 'EI01', 'KH03', 'LN02', 'LN03', 'RR01', '7800_DT_KHKD1')
 ORDER BY t.name, i.name;
 
