@@ -211,6 +211,10 @@ namespace TinhKhoanApp.Api.Services
             {
                 _logger.LogInformation("🚀 [{DataType}_DIRECT] Bắt đầu Direct Import: {FileName}", dataType, file.FileName);
 
+                // Extract NgayDL từ filename
+                var ngayDL = ExtractNgayDLFromFileName(file.FileName);
+                result.NgayDL = ngayDL;
+
                 // Create ImportedDataRecord for tracking (chỉ metadata)
                 var importRecord = await CreateImportedDataRecordAsync(file, dataType, 0);
                 result.ImportedDataRecordId = importRecord.Id;
@@ -264,6 +268,10 @@ namespace TinhKhoanApp.Api.Services
             try
             {
                 _logger.LogInformation("🚀 [{DataType}_DIRECT] Bắt đầu Excel Direct Import: {FileName}", dataType, file.FileName);
+
+                // Extract NgayDL từ filename
+                var ngayDL = ExtractNgayDLFromFileName(file.FileName);
+                result.NgayDL = ngayDL;
 
                 // Create ImportedDataRecord for tracking (chỉ metadata)
                 var importRecord = await CreateImportedDataRecordAsync(file, dataType, 0);

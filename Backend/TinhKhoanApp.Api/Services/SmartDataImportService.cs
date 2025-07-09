@@ -70,7 +70,7 @@ namespace TinhKhoanApp.Api.Services
                         ImportedBy = "SmartImportService-Direct",
                         Status = "Completed",
                         RecordsCount = directResult.ProcessedRecords,
-                        StatementDate = directResult.NgayDL
+                        StatementDate = ParseNgayDLToDateTime(directResult.NgayDL)
                     };
 
                     _context.ImportedDataRecords.Add(metadataRecord);
@@ -165,8 +165,8 @@ namespace TinhKhoanApp.Api.Services
         {
             var tables = new List<string>
             {
-                "DP01", "LN01", "LN02", "LN03", "DB01", 
-                "GL01", "GL41", "DPDA", "EI01", "KH03", 
+                "DP01", "LN01", "LN02", "LN03", "DB01",
+                "GL01", "GL41", "DPDA", "EI01", "KH03",
                 "RR01", "DT_KHKD1"
             };
 
@@ -216,6 +216,20 @@ namespace TinhKhoanApp.Api.Services
             };
 
             return mappings.TryGetValue(dataTypeCode, out var mapping) ? mapping : null;
+        }
+
+        /// <summary>
+        /// Parse NgayDL từ format dd/MM/yyyy thành DateTime
+        /// </summary>
+        private DateTime? ParseNgayDLToDateTime(string ngayDL)
+        {
+            if (string.IsNullOrEmpty(ngayDL))
+                return null;
+
+            if (DateTime.TryParseExact(ngayDL, "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out var result))
+                return result;
+
+            return null;
         }
     }
 

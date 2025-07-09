@@ -43,6 +43,11 @@ namespace TinhKhoanApp.Api.Models
         public int ErrorRecords { get; set; }
 
         /// <summary>
+        /// Ngày dữ liệu (NgayDL) extracted từ filename
+        /// </summary>
+        public string NgayDL { get; set; } = string.Empty;
+
+        /// <summary>
         /// Batch ID để tracking
         /// </summary>
         public string BatchId { get; set; } = string.Empty;

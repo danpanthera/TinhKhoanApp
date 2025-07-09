@@ -349,6 +349,8 @@ namespace TinhKhoanApp.Api.Controllers
         }
 
         // 👁️ GET: api/RawData/{id}/preview - Xem trước dữ liệu đã import
+        // ❌ LEGACY METHOD - DISABLED: Depends on ImportedDataItems which has been removed
+        /*
         [HttpGet("{id:int}/preview")]
         public async Task<ActionResult<object>> PreviewRawDataImport(int id)
         {
@@ -446,6 +448,7 @@ namespace TinhKhoanApp.Api.Controllers
                 });
             }
         }
+        */
 
         // � XÓA MOCK DATA: Comment out method tạo mock data LOAN10001-LOAN10010
         /*
@@ -605,7 +608,9 @@ namespace TinhKhoanApp.Api.Controllers
 
         /// <summary>
         /// 🗑️ Xóa triệt để toàn bộ dữ liệu đã import - KHÔNG THỂ HOÀN TÁC!
+        /// ❌ LEGACY METHOD - DISABLED: Depends on ImportedDataItems which has been removed
         /// </summary>
+        /*
         [HttpDelete("clear-all")]
         public async Task<IActionResult> ClearAllRawData()
         {
@@ -695,6 +700,7 @@ namespace TinhKhoanApp.Api.Controllers
                 });
             }
         }
+        */
 
         // 🔍 GET: api/RawData/check-duplicate/{dataType}/{statementDate} - Kiểm tra dữ liệu trùng lặp từ Temporal Tables
         [HttpGet("check-duplicate/{dataType}/{statementDate}")]
@@ -1677,6 +1683,8 @@ namespace TinhKhoanApp.Api.Controllers
         }
 
         // ⚡ Helper method để lưu batch vào database
+        // ❌ LEGACY METHOD - DISABLED: Depends on ImportedDataItems which has been removed
+        /*
         private async Task SaveBatchToDatabase(List<Dictionary<string, object>> records, int importedDataRecordId, string branchCode)
         {
             foreach (var record in records)
@@ -1693,6 +1701,7 @@ namespace TinhKhoanApp.Api.Controllers
 
             await _context.SaveChangesAsync();
         }
+        */
 
         // ✅ API mới: Lấy danh sách import gần đây nhất (để hiển thị ngay sau khi upload)
         [HttpGet("recent")]
