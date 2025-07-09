@@ -107,11 +107,11 @@
                 <td>
                   <div style="display: flex; align-items: center; gap: 8px;">
                     <span class="badge-agribank badge-primary">{{ index + 1 }}</span>
-                    <span class="font-weight-semibold">{{ indicator.indicatorName }}</span>
+                    <span class="font-weight-semibold">{{ safeGet(indicator, 'IndicatorName') }}</span>
                   </div>
                 </td>
                 <td style="text-align: center;">
-                  <span class="badge-agribank badge-accent">{{ indicator.maxScore }}</span>
+                  <span class="badge-agribank badge-accent">{{ safeGet(indicator, 'MaxScore') }}</span>
                 </td>
                 <td>
                   <input
@@ -125,7 +125,7 @@
                   />
                 </td>
                 <td style="text-align: center;">
-                  <span class="badge-agribank badge-secondary">{{ indicator.unit || 'N/A' }}</span>
+                  <span class="badge-agribank badge-secondary">{{ safeGet(indicator, 'Unit') || 'N/A' }}</span>
                 </td>
                 <td>
                   <div style="display: flex; gap: 4px; justify-content: center;">

@@ -42,7 +42,7 @@ PATTERNS=(
 for pattern in "${PATTERNS[@]}"; do
   camel=$(echo $pattern | cut -d'/' -f1)
   pascal=$(echo $pattern | cut -d'/' -f2)
-  
+
   echo -e "\n🔍 Checking $camel vs $pascal usage:" | tee -a "$REPORT_FILE"
   grep -r --include="*.vue" --include="*.js" -E "\\.$camel\\b|\\.$pascal\\b|'$camel'|'$pascal'" src/ | grep -v "safeGet" | grep -v "import" | grep -v "require" | head -n 10 >> "$REPORT_FILE"
 done

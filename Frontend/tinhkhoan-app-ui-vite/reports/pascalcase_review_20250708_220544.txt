@@ -1,0 +1,280 @@
+TinhKhoanApp PascalCase Consistency Review
+Generated: Tue Jul  8 22:05:44 +07 2025
+---------------------------------------------
+
+🔎 Scanning for direct property access that should use safeGet...
+src/App.vue:          <img src="/Logo-Agribank-2.png" alt="Agribank Logo" class="nav-logo-img" />
+src/App.vue:          <a href="#" @click.prevent="handleLogout" class="logout-btn">
+src/App.vue:if (!isAuthenticated() && router.currentRoute.value.path !== '/login') {
+src/App.vue:  router.push('/login');
+src/App.vue:  router.push('/login');
+src/App.vue:  if (hrMenuTimeout.value) {
+src/App.vue:    clearTimeout(hrMenuTimeout.value);
+src/App.vue:    hrMenuTimeout.value = null;
+src/App.vue:  showHRMenu.value = true;
+src/App.vue:  hrMenuTimeout.value = setTimeout(() => {
+src/App.vue:    showHRMenu.value = false;
+src/App.vue:  if (kpiMenuTimeout.value) {
+src/App.vue:    clearTimeout(kpiMenuTimeout.value);
+src/App.vue:    kpiMenuTimeout.value = null;
+src/App.vue:  showKPIMenu.value = true;
+src/App.vue:  kpiMenuTimeout.value = setTimeout(() => {
+src/App.vue:    showKPIMenu.value = false;
+src/App.vue:  if (dashboardMenuTimeout.value) {
+src/App.vue:    clearTimeout(dashboardMenuTimeout.value);
+src/App.vue:    dashboardMenuTimeout.value = null;
+src/App.vue:  showDashboardMenu.value = true;
+src/App.vue:  dashboardMenuTimeout.value = setTimeout(() => {
+src/App.vue:    showDashboardMenu.value = false;
+src/App.vue:  if (aboutMenuTimeout.value) {
+src/App.vue:    clearTimeout(aboutMenuTimeout.value);
+src/App.vue:    aboutMenuTimeout.value = null;
+src/App.vue:  showAboutMenu.value = true;
+src/App.vue:  aboutMenuTimeout.value = setTimeout(() => {
+src/App.vue:    showAboutMenu.value = false;
+src/App.vue:  showHRMenu.value = false;
+src/App.vue:  showKPIMenu.value = false;
+src/App.vue:  showDashboardMenu.value = false;
+src/App.vue:  showAboutMenu.value = false;
+src/App.vue:  if (hrMenuTimeout.value) {
+src/App.vue:    clearTimeout(hrMenuTimeout.value);
+src/App.vue:    hrMenuTimeout.value = null;
+src/App.vue:  if (kpiMenuTimeout.value) {
+src/App.vue:    clearTimeout(kpiMenuTimeout.value);
+src/App.vue:    kpiMenuTimeout.value = null;
+src/App.vue:  if (dashboardMenuTimeout.value) {
+src/App.vue:    clearTimeout(dashboardMenuTimeout.value);
+src/App.vue:    dashboardMenuTimeout.value = null;
+src/App.vue:  if (aboutMenuTimeout.value) {
+src/App.vue:    clearTimeout(aboutMenuTimeout.value);
+src/App.vue:    aboutMenuTimeout.value = null;
+src/App.vue:  const dropdownElements = document.querySelectorAll('.nav-dropdown');
+src/App.vue:  dropdownElements.forEach(dropdown => {
+src/App.vue:    if (dropdown.contains(event.target)) {
+src/App.vue:  return hrRoutes.includes(route.path);
+src/App.vue:  return kpiRoutes.includes(route.path);
+
+🔎 Scanning for inconsistent casing usage...
+
+🔍 Checking id vs Id usage:
+src/stores/offlineStore.js:          console.log('🔧 Offline Store: Sync success for action:', action.Id);
+src/stores/offlineStore.js:        console.error('🔧 Offline Store: Sync failed for action:', action.Id, error);
+src/stores/offlineStore.js:    pendingActions.value = pendingActions.value.filter(action => action.Id !== actionId);
+src/stores/employeeStore.js:        if (!response.data || !response.data.Id) {
+src/stores/employeeStore.js:        const newEmployee = this.employees.find(e => e.Id === response.data.Id);
+src/stores/employeeStore.js:        const currentEmployee = await this.fetchEmployeeDetail(employeeData.Id).catch(() => null);
+src/stores/employeeStore.js:        const employeeId = employeeData.Id || employeeData.id;
+src/stores/employeeStore.js:        this.employees = this.employees.filter(e => e.Id !== employeeId);
+src/stores/employeeStore.js:        this.employees = this.employees.filter(e => !employeeIds.includes(e.Id));
+src/utils/casingSafeAccess.js:export function mapDropdownOptions(items, valueField = 'Id', textField = 'Name') {
+
+🔍 Checking name vs Name usage:
+src/App.vue:      backgroundNames.value = sortedData.map(item => item.name);
+src/utils/casingSafeAccess.js:export function mapDropdownOptions(items, valueField = 'Id', textField = 'Name') {
+src/utils/casingSafeAccess.js:  const critical = ['Id', 'id', 'Name', 'name', 'Type', 'type', 'Status', 'status'];
+src/components/dashboard/KpiCard_OLD.vue:          <h4>{{ indicator.Name }}</h4>
+src/components/dashboard/KpiCard.vue:        <h4 class="card-name">{{ indicator.Name }}</h4>
+src/components/dashboard/TrendChart.vue:    const isPercentage = dataset.Name.includes('Tỷ lệ') || dataset.Name.includes('%');
+src/components/dashboard/TrendChart.vue:      name: dataset.Name,
+src/components/dashboard/KpiCard_NEW.vue:        <h4 class="card-name">{{ indicator.Name }}</h4>
+src/components/dashboard/ComparisonView.vue:            :label="indicator.Name"
+src/components/dashboard/ComparisonView.vue:                  <div class="card-value">{{ getBestUnit().Name }}</div>
+
+🔍 Checking startDate vs StartDate usage:
+src/stores/khoanPeriodStore.js:        (a, b) => new Date(b.StartDate || b.startDate) - new Date(a.StartDate || a.startDate)
+src/stores/khoanPeriodStore.js:          StartDate: periodData.StartDate || periodData.startDate,
+src/views/KpiActualValuesView.vue:                >                      {{ period.Name }} ({{ formatDate(period.startDate) }} - {{ formatDate(period.endDate) }})
+src/views/KpiActualValuesView.vue:                    {{ formatDate(assignment.khoanPeriod?.startDate) }} -
+src/views/KpiActualValuesView.vue:                      {{ period.Name }} ({{ formatDate(period.startDate) }} - {{ formatDate(period.endDate) }})
+src/views/KhoanPeriodsView.vue:            <div class="period-dates">📅 Thời gian: {{ formatDate(period.StartDate || period.startDate) }} → {{ formatDate(period.EndDate || period.endDate) }}</div>
+src/views/KhoanPeriodsView.vue:            v-model="currentKhoanPeriod.startDate"
+src/views/KhoanPeriodsView.vue:  if (!dataToSubmit.startDate) {
+src/views/KhoanPeriodsView.vue:  if (new Date(dataToSubmit.startDate) >= new Date(dataToSubmit.endDate)) {
+src/views/KhoanPeriodsView.vue:  dataToSubmit.startDate = toDateInputValue(dataToSubmit.startDate);
+
+🔍 Checking endDate vs EndDate usage:
+src/stores/khoanPeriodStore.js:          EndDate: periodData.EndDate || periodData.endDate,
+src/views/KpiActualValuesView.vue:                >                      {{ period.Name }} ({{ formatDate(period.startDate) }} - {{ formatDate(period.endDate) }})
+src/views/KpiActualValuesView.vue:                    {{ formatDate(assignment.khoanPeriod?.endDate) }}
+src/views/KpiActualValuesView.vue:                      {{ period.Name }} ({{ formatDate(period.startDate) }} - {{ formatDate(period.endDate) }})
+src/views/KhoanPeriodsView.vue:            <div class="period-dates">📅 Thời gian: {{ formatDate(period.StartDate || period.startDate) }} → {{ formatDate(period.EndDate || period.endDate) }}</div>
+src/views/KhoanPeriodsView.vue:            v-model="currentKhoanPeriod.endDate"
+src/views/KhoanPeriodsView.vue:  if (!dataToSubmit.endDate) {
+src/views/KhoanPeriodsView.vue:  if (new Date(dataToSubmit.startDate) >= new Date(dataToSubmit.endDate)) {
+src/views/KhoanPeriodsView.vue:  dataToSubmit.endDate = toDateInputValue(dataToSubmit.endDate);
+src/views/UnitKpiAssignmentView.vue:                {{ period.Name || period.Name }} ({{ formatDate(period.StartDate || period.startDate) }} - {{ formatDate(period.EndDate || period.endDate) }})
+
+🔍 Checking employeeId vs EmployeeId usage:
+
+🔍 Checking unitId vs UnitId usage:
+src/views/KpiScoringView.vue:      assignment.unitId == selectedUnit.value &&
+src/views/KpiActualValuesView.vue:    filtered = filtered.filter(emp => emp.unitId === deptId);
+src/views/KpiActualValuesView.vue:    filtered = filtered.filter(emp => branchDepartments.includes(emp.unitId));
+src/views/dashboard/TargetAssignment.vue:    let matches = target.unitId === selectedUnitId.value;
+src/views/dashboard/TargetAssignment.vue:      params.unitId = selectedUnitId.value;
+src/views/dashboard/TargetAssignment.vue:    unitId: target.unitId,
+src/views/dashboard/CalculationDashboard.vue:              <tr v-for="unit in performanceData" :key="unit.unitId">
+src/views/dashboard/CalculationDashboard.vue:    if (selectedUnitId.value) params.unitId = selectedUnitId.value;
+src/views/dashboard/CalculationDashboard.vue:    if (selectedUnitId.value) params.unitId = selectedUnitId.value;
+src/views/dashboard/CalculationDashboard.vue:    if (selectedUnitId.value) params.unitId = selectedUnitId.value;
+
+🔍 Checking indicators vs Indicators usage:
+src/utils/apiHelpers.js: * @param {string} dataKey - Key chứa data cần check (e.g., 'indicators')
+src/components/dashboard/ComparisonView.vue:  const indicator = props.indicators.find(i => i.Code === code);
+src/components/dashboard/ComparisonView.vue:  const indicatorObj = props.indicators.find(i => i.Code === indicator);
+src/views/dashboard/BusinessPlanDashboard.vue:    if (data && data.indicators) {
+src/views/dashboard/BusinessPlanDashboard.vue:      indicators.value = data.indicators.map(indicator => {
+src/views/dashboard/BusinessPlanDashboard.vue:.indicators-grid {
+src/views/dashboard/BusinessPlanDashboard.vue:  .indicators-grid {
+src/views/dashboard/BusinessPlanDashboard.vue:  .indicators-grid {
+src/views/EmployeeKpiAssignmentView.vue:    logApiResponse(`/KpiAssignment/tables/${selectedTableId.value}`, response, 'indicators')
+src/views/EmployeeKpiAssignmentView.vue:    // Handle both 'indicators' (lowercase) and 'Indicators' (PascalCase) from API
+
+🔍 Checking description vs Description usage:
+src/components/dashboard/IndicatorDetail.vue:          <p class="indicator-description">{{ indicator.description || 'Theo dõi hiệu quả hoạt động kinh doanh' }}</p>
+src/components/RawData/OptimizedDataTable.vue:              {{ def.icon }} {{ key }} - {{ def.description }}
+src/components/RawData/EnhancedDashboard.vue:            <div class="activity-description">{{ activity.description }}</div>
+src/views/PositionsView.vue:          <span class="item-details" v-if="position.Description"
+src/views/PositionsView.vue:            >(Mô tả: {{ position.Description }})</span
+src/views/PositionsView.vue:            :value="currentPosition.Description"
+src/views/PositionsView.vue:            @input="currentPosition.Description = $event.target.value"
+src/views/PositionsView.vue:    typeof currentPosition.value.Description === "string"
+src/views/PositionsView.vue:      ? currentPosition.value.Description.trim()
+src/views/EmployeeKpiAssignmentView.vue:  return table ? (table.description || table.tableName) : 'Bảng KPI'
+
+🔍 Checking status vs Status usage:
+src/stores/offlineStore.js:          throw new Error(`HTTP ${response.Status}: ${response.statusText}`);
+src/stores/roleStore.js:          status: response.Status,
+src/stores/unitStore.js:        console.log('📨 API Response received:', response.Status, response.data);
+src/utils/casingSafeAccess.js:  const critical = ['Id', 'id', 'Name', 'name', 'Type', 'type', 'Status', 'status'];
+src/utils/apiHelpers.js:  console.log('Status:', response.status)
+src/components/FrontendDebug.vue:    addLog(`📡 Response status: ${response.Status}`)
+src/components/FrontendDebug.vue:      status: response.Status,
+src/components/dashboard/KpiCard_OLD.vue:.Status-badge {
+src/components/dashboard/KpiCard_OLD.vue:.Status-badge.success {
+src/components/dashboard/KpiCard_OLD.vue:.Status-badge.warning {
+
+🔍 Checking type vs Type usage:
+src/utils/casingSafeAccess.js:  const critical = ['Id', 'id', 'Name', 'name', 'Type', 'type', 'Status', 'status'];
+src/components/PerformanceDashboard.vue:          :class="activity.Type"
+src/components/dashboard/ComparisonChart.vue:  switch (props.Type) {
+src/components/dashboard/ComparisonChart.vue:watch(() => props.Type, () => {
+src/components/DebugAPIComponent.vue:        <strong>{{ unit.Name }}</strong> ({{ unit.Code }}) - {{ unit.Type }}
+src/components/RawData/EnhancedDashboard.vue:          :class="getActivityClass(activity.type)"
+src/components/RawData/EnhancedDashboard.vue:          <div class="activity-icon">{{ getActivityIcon(activity.type) }}</div>
+src/components/RawData/EnhancedDashboard.vue:  return recentActivities.value.filter(activity => activity.type === selectedActivityFilter.value);
+src/views/KpiScoringView.vue:    cnl1Units.value = unitsData.filter(unit => unit.type === 'CNL1')
+src/views/KpiScoringView.vue:    cnl2Units.value = unitsData.filter(unit => unit.type === 'CNL2')
+
+🔍 Checking code vs Code usage:
+src/components/dashboard/KpiCard_OLD.vue:  if (props.indicator.Code === 'TyLeNoXau') {
+src/components/dashboard/KpiCard.vue:  if (props.indicator.Code === 'TyLeNoXau') {
+src/components/dashboard/KpiCard_NEW.vue:  if (props.indicator.Code === 'TyLeNoXau') {
+src/components/dashboard/ComparisonView.vue:            :key="indicator.Code"
+src/components/dashboard/ComparisonView.vue:            :value="indicator.Code"
+src/components/dashboard/ComparisonView.vue:  const indicator = props.indicators.find(i => i.Code === code);
+src/components/dashboard/ComparisonView.vue:  const indicatorObj = props.indicators.find(i => i.Code === indicator);
+src/components/dashboard/IndicatorDetail.vue:              :indicators="[indicator.Code]"
+src/components/dashboard/IndicatorDetail.vue:              :indicator="indicator.Code"
+src/components/dashboard/IndicatorDetail.vue:            <span :class="getChangeClass(row.vsStartYear, indicator.Code)">
+
+🔍 Checking value vs Value usage:
+src/App.vue:if (!isAuthenticated() && router.currentRoute.value.path !== '/login') {
+src/App.vue:  if (hrMenuTimeout.value) {
+src/App.vue:    clearTimeout(hrMenuTimeout.value);
+src/App.vue:    hrMenuTimeout.value = null;
+src/App.vue:  showHRMenu.value = true;
+src/App.vue:  hrMenuTimeout.value = setTimeout(() => {
+src/App.vue:    showHRMenu.value = false;
+src/App.vue:  if (kpiMenuTimeout.value) {
+src/App.vue:    clearTimeout(kpiMenuTimeout.value);
+src/App.vue:    kpiMenuTimeout.value = null;
+
+🔍 Checking isActive vs IsActive usage:
+src/components/EmployeeDetailModal.vue:      <div class="info-row"><strong>Trạng thái:</strong> <span :class="employee.isActive ? 'active' : 'inactive'">{{ employee.isActive ? 'Đang làm việc' : 'Nghỉ việc' }}</span></div>
+src/views/KpiActualValuesView.vue:    employees.Value = employeesData.filter(emp => emp.isActive);
+src/views/dashboard/TargetAssignment.vue:                <span :class="['status-badge', target.isActive ? 'active' : 'inactive']">
+src/views/dashboard/TargetAssignment.vue:                  {{ target.isActive ? 'Hoạt động' : 'Không hoạt động' }}
+src/views/dashboard/TargetAssignment.vue:                  v-model="targetForm.isActive"
+src/views/dashboard/TargetAssignment.vue:    isActive: target.isActive
+src/views/KpiDefinitionsView.vue:                  <span class="value" :class="{ active: (selectedTable.IsActive !== undefined ? selectedTable.IsActive : selectedTable.isActive), inactive: !(selectedTable.IsActive !== undefined ? selectedTable.IsActive : selectedTable.isActive) }">
+src/views/KpiDefinitionsView.vue:                    {{ (selectedTable.IsActive !== undefined ? selectedTable.IsActive : selectedTable.isActive) ? 'Hoạt động' : 'Không hoạt động' }}
+src/views/KpiDefinitionsView.vue:                v-model="indicatorForm.isActive"
+src/views/KpiDefinitionsView.vue:        if (indicator.isActive && indicator.indicatorName) {
+
+📋 Files that may need comprehensive review:
+⚠️ src/api/employeeKpiAssignmentApi.js (no safeGet usage)
+⚠️ src/App.vue (no safeGet usage)
+⚠️ src/components/AppFooter.vue (no safeGet usage)
+⚠️ src/components/dashboard/AnimatedNumber.vue (no safeGet usage)
+⚠️ src/components/dashboard/ComparisonChart.vue (no safeGet usage)
+⚠️ src/components/dashboard/ComparisonView.vue (no safeGet usage)
+⚠️ src/components/dashboard/IndicatorDetail.vue (no safeGet usage)
+⚠️ src/components/dashboard/KpiCard_NEW.vue (no safeGet usage)
+⚠️ src/components/dashboard/KpiCard_OLD.vue (no safeGet usage)
+⚠️ src/components/dashboard/KpiCard.vue (no safeGet usage)
+⚠️ src/components/dashboard/LoadingOverlay.vue (no safeGet usage)
+⚠️ src/components/dashboard/MiniTrendChart_NEW.vue (no safeGet usage)
+⚠️ src/components/dashboard/MiniTrendChart_OLD.vue (no safeGet usage)
+⚠️ src/components/dashboard/MiniTrendChart.vue (no safeGet usage)
+⚠️ src/components/dashboard/TrendChart.vue (no safeGet usage)
+⚠️ src/components/DebugAPIComponent.vue (no safeGet usage)
+⚠️ src/components/DebugDropdown.vue (no safeGet usage)
+⚠️ src/components/EmployeeDetailModal.vue (no safeGet usage)
+⚠️ src/components/FrontendDebug.vue (no safeGet usage)
+⚠️ src/components/OfflineIndicator.vue (no safeGet usage)
+⚠️ src/components/PerformanceDashboard.vue (no safeGet usage)
+⚠️ src/components/PWAInstallPrompt.vue (no safeGet usage)
+⚠️ src/components/RawData/EnhancedDashboard.vue (no safeGet usage)
+⚠️ src/components/RawData/OptimizedDataTable.vue (no safeGet usage)
+⚠️ src/components/StoreDebugPanel.vue (no safeGet usage)
+⚠️ src/components/ThemeSwitcher.vue (no safeGet usage)
+⚠️ src/composables/useApiService.js (no safeGet usage)
+⚠️ src/composables/useToast.js (no safeGet usage)
+⚠️ src/main.js (no safeGet usage)
+⚠️ src/router/index.js (no safeGet usage)
+⚠️ src/services/api.js (no safeGet usage)
+⚠️ src/services/audioService.js (no safeGet usage)
+⚠️ src/services/auth.js (no safeGet usage)
+⚠️ src/services/branchIndicatorsService.js (no safeGet usage)
+⚠️ src/services/dashboardService.js (no safeGet usage)
+⚠️ src/services/dataImportService.js (no safeGet usage)
+⚠️ src/services/kpiAssignmentService.js (no safeGet usage)
+⚠️ src/services/kpiDefinitionsService.js (no safeGet usage)
+⚠️ src/services/offlineApi.js (no safeGet usage)
+⚠️ src/services/rawDataService.js (no safeGet usage)
+⚠️ src/services/smartImportService.js (no safeGet usage)
+⚠️ src/services/temporalService.js (no safeGet usage)
+⚠️ src/services/unitKpiAssignmentService.js (no safeGet usage)
+⚠️ src/stores/khoanPeriodStore.js (no safeGet usage)
+⚠️ src/stores/offlineStore.js (no safeGet usage)
+⚠️ src/stores/positionStore.js (no safeGet usage)
+⚠️ src/stores/roleStore.js (no safeGet usage)
+⚠️ src/stores/themeStore.js (no safeGet usage)
+⚠️ src/stores/unitStore.js (no safeGet usage)
+⚠️ src/sw.js (no safeGet usage)
+⚠️ src/utils/apiHelpers.js (no safeGet usage)
+⚠️ src/utils/numberFormat.js (no safeGet usage)
+⚠️ src/utils/soundUtils.js (no safeGet usage)
+⚠️ src/views/AboutInfoView.vue (no safeGet usage)
+⚠️ src/views/dashboard/BusinessPlanDashboard.vue (no safeGet usage)
+⚠️ src/views/dashboard/CalculationDashboard.vue (no safeGet usage)
+⚠️ src/views/dashboard/TargetAssignment.vue (no safeGet usage)
+⚠️ src/views/DataImportViewFull.vue (no safeGet usage)
+⚠️ src/views/HomeView.vue (no safeGet usage)
+⚠️ src/views/KpiActualValuesView.vue (no safeGet usage)
+⚠️ src/views/KpiScoringView.vue (no safeGet usage)
+⚠️ src/views/LoginView.vue (no safeGet usage)
+⚠️ src/views/PayrollReportView.vue (no safeGet usage)
+⚠️ src/views/PositionsView.vue (no safeGet usage)
+⚠️ src/views/RolesView.vue (no safeGet usage)
+⚠️ src/views/SoftwareInfoView.vue (no safeGet usage)
+⚠️ src/views/UnitKpiAssignmentView.vue (no safeGet usage)
+⚠️ src/views/UnitKpiScoringView.vue (no safeGet usage)
+⚠️ src/views/UnitsView.vue (no safeGet usage)
+⚠️ src/views/UserGuideView.vue (no safeGet usage)
+
+📋 API handlers that may need review:
+src/components/PWAInstallPrompt.vue:    navigator.serviceWorker.ready.then((reg) => {
+src/services/audioService.js:        sound.play().then(() => {
+src/sw.js:    self.clients.claim().then(() => {

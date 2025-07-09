@@ -18,11 +18,11 @@ FILES_TO_FIX=(
 for file in "${FILES_TO_FIX[@]}"; do
   if [ -f "$file" ]; then
     echo "🔧 Processing file: $file"
-    
+
     # Create backup
     cp "$file" "${file}.bak"
     echo "   📑 Created backup: ${file}.bak"
-    
+
     # Check if file already imports safeGet
     if ! grep -q "import.*safeGet" "$file"; then
       # Add import if needed
@@ -35,7 +35,7 @@ for file in "${FILES_TO_FIX[@]}"; do
       fi
       echo "   ➕ Added safeGet import"
     fi
-    
+
     echo "   ✅ File processed"
   else
     echo "❌ File not found: $file"

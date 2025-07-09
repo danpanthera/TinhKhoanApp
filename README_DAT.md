@@ -13,18 +13,6 @@ Luôn để backend port là 5055, frontend port là 3000.
 
 ## 🆕 TinhKhoanApp Maintenance Notes (July 2025)
 
-### KPI Assignment Workflow Fixes
-
-#### ✅ Đã hoàn thành:
-- ✅ Sửa hiển thị thông tin cán bộ với PascalCase nhất quán sử dụng `safeGet`
-- ✅ Sửa `getEmployeeRole` và `getEmployeeShortName` để sử dụng casing-safe helpers
-- ✅ Sửa dropdown cho bảng KPI với lọc category đúng
-- ✅ Sửa logic mapping để không tự động map bảng KPI theo vai trò, cho phép chọn thủ công
-- ✅ Sửa hiển thị indicators khi chọn bảng KPI (kiểm tra cả 'Indicators' và 'indicators')
-- ✅ Thêm debug logging cho quá trình load indicators
-- ✅ Xác nhận các sửa đổi với các script test toàn diện
-- ✅ Tạo tài liệu và script bảo trì
-
 ### Dọn dẹp Dự án
 
 Một cuộc dọn dẹp toàn diện đã được thực hiện để giảm kích thước dự án và cải thiện khả năng bảo trì:

@@ -51,7 +51,7 @@ fi
 
 echo ""
 
-# Test 2: Check UnitKpiAssignmentView indicators fix  
+# Test 2: Check UnitKpiAssignmentView indicators fix
 echo -e "${YELLOW}🔍 TEST 2: UnitKpiAssignmentView indicators handling...${NC}"
 echo ""
 
@@ -64,7 +64,7 @@ fi
 
 if grep -q "Raw indicators data:" "$UNIT_VIEW"; then
     echo -e "${GREEN}✅ Unit view has debug logging${NC}"
-    echo "   - Includes raw data and normalized data logging"  
+    echo "   - Includes raw data and normalized data logging"
 else
     echo -e "${YELLOW}⚠️ Unit view missing debug logging${NC}"
 fi
@@ -127,7 +127,7 @@ echo "============================"
 echo ""
 
 echo -e "${GREEN}✅ Issue 1: Employee KPI Assignment indicators not displaying${NC}"
-echo "   Root cause: API returns 'Indicators' but code checked 'indicators'"  
+echo "   Root cause: API returns 'Indicators' but code checked 'indicators'"
 echo "   Fix: Handle both PascalCase and camelCase variants"
 echo "   Result: Indicators should display after selecting KPI table"
 echo ""
@@ -151,7 +151,7 @@ echo "   - Select period → branch → employees → KPI table"
 echo "   - Verify indicators appear in the table below"
 echo "   - Check console logs for successful indicator loading"
 echo ""
-echo "3. Test Unit KPI Assignment:"  
+echo "3. Test Unit KPI Assignment:"
 echo "   - Navigate to Unit KPI Assignment page"
 echo "   - Select period → select branch"
 echo "   - Verify KPI indicators load automatically"
@@ -175,7 +175,7 @@ echo -e "${GREEN}🎉 INDICATORS DISPLAY FIXES COMPLETED!${NC}"
 echo ""
 echo -e "${BLUE}Expected Results:${NC}"
 echo "✅ Employee KPI indicators display after KPI table selection"
-echo "✅ Unit KPI indicators display after branch selection"  
+echo "✅ Unit KPI indicators display after branch selection"
 echo "✅ No more empty indicator lists"
 echo "✅ Console shows successful data loading"
 echo "✅ Both PascalCase and camelCase API responses handled"
