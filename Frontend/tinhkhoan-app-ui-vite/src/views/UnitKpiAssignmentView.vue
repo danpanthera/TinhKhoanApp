@@ -235,6 +235,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../services/api.js';
 import { logApiResponse, normalizeNetArray } from '../utils/apiHelpers.js';
+import { safeGet } from '../utils/casingSafeAccess.js';
 import { useNumberInput } from '../utils/numberFormat';
 
 // Router instance
