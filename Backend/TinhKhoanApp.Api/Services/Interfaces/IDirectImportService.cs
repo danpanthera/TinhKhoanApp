@@ -78,5 +78,20 @@ namespace TinhKhoanApp.Api.Services.Interfaces
         /// Lấy lịch sử import để hiển thị trong Raw Data view
         /// </summary>
         Task<List<object>> GetImportHistoryAsync();
+
+        /// <summary>
+        /// Lấy preview data cho import record
+        /// </summary>
+        Task<object?> GetImportPreviewAsync(int importId);
+
+        /// <summary>
+        /// Xóa import record và dữ liệu liên quan
+        /// </summary>
+        Task<(bool Success, string ErrorMessage, int RecordsDeleted)> DeleteImportAsync(int importId);
+
+        /// <summary>
+        /// Xóa import records theo ngày và data type
+        /// </summary>
+        Task<(bool Success, string ErrorMessage, int RecordsDeleted)> DeleteImportsByDateAsync(string dataType, string date);
     }
 }

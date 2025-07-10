@@ -332,14 +332,13 @@
                       >
                         👁️
                       </button>
-                      <!-- 🚫 NÚT XÓA DISABLED - Direct Import uses Temporal Tables -->
-                      <!-- <button
+                      <button
                         @click="confirmDelete(item.id, item.fileName)"
                         class="btn-action btn-delete"
                         title="Xóa bản ghi"
                       >
                         🗑️
-                      </button> -->
+                      </button>
                     </td>
                   </tr>
                 </tbody>
@@ -1291,18 +1290,18 @@ const previewData = async (importId) => {
     const result = await rawDataService.previewData(importId)
 
     if (result.success && result.data) {
-      // ✅ FIX: Hiển thị modal với dữ liệu thay vì chỉ báo "tính năng đang phát triển"
-      const previewRows = result.data.previewRows || result.data.PreviewData || result.data.previewData || []
+      // ✅ Hiển thị modal với dữ liệu thực tế từ database
+      const previewRows = result.data.PreviewRows || result.data.previewRows || []
 
       if (previewRows && previewRows.length > 0) {
-        // Hiển thị tối đa 20 bản ghi đầu như yêu cầu
+        // Hiển thị tối đa 20 bản ghi đầu
         const recordsToShow = previewRows.slice(0, 20)
 
         // Cập nhật state để hiển thị modal
         rawDataRecords.value = recordsToShow
-        selectedDataType.value = result.data.importInfo?.DataType || result.data.dataType || 'Dữ liệu chi tiết'
+        selectedDataType.value = result.data.Category || result.data.category || 'Dữ liệu chi tiết'
 
-        showSuccess(`✅ Đã tải ${recordsToShow.length} bản ghi chi tiết đầu tiên`)
+        showSuccess(`✅ Đã tải ${recordsToShow.length} bản ghi chi tiết từ ${result.data.TotalRecords || result.data.totalRecords} bản ghi`)
         showRawDataModal.value = true
       } else {
         showError('Không tìm thấy dữ liệu chi tiết trong bản ghi này')
@@ -1349,7 +1348,7 @@ const formatDateTime = (dateTimeString) => {
 
 // Delete confirmation
 const confirmDelete = async (importId, fileName) => {
-  if (confirm(`Bạn có chắc chắn muốn xóa bản ghi "${fileName}"?`)) {
+  if (confirm(`⚠️ Bạn có chắc chắn muốn xóa bản ghi "${fileName}"?\n\nViệc xóa sẽ bao gồm:\n- Xóa bản ghi import khỏi lịch sử\n- Xóa tất cả dữ liệu liên quan trong bảng database\n\nHành động này không thể hoàn tác!`)) {
     try {
       loading.value = true
       loadingMessage.value = 'Đang xóa dữ liệu...'
@@ -1357,7 +1356,7 @@ const confirmDelete = async (importId, fileName) => {
       const result = await rawDataService.deleteImport(importId)
 
       if (result.success) {
-        showSuccess(`Đã xóa thành công bản ghi "${fileName}"`)
+        showSuccess(`✅ Đã xóa thành công bản ghi "${fileName}" (${result.recordsDeleted} bản ghi dữ liệu)`)
 
         // Remove from filtered results
         filteredResults.value = filteredResults.value.filter(item => item.id !== importId)
@@ -1365,11 +1364,11 @@ const confirmDelete = async (importId, fileName) => {
         // Refresh all data
         await refreshAllData()
       } else {
-        showError(`Lỗi khi xóa bản ghi: ${result.error}`)
+        showError(`❌ Lỗi khi xóa bản ghi: ${result.error}`)
       }
     } catch (error) {
       console.error('Error deleting import:', error)
-      showError(`Lỗi khi xóa bản ghi: ${error.message}`)
+      showError(`❌ Lỗi khi xóa bản ghi: ${error.message}`)
     } finally {
       loading.value = false
       loadingMessage.value = ''

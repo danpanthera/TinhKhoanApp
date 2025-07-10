@@ -36,11 +36,17 @@ export function formatNumber(value, decimals = 2, showZeroDecimals = false) {
 /**
  * Format số tiền (currency) với prefix và suffix
  * @param {number|string} value - Giá trị số tiền
- * @param {string} currency - Đơn vị tiền tệ (VD: 'VND', 'USD')
+ * @param {string} currency - Đơn vị tiền tệ (VD: 'VND', 'USD', 'MILLION_VND')
  * @param {number} decimals - Số chữ số thập phân
  * @returns {string} Chuỗi tiền đã format
  */
 export function formatCurrency(value, currency = 'VND', decimals = 0) {
+  // Đặc biệt cho Triệu VND: luôn hiển thị 2 chữ số thập phân
+  if (currency === 'MILLION_VND') {
+    const formatted = formatNumber(value, 2, true) // Force show decimals
+    return `${formatted} tr.VND`
+  }
+
   const formatted = formatNumber(value, decimals, false)
 
   if (currency === 'VND') {
@@ -174,6 +180,24 @@ export function formatProcessingTime(seconds) {
   }
 }
 
+/**
+ * Format số tiền Triệu VND với 2 chữ số thập phân
+ * @param {number|string} value - Giá trị tiền tệ
+ * @returns {string} Chuỗi tiền Triệu VND đã format
+ */
+export function formatMillionVND(value) {
+  return formatCurrency(value, 'MILLION_VND', 2)
+}
+
+/**
+ * Format input cho trường Triệu VND
+ * @param {string} value - Giá trị input
+ * @returns {string} Giá trị đã format
+ */
+export function formatMillionVNDInput(value) {
+  return formatInputNumber(value, 2) // Luôn hiển thị 2 chữ số thập phân
+}
+
 // Default export cho convenience
 export default {
   formatNumber,
@@ -183,5 +207,7 @@ export default {
   validateNumberFormat,
   formatInputNumber,
   formatFileSize,
-  formatProcessingTime
+  formatProcessingTime,
+  formatMillionVND,
+  formatMillionVNDInput
 }

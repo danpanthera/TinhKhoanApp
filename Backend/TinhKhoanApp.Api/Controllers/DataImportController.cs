@@ -88,7 +88,79 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
-        // � GET: api/DataImport/records - Get import records for Raw Data view
+        // 🔍 NEW: GET: api/DataImport/preview/{id} - Preview data for import record
+        [HttpGet("preview/{id}")]
+        public async Task<IActionResult> PreviewImportData(int id)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Getting preview data for import record: {Id}", id);
+
+                var previewData = await _directImportService.GetImportPreviewAsync(id);
+
+                if (previewData == null)
+                {
+                    return NotFound(new { message = "Import record not found" });
+                }
+
+                return Ok(previewData);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error getting preview data for import {Id}", id);
+                return StatusCode(500, new { message = "Error retrieving preview data", error = ex.Message });
+            }
+        }
+
+        // 🗑️ NEW: DELETE: api/DataImport/delete/{id} - Delete import record and related data
+        [HttpDelete("delete/{id}")]
+        public async Task<IActionResult> DeleteImportData(int id)
+        {
+            try
+            {
+                _logger.LogInformation("🗑️ Deleting import record: {Id}", id);
+
+                var result = await _directImportService.DeleteImportAsync(id);
+
+                if (!result.Success)
+                {
+                    return BadRequest(new { message = result.ErrorMessage });
+                }
+
+                return Ok(new { message = "Import record deleted successfully", recordsDeleted = result.RecordsDeleted });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error deleting import record {Id}", id);
+                return StatusCode(500, new { message = "Error deleting import record", error = ex.Message });
+            }
+        }
+
+        // 🗑️ NEW: DELETE: api/DataImport/by-date/{dataType}/{date} - Delete import records by date and type
+        [HttpDelete("by-date/{dataType}/{date}")]
+        public async Task<IActionResult> DeleteImportsByDate(string dataType, string date)
+        {
+            try
+            {
+                _logger.LogInformation("🗑️ Deleting imports by date: {DataType}, {Date}", dataType, date);
+
+                var result = await _directImportService.DeleteImportsByDateAsync(dataType, date);
+
+                if (!result.Success)
+                {
+                    return BadRequest(new { message = result.ErrorMessage });
+                }
+
+                return Ok(new { message = "Import records deleted successfully", recordsDeleted = result.RecordsDeleted });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error deleting imports by date: {DataType}, {Date}", dataType, date);
+                return StatusCode(500, new { message = "Error deleting import records by date", error = ex.Message });
+            }
+        }
+
+        // 📊 GET: api/DataImport/records - Get import records for Raw Data view
         [HttpGet("records")]
         public async Task<IActionResult> GetImportRecords()
         {
@@ -144,7 +216,7 @@ namespace TinhKhoanApp.Api.Controllers
             });
         }
 
-        [HttpDelete("{id}")]
+        // [HttpDelete("{id}")] // ❌ DISABLED: Conflict with new delete route
         [Obsolete("Use DirectImportService instead")]
         public async Task<IActionResult> DeleteImportedData(int id)
         {

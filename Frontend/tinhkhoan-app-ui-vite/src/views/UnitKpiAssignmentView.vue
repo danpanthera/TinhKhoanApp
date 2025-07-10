@@ -671,8 +671,8 @@ const handleKpiTargetInput = (event, indicatorId) => {
 
     const numValue = parseFloat(cleanNumber);
     if (!isNaN(numValue) && cleanNumber !== '') {
-      // Format with thousand separators
-      const formatted = new Intl.NumberFormat('vi-VN').format(numValue);
+      // ✅ Format with formatNumber chuẩn US: 1,000,000 thay vì vi-VN: 1.000.000
+      const formatted = formatNumber(numValue);
       event.target.value = formatted;
       kpiTargets.value[indicatorId] = numValue;
       return;
@@ -749,7 +749,8 @@ const handleKpiTargetBlur = (event, indicatorId) => {
 
     const finalValue = parseFloat(cleanNumber);
     if (!isNaN(finalValue)) {
-      const formatted = new Intl.NumberFormat('vi-VN').format(finalValue);
+      // ✅ Format with formatNumber chuẩn US: 1,000,000 thay vì vi-VN: 1.000.000
+      const formatted = formatNumber(finalValue);
       event.target.value = formatted;
       kpiTargets.value[indicatorId] = finalValue;
       if (cleanNumber.length <= 8) {
@@ -774,7 +775,8 @@ function formatUnitTargetValue(indicator, value) {
 
   // Format based on unit type
   if (unit === 'Triệu VND') {
-    return new Intl.NumberFormat('vi-VN').format(numValue);
+    // ✅ Sử dụng formatNumber chuẩn US: 1,000,000 thay vì vi-VN: 1.000.000
+    return formatNumber(numValue);
   } else if (unit === '%') {
     return numValue.toString();
   } else {

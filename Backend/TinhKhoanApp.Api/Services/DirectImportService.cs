@@ -699,5 +699,131 @@ namespace TinhKhoanApp.Api.Services
         }
 
         #endregion
+
+        #region Preview and Delete Methods
+
+        /// <summary>
+        /// Lấy preview data cho import record
+        /// </summary>
+        public async Task<object?> GetImportPreviewAsync(int importId)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Getting preview data for import ID: {ImportId}", importId);
+
+                // Tìm import record trong ImportedDataRecords
+                var importRecord = await _context.ImportedDataRecords
+                    .FirstOrDefaultAsync(x => x.Id == importId);
+
+                if (importRecord == null)
+                {
+                    _logger.LogWarning("⚠️ Import record not found: {ImportId}", importId);
+                    return null;
+                }
+
+                _logger.LogInformation("✅ Found import record: {FileName}, Category: {Category}",
+                    importRecord.FileName, importRecord.Category);
+
+                // Trả về thông tin cơ bản (preview rows sẽ trống vì DirectImport không lưu JSON)
+                return new
+                {
+                    ImportId = importRecord.Id,
+                    FileName = importRecord.FileName,
+                    Category = importRecord.Category,
+                    ImportDate = importRecord.ImportDate,
+                    TotalRecords = importRecord.RecordsCount,
+                    PreviewRows = new List<object>() // DirectImport không lưu raw data
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error getting preview data for import {ImportId}", importId);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Xóa import record và dữ liệu liên quan
+        /// </summary>
+        public async Task<(bool Success, string ErrorMessage, int RecordsDeleted)> DeleteImportAsync(int importId)
+        {
+            try
+            {
+                _logger.LogInformation("🗑️ Starting delete operation for import ID: {ImportId}", importId);
+
+                // Tìm import record
+                var importRecord = await _context.ImportedDataRecords
+                    .FirstOrDefaultAsync(x => x.Id == importId);
+
+                if (importRecord == null)
+                {
+                    _logger.LogWarning("⚠️ Import record not found: {ImportId}", importId);
+                    return (false, "Import record not found", 0);
+                }
+
+                _logger.LogInformation("🔍 Found import record: {FileName}, Category: {Category}, Records: {RecordsCount}",
+                    importRecord.FileName, importRecord.Category, importRecord.RecordsCount);
+
+                // Xóa import record từ ImportedDataRecords
+                _context.ImportedDataRecords.Remove(importRecord);
+                var deletedRecords = await _context.SaveChangesAsync();
+
+                _logger.LogInformation("✅ Successfully deleted import record {ImportId}, deleted {RecordsDeleted} records",
+                    importId, deletedRecords);
+
+                return (true, "Import record deleted successfully", deletedRecords);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error deleting import record {ImportId}", importId);
+                return (false, $"Error deleting import: {ex.Message}", 0);
+            }
+        }
+
+        /// <summary>
+        /// Xóa import records theo ngày và data type
+        /// </summary>
+        public async Task<(bool Success, string ErrorMessage, int RecordsDeleted)> DeleteImportsByDateAsync(string dataType, string date)
+        {
+            try
+            {
+                _logger.LogInformation("🗑️ Starting bulk delete operation for type: {DataType}, date: {Date}", dataType, date);
+
+                // Parse date
+                if (!DateTime.TryParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var targetDate))
+                {
+                    return (false, "Invalid date format. Use yyyy-MM-dd", 0);
+                }
+
+                // Tìm records theo category và date
+                var recordsToDelete = await _context.ImportedDataRecords
+                    .Where(x => x.Category == dataType.ToUpper() &&
+                               x.ImportDate.Date == targetDate.Date)
+                    .ToListAsync();
+
+                if (!recordsToDelete.Any())
+                {
+                    _logger.LogInformation("ℹ️ No records found for type: {DataType}, date: {Date}", dataType, date);
+                    return (true, "No records found to delete", 0);
+                }
+
+                _logger.LogInformation("🔍 Found {Count} records to delete", recordsToDelete.Count);
+
+                // Xóa tất cả records
+                _context.ImportedDataRecords.RemoveRange(recordsToDelete);
+                var deletedCount = await _context.SaveChangesAsync();
+
+                _logger.LogInformation("✅ Successfully deleted {DeletedCount} import records", deletedCount);
+
+                return (true, $"Successfully deleted {deletedCount} records", deletedCount);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error deleting imports by date: {DataType}, {Date}", dataType, date);
+                return (false, $"Error deleting imports: {ex.Message}", 0);
+            }
+        }
+
+        #endregion
     }
 }

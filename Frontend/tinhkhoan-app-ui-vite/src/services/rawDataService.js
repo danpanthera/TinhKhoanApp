@@ -349,25 +349,65 @@ class RawDataService {
     }
   }
 
-  // 🔍 Preview dữ liệu chi tiết của import record [DEPRECATED]
+  // 🔍 Preview dữ liệu chi tiết của import record
   async previewData(importId) {
-    // ⚠️ DEPRECATED: Direct Import stores data directly in tables
-    // Use direct database queries instead of preview endpoint
-    return {
-      success: false,
-      error: "Preview tính năng đã được thay thế bởi Direct Import. Dữ liệu đã được lưu trực tiếp vào bảng database.",
-      data: { previewRows: [], totalRecords: 0, fileName: 'N/A' }
-    };
+    try {
+      console.log('🔍 Previewing data for import:', importId);
+      const response = await api.get(`/DataImport/preview/${importId}`);
+
+      console.log('✅ Preview data retrieved successfully:', response.data);
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      console.error('❌ Error previewing data:', error);
+      return {
+        success: false,
+        error: `Failed to preview data: ${error.response?.data?.message || error.message}`,
+        data: { previewRows: [], totalRecords: 0, fileName: 'N/A' }
+      };
+    }
+  }  // 🗑️ Xóa import record
+  async deleteImport(importId) {
+    try {
+      console.log('🗑️ Deleting import:', importId);
+      const response = await api.delete(`/DataImport/delete/${importId}`);
+
+      console.log('✅ Import deleted successfully:', response.data);
+      return {
+        success: true,
+        message: response.data.message,
+        recordsDeleted: response.data.recordsDeleted
+      };
+    } catch (error) {
+      console.error('❌ Error deleting import:', error);
+      return {
+        success: false,
+        error: `Failed to delete import: ${error.response?.data?.message || error.message}`
+      };
+    }
   }
 
-  // 🗑️ Xóa import record [DEPRECATED]
-  async deleteImport(importId) {
-    // ⚠️ DEPRECATED: Direct Import uses Temporal Tables for history
-    // Data integrity maintained by database temporal features
-    return {
-      success: false,
-      error: "Xóa dữ liệu đã được disable vì Direct Import sử dụng Temporal Tables để bảo toàn lịch sử. Vui lòng sử dụng công cụ admin database nếu cần."
-    };
+  // 🗑️ Xóa import records theo ngày và data type
+  async deleteByStatementDate(dataType, dateStr) {
+    try {
+      console.log('🗑️ Deleting imports by date:', dataType, dateStr);
+      const response = await api.delete(`/DataImport/by-date/${dataType}/${dateStr}`);
+
+      console.log('✅ Imports deleted successfully:', response.data);
+      return {
+        success: true,
+        message: response.data.message,
+        recordsDeleted: response.data.recordsDeleted
+      };
+    } catch (error) {
+      console.error('❌ Error deleting imports by date:', error);
+      return {
+        success: false,
+        error: `Failed to delete imports by date: ${error.response?.data?.message || error.message}`
+      };
+    }
   }
 
   // 📊 Lấy dữ liệu import gần đây [COMPATIBILITY WRAPPER]

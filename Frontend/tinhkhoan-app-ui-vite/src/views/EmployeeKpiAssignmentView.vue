@@ -456,7 +456,8 @@ function formatTargetValue(indicator, value) {
 
   // Format based on unit type
   if (unit === 'Triệu VND') {
-    return new Intl.NumberFormat('vi-VN').format(numValue);
+    // ✅ Sử dụng formatNumber chuẩn US: 1,000,000 thay vì vi-VN: 1.000.000
+    return formatNumber(numValue);
   } else if (unit === '%') {
     return numValue.toString();
   } else {
