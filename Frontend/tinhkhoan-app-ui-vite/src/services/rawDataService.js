@@ -205,6 +205,96 @@ class RawDataService {
     }
   }
 
+  // 📋 Lấy danh sách định nghĩa các loại dữ liệu (for DataImportViewFull.vue compatibility)
+  getDataTypeDefinitions() {
+    return {
+      'LN01': {
+        name: 'LN01',
+        description: 'Dữ liệu LOAN',
+        icon: '💰',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'LN01'
+      },
+      'LN02': {
+        name: 'LN02',
+        description: 'Sao kê biến động nhóm nợ',
+        icon: '🔄',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'LN02'
+      },
+      'LN03': {
+        name: 'LN03',
+        description: 'Dữ liệu Nợ XLRR',
+        icon: '📊',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'LN03'
+      },
+      'DP01': {
+        name: 'DP01',
+        description: 'Dữ liệu Tiền gửi',
+        icon: '🏦',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'DP01'
+      },
+      'EI01': {
+        name: 'EI01',
+        description: 'Dữ liệu mobile banking',
+        icon: '📱',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'EI01'
+      },
+      'GL01': {
+        name: 'GL01',
+        description: 'Dữ liệu bút toán GDV',
+        icon: '✍️',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'GL01'
+      },
+      'DPDA': {
+        name: 'DPDA',
+        description: 'Dữ liệu sao kê phát hành thẻ',
+        icon: '💳',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'DPDA'
+      },
+      'DB01': {
+        name: 'DB01',
+        description: 'Sao kê TSDB và Không TSDB',
+        icon: '📋',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'DB01'
+      },
+      'KH03': {
+        name: 'KH03',
+        description: 'Sao kê Khách hàng pháp nhân',
+        icon: '🏢',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'KH03'
+      },
+      'RR01': {
+        name: 'RR01',
+        description: 'Sao kê dư nợ gốc, lãi XLRR',
+        icon: '📉',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'RR01'
+      },
+      '7800_DT_KHKD1': {
+        name: '7800_DT_KHKD1',
+        description: 'Báo cáo KHKD (DT)',
+        icon: '📑',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: '7800_DT_KHKD1'
+      },
+      'GL41': {
+        name: 'GL41',
+        description: 'Bảng cân đối',
+        icon: '⚖️',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'GL41'
+      }
+    };
+  }
+
   // 🔧 Utility functions
   formatFileSize(bytes) {
     if (bytes === 0) return '0 Bytes';

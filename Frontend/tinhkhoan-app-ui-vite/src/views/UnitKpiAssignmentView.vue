@@ -323,7 +323,7 @@ const selectedBranch = computed(() => {
 })
 
 const totalMaxScore = computed(() => {
-  return availableKpiIndicators.value.reduce((sum, indicator) => sum + (indicator.maxScore || 0), 0)
+  return availableKpiIndicators.value.reduce((sum, indicator) => sum + (safeGet(indicator, 'MaxScore') || 0), 0)
 })
 
 const totalScore = computed(() => {

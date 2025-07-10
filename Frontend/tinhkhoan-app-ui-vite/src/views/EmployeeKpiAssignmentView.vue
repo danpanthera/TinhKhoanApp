@@ -941,7 +941,7 @@ function clearIndicatorTarget(indicatorId) {
 }
 
 function getTotalMaxScore() {
-  return indicators.value.reduce((sum, ind) => sum + (ind.maxScore || 0), 0)
+  return indicators.value.reduce((sum, ind) => sum + (safeGet(ind, 'MaxScore') || 0), 0)
 }
 
 function getTotalScore() {
