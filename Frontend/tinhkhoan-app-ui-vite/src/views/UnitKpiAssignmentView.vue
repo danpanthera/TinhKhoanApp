@@ -658,21 +658,27 @@ const handleKpiTargetInput = (event, indicatorId) => {
 
   // For "Triệu VND", format with thousand separators and limit to 8 digits
   if (unit === 'Triệu VND') {
-    const numValue = parseFloat(numericValue);
-    if (!isNaN(numValue)) {
-      // Limit to 8 digits (99,999,999 max)
-      if (numValue > 99999999) {
-        numericValue = '99999999';
-        kpiTargetErrors.value[indicatorId] = 'Giá trị tối đa là 99,999,999 triệu VND (8 chữ số)';
-        const formatted = new Intl.NumberFormat('vi-VN').format(99999999);
-        event.target.value = formatted;
-        kpiTargets.value[indicatorId] = 99999999;
-        return;
-      }
+    // Remove formatting first to get clean number
+    let cleanNumber = numericValue.replace(/[,.\s]/g, '');
+
+    // Limit to 8 digits maximum
+    if (cleanNumber.length > 8) {
+      cleanNumber = cleanNumber.substring(0, 8);
+      kpiTargetErrors.value[indicatorId] = 'Giá trị tối đa là 8 chữ số (99,999,999 triệu VND)';
+    } else {
+      delete kpiTargetErrors.value[indicatorId];
+    }
+
+    const numValue = parseFloat(cleanNumber);
+    if (!isNaN(numValue) && cleanNumber !== '') {
       // Format with thousand separators
       const formatted = new Intl.NumberFormat('vi-VN').format(numValue);
       event.target.value = formatted;
       kpiTargets.value[indicatorId] = numValue;
+      return;
+    } else if (cleanNumber === '') {
+      event.target.value = '';
+      kpiTargets.value[indicatorId] = null;
       delete kpiTargetErrors.value[indicatorId];
       return;
     }
@@ -734,16 +740,21 @@ const handleKpiTargetBlur = (event, indicatorId) => {
       delete kpiTargetErrors.value[indicatorId];
     }
   } else if (unit === 'Triệu VND') {
-    // Limit to 8 digits (99,999,999 max)
-    if (numValue > 99999999) {
-      kpiTargetErrors.value[indicatorId] = 'Giá trị tối đa là 99,999,999 triệu VND (8 chữ số)';
-      event.target.value = new Intl.NumberFormat('vi-VN').format(99999999);
-      kpiTargets.value[indicatorId] = 99999999;
-    } else {
-      const formatted = new Intl.NumberFormat('vi-VN').format(numValue);
+    // Remove formatting and limit to 8 digits
+    let cleanNumber = inputValue.replace(/[,.\s]/g, '');
+    if (cleanNumber.length > 8) {
+      cleanNumber = cleanNumber.substring(0, 8);
+      kpiTargetErrors.value[indicatorId] = 'Giá trị tối đa là 8 chữ số (99,999,999 triệu VND)';
+    }
+
+    const finalValue = parseFloat(cleanNumber);
+    if (!isNaN(finalValue)) {
+      const formatted = new Intl.NumberFormat('vi-VN').format(finalValue);
       event.target.value = formatted;
-      kpiTargets.value[indicatorId] = numValue;
-      delete kpiTargetErrors.value[indicatorId];
+      kpiTargets.value[indicatorId] = finalValue;
+      if (cleanNumber.length <= 8) {
+        delete kpiTargetErrors.value[indicatorId];
+      }
     }
   } else {
     event.target.value = numValue.toString();
