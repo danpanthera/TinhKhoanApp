@@ -47,14 +47,18 @@ class RawDataService {
       }));
 
       console.log('✅ Mapped getAllImports data:', mappedData.length, 'items');
-      return mappedData;
+      return { success: true, data: mappedData };
     } catch (error) {
       console.error('❌ Error in getAllImports:', error);
       if (error.response?.status === 404) {
         console.warn('⚠️ API endpoint not found, returning empty array');
-        return [];
+        return { success: true, data: [] };
       }
-      throw new Error(`Failed to get imports: ${error.response?.data?.message || error.message}`);
+      return { 
+        success: false, 
+        error: `Failed to get imports: ${error.response?.data?.message || error.message}`,
+        data: []
+      };
     }
   }
 
@@ -175,7 +179,8 @@ class RawDataService {
   // 📊 Lấy thống kê import theo data type
   async getImportStatistics(dataType = null) {
     try {
-      const imports = await this.getAllImports();
+      const importsResult = await this.getAllImports();
+      const imports = importsResult.success ? importsResult.data : [];
 
       // Filter by dataType if specified
       const filteredImports = dataType
