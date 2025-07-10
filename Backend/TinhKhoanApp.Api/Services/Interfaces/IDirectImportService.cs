@@ -93,5 +93,10 @@ namespace TinhKhoanApp.Api.Services.Interfaces
         /// Xóa import records theo ngày và data type
         /// </summary>
         Task<(bool Success, string ErrorMessage, int RecordsDeleted)> DeleteImportsByDateAsync(string dataType, string date);
+
+        /// <summary>
+        /// Xóa toàn bộ dữ liệu import (import history và dữ liệu trong các bảng)
+        /// </summary>
+        Task<(bool Success, string ErrorMessage, int RecordsDeleted)> ClearAllDataAsync();
     }
 }

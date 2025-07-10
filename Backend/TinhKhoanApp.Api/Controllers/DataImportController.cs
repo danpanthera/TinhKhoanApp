@@ -179,7 +179,35 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
-        // �📊 Legacy endpoints - Disabled for migration to DirectImportService
+        // 🗑️ DELETE: api/DataImport/clear-all - Clear all import data
+        [HttpDelete("clear-all")]
+        public async Task<IActionResult> ClearAllData()
+        {
+            try
+            {
+                _logger.LogInformation("🗑️ Clearing all import data");
+
+                var result = await _directImportService.ClearAllDataAsync();
+
+                if (!result.Success)
+                {
+                    return BadRequest(new { message = result.ErrorMessage });
+                }
+
+                return Ok(new
+                {
+                    message = "All import data cleared successfully",
+                    recordsDeleted = result.RecordsDeleted
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error clearing all data");
+                return StatusCode(500, new { message = "Error clearing all data", error = ex.Message });
+            }
+        }
+
+        // 📊 Legacy endpoints - Disabled for migration to DirectImportService
         [HttpGet]
         [Obsolete("Use DirectImportService instead")]
         public async Task<IActionResult> GetImportedData()

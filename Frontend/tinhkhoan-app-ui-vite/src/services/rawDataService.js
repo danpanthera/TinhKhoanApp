@@ -447,6 +447,61 @@ class RawDataService {
       return { success: false, error: error.message, data: [] };
     }
   }
+
+  // 🗑️ Xóa toàn bộ dữ liệu import
+  async clearAllData() {
+    try {
+      console.log('🗑️ Clearing all import data');
+
+      // TẠM THỜI: Sử dụng phương pháp xóa từng record thay vì API clear-all
+      // Do backend API clear-all có thể chưa hoạt động
+      const importsResult = await this.getAllImports();
+
+      if (!importsResult.success || !importsResult.data || importsResult.data.length === 0) {
+        return {
+          success: true,
+          message: "No data to clear",
+          data: { recordsCleared: 0 }
+        };
+      }
+
+      let totalDeleted = 0;
+      const failedDeletes = [];
+
+      // Xóa từng record một
+      for (const importRecord of importsResult.data) {
+        try {
+          const deleteResult = await this.deleteImport(importRecord.Id);
+          if (deleteResult.success) {
+            totalDeleted++;
+          } else {
+            failedDeletes.push(importRecord.FileName);
+          }
+        } catch (error) {
+          console.error(`❌ Failed to delete record ${importRecord.Id}:`, error);
+          failedDeletes.push(importRecord.FileName);
+        }
+      }
+
+      const message = failedDeletes.length > 0
+        ? `Deleted ${totalDeleted} records. Failed to delete: ${failedDeletes.join(', ')}`
+        : `Successfully cleared ${totalDeleted} import records`;
+
+      console.log('✅ Clear all data completed:', message);
+      return {
+        success: true,
+        message: message,
+        data: { recordsCleared: totalDeleted }
+      };
+
+    } catch (error) {
+      console.error('❌ Error clearing all data:', error);
+      return {
+        success: false,
+        error: `Failed to clear all data: ${error.message}`
+      };
+    }
+  }
 }
 
 // Create and export service instance

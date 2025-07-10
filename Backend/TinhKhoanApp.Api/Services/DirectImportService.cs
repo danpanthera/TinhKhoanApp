@@ -886,6 +886,85 @@ namespace TinhKhoanApp.Api.Services
             };
         }
 
+        /// <summary>
+        /// Xóa toàn bộ dữ liệu import (import history và dữ liệu trong các bảng)
+        /// </summary>
+        public async Task<(bool Success, string ErrorMessage, int RecordsDeleted)> ClearAllDataAsync()
+        {
+            try
+            {
+                _logger.LogInformation("🗑️ Starting clear all data operation...");
+
+                // Đếm số lượng records trước khi xóa
+                var totalRecords = await _context.ImportedDataRecords.CountAsync();
+                _logger.LogInformation("📊 Found {TotalRecords} import records to delete", totalRecords);
+
+                if (totalRecords == 0)
+                {
+                    return (true, "No data to clear", 0);
+                }
+
+                // Xóa tất cả import records
+                var allRecords = await _context.ImportedDataRecords.ToListAsync();
+                _context.ImportedDataRecords.RemoveRange(allRecords);
+
+                // Xóa dữ liệu trong các bảng temporal (optional, có thể comment lại nếu muốn giữ data)
+                using var connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+
+                // Danh sách các bảng cần xóa dữ liệu
+                var tablesToClear = new[]
+                {
+                    "DP01_New", "LN01", "LN02", "LN03", "DB01", "GL01", "GL41",
+                    "DPDA", "EI01", "KH03", "RR01", "7800_DT_KHKD1"
+                };
+
+                int totalDataRecords = 0;
+
+                foreach (var tableName in tablesToClear)
+                {
+                    try
+                    {
+                        // Đếm records trước khi xóa
+                        var countSql = $"SELECT COUNT(*) FROM [{tableName}]";
+                        using var countCommand = new SqlCommand(countSql, connection);
+                        var countResult = await countCommand.ExecuteScalarAsync();
+                        var count = countResult != null ? (int)countResult : 0;
+
+                        if (count > 0)
+                        {
+                            // Xóa dữ liệu
+                            var deleteSql = $"DELETE FROM [{tableName}]";
+                            using var deleteCommand = new SqlCommand(deleteSql, connection);
+                            await deleteCommand.ExecuteNonQueryAsync();
+
+                            totalDataRecords += count;
+                            _logger.LogInformation("✅ Cleared {Count} records from table {TableName}", count, tableName);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning("⚠️ Could not clear table {TableName}: {Error}", tableName, ex.Message);
+                        // Continue with other tables
+                    }
+                }
+
+                // Lưu thay đổi import records
+                var deletedImportRecords = await _context.SaveChangesAsync();
+
+                _logger.LogInformation("✅ Clear all data completed: {ImportRecords} import records, {DataRecords} data records",
+                    deletedImportRecords, totalDataRecords);
+
+                return (true, $"Successfully cleared {deletedImportRecords} import records and {totalDataRecords} data records",
+                    deletedImportRecords + totalDataRecords);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error in clear all data operation");
+                return (false, $"Error clearing data: {ex.Message}", 0);
+            }
+        }
+
         #endregion
     }
 }
