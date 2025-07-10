@@ -1,3 +1,4 @@
+import { formatFileSize } from '../utils/numberFormatter.js'
 import apiClient from './api.js'
 
 /**
@@ -25,15 +26,15 @@ class SmartImportService {
     try {
       // Validation file size
       if (file.size > this.MAX_FILE_SIZE) {
-        throw new Error(`File ${file.name} quá lớn (${this.formatFileSize(file.size)}). Giới hạn tối đa: ${this.formatFileSize(this.MAX_FILE_SIZE)}`)
+        throw new Error(`File ${file.name} quá lớn (${formatFileSize(file.size)}). Giới hạn tối đa: ${formatFileSize(this.MAX_FILE_SIZE)}`)
       }
 
       // Quyết định dùng chunked upload hay normal upload
       if (file.size > this.LARGE_FILE_THRESHOLD) {
-        console.log(`📦 Using chunked upload for large file: ${file.name} (${this.formatFileSize(file.size)})`)
+        console.log(`📦 Using chunked upload for large file: ${file.name} (${formatFileSize(file.size)})`)
         return await this.uploadLargeFile(file, statementDate, progressCallback)
       } else {
-        console.log(`📤 Using normal upload for file: ${file.name} (${this.formatFileSize(file.size)})`)
+        console.log(`📤 Using normal upload for file: ${file.name} (${formatFileSize(file.size)})`)
         return await this.uploadNormalFile(file, statementDate, progressCallback)
       }
     } catch (error) {
@@ -111,16 +112,8 @@ class SmartImportService {
     return response.data
   }
 
-  /**
-   * Format file size thành human readable
-   */
-  formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes'
-    const k = 1024
-    const sizes = ['Bytes', 'KB', 'MB', 'GB']
-    const i = Math.floor(Math.log(bytes) / Math.log(k))
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-  }
+  // Loại bỏ method formatFileSize cũ vì đã import từ numberFormatter
+  // formatFileSize() method removed - using imported utility
 
   /**
    * Upload nhiều file với Smart Import - OPTIMIZED PARALLEL VERSION

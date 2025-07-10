@@ -32,18 +32,18 @@ class RawDataService {
       // 🔧 ĐỒNG BỘ FIELD MAPPING để fix vấn đề backend trả category, frontend dùng dataType
       const mappedData = data.map(item => ({
         ...item,
-        // ✅ FIX TRIỆT ĐỂ: Backend trả về category="LN01", ưu tiên category trước
-        dataType: item.category || item.dataType || item.fileType || 'UNKNOWN',
+        // ✅ FIX TRIỆT ĐỂ: Backend trả về Category="LN01", ưu tiên Category trước
+        dataType: item.Category || item.DataType || item.FileType || 'UNKNOWN',
         // 🔧 Preserve original fields để debug
-        originalFileType: item.fileType,
-        originalDataType: item.dataType,
-        originalCategory: item.category,
+        originalFileType: item.FileType,
+        originalDataType: item.DataType,
+        originalCategory: item.Category,
         // Format date đúng
-        importDate: item.importDate ? new Date(item.importDate) : new Date(),
+        importDate: item.ImportDate ? new Date(item.ImportDate) : new Date(),
         // Đảm bảo recordsCount luôn là số nguyên
-        recordsCount: parseInt(item.recordsCount || 0),
+        recordsCount: parseInt(item.RecordsCount || 0),
         // Normalize fileName
-        fileName: item.fileName || item.name || 'Unknown File'
+        fileName: item.FileName || item.Name || 'Unknown File'
       }));
 
       console.log('✅ Mapped getAllImports data:', mappedData.length, 'items');
@@ -54,8 +54,8 @@ class RawDataService {
         console.warn('⚠️ API endpoint not found, returning empty array');
         return { success: true, data: [] };
       }
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: `Failed to get imports: ${error.response?.data?.message || error.message}`,
         data: []
       };
@@ -128,18 +128,18 @@ class RawDataService {
           });
 
           // Handle successful response
-          if (response.data && response.data.success) {
+          if (response.data && response.data.Success) {
             results.successCount++;
             results.results.push({
               file: file.name,
               success: true,
-              dataType: response.data.dataType,
-              recordsCount: response.data.processedRecords,
-              message: `Import thành công: ${response.data.processedRecords} records`
+              dataType: response.data.DataType,
+              recordsCount: response.data.ProcessedRecords,
+              message: `Import thành công: ${response.data.ProcessedRecords} records`
             });
-            console.log(`✅ File ${file.name} imported successfully: ${response.data.processedRecords} records`);
+            console.log(`✅ File ${file.name} imported successfully: ${response.data.ProcessedRecords} records`);
           } else {
-            throw new Error(response.data?.errorMessage || 'Unknown import error');
+            throw new Error(response.data?.ErrorMessage || 'Unknown import error');
           }
 
         } catch (error) {
@@ -346,6 +346,65 @@ class RawDataService {
       oscillator.stop(audioContext.currentTime + 0.3);
     } catch (error) {
       console.log('Audio notification not available');
+    }
+  }
+
+  // 🔍 Preview dữ liệu chi tiết của import record [DEPRECATED]
+  async previewData(importId) {
+    // ⚠️ DEPRECATED: Direct Import stores data directly in tables
+    // Use direct database queries instead of preview endpoint
+    return {
+      success: false,
+      error: "Preview tính năng đã được thay thế bởi Direct Import. Dữ liệu đã được lưu trực tiếp vào bảng database.",
+      data: { previewRows: [], totalRecords: 0, fileName: 'N/A' }
+    };
+  }
+
+  // 🗑️ Xóa import record [DEPRECATED]
+  async deleteImport(importId) {
+    // ⚠️ DEPRECATED: Direct Import uses Temporal Tables for history
+    // Data integrity maintained by database temporal features
+    return {
+      success: false,
+      error: "Xóa dữ liệu đã được disable vì Direct Import sử dụng Temporal Tables để bảo toàn lịch sử. Vui lòng sử dụng công cụ admin database nếu cần."
+    };
+  }
+
+  // 📊 Lấy dữ liệu import gần đây [COMPATIBILITY WRAPPER]
+  async getRecentImports(limit = 50) {
+    // ✅ Wrapper for compatibility - uses getAllImports with limit
+    try {
+      console.log(`📊 getRecentImports called with limit: ${limit}`);
+      const result = await this.getAllImports();
+
+      if (result.success && result.data && Array.isArray(result.data)) {
+        // Sort by importDate desc and limit
+        const sortedData = result.data
+          .sort((a, b) => new Date(b.importDate || 0) - new Date(a.importDate || 0))
+          .slice(0, limit);
+
+        console.log(`✅ getRecentImports returning ${sortedData.length} items`);
+        return { success: true, data: sortedData };
+      }
+
+      return { success: true, data: [] };
+    } catch (error) {
+      console.error('❌ Error in getRecentImports:', error);
+      return { success: false, error: error.message, data: [] };
+    }
+  }
+
+  // 📊 Lấy tất cả dữ liệu [COMPATIBILITY WRAPPER]
+  async getAllData() {
+    // ✅ Wrapper for compatibility - same as getAllImports
+    try {
+      console.log('📊 getAllData called (wrapper for getAllImports)');
+      const result = await this.getAllImports();
+      console.log(`✅ getAllData returning ${result.data?.length || 0} items`);
+      return result;
+    } catch (error) {
+      console.error('❌ Error in getAllData:', error);
+      return { success: false, error: error.message, data: [] };
     }
   }
 }

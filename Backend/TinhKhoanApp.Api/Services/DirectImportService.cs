@@ -4,6 +4,7 @@ using System.Data;
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.ComponentModel.DataAnnotations.Schema;
 using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models;
 using TinhKhoanApp.Api.Models.DataTables;
@@ -181,11 +182,12 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Import DT_KHKD1 - Business plan data (Excel)
+        /// Import DT_KHKD1 - Business plan data (CSV for testing)
         /// </summary>
         public async Task<DirectImportResult> ImportDT_KHKD1DirectAsync(IFormFile file, string? statementDate = null)
         {
-            return await ImportGenericExcelAsync<DT_KHKD1>("DT_KHKD1", "7800_DT_KHKD1", file, statementDate);
+            // Temporary: Use CSV import for testing (should be Excel eventually)
+            return await ImportGenericCSVAsync<DT_KHKD1>("DT_KHKD1", "7800_DT_KHKD1", file, statementDate);
         }
 
         #endregion
@@ -221,8 +223,11 @@ namespace TinhKhoanApp.Api.Services
 
                 // Parse CSV và bulk insert
                 var records = await ParseGenericCSVAsync<T>(file, statementDate);
+                _logger.LogInformation("📊 [IMPORT_DEBUG] Parsed {Count} records from CSV", records.Count);
+
                 if (records.Any())
                 {
+                    _logger.LogInformation("📊 [IMPORT_DEBUG] Starting bulk insert for {Count} records", records.Count);
                     var insertedCount = await BulkInsertGenericAsync(records, tableName);
                     result.ProcessedRecords = insertedCount;
 
@@ -358,30 +363,89 @@ namespace TinhKhoanApp.Api.Services
             var records = new List<T>();
             var ngayDL = ExtractNgayDLFromFileName(file.FileName);
 
+            _logger.LogInformation("🔍 [CSV_PARSE] Bắt đầu parse CSV: {FileName}, Target Type: {TypeName}", file.FileName, typeof(T).Name);
+
             using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
             using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+
+            // Configure CSV để bỏ qua missing fields và handle auto-increment fields
+            csv.Context.Configuration.MissingFieldFound = null; // Bỏ qua fields không tồn tại
+            csv.Context.Configuration.HeaderValidated = null; // Bỏ qua validation header
+            csv.Context.Configuration.PrepareHeaderForMatch = args => args.Header.ToUpper(); // Case insensitive
 
             // Auto-configure CSV mapping
             csv.Read();
             csv.ReadHeader();
 
+            // Log headers để debug
+            var headers = csv.HeaderRecord;
+            _logger.LogInformation("📊 [CSV_PARSE] Headers found: {Headers}", string.Join(", ", headers ?? new string[0]));
+
+            // Log model properties để debug
+            var modelProps = typeof(T).GetProperties().Select(p => p.Name);
+            _logger.LogInformation("🔧 [CSV_PARSE] Model properties: {Properties}", string.Join(", ", modelProps));
+
+            // Configure mapping để bỏ qua auto-increment và system fields
+            csv.Context.Configuration.ShouldSkipRecord = args => false;
+
+            int totalRows = 0;
+            int successRows = 0;
+
             while (csv.Read())
             {
+                totalRows++;
                 try
                 {
-                    var record = csv.GetRecord<T>();
+                    var record = new T();
+
+                    // Manual mapping chỉ các fields có trong CSV headers
+                    foreach (var prop in typeof(T).GetProperties())
+                    {
+                        // Bỏ qua auto-increment và system fields
+                        if (prop.Name == "Id" || prop.Name == "CreatedDate" || prop.Name == "UpdatedDate")
+                            continue;
+
+                        // Tìm header tương ứng (case insensitive)
+                        var headerName = headers?.FirstOrDefault(h =>
+                            string.Equals(h, prop.Name, StringComparison.OrdinalIgnoreCase));
+
+                        if (!string.IsNullOrEmpty(headerName))
+                        {
+                            try
+                            {
+                                var value = csv.GetField(headerName);
+                                if (!string.IsNullOrEmpty(value))
+                                {
+                                    // Convert value based on property type
+                                    var convertedValue = ConvertCsvValue(value, prop.PropertyType);
+                                    if (convertedValue != null)
+                                    {
+                                        prop.SetValue(record, convertedValue);
+                                    }
+                                }
+                            }
+                            catch (Exception fieldEx)
+                            {
+                                _logger.LogWarning("⚠️ [CSV_PARSE] Field mapping error for {PropertyName}: {Error}", prop.Name, fieldEx.Message);
+                            }
+                        }
+                    }
+
                     if (record != null)
                     {
                         // Set common properties if they exist
                         SetCommonProperties(record, ngayDL, file.FileName);
                         records.Add(record);
+                        successRows++;
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning("Lỗi parse CSV dòng {LineNumber}: {Error}", csv.Context.Parser.Row, ex.Message);
+                    _logger.LogWarning("❌ [CSV_PARSE] Lỗi parse CSV dòng {LineNumber}: {Error}", csv.Context.Parser.Row, ex.Message);
                 }
             }
+
+            _logger.LogInformation("✅ [CSV_PARSE] Hoàn thành: {SuccessRows}/{TotalRows} rows parsed successfully", successRows, totalRows);
 
             return records;
         }
@@ -424,6 +488,9 @@ namespace TinhKhoanApp.Api.Services
 
             var dataTable = ConvertToDataTable(records);
 
+            _logger.LogInformation("💾 [BULK_INSERT] Table: {TableName}, DataTable columns: {Columns}",
+                tableName, string.Join(", ", dataTable.Columns.Cast<DataColumn>().Select(c => c.ColumnName)));
+
             using var connection = new SqlConnection(_connectionString);
             await connection.OpenAsync();
 
@@ -438,6 +505,7 @@ namespace TinhKhoanApp.Api.Services
             foreach (DataColumn column in dataTable.Columns)
             {
                 bulkCopy.ColumnMappings.Add(column.ColumnName, column.ColumnName);
+                _logger.LogInformation("💾 [BULK_MAPPING] {SourceColumn} -> {DestColumn}", column.ColumnName, column.ColumnName);
             }
 
             await bulkCopy.WriteToServerAsync(dataTable);
@@ -447,23 +515,39 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Convert generic list to DataTable
+        /// Convert generic list to DataTable - sử dụng Column attribute names
         /// </summary>
         private DataTable ConvertToDataTable<T>(List<T> records)
         {
             var table = new DataTable();
-            var properties = typeof(T).GetProperties();
+            var properties = typeof(T).GetProperties()
+                .Where(p => p.Name != "Id" && p.Name != "UpdatedDate") // Chỉ bỏ qua Id và UpdatedDate, giữ lại CreatedDate
+                .ToArray();
 
-            // Create columns
+            var columnMappings = new Dictionary<string, string>(); // PropertyName -> ColumnName
+
+            _logger.LogInformation("📊 [DATATABLE] Creating DataTable with columns: {Columns}",
+                string.Join(", ", properties.Select(p => p.Name)));
+
+            // Create columns sử dụng Column attribute names
             foreach (var property in properties)
             {
+                var columnAttr = property.GetCustomAttributes(typeof(ColumnAttribute), false)
+                    .FirstOrDefault() as ColumnAttribute;
+
+                var columnName = columnAttr?.Name ?? property.Name; // Use Column attribute name or property name
+                columnMappings[property.Name] = columnName;
+
                 var columnType = property.PropertyType;
                 if (columnType.IsGenericType && columnType.GetGenericTypeDefinition() == typeof(Nullable<>))
                 {
                     columnType = columnType.GetGenericArguments()[0];
                 }
-                table.Columns.Add(property.Name, columnType);
+                table.Columns.Add(columnName, columnType);
             }
+
+            _logger.LogInformation("📊 [DATATABLE] Column mappings: {Mappings}",
+                string.Join(", ", columnMappings.Select(kvp => $"{kvp.Key}->{kvp.Value}")));
 
             // Fill data
             foreach (var record in records)
@@ -472,10 +556,14 @@ namespace TinhKhoanApp.Api.Services
                 foreach (var property in properties)
                 {
                     var value = property.GetValue(record);
-                    row[property.Name] = value ?? DBNull.Value;
+                    var columnName = columnMappings[property.Name];
+                    row[columnName] = value ?? DBNull.Value;
                 }
                 table.Rows.Add(row);
             }
+
+            _logger.LogInformation("📊 [DATATABLE] Created DataTable: {RowCount} rows, {ColumnCount} columns",
+                table.Rows.Count, table.Columns.Count);
 
             return table;
         }
@@ -545,6 +633,69 @@ namespace TinhKhoanApp.Api.Services
             if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
             if (bytes < 1024 * 1024 * 1024) return $"{bytes / (1024.0 * 1024.0):F1} MB";
             return $"{bytes / (1024.0 * 1024.0 * 1024.0):F1} GB";
+        }
+
+        /// <summary>
+        /// Convert CSV string value to proper type với number formatting chuẩn
+        /// </summary>
+        private object? ConvertCsvValue(string csvValue, Type targetType)
+        {
+            if (string.IsNullOrWhiteSpace(csvValue))
+                return null;
+
+            try
+            {
+                // Handle nullable types
+                var underlyingType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+
+                if (underlyingType == typeof(string))
+                {
+                    return csvValue.Trim();
+                }
+                else if (underlyingType == typeof(decimal))
+                {
+                    // Chuẩn hóa format số: ngăn cách hàng nghìn = dấu phẩy, thập phân = dấu chấm
+                    var normalizedValue = csvValue.Replace(",", "").Trim(); // Bỏ dấu phẩy ngăn cách hàng nghìn
+                    return decimal.TryParse(normalizedValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var decimalResult)
+                        ? decimalResult : (decimal?)null;
+                }
+                else if (underlyingType == typeof(int))
+                {
+                    var normalizedValue = csvValue.Replace(",", "").Trim();
+                    return int.TryParse(normalizedValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var intResult)
+                        ? intResult : (int?)null;
+                }
+                else if (underlyingType == typeof(long))
+                {
+                    var normalizedValue = csvValue.Replace(",", "").Trim();
+                    return long.TryParse(normalizedValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var longResult)
+                        ? longResult : (long?)null;
+                }
+                else if (underlyingType == typeof(double))
+                {
+                    var normalizedValue = csvValue.Replace(",", "").Trim();
+                    return double.TryParse(normalizedValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var doubleResult)
+                        ? doubleResult : (double?)null;
+                }
+                else if (underlyingType == typeof(DateTime))
+                {
+                    return DateTime.TryParse(csvValue, out var dateResult) ? dateResult : (DateTime?)null;
+                }
+                else if (underlyingType == typeof(bool))
+                {
+                    return bool.TryParse(csvValue, out var boolResult) ? boolResult : (bool?)null;
+                }
+                else
+                {
+                    // Fallback: try direct conversion
+                    return Convert.ChangeType(csvValue.Trim(), underlyingType, CultureInfo.InvariantCulture);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("⚠️ [CSV_CONVERT] Cannot convert '{Value}' to {TargetType}: {Error}", csvValue, targetType.Name, ex.Message);
+                return null;
+            }
         }
 
         #endregion

@@ -332,13 +332,14 @@
                       >
                         👁️
                       </button>
-                      <button
+                      <!-- 🚫 NÚT XÓA DISABLED - Direct Import uses Temporal Tables -->
+                      <!-- <button
                         @click="confirmDelete(item.id, item.fileName)"
                         class="btn-action btn-delete"
                         title="Xóa bản ghi"
                       >
                         🗑️
-                      </button>
+                      </button> -->
                     </td>
                   </tr>
                 </tbody>
@@ -536,8 +537,9 @@
                   <div class="result-info">
                     <strong>{{ result.fileName }}</strong>
                     <div v-if="result.success" class="success-details">
-                      <span>Category: {{ result.result?.detectedCategory || 'N/A' }}</span>
-                      <span>Records: {{ result.result?.importedRecords || 0 }}</span>
+                      <span>Category: {{ result.result?.DataType || result.result?.detectedCategory || 'N/A' }}</span>
+                      <span>Records: {{ formatNumber(result.result?.ProcessedRecords || result.result?.importedRecords || 0, 0) }}</span>
+                      <span v-if="result.result?.Duration">Time: {{ result.result.Duration }}</span>
                     </div>
                     <div v-else class="error-details">
                       <span class="error-message">{{ result.error }}</span>
@@ -571,6 +573,7 @@ import api from '../services/api.js'; // ✅ Import api để sử dụng trong 
 import audioService from '../services/audioService.js';
 import rawDataService from '../services/rawDataService.js';
 import smartImportService from '../services/smartImportService.js';
+import { formatFileSize, formatNumber } from '../utils/numberFormatter.js';
 
 // Reactive state
 const loading = ref(false)
@@ -1625,16 +1628,7 @@ const getUploadStatusIcon = () => {
 }
 
 // Hàm kiểm tra nếu file là file nén
-// Hàm định dạng kích thước file
-const formatFileSize = (bytes) => {
-  if (bytes === 0) return '0 Bytes'
-
-  const k = 1024
-  const sizes = ['Bytes', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
-
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
-}
+// formatFileSize được import từ ../utils/numberFormatter.js
 
 // Xử lý chọn file
 const handleFileSelect = (event) => {
@@ -1755,7 +1749,7 @@ const startSmartImport = async () => {
   const maxTotalSize = 500 * 1024 * 1024 // 500MB total limit
 
   if (totalSize > maxTotalSize) {
-    errorMessage.value = `⚠️ Tổng dung lượng file quá lớn (${smartImportService.formatFileSize(totalSize)}). Giới hạn: ${smartImportService.formatFileSize(maxTotalSize)}`
+    errorMessage.value = `⚠️ Tổng dung lượng file quá lớn (${formatFileSize(totalSize)}). Giới hạn: ${formatFileSize(maxTotalSize)}`
     return
   }
 
@@ -1782,7 +1776,7 @@ const startSmartImport = async () => {
       currentFile: 'Chuẩn bị upload...'
     }
 
-    console.log('🧠 Starting OPTIMIZED Smart Import with', smartSelectedFiles.value.length, 'files', `(Total size: ${smartImportService.formatFileSize(totalSize)})`)
+    console.log('🧠 Starting OPTIMIZED Smart Import with', smartSelectedFiles.value.length, 'files', `(Total size: ${formatFileSize(totalSize)})`)
 
     // ✅ OPTIMIZATION: Sử dụng callback để update progress real-time
     const progressCallback = (progressInfo) => {
@@ -1796,7 +1790,7 @@ const startSmartImport = async () => {
 
       // 📊 Log detailed progress
       if (progressInfo.fileProgress) {
-        console.log(`📊 File Progress: ${progressInfo.currentFile} - ${progressInfo.fileProgress.percentage}% (${smartImportService.formatFileSize(progressInfo.fileProgress.loaded)}/${smartImportService.formatFileSize(progressInfo.fileProgress.total)})`)
+        console.log(`📊 File Progress: ${progressInfo.currentFile} - ${progressInfo.fileProgress.percentage}% (${formatFileSize(progressInfo.fileProgress.loaded)}/${formatFileSize(progressInfo.fileProgress.total)})`)
       }
     }
 
@@ -1822,7 +1816,7 @@ const startSmartImport = async () => {
       // 🔊 AUDIO NOTIFICATION: Phát âm thanh thành công
       audioService.playSuccess()
 
-      const sizeInfo = `${smartImportService.formatFileSize(totalSize)}`
+      const sizeInfo = `${formatFileSize(totalSize)}`
       successMessage.value = `✅ Smart Import hoàn thành! ${results.successCount}/${results.totalFiles} file thành công (${sizeInfo} trong ${duration.toFixed(1)}s - ${avgSpeedMBps} MB/s)`
 
       // Refresh data sau khi import thành công
@@ -1840,7 +1834,7 @@ const startSmartImport = async () => {
       totalFiles: results.totalFiles,
       successCount: results.successCount,
       failureCount: results.failureCount,
-      totalSize: smartImportService.formatFileSize(totalSize),
+      totalSize: formatFileSize(totalSize),
       duration: `${duration.toFixed(1)}s`,
       avgTimePerFile: `${avgTimePerFile}s`,
       avgSpeed: `${avgSpeedMBps} MB/s`

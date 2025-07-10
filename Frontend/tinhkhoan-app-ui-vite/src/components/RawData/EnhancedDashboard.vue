@@ -132,11 +132,11 @@
             <option value="90d">90 ngày qua</option>
           </select>
         </div>
-        
+
         <div class="data-type-chart" v-if="dataTypeStats">
           <div class="chart-container">
-            <div 
-              v-for="item in dataTypeStats" 
+            <div
+              v-for="item in dataTypeStats"
               :key="item.dataType"
               class="chart-bar"
               :style="{ height: (item.percentage || 0) + '%' }"
@@ -202,8 +202,8 @@
       <div class="activity-header">
         <h3>📋 Hoạt động gần đây</h3>
         <div class="activity-filters">
-          <button 
-            v-for="filter in activityFilters" 
+          <button
+            v-for="filter in activityFilters"
             :key="filter.key"
             @click="selectedActivityFilter = filter.key"
             :class="{ active: selectedActivityFilter === filter.key }"
@@ -215,8 +215,8 @@
       </div>
 
       <div class="activity-list">
-        <div 
-          v-for="activity in filteredActivities" 
+        <div
+          v-for="activity in filteredActivities"
           :key="activity.id"
           class="activity-item"
           :class="getActivityClass(activity.type)"
@@ -276,8 +276,9 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import rawDataService from '../../services/rawDataService.js';
+import { formatNumber } from '../../utils/numberFormatter.js';
 
 // Reactive data
 const loading = ref(false);
@@ -312,7 +313,7 @@ const filteredActivities = computed(() => {
 // Methods
 const loadAllData = async () => {
   loading.value = true;
-  
+
   try {
     // Load dashboard stats
     const statsResult = await rawDataService.getDashboardStats();
@@ -372,7 +373,7 @@ const loadRecentActivities = () => {
       user: 'Admin'
     },
     {
-      id: '2', 
+      id: '2',
       type: 'cache',
       title: 'Cache refresh',
       description: 'Hệ thống đã tự động làm mới cache cho bảng optimized imports',
@@ -396,7 +397,7 @@ const loadRecentActivities = () => {
       status: 'error'
     }
   ];
-  
+
   recentActivities.value = activities;
 };
 
@@ -440,15 +441,8 @@ const clearCache = async () => {
   }
 };
 
-// Utility functions
-const formatNumber = (num) => {
-  if (num >= 1000000) {
-    return (num / 1000000).toFixed(1) + 'M';
-  } else if (num >= 1000) {
-    return (num / 1000).toFixed(1) + 'K';
-  }
-  return num.toString();
-};
+// Loại bỏ custom formatNumber, sử dụng utility
+// const formatNumber = (num) => { ... } // Removed - using imported utility
 
 const formatTime = (ms) => {
   if (ms < 1000) {
@@ -461,12 +455,12 @@ const formatSize = (bytes) => {
   const units = ['B', 'KB', 'MB', 'GB'];
   let size = bytes;
   let unitIndex = 0;
-  
+
   while (size >= 1024 && unitIndex < units.length - 1) {
     size /= 1024;
     unitIndex++;
   }
-  
+
   return size.toFixed(1) + units[unitIndex];
 };
 
@@ -481,7 +475,7 @@ const formatRelativeTime = (date) => {
   const minutes = Math.floor(diff / 60000);
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
-  
+
   if (days > 0) return `${days} ngày trước`;
   if (hours > 0) return `${hours} giờ trước`;
   if (minutes > 0) return `${minutes} phút trước`;
@@ -532,7 +526,7 @@ const getActivityIcon = (type) => {
 // Lifecycle
 onMounted(() => {
   loadAllData();
-  
+
   // Set up auto-refresh every 30 seconds
   refreshTimer = setInterval(() => {
     loadAllData();
@@ -1091,25 +1085,25 @@ onUnmounted(() => {
     gap: 16px;
     align-items: stretch;
   }
-  
+
   .content-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .stat-row:first-child {
     grid-template-columns: 1fr 1fr;
   }
-  
+
   .activity-header {
     flex-direction: column;
     gap: 12px;
     align-items: stretch;
   }
-  
+
   .activity-filters {
     justify-content: center;
   }
-  
+
   .quick-buttons {
     grid-template-columns: 1fr;
   }

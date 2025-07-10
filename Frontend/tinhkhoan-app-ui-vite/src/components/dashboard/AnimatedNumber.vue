@@ -5,7 +5,8 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { onMounted, ref, watch } from 'vue';
+import { formatNumber as utilFormatNumber } from '../../utils/numberFormatter.js';
 
 const props = defineProps({
   value: {
@@ -37,10 +38,9 @@ const props = defineProps({
 const displayValue = ref(0);
 const isCounting = ref(false);
 
+// Sử dụng utility formatter thay vì custom logic
 const formatNumber = (num) => {
-  const parts = num.toFixed(props.decimals).split('.');
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, props.separator);
-  const formatted = parts.join('.');
+  const formatted = utilFormatNumber(num, props.decimals, false);
   return props.prefix + formatted + props.suffix;
 };
 
@@ -57,13 +57,13 @@ const animateNumber = (start, end, duration) => {
   const updateNumber = (currentTime) => {
     const elapsed = currentTime - startTime;
     const progress = Math.min(elapsed / duration, 1);
-    
+
     // Easing function for smooth animation
     const easeOut = 1 - Math.pow(1 - progress, 3);
     const current = start + (diff * easeOut);
-    
+
     displayValue.value = formatNumber(current);
-    
+
     if (progress < 1) {
       requestAnimationFrame(updateNumber);
     } else {
