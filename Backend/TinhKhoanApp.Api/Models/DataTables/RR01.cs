@@ -5,98 +5,116 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TinhKhoanApp.Api.Models.DataTables
 {
     /// <summary>
-    /// Bảng RR01 - Dữ liệu tỷ lệ
-    /// Lưu trữ dữ liệu từ các file CSV có filename chứa "RR01"
-    /// Tuân thủ Temporal Tables + Columnstore Indexes
+    /// Bảng RR01 - 25 cột theo header_7800_rr01_20250430.csv
+    /// CN_LOAI_I,BRCD,MA_KH,TEN_KH,SO_LDS,CCY,SO_LAV,LOAI_KH,NGAY_GIAI_NGAN,NGAY_DEN_HAN,VAMC_FLG,NGAY_XLRR,DUNO_GOC_BAN_DAU,DUNO_LAI_TICHLUY_BD,DOC_DAUKY_DA_THU_HT,DUNO_GOC_HIENTAI,DUNO_LAI_HIENTAI,DUNO_NGAN_HAN,DUNO_TRUNG_HAN,DUNO_DAI_HAN,THU_GOC,THU_LAI,BDS,DS,TSK
     /// </summary>
     [Table("RR01")]
     public class RR01
     {
-        /// <summary>
-        /// Khóa chính tự tăng
-        /// </summary>
         [Key]
         public int Id { get; set; }
 
-        /// <summary>
-        /// Ngày dữ liệu theo định dạng dd/MM/yyyy
-        /// Được parse từ tên file *yyyymmdd.csv
-        /// </summary>
         [Column("NGAY_DL")]
         [StringLength(10)]
         public string NgayDL { get; set; } = null!;
 
-        /// <summary>
-        /// Mã chi nhánh
-        /// </summary>
-        [Column("MA_CN")]
+        // === 25 CỘT THEO HEADER CSV GỐC ===
+        [Column("CN_LOAI_I")]
+        [StringLength(50)]
+        public string? CN_LOAI_I { get; set; }
+
+        [Column("BRCD")]
+        [StringLength(50)]
+        public string? BRCD { get; set; }
+
+        [Column("MA_KH")]
+        [StringLength(50)]
+        public string? MA_KH { get; set; }
+
+        [Column("TEN_KH")]
+        [StringLength(255)]
+        public string? TEN_KH { get; set; }
+
+        [Column("SO_LDS")]
+        [StringLength(50)]
+        public string? SO_LDS { get; set; }
+
+        [Column("CCY")]
+        [StringLength(10)]
+        public string? CCY { get; set; }
+
+        [Column("SO_LAV")]
+        [StringLength(50)]
+        public string? SO_LAV { get; set; }
+
+        [Column("LOAI_KH")]
+        [StringLength(50)]
+        public string? LOAI_KH { get; set; }
+
+        [Column("NGAY_GIAI_NGAN")]
         [StringLength(20)]
-        public string? MA_CN { get; set; }
+        public string? NGAY_GIAI_NGAN { get; set; }
 
-        /// <summary>
-        /// Mã phòng giao dịch
-        /// </summary>
-        [Column("MA_PGD")]
+        [Column("NGAY_DEN_HAN")]
         [StringLength(20)]
-        public string? MA_PGD { get; set; }
+        public string? NGAY_DEN_HAN { get; set; }
 
-        /// <summary>
-        /// Loại tỷ lệ
-        /// </summary>
-        [Column("LOAI_TY_LE")]
-        [StringLength(100)]
-        public string? LOAI_TY_LE { get; set; }
+        [Column("VAMC_FLG")]
+        [StringLength(10)]
+        public string? VAMC_FLG { get; set; }
 
-        /// <summary>
-        /// Tên chỉ tiêu
-        /// </summary>
-        [Column("TEN_CHI_TIEU")]
-        [StringLength(200)]
-        public string? TEN_CHI_TIEU { get; set; }
-
-        /// <summary>
-        /// Giá trị tỷ lệ
-        /// </summary>
-        [Column("GIA_TRI_TY_LE")]
-        public decimal? GIA_TRI_TY_LE { get; set; }
-
-        /// <summary>
-        /// Đơn vị tính
-        /// </summary>
-        [Column("DON_VI_TINH")]
+        [Column("NGAY_XLRR")]
         [StringLength(20)]
-        public string? DON_VI_TINH { get; set; }
+        public string? NGAY_XLRR { get; set; }
 
-        /// <summary>
-        /// Ngày áp dụng
-        /// </summary>
-        [Column("NGAY_AP_DUNG")]
-        public DateTime? NGAY_AP_DUNG { get; set; }
+        [Column("DUNO_GOC_BAN_DAU")]
+        public decimal? DUNO_GOC_BAN_DAU { get; set; }
 
-        /// <summary>
-        /// Ghi chú
-        /// </summary>
-        [Column("GHI_CHU")]
-        [StringLength(500)]
-        public string? GHI_CHU { get; set; }
+        [Column("DUNO_LAI_TICHLUY_BD")]
+        public decimal? DUNO_LAI_TICHLUY_BD { get; set; }
 
-        /// <summary>
-        /// Ngày tạo bản ghi
-        /// </summary>
+        [Column("DOC_DAUKY_DA_THU_HT")]
+        public decimal? DOC_DAUKY_DA_THU_HT { get; set; }
+
+        [Column("DUNO_GOC_HIENTAI")]
+        public decimal? DUNO_GOC_HIENTAI { get; set; }
+
+        [Column("DUNO_LAI_HIENTAI")]
+        public decimal? DUNO_LAI_HIENTAI { get; set; }
+
+        [Column("DUNO_NGAN_HAN")]
+        public decimal? DUNO_NGAN_HAN { get; set; }
+
+        [Column("DUNO_TRUNG_HAN")]
+        public decimal? DUNO_TRUNG_HAN { get; set; }
+
+        [Column("DUNO_DAI_HAN")]
+        public decimal? DUNO_DAI_HAN { get; set; }
+
+        [Column("THU_GOC")]
+        public decimal? THU_GOC { get; set; }
+
+        [Column("THU_LAI")]
+        public decimal? THU_LAI { get; set; }
+
+        [Column("BDS")]
+        public decimal? BDS { get; set; }
+
+        [Column("DS")]
+        public decimal? DS { get; set; }
+
+        [Column("TSK")]
+        public decimal? TSK { get; set; }
+
+        // === TEMPORAL COLUMNS ===
         [Column("CREATED_DATE")]
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime CREATED_DATE { get; set; } = DateTime.Now;
 
-        /// <summary>
-        /// Ngày cập nhật bản ghi
-        /// </summary>
         [Column("UPDATED_DATE")]
-        public DateTime? UpdatedDate { get; set; }
+        public DateTime? UPDATED_DATE { get; set; }
 
-        /// <summary>
-        /// Tên file gốc được import
-        /// </summary>
         [Column("FILE_NAME")]
-        [StringLength(200)]
-        public string? FileName { get; set; }
+        [StringLength(255)]
+        public string? FILE_NAME { get; set; }
     }
 }

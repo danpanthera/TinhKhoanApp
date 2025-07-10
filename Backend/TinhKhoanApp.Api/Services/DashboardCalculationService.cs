@@ -219,7 +219,7 @@ namespace TinhKhoanApp.Api.Services
 
                 // Lấy dữ liệu chi tiết từ bảng LN01 mới nhất
                 var ln01Data = await _context.LN01s
-                    .Where(i => i.FileName == latestImportRecord.FileName)
+                    .Where(i => i.NgayDL == date.ToString("dd/MM/yyyy"))
                     .ToListAsync();
 
                 decimal totalDisbursement = 0;
@@ -231,19 +231,19 @@ namespace TinhKhoanApp.Api.Services
                     try
                     {
                         // Kiểm tra có thuộc chi nhánh đang tính không
-                        var belongsToBranch = lnRecord.MA_CN == branchCode;
+                        var belongsToBranch = lnRecord.BRCD == branchCode;
 
                         if (!belongsToBranch) continue;
 
                         // Lấy số tiền giải ngân từ LN01
-                        var disbursement = lnRecord.SO_TIEN_CHO_VAY ?? 0m;
+                        var disbursement = lnRecord.DISBURSEMENT_AMOUNT ?? 0m;
                         if (disbursement > 0)
                         {
                             totalDisbursement += disbursement;
                             processedRecords++;
 
                             // Phân tích theo loại hình cho vay (thay vì nhóm nợ)
-                            var loaiHinh = lnRecord.LOAI_HINH_CHO_VAY ?? "01"; // Default
+                            var loaiHinh = lnRecord.LOAN_TYPE ?? "01"; // Default
 
                             if (!nhomNoBreakdown.ContainsKey(loaiHinh))
                                 nhomNoBreakdown[loaiHinh] = 0;
@@ -334,7 +334,7 @@ namespace TinhKhoanApp.Api.Services
 
                 // Lấy dữ liệu chi tiết từ bảng LN01 mới nhất
                 var ln01Data = await _context.LN01s
-                    .Where(i => i.FileName == latestImportRecord.FileName)
+                    .Where(i => i.NgayDL == date.ToString("dd/MM/yyyy"))
                     .ToListAsync();
 
                 decimal totalDebt = 0;
@@ -348,28 +348,26 @@ namespace TinhKhoanApp.Api.Services
                     try
                     {
                         // Kiểm tra có thuộc chi nhánh đang tính không
-                        var belongsToBranch = lnRecord.MA_CN == branchCode;
+                        var belongsToBranch = lnRecord.BRCD == branchCode;
 
                         if (!belongsToBranch) continue;
 
                         // Lấy số tiền dư nợ từ LN01
-                        var debtAmount = lnRecord.DU_NO_GOC ?? 0m;
+                        var debtAmount = lnRecord.DU_NO ?? 0m;
                         if (debtAmount > 0)
                         {
                             totalDebt += debtAmount;
 
-                            // Sử dụng trạng thái khoản vay để phân loại nợ xấu
-                            var trangThai = lnRecord.TRANG_THAI ?? "01"; // Default
+                            // Sử dụng nhóm nợ để phân loại nợ xấu
+                            var nhomNo = lnRecord.NHOM_NO ?? "01"; // Default
 
-                            if (!nhomNoBreakdown.ContainsKey(trangThai))
-                                nhomNoBreakdown[trangThai] = 0;
-                            nhomNoBreakdown[trangThai] += debtAmount;
+                            if (!nhomNoBreakdown.ContainsKey(nhomNo))
+                                nhomNoBreakdown[nhomNo] = 0;
+                            nhomNoBreakdown[nhomNo] += debtAmount;
 
-                            // Tính nợ xấu (dựa trên trạng thái)
-                            // Giả định các trạng thái xấu: "03", "04", "05" hoặc chứa "bad", "overdue"
-                            var isBadDebt = badDebtGroups.Contains(trangThai) ||
-                                          (trangThai.ToLower().Contains("bad")) ||
-                                          (trangThai.ToLower().Contains("overdue"));
+                            // Tính nợ xấu (dựa trên nhóm nợ)
+                            // Giả định các nhóm nợ xấu: "03", "04", "05"
+                            var isBadDebt = badDebtGroups.Contains(nhomNo);
 
                             if (isBadDebt)
                             {

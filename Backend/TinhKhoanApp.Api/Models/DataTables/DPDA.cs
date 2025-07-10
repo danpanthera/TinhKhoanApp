@@ -5,110 +5,81 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TinhKhoanApp.Api.Models.DataTables
 {
     /// <summary>
-    /// Bảng DPDA - Dữ liệu tiền gửi của dân
-    /// Lưu trữ dữ liệu từ các file CSV có filename chứa "DPDA"
-    /// Tuân thủ Temporal Tables + Columnstore Indexes
+    /// Bảng DPDA - 13 cột theo header_7800_dpda_20250430.csv
+    /// MA_CHI_NHANH,MA_KHACH_HANG,TEN_KHACH_HANG,SO_TAI_KHOAN,LOAI_THE,SO_THE,NGAY_NOP_DON,NGAY_PHAT_HANH,USER_PHAT_HANH,TRANG_THAI,PHAN_LOAI,GIAO_THE,LOAI_PHAT_HANH
     /// </summary>
     [Table("DPDA")]
     public class DPDA
     {
-        /// <summary>
-        /// Khóa chính tự tăng
-        /// </summary>
         [Key]
         public int Id { get; set; }
 
-        /// <summary>
-        /// Ngày dữ liệu theo định dạng dd/MM/yyyy
-        /// Được parse từ tên file *yyyymmdd.csv
-        /// </summary>
         [Column("NGAY_DL")]
         [StringLength(10)]
         public string NgayDL { get; set; } = null!;
 
-        /// <summary>
-        /// Mã chi nhánh
-        /// </summary>
-        [Column("MA_CN")]
-        [StringLength(20)]
-        public string? MA_CN { get; set; }
-
-        /// <summary>
-        /// Mã phòng giao dịch
-        /// </summary>
-        [Column("MA_PGD")]
-        [StringLength(20)]
-        public string? MA_PGD { get; set; }
-
-        /// <summary>
-        /// Mã khách hàng
-        /// </summary>
-        [Column("MA_KH")]
+        // === 13 CỘT THEO HEADER CSV GỐC ===
+        [Column("MA_CHI_NHANH")]
         [StringLength(50)]
-        public string? MA_KH { get; set; }
+        public string? MA_CHI_NHANH { get; set; }
 
-        /// <summary>
-        /// Số tài khoản tiền gửi
-        /// </summary>
-        [Column("SO_TK_TIEN_GUI")]
+        [Column("MA_KHACH_HANG")]
         [StringLength(50)]
-        public string? SO_TK_TIEN_GUI { get; set; }
+        public string? MA_KHACH_HANG { get; set; }
 
-        /// <summary>
-        /// Loại tiền gửi
-        /// </summary>
-        [Column("LOAI_TIEN_GUI")]
+        [Column("TEN_KHACH_HANG")]
+        [StringLength(255)]
+        public string? TEN_KHACH_HANG { get; set; }
+
+        [Column("SO_TAI_KHOAN")]
+        [StringLength(50)]
+        public string? SO_TAI_KHOAN { get; set; }
+
+        [Column("LOAI_THE")]
+        [StringLength(50)]
+        public string? LOAI_THE { get; set; }
+
+        [Column("SO_THE")]
+        [StringLength(50)]
+        public string? SO_THE { get; set; }
+
+        [Column("NGAY_NOP_DON")]
+        [StringLength(20)]
+        public string? NGAY_NOP_DON { get; set; }
+
+        [Column("NGAY_PHAT_HANH")]
+        [StringLength(20)]
+        public string? NGAY_PHAT_HANH { get; set; }
+
+        [Column("USER_PHAT_HANH")]
         [StringLength(100)]
-        public string? LOAI_TIEN_GUI { get; set; }
+        public string? USER_PHAT_HANH { get; set; }
 
-        /// <summary>
-        /// Số dư tiền gửi
-        /// </summary>
-        [Column("SO_DU_TIEN_GUI")]
-        public decimal? SO_DU_TIEN_GUI { get; set; }
-
-        /// <summary>
-        /// Lãi suất tiền gửi
-        /// </summary>
-        [Column("LAI_SUAT")]
-        public decimal? LAI_SUAT { get; set; }
-
-        /// <summary>
-        /// Ngày mở tài khoản
-        /// </summary>
-        [Column("NGAY_MO_TK")]
-        public DateTime? NGAY_MO_TK { get; set; }
-
-        /// <summary>
-        /// Ngày đến hạn
-        /// </summary>
-        [Column("NGAY_DEN_HAN")]
-        public DateTime? NGAY_DEN_HAN { get; set; }
-
-        /// <summary>
-        /// Trạng thái tài khoản
-        /// </summary>
         [Column("TRANG_THAI")]
         [StringLength(50)]
         public string? TRANG_THAI { get; set; }
 
-        /// <summary>
-        /// Ngày tạo bản ghi
-        /// </summary>
+        [Column("PHAN_LOAI")]
+        [StringLength(50)]
+        public string? PHAN_LOAI { get; set; }
+
+        [Column("GIAO_THE")]
+        [StringLength(50)]
+        public string? GIAO_THE { get; set; }
+
+        [Column("LOAI_PHAT_HANH")]
+        [StringLength(50)]
+        public string? LOAI_PHAT_HANH { get; set; }
+
+        // === TEMPORAL COLUMNS ===
         [Column("CREATED_DATE")]
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime CREATED_DATE { get; set; } = DateTime.Now;
 
-        /// <summary>
-        /// Ngày cập nhật bản ghi
-        /// </summary>
         [Column("UPDATED_DATE")]
-        public DateTime? UpdatedDate { get; set; }
+        public DateTime? UPDATED_DATE { get; set; }
 
-        /// <summary>
-        /// Tên file gốc được import
-        /// </summary>
         [Column("FILE_NAME")]
-        [StringLength(200)]
-        public string? FileName { get; set; }
+        [StringLength(255)]
+        public string? FILE_NAME { get; set; }
     }
 }

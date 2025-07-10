@@ -376,19 +376,20 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
             modelBuilder.Entity<DataTables.DP01>(entity =>
             {
                 entity.Property(e => e.CURRENT_BALANCE).HasPrecision(18, 2);
-                entity.Property(e => e.SO_DU_CUOI_KY).HasPrecision(18, 2);
-                entity.Property(e => e.SO_DU_DAU_KY).HasPrecision(18, 2);
-                entity.Property(e => e.SO_PHAT_SINH_CO).HasPrecision(18, 2);
-                entity.Property(e => e.SO_PHAT_SINH_NO).HasPrecision(18, 2);
+                entity.Property(e => e.RATE).HasPrecision(18, 6);
+                entity.Property(e => e.ACRUAL_AMOUNT).HasPrecision(18, 2);
+                entity.Property(e => e.ACRUAL_AMOUNT_END).HasPrecision(18, 2);
+                entity.Property(e => e.DRAMT).HasPrecision(18, 2);
+                entity.Property(e => e.CRAMT).HasPrecision(18, 2);
+                entity.Property(e => e.SPECIAL_RATE).HasPrecision(18, 6);
+                entity.Property(e => e.TYGIA).HasPrecision(18, 6);
             });
 
             // GL01 decimal properties
             modelBuilder.Entity<DataTables.GL01>(entity =>
             {
-                entity.Property(e => e.PHAT_SINH_CO).HasPrecision(18, 2);
-                entity.Property(e => e.PHAT_SINH_NO).HasPrecision(18, 2);
-                entity.Property(e => e.SO_DU_CUOI_KY).HasPrecision(18, 2);
-                entity.Property(e => e.SO_DU_DAU_KY).HasPrecision(18, 2);
+                entity.Property(e => e.SO_TIEN_GD).HasPrecision(18, 2);
+                entity.Property(e => e.TR_EX_RT).HasPrecision(18, 6);
             });
 
             // GL41 decimal properties

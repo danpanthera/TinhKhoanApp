@@ -1,3 +1,14 @@
+#!/bin/bash
+
+# ===================================================================
+# SCRIPT TẠO LẠI CẤU TRÚC BẢNG THEO HEADER CSV GỐC
+# Đảm bảo 100% khớp với cột CSV gốc
+# ===================================================================
+
+echo "🔧 Tạo lại cấu trúc model EI01 theo header CSV gốc..."
+
+# Tạo EI01.cs với cấu trúc đúng header_7800_ei01_20250430.csv
+cat > /Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api/Models/DataTables/EI01.cs << 'EOF'
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -5,22 +16,32 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TinhKhoanApp.Api.Models.DataTables
 {
     /// <summary>
-    /// Bảng EI01 - 24 cột theo header_7800_ei01_20250430.csv
-    /// MA_CN,MA_KH,TEN_KH,LOAI_KH,SDT_EMB,TRANG_THAI_EMB,NGAY_DK_EMB,SDT_OTT,TRANG_THAI_OTT,NGAY_DK_OTT,SDT_SMS,TRANG_THAI_SMS,NGAY_DK_SMS,SDT_SAV,TRANG_THAI_SAV,NGAY_DK_SAV,SDT_LN,TRANG_THAI_LN,NGAY_DK_LN,USER_EMB,USER_OTT,USER_SMS,USER_SAV,USER_LN
+    /// Bảng EI01 - Thu nhập khác (24 cột theo header)
+    /// Lưu trữ dữ liệu từ các file CSV có filename chứa "EI01"
+    /// Cấu trúc theo header_7800_ei01_20250430.csv
+    /// Tuân thủ Temporal Tables + Columnstore Indexes
     /// </summary>
     [Table("EI01")]
     public class EI01
     {
+        /// <summary>
+        /// Khóa chính tự tăng
+        /// </summary>
         [Key]
         public int Id { get; set; }
 
+        /// <summary>
+        /// Ngày dữ liệu theo định dạng dd/MM/yyyy
+        /// Được parse từ tên file *yyyymmdd.csv
+        /// </summary>
         [Column("NGAY_DL")]
         [StringLength(10)]
         public string NgayDL { get; set; } = null!;
 
-        // === 24 CỘT THEO HEADER CSV GỐC ===
+        // === TẤT CẢ CỘT THEO HEADER CSV GỐC (24 cột) ===
+
         [Column("MA_CN")]
-        [StringLength(50)]
+        [StringLength(20)]
         public string? MA_CN { get; set; }
 
         [Column("MA_KH")]
@@ -115,15 +136,28 @@ namespace TinhKhoanApp.Api.Models.DataTables
         [StringLength(100)]
         public string? USER_LN { get; set; }
 
-        // === TEMPORAL COLUMNS ===
+        // === TEMPORAL TABLES STANDARD COLUMNS ===
+
+        /// <summary>
+        /// Ngày tạo bản ghi
+        /// </summary>
         [Column("CREATED_DATE")]
         public DateTime CREATED_DATE { get; set; } = DateTime.Now;
 
+        /// <summary>
+        /// Ngày cập nhật bản ghi
+        /// </summary>
         [Column("UPDATED_DATE")]
         public DateTime? UPDATED_DATE { get; set; }
 
+        /// <summary>
+        /// Tên file import
+        /// </summary>
         [Column("FILE_NAME")]
         [StringLength(255)]
         public string? FILE_NAME { get; set; }
     }
 }
+EOF
+
+echo "✅ Đã tạo EI01.cs với 24 cột theo header CSV gốc"

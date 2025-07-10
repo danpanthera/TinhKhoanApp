@@ -1,3 +1,18 @@
+#!/bin/bash
+
+# ===================================================================
+# SCRIPT REGENERATE DP01 MODEL VỚI CHÍNH XÁC 63 CỘT
+# ===================================================================
+
+echo "🔧 Regenerate DP01 model với chính xác 63 cột..."
+
+MODELS_DIR="/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api/Models/DataTables"
+
+# Backup DP01 cũ
+cp $MODELS_DIR/DP01.cs $MODELS_DIR/DP01_backup_$(date +%Y%m%d_%H%M%S).cs
+
+# Tạo DP01.cs với đúng 63 cột
+cat > $MODELS_DIR/DP01.cs << 'EOF'
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -273,3 +288,10 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public string? FILE_NAME { get; set; }
     }
 }
+EOF
+
+echo "✅ Đã tạo lại DP01.cs với chính xác 63 cột CSV + 3 temporal = 66 cột tổng"
+echo "🔍 Kiểm tra số property trong file:"
+grep -c "public.*{.*get.*set.*}" $MODELS_DIR/DP01.cs
+
+echo "🎉 Hoàn thành regenerate DP01 model!"

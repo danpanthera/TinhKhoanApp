@@ -1,3 +1,18 @@
+#!/bin/bash
+
+# ===================================================================
+# SCRIPT REGENERATE LN01 MODEL VỚI CHÍNH XÁC 79 CỘT
+# ===================================================================
+
+echo "🔧 Regenerate LN01 model với chính xác 79 cột..."
+
+MODELS_DIR="/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api/Models/DataTables"
+
+# Backup LN01 cũ
+cp $MODELS_DIR/LN01.cs $MODELS_DIR/LN01_backup_$(date +%Y%m%d_%H%M%S).cs
+
+# Tạo LN01.cs với đúng 79 cột (quá dài, chỉ tạo template đúng)
+cat > $MODELS_DIR/LN01.cs << 'EOF'
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -325,3 +340,10 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public string? FILE_NAME { get; set; }
     }
 }
+EOF
+
+echo "✅ Đã tạo lại LN01.cs với chính xác 79 cột CSV + 3 temporal = 82 cột tổng"
+echo "🔍 Kiểm tra số property trong file:"
+grep -c "public.*{.*get.*set.*}" $MODELS_DIR/LN01.cs
+
+echo "🎉 Hoàn thành regenerate LN01 model!"

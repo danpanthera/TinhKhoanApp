@@ -5,122 +5,93 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TinhKhoanApp.Api.Models.DataTables
 {
     /// <summary>
-    /// Bảng LN03 - Dữ liệu nợ xấu
-    /// Lưu trữ dữ liệu từ các file CSV có filename chứa "LN03"
-    /// Tuân thủ Temporal Tables + Columnstore Indexes
+    /// Bảng LN03 - 17 cột theo header_7800_ln03_20250430.csv
+    /// MACHINHANH,TENCHINHANH,MAKH,TENKH,SOHOPDONG,SOTIENXLRR,NGAYPHATSINHXL,THUNOSAUXL,CONLAINGOAIBANG,DUNONOIBANG,NHOMNO,MACBTD,TENCBTD,MAPGD,TAIKHOANHACHTOAN,REFNO,LOAINGUONVON
     /// </summary>
     [Table("LN03")]
     public class LN03
     {
-        /// <summary>
-        /// Khóa chính tự tăng
-        /// </summary>
         [Key]
         public int Id { get; set; }
 
-        /// <summary>
-        /// Ngày dữ liệu theo định dạng dd/MM/yyyy
-        /// Được parse từ tên file *yyyymmdd.csv
-        /// </summary>
         [Column("NGAY_DL")]
         [StringLength(10)]
         public string NgayDL { get; set; } = null!;
 
-        /// <summary>
-        /// Mã chi nhánh
-        /// </summary>
-        [Column("MA_CN")]
+        // === 17 CỘT THEO HEADER CSV GỐC ===
+        [Column("MACHINHANH")]
+        [StringLength(50)]
+        public string? MACHINHANH { get; set; }
+
+        [Column("TENCHINHANH")]
+        [StringLength(255)]
+        public string? TENCHINHANH { get; set; }
+
+        [Column("MAKH")]
+        [StringLength(50)]
+        public string? MAKH { get; set; }
+
+        [Column("TENKH")]
+        [StringLength(255)]
+        public string? TENKH { get; set; }
+
+        [Column("SOHOPDONG")]
+        [StringLength(50)]
+        public string? SOHOPDONG { get; set; }
+
+        [Column("SOTIENXLRR")]
+        public decimal? SOTIENXLRR { get; set; }
+
+        [Column("NGAYPHATSINHXL")]
         [StringLength(20)]
-        public string? MA_CN { get; set; }
+        public string? NGAYPHATSINHXL { get; set; }
 
-        /// <summary>
-        /// Mã phòng giao dịch
-        /// </summary>
-        [Column("MA_PGD")]
+        [Column("THUNOSAUXL")]
+        public decimal? THUNOSAUXL { get; set; }
+
+        [Column("CONLAINGOAIBANG")]
+        public decimal? CONLAINGOAIBANG { get; set; }
+
+        [Column("DUNONOIBANG")]
+        public decimal? DUNONOIBANG { get; set; }
+
+        [Column("NHOMNO")]
         [StringLength(20)]
-        public string? MA_PGD { get; set; }
+        public string? NHOMNO { get; set; }
 
-        /// <summary>
-        /// Mã khách hàng
-        /// </summary>
-        [Column("MA_KH")]
+        [Column("MACBTD")]
         [StringLength(50)]
-        public string? MA_KH { get; set; }
+        public string? MACBTD { get; set; }
 
-        /// <summary>
-        /// Số hợp đồng cho vay
-        /// </summary>
-        [Column("SO_HD_CHO_VAY")]
+        [Column("TENCBTD")]
+        [StringLength(255)]
+        public string? TENCBTD { get; set; }
+
+        [Column("MAPGD")]
         [StringLength(50)]
-        public string? SO_HD_CHO_VAY { get; set; }
+        public string? MAPGD { get; set; }
 
-        /// <summary>
-        /// Nhóm nợ
-        /// </summary>
-        [Column("NHOM_NO")]
-        [StringLength(10)]
-        public string? NHOM_NO { get; set; }
-
-        /// <summary>
-        /// Dư nợ gốc
-        /// </summary>
-        [Column("DU_NO_GOC")]
-        public decimal? DU_NO_GOC { get; set; }
-
-        /// <summary>
-        /// Dư nợ lãi
-        /// </summary>
-        [Column("DU_NO_LAI")]
-        public decimal? DU_NO_LAI { get; set; }
-
-        /// <summary>
-        /// Số ngày quá hạn
-        /// </summary>
-        [Column("SO_NGAY_QUA_HAN")]
-        public int? SO_NGAY_QUA_HAN { get; set; }
-
-        /// <summary>
-        /// Tỷ lệ dự phòng
-        /// </summary>
-        [Column("TY_LE_DU_PHONG")]
-        public decimal? TY_LE_DU_PHONG { get; set; }
-
-        /// <summary>
-        /// Số tiền dự phòng
-        /// </summary>
-        [Column("SO_TIEN_DU_PHONG")]
-        public decimal? SO_TIEN_DU_PHONG { get; set; }
-
-        /// <summary>
-        /// Ngày phân loại nợ
-        /// </summary>
-        [Column("NGAY_PHAN_LOAI_NO")]
-        public DateTime? NGAY_PHAN_LOAI_NO { get; set; }
-
-        /// <summary>
-        /// Trạng thái nợ
-        /// </summary>
-        [Column("TRANG_THAI")]
+        [Column("TAIKHOANHACHTOAN")]
         [StringLength(50)]
-        public string? TRANG_THAI { get; set; }
+        public string? TAIKHOANHACHTOAN { get; set; }
 
-        /// <summary>
-        /// Ngày tạo bản ghi
-        /// </summary>
+        [Column("REFNO")]
+        [StringLength(50)]
+        public string? REFNO { get; set; }
+
+        [Column("LOAINGUONVON")]
+        [StringLength(50)]
+        public string? LOAINGUONVON { get; set; }
+
+        // === TEMPORAL COLUMNS ===
         [Column("CREATED_DATE")]
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime CREATED_DATE { get; set; } = DateTime.Now;
 
-        /// <summary>
-        /// Ngày cập nhật bản ghi
-        /// </summary>
         [Column("UPDATED_DATE")]
-        public DateTime? UpdatedDate { get; set; }
+        public DateTime? UPDATED_DATE { get; set; }
 
-        /// <summary>
-        /// Tên file gốc được import
-        /// </summary>
         [Column("FILE_NAME")]
-        [StringLength(200)]
-        public string? FileName { get; set; }
+        [StringLength(255)]
+        public string? FILE_NAME { get; set; }
     }
 }
