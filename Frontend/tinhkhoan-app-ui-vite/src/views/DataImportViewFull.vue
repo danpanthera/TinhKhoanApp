@@ -320,20 +320,20 @@
                 </thead>
                 <tbody class="agribank-tbody">
                   <tr v-for="(item, index) in filteredResults" :key="index">
-                    <td>{{ item.fileName }}</td>
-                    <td>{{ formatDateTime(item.importDate) }}</td>
-                    <td class="agribank-number">{{ formatRecordCount(item.recordsCount) }}</td>
-                    <td>{{ item.status }}</td>
+                    <td>{{ item.FileName }}</td>
+                    <td>{{ formatDateTime(item.ImportDate) }}</td>
+                    <td class="agribank-number">{{ formatRecordCount(item.RecordsCount) }}</td>
+                    <td>{{ item.Status }}</td>
                     <td>
                       <button
-                        @click="previewData(item.id)"
+                        @click="previewData(item.Id)"
                         class="btn-action btn-view"
                         title="Xem chi tiết"
                       >
                         👁️
                       </button>
                       <button
-                        @click="confirmDelete(item.id, item.fileName)"
+                        @click="confirmDelete(item.Id, item.FileName)"
                         class="btn-action btn-delete"
                         title="Xóa bản ghi"
                       >
@@ -970,8 +970,8 @@ const refreshDataWithFallback = async () => {
         ...item,
         dataType: item.category || item.dataType || item.fileType || 'UNKNOWN',
         category: item.category || item.dataType || '',
-        recordsCount: parseInt(item.recordsCount || 0),
-        fileName: item.fileName || 'Unknown File'
+        recordsCount: parseInt(item.RecordsCount || 0),
+        fileName: item.FileName || 'Unknown File'
       }));
 
       console.log('✅ Strategy 4 success:', mappedData.length, 'items');
@@ -989,8 +989,8 @@ const refreshDataWithFallback = async () => {
         ...item,
         dataType: item.category || item.dataType || item.fileType || 'UNKNOWN',
         category: item.category || item.dataType || '',
-        recordsCount: parseInt(item.recordsCount || 0),
-        fileName: item.fileName || 'Unknown File'
+        recordsCount: parseInt(item.RecordsCount || 0),
+        fileName: item.FileName || 'Unknown File'
       }));
 
       console.log('✅ Strategy 5 success:', mappedData.length, 'items');
@@ -1066,7 +1066,7 @@ const viewDataType = async (dataType) => {
         } else {
           // 🔥 ENHANCED: For BC57, DPDA, LN01, GL41, and 7800_DT_KHKD1, try to show processed data instead of raw import data
           if (['BC57', 'DPDA', 'LN01', 'GL41', '7800_DT_KHKD1'].includes(dataType.toUpperCase()) && filteredResults.value.length > 0) {
-            const importId = filteredResults.value[0].id
+            const importId = filteredResults.value[0].Id
             console.log(`🔄 Fetching processed data for ${dataType} import ID: ${importId}`)
 
             const processedResult = await rawDataService.getProcessedData(importId)
@@ -1359,7 +1359,7 @@ const confirmDelete = async (importId, fileName) => {
         showSuccess(`✅ Đã xóa thành công bản ghi "${fileName}" (${result.recordsDeleted} bản ghi dữ liệu)`)
 
         // Remove from filtered results
-        filteredResults.value = filteredResults.value.filter(item => item.id !== importId)
+        filteredResults.value = filteredResults.value.filter(item => item.Id !== importId)
 
         // Refresh all data
         await refreshAllData()
