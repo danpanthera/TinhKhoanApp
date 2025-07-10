@@ -47,6 +47,20 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<ImportedDataRecord> ImportedDataRecords { get; set; }
         // 🗑️ REMOVED: ImportedDataItem - Replaced with DirectImportService workflow
 
+        // 🚀 DbSets cho 12 bảng dữ liệu thô chính (DirectImport với Temporal Tables + Columnstore)
+        public DbSet<DataTables.DP01> DP01_New { get; set; }
+        public DbSet<DataTables.LN01> LN01 { get; set; }
+        public DbSet<DataTables.LN02> LN02 { get; set; }
+        public DbSet<DataTables.LN03> LN03 { get; set; }
+        public DbSet<DataTables.DB01> DB01 { get; set; }
+        public DbSet<DataTables.GL01> GL01 { get; set; }
+        public DbSet<DataTables.GL41> GL41 { get; set; }
+        public DbSet<DataTables.DPDA> DPDA { get; set; }
+        public DbSet<DataTables.EI01> EI01 { get; set; }
+        public DbSet<DataTables.KH03> KH03 { get; set; }
+        public DbSet<DataTables.RR01> RR01 { get; set; }
+        public DbSet<DataTables.DT_KHKD1> DT_KHKD1 { get; set; }
+
         // 🗄️ DbSets cho hệ thống Kho Dữ liệu Thô (Legacy)
         public DbSet<Models.RawDataImport> LegacyRawDataImports { get; set; }
         public DbSet<RawDataRecord> RawDataRecords { get; set; }
@@ -353,6 +367,38 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
                       .WithMany()
                       .HasForeignKey(d => d.UnitId)
                       .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // === DECIMAL PRECISION CONFIGURATION FOR DATA TABLES ===
+            // Fix specific decimal property precision warnings for the 12 data tables
+
+            // DP01 decimal properties
+            modelBuilder.Entity<DataTables.DP01>(entity =>
+            {
+                entity.Property(e => e.CURRENT_BALANCE).HasPrecision(18, 2);
+                entity.Property(e => e.SO_DU_CUOI_KY).HasPrecision(18, 2);
+                entity.Property(e => e.SO_DU_DAU_KY).HasPrecision(18, 2);
+                entity.Property(e => e.SO_PHAT_SINH_CO).HasPrecision(18, 2);
+                entity.Property(e => e.SO_PHAT_SINH_NO).HasPrecision(18, 2);
+            });
+
+            // GL01 decimal properties
+            modelBuilder.Entity<DataTables.GL01>(entity =>
+            {
+                entity.Property(e => e.PHAT_SINH_CO).HasPrecision(18, 2);
+                entity.Property(e => e.PHAT_SINH_NO).HasPrecision(18, 2);
+                entity.Property(e => e.SO_DU_CUOI_KY).HasPrecision(18, 2);
+                entity.Property(e => e.SO_DU_DAU_KY).HasPrecision(18, 2);
+            });
+
+            // GL41 decimal properties
+            modelBuilder.Entity<DataTables.GL41>(entity =>
+            {
+                entity.Property(e => e.SO_DU).HasPrecision(18, 2);
+                entity.Property(e => e.SO_DU_CUOI_KY).HasPrecision(18, 2);
+                entity.Property(e => e.SO_DU_DAU_KY).HasPrecision(18, 2);
+                entity.Property(e => e.SO_PHAT_SINH_CO).HasPrecision(18, 2);
+                entity.Property(e => e.SO_PHAT_SINH_NO).HasPrecision(18, 2);
             });
 
             // 🚀 === TEMPORAL TABLES + COLUMNSTORE INDEXES CONFIGURATION ===

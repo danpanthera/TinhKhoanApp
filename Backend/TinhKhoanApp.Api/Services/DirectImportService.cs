@@ -2,6 +2,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 using System.Globalization;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -405,9 +406,20 @@ namespace TinhKhoanApp.Api.Services
                         if (prop.Name == "Id" || prop.Name == "CreatedDate" || prop.Name == "UpdatedDate")
                             continue;
 
+                        // ✅ FIX: Sử dụng Column attribute name thay vì property name
+                        var columnAttribute = prop.GetCustomAttribute<ColumnAttribute>();
+                        var targetColumnName = columnAttribute?.Name ?? prop.Name;
+
                         // Tìm header tương ứng (case insensitive)
                         var headerName = headers?.FirstOrDefault(h =>
-                            string.Equals(h, prop.Name, StringComparison.OrdinalIgnoreCase));
+                            string.Equals(h, targetColumnName, StringComparison.OrdinalIgnoreCase));
+
+                        // ✅ FALLBACK: Nếu không tìm thấy bằng Column name, thử property name
+                        if (string.IsNullOrEmpty(headerName))
+                        {
+                            headerName = headers?.FirstOrDefault(h =>
+                                string.Equals(h, prop.Name, StringComparison.OrdinalIgnoreCase));
+                        }
 
                         if (!string.IsNullOrEmpty(headerName))
                         {
@@ -426,8 +438,14 @@ namespace TinhKhoanApp.Api.Services
                             }
                             catch (Exception fieldEx)
                             {
-                                _logger.LogWarning("⚠️ [CSV_PARSE] Field mapping error for {PropertyName}: {Error}", prop.Name, fieldEx.Message);
+                                _logger.LogWarning("⚠️ [CSV_PARSE] Field mapping error for {PropertyName} -> {ColumnName}: {Error}",
+                                    prop.Name, targetColumnName, fieldEx.Message);
                             }
+                        }
+                        else
+                        {
+                            _logger.LogDebug("🔍 [CSV_PARSE] No header found for property {PropertyName} (column: {ColumnName})",
+                                prop.Name, targetColumnName);
                         }
                     }
 
