@@ -724,7 +724,46 @@ namespace TinhKhoanApp.Api.Services
                 _logger.LogInformation("✅ Found import record: {FileName}, Category: {Category}",
                     importRecord.FileName, importRecord.Category);
 
-                // Trả về thông tin cơ bản (preview rows sẽ trống vì DirectImport không lưu JSON)
+                // Lấy dữ liệu thực tế từ bảng tương ứng
+                var previewRows = new List<object>();
+                var tableName = GetTableNameFromCategory(importRecord.Category);
+
+                if (!string.IsNullOrEmpty(tableName))
+                {
+                    try
+                    {
+                        // Lấy 20 bản ghi mới nhất từ bảng tương ứng
+                        var sql = $"SELECT TOP 20 * FROM {tableName} ORDER BY ID DESC";
+
+                        using var connection = new SqlConnection(_connectionString);
+                        await connection.OpenAsync();
+
+                        using var command = new SqlCommand(sql, connection);
+                        using var reader = await command.ExecuteReaderAsync();
+
+                        var rows = new List<Dictionary<string, object>>();
+                        while (await reader.ReadAsync())
+                        {
+                            var row = new Dictionary<string, object>();
+                            for (int i = 0; i < reader.FieldCount; i++)
+                            {
+                                var value = reader.GetValue(i);
+                                row[reader.GetName(i)] = value == DBNull.Value ? null : value;
+                            }
+                            rows.Add(row);
+                        }
+
+                        previewRows = rows.Cast<object>().ToList();
+                        _logger.LogInformation("📊 Retrieved {Count} preview rows from {TableName}", previewRows.Count, tableName);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "⚠️ Could not retrieve preview data from table {TableName}", tableName);
+                        // Không throw exception, chỉ log warning và trả về empty list
+                    }
+                }
+
+                // Trả về thông tin với dữ liệu thực tế
                 return new
                 {
                     ImportId = importRecord.Id,
@@ -732,7 +771,7 @@ namespace TinhKhoanApp.Api.Services
                     Category = importRecord.Category,
                     ImportDate = importRecord.ImportDate,
                     TotalRecords = importRecord.RecordsCount,
-                    PreviewRows = new List<object>() // DirectImport không lưu raw data
+                    PreviewRows = previewRows
                 };
             }
             catch (Exception ex)
@@ -822,6 +861,29 @@ namespace TinhKhoanApp.Api.Services
                 _logger.LogError(ex, "❌ Error deleting imports by date: {DataType}, {Date}", dataType, date);
                 return (false, $"Error deleting imports: {ex.Message}", 0);
             }
+        }
+
+        /// <summary>
+        /// Map category to table name for preview
+        /// </summary>
+        private string? GetTableNameFromCategory(string category)
+        {
+            return category?.ToUpper() switch
+            {
+                "DP01" => "DP01_New",
+                "LN01" => "LN01",
+                "LN02" => "LN02",
+                "LN03" => "LN03",
+                "DB01" => "DB01",
+                "GL01" => "GL01",
+                "GL41" => "GL41",
+                "DPDA" => "DPDA",
+                "EI01" => "EI01",
+                "KH03" => "KH03",
+                "RR01" => "RR01",
+                "DT_KHKD1" => "7800_DT_KHKD1",
+                _ => null
+            };
         }
 
         #endregion
