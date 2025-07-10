@@ -116,13 +116,17 @@
                 <td>
                   <input
                     type="text"
-                    :value="formatNumber(kpiTargets[indicator.Id] || 0)"
+                    :value="formatUnitTargetValue(indicator, kpiTargets[indicator.Id])"
                     placeholder="Nhập mục tiêu"
                     class="form-control"
                     style="font-size: 0.85rem; padding: 8px 12px;"
+                    :class="{ 'error': kpiTargetErrors[indicator.Id] }"
                     @input="(e) => handleKpiTargetInput(e, indicator.Id)"
                     @blur="(e) => handleKpiTargetBlur(e, indicator.Id)"
                   />
+                  <div v-if="kpiTargetErrors[indicator.Id]" class="text-danger" style="font-size: 0.75rem; margin-top: 4px;">
+                    {{ kpiTargetErrors[indicator.Id] }}
+                  </div>
                 </td>
                 <td style="text-align: center;">
                   <span class="badge-agribank badge-secondary">{{ safeGet(indicator, 'Unit') || 'N/A' }}</span>
@@ -259,6 +263,7 @@ const units = ref([])
 const kpiTables = ref([])
 const availableKpiIndicators = ref([])
 const kpiTargets = ref({})
+const kpiTargetErrors = ref({})
 const currentAssignments = ref([])
 
 // Computed properties
@@ -627,18 +632,128 @@ function formatDate(dateString) {
   return date.toLocaleDateString('vi-VN')
 }
 
-// Number input handlers for KPI targets
+// Enhanced number input handlers for KPI targets with unit-specific validation
 const handleKpiTargetInput = (event, indicatorId) => {
-  const formattedValue = handleInput(event);
-  event.target.value = formattedValue;
-  kpiTargets.value[indicatorId] = parseFormattedNumber(formattedValue);
+  const indicator = availableKpiIndicators.value.find(ind => ind.Id === indicatorId);
+  const unit = safeGet(indicator, 'Unit') || 'N/A';
+
+  let inputValue = event.target.value;
+
+  // Remove all non-numeric characters except decimal point for initial processing
+  let numericValue = inputValue.replace(/[^\d.,]/g, '');
+
+  // Handle comma as decimal separator (Vietnamese style)
+  numericValue = numericValue.replace(',', '.');
+
+  // For percentage, limit to 100
+  if (unit === '%') {
+    const numValue = parseFloat(numericValue);
+    if (!isNaN(numValue) && numValue > 100) {
+      numericValue = '100';
+      kpiTargetErrors.value[indicatorId] = 'Giá trị tối đa là 100%';
+    } else {
+      delete kpiTargetErrors.value[indicatorId];
+    }
+  }
+
+  // For "Triệu VND", format with thousand separators
+  if (unit === 'Triệu VND') {
+    const numValue = parseFloat(numericValue);
+    if (!isNaN(numValue)) {
+      // Format with thousand separators
+      const formatted = new Intl.NumberFormat('vi-VN').format(numValue);
+      event.target.value = formatted;
+      kpiTargets.value[indicatorId] = numValue;
+      delete kpiTargetErrors.value[indicatorId];
+      return;
+    }
+  }
+
+  // For percentage, keep as decimal
+  if (unit === '%') {
+    const numValue = parseFloat(numericValue);
+    if (!isNaN(numValue)) {
+      event.target.value = numValue.toString();
+      kpiTargets.value[indicatorId] = numValue;
+    }
+    return;
+  }
+
+  // Default handling for other units
+  const numValue = parseFloat(numericValue);
+  if (!isNaN(numValue)) {
+    event.target.value = numValue.toString();
+    kpiTargets.value[indicatorId] = numValue;
+    delete kpiTargetErrors.value[indicatorId];
+  } else if (inputValue.trim() === '') {
+    kpiTargets.value[indicatorId] = null;
+    delete kpiTargetErrors.value[indicatorId];
+  } else {
+    kpiTargetErrors.value[indicatorId] = 'Vui lòng chỉ nhập số';
+  }
 };
 
 const handleKpiTargetBlur = (event, indicatorId) => {
-  const formattedValue = handleBlur(event);
-  event.target.value = formattedValue;
-  kpiTargets.value[indicatorId] = parseFormattedNumber(formattedValue);
+  const indicator = availableKpiIndicators.value.find(ind => ind.Id === indicatorId);
+  const unit = safeGet(indicator, 'Unit') || 'N/A';
+  const inputValue = event.target.value;
+
+  if (inputValue.trim() === '') {
+    kpiTargets.value[indicatorId] = null;
+    delete kpiTargetErrors.value[indicatorId];
+    return;
+  }
+
+  // Parse the final value
+  let numericValue = inputValue.replace(/[^\d.,]/g, '').replace(',', '.');
+  const numValue = parseFloat(numericValue);
+
+  if (isNaN(numValue)) {
+    kpiTargetErrors.value[indicatorId] = 'Giá trị không hợp lệ';
+    return;
+  }
+
+  // Final validation and formatting
+  if (unit === '%') {
+    if (numValue > 100) {
+      kpiTargetErrors.value[indicatorId] = 'Giá trị tối đa là 100%';
+      event.target.value = '100';
+      kpiTargets.value[indicatorId] = 100;
+    } else {
+      event.target.value = numValue.toString();
+      kpiTargets.value[indicatorId] = numValue;
+      delete kpiTargetErrors.value[indicatorId];
+    }
+  } else if (unit === 'Triệu VND') {
+    const formatted = new Intl.NumberFormat('vi-VN').format(numValue);
+    event.target.value = formatted;
+    kpiTargets.value[indicatorId] = numValue;
+    delete kpiTargetErrors.value[indicatorId];
+  } else {
+    event.target.value = numValue.toString();
+    kpiTargets.value[indicatorId] = numValue;
+    delete kpiTargetErrors.value[indicatorId];
+  }
 };
+
+// Format target value based on unit type for Unit KPI
+function formatUnitTargetValue(indicator, value) {
+  if (value === null || value === undefined || value === '') return '';
+
+  const unit = safeGet(indicator, 'Unit') || 'N/A';
+  const numValue = parseFloat(value);
+
+  if (isNaN(numValue)) return '';
+
+  // Format based on unit type
+  if (unit === 'Triệu VND') {
+    return new Intl.NumberFormat('vi-VN').format(numValue);
+  } else if (unit === '%') {
+    return numValue.toString();
+  } else {
+    return numValue.toString();
+  }
+}
 
 onMounted(() => {
   loadInitialData()
@@ -673,6 +788,10 @@ watch([selectedPeriodId, selectedBranchId], ([newPeriodId, newBranchId]) => {
 
 .form-group {
   margin-bottom: 0;
+}
+
+.error input {
+  border-color: var(--danger-color) !important;
 }
 
 @media (max-width: 768px) {

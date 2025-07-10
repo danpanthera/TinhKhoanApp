@@ -205,7 +205,7 @@
                 <td>
                   <input
                     type="text"
-                    :value="formatNumber(targetValues[indicator.Id] || 0)"
+                    :value="formatTargetValue(indicator, targetValues[indicator.Id])"
                     @input="(e) => handleTargetInput(e, indicator.Id)"
                     @blur="(e) => handleTargetBlur(e, indicator.Id)"
                     placeholder="Nhập mục tiêu"
@@ -314,19 +314,128 @@ const selectedPeriodId = ref('')
 const targetValues = ref({})
 const targetErrors = ref({})
 
-// Number input handlers for employee targets
+// Enhanced number input handlers for employee targets with unit-specific validation
 const handleTargetInput = (event, indicatorId) => {
-  const formattedValue = handleInput(event);
-  event.target.value = formattedValue;
-  targetValues.value[indicatorId] = parseFormattedNumber(formattedValue);
-  targetErrors.value[indicatorId] = false; // Clear error on input
+  const indicator = indicators.value.find(ind => ind.Id === indicatorId);
+  const unit = getIndicatorUnit(indicator);
+
+  let inputValue = event.target.value;
+
+  // Remove all non-numeric characters except decimal point for initial processing
+  let numericValue = inputValue.replace(/[^\d.,]/g, '');
+
+  // Handle comma as decimal separator (Vietnamese style)
+  numericValue = numericValue.replace(',', '.');
+
+  // For percentage, limit to 100
+  if (unit === '%') {
+    const numValue = parseFloat(numericValue);
+    if (!isNaN(numValue) && numValue > 100) {
+      numericValue = '100';
+      targetErrors.value[indicatorId] = 'Giá trị tối đa là 100%';
+    } else {
+      delete targetErrors.value[indicatorId];
+    }
+  }
+
+  // For "Triệu VND", format with thousand separators
+  if (unit === 'Triệu VND') {
+    const numValue = parseFloat(numericValue);
+    if (!isNaN(numValue)) {
+      // Format with thousand separators
+      const formatted = new Intl.NumberFormat('vi-VN').format(numValue);
+      event.target.value = formatted;
+      targetValues.value[indicatorId] = numValue;
+      delete targetErrors.value[indicatorId];
+      return;
+    }
+  }
+
+  // For percentage, keep as decimal
+  if (unit === '%') {
+    const numValue = parseFloat(numericValue);
+    if (!isNaN(numValue)) {
+      event.target.value = numValue.toString();
+      targetValues.value[indicatorId] = numValue;
+    }
+    return;
+  }
+
+  // Default handling for other units
+  const numValue = parseFloat(numericValue);
+  if (!isNaN(numValue)) {
+    event.target.value = numValue.toString();
+    targetValues.value[indicatorId] = numValue;
+    delete targetErrors.value[indicatorId];
+  } else if (inputValue.trim() === '') {
+    targetValues.value[indicatorId] = null;
+    delete targetErrors.value[indicatorId];
+  } else {
+    targetErrors.value[indicatorId] = 'Vui lòng chỉ nhập số';
+  }
 };
 
 const handleTargetBlur = (event, indicatorId) => {
-  const formattedValue = handleBlur(event);
-  event.target.value = formattedValue;
-  targetValues.value[indicatorId] = parseFormattedNumber(formattedValue);
+  const indicator = indicators.value.find(ind => ind.Id === indicatorId);
+  const unit = getIndicatorUnit(indicator);
+  const inputValue = event.target.value;
+
+  if (inputValue.trim() === '') {
+    targetValues.value[indicatorId] = null;
+    delete targetErrors.value[indicatorId];
+    return;
+  }
+
+  // Parse the final value
+  let numericValue = inputValue.replace(/[^\d.,]/g, '').replace(',', '.');
+  const numValue = parseFloat(numericValue);
+
+  if (isNaN(numValue)) {
+    targetErrors.value[indicatorId] = 'Giá trị không hợp lệ';
+    return;
+  }
+
+  // Final validation and formatting
+  if (unit === '%') {
+    if (numValue > 100) {
+      targetErrors.value[indicatorId] = 'Giá trị tối đa là 100%';
+      event.target.value = '100';
+      targetValues.value[indicatorId] = 100;
+    } else {
+      event.target.value = numValue.toString();
+      targetValues.value[indicatorId] = numValue;
+      delete targetErrors.value[indicatorId];
+    }
+  } else if (unit === 'Triệu VND') {
+    const formatted = new Intl.NumberFormat('vi-VN').format(numValue);
+    event.target.value = formatted;
+    targetValues.value[indicatorId] = numValue;
+    delete targetErrors.value[indicatorId];
+  } else {
+    event.target.value = numValue.toString();
+    targetValues.value[indicatorId] = numValue;
+    delete targetErrors.value[indicatorId];
+  }
 };
+
+// Format target value based on unit type
+function formatTargetValue(indicator, value) {
+  if (value === null || value === undefined || value === '') return '';
+
+  const unit = getIndicatorUnit(indicator);
+  const numValue = parseFloat(value);
+
+  if (isNaN(numValue)) return '';
+
+  // Format based on unit type
+  if (unit === 'Triệu VND') {
+    return new Intl.NumberFormat('vi-VN').format(numValue);
+  } else if (unit === '%') {
+    return numValue.toString();
+  } else {
+    return numValue.toString();
+  }
+}
 
 // Computed properties cho bộ lọc
 // Lọc 23 bảng KPI dành cho Cán bộ
