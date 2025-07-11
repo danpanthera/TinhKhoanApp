@@ -18,7 +18,6 @@ This implementation ensures that when importing CSV files into the database, the
 ### 2. New History Models with Original CSV Column Names
 
 - **LN01_CsvHistory**: For loan data with properties like `BRCD`, `CUSTSEQ`, `TAI_KHOAN`, etc.
-- **DT_KHKD1_History**: For business plan data with properties like `BRCD`, `BRANCH_NAME`, `INDICATOR_TYPE`, etc.
 - **Key Features**:
   - Properties named exactly as CSV columns (e.g., `BRCD` not `MaChiNhanh`)
   - Uses `[Column("OriginalName")]` attributes to map to database columns
@@ -31,7 +30,6 @@ This implementation ensures that when importing CSV files into the database, the
 - **Key Methods**:
   - `ProcessImportedDataToHistoryAsync()`: Main processing method
   - `ValidateImportedDataForCategoryAsync()`: Validates CSV structure before processing
-  - `ProcessLN01DataAsync()` / `ProcessDT_KHKD1_DataAsync()`: Category-specific processing
 - **Features**:
   - Preserves original CSV column names when mapping to Model properties
   - Generates business keys and data hashes for SCD Type 2 tracking

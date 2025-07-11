@@ -11,10 +11,8 @@
 
 #### Khắc phục:
 
-- **Backend**: Thêm endpoint `GET /api/RawData/{id}/processed` để lấy dữ liệu từ BC57History, DPDAHistory, LN01_History, DT_KHKD1_History
 - **Frontend**:
   - Thêm method `getProcessedData()` trong rawDataService.js
-  - Cập nhật `viewDataType()` để tự động gọi processed data cho BC57, DPDA, LN01, 7800_DT_KHKD1
   - Cải tiến UI modal để hiển thị dữ liệu processed với business columns thay vì raw data
 
 #### Files thay đổi:
@@ -28,12 +26,10 @@
 #### Nguyên nhân:
 
 - Validation tên file quá strict yêu cầu phải chứa "GL01"
-- Thiếu method `ProcessSpecialHeader()` cho file 7800_DT_KHKD1
 
 #### Khắc phục:
 
 - **Relaxed filename validation**: GL01 chỉ cần file .csv, không bắt buộc tên chứa "GL01"
-- **Added missing method**: `ProcessSpecialHeader()` để xử lý header đặc biệt cho 7800_DT_KHKD1
 - **Better error handling**: Thêm debug logging chi tiết cho GL01 imports
 
 #### Files thay đổi:
@@ -47,7 +43,6 @@
 - **BC57**: Lưu đầy đủ business data vào BC57History với mapping cột CSV
 - **DPDA**: Lưu vào DPDAHistory với các trường chính
 - **LN01**: Đã có đầy đủ mapping các cột nghiệp vụ
-- **7800_DT_KHKD1**: Xử lý header đặc biệt và lưu vào DT_KHKD1_History
 
 #### Files đã cập nhật:
 
@@ -62,7 +57,6 @@ GET /api/RawData/{importId}/processed
 ```
 
 - Trả về dữ liệu đã xử lý từ history tables thay vì raw import data
-- Hỗ trợ BC57, DPDA, LN01, 7800_DT_KHKD1
 - Tự động mapping theo statement date
 
 ### 2. **Enhanced Frontend Data Viewing**
@@ -84,7 +78,6 @@ GET /api/RawData/{importId}/processed
 - BC57: Import ✅ + View processed data ✅
 - DPDA: Import ✅ + View processed data ✅
 - LN01: Import ✅ + View processed data ✅
-- 7800_DT_KHKD1: Import ✅ + View processed data ✅
 - GL01: Import validation fixed ✅
 
 ### 🔄 Cần tiếp tục:
@@ -107,7 +100,6 @@ GET /api/RawData/{importId}/processed
 2. Chọn data type = GL01
 3. Import should succeed (không còn lỗi 400)
 
-### 3. Test DPDA, LN01, 7800_DT_KHKD1:
 
 - Tương tự BC57, kiểm tra processed data display
 

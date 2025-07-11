@@ -17,7 +17,6 @@
 | 9   | EI01      | ✅ HOÀN THÀNH | Signature đã nhận tham số ngayDL, sử dụng đúng |
 | 10  | KH03      | ✅ HOÀN THÀNH | Signature đã nhận tham số ngayDL, sử dụng đúng |
 | 11  | RR01      | ✅ HOÀN THÀNH | Signature đã nhận tham số ngayDL, sử dụng đúng |
-| 12  | DT_KHKD1  | ✅ HOÀN THÀNH | Signature đã nhận tham số ngayDL, sử dụng đúng |
 
 ## 🔧 CÁC THAY ĐỔI ĐÃ THỰC HIỆN
 

@@ -7,14 +7,12 @@
 - **File**: `/Frontend/tinhkhoan-app-ui-vite/src/views/DataImportViewFull.vue`
 - **Dòng 84**: Đã thay đổi tiêu đề từ "📊 BẢNG QUẢN LÝ DỮ LIỆU NGHIỆP VỤ" thành "📊 BẢNG DỮ LIỆU THÔ"
 
-### 2. ✅ Xử lý file 7800_DT_KHKD1 với header đặc biệt
 
 - **File**: `/Backend/TinhKhoanApp.Api/Controllers/RawDataController.cs`
 - **Tính năng mới**:
   - Xử lý header gồm 3 dòng (10-12) merge thành header tổng hợp
   - Dữ liệu bắt đầu từ dòng 13
   - Method `ProcessSpecialHeader()` để gộp 3 dòng header với dấu "\_"
-  - Logic phát hiện tự động file `7800_DT_KHKD1`
 
 ### 3. ✅ Thêm debug logging cho lỗi import GL01
 
@@ -39,7 +37,6 @@
 
 - **File**: `/Backend/TinhKhoanApp.Api/Services/RawDataProcessingService.cs`
 - **Tính năng**:
-  - Xử lý LN01 và 7800_DT_KHKD1 đầy đủ
   - Validation headers, business key generation
   - SCD Type 2 với metadata fields
   - Batch processing và error handling

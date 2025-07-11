@@ -13,7 +13,6 @@
    - PWA Ready ✓
 
 🔧 **TÍNH NĂNG MỚI HOÀN THÀNH:**
-   ✓ NgayDL extraction cho 12 bảng (DP01, LN01, LN02, LN03, GL01, GL41, DB01, DPDA, EI01, KH03, RR01, DT_KHKD1)
    ✓ Smart Data Import với pattern *yyyymmdd.csv*  
    ✓ Raw Data Processing Service optimized
    ✓ Temporal Tables + Columnstore Indexes

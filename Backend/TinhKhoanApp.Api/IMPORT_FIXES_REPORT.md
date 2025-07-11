@@ -19,7 +19,6 @@
 - Xử lý dữ liệu thô để có thể hiển thị records preview
 - Đếm số records chính xác cho mỗi loại
 
-### 3. ✅ 7800_DT_KHKD1 lỗi ký tự khi xem trước
 
 **Nguyên nhân**: Vấn đề encoding và ký tự đặc biệt
 **Giải pháp**:
@@ -44,7 +43,6 @@
 
 ```csharp
 // Thêm các categories mới
-GetValidCategoriesAsync() -> { "LN01", "7800_DT_KHKD1", "BC57", "DPDA", "EI01", "KH03" }
 
 // Thêm switch cases
 case "BC57": -> ProcessBC57DataAsync()
@@ -77,7 +75,6 @@ Log file size, content type, validation errors
 2. Xem preview -> Hiện records đã import
 3. Console không còn lỗi "Chưa có dữ liệu import"
 
-### Test 7800_DT_KHKD1
 
 1. Upload file có ký tự đặc biệt -> Thành công
 2. Xem preview -> Không còn lỗi ký tự lạ
@@ -92,12 +89,10 @@ Log file size, content type, validation errors
 ## 📊 KẾT QUẢ
 
 **Build Status**: ✅ SUCCESS (0 errors, 2 warnings)
-**Supported Data Types**: 6/13 (LN01, 7800_DT_KHKD1, BC57, DPDA, EI01, KH03)
 
 ### ⚠️ CẦN TEST TIẾP
 
 1. **BC57 Preview**: Test upload BC57 và xem preview có hiện records không
-2. **7800_DT_KHKD1 Characters**: Test file có ký tự tiếng Việt/đặc biệt
 3. **GL01 Large File**: Upload GL01 và check backend log để debug lỗi 400
 
 ### 🔮 BƯỚC TIẾP THEO
