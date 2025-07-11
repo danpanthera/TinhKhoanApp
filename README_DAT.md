@@ -604,3 +604,35 @@ Em đã thực hiện rà soát chi tiết tất cả 10 bảng dữ liệu theo
 - Performance excellent (50-75 records/sec)
 
 **Anh có thể confidently sử dụng hệ thống với model mới!** 🎊
+
+### 🔢 **CẬP NHẬT FORMAT SỐ - JULY 11, 2025**
+
+**✅ HOÀN THÀNH:** Chuyển đổi format số từ "Việt Nam" sang "US" cho các chỉ tiêu có đơn vị "Triệu VND"
+
+#### **🎯 THAY ĐỔI THỰC HIỆN:**
+
+**Frontend Format Updates:**
+- ✅ **numberFormat.js**: Chuyển từ `vi-VN` → `en-US` format
+- ✅ **EmployeeKpiAssignmentView.vue**: Cập nhật input handling cho "Triệu VND"
+- ✅ **UnitKpiAssignmentView.vue**: Đã sử dụng formatNumber utility (tự động cập nhật)
+- ✅ **CalculationDashboard.vue**: Cập nhật formatNumber và formatCurrency functions
+- ✅ **BusinessPlanDashboard.vue**: Sử dụng formatVNNumber từ utils (tự động cập nhật)
+
+**Backend Format Updates:**
+- ✅ **NumberFormatter.cs**: Đã sử dụng en-US base culture (đúng format từ trước)
+
+#### **📊 KẾT QUẢ FORMAT:**
+
+**Trước đây (vi-VN):** `1.234.567,89` triệu VND  
+**Hiện tại (en-US):** `1,234,567.89` triệu VND ✅
+
+**🎯 ẢNH HƯỞNG:**
+- ✅ Tất cả bảng KPI giao khoán cho chi nhánh và cán bộ
+- ✅ Cột "Mục tiêu" hiển thị format US (#,###.00)  
+- ✅ Input validation và formatting consistency
+- ✅ Dashboard reports và calculation results
+
+**🚀 STATUS: READY**
+- Format consistency across frontend và backend
+- User input handling updated
+- Display formatting standardized

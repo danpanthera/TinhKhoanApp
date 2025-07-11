@@ -3,16 +3,16 @@ using System.Globalization;
 namespace TinhKhoanApp.Api.Utils
 {
     /// <summary>
-    /// 🔢 Utility class cho định dạng số theo chuẩn Việt Nam
+    /// 🔢 Utility class cho định dạng số theo chuẩn US (#,###.00)
     /// Quy ước: Dấu "," cho ngăn cách hàng nghìn, dấu "." cho thập phân
     /// </summary>
     public static class NumberFormatter
     {
-        // Custom CultureInfo cho định dạng Việt Nam (dấu phẩy ngăn cách nghìn, dấu chấm thập phân)
+        // Custom CultureInfo cho định dạng US (dấu phẩy ngăn cách nghìn, dấu chấm thập phân)
         private static readonly CultureInfo CustomVietnameseCulture = CreateCustomVietnameseCulture();
 
         /// <summary>
-        /// Tạo custom CultureInfo cho định dạng số Việt Nam đúng chuẩn
+        /// Tạo custom CultureInfo cho định dạng số US đúng chuẩn (#,###.00)
         /// </summary>
         private static CultureInfo CreateCustomVietnameseCulture()
         {
@@ -25,11 +25,11 @@ namespace TinhKhoanApp.Api.Utils
         }
 
         /// <summary>
-        /// Format số thành chuỗi với định dạng Việt Nam (dấu phẩy ngăn cách nghìn, dấu chấm thập phân)
+        /// Format số thành chuỗi với định dạng US (dấu phẩy ngăn cách nghìn, dấu chấm thập phân)
         /// </summary>
         /// <param name="value">Giá trị số cần format</param>
         /// <param name="decimalPlaces">Số chữ số sau dấu thập phân (mặc định: 0)</param>
-        /// <returns>Chuỗi đã format theo chuẩn Việt Nam</returns>
+        /// <returns>Chuỗi đã format theo chuẩn US (#,###.00)</returns>
         public static string FormatNumber(decimal value, int decimalPlaces = 0)
         {
             string format = decimalPlaces > 0 ? $"N{decimalPlaces}" : "N0";
@@ -37,11 +37,11 @@ namespace TinhKhoanApp.Api.Utils
         }
 
         /// <summary>
-        /// Format số thành chuỗi với định dạng Việt Nam
+        /// Format số thành chuỗi với định dạng US (#,###.00)
         /// </summary>
         /// <param name="value">Giá trị số cần format</param>
         /// <param name="decimalPlaces">Số chữ số sau dấu thập phân (mặc định: 0)</param>
-        /// <returns>Chuỗi đã format theo chuẩn Việt Nam</returns>
+        /// <returns>Chuỗi đã format theo chuẩn US (#,###.00)</returns>
         public static string FormatNumber(double value, int decimalPlaces = 0)
         {
             string format = decimalPlaces > 0 ? $"N{decimalPlaces}" : "N0";

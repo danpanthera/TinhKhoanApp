@@ -1038,7 +1038,7 @@ const calculateNguonVon = async () => {
       };
 
       showCalculationResults.value = true;
-      successMessage.value = `✅ ${result.message}: ${result.data.totalNguonVonTrieuVND.toLocaleString()} triệu VND (${result.data.recordCount?.toLocaleString() || 0} bản ghi) - ${calculationDescription}`;
+      successMessage.value = `✅ ${result.message}: ${result.data.totalNguonVonTrieuVND.toLocaleString('en-US')} triệu VND (${result.data.recordCount?.toLocaleString('en-US') || 0} bản ghi) - ${calculationDescription}`;
     } else {
       throw new Error(result.message || 'Tính toán thất bại');
     }
@@ -1299,13 +1299,13 @@ const refreshIndicatorData = async () => {
 // Utility methods
 const formatNumber = (value) => {
   if (!value && value !== 0) return '0';
-  return Number(value).toLocaleString('vi-VN');
+  return Number(value).toLocaleString('en-US');
 };
 
-// Helper function để format tiền tệ VND
+// Helper function để format tiền tệ VND với format US
 const formatCurrency = (value) => {
   if (!value && value !== 0) return '0 VND';
-  return new Intl.NumberFormat('vi-VN', {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'VND',
     minimumFractionDigits: 0,

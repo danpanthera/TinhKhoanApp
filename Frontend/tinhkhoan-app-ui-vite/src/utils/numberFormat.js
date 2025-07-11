@@ -1,8 +1,8 @@
-// 🔢 utils/numberFormat.js - Utility cho định dạng số theo chuẩn Việt Nam
-// Quy ước: Dấu "," cho ngăn cách hàng nghìn, dấu "." cho thập phân
+// 🔢 utils/numberFormat.js - Utility cho định dạng số theo chuẩn US
+// Quy ước: Dấu "," cho ngăn cách hàng nghìn, dấu "." cho thập phân (#,###.00)
 
 /**
- * Format số thành chuỗi với định dạng Việt Nam
+ * Format số thành chuỗi với định dạng US (#,###.00)
  * @param {number|string} value - Giá trị số cần format
  * @param {object} options - Tùy chọn format
  * @returns {string} Chuỗi đã format
@@ -20,8 +20,8 @@ export const formatNumber = (value, options = {}) => {
 
   if (isNaN(numValue)) return '';
 
-  // Sử dụng Intl.NumberFormat cho định dạng chuẩn Việt Nam
-  return numValue.toLocaleString('vi-VN', {
+  // Sử dụng Intl.NumberFormat cho định dạng US với dấu phẩy ngăn cách
+  return numValue.toLocaleString('en-US', {
     minimumFractionDigits,
     maximumFractionDigits,
     useGrouping
@@ -29,7 +29,7 @@ export const formatNumber = (value, options = {}) => {
 };
 
 /**
- * Format số tiền theo chuẩn Việt Nam
+ * Format số tiền theo chuẩn US (#,###.00)
  * @param {number|string} value - Giá trị số cần format
  * @param {string} currency - Đơn vị tiền tệ (VND, triệu VND, triệu VND)
  * @returns {string} Chuỗi tiền tệ đã format

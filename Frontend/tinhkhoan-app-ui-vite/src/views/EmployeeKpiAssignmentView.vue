@@ -353,8 +353,8 @@ const handleTargetInput = (event, indicatorId) => {
 
     const numValue = parseFloat(cleanNumber);
     if (!isNaN(numValue) && cleanNumber !== '') {
-      // Format with thousand separators
-      const formatted = new Intl.NumberFormat('vi-VN').format(numValue);
+      // Format with thousand separators using US format (#,###.00)
+      const formatted = new Intl.NumberFormat('en-US').format(numValue);
       event.target.value = formatted;
       targetValues.value[indicatorId] = numValue;
       return;
@@ -431,7 +431,7 @@ const handleTargetBlur = (event, indicatorId) => {
 
     const finalValue = parseFloat(cleanNumber);
     if (!isNaN(finalValue)) {
-      const formatted = new Intl.NumberFormat('vi-VN').format(finalValue);
+      const formatted = new Intl.NumberFormat('en-US').format(finalValue);
       event.target.value = formatted;
       targetValues.value[indicatorId] = finalValue;
       if (cleanNumber.length <= 8) {
