@@ -220,13 +220,6 @@ class RawDataService {
         acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: 'LN01'
       },
-      'LN02': {
-        name: 'LN02',
-        description: 'Sao kê biến động nhóm nợ',
-        icon: '🔄',
-        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
-        requiredKeyword: 'LN02'
-      },
       'LN03': {
         name: 'LN03',
         description: 'Dữ liệu Nợ XLRR',
@@ -269,26 +262,12 @@ class RawDataService {
         acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: 'DB01'
       },
-      'KH03': {
-        name: 'KH03',
-        description: 'Sao kê Khách hàng pháp nhân',
-        icon: '🏢',
-        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
-        requiredKeyword: 'KH03'
-      },
       'RR01': {
         name: 'RR01',
         description: 'Sao kê dư nợ gốc, lãi XLRR',
         icon: '📉',
         acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: 'RR01'
-      },
-      '7800_DT_KHKD1': {
-        name: '7800_DT_KHKD1',
-        description: 'Báo cáo KHKD (DT)',
-        icon: '📑',
-        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
-        requiredKeyword: '7800_DT_KHKD1'
       },
       'GL41': {
         name: 'GL41',

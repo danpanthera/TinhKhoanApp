@@ -35,7 +35,7 @@ namespace TinhKhoanApp.Api.Models.Validation
             if (value == null) return true; // Optional field
 
             var searchTerm = value.ToString();
-            
+
             if (searchTerm?.Length > 500)
             {
                 ErrorMessage = "Search term cannot exceed 500 characters";
@@ -56,14 +56,14 @@ namespace TinhKhoanApp.Api.Models.Validation
 
     public class DataTypeValidationAttribute : ValidationAttribute
     {
-        private readonly string[] _validDataTypes = { "LN01", "LN03", "DP01", "EI01", "GL01", "DPDA", "DB01", "KH03", "BC57" };
+        private readonly string[] _validDataTypes = { "LN01", "LN03", "DP01", "EI01", "GL01", "DPDA", "DB01", "BC57" };
 
         public override bool IsValid(object? value)
         {
             if (value == null) return true; // Optional field
 
             var dataType = value.ToString();
-            
+
             if (dataType != null && !_validDataTypes.Contains(dataType.ToUpper()))
             {
                 ErrorMessage = $"Invalid data type. Valid types are: {string.Join(", ", _validDataTypes)}";
@@ -134,7 +134,7 @@ namespace TinhKhoanApp.Api.Models.Validation
         // Remove 'new' keyword since we can't override non-virtual properties
     }
 
-    public class ValidatedVirtualScrollRequest : VirtualScrollRequest  
+    public class ValidatedVirtualScrollRequest : VirtualScrollRequest
     {
         // Remove 'new' keyword since we can't override non-virtual properties
     }

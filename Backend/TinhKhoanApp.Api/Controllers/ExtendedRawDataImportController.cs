@@ -8,7 +8,7 @@ namespace TinhKhoanApp.Api.Controllers
 {
     /// <summary>
     /// 🆕 Controller mở rộng cho import dữ liệu thô tất cả các bảng SCD Type 2
-    /// Bao gồm: LN03, EI01, DPDA, DB01, KH03, BC57
+    /// Bao gồm: LN03, EI01, DPDA, DB01, BC57
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
@@ -179,43 +179,6 @@ namespace TinhKhoanApp.Api.Controllers
         }
 
         /// <summary>
-        /// Import dữ liệu KH03 (Khách hàng pháp nhân)
-        /// </summary>
-        [HttpPost("import/kh03")]
-        public async Task<ActionResult<ImportResponseDto>> ImportKH03Data([FromBody] ImportKH03RequestDto request)
-        {
-            try
-            {
-                _logger.LogInformation("Starting KH03 data import");
-
-                var importRequest = new ImportRequestDto
-                {
-                    BatchId = request.BatchId,
-                    CreatedBy = User.Identity?.Name ?? "System",
-                    ImportDate = request.ImportDate
-                };
-
-                var result = await _importService.ImportKH03DataAsync(importRequest, request.Data);
-
-                if (result.Success)
-                {
-                    _logger.LogInformation($"KH03 import completed successfully. BatchId: {result.BatchId}");
-                    return Ok(result);
-                }
-                else
-                {
-                    _logger.LogWarning($"KH03 import failed. BatchId: {result.BatchId}");
-                    return BadRequest(result);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error importing KH03 data");
-                return StatusCode(500, new { error = "Internal server error during KH03 import" });
-            }
-        }
-
-        /// <summary>
         /// Import dữ liệu BC57 (Lãi dự thu)
         /// </summary>
         [HttpPost("import/bc57")]
@@ -283,11 +246,12 @@ namespace TinhKhoanApp.Api.Controllers
         [AllowAnonymous]
         public IActionResult Health()
         {
-            return Ok(new { 
-                status = "healthy", 
+            return Ok(new
+            {
+                status = "healthy",
                 timestamp = DateTime.UtcNow,
                 service = "ExtendedRawDataImportService",
-                supportedTables = new[] { "LN03", "EI01", "DPDA", "DB01", "KH03", "BC57" }
+                supportedTables = new[] { "LN03", "EI01", "DPDA", "DB01", "BC57" }
             });
         }
 
@@ -304,8 +268,8 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 // Basic validation logic
-                var supportedTables = new[] { "LN03", "EI01", "DPDA", "DB01", "KH03", "BC57" };
-                
+                var supportedTables = new[] { "LN03", "EI01", "DPDA", "DB01", "BC57" };
+
                 if (!supportedTables.Contains(tableName.ToUpper()))
                 {
                     return BadRequest(new { error = $"Table {tableName} is not supported" });
@@ -316,10 +280,11 @@ namespace TinhKhoanApp.Api.Controllers
                     return BadRequest(new { error = "Data cannot be null" });
                 }
 
-                return Ok(new { 
-                    valid = true, 
+                return Ok(new
+                {
+                    valid = true,
                     tableName = tableName.ToUpper(),
-                    message = "Data validation passed" 
+                    message = "Data validation passed"
                 });
             }
             catch (Exception ex)
@@ -360,13 +325,6 @@ namespace TinhKhoanApp.Api.Controllers
         public string? BatchId { get; set; }
         public DateTime? ImportDate { get; set; }
         public List<DB01History> Data { get; set; } = new List<DB01History>();
-    }
-
-    public class ImportKH03RequestDto
-    {
-        public string? BatchId { get; set; }
-        public DateTime? ImportDate { get; set; }
-        public List<KH03History> Data { get; set; } = new List<KH03History>();
     }
 
     public class ImportBC57RequestDto

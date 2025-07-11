@@ -124,7 +124,7 @@ namespace TinhKhoanApp.Api.Services
 
             // Query dữ liệu từ DP01 theo ngày và chi nhánh
             var query = _context.DP01s
-                .Where(d => d.DATA_DATE == targetDate && d.MA_CN == maCN);
+                .Where(d => d.NgayDL == targetDate.ToString("dd/MM/yyyy") && d.MA_CN == maCN);
 
             // Nếu là PGD thì lọc thêm theo MA_PGD
             if (!string.IsNullOrEmpty(maPGD))
@@ -150,7 +150,7 @@ namespace TinhKhoanApp.Api.Services
             if (totalBalance == 0 && recordCount == 0)
             {
                 var hasAnyData = await _context.DP01s
-                    .AnyAsync(d => d.DATA_DATE == targetDate && d.MA_CN == maCN);
+                    .AnyAsync(d => d.NgayDL == targetDate.ToString("dd/MM/yyyy") && d.MA_CN == maCN);
 
                 if (!hasAnyData)
                 {
@@ -181,7 +181,7 @@ namespace TinhKhoanApp.Api.Services
 
             // Query tổng cho tất cả chi nhánh
             var query = _context.DP01s
-                .Where(d => d.DATA_DATE == targetDate && allBranchCodes.Contains(d.MA_CN))
+                .Where(d => d.NgayDL == targetDate.ToString("dd/MM/yyyy") && allBranchCodes.Contains(d.MA_CN))
                 .Where(d =>
                     !d.TAI_KHOAN_HACH_TOAN.StartsWith("40") &&
                     !d.TAI_KHOAN_HACH_TOAN.StartsWith("41") &&
@@ -198,7 +198,7 @@ namespace TinhKhoanApp.Api.Services
             if (totalBalance == 0 && recordCount == 0)
             {
                 var hasAnyData = await _context.DP01s
-                    .AnyAsync(d => d.DATA_DATE == targetDate && allBranchCodes.Contains(d.MA_CN));
+                    .AnyAsync(d => d.NgayDL == targetDate.ToString("dd/MM/yyyy") && allBranchCodes.Contains(d.MA_CN));
 
                 if (!hasAnyData)
                 {
@@ -253,7 +253,7 @@ namespace TinhKhoanApp.Api.Services
                 // Xử lý tất cả đơn vị
                 var allBranchCodes = _branchMapping.Values.ToList();
                 var accountDetails = await _context.DP01s
-                    .Where(d => d.DATA_DATE == targetDate && allBranchCodes.Contains(d.MA_CN))
+                    .Where(d => d.NgayDL == targetDate.ToString("dd/MM/yyyy") && allBranchCodes.Contains(d.MA_CN))
                     .Where(d =>
                         !d.TAI_KHOAN_HACH_TOAN.StartsWith("40") &&
                         !d.TAI_KHOAN_HACH_TOAN.StartsWith("41") &&
@@ -284,7 +284,7 @@ namespace TinhKhoanApp.Api.Services
             if (!string.IsNullOrEmpty(maCN))
             {
                 var query = _context.DP01s
-                    .Where(d => d.DATA_DATE == targetDate && d.MA_CN == maCN)
+                    .Where(d => d.NgayDL == targetDate.ToString("dd/MM/yyyy") && d.MA_CN == maCN)
                     .Where(d =>
                         !d.TAI_KHOAN_HACH_TOAN.StartsWith("40") &&
                         !d.TAI_KHOAN_HACH_TOAN.StartsWith("41") &&

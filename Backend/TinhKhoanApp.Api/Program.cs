@@ -16,7 +16,7 @@ using System.Text.Json.Serialization;
 using BCrypt.Net;
 using Microsoft.AspNetCore.Http.Features; // For FormOptions
 
-internal class Program
+internal partial class Program
 {
     private static async Task Main(string[] args)
     {

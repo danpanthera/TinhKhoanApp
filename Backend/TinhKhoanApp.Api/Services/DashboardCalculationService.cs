@@ -99,7 +99,7 @@ namespace TinhKhoanApp.Api.Services
 
                 // Lấy dữ liệu chi tiết từ bảng DP01 mới nhất
                 var dp01Data = await _context.DP01s
-                    .Where(i => i.FileName == latestImportRecord.FileName)
+                    .Where(i => i.FILE_NAME == latestImportRecord.FileName)
                     .ToListAsync();
 
                 decimal totalNguonVon = 0;
@@ -566,8 +566,9 @@ namespace TinhKhoanApp.Api.Services
                 _logger.LogInformation("Tìm dữ liệu GL41 có NgayDL = {TargetDate}", targetStatementDate.Value.ToString("dd/MM/yyyy"));
 
                 // Lấy dữ liệu GL41 trực tiếp từ bảng với NgayDL = targetStatementDate và MA_CN
+                var targetDateString = targetStatementDate.Value.ToString("dd/MM/yyyy");
                 var gl41Records = await _context.GL41s
-                    .Where(g => g.NgayDL == targetStatementDate.Value.ToString("dd/MM/yyyy") && g.MA_CN == branchCode)
+                    .Where(g => g.NgayDL == targetDateString && g.MA_CN == branchCode)
                     .ToListAsync();
 
                 if (!gl41Records.Any())
@@ -655,8 +656,9 @@ namespace TinhKhoanApp.Api.Services
                 _logger.LogInformation("Tìm dữ liệu GL41 có NgayDL = {TargetDate}", targetStatementDate.Value.ToString("dd/MM/yyyy"));
 
                 // Lấy dữ liệu GL41 trực tiếp từ bảng với NgayDL = targetStatementDate và MA_CN (mã chi nhánh)
+                var targetDateString = targetStatementDate.Value.ToString("dd/MM/yyyy");
                 var gl41Records = await _context.GL41s
-                    .Where(g => g.NgayDL == targetStatementDate.Value.ToString("dd/MM/yyyy") && g.MA_CN == branchCode)
+                    .Where(g => g.NgayDL == targetDateString && g.MA_CN == branchCode)
                     .ToListAsync();
 
                 if (!gl41Records.Any())

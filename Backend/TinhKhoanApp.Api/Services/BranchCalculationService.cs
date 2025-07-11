@@ -607,12 +607,12 @@ namespace TinhKhoanApp.Api.Services
                 foreach (var record in dp01Records)
                 {
                     processedRecords++;
-                    _logger.LogInformation("🔧 Xử lý record {Index}/{Total}: {FileName}", processedRecords, dp01Records.Count, record.FileName);
+                    _logger.LogInformation("🔧 Xử lý record {Index}/{Total}: {FileName}", processedRecords, dp01Records.Count, record.FILE_NAME);
 
                     var items = dp01Records; // Sử dụng trực tiếp dữ liệu từ bảng DP01
 
                     totalItems += items.Count;
-                    _logger.LogInformation("📊 Record {FileName} có {ItemCount} items", record.FileName, items.Count);
+                    _logger.LogInformation("📊 Record {FileName} có {ItemCount} items", record.FILE_NAME, items.Count);
 
                     foreach (var dp01Record in items)
                     {

@@ -317,7 +317,7 @@ class SmartImportService {
       return response.data
     } catch (error) {
       console.error('🔥 Error fetching supported categories:', error)
-      return ['DP01', 'LN01', 'LN02', 'LN03', 'GL01', 'GL41', 'DB01', 'DPDA', 'EI01', 'KH03', 'RR01', 'DT_KHKD1'] // fallback
+      return ['DP01', 'LN01', 'LN03', 'GL01', 'GL41', 'DB01', 'DPDA', 'EI01', 'RR01'] // fallback
     }
   }
 
@@ -333,16 +333,13 @@ class SmartImportService {
     const patterns = {
       'DP01': /DP01|DEPOSIT|TIENGUI/,
       'LN01': /LN01|LOAN|CHOAVAY/,
-      'LN02': /LN02|LOAN.*SCHEDULE|LICHTRANGOAN/,
       'LN03': /LN03|LOAN.*CLASSIFY|PHANLOAINO/,
       'GL01': /GL01|GENERAL.*LEDGER|SOTONGOHAP/,
       'GL41': /GL41|BALANCE|BANGSODUE/,
       'DB01': /DB01|COLLATERAL|TAISANDAMBAO/,
       'DPDA': /DPDA|DEPOSIT.*DETAIL|CHITIETTIENGUI/,
       'EI01': /EI01|INCOME|THUNHAP/,
-      'KH03': /KH03|CUSTOMER|KHACHHANG/,
-      'RR01': /RR01|RATIO|TYLE/,
-      'DT_KHKD1': /DT_KHKD1|7800|KHKD|KINHKINHDOANH/
+      'RR01': /RR01|RATIO|TYLE/
     }
 
     for (const [category, pattern] of Object.entries(patterns)) {

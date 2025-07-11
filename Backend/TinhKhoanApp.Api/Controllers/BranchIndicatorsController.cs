@@ -346,12 +346,12 @@ namespace TinhKhoanApp.Api.Controllers
                     {
                         // Get sample data from DP01 table instead of ImportedDataItems
                         var items = await _context.DP01s
-                            .Where(x => x.FileName == record.FileName)
+                            .Where(x => x.FILE_NAME == record.FileName)
                             .Take(3)
                             .Select(x => $"MA_CN: {x.MA_CN}, TAI_KHOAN: {x.TAI_KHOAN_HACH_TOAN}, BALANCE: {x.CURRENT_BALANCE}")
                             .ToListAsync();
 
-                        var itemCount = await _context.DP01s.Where(x => x.FileName == record.FileName).CountAsync();
+                        var itemCount = await _context.DP01s.Where(x => x.FILE_NAME == record.FileName).CountAsync();
 
                         sampleData.Add(new
                         {

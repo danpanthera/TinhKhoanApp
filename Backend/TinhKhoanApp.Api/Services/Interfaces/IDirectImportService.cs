@@ -20,11 +20,6 @@ namespace TinhKhoanApp.Api.Services.Interfaces
         Task<DirectImportResult> ImportLN01DirectAsync(IFormFile file, string? statementDate = null);
 
         /// <summary>
-        /// Import trực tiếp file CSV vào bảng LN02 sử dụng SqlBulkCopy
-        /// </summary>
-        Task<DirectImportResult> ImportLN02DirectAsync(IFormFile file, string? statementDate = null);
-
-        /// <summary>
         /// Import trực tiếp file CSV vào bảng LN03 sử dụng SqlBulkCopy
         /// </summary>
         Task<DirectImportResult> ImportLN03DirectAsync(IFormFile file, string? statementDate = null);
@@ -55,19 +50,9 @@ namespace TinhKhoanApp.Api.Services.Interfaces
         Task<DirectImportResult> ImportEI01DirectAsync(IFormFile file, string? statementDate = null);
 
         /// <summary>
-        /// Import trực tiếp file CSV vào bảng KH03 sử dụng SqlBulkCopy
-        /// </summary>
-        Task<DirectImportResult> ImportKH03DirectAsync(IFormFile file, string? statementDate = null);
-
-        /// <summary>
         /// Import trực tiếp file CSV vào bảng RR01 sử dụng SqlBulkCopy
         /// </summary>
         Task<DirectImportResult> ImportRR01DirectAsync(IFormFile file, string? statementDate = null);
-
-        /// <summary>
-        /// Import trực tiếp file Excel vào bảng 7800_DT_KHKD1 sử dụng SqlBulkCopy
-        /// </summary>
-        Task<DirectImportResult> ImportDT_KHKD1DirectAsync(IFormFile file, string? statementDate = null);
 
         /// <summary>
         /// Import thông minh - tự động detect loại file và import trực tiếp
@@ -98,5 +83,10 @@ namespace TinhKhoanApp.Api.Services.Interfaces
         /// Xóa toàn bộ dữ liệu import (import history và dữ liệu trong các bảng)
         /// </summary>
         Task<(bool Success, string ErrorMessage, int RecordsDeleted)> ClearAllDataAsync();
+
+        /// <summary>
+        /// 🔧 TEMPORARY: Fix GL41 database structure to match CSV (13 columns)
+        /// </summary>
+        Task<DirectImportResult> FixGL41DatabaseStructureAsync();
     }
 }

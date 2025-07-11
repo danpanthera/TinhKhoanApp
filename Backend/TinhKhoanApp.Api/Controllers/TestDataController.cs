@@ -117,10 +117,8 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     DP01_Count = await _context.DP01_News.CountAsync(),
                     LN01_Count = await _context.LN01s.CountAsync(),
-                    LN02_Count = await _context.LN02s.CountAsync(),
                     LN03_Count = await _context.LN03s.CountAsync(),
                     GL01_Count = await _context.GL01s.CountAsync(),
-                    KH03_Count = await _context.KH03s.CountAsync(),
                     DPDA_Count = await _context.DPDAs.CountAsync(),
                     EI01_Count = await _context.EI01s.CountAsync(),
                     RR01_Count = await _context.RR01s.CountAsync(),

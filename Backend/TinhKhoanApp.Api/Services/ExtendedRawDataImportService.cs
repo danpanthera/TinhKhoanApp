@@ -21,9 +21,9 @@ namespace TinhKhoanApp.Api.Services
         Task<ImportResponseDto> ImportEI01DataAsync(ImportRequestDto request, List<EI01History> data);
         Task<ImportResponseDto> ImportDPDADataAsync(ImportRequestDto request, List<DPDAHistory> data);
         Task<ImportResponseDto> ImportDB01DataAsync(ImportRequestDto request, List<DB01History> data);
-        Task<ImportResponseDto> ImportKH03DataAsync(ImportRequestDto request, List<KH03History> data);
+
         Task<ImportResponseDto> ImportBC57DataAsync(ImportRequestDto request, List<BC57History> data);
-        
+
         // 🆕 Statistics for all tables
         Task<List<TableSummaryDto>> GetAllTablesSummaryAsync();
     }
@@ -65,10 +65,7 @@ namespace TinhKhoanApp.Api.Services
             return await ImportDataAsync(request, data, "DB01");
         }
 
-        public async Task<ImportResponseDto> ImportKH03DataAsync(ImportRequestDto request, List<KH03History> data)
-        {
-            return await ImportDataAsync(request, data, "KH03");
-        }
+
 
         public async Task<ImportResponseDto> ImportBC57DataAsync(ImportRequestDto request, List<BC57History> data)
         {
@@ -78,8 +75,8 @@ namespace TinhKhoanApp.Api.Services
         // 🔧 Generic Import Method
         // =======================================
         private async Task<ImportResponseDto> ImportDataAsync<T>(
-            ImportRequestDto request, 
-            List<T> data, 
+            ImportRequestDto request,
+            List<T> data,
             string tableName) where T : class, IExtendedHistoryModel
         {
             var response = new ImportResponseDto
@@ -160,28 +157,28 @@ namespace TinhKhoanApp.Api.Services
             {
                 // Use reflection to set common properties
                 var type = typeof(T);
-                
+
                 var importIdProp = type.GetProperty("ImportId");
                 importIdProp?.SetValue(record, batchId);
-                
+
                 var statementDateProp = type.GetProperty("StatementDate");
                 statementDateProp?.SetValue(record, importDate.Date);
-                
+
                 var processedDateProp = type.GetProperty("ProcessedDate");
                 processedDateProp?.SetValue(record, importDate);
-                
+
                 var effectiveDateProp = type.GetProperty("EffectiveDate");
                 effectiveDateProp?.SetValue(record, importDate);
-                
+
                 var isCurrentProp = type.GetProperty("IsCurrent");
                 isCurrentProp?.SetValue(record, true);
-                
+
                 var rowVersionProp = type.GetProperty("RowVersion");
                 rowVersionProp?.SetValue(record, 1);
-                
+
                 var dataHashProp = type.GetProperty("DataHash");
                 dataHashProp?.SetValue(record, CalculateSimpleHash(record));
-                
+
                 var businessKeyProp = type.GetProperty("BusinessKey");
                 if (businessKeyProp?.GetValue(record) == null)
                 {
@@ -206,9 +203,7 @@ namespace TinhKhoanApp.Api.Services
                 case "DB01":
                     _context.DB01History.AddRange(data.Cast<DB01History>());
                     break;
-                case "KH03":
-                    _context.KH03History.AddRange(data.Cast<KH03History>());
-                    break;
+
                 case "BC57":
                     _context.BC57History.AddRange(data.Cast<BC57History>());
                     break;
@@ -234,7 +229,7 @@ namespace TinhKhoanApp.Api.Services
                 return Guid.NewGuid().ToString("N"); // Fallback hash
             }
         }
-        
+
         // =======================================
         // 📊 Statistics for All Tables
         // =======================================
@@ -246,7 +241,7 @@ namespace TinhKhoanApp.Api.Services
             try
             {
                 // Helper function to get table summary
-                async Task<TableSummaryDto> GetTableSummary<T>(IQueryable<T> query, string tableName, string description) 
+                async Task<TableSummaryDto> GetTableSummary<T>(IQueryable<T> query, string tableName, string description)
                     where T : class, IExtendedHistoryModel
                 {
                     var records = await query.ToListAsync();
@@ -262,33 +257,28 @@ namespace TinhKhoanApp.Api.Services
 
                 // Add all table summaries with current records only
                 summaries.Add(await GetTableSummary(
-                    _context.LN03History.Where(x => x.IsCurrent), 
-                    "LN03", 
+                    _context.LN03History.Where(x => x.IsCurrent),
+                    "LN03",
                     "Dữ liệu Nợ XLRR"));
-                    
+
                 summaries.Add(await GetTableSummary(
-                    _context.EI01History.Where(x => x.IsCurrent), 
-                    "EI01", 
+                    _context.EI01History.Where(x => x.IsCurrent),
+                    "EI01",
                     "Dữ liệu Mobile Banking"));
-                    
+
                 summaries.Add(await GetTableSummary(
-                    _context.DPDAHistory.Where(x => x.IsCurrent), 
-                    "DPDA", 
+                    _context.DPDAHistory.Where(x => x.IsCurrent),
+                    "DPDA",
                     "Dữ liệu Phát hành thẻ"));
-                    
+
                 summaries.Add(await GetTableSummary(
-                    _context.DB01History.Where(x => x.IsCurrent), 
-                    "DB01", 
+                    _context.DB01History.Where(x => x.IsCurrent),
+                    "DB01",
                     "Sao kê TSDB và Không TSDB"));
-                    
+
                 summaries.Add(await GetTableSummary(
-                    _context.KH03History.Where(x => x.IsCurrent), 
-                    "KH03", 
-                    "Sao kê Khách hàng pháp nhân"));
-                    
-                summaries.Add(await GetTableSummary(
-                    _context.BC57History.Where(x => x.IsCurrent), 
-                    "BC57", 
+                    _context.BC57History.Where(x => x.IsCurrent),
+                    "BC57",
                     "Sao kê Lãi dự thu"));
 
             }

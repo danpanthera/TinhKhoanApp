@@ -84,31 +84,6 @@ namespace TinhKhoanApp.Api.Services
         };
 
         /// <summary>
-        /// Mapping cho bảng 7800_DT_KHKD1 (Business plan data)
-        /// Giữ nguyên tên cột CSV gốc làm property name
-        /// </summary>
-        public static readonly Dictionary<string, string> DT_KHKD1_ColumnMapping = new()
-        {
-            // Model Property (CSV gốc) → CSV Header (cũng chính là CSV gốc)
-            { "BRCD", "BRCD" },
-            { "BRANCH_NAME", "BRANCH_NAME" },
-            { "INDICATOR_TYPE", "INDICATOR_TYPE" },
-            { "INDICATOR_NAME", "INDICATOR_NAME" },
-            { "PLAN_YEAR", "PLAN_YEAR" },
-            { "PLAN_QUARTER", "PLAN_QUARTER" },
-            { "PLAN_MONTH", "PLAN_MONTH" },
-            { "ACTUAL_YEAR", "ACTUAL_YEAR" },
-            { "ACTUAL_QUARTER", "ACTUAL_QUARTER" },
-            { "ACTUAL_MONTH", "ACTUAL_MONTH" },
-            { "ACHIEVEMENT_RATE", "ACHIEVEMENT_RATE" },
-            { "YEAR", "YEAR" },
-            { "QUARTER", "QUARTER" },
-            { "MONTH", "MONTH" },
-            { "CREATED_DATE", "CREATED_DATE" },
-            { "UPDATED_DATE", "UPDATED_DATE" }
-        };
-
-        /// <summary>
         /// Lấy mapping config dựa trên category
         /// Trả về mapping giữa Model property và CSV header (cả hai đều giữ nguyên tên CSV gốc)
         /// </summary>
@@ -119,7 +94,6 @@ namespace TinhKhoanApp.Api.Services
                 "LN01" => LN01_ColumnMapping,
                 "GAHR26" => GAHR26_ColumnMapping,
                 "GL41" => GL41_ColumnMapping,
-                "7800_DT_KHKD1" => DT_KHKD1_ColumnMapping,
                 _ => null
             };
         }

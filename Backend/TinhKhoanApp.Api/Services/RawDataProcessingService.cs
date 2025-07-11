@@ -97,14 +97,12 @@ namespace TinhKhoanApp.Api.Services
             var validCategories = new List<string>
             {
                 "DP01",
-                "LN01", "LN02", "LN03",
+                "LN01", "LN03",
                 "DB01",
                 "GL01", "GL41",
                 "DPDA",
                 "EI01",
-                "KH03",
-                "RR01",
-                "DT_KHKD1"
+                "RR01"
             };
 
             return await Task.FromResult(validCategories);
@@ -116,17 +114,13 @@ namespace TinhKhoanApp.Api.Services
             {
                 "DP01" => "DP01",
                 "LN01" => "LN01",
-                "LN02" => "LN02", 
                 "LN03" => "LN03",
                 "DB01" => "DB01",
                 "GL01" => "GL01",
                 "GL41" => "GL41",
                 "DPDA" => "DPDA",
                 "EI01" => "EI01",
-                "KH03" => "KH03",
                 "RR01" => "RR01",
-                "DT_KHKD1" => "DT_KHKD1",
-                "7800_DT_KHKD1" => "DT_KHKD1",
                 _ => category
             };
         }
