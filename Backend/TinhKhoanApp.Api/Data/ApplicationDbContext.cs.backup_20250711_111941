@@ -392,17 +392,14 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
                 entity.Property(e => e.TR_EX_RT).HasPrecision(18, 6);
             });
 
-            // GL41 decimal properties - Updated for new 13-column structure
+            // GL41 decimal properties
             modelBuilder.Entity<DataTables.GL41>(entity =>
             {
-                entity.Property(e => e.DN_DAUKY).HasPrecision(18, 2);
-                entity.Property(e => e.DC_DAUKY).HasPrecision(18, 2);
-                entity.Property(e => e.SBT_NO).HasPrecision(18, 2);
-                entity.Property(e => e.ST_GHINO).HasPrecision(18, 2);
-                entity.Property(e => e.SBT_CO).HasPrecision(18, 2);
-                entity.Property(e => e.ST_GHICO).HasPrecision(18, 2);
-                entity.Property(e => e.DN_CUOIKY).HasPrecision(18, 2);
-                entity.Property(e => e.DC_CUOIKY).HasPrecision(18, 2);
+                entity.Property(e => e.SO_DU).HasPrecision(18, 2);
+                entity.Property(e => e.SO_DU_CUOI_KY).HasPrecision(18, 2);
+                entity.Property(e => e.SO_DU_DAU_KY).HasPrecision(18, 2);
+                entity.Property(e => e.SO_PHAT_SINH_CO).HasPrecision(18, 2);
+                entity.Property(e => e.SO_PHAT_SINH_NO).HasPrecision(18, 2);
             });
 
             // 🚀 === TEMPORAL TABLES + COLUMNSTORE INDEXES CONFIGURATION ===

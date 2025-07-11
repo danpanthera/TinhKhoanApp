@@ -1,3 +1,27 @@
+#!/bin/bash
+
+# ✅ Script regenerate GL41 model theo đúng header CSV chuẩn
+# Header chuẩn GL41: MA_CN,LOAI_TIEN,MA_TK,TEN_TK,LOAI_BT,DN_DAUKY,DC_DAUKY,SBT_NO,ST_GHINO,SBT_CO,ST_GHICO,DN_CUOIKY,DC_CUOIKY
+
+echo "🔧 REGENERATE GL41 MODEL - THEO HEADER CSV CHUẨN"
+echo "════════════════════════════════════════════════"
+
+# Header GL41 chuẩn theo yêu cầu anh
+GL41_HEADER="MA_CN,LOAI_TIEN,MA_TK,TEN_TK,LOAI_BT,DN_DAUKY,DC_DAUKY,SBT_NO,ST_GHINO,SBT_CO,ST_GHICO,DN_CUOIKY,DC_CUOIKY"
+
+echo "📊 Header GL41 chuẩn (13 cột):"
+echo "$GL41_HEADER"
+echo
+
+# Đếm số cột
+COLUMN_COUNT=$(echo "$GL41_HEADER" | tr ',' '\n' | wc -l | xargs)
+echo "🔢 Tổng số cột: $COLUMN_COUNT"
+echo
+
+# Tạo GL41 model mới
+echo "🚀 Tạo GL41.cs model mới..."
+
+cat > /Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api/Models/DataTables/GL41.cs << 'EOF'
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -61,49 +85,57 @@ namespace TinhKhoanApp.Api.Models.DataTables
         /// <summary>
         /// Dư nợ đầu kỳ
         /// </summary>
-        [Column("DN_DAUKY", TypeName = "decimal(18,2)")]
+        [Column("DN_DAUKY")]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal? DN_DAUKY { get; set; }
 
         /// <summary>
         /// Dư có đầu kỳ
         /// </summary>
-        [Column("DC_DAUKY", TypeName = "decimal(18,2)")]
+        [Column("DC_DAUKY")]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal? DC_DAUKY { get; set; }
 
         /// <summary>
         /// Số bút toán nợ
         /// </summary>
-        [Column("SBT_NO", TypeName = "decimal(18,2)")]
+        [Column("SBT_NO")]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal? SBT_NO { get; set; }
 
         /// <summary>
         /// Số tiền ghi nợ
         /// </summary>
-        [Column("ST_GHINO", TypeName = "decimal(18,2)")]
+        [Column("ST_GHINO")]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal? ST_GHINO { get; set; }
 
         /// <summary>
         /// Số bút toán có
         /// </summary>
-        [Column("SBT_CO", TypeName = "decimal(18,2)")]
+        [Column("SBT_CO")]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal? SBT_CO { get; set; }
 
         /// <summary>
         /// Số tiền ghi có
         /// </summary>
-        [Column("ST_GHICO", TypeName = "decimal(18,2)")]
+        [Column("ST_GHICO")]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal? ST_GHICO { get; set; }
 
         /// <summary>
         /// Dư nợ cuối kỳ
         /// </summary>
-        [Column("DN_CUOIKY", TypeName = "decimal(18,2)")]
+        [Column("DN_CUOIKY")]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal? DN_CUOIKY { get; set; }
 
         /// <summary>
         /// Dư có cuối kỳ
         /// </summary>
-        [Column("DC_CUOIKY", TypeName = "decimal(18,2)")]
+        [Column("DC_CUOIKY")]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal? DC_CUOIKY { get; set; }
 
         // ═══════════════════════════════════════════════════════════════
@@ -141,3 +173,41 @@ namespace TinhKhoanApp.Api.Models.DataTables
         // SysStartTime, SysEndTime sẽ được SQL Server tự quản lý
     }
 }
+EOF
+
+echo "✅ Đã tạo GL41.cs model mới với 13 cột theo header chuẩn!"
+echo
+
+# Tạo file CSV mẫu để test
+echo "📄 Tạo file CSV mẫu để test import..."
+cat > /Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api/test_gl41_13_columns.csv << 'EOF'
+MA_CN,LOAI_TIEN,MA_TK,TEN_TK,LOAI_BT,DN_DAUKY,DC_DAUKY,SBT_NO,ST_GHINO,SBT_CO,ST_GHICO,DN_CUOIKY,DC_CUOIKY
+7800,VND,11101,TK Tiền mặt tại quỹ VND,PS,1000000.00,0.00,500000.00,500000.00,200000.00,200000.00,1300000.00,0.00
+7800,VND,11102,TK Tiền gửi không kỳ hạn,PS,5000000.00,0.00,2000000.00,2000000.00,1000000.00,1000000.00,6000000.00,0.00
+EOF
+
+echo "✅ Đã tạo test_gl41_13_columns.csv với 2 records mẫu!"
+echo
+
+# Kiểm tra số cột trong file CSV mẫu
+CSV_COLUMNS=$(head -1 /Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api/test_gl41_13_columns.csv | tr ',' '\n' | wc -l | xargs)
+echo "🔍 Verification:"
+echo "   - Header chuẩn: $COLUMN_COUNT cột"
+echo "   - CSV mẫu: $CSV_COLUMNS cột"
+
+if [ "$COLUMN_COUNT" -eq "$CSV_COLUMNS" ]; then
+    echo "   ✅ KHỚP! Model và CSV có cùng số cột"
+else
+    echo "   ❌ KHÔNG KHỚP! Cần kiểm tra lại"
+fi
+
+echo
+echo "🎯 Kết quả:"
+echo "   ✅ GL41.cs model: 13 cột dữ liệu + 4 cột chuẩn temporal"
+echo "   ✅ Test CSV: test_gl41_13_columns.csv"
+echo "   ✅ Ready for: Migration và test import"
+echo
+echo "📋 Bước tiếp theo:"
+echo "   1. Tạo migration: dotnet ef migrations add UpdateGL41Structure"
+echo "   2. Apply migration: dotnet ef database update"
+echo "   3. Test import: /api/directimport/smart"

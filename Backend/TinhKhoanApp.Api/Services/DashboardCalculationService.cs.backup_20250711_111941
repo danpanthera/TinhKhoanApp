@@ -586,13 +586,13 @@ namespace TinhKhoanApp.Api.Services
 
                 foreach (var record in gl41Records)
                 {
-                    var accountCode = record.MA_TK ?? "";
+                    var accountCode = record.SO_TK ?? "";
 
                     // Chỉ tính các tài khoản thu dịch vụ
                     if (serviceRevenueAccounts.Any(acc => accountCode.StartsWith(acc)))
                     {
                         // Thu dịch vụ = Credit - Debit
-                        var serviceAmount = (record.ST_GHICO ?? 0) - (record.ST_GHINO ?? 0);
+                        var serviceAmount = (record.SO_PHAT_SINH_CO ?? 0) - (record.SO_PHAT_SINH_NO ?? 0);
                         totalServiceRevenue += serviceAmount;
                         processedRecords++;
                     }
@@ -678,18 +678,18 @@ namespace TinhKhoanApp.Api.Services
 
                 foreach (var record in gl41Records)
                 {
-                    var accountCode = record.MA_TK ?? "";
+                    var accountCode = record.SO_TK ?? "";
 
                     // Tính thu nhập từ các tài khoản thu
                     if (revenueAccounts.Any(acc => accountCode.StartsWith(acc)))
                     {
-                        totalRevenue += (record.ST_GHICO ?? 0) - (record.ST_GHINO ?? 0); // Credit - Debit cho tài khoản thu
+                        totalRevenue += (record.SO_PHAT_SINH_CO ?? 0) - (record.SO_PHAT_SINH_NO ?? 0); // Credit - Debit cho tài khoản thu
                     }
 
                     // Tính chi phí từ các tài khoản chi
                     if (expenseAccounts.Any(acc => accountCode.StartsWith(acc)))
                     {
-                        totalExpense += (record.ST_GHINO ?? 0) - (record.ST_GHICO ?? 0); // Debit - Credit cho tài khoản chi
+                        totalExpense += (record.SO_PHAT_SINH_NO ?? 0) - (record.SO_PHAT_SINH_CO ?? 0); // Debit - Credit cho tài khoản chi
                     }
 
                     processedRecords++;
