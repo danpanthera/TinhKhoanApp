@@ -1,143 +1,78 @@
-using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TinhKhoanApp.Api.Models.DataTables
 {
     /// <summary>
-    /// Bảng GL41 - Dữ liệu kế toán chi tiết theo tài khoản
-    /// Lưu trữ dữ liệu từ các file CSV có filename chứa "GL41"
-    /// Tuân thủ Temporal Tables + Columnstore Indexes
-    /// Header: MA_CN,LOAI_TIEN,MA_TK,TEN_TK,LOAI_BT,DN_DAUKY,DC_DAUKY,SBT_NO,ST_GHINO,SBT_CO,ST_GHICO,DN_CUOIKY,DC_CUOIKY
+    /// Bảng GL41 - Sổ cái chi tiết
+    /// Cấu trúc theo file: 7808_gl41_20250630.csv
+    /// 13 cột business data + temporal columns
     /// </summary>
     [Table("GL41")]
     public class GL41
     {
-        /// <summary>
-        /// Khóa chính tự tăng
-        /// </summary>
         [Key]
         public int Id { get; set; }
 
-        // ═══════════════════════════════════════════════════════════════
-        // 🏛️ CÁC CỘT DỮ LIỆU THEO HEADER CSV GL41 (13 CỘT)
-        // ═══════════════════════════════════════════════════════════════
-
-        /// <summary>
-        /// Mã chi nhánh
-        /// </summary>
-        [Column("MA_CN")]
-        [StringLength(50)]
-        public string? MA_CN { get; set; }
-
-        /// <summary>
-        /// Loại tiền tệ (VND, USD, etc.)
-        /// </summary>
-        [Column("LOAI_TIEN")]
-        [StringLength(10)]
-        public string? LOAI_TIEN { get; set; }
-
-        /// <summary>
-        /// Mã tài khoản kế toán
-        /// </summary>
-        [Column("MA_TK")]
-        [StringLength(50)]
-        public string? MA_TK { get; set; }
-
-        /// <summary>
-        /// Tên tài khoản kế toán
-        /// </summary>
-        [Column("TEN_TK")]
-        [StringLength(255)]
-        public string? TEN_TK { get; set; }
-
-        /// <summary>
-        /// Loại bút toán
-        /// </summary>
-        [Column("LOAI_BT")]
-        [StringLength(50)]
-        public string? LOAI_BT { get; set; }
-
-        /// <summary>
-        /// Dư nợ đầu kỳ
-        /// </summary>
-        [Column("DN_DAUKY", TypeName = "decimal(18,2)")]
-        public decimal? DN_DAUKY { get; set; }
-
-        /// <summary>
-        /// Dư có đầu kỳ
-        /// </summary>
-        [Column("DC_DAUKY", TypeName = "decimal(18,2)")]
-        public decimal? DC_DAUKY { get; set; }
-
-        /// <summary>
-        /// Số bút toán nợ
-        /// </summary>
-        [Column("SBT_NO", TypeName = "decimal(18,2)")]
-        public decimal? SBT_NO { get; set; }
-
-        /// <summary>
-        /// Số tiền ghi nợ
-        /// </summary>
-        [Column("ST_GHINO", TypeName = "decimal(18,2)")]
-        public decimal? ST_GHINO { get; set; }
-
-        /// <summary>
-        /// Số bút toán có
-        /// </summary>
-        [Column("SBT_CO", TypeName = "decimal(18,2)")]
-        public decimal? SBT_CO { get; set; }
-
-        /// <summary>
-        /// Số tiền ghi có
-        /// </summary>
-        [Column("ST_GHICO", TypeName = "decimal(18,2)")]
-        public decimal? ST_GHICO { get; set; }
-
-        /// <summary>
-        /// Dư nợ cuối kỳ
-        /// </summary>
-        [Column("DN_CUOIKY", TypeName = "decimal(18,2)")]
-        public decimal? DN_CUOIKY { get; set; }
-
-        /// <summary>
-        /// Dư có cuối kỳ
-        /// </summary>
-        [Column("DC_CUOIKY", TypeName = "decimal(18,2)")]
-        public decimal? DC_CUOIKY { get; set; }
-
-        // ═══════════════════════════════════════════════════════════════
-        // 🛠️ CÁC CỘT CHUẨN TEMPORAL TABLES + METADATA
-        // ═══════════════════════════════════════════════════════════════
-
-        /// <summary>
-        /// Ngày dữ liệu theo định dạng dd/MM/yyyy
-        /// Được parse từ tên file *yyyymmdd.csv
-        /// </summary>
+        // === TEMPORAL COLUMNS ===
         [Column("NGAY_DL")]
         [StringLength(10)]
         public string NgayDL { get; set; } = null!;
 
-        /// <summary>
-        /// Ngày tạo bản ghi
-        /// </summary>
         [Column("CREATED_DATE")]
-        public DateTime CREATED_DATE { get; set; } = DateTime.Now;
+        public DateTime CREATED_DATE { get; set; } = DateTime.UtcNow;
 
-        /// <summary>
-        /// Ngày cập nhật bản ghi
-        /// </summary>
         [Column("UPDATED_DATE")]
         public DateTime? UPDATED_DATE { get; set; }
 
-        /// <summary>
-        /// Tên file gốc được import
-        /// </summary>
         [Column("FILE_NAME")]
         [StringLength(255)]
         public string? FILE_NAME { get; set; }
 
-        // Temporal Tables columns sẽ được thêm bởi EF Core khi config
-        // SysStartTime, SysEndTime sẽ được SQL Server tự quản lý
+        // === 13 CỘT BUSINESS DATA THEO CSV GỐC ===
+
+        [Column("MA_CN")]
+        [StringLength(50)]
+        public string? MA_CN { get; set; }
+
+        [Column("LOAI_TIEN")]
+        [StringLength(10)]
+        public string? LOAI_TIEN { get; set; }
+
+        [Column("MA_TK")]
+        [StringLength(50)]
+        public string? MA_TK { get; set; }
+
+        [Column("TEN_TK")]
+        [StringLength(255)]
+        public string? TEN_TK { get; set; }
+
+        [Column("LOAI_BT")]
+        [StringLength(10)]
+        public string? LOAI_BT { get; set; }
+
+        [Column("DN_DAUKY")]
+        public decimal? DN_DAUKY { get; set; }
+
+        [Column("DC_DAUKY")]
+        public decimal? DC_DAUKY { get; set; }
+
+        [Column("SBT_NO")]
+        public decimal? SBT_NO { get; set; }
+
+        [Column("ST_GHINO")]
+        public decimal? ST_GHINO { get; set; }
+
+        [Column("SBT_CO")]
+        public decimal? SBT_CO { get; set; }
+
+        [Column("ST_GHICO")]
+        public decimal? ST_GHICO { get; set; }
+
+        [Column("DN_CUOIKY")]
+        public decimal? DN_CUOIKY { get; set; }
+
+        [Column("DC_CUOIKY")]
+        public decimal? DC_CUOIKY { get; set; }
     }
 }

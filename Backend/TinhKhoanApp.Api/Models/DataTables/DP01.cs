@@ -5,8 +5,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TinhKhoanApp.Api.Models.DataTables
 {
     /// <summary>
-    /// Bảng DP01 - 63 cột theo header_7800_dp01_20250430.csv
-    /// MA_CN,TAI_KHOAN_HACH_TOAN,MA_KH,TEN_KH,DP_TYPE_NAME,CCY,CURRENT_BALANCE,RATE,SO_TAI_KHOAN,OPENING_DATE,MATURITY_DATE,ADDRESS,NOTENO,MONTH_TERM,TERM_DP_NAME,TIME_DP_NAME,MA_PGD,TEN_PGD,DP_TYPE_CODE,RENEW_DATE,CUST_TYPE,CUST_TYPE_NAME,CUST_TYPE_DETAIL,CUST_DETAIL_NAME,PREVIOUS_DP_CAP_DATE,NEXT_DP_CAP_DATE,ID_NUMBER,ISSUED_BY,ISSUE_DATE,SEX_TYPE,BIRTH_DATE,TELEPHONE,ACRUAL_AMOUNT,ACRUAL_AMOUNT_END,ACCOUNT_STATUS,DRAMT,CRAMT,EMPLOYEE_NUMBER,EMPLOYEE_NAME,SPECIAL_RATE,AUTO_RENEWAL,CLOSE_DATE,LOCAL_PROVIN_NAME,LOCAL_DISTRICT_NAME,LOCAL_WARD_NAME,TERM_DP_TYPE,TIME_DP_TYPE,STATES_CODE,ZIP_CODE,COUNTRY_CODE,TAX_CODE_LOCATION,MA_CAN_BO_PT,TEN_CAN_BO_PT,PHONG_CAN_BO_PT,NGUOI_NUOC_NGOAI,QUOC_TICH,MA_CAN_BO_AGRIBANK,NGUOI_GIOI_THIEU,TEN_NGUOI_GIOI_THIEU,CONTRACT_COUTS_DAY,SO_KY_AD_LSDB,UNTBUSCD,TYGIA
+    /// Bảng DP01 - Dữ liệu tiền gửi
+    /// Cấu trúc theo file: 7808_dp01_20241231.csv
+    /// 62 cột business data + temporal columns
     /// </summary>
     [Table("DP01")]
     public class DP01
@@ -14,11 +15,23 @@ namespace TinhKhoanApp.Api.Models.DataTables
         [Key]
         public int Id { get; set; }
 
+        // === TEMPORAL COLUMNS ===
         [Column("NGAY_DL")]
         [StringLength(10)]
         public string NgayDL { get; set; } = null!;
 
-        // === 63 CỘT THEO HEADER CSV GỐC ===
+        [Column("CREATED_DATE")]
+        public DateTime CREATED_DATE { get; set; } = DateTime.UtcNow;
+
+        [Column("UPDATED_DATE")]
+        public DateTime? UPDATED_DATE { get; set; }
+
+        [Column("FILE_NAME")]
+        [StringLength(255)]
+        public string? FILE_NAME { get; set; }
+
+        // === 62 CỘT BUSINESS DATA THEO CSV GỐC ===
+
         [Column("MA_CN")]
         [StringLength(50)]
         public string? MA_CN { get; set; }
@@ -133,7 +146,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public string? ISSUE_DATE { get; set; }
 
         [Column("SEX_TYPE")]
-        [StringLength(10)]
+        [StringLength(20)]
         public string? SEX_TYPE { get; set; }
 
         [Column("BIRTH_DATE")]
@@ -172,8 +185,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public decimal? SPECIAL_RATE { get; set; }
 
         [Column("AUTO_RENEWAL")]
-        [StringLength(10)]
-        public string? AUTO_RENEWAL { get; set; }
+        public int? AUTO_RENEWAL { get; set; }
 
         [Column("CLOSE_DATE")]
         [StringLength(20)]
@@ -251,8 +263,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public int? CONTRACT_COUTS_DAY { get; set; }
 
         [Column("SO_KY_AD_LSDB")]
-        [StringLength(50)]
-        public string? SO_KY_AD_LSDB { get; set; }
+        public int? SO_KY_AD_LSDB { get; set; }
 
         [Column("UNTBUSCD")]
         [StringLength(50)]
@@ -260,16 +271,5 @@ namespace TinhKhoanApp.Api.Models.DataTables
 
         [Column("TYGIA")]
         public decimal? TYGIA { get; set; }
-
-        // === TEMPORAL COLUMNS ===
-        [Column("CREATED_DATE")]
-        public DateTime CREATED_DATE { get; set; } = DateTime.Now;
-
-        [Column("UPDATED_DATE")]
-        public DateTime? UPDATED_DATE { get; set; }
-
-        [Column("FILE_NAME")]
-        [StringLength(255)]
-        public string? FILE_NAME { get; set; }
     }
 }
