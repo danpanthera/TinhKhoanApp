@@ -47,19 +47,32 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<ImportedDataRecord> ImportedDataRecords { get; set; }
         // 🗑️ REMOVED: ImportedDataItem - Replaced with DirectImportService workflow
 
-        // 🚀 DbSets cho 12 bảng dữ liệu thô chính (DirectImport với Temporal Tables + Columnstore)
-        public DbSet<DataTables.DP01> DP01_New { get; set; }
+        // 🚀 DbSets cho 10 bảng dữ liệu thô chính (DirectImport với Temporal Tables + Columnstore)
+        public DbSet<DataTables.DP01> DP01 { get; set; }
         public DbSet<DataTables.LN01> LN01 { get; set; }
-        public DbSet<DataTables.LN02> LN02 { get; set; }
         public DbSet<DataTables.LN03> LN03 { get; set; }
         public DbSet<DataTables.DB01> DB01 { get; set; }
         public DbSet<DataTables.GL01> GL01 { get; set; }
         public DbSet<DataTables.GL41> GL41 { get; set; }
         public DbSet<DataTables.DPDA> DPDA { get; set; }
         public DbSet<DataTables.EI01> EI01 { get; set; }
-        public DbSet<DataTables.KH03> KH03 { get; set; }
         public DbSet<DataTables.RR01> RR01 { get; set; }
-        public DbSet<DataTables.DT_KHKD1> DT_KHKD1 { get; set; }
+        public DbSet<DataTables.TSDB01> TSDB01 { get; set; }
+
+        // 🔄 DbSets with plural names for backward compatibility
+        public DbSet<DataTables.DP01> DP01s { get; set; }
+        public DbSet<DataTables.LN01> LN01s { get; set; }
+        public DbSet<DataTables.LN03> LN03s { get; set; }
+        public DbSet<DataTables.DB01> DB01s { get; set; }
+        public DbSet<DataTables.GL01> GL01s { get; set; }
+        public DbSet<DataTables.GL41> GL41s { get; set; }
+        public DbSet<DataTables.DPDA> DPDAs { get; set; }
+        public DbSet<DataTables.EI01> EI01s { get; set; }
+        public DbSet<DataTables.RR01> RR01s { get; set; }
+
+        // Legacy naming compatibility
+        public DbSet<DataTables.DP01> DP01_News { get; set; }
+        public DbSet<DataTables.TSDB01> TSDB01s { get; set; }
 
         // 🗄️ DbSets cho hệ thống Kho Dữ liệu Thô (Legacy)
         public DbSet<Models.RawDataImport> LegacyRawDataImports { get; set; }
@@ -84,11 +97,10 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<EI01History> EI01History { get; set; }
         public DbSet<DPDAHistory> DPDAHistory { get; set; }
         public DbSet<DB01History> DB01History { get; set; }
-        public DbSet<KH03History> KH03History { get; set; }
+
         public DbSet<BC57History> BC57History { get; set; }
 
         // 🚀 DbSets cho các bảng còn thiếu temporal tables
-        public DbSet<DT_KHKD1_History> DT_KHKD1_History { get; set; }
         public DbSet<GAHR26_History> GAHR26_History { get; set; }
         public DbSet<GL41_History> GL41_History { get; set; }
 
@@ -101,25 +113,6 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<DashboardIndicator> DashboardIndicators { get; set; }
         public DbSet<BusinessPlanTarget> BusinessPlanTargets { get; set; }
         public DbSet<DashboardCalculation> DashboardCalculations { get; set; }
-
-        // 💰 DbSet cho bảng DP01 - Dữ liệu báo cáo tài chính theo ngày
-        public DbSet<DP01> DP01s { get; set; }
-
-        // 📊 DbSets cho các bảng dữ liệu riêng biệt theo từng loại file
-        // Tuân thủ Temporal Tables + Columnstore Indexes
-        public DbSet<DataTables.DB01> DB01s { get; set; }
-        public DbSet<DataTables.DP01> DP01NewTables { get; set; }
-        public DbSet<DataTables.DP01> DP01_News { get; set; } // Thêm DbSet riêng cho NguonVonController
-        public DbSet<DataTables.DPDA> DPDAs { get; set; }
-        public DbSet<DataTables.EI01> EI01s { get; set; }
-        public DbSet<DataTables.GL01> GL01s { get; set; }
-        public DbSet<DataTables.GL41> GL41s { get; set; }
-        public DbSet<DataTables.KH03> KH03s { get; set; }
-        public DbSet<DataTables.LN01> LN01s { get; set; }
-        public DbSet<DataTables.LN02> LN02s { get; set; }
-        public DbSet<DataTables.LN03> LN03s { get; set; }
-        public DbSet<DataTables.RR01> RR01s { get; set; }
-        public DbSet<DataTables.DT_KHKD1> DT_KHKD1s { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -450,8 +443,7 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
             // Cấu hình tên cột CSV gốc cho các bảng
             ConfigureMainTableWithOriginalColumns(modelBuilder);
 
-            // Cấu hình temporal table cho KH03 (chỉ thiếu temporal table)
-            // ConfigureTemporalTable<KH03History>(modelBuilder, "KH03", "KH03_History");
+
 
             // Đảm bảo các bảng đã có cũng được cấu hình đúng - COMMENT TẠM THỜI ĐỂ TRÁNH CONFLICT
             // ConfigureTemporalTable<DPDAHistory>(modelBuilder, "DPDA", "DPDA_History");
@@ -460,10 +452,6 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
             // 🆕 Cấu hình Temporal Tables cho các bảng dữ liệu mới
             // Mỗi bảng sẽ có Temporal Tables + Columnstore Indexes tự động
             ConfigureNewDataTables(modelBuilder);
-
-            // ⚠️ TEMPORARY FIX: Map DP01_News to same table as DP01NewTables cho NguonVonController
-            modelBuilder.Entity<DataTables.DP01>()
-                .ToTable("DP01_New"); // Both DbSets map to same table
         }
 
         // 🔧 Helper method để cấu hình Temporal Table
@@ -510,28 +498,8 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         /// </summary>
         private void ConfigureMainTableWithOriginalColumns(ModelBuilder modelBuilder)
         {
-            // Tạm thời comment out vì cần xem lại cấu hình temporal table
-            // Thay vào đó, đảm bảo History models có tên cột chính xác            // 🏦 Cấu hình cho bảng DP01 - Dữ liệu báo cáo tài chính
-            modelBuilder.Entity<DP01>(entity =>
-            {
-                entity.ToTable("DP01");
-
-                // Cấu hình precision cho CURRENT_BALANCE (18,2 để lưu số tiền lớn)
-                entity.Property(e => e.CURRENT_BALANCE)
-                    .HasPrecision(18, 2);
-
-                // Tạo clustered columnstore index cho hiệu suất cao
-                entity.HasIndex(e => new { e.DATA_DATE, e.MA_CN, e.MA_PGD })
-                    .HasDatabaseName("IX_DP01_DateBranchPGD_Clustered");
-
-                // Index cho tài khoản hạch toán để filter nhanh
-                entity.HasIndex(e => e.TAI_KHOAN_HACH_TOAN)
-                    .HasDatabaseName("IX_DP01_Account");
-
-                // Index cho mã chi nhánh
-                entity.HasIndex(e => e.MA_CN)
-                    .HasDatabaseName("IX_DP01_Branch");
-            });
+            // Cấu hình bảng DP01 mới với cấu trúc temporal table + columnstore
+            ConfigureDataTableWithTemporal<DataTables.DP01>(modelBuilder, "DP01");
         }
 
         /// <summary>
@@ -541,34 +509,28 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         private void ConfigureNewDataTables(ModelBuilder modelBuilder)
         {
             // 🏦 Cấu hình bảng DB01 - Tài sản đảm bảo
-            ConfigureDataTableBasic<DataTables.DB01>(modelBuilder, "DB01");
+            ConfigureDataTableWithTemporal<DataTables.DB01>(modelBuilder, "DB01");
 
             // 💰 Cấu hình bảng DPDA - Tiền gửi của dân
-            ConfigureDataTableBasic<DataTables.DPDA>(modelBuilder, "DPDA");
+            ConfigureDataTableWithTemporal<DataTables.DPDA>(modelBuilder, "DPDA");
 
             // 📊 Cấu hình bảng EI01 - Thu nhập khác
-            ConfigureDataTableBasic<DataTables.EI01>(modelBuilder, "EI01");
+            ConfigureDataTableWithTemporal<DataTables.EI01>(modelBuilder, "EI01");
 
             // 📋 Cấu hình bảng GL01 - Sổ cái tổng hợp
-            ConfigureDataTableBasic<DataTables.GL01>(modelBuilder, "GL01");
-
-            // 👥 Cấu hình bảng KH03 - Khách hàng
-            ConfigureDataTableBasic<DataTables.KH03>(modelBuilder, "KH03");
+            ConfigureDataTableWithTemporal<DataTables.GL01>(modelBuilder, "GL01");
 
             // 🏷️ Cấu hình bảng LN01 - Cho vay
-            ConfigureDataTableBasic<DataTables.LN01>(modelBuilder, "LN01");
-
-            // 📄 Cấu hình bảng LN02 - Cho vay chi tiết
-            ConfigureDataTableBasic<DataTables.LN02>(modelBuilder, "LN02");
+            ConfigureDataTableWithTemporal<DataTables.LN01>(modelBuilder, "LN01");
 
             // ⚠️ Cấu hình bảng LN03 - Nợ xấu
-            ConfigureDataTableBasic<DataTables.LN03>(modelBuilder, "LN03");
+            ConfigureDataTableWithTemporal<DataTables.LN03>(modelBuilder, "LN03");
 
             // 📈 Cấu hình bảng RR01 - Tỷ lệ
-            ConfigureDataTableBasic<DataTables.RR01>(modelBuilder, "RR01");
+            ConfigureDataTableWithTemporal<DataTables.RR01>(modelBuilder, "RR01");
 
-            // 📊 Cấu hình bảng 7800_DT_KHKD1 - Doanh thu kế hoạch kinh doanh 1
-            ConfigureDataTableBasic<DataTables.DT_KHKD1>(modelBuilder, "7800_DT_KHKD1");
+            // 🏦 Cấu hình bảng TSDB01 - Tài sản đảm bảo khách hàng
+            ConfigureDataTableWithTemporal<DataTables.TSDB01>(modelBuilder, "TSDB01");
         }
 
         /// <summary>
