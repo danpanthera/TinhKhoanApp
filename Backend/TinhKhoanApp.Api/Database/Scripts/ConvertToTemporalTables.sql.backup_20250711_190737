@@ -131,6 +131,7 @@ INSERT INTO @DataTypes VALUES
     ('KH03', 'Sao kê Khách hàng pháp nhân'),
     ('BC57', 'Sao kê Lãi dự thu'),
     ('RR01', 'Sao kê dư nợ gốc, lãi XLRR'),
+    ('7800_DT_KHKD1', 'Báo cáo KHKD (DT)'),
     ('GLCB41', 'Bảng cân đối')
 
 DECLARE @DataType NVARCHAR(20), @Description NVARCHAR(100), @TableName NVARCHAR(50), @HistoryTableName NVARCHAR(50)

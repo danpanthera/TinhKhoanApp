@@ -24,6 +24,7 @@ DECLARE @RawDataTypes TABLE (
 );
 
 INSERT INTO @RawDataTypes VALUES
+    ('7800_DT_KHKD1', '7800_DT_KHKD1_RawData', 'Báo cáo KHKD (DT) - Dữ liệu kế hoạch kinh doanh'),
     ('BC57', 'BC57_RawData', 'Sao kê Lãi dự thu - Dữ liệu lãi suất'),
     ('DPDA', 'DPDA_RawData', 'Dữ liệu sao kê phát hành thẻ'),
     ('DP01', 'DP01_RawData', 'Dữ liệu Tiền gửi'),
@@ -122,6 +123,7 @@ BEGIN
             PRINT '   ✅ Đã tạo Temporal Table: ' + @TableName;
 
             -- Tạo Clustered Columnstore Index cho bảng chính (cho analytics)
+            IF @DataType IN ('7800_DT_KHKD1', 'BC57', 'GL01', 'LN01') -- Bảng lớn cần columnstore
             BEGIN
                 SET @SQL = 'CREATE CLUSTERED COLUMNSTORE INDEX [CCI_' + @TableName + '] ON [dbo].[' + @TableName + ']
                            WITH (COMPRESSION_DELAY = 0, MAXDOP = 4);';
@@ -395,6 +397,8 @@ SELECT
     IsProcessed, CreatedDate FROM [dbo].[EI01_RawData]
 UNION ALL
 SELECT
+    '7800_DT_KHKD1' AS DataType, StatementDate, BranchCode, EmployeeCode, Amount, Quantity,
+    IsProcessed, CreatedDate FROM [dbo].[7800_DT_KHKD1_RawData];
 GO
 
 -- View tổng hợp dữ liệu lịch sử (temporal queries)
@@ -425,6 +429,7 @@ EXEC [dbo].[sp_CheckTemporalTablesPerformance];
 
 PRINT '';
 PRINT '📋 TỔNG KẾT:';
+PRINT '• Đã tạo temporal tables cho tất cả loại dữ liệu thô (7800_DT_KHKD1, BC57, DPDA, DP01, DB01, LN01, GL01, EI01, v.v.)';
 PRINT '• Đã áp dụng Columnstore Indexes cho tối ưu hiệu năng';
 PRINT '• Đã tạo indexes bổ sung cho truy vấn nhanh';
 PRINT '• Đã tạo stored procedures và views hỗ trợ';

@@ -219,6 +219,7 @@ BEGIN TRY
     );
 
     INSERT INTO @RawDataTypes VALUES
+        ('7800_DT_KHKD1', '7800_DT_KHKD1_RawData', 'Báo cáo KHKD (DT) - Dữ liệu kế hoạch kinh doanh'),
         ('BC57', 'BC57_RawData', 'Sao kê Lãi dự thu - Dữ liệu lãi suất'),
         ('DPDA', 'DPDA_RawData', 'Dữ liệu sao kê phát hành thẻ'),
         ('DP01', 'DP01_RawData', 'Dữ liệu Tiền gửi'),
@@ -512,6 +513,7 @@ PRINT '• ✅ Đã hoàn thiện temporal tables cho tất cả loại dữ li�
 PRINT '• ✅ Đã áp dụng columnstore indexes để tối ưu hiệu năng';
 PRINT '• ✅ Đã tạo stored procedures và views hỗ trợ';
 PRINT '• ✅ Retention policy: 7 năm cho dữ liệu lịch sử';
+PRINT '• ✅ Hỗ trợ đầy đủ các loại dữ liệu: 7800_DT_KHKD1, BC57, DPDA, DP01, DB01, LN01, GL01, EI01';
 PRINT '';
 PRINT '📅 Thời gian hoàn thành: ' + CONVERT(NVARCHAR, GETDATE(), 120);
 PRINT '🚀 HỆ THỐNG SẴN SÀNG CHO VIỆC XỬ LÝ DỮ LIỆU THÔ VỚI HIỆU NĂNG TỐI ƯU!';
