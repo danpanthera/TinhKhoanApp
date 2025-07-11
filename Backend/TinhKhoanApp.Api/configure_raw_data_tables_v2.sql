@@ -27,32 +27,21 @@ BEGIN
 END
 
 -- ==================================================
--- 1. BẢNG 7800_DT_KHKD1 (Excel Files)
 -- ==================================================
-PRINT 'Cấu hình bảng 7800_DT_KHKD1...';
 
 -- Kiểm tra và thêm system-time columns
-IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('7800_DT_KHKD1') AND name = 'SysStartTime')
 BEGIN
-    ALTER TABLE [7800_DT_KHKD1]
     ADD SysStartTime DATETIME2 GENERATED ALWAYS AS ROW START HIDDEN DEFAULT GETUTCDATE(),
         SysEndTime DATETIME2 GENERATED ALWAYS AS ROW END HIDDEN DEFAULT '9999-12-31 23:59:59.9999999',
         PERIOD FOR SYSTEM_TIME (SysStartTime, SysEndTime);
-    PRINT '  - Đã thêm system-time columns cho 7800_DT_KHKD1';
 END
 
 -- Bật system versioning
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = '7800_DT_KHKD1' AND temporal_type = 2)
 BEGIN
-    ALTER TABLE [7800_DT_KHKD1] SET (SYSTEM_VERSIONING = ON (HISTORY_TABLE = dbo.[7800_DT_KHKD1_History]));
-    PRINT '  - Đã bật system versioning cho 7800_DT_KHKD1';
 END
 
 -- Tạo columnstore index
-IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID('7800_DT_KHKD1') AND type_desc = 'CLUSTERED COLUMNSTORE')
 BEGIN
-    CREATE CLUSTERED COLUMNSTORE INDEX CCI_7800_DT_KHKD1 ON [7800_DT_KHKD1];
-    PRINT '  - Đã tạo columnstore index cho 7800_DT_KHKD1';
 END
 
 -- ==================================================
@@ -136,7 +125,6 @@ SELECT
         ELSE 'No Columnstore ❌'
     END as ColumnstoreStatus
 FROM sys.tables t
-WHERE t.name IN ('7800_DT_KHKD1', 'DB01', 'DP01_New', 'DPDA', 'EI01', 'GL01', 'GL41', 'KH03', 'LN01', 'LN02', 'LN03', 'RR01')
 ORDER BY t.name;
 
 GO

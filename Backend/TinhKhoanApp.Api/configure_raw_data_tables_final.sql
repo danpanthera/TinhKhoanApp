@@ -15,7 +15,6 @@ DECLARE @RawDataTables TABLE (
 );
 
 INSERT INTO @RawDataTables VALUES
-('7800_DT_KHKD1', 'Excel'),
 ('DB01', 'CSV'),
 ('DP01_New', 'CSV'),
 ('DPDA', 'CSV'),
@@ -141,7 +140,6 @@ SELECT
     ht.name as [History Table]
 FROM sys.tables t
 LEFT JOIN sys.tables ht ON t.history_table_id = ht.object_id
-WHERE t.name IN ('7800_DT_KHKD1', 'DB01', 'DP01_New', 'DPDA', 'EI01', 'GL01', 'GL41', 'KH03', 'LN01', 'LN02', 'LN03', 'RR01')
 ORDER BY t.name;
 
 -- Đếm số lượng
@@ -150,7 +148,6 @@ SELECT
     SUM(CASE WHEN temporal_type = 2 THEN 1 ELSE 0 END) as [Số bảng Temporal],
     SUM(CASE WHEN EXISTS (SELECT 1 FROM sys.indexes i WHERE i.object_id = t.object_id AND i.type_desc = 'CLUSTERED COLUMNSTORE') THEN 1 ELSE 0 END) as [Số bảng Columnstore]
 FROM sys.tables t
-WHERE t.name IN ('7800_DT_KHKD1', 'DB01', 'DP01_New', 'DPDA', 'EI01', 'GL01', 'GL41', 'KH03', 'LN01', 'LN02', 'LN03', 'RR01');
 
 PRINT '';
 PRINT '🚀 Tất cả bảng dữ liệu thô đã sẵn sàng cho hiệu năng tối ưu!';

@@ -138,17 +138,10 @@ END
 ELSE
     PRINT N'⚠️ RR01 Columnstore Index đã tồn tại.';
 
--- 12. 7800_DT_KHKD1 - Dữ liệu kinh doanh (Excel)
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID('7800_DT_KHKD1') AND type = 5)
 BEGIN
-    PRINT N'📊 Tạo Columnstore Index cho 7800_DT_KHKD1...';
-    CREATE NONCLUSTERED COLUMNSTORE INDEX IX_7800_DT_KHKD1_Columnstore
-    ON [7800_DT_KHKD1] (NGAY_DL, MA_CN)
     WITH (DATA_COMPRESSION = COLUMNSTORE);
-    PRINT N'✅ 7800_DT_KHKD1 Columnstore Index đã tạo xong.';
 END
 ELSE
-    PRINT N'⚠️ 7800_DT_KHKD1 Columnstore Index đã tồn tại.';
 
 PRINT N'🎉 Hoàn thành tạo Columnstore Indexes cho tất cả bảng dữ liệu thô!';
 
@@ -162,7 +155,6 @@ SELECT
 FROM sys.indexes i
 INNER JOIN sys.tables t ON i.object_id = t.object_id
 WHERE i.type_desc LIKE '%COLUMNSTORE%'
-    AND t.name IN ('DP01_New', 'LN01', 'DB01', 'GL01', 'GL41', 'DPDA', 'EI01', 'KH03', 'LN02', 'LN03', 'RR01', '7800_DT_KHKD1')
 ORDER BY t.name, i.name;
 
 PRINT N'✅ Script hoàn thành! Tất cả bảng dữ liệu thô đã có Columnstore Indexes để tối ưu hiệu năng analytics.';

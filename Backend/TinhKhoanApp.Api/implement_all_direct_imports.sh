@@ -1,7 +1,6 @@
 #!/bin/bash
 
 # Script tạo Direct Import Implementation cho tất cả data types
-# Tạo full implementation cho LN01, LN02, LN03, DB01, GL01, GL41, DPDA, EI01, KH03, RR01, DT_KHKD1
 
 echo "🚀 IMPLEMENT DIRECT IMPORT CHO TẤT CẢ DATA TYPES"
 echo "=============================================="
@@ -17,7 +16,6 @@ echo "🔧 FEATURES MỚI:"
 echo "==============="
 echo "✅ Smart detection tất cả 12 loại file"
 echo "✅ Generic CSV parsing với auto-mapping"
-echo "✅ Generic Excel parsing cho DT_KHKD1"
 echo "✅ Generic bulk insert với SqlBulkCopy"
 echo "✅ Automatic NgayDL extraction từ filename"
 echo "✅ Metadata tracking chỉ với ImportedDataRecords"
@@ -26,7 +24,6 @@ echo ""
 echo "🎯 LOẠI FILE SUPPORT:"
 echo "===================="
 echo "📄 CSV: DP01, LN01, LN02, LN03, DB01, GL01, GL41, DPDA, EI01, KH03, RR01"
-echo "📊 Excel: DT_KHKD1"
 echo ""
 echo "📋 TIẾP THEO:"
 echo "============"

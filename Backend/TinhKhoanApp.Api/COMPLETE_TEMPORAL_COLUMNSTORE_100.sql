@@ -15,7 +15,6 @@ PRINT '🎯 Starting complete Temporal Tables + Columnstore Indexes configuratio
 DECLARE @tables TABLE (TableName NVARCHAR(50), HistoryTableName NVARCHAR(50))
 INSERT INTO @tables VALUES
 ('LN01_History', 'LN01_History_Archive'),
-('DT_KHKD1_History', 'DT_KHKD1_History_Archive'),
 ('GL01_History', 'GL01_History_Archive'),
 ('DPDA', 'DPDA_History'),
 ('EI01', 'EI01_History'),
@@ -79,7 +78,6 @@ PRINT '🏗️ Creating Columnstore Indexes for performance...';
 DECLARE @columnstoreTables TABLE (TableName NVARCHAR(50))
 INSERT INTO @columnstoreTables VALUES
 ('LN01_History'),
-('DT_KHKD1_History'),
 ('GL01_History'),
 ('DPDA'),
 ('EI01'),
@@ -134,7 +132,6 @@ PRINT '📊 Creating performance indexes...';
 DECLARE @perfTables TABLE (TableName NVARCHAR(50))
 INSERT INTO @perfTables VALUES
 ('LN01_History'),
-('DT_KHKD1_History'),
 ('GL01_History'),
 ('DPDA'),
 ('EI01'),
@@ -213,7 +210,6 @@ SELECT
     h.name AS HistoryTableName
 FROM sys.tables t
 LEFT JOIN sys.tables h ON t.history_table_id = h.object_id
-WHERE t.name IN ('LN01_History', 'DT_KHKD1_History', 'GL01_History', 'DPDA', 'EI01', 'KH03', 'BC57', 'DP01', 'DB01', 'LN03')
 ORDER BY t.name;
 
 PRINT '';
@@ -225,7 +221,6 @@ SELECT
         ELSE '❌ NO COLUMNSTORE'
     END AS ColumnstoreStatus
 FROM sys.tables t
-WHERE t.name IN ('LN01_History', 'DT_KHKD1_History', 'GL01_History', 'DPDA', 'EI01', 'KH03', 'BC57', 'DP01', 'DB01', 'LN03')
 ORDER BY t.name;
 
 PRINT '';

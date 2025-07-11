@@ -18,7 +18,6 @@ WHERE t.name LIKE '%History' OR t.name IN (
     'LN01_History', 'LN02_History', 'LN03_History', 'DP01_History',
     'EI01_History', 'GL01_History', 'DPDA_History', 'DB01_History',
     'KH03_History', 'BC57_History', 'RR01_History', 'GL41_History',
-    'DT_KHKD1_History', 'ImportedDataRecords', 'ImportedDataItems'
 )
 ORDER BY SchemaName, TableName;
 

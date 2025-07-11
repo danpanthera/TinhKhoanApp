@@ -31,7 +31,6 @@ SELECT
     END AS ColumnstoreStatus
 FROM sys.tables t
 LEFT JOIN sys.tables h ON t.history_table_id = h.object_id
-WHERE t.name IN ('DP01_New', 'LN01', 'LN02', 'LN03', 'GL01', 'GL41', 'DB01', 'DPDA', 'EI01', 'KH03', 'RR01', 'DT_KHKD1')
 ORDER BY t.name;
 
 -- =================================================================
@@ -110,44 +109,6 @@ IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID('LN01') AND
 BEGIN
     PRINT '  Adding columnstore index to LN01...';
     CREATE CLUSTERED COLUMNSTORE INDEX [CCI_LN01] ON [LN01];
-END
-
--- =================================================================
--- 🔧 SETUP LN02 TABLE
--- =================================================================
-PRINT '🔧 Setting up LN02 table...';
-
-IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'LN02')
-BEGIN
-    PRINT '  Creating LN02 table...';
-    CREATE TABLE [LN02] (
-        [Id] int IDENTITY(1,1) NOT NULL PRIMARY KEY,
-        [NgayDL] nvarchar(10) NOT NULL,
-        [FileName] nvarchar(255) NULL,
-        [CreatedDate] datetime2 NOT NULL DEFAULT GETUTCDATE(),
-        [MA_CN] nvarchar(20) NULL,
-        [MA_PGD] nvarchar(20) NULL,
-        [MA_KH] nvarchar(50) NULL,
-        [SO_HD_CHO_VAY] nvarchar(50) NULL,
-        [KY_HAN_THANH_TOAN] int NULL,
-        [SO_TIEN_GOC_PHAI_TRA] decimal(18,2) NULL,
-        [SO_TIEN_LAI_PHAI_TRA] decimal(18,2) NULL,
-        [NGAY_DEN_HAN_TRA] datetime2 NULL,
-        [NGAY_TRA_THUC_TE] datetime2 NULL,
-        [SO_TIEN_DA_TRA] decimal(18,2) NULL,
-        [TRANG_THAI] nvarchar(20) NULL,
-
-        -- Temporal columns
-        [ValidFrom] datetime2 GENERATED ALWAYS AS ROW START NOT NULL,
-        [ValidTo] datetime2 GENERATED ALWAYS AS ROW END NOT NULL,
-        PERIOD FOR SYSTEM_TIME ([ValidFrom], [ValidTo])
-    ) WITH (SYSTEM_VERSIONING = ON (HISTORY_TABLE = [LN02_History]));
-END
-
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID('LN02') AND type IN (5, 6))
-BEGIN
-    PRINT '  Adding columnstore index to LN02...';
-    CREATE CLUSTERED COLUMNSTORE INDEX [CCI_LN02] ON [LN02];
 END
 
 -- =================================================================
@@ -367,43 +328,6 @@ BEGIN
 END
 
 -- =================================================================
--- 🔧 SETUP KH03 TABLE
--- =================================================================
-PRINT '🔧 Setting up KH03 table...';
-
-IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'KH03')
-BEGIN
-    PRINT '  Creating KH03 table...';
-    CREATE TABLE [KH03] (
-        [Id] int IDENTITY(1,1) NOT NULL PRIMARY KEY,
-        [NgayDL] nvarchar(10) NOT NULL,
-        [FileName] nvarchar(255) NULL,
-        [CreatedDate] datetime2 NOT NULL DEFAULT GETUTCDATE(),
-        [MA_CN] nvarchar(20) NULL,
-        [MA_PGD] nvarchar(20) NULL,
-        [MA_KH] nvarchar(50) NULL,
-        [TEN_KH] nvarchar(255) NULL,
-        [LOAI_KH] nvarchar(50) NULL,
-        [SO_CMND] nvarchar(20) NULL,
-        [DIA_CHI] nvarchar(500) NULL,
-        [SO_DIEN_THOAI] nvarchar(20) NULL,
-        [EMAIL] nvarchar(100) NULL,
-        [NGAY_MO_TK] datetime2 NULL,
-        [TRANG_THAI] nvarchar(20) NULL,
-
-        -- Temporal columns
-        [ValidFrom] datetime2 GENERATED ALWAYS AS ROW START NOT NULL,
-        [ValidTo] datetime2 GENERATED ALWAYS AS ROW END NOT NULL,
-        PERIOD FOR SYSTEM_TIME ([ValidFrom], [ValidTo])
-    ) WITH (SYSTEM_VERSIONING = ON (HISTORY_TABLE = [KH03_History]));
-END
-
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID('KH03') AND type IN (5, 6))
-BEGIN
-    PRINT '  Adding columnstore index to KH03...';
-    CREATE CLUSTERED COLUMNSTORE INDEX [CCI_KH03] ON [KH03];
-END
-
 -- =================================================================
 -- 🔧 SETUP RR01 TABLE
 -- =================================================================
@@ -440,43 +364,7 @@ BEGIN
 END
 
 -- =================================================================
--- 🔧 SETUP DT_KHKD1 TABLE
--- =================================================================
-PRINT '🔧 Setting up DT_KHKD1 table...';
-
-IF NOT EXISTS (SELECT 1 FROM sys.tables WHERE name = 'DT_KHKD1')
-BEGIN
-    PRINT '  Creating DT_KHKD1 table...';
-    CREATE TABLE [DT_KHKD1] (
-        [Id] int IDENTITY(1,1) NOT NULL PRIMARY KEY,
-        [NgayDL] nvarchar(10) NOT NULL,
-        [FileName] nvarchar(255) NULL,
-        [CreatedDate] datetime2 NOT NULL DEFAULT GETUTCDATE(),
-        [MA_CN] nvarchar(20) NULL,
-        [MA_PGD] nvarchar(20) NULL,
-        [CHI_TIEU] nvarchar(255) NULL,
-        [GIA_TRI_KE_HOACH] decimal(18,2) NULL,
-        [GIA_TRI_THUC_HIEN] decimal(18,2) NULL,
-        [TY_LE_HOAN_THANH] decimal(5,2) NULL,
-        [THANG_BAO_CAO] int NULL,
-        [NAM_BAO_CAO] int NULL,
-        [GHI_CHU] nvarchar(500) NULL,
-
-        -- Temporal columns
-        [ValidFrom] datetime2 GENERATED ALWAYS AS ROW START NOT NULL,
-        [ValidTo] datetime2 GENERATED ALWAYS AS ROW END NOT NULL,
-        PERIOD FOR SYSTEM_TIME ([ValidFrom], [ValidTo])
-    ) WITH (SYSTEM_VERSIONING = ON (HISTORY_TABLE = [DT_KHKD1_History]));
-END
-
-IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID('DT_KHKD1') AND type IN (5, 6))
-BEGIN
-    PRINT '  Adding columnstore index to DT_KHKD1...';
-    CREATE CLUSTERED COLUMNSTORE INDEX [CCI_DT_KHKD1] ON [DT_KHKD1];
-END
-
--- =================================================================
--- 📊 FINAL VERIFICATION
+--  FINAL VERIFICATION
 -- =================================================================
 PRINT '📊 Final verification of all tables...';
 
@@ -498,7 +386,6 @@ SELECT
     END AS ColumnstoreStatus
 FROM sys.tables t
 LEFT JOIN sys.tables h ON t.history_table_id = h.object_id
-WHERE t.name IN ('DP01_New', 'LN01', 'LN02', 'LN03', 'GL01', 'GL41', 'DB01', 'DPDA', 'EI01', 'KH03', 'RR01', 'DT_KHKD1')
 ORDER BY t.name;
 
 -- =================================================================
@@ -510,13 +397,13 @@ DECLARE @ColumnstoreTables INT;
 
 SELECT @TemporalTables = COUNT(*)
 FROM sys.tables t
-WHERE t.name IN ('DP01_New', 'LN01', 'LN02', 'LN03', 'GL01', 'GL41', 'DB01', 'DPDA', 'EI01', 'KH03', 'RR01', 'DT_KHKD1')
+WHERE t.name IN ('DP01_New', 'LN01', 'LN02', 'LN03', 'GL01', 'GL41', 'DB01', 'DPDA', 'EI01', 'KH03', 'RR01')
 AND t.temporal_type_desc = 'SYSTEM_VERSIONED_TEMPORAL_TABLE';
 
 SELECT @ColumnstoreTables = COUNT(DISTINCT t.name)
 FROM sys.tables t
 INNER JOIN sys.indexes i ON t.object_id = i.object_id
-WHERE t.name IN ('DP01_New', 'LN01', 'LN02', 'LN03', 'GL01', 'GL41', 'DB01', 'DPDA', 'EI01', 'KH03', 'RR01', 'DT_KHKD1')
+WHERE t.name IN ('DP01_New', 'LN01', 'LN02', 'LN03', 'GL01', 'GL41', 'DB01', 'DPDA', 'EI01', 'KH03', 'RR01')
 AND i.type IN (5, 6);
 
 PRINT '';
@@ -551,6 +438,5 @@ PRINT '   • Files with *DPDA* → DPDA table';
 PRINT '   • Files with *EI01* → EI01 table';
 PRINT '   • Files with *KH03* → KH03 table';
 PRINT '   • Files with *RR01* → RR01 table';
-PRINT '   • Files with *DT_KHKD1* → DT_KHKD1 table';
 PRINT '';
 PRINT '🎉 Setup Complete!';
