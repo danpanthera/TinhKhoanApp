@@ -165,9 +165,8 @@ namespace TinhKhoanApp.Api.Services
         {
             var tables = new List<string>
             {
-                "DP01", "LN01", "LN02", "LN03", "DB01",
-                "GL01", "GL41", "DPDA", "EI01", "KH03",
-                "RR01", "DT_KHKD1"
+                "DP01", "LN01", "LN03", "DB01",
+                "GL01", "GL41", "DPDA", "EI01",
             };
 
             return await Task.FromResult(tables);
@@ -183,16 +182,13 @@ namespace TinhKhoanApp.Api.Services
             // Check for specific patterns
             if (fileName.Contains("DP01")) return "DP01";
             if (fileName.Contains("LN01")) return "LN01";
-            if (fileName.Contains("LN02")) return "LN02";
             if (fileName.Contains("LN03")) return "LN03";
             if (fileName.Contains("DB01")) return "DB01";
             if (fileName.Contains("GL01")) return "GL01";
             if (fileName.Contains("GL41")) return "GL41";
             if (fileName.Contains("DPDA")) return "DPDA";
             if (fileName.Contains("EI01")) return "EI01";
-            if (fileName.Contains("KH03")) return "KH03";
             if (fileName.Contains("RR01")) return "RR01";
-            if (fileName.Contains("DT_KHKD1") || fileName.Contains("KHKD1")) return "DT_KHKD1";
 
             return "";
         }
@@ -203,16 +199,13 @@ namespace TinhKhoanApp.Api.Services
             {
                 { "DP01", new DataTableMapping { TableName = "DP01", EntityType = "DP01", HasTemporalTables = true, HasColumnstoreIndex = true } },
                 { "LN01", new DataTableMapping { TableName = "LN01", EntityType = "LN01", HasTemporalTables = true, HasColumnstoreIndex = true } },
-                { "LN02", new DataTableMapping { TableName = "LN02", EntityType = "LN02", HasTemporalTables = true, HasColumnstoreIndex = true } },
                 { "LN03", new DataTableMapping { TableName = "LN03", EntityType = "LN03", HasTemporalTables = true, HasColumnstoreIndex = true } },
                 { "DB01", new DataTableMapping { TableName = "DB01", EntityType = "DB01", HasTemporalTables = true, HasColumnstoreIndex = true } },
                 { "GL01", new DataTableMapping { TableName = "GL01", EntityType = "GL01", HasTemporalTables = true, HasColumnstoreIndex = true } },
                 { "GL41", new DataTableMapping { TableName = "GL41", EntityType = "GL41", HasTemporalTables = true, HasColumnstoreIndex = true } },
                 { "DPDA", new DataTableMapping { TableName = "DPDA", EntityType = "DPDA", HasTemporalTables = true, HasColumnstoreIndex = true } },
                 { "EI01", new DataTableMapping { TableName = "EI01", EntityType = "EI01", HasTemporalTables = true, HasColumnstoreIndex = true } },
-                { "KH03", new DataTableMapping { TableName = "KH03", EntityType = "KH03", HasTemporalTables = true, HasColumnstoreIndex = true } },
-                { "RR01", new DataTableMapping { TableName = "RR01", EntityType = "RR01", HasTemporalTables = true, HasColumnstoreIndex = true } },
-                { "DT_KHKD1", new DataTableMapping { TableName = "7800_DT_KHKD1", EntityType = "7800_DT_KHKD1", HasTemporalTables = true, HasColumnstoreIndex = true } }
+                { "RR01", new DataTableMapping { TableName = "RR01", EntityType = "RR01", HasTemporalTables = true, HasColumnstoreIndex = true } }
             };
 
             return mappings.TryGetValue(dataTypeCode, out var mapping) ? mapping : null;

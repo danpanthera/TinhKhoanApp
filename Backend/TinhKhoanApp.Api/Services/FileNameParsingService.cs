@@ -54,17 +54,16 @@ namespace TinhKhoanApp.Api.Services
         private static readonly Dictionary<string, string> DataTypeDefinitions = new()
         {
             { "LN01", "Dữ liệu LOAN - Danh mục tín dụng" },
-            { "LN02", "Sao kê biến động nhóm nợ - Theo dõi chất lượng tín dụng" },
+
             { "LN03", "Dữ liệu Nợ XLRR - Nợ xử lý rủi ro" },
             { "DP01", "Dữ liệu Tiền gửi - Huy động vốn" },
             { "EI01", "Dữ liệu mobile banking - Giao dịch điện tử" },
             { "GL01", "Dữ liệu bút toán GDV - Giao dịch viên" },
             { "DPDA", "Dữ liệu sao kê phát hành thẻ - Thẻ tín dụng/ghi nợ" },
             { "DB01", "Sao kê TSDB và Không TSDB - Tài sản đảm bảo" },
-            { "KH03", "Sao kê Khách hàng pháp nhân - Doanh nghiệp" },
+
             { "BC57", "Sao kê Lãi dự thu - Dự phòng lãi" },
             { "RR01", "Sao kê dư nợ gốc, lãi XLRR - Rủi ro tín dụng" },
-            { "DT_KHKD1", "Báo cáo KHKD (DT) - Kế hoạch kinh doanh doanh thu" },
             { "GL41", "Bảng cân đối - Báo cáo tài chính" }
         };
 

@@ -69,16 +69,13 @@ namespace TinhKhoanApp.Api.Services
                 {
                     "DP01" => await ImportDP01DirectAsync(file, statementDate),
                     "LN01" => await ImportLN01DirectAsync(file, statementDate),
-                    "LN02" => await ImportLN02DirectAsync(file, statementDate),
                     "LN03" => await ImportLN03DirectAsync(file, statementDate),
                     "DB01" => await ImportDB01DirectAsync(file, statementDate),
                     "GL01" => await ImportGL01DirectAsync(file, statementDate),
                     "GL41" => await ImportGL41DirectAsync(file, statementDate),
                     "DPDA" => await ImportDPDADirectAsync(file, statementDate),
                     "EI01" => await ImportEI01DirectAsync(file, statementDate),
-                    "KH03" => await ImportKH03DirectAsync(file, statementDate),
                     "RR01" => await ImportRR01DirectAsync(file, statementDate),
-                    "DT_KHKD1" => await ImportDT_KHKD1DirectAsync(file, statementDate),
                     _ => throw new NotSupportedException($"Data type {dataType} not supported")
                 };
             }
@@ -108,14 +105,6 @@ namespace TinhKhoanApp.Api.Services
         public async Task<DirectImportResult> ImportLN01DirectAsync(IFormFile file, string? statementDate = null)
         {
             return await ImportGenericCSVAsync<LN01>("LN01", "LN01", file, statementDate);
-        }
-
-        /// <summary>
-        /// Import LN02 - Loan payment schedule
-        /// </summary>
-        public async Task<DirectImportResult> ImportLN02DirectAsync(IFormFile file, string? statementDate = null)
-        {
-            return await ImportGenericCSVAsync<LN02>("LN02", "LN02", file, statementDate);
         }
 
         /// <summary>
@@ -167,28 +156,11 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Import KH03 - Customer data
-        /// </summary>
-        public async Task<DirectImportResult> ImportKH03DirectAsync(IFormFile file, string? statementDate = null)
-        {
-            return await ImportGenericCSVAsync<KH03>("KH03", "KH03", file, statementDate);
-        }
-
-        /// <summary>
         /// Import RR01 - Risk rating data
         /// </summary>
         public async Task<DirectImportResult> ImportRR01DirectAsync(IFormFile file, string? statementDate = null)
         {
             return await ImportGenericCSVAsync<RR01>("RR01", "RR01", file, statementDate);
-        }
-
-        /// <summary>
-        /// Import DT_KHKD1 - Business plan data (CSV for testing)
-        /// </summary>
-        public async Task<DirectImportResult> ImportDT_KHKD1DirectAsync(IFormFile file, string? statementDate = null)
-        {
-            // Temporary: Use CSV import for testing (should be Excel eventually)
-            return await ImportGenericCSVAsync<DT_KHKD1>("DT_KHKD1", "7800_DT_KHKD1", file, statementDate);
         }
 
         #endregion
@@ -318,16 +290,13 @@ namespace TinhKhoanApp.Api.Services
             // Priority order detection
             if (upperFileName.Contains("DP01")) return "DP01";
             if (upperFileName.Contains("LN01")) return "LN01";
-            if (upperFileName.Contains("LN02")) return "LN02";
             if (upperFileName.Contains("LN03")) return "LN03";
             if (upperFileName.Contains("DB01")) return "DB01";
             if (upperFileName.Contains("GL01")) return "GL01";
             if (upperFileName.Contains("GL41")) return "GL41";
             if (upperFileName.Contains("DPDA")) return "DPDA";
             if (upperFileName.Contains("EI01")) return "EI01";
-            if (upperFileName.Contains("KH03")) return "KH03";
             if (upperFileName.Contains("RR01")) return "RR01";
-            if (upperFileName.Contains("DT_KHKD1")) return "DT_KHKD1";
 
             return null;
         }
@@ -890,16 +859,13 @@ namespace TinhKhoanApp.Api.Services
             {
                 "DP01" => "DP01_New",
                 "LN01" => "LN01",
-                "LN02" => "LN02",
                 "LN03" => "LN03",
                 "DB01" => "DB01",
                 "GL01" => "GL01",
                 "GL41" => "GL41",
                 "DPDA" => "DPDA",
                 "EI01" => "EI01",
-                "KH03" => "KH03",
                 "RR01" => "RR01",
-                "DT_KHKD1" => "7800_DT_KHKD1",
                 _ => null
             };
         }
@@ -933,8 +899,8 @@ namespace TinhKhoanApp.Api.Services
                 // Danh sách các bảng cần xóa dữ liệu
                 var tablesToClear = new[]
                 {
-                    "DP01_New", "LN01", "LN02", "LN03", "DB01", "GL01", "GL41",
-                    "DPDA", "EI01", "KH03", "RR01", "7800_DT_KHKD1"
+                    "DP01_New", "LN01", "LN03", "DB01", "GL01", "GL41",
+                    "DPDA", "EI01", "RR01"
                 };
 
                 int totalDataRecords = 0;
@@ -980,6 +946,135 @@ namespace TinhKhoanApp.Api.Services
             {
                 _logger.LogError(ex, "❌ Error in clear all data operation");
                 return (false, $"Error clearing data: {ex.Message}", 0);
+            }
+        }
+
+        #endregion
+
+        #region GL41 Structure Fix
+
+        /// <summary>
+        /// 🔧 TEMPORARY: Fix GL41 database structure to match CSV (13 columns)
+        /// </summary>
+        public async Task<DirectImportResult> FixGL41DatabaseStructureAsync()
+        {
+            var result = new DirectImportResult
+            {
+                FileName = "GL41_Structure_Fix",
+                DataType = "GL41",
+                StartTime = DateTime.UtcNow
+            };
+
+            try
+            {
+                _logger.LogInformation("🔧 Starting GL41 database structure fix...");
+
+                using var connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+
+                var messages = new List<string>();
+
+                // 1. Rename SO_TK to MA_TK if exists
+                var checkSOTK = @"
+                    SELECT COUNT(*) FROM sys.columns
+                    WHERE object_id = OBJECT_ID('GL41') AND name = 'SO_TK'";
+
+                using (var cmd = new SqlCommand(checkSOTK, connection))
+                {
+                    var existsResult = await cmd.ExecuteScalarAsync();
+                    int exists = existsResult != null ? (int)existsResult : 0;
+                    if (exists > 0)
+                    {
+                        var renameSql = "EXEC sp_rename 'GL41.SO_TK', 'MA_TK', 'COLUMN'";
+                        using var renameCmd = new SqlCommand(renameSql, connection);
+                        await renameCmd.ExecuteNonQueryAsync();
+                        messages.Add("✅ Renamed SO_TK to MA_TK");
+                        _logger.LogInformation("✅ Renamed SO_TK to MA_TK");
+                    }
+                    else
+                    {
+                        messages.Add("ℹ️ SO_TK column not found or already renamed");
+                        _logger.LogInformation("ℹ️ SO_TK column not found or already renamed");
+                    }
+                }
+
+                // 2. Add LOAI_TIEN column if not exists
+                var checkLOAI_TIEN = @"
+                    SELECT COUNT(*) FROM sys.columns
+                    WHERE object_id = OBJECT_ID('GL41') AND name = 'LOAI_TIEN'";
+
+                using (var cmd = new SqlCommand(checkLOAI_TIEN, connection))
+                {
+                    var existsResult = await cmd.ExecuteScalarAsync();
+                    int exists = existsResult != null ? (int)existsResult : 0;
+                    if (exists == 0)
+                    {
+                        var addSql = "ALTER TABLE GL41 ADD LOAI_TIEN NVARCHAR(50)";
+                        using var addCmd = new SqlCommand(addSql, connection);
+                        await addCmd.ExecuteNonQueryAsync();
+                        messages.Add("✅ Added LOAI_TIEN column");
+                        _logger.LogInformation("✅ Added LOAI_TIEN column");
+                    }
+                    else
+                    {
+                        messages.Add("ℹ️ LOAI_TIEN column already exists");
+                        _logger.LogInformation("ℹ️ LOAI_TIEN column already exists");
+                    }
+                }
+
+                // 3. Add LOAI_BT column if not exists
+                var checkLOAI_BT = @"
+                    SELECT COUNT(*) FROM sys.columns
+                    WHERE object_id = OBJECT_ID('GL41') AND name = 'LOAI_BT'";
+
+                using (var cmd = new SqlCommand(checkLOAI_BT, connection))
+                {
+                    var existsResult = await cmd.ExecuteScalarAsync();
+                    int exists = existsResult != null ? (int)existsResult : 0;
+                    if (exists == 0)
+                    {
+                        var addSql = "ALTER TABLE GL41 ADD LOAI_BT NVARCHAR(50)";
+                        using var addCmd = new SqlCommand(addSql, connection);
+                        await addCmd.ExecuteNonQueryAsync();
+                        messages.Add("✅ Added LOAI_BT column");
+                        _logger.LogInformation("✅ Added LOAI_BT column");
+                    }
+                    else
+                    {
+                        messages.Add("ℹ️ LOAI_BT column already exists");
+                        _logger.LogInformation("ℹ️ LOAI_BT column already exists");
+                    }
+                }
+
+                // 4. Verify final structure
+                var verifySql = @"
+                    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+                    WHERE TABLE_NAME = 'GL41'";
+
+                using (var cmd = new SqlCommand(verifySql, connection))
+                {
+                    var countResult = await cmd.ExecuteScalarAsync();
+                    int columnCount = countResult != null ? (int)countResult : 0;
+                    messages.Add($"📊 GL41 now has {columnCount} columns");
+                    _logger.LogInformation("📊 GL41 now has {ColumnCount} columns", columnCount);
+
+                    result.ProcessedRecords = columnCount;
+                }
+
+                result.Success = true;
+                result.Details = string.Join("\n", messages);
+                result.EndTime = DateTime.UtcNow;
+
+                _logger.LogInformation("🎉 GL41 structure fix completed successfully");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.ErrorMessage = ex.Message;
+                result.EndTime = DateTime.UtcNow;
+                _logger.LogError(ex, "❌ Error fixing GL41 structure");
+                return result;
             }
         }
 
