@@ -207,6 +207,47 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
+        // 🔧 TEMPORARY: Fix GL41 structure - Admin only endpoint
+        [HttpPost("fix-gl41-structure")]
+        public async Task<IActionResult> FixGL41Structure()
+        {
+            try
+            {
+                _logger.LogInformation("🔧 Starting GL41 structure fix...");
+
+                var result = await _directImportService.FixGL41DatabaseStructureAsync();
+
+                if (result.Success)
+                {
+                    return Ok(new
+                    {
+                        message = "GL41 structure updated successfully",
+                        details = result.Details,
+                        timestamp = DateTime.UtcNow
+                    });
+                }
+                else
+                {
+                    return BadRequest(new
+                    {
+                        message = "Failed to update GL41 structure",
+                        error = result.ErrorMessage,
+                        timestamp = DateTime.UtcNow
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error fixing GL41 structure");
+                return StatusCode(500, new
+                {
+                    message = "Internal server error while fixing GL41 structure",
+                    error = ex.Message,
+                    timestamp = DateTime.UtcNow
+                });
+            }
+        }
+
         // 📊 Legacy endpoints - Disabled for migration to DirectImportService
         [HttpGet]
         [Obsolete("Use DirectImportService instead")]

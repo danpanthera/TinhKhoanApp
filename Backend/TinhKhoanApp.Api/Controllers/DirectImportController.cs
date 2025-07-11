@@ -206,9 +206,8 @@ namespace TinhKhoanApp.Api.Controllers
                         "GL41 - Dữ liệu giao dịch",
                         "DPDA - Dữ liệu phân tích",
                         "EI01 - Dữ liệu lãi suất",
-                        "KH03 - Dữ liệu khách hàng",
+
                         "RR01 - Dữ liệu rủi ro",
-                        "DT_KHKD1 - Dữ liệu kinh doanh"
                     }
                 });
             }
