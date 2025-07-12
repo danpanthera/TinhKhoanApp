@@ -42,10 +42,10 @@ namespace TinhKhoanApp.Api.Controllers
                         Message = "KPI System is operational",
                         Data = new
                         {
-                            TotalTables = reader.IsDBNull("TotalTables") ? 0 : reader.GetInt32("TotalTables"),
-                            TotalIndicators = reader.IsDBNull("TotalIndicators") ? 0 : reader.GetInt32("TotalIndicators"),
-                            EmployeeTables = reader.IsDBNull("EmployeeTables") ? 0 : reader.GetInt32("EmployeeTables"),
-                            UnitTables = reader.IsDBNull("UnitTables") ? 0 : reader.GetInt32("UnitTables")
+                            TotalTables = reader.IsDBNull(reader.GetOrdinal("TotalTables")) ? 0 : reader.GetInt32(reader.GetOrdinal("TotalTables")),
+                            TotalIndicators = reader.IsDBNull(reader.GetOrdinal("TotalIndicators")) ? 0 : reader.GetInt32(reader.GetOrdinal("TotalIndicators")),
+                            EmployeeTables = reader.IsDBNull(reader.GetOrdinal("EmployeeTables")) ? 0 : reader.GetInt32(reader.GetOrdinal("EmployeeTables")),
+                            UnitTables = reader.IsDBNull(reader.GetOrdinal("UnitTables")) ? 0 : reader.GetInt32(reader.GetOrdinal("UnitTables"))
                         },
                         Timestamp = DateTime.UtcNow
                     });
@@ -93,11 +93,11 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     tables.Add(new
                     {
-                        Id = reader.IsDBNull("Id") ? 0 : reader.GetInt32("Id"),
-                        TableType = reader.IsDBNull("TableType") ? "" : reader.GetString("TableType"),
-                        TableName = reader.IsDBNull("TableName") ? "" : reader.GetString("TableName"),
-                        Description = reader.IsDBNull("Description") ? "" : reader.GetString("Description"),
-                        Category = reader.IsDBNull("Category") ? "" : reader.GetString("Category")
+                        Id = reader.IsDBNull(reader.GetOrdinal("Id")) ? 0 : reader.GetInt32(reader.GetOrdinal("Id")),
+                        TableType = reader.IsDBNull(reader.GetOrdinal("TableType")) ? "" : reader.GetString(reader.GetOrdinal("TableType")),
+                        TableName = reader.IsDBNull(reader.GetOrdinal("TableName")) ? "" : reader.GetString(reader.GetOrdinal("TableName")),
+                        Description = reader.IsDBNull(reader.GetOrdinal("Description")) ? "" : reader.GetString(reader.GetOrdinal("Description")),
+                        Category = reader.IsDBNull(reader.GetOrdinal("Category")) ? "" : reader.GetString(reader.GetOrdinal("Category"))
                     });
                 }
 

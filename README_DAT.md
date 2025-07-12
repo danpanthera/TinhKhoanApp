@@ -364,18 +364,6 @@ curl -s "http://localhost:5055/api/employees/{id}" | jq '.EmployeeRoles'
 - API: /api/KpiAssignment/* endpoints
 ```
 
-#### 9.2 Role-Table mapping (✅)
-```
-Role ID → KpiAssignmentTable ID mapping:
-Role 1 (Trưởng phòng KHDN) → Table 1 (TruongphongKhdn)
-Role 2 (Trưởng phòng KHCN) → Table 2 (TruongphongKhcn)  
-Role 5 (TP KH&QLRR) → Table 5 (TruongphongKhqlrr)
-Role 8 (TP KTNQ CNL1) → Table 8 (TruongphongKtnqCnl1)
-Role 12 (IT/Tổng hợp) → Table 12 (TruongphoItThKtgs)
-Role 15 (Phó GĐ PGD) → Table 15 (PhogiamdocPgd)
-Role 18 (Phó GĐ CNL2 TD) → Table 18 (PhogiamdocCnl2Td)
-```
-
 #### 9.3 Thách thức hiện tại (🔄)
 ❓ **KpiIndicators chưa được populate**: Assignment tables có template nhưng chưa có KPI indicators cụ thể  
 ❓ **Link KpiDefinitions → KpiIndicators**: Cần tạo quan hệ giữa master data và assignment tables  
