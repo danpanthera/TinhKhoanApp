@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import apiClient from "../services/api.js";
-import { getStatus, getType, normalizeArray } from "../utils/casingSafeAccess.js";
+import { getId, getName, getStatus, getType, normalizeArray } from "../utils/casingSafeAccess.js";
 
 export const useKhoanPeriodStore = defineStore("khoanPeriod", {
   // State
