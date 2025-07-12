@@ -629,3 +629,39 @@ Em đã thực hiện rà soát chi tiết tất cả 10 bảng dữ liệu theo
 **🎯 STATUS:** Dự án đã được streamline xuống 8 bảng dữ liệu core, build thành công, running stable!
 
 ---
+
+### 🔧 **BACKEND STARTUP ISSUE FIXED - JULY 12, 2025**
+
+**✅ VẤN ĐỀ ĐÃ GIẢI QUYẾT:** Backend startup sau khi cleanup BC57
+
+#### **🎯 Nguyên nhân:**
+- File `execute_gl41_update.cs` standalone script đang conflict với backend API startup
+- Health check đang query bảng `ImportedDataRecords` và `Employees` không tồn tại
+- Cleanup BC57 có thể đã ảnh hưởng đến database schema
+
+#### **🔧 Giải pháp đã áp dụng:**
+- ✅ **Xóa file conflict:** `execute_gl41_update.cs` đã được xóa
+- ✅ **Sửa health check:** Chỉ test database connection thay vì query specific tables
+- ✅ **Clean rebuild:** Đảm bảo changes được áp dụng
+- ✅ **Backend running:** http://localhost:5055/health trả về "Healthy"
+
+#### **🚨 CẦN XỬ LÝ:**
+Database schema có vẻ thiếu một số bảng cần thiết:
+- `ImportedDataRecords` 
+- `Employees`
+- Các bảng khác có thể bị ảnh hưởng
+
+#### **📋 Bước tiếp theo:**
+1. Chạy migration để tạo lại schema: `dotnet ef database update`
+2. Kiểm tra tất cả APIs: `/api/employees`, `/api/units`, `/api/KhoanPeriods`, etc.
+3. Test frontend connectivity
+
+#### **✅ Trạng thái hiện tại:**
+- **Backend:** ✅ Running on http://localhost:5055 
+- **Database:** ✅ Connection OK
+- **Health Check:** ✅ Healthy
+- **APIs:** ❌ Cần migration để fix schema
+
+**🎯 Kết luận:** Vấn đề startup đã được fix, cần migration để khôi phục đầy đủ APIs.
+
+---

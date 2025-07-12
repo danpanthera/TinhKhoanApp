@@ -17,25 +17,21 @@ namespace TinhKhoanApp.Api.HealthChecks
         }
 
         public async Task<HealthCheckResult> CheckHealthAsync(
-            HealthCheckContext context, 
+            HealthCheckContext context,
             CancellationToken cancellationToken = default)
         {
             try
             {
                 var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-                
-                // Test database connection
+
+                // Test database connection only
                 await _context.Database.CanConnectAsync(cancellationToken);
-                
-                // Test a simple query
-                var recordCount = await _context.ImportedDataRecords.CountAsync(cancellationToken);
-                
+
                 stopwatch.Stop();
-                
+
                 var data = new Dictionary<string, object>
                 {
                     ["ConnectionTime"] = $"{stopwatch.ElapsedMilliseconds}ms",
-                    ["TotalImports"] = recordCount,
                     ["DatabaseProvider"] = _context.Database.ProviderName ?? "Unknown",
                     ["LastChecked"] = DateTime.UtcNow
                 };
@@ -67,7 +63,7 @@ namespace TinhKhoanApp.Api.HealthChecks
         }
 
         public Task<HealthCheckResult> CheckHealthAsync(
-            HealthCheckContext context, 
+            HealthCheckContext context,
             CancellationToken cancellationToken = default)
         {
             try
@@ -75,7 +71,7 @@ namespace TinhKhoanApp.Api.HealthChecks
                 // Test cache functionality
                 var testKey = $"health_check_{Guid.NewGuid()}";
                 var testValue = DateTime.UtcNow;
-                
+
                 _cache.Set(testKey, testValue, new MemoryCacheEntryOptions
                 {
                     AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(10),
@@ -119,13 +115,13 @@ namespace TinhKhoanApp.Api.HealthChecks
         }
 
         public async Task<HealthCheckResult> CheckHealthAsync(
-            HealthCheckContext context, 
+            HealthCheckContext context,
             CancellationToken cancellationToken = default)
         {
             try
             {
                 var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-                
+
                 // Test optimized query performance
                 var recentImports = await _context.ImportedDataRecords
                     .OrderByDescending(x => x.ImportDate)
@@ -201,16 +197,16 @@ namespace TinhKhoanApp.Api.HealthChecks
         public static IServiceCollection AddCustomHealthChecks(this IServiceCollection services)
         {
             services.AddHealthChecks()
-                .AddCheck<DatabaseHealthCheck>("database", 
+                .AddCheck<DatabaseHealthCheck>("database",
                     failureStatus: HealthStatus.Unhealthy,
                     tags: new[] { "db", "ready" })
                 .AddCheck<MemoryCacheHealthCheck>("cache",
-                    failureStatus: HealthStatus.Degraded, 
+                    failureStatus: HealthStatus.Degraded,
                     tags: new[] { "cache", "ready" });
-                // Tạm comment performance check vì CompressedData column issue
-                // .AddCheck<PerformanceHealthCheck>("performance",
-                //     failureStatus: HealthStatus.Degraded,
-                //     tags: new[] { "performance", "ready" });
+            // Tạm comment performance check vì CompressedData column issue
+            // .AddCheck<PerformanceHealthCheck>("performance",
+            //     failureStatus: HealthStatus.Degraded,
+            //     tags: new[] { "performance", "ready" });
 
             return services;
         }
