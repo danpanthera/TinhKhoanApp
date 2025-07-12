@@ -41,7 +41,7 @@ namespace TinhKhoanApp.Api.Controllers
                     ("TruongphongKtnqCnl1", "Trưởng phòng KTNQ CNL1", 6),
                     ("PhophongKtnqCnl1", "Phó phòng KTNQ CNL1", 6),
                     ("Gdv", "GDV", 6),
-                    ("TqHkKtnb", "Thủ quỹ | Hậu kiểm | KTNB", 6),
+                    ("TqHkKtnb", "Thủ quỹ | Hậu kiểm | KTNB", 0), // Bảng tạm thời chưa có chỉ tiêu
                     ("TruongphoItThKtgs", "Trưởng phó IT | Tổng hợp | KTGS", 5),
                     ("CBItThKtgsKhqlrr", "Cán bộ IT | Tổng hợp | KTGS | KH&QLRR", 4),
                     ("GiamdocPgd", "Giám đốc Phòng giao dịch", 9),
@@ -89,22 +89,25 @@ namespace TinhKhoanApp.Api.Controllers
                         insertedTableId = Convert.ToInt32(await tableCommand.ExecuteScalarAsync());
                     }
 
-                    // Tạo KpiIndicators cho bảng này
-                    for (int i = 1; i <= indicatorCount; i++)
+                    // Tạo KpiIndicators cho bảng này (chỉ khi có chỉ tiêu)
+                    if (indicatorCount > 0)
                     {
-                        var insertIndicatorSql = @"
-                            INSERT INTO KpiIndicators (TableId, IndicatorCode, IndicatorName, Description, Unit, IsActive, CreatedAt, UpdatedAt)
-                            VALUES (@TableId, @IndicatorCode, @IndicatorName, @Description, @Unit, 1, GETDATE(), GETDATE())";
+                        for (int i = 1; i <= indicatorCount; i++)
+                        {
+                            var insertIndicatorSql = @"
+                                INSERT INTO KpiIndicators (TableId, IndicatorCode, IndicatorName, Description, Unit, IsActive, CreatedAt, UpdatedAt)
+                                VALUES (@TableId, @IndicatorCode, @IndicatorName, @Description, @Unit, 1, GETDATE(), GETDATE())";
 
-                        using var indicatorCommand = new SqlCommand(insertIndicatorSql, connection);
-                        indicatorCommand.Parameters.AddWithValue("@TableId", insertedTableId);
-                        indicatorCommand.Parameters.AddWithValue("@IndicatorCode", $"IND_{tableName}_{i:D2}");
-                        indicatorCommand.Parameters.AddWithValue("@IndicatorName", $"Chỉ tiêu {i} cho {description}");
-                        indicatorCommand.Parameters.AddWithValue("@Description", $"Mô tả chỉ tiêu {i} - {description}");
-                        indicatorCommand.Parameters.AddWithValue("@Unit", "VND");
+                            using var indicatorCommand = new SqlCommand(insertIndicatorSql, connection);
+                            indicatorCommand.Parameters.AddWithValue("@TableId", insertedTableId);
+                            indicatorCommand.Parameters.AddWithValue("@IndicatorCode", $"IND_{tableName}_{i:D2}");
+                            indicatorCommand.Parameters.AddWithValue("@IndicatorName", $"Chỉ tiêu {i} cho {description}");
+                            indicatorCommand.Parameters.AddWithValue("@Description", $"Mô tả chỉ tiêu {i} - {description}");
+                            indicatorCommand.Parameters.AddWithValue("@Unit", "VND");
 
-                        await indicatorCommand.ExecuteNonQueryAsync();
-                        totalIndicators++;
+                            await indicatorCommand.ExecuteNonQueryAsync();
+                            totalIndicators++;
+                        }
                     }
                 }
 
@@ -163,7 +166,7 @@ namespace TinhKhoanApp.Api.Controllers
                     TotalIndicators = indicatorDbCount,
                     CanBoTables = 23,
                     ChiNhanhTables = 9,
-                    ExpectedIndicators = 23 * 7 + 9 * 11, // Tính toán dự kiến
+                    ExpectedIndicators = 158, // 23 bảng cán bộ (158 chỉ tiêu) + 9 bảng chi nhánh (99 chỉ tiêu) = 257
                     ActualIndicators = totalIndicators,
                     Message = "Tạo thành công cấu trúc KPI 32 bảng",
                     Details = new
