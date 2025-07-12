@@ -111,6 +111,18 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         {
             base.OnModelCreating(modelBuilder);
 
+            // Cấu hình explicit cho Employee model
+            modelBuilder.Entity<Employee>(entity =>
+            {
+                entity.ToTable("Employees");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.IsActive)
+                    .HasColumnName("IsActive")
+                    .HasColumnType("bit")
+                    .IsRequired()
+                    .HasDefaultValue(true);
+            });
+
             // Cấu hình khóa chính phức hợp cho EmployeeRole
             modelBuilder.Entity<EmployeeRole>()
                 .HasKey(er => new { er.EmployeeId, er.RoleId });

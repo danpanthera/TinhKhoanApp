@@ -414,9 +414,17 @@ namespace TinhKhoanApp.Api.Controllers
                 return BadRequest("Không có ID nhân viên hợp lệ nào được cung cấp.");
             }
 
-            // Lấy danh sách nhân viên cần xóa
+            // Lấy danh sách nhân viên cần xóa với safe NULL handling
             var employeesToDelete = await _context.Employees
                 .Where(e => validIds.Contains(e.Id))
+                .Select(e => new
+                {
+                    e.Id,
+                    e.EmployeeCode,
+                    FullName = e.FullName ?? "",
+                    Username = e.Username ?? "",
+                    Employee = e
+                })
                 .ToListAsync();
 
             if (!employeesToDelete.Any())
@@ -443,9 +451,12 @@ namespace TinhKhoanApp.Api.Controllers
                     _context.EmployeeRoles.RemoveRange(employeeRolesToDelete);
                 }
 
-                // Xóa nhân viên
-                _context.Employees.RemoveRange(employeesToDelete);
-                await _context.SaveChangesAsync();
+                // Xóa nhân viên bằng SQL trực tiếp để tránh conflict với soft delete
+                var idsParam = string.Join(",", validIds);
+                await _context.Database.ExecuteSqlRawAsync($"DELETE FROM Employees WHERE Id IN ({idsParam})");
+
+                // Hoặc nếu muốn dùng soft delete, dùng SQL trực tiếp
+                // await _context.Database.ExecuteSqlRawAsync($"UPDATE Employees SET IsActive = 0 WHERE Id IN ({idsParam})");
 
                 return Ok(new
                 {
