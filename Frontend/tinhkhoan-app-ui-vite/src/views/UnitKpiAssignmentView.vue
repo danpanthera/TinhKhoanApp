@@ -343,7 +343,7 @@ async function loadInitialData() {
   try {
     const [periodsResponse, tablesResponse, unitsResponse] = await Promise.all([
       api.get('/KhoanPeriods'),
-      api.get('/KpiAssignment/tables'),
+      api.get('/KpiAssignmentTables'),
       api.get('/units')
     ])
 

@@ -15,7 +15,7 @@ reset_table_indicators() {
     echo "🗑️  Xóa toàn bộ chỉ tiêu của bảng: $table_name"
 
     # Get TableId
-    local table_id=$(curl -s "$API_BASE/KpiAssignment/tables" | jq -r ".[] | select(.TableName == \"$table_name\") | .Id")
+    local table_id=$(curl -s "$API_BASE/KpiAssignmentTables" | jq -r ".[] | select(.TableName == \"$table_name\") | .Id")
 
     if [ -z "$table_id" ]; then
         echo "    ❌ Không tìm thấy TableId cho $table_name"

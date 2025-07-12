@@ -28,9 +28,17 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 var query = @"
-                    SELECT Id, TableName, Description, Category
-                    FROM KpiAssignmentTables
-                    ORDER BY Id
+                    SELECT
+                        kat.Id,
+                        kat.TableName,
+                        kat.Description,
+                        kat.Category,
+                        COUNT(ki.Id) as IndicatorCount
+                    FROM KpiAssignmentTables kat
+                    LEFT JOIN KpiIndicators ki ON kat.Id = ki.TableId AND ki.IsActive = 1
+                    WHERE kat.IsActive = 1
+                    GROUP BY kat.Id, kat.TableName, kat.Description, kat.Category
+                    ORDER BY kat.Id
                 ";
 
                 using var connection = _context.Database.GetDbConnection();
@@ -42,15 +50,25 @@ namespace TinhKhoanApp.Api.Controllers
                 using var reader = await command.ExecuteReaderAsync();
                 while (await reader.ReadAsync())
                 {
+                    var id = reader.GetInt32(0);
+                    var tableName = reader.GetString(1);
+                    var description = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                    var originalCategory = reader.GetString(3);
+                    var indicatorCount = reader.GetInt32(4);
+
+                    // Map category để frontend hiểu đúng
+                    string mappedCategory = MapCategory(originalCategory);
+
                     tables.Add(new
                     {
-                        Id = reader.GetInt32(0),
-                        TableType = "",
-                        TableName = reader.GetString(1),
-                        Description = reader.IsDBNull(2) ? "" : reader.GetString(2),
-                        Category = reader.GetString(3),
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
+                        Id = id,
+                        TableType = tableName, // Use TableName as TableType for consistency
+                        TableName = tableName,
+                        Description = description,
+                        Category = mappedCategory,
+                        IsActive = true,
+                        CreatedDate = DateTime.UtcNow,
+                        IndicatorCount = indicatorCount
                     });
                 }
 
@@ -192,6 +210,15 @@ namespace TinhKhoanApp.Api.Controllers
                     stackTrace = ex.StackTrace
                 });
             }
+        }
+
+        /// <summary>
+        /// Map category từ database sang format mà frontend mong đợi
+        /// </summary>
+        private string MapCategory(string originalCategory)
+        {
+            // Database đã có category đúng rồi, return nguyên bản
+            return originalCategory?.ToUpper() ?? "CANBO";
         }
     }
 }

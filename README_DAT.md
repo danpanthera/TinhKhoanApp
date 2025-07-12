@@ -7,7 +7,7 @@ LUÔN commit từng phần nhỏ, không commit cả một lần quá nhiều fi
 databasse là "TinhKhoanDB" và mật khẩu là "YourStrong@Password123"
 trên docker có container chứa SQL server với tên là "azure_sql_edge_tinhkhoan"
 Luôn để backend port là 5055, frontend port là 3000.
-
+Luôn chạy backend bằng lệnh ./start_backend.sh
 ## 🆕 TinhKhoanApp Maintenance Notes (July 2025)
 
 ### Dọn dẹp Dự án
@@ -772,27 +772,7 @@ Database schema có vẻ thiếu một số bảng cần thiết:
 ✅ Error Resolution: "Invalid column name 'IsActive'" fixed completely
 ```
 
-#### **🎯 Test Results:**
 
-```bash
-# Test bulk delete API
-curl -X DELETE http://localhost:5055/api/employees/bulk \
-  -H "Content-Type: application/json" \
-  -d '[3]'
-
-# Response:
-{
-  "message": "Đã xóa thành công 1 nhân viên.",
-  "deletedCount": 1,
-  "deletedEmployees": [
-    {
-      "Id": 3,
-      "EmployeeCode": "EMP003", 
-      "FullName": "Lê Văn C"
-    }
-  ]
-}
-```
 
 **🎉 STATUS:** Bulk delete API và Entity Framework schema mismatch đã được fix hoàn toàn!
 

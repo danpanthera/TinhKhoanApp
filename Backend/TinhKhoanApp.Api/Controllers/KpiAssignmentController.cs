@@ -27,12 +27,12 @@ namespace TinhKhoanApp.Api.Controllers
             var response = tables.Select(t => new
             {
                 Id = t.Id,
-                TableType = t.TableType ?? "",
+                TableType = t.TableType.ToString(),
                 TableName = t.TableName ?? "",
                 Description = t.Description ?? "",
                 Category = MapCategory(t.Category ?? ""),
                 IsActive = true,
-                CreatedDate = t.CreatedAt,
+                CreatedDate = t.CreatedDate,
                 IndicatorCount = 0
             }).OrderBy(t => t.Id).ToList();
 
