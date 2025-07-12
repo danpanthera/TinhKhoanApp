@@ -15,7 +15,7 @@ namespace TinhKhoanApp.Api.Models
 
         [Required]
         [StringLength(50)]
-        public string DataType { get; set; } = null!; // LN01, LN03, DP01, DB01, GL01, EI01, BC57, DPDA, RR01, GL41
+        public string DataType { get; set; } = null!; // LN01, LN03, DP01, GL01, EI01, BC57, DPDA, RR01, GL41
 
         [Required]
         public DateTime ImportDate { get; set; } // Ngày import
@@ -72,7 +72,6 @@ namespace TinhKhoanApp.Api.Models
         LN01,         // Dữ liệu LOAN - Danh mục tín dụng
         LN03,         // Dữ liệu Nợ XLRR
         DP01,         // Dữ liệu Tiền gửi
-        DB01,         // Sao kê TSDB và Không TSDB
         GL01,         // Dữ liệu bút toán GDV
         EI01,         // Dữ liệu mobile banking
         BC57,         // Sao kê Lãi dự thu - Dữ liệu lãi suất
@@ -89,7 +88,7 @@ namespace TinhKhoanApp.Api.Models
         [Required(ErrorMessage = "Vui lòng chọn ít nhất một file")]
         public IFormFileCollection? Files { get; set; }
 
-        public string? DataType { get; set; } // Loại dữ liệu (LN01, LN03, DP01, DB01, GL01, EI01, BC57, DPDA, RR01, GL41)
+        public string? DataType { get; set; } // Loại dữ liệu (LN01, LN03, DP01, GL01, EI01, BC57, DPDA, RR01, GL41)
         public string? Notes { get; set; } // Ghi chú
     }
 

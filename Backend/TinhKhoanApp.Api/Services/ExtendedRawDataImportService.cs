@@ -20,7 +20,7 @@ namespace TinhKhoanApp.Api.Services
         Task<ImportResponseDto> ImportLN03DataAsync(ImportRequestDto request, List<LN03History> data);
         Task<ImportResponseDto> ImportEI01DataAsync(ImportRequestDto request, List<EI01History> data);
         Task<ImportResponseDto> ImportDPDADataAsync(ImportRequestDto request, List<DPDAHistory> data);
-        Task<ImportResponseDto> ImportDB01DataAsync(ImportRequestDto request, List<DB01History> data);
+
 
         Task<ImportResponseDto> ImportBC57DataAsync(ImportRequestDto request, List<BC57History> data);
 
@@ -59,13 +59,6 @@ namespace TinhKhoanApp.Api.Services
         {
             return await ImportDataAsync(request, data, "DPDA");
         }
-
-        public async Task<ImportResponseDto> ImportDB01DataAsync(ImportRequestDto request, List<DB01History> data)
-        {
-            return await ImportDataAsync(request, data, "DB01");
-        }
-
-
 
         public async Task<ImportResponseDto> ImportBC57DataAsync(ImportRequestDto request, List<BC57History> data)
         {
@@ -200,10 +193,6 @@ namespace TinhKhoanApp.Api.Services
                 case "DPDA":
                     _context.DPDAHistory.AddRange(data.Cast<DPDAHistory>());
                     break;
-                case "DB01":
-                    _context.DB01History.AddRange(data.Cast<DB01History>());
-                    break;
-
                 case "BC57":
                     _context.BC57History.AddRange(data.Cast<BC57History>());
                     break;
@@ -270,11 +259,6 @@ namespace TinhKhoanApp.Api.Services
                     _context.DPDAHistory.Where(x => x.IsCurrent),
                     "DPDA",
                     "Dữ liệu Phát hành thẻ"));
-
-                summaries.Add(await GetTableSummary(
-                    _context.DB01History.Where(x => x.IsCurrent),
-                    "DB01",
-                    "Sao kê TSDB và Không TSDB"));
 
                 summaries.Add(await GetTableSummary(
                     _context.BC57History.Where(x => x.IsCurrent),

@@ -795,13 +795,6 @@ class RawDataService {
         acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: 'DPDA'
       },
-      'DB01': {
-        name: 'DB01',
-        description: 'Sao kê TSDB và Không TSDB',
-        icon: '📋',
-        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
-        requiredKeyword: 'DB01'
-      },
       'KH03': {
         name: 'KH03',
         description: 'Sao kê Khách hàng pháp nhân',

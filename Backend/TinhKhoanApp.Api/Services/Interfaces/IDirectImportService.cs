@@ -24,10 +24,7 @@ namespace TinhKhoanApp.Api.Services.Interfaces
         /// </summary>
         Task<DirectImportResult> ImportLN03DirectAsync(IFormFile file, string? statementDate = null);
 
-        /// <summary>
-        /// Import trực tiếp file CSV vào bảng DB01 sử dụng SqlBulkCopy
-        /// </summary>
-        Task<DirectImportResult> ImportDB01DirectAsync(IFormFile file, string? statementDate = null);
+
 
         /// <summary>
         /// Import trực tiếp file CSV vào bảng GL01 sử dụng SqlBulkCopy

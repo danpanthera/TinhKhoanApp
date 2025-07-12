@@ -56,7 +56,7 @@ namespace TinhKhoanApp.Api.Models.Validation
 
     public class DataTypeValidationAttribute : ValidationAttribute
     {
-        private readonly string[] _validDataTypes = { "LN01", "LN03", "DP01", "EI01", "GL01", "DPDA", "DB01", "BC57" };
+        private readonly string[] _validDataTypes = { "LN01", "LN03", "DP01", "EI01", "GL01", "DPDA", "BC57" };
 
         public override bool IsValid(object? value)
         {

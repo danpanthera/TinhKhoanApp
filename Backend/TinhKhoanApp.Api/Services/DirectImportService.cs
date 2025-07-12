@@ -70,7 +70,6 @@ namespace TinhKhoanApp.Api.Services
                     "DP01" => await ImportDP01DirectAsync(file, statementDate),
                     "LN01" => await ImportLN01DirectAsync(file, statementDate),
                     "LN03" => await ImportLN03DirectAsync(file, statementDate),
-                    "DB01" => await ImportDB01DirectAsync(file, statementDate),
                     "GL01" => await ImportGL01DirectAsync(file, statementDate),
                     "GL41" => await ImportGL41DirectAsync(file, statementDate),
                     "DPDA" => await ImportDPDADirectAsync(file, statementDate),
@@ -113,14 +112,6 @@ namespace TinhKhoanApp.Api.Services
         public async Task<DirectImportResult> ImportLN03DirectAsync(IFormFile file, string? statementDate = null)
         {
             return await ImportGenericCSVAsync<LN03>("LN03", "LN03", file, statementDate);
-        }
-
-        /// <summary>
-        /// Import DB01 - Deposit data
-        /// </summary>
-        public async Task<DirectImportResult> ImportDB01DirectAsync(IFormFile file, string? statementDate = null)
-        {
-            return await ImportGenericCSVAsync<DB01>("DB01", "DB01", file, statementDate);
         }
 
         /// <summary>
@@ -291,7 +282,6 @@ namespace TinhKhoanApp.Api.Services
             if (upperFileName.Contains("DP01")) return "DP01";
             if (upperFileName.Contains("LN01")) return "LN01";
             if (upperFileName.Contains("LN03")) return "LN03";
-            if (upperFileName.Contains("DB01")) return "DB01";
             if (upperFileName.Contains("GL01")) return "GL01";
             if (upperFileName.Contains("GL41")) return "GL41";
             if (upperFileName.Contains("DPDA")) return "DPDA";
@@ -860,7 +850,6 @@ namespace TinhKhoanApp.Api.Services
                 "DP01" => "DP01_New",
                 "LN01" => "LN01",
                 "LN03" => "LN03",
-                "DB01" => "DB01",
                 "GL01" => "GL01",
                 "GL41" => "GL41",
                 "DPDA" => "DPDA",
@@ -899,7 +888,7 @@ namespace TinhKhoanApp.Api.Services
                 // Danh sách các bảng cần xóa dữ liệu
                 var tablesToClear = new[]
                 {
-                    "DP01_New", "LN01", "LN03", "DB01", "GL01", "GL41",
+                    "DP01_New", "LN01", "LN03", "GL01", "GL41",
                     "DPDA", "EI01", "RR01"
                 };
 

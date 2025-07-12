@@ -165,7 +165,7 @@ namespace TinhKhoanApp.Api.Services
         {
             var tables = new List<string>
             {
-                "DP01", "LN01", "LN03", "DB01",
+                "DP01", "LN01", "LN03",
                 "GL01", "GL41", "DPDA", "EI01",
             };
 
@@ -183,7 +183,6 @@ namespace TinhKhoanApp.Api.Services
             if (fileName.Contains("DP01")) return "DP01";
             if (fileName.Contains("LN01")) return "LN01";
             if (fileName.Contains("LN03")) return "LN03";
-            if (fileName.Contains("DB01")) return "DB01";
             if (fileName.Contains("GL01")) return "GL01";
             if (fileName.Contains("GL41")) return "GL41";
             if (fileName.Contains("DPDA")) return "DPDA";
@@ -200,7 +199,6 @@ namespace TinhKhoanApp.Api.Services
                 { "DP01", new DataTableMapping { TableName = "DP01", EntityType = "DP01", HasTemporalTables = true, HasColumnstoreIndex = true } },
                 { "LN01", new DataTableMapping { TableName = "LN01", EntityType = "LN01", HasTemporalTables = true, HasColumnstoreIndex = true } },
                 { "LN03", new DataTableMapping { TableName = "LN03", EntityType = "LN03", HasTemporalTables = true, HasColumnstoreIndex = true } },
-                { "DB01", new DataTableMapping { TableName = "DB01", EntityType = "DB01", HasTemporalTables = true, HasColumnstoreIndex = true } },
                 { "GL01", new DataTableMapping { TableName = "GL01", EntityType = "GL01", HasTemporalTables = true, HasColumnstoreIndex = true } },
                 { "GL41", new DataTableMapping { TableName = "GL41", EntityType = "GL41", HasTemporalTables = true, HasColumnstoreIndex = true } },
                 { "DPDA", new DataTableMapping { TableName = "DPDA", EntityType = "DPDA", HasTemporalTables = true, HasColumnstoreIndex = true } },

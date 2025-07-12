@@ -1,0 +1,77 @@
+-- ===============================================
+-- TẠO CÁC BẢNG DỮ LIỆU THÔ CÒN THIẾU (DPDA, TSDB01)
+-- ===============================================
+
+USE TinhKhoanDB;
+GO
+
+-- Tạo bảng DPDA (Phát hành thẻ)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'DPDA')
+BEGIN
+    CREATE TABLE DPDA (
+        Id BIGINT IDENTITY(1,1) PRIMARY KEY,
+        MA_KH NVARCHAR(50),
+        TEN_KH NVARCHAR(255),
+        SO_THE NVARCHAR(50),
+        LOAI_THE NVARCHAR(50),
+        NGAY_PH DATE,
+        TRANG_THAI NVARCHAR(50),
+        SO_DU DECIMAL(18,2),
+        SO_GD_THANG INT,
+        SO_TIEN_GD DECIMAL(18,2),
+        PHI_THUONG_NIEN DECIMAL(18,2),
+        DOANH_THU DECIMAL(18,2),
+        NGAY_DL DATE,
+        CREATED_DATE DATETIME2 DEFAULT GETDATE(),
+        UPDATED_DATE DATETIME2 DEFAULT GETDATE(),
+        SysStartTime DATETIME2 GENERATED ALWAYS AS ROW START HIDDEN DEFAULT GETDATE(),
+        SysEndTime DATETIME2 GENERATED ALWAYS AS ROW END HIDDEN DEFAULT '9999-12-31 23:59:59.9999999',
+        PERIOD FOR SYSTEM_TIME (SysStartTime, SysEndTime)
+    ) WITH (SYSTEM_VERSIONING = ON (HISTORY_TABLE = dbo.DPDA_History));
+
+    CREATE NONCLUSTERED COLUMNSTORE INDEX NCCI_DPDA ON DPDA (
+        MA_KH, TEN_KH, SO_THE, LOAI_THE, NGAY_PH, TRANG_THAI,
+        SO_DU, SO_GD_THANG, SO_TIEN_GD, PHI_THUONG_NIEN, DOANH_THU, NGAY_DL
+    );
+    PRINT '✅ DPDA - Temporal table + Columnstore index (Phát hành thẻ)';
+END
+ELSE
+    PRINT 'ℹ️ DPDA đã tồn tại';
+
+-- Tạo bảng TSDB01 (Tài sản đảm bảo)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TSDB01')
+BEGIN
+    CREATE TABLE TSDB01 (
+        Id BIGINT IDENTITY(1,1) PRIMARY KEY,
+        SO_HD NVARCHAR(50),
+        MA_KH NVARCHAR(50),
+        TEN_KH NVARCHAR(255),
+        LOAI_TSDB NVARCHAR(100),
+        MO_TA_TSDB NVARCHAR(500),
+        GIA_TRI_TSDB DECIMAL(18,2),
+        TY_LE_CHO_VAY DECIMAL(5,4),
+        GIA_TRI_CHO_VAY DECIMAL(18,2),
+        NGAY_DANH_GIA DATE,
+        DON_VI_DANH_GIA NVARCHAR(255),
+        TRANG_THAI NVARCHAR(50),
+        GHI_CHU NVARCHAR(500),
+        NGAY_TAO_HO_SO DATE,
+        NGUOI_TAO NVARCHAR(100),
+        NGAY_DL DATE,
+        CREATED_DATE DATETIME2 DEFAULT GETDATE(),
+        UPDATED_DATE DATETIME2 DEFAULT GETDATE(),
+        SysStartTime DATETIME2 GENERATED ALWAYS AS ROW START HIDDEN DEFAULT GETDATE(),
+        SysEndTime DATETIME2 GENERATED ALWAYS AS ROW END HIDDEN DEFAULT '9999-12-31 23:59:59.9999999',
+        PERIOD FOR SYSTEM_TIME (SysStartTime, SysEndTime)
+    ) WITH (SYSTEM_VERSIONING = ON (HISTORY_TABLE = dbo.TSDB01_History));
+
+    CREATE NONCLUSTERED COLUMNSTORE INDEX NCCI_TSDB01 ON TSDB01 (
+        SO_HD, MA_KH, TEN_KH, LOAI_TSDB, GIA_TRI_TSDB, TY_LE_CHO_VAY,
+        GIA_TRI_CHO_VAY, NGAY_DANH_GIA, TRANG_THAI, NGAY_TAO_HO_SO, NGAY_DL
+    );
+    PRINT '✅ TSDB01 - Temporal table + Columnstore index (Tài sản đảm bảo)';
+END
+ELSE
+    PRINT 'ℹ️ TSDB01 đã tồn tại';
+
+PRINT '🎉 Hoàn thành tạo các bảng dữ liệu còn thiếu!';

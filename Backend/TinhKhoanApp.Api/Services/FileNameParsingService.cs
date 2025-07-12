@@ -60,7 +60,6 @@ namespace TinhKhoanApp.Api.Services
             { "EI01", "Dữ liệu mobile banking - Giao dịch điện tử" },
             { "GL01", "Dữ liệu bút toán GDV - Giao dịch viên" },
             { "DPDA", "Dữ liệu sao kê phát hành thẻ - Thẻ tín dụng/ghi nợ" },
-            { "DB01", "Sao kê TSDB và Không TSDB - Tài sản đảm bảo" },
 
             { "BC57", "Sao kê Lãi dự thu - Dự phòng lãi" },
             { "RR01", "Sao kê dư nợ gốc, lãi XLRR - Rủi ro tín dụng" },

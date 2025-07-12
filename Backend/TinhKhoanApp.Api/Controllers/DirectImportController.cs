@@ -146,37 +146,6 @@ namespace TinhKhoanApp.Api.Controllers
         }
 
         /// <summary>
-        /// Import trực tiếp file DB01 vào bảng DB01
-        /// </summary>
-        [HttpPost("db01")]
-        [DisableRequestSizeLimit]
-        public async Task<ActionResult<DirectImportResult>> ImportDB01Direct(
-            IFormFile file,
-            [FromQuery] string? statementDate = null)
-        {
-            try
-            {
-                if (file == null || file.Length == 0)
-                {
-                    return BadRequest("File không được để trống");
-                }
-
-                var result = await _directImportService.ImportDB01DirectAsync(file, statementDate);
-                return result.Success ? Ok(result) : BadRequest(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "💥 [DB01_DIRECT_API] Import exception: {FileName}", file?.FileName);
-                return StatusCode(500, new DirectImportResult
-                {
-                    Success = false,
-                    ErrorMessage = $"Lỗi hệ thống: {ex.Message}",
-                    FileName = file?.FileName ?? "Unknown"
-                });
-            }
-        }
-
-        /// <summary>
         /// Lấy thông tin trạng thái import
         /// </summary>
         [HttpGet("status")]
@@ -201,12 +170,10 @@ namespace TinhKhoanApp.Api.Controllers
                     {
                         "DP01 - Báo cáo tài chính",
                         "LN01 - Dữ liệu cho vay",
-                        "DB01 - Dữ liệu huy động",
                         "GL01 - Dữ liệu sổ cái",
                         "GL41 - Dữ liệu giao dịch",
                         "DPDA - Dữ liệu phân tích",
                         "EI01 - Dữ liệu lãi suất",
-
                         "RR01 - Dữ liệu rủi ro",
                     }
                 });

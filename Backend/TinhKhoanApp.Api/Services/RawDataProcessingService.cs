@@ -98,7 +98,6 @@ namespace TinhKhoanApp.Api.Services
             {
                 "DP01",
                 "LN01", "LN03",
-                "DB01",
                 "GL01", "GL41",
                 "DPDA",
                 "EI01",
@@ -115,7 +114,6 @@ namespace TinhKhoanApp.Api.Services
                 "DP01" => "DP01",
                 "LN01" => "LN01",
                 "LN03" => "LN03",
-                "DB01" => "DB01",
                 "GL01" => "GL01",
                 "GL41" => "GL41",
                 "DPDA" => "DPDA",

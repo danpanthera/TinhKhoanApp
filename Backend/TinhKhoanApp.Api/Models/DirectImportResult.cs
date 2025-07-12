@@ -18,7 +18,7 @@ namespace TinhKhoanApp.Api.Models
         public string FileName { get; set; } = string.Empty;
 
         /// <summary>
-        /// Loại dữ liệu (DP01, LN01, DB01, ...)
+        /// Loại dữ liệu (DP01, LN01, GL01, ...)
         /// </summary>
         public string DataType { get; set; } = string.Empty;
 

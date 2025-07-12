@@ -47,23 +47,20 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<ImportedDataRecord> ImportedDataRecords { get; set; }
         // 🗑️ REMOVED: ImportedDataItem - Replaced with DirectImportService workflow
 
-        // 🚀 DbSets cho 10 bảng dữ liệu thô chính (DirectImport với Temporal Tables + Columnstore)
+        // 🚀 DbSets cho 8 bảng dữ liệu thô chính (DirectImport với Temporal Tables + Columnstore)
         public DbSet<DataTables.DP01> DP01 { get; set; }
         public DbSet<DataTables.LN01> LN01 { get; set; }
         public DbSet<DataTables.LN03> LN03 { get; set; }
-        public DbSet<DataTables.DB01> DB01 { get; set; }
         public DbSet<DataTables.GL01> GL01 { get; set; }
         public DbSet<DataTables.GL41> GL41 { get; set; }
         public DbSet<DataTables.DPDA> DPDA { get; set; }
         public DbSet<DataTables.EI01> EI01 { get; set; }
         public DbSet<DataTables.RR01> RR01 { get; set; }
-        public DbSet<DataTables.TSDB01> TSDB01 { get; set; }
 
         // 🔄 DbSets with plural names for backward compatibility
         public DbSet<DataTables.DP01> DP01s { get; set; }
         public DbSet<DataTables.LN01> LN01s { get; set; }
         public DbSet<DataTables.LN03> LN03s { get; set; }
-        public DbSet<DataTables.DB01> DB01s { get; set; }
         public DbSet<DataTables.GL01> GL01s { get; set; }
         public DbSet<DataTables.GL41> GL41s { get; set; }
         public DbSet<DataTables.DPDA> DPDAs { get; set; }
@@ -72,7 +69,6 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
 
         // Legacy naming compatibility
         public DbSet<DataTables.DP01> DP01_News { get; set; }
-        public DbSet<DataTables.TSDB01> TSDB01s { get; set; }
 
         // 🗄️ DbSets cho hệ thống Kho Dữ liệu Thô (Legacy)
         public DbSet<Models.RawDataImport> LegacyRawDataImports { get; set; }
@@ -96,7 +92,6 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<LN03History> LN03History { get; set; }
         public DbSet<EI01History> EI01History { get; set; }
         public DbSet<DPDAHistory> DPDAHistory { get; set; }
-        public DbSet<DB01History> DB01History { get; set; }
 
         public DbSet<BC57History> BC57History { get; set; }
 
@@ -508,9 +503,6 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         /// </summary>
         private void ConfigureNewDataTables(ModelBuilder modelBuilder)
         {
-            // 🏦 Cấu hình bảng DB01 - Tài sản đảm bảo
-            ConfigureDataTableWithTemporal<DataTables.DB01>(modelBuilder, "DB01");
-
             // 💰 Cấu hình bảng DPDA - Tiền gửi của dân
             ConfigureDataTableWithTemporal<DataTables.DPDA>(modelBuilder, "DPDA");
 
@@ -528,9 +520,6 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
 
             // 📈 Cấu hình bảng RR01 - Tỷ lệ
             ConfigureDataTableWithTemporal<DataTables.RR01>(modelBuilder, "RR01");
-
-            // 🏦 Cấu hình bảng TSDB01 - Tài sản đảm bảo khách hàng
-            ConfigureDataTableWithTemporal<DataTables.TSDB01>(modelBuilder, "TSDB01");
         }
 
         /// <summary>
