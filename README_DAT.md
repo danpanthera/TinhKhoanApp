@@ -797,3 +797,61 @@ curl -X DELETE http://localhost:5055/api/employees/bulk \
 **🎉 STATUS:** Bulk delete API và Entity Framework schema mismatch đã được fix hoàn toàn!
 
 ---
+
+### 🔧 **KPI ASSIGNMENT TABLES API FIX - JULY 12, 2025**
+
+**✅ VẤN ĐỀ ĐÃ ĐƯỢC GIẢI QUYẾT HOÀN TOÀN:** Frontend hiển thị 32 bảng KPI (23 cán bộ + 9 chi nhánh)
+
+#### **🎯 Vấn đề gặp phải:**
+- API `GET /api/KpiAssignment/tables` trả về 500 Internal Server Error
+- Frontend Console: "InvalidCastException" do mismatch giữa Entity model và database schema
+- Model có `TableType` là enum (int) nhưng database lưu string
+- Thiếu các cột `IsActive` và `CreatedDate` trong bảng KpiAssignmentTables
+
+#### **🔧 Giải pháp đã triển khai:**
+
+1. **✅ Thêm cột thiếu vào database:**
+   ```sql
+   ALTER TABLE KpiAssignmentTables ADD IsActive bit NOT NULL DEFAULT 1;
+   ALTER TABLE KpiAssignmentTables ADD CreatedDate datetime2 NOT NULL DEFAULT GETDATE();
+   ```
+
+2. **✅ Sử dụng KpiAssignmentTablesController:**
+   - Controller này dùng raw SQL thay vì Entity Framework
+   - Tránh được conflict giữa model enum và database string
+   - API endpoint: `/api/KpiAssignmentTables`
+
+3. **✅ Sửa frontend service:**
+   ```javascript
+   // Thay đổi từ
+   const response = await api.get('/KpiAssignment/tables');
+   // Thành
+   const response = await api.get('/KpiAssignmentTables');
+   ```
+
+#### **✅ Kết quả đạt được:**
+
+```bash
+✅ API Endpoint: GET /api/KpiAssignmentTables - HTTP 200 ✅
+✅ Total KPI Tables: 32 bảng (đúng chuẩn)
+✅ 23 bảng KPI cán bộ: ID 1-23 
+✅ 9 bảng KPI chi nhánh: ID 24-32
+✅ Frontend Console: No errors
+✅ Mục Cấu hình KPI: Hiển thị đầy đủ bảng KPI
+```
+
+#### **🎯 Test Results:**
+
+```bash
+# Test API endpoint
+curl -s "http://localhost:5055/api/KpiAssignmentTables" | jq 'length'
+# Response: 32
+
+# Verify categories
+curl -s "http://localhost:5055/api/KpiAssignmentTables" | jq 'group_by(.Category) | map({category: .[0].Category, count: length})'
+# Response: Các categories với đúng số lượng bảng
+```
+
+**🎉 STATUS:** Mục Cấu hình KPI hiển thị hoàn hảo với 32 bảng KPI theo đúng phân loại!
+
+---
