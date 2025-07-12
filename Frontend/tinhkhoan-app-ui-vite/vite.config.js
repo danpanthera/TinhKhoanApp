@@ -1,10 +1,26 @@
-import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
+import { defineConfig } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // 🇻🇳 Cấu hình UTF-8 cho tiếng Việt
+  server: {
+    host: '0.0.0.0',
+    port: 3000,
+    open: true
+  },
+  build: {
+    target: 'esnext',
+    // Đảm bảo UTF-8 encoding trong build
+    assetsInlineLimit: 0,
+    rollupOptions: {
+      output: {
+        manualChunks: undefined
+      }
+    }
+  },
   plugins: [
     vue(),
     VitePWA({

@@ -20,7 +20,12 @@ internal partial class Program
 {
     private static async Task Main(string[] args)
     {
-        // 🕐 Cấu hình timezone cho Hà Nội (UTC+7) - SET SYSTEM DEFAULT
+        // � CẤU HÌNH UTF-8 ENCODING CHO TIẾNG VIỆT
+        Console.OutputEncoding = System.Text.Encoding.UTF8;
+        Console.InputEncoding = System.Text.Encoding.UTF8;
+        System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
+
+        // �🕐 Cấu hình timezone cho Hà Nội (UTC+7) - SET SYSTEM DEFAULT
         TimeZoneInfo vietnamTimeZone;
         try
         {
@@ -95,6 +100,10 @@ internal partial class Program
                 // 🇻🇳 CẤU HÌNH UTF-8 CHO TIẾNG VIỆT - Azure SQL Edge
                 options.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
                 options.JsonSerializerOptions.PropertyNamingPolicy = null; // Giữ nguyên tên property
+
+                // 🔤 UTF-8 encoding configuration cho tiếng Việt
+                options.JsonSerializerOptions.WriteIndented = true;
+                options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
             });
 
         // 🔧 Cấu hình cho file upload lớn
