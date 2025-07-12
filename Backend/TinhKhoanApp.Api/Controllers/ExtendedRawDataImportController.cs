@@ -8,7 +8,7 @@ namespace TinhKhoanApp.Api.Controllers
 {
     /// <summary>
     /// 🆕 Controller mở rộng cho import dữ liệu thô tất cả các bảng SCD Type 2
-    /// Bao gồm: LN03, EI01, DPDA, BC57
+    /// Bao gồm: LN03, EI01, DPDA
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
@@ -141,43 +141,6 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
-        /// <summary>
-        /// Import dữ liệu BC57 (Lãi dự thu)
-        /// </summary>
-        [HttpPost("import/bc57")]
-        public async Task<ActionResult<ImportResponseDto>> ImportBC57Data([FromBody] ImportBC57RequestDto request)
-        {
-            try
-            {
-                _logger.LogInformation("Starting BC57 data import");
-
-                var importRequest = new ImportRequestDto
-                {
-                    BatchId = request.BatchId,
-                    CreatedBy = User.Identity?.Name ?? "System",
-                    ImportDate = request.ImportDate
-                };
-
-                var result = await _importService.ImportBC57DataAsync(importRequest, request.Data);
-
-                if (result.Success)
-                {
-                    _logger.LogInformation($"BC57 import completed successfully. BatchId: {result.BatchId}");
-                    return Ok(result);
-                }
-                else
-                {
-                    _logger.LogWarning($"BC57 import failed. BatchId: {result.BatchId}");
-                    return BadRequest(result);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error importing BC57 data");
-                return StatusCode(500, new { error = "Internal server error during BC57 import" });
-            }
-        }
-
         // =======================================
         // 📊 Statistics Endpoints
         // =======================================
@@ -214,7 +177,7 @@ namespace TinhKhoanApp.Api.Controllers
                 status = "healthy",
                 timestamp = DateTime.UtcNow,
                 service = "ExtendedRawDataImportService",
-                supportedTables = new[] { "LN03", "EI01", "DPDA", "BC57" }
+                supportedTables = new[] { "LN03", "EI01", "DPDA" }
             });
         }
 
@@ -231,7 +194,7 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 // Basic validation logic
-                var supportedTables = new[] { "LN03", "EI01", "DPDA", "BC57" };
+                var supportedTables = new[] { "LN03", "EI01", "DPDA" };
 
                 if (!supportedTables.Contains(tableName.ToUpper()))
                 {
@@ -281,12 +244,5 @@ namespace TinhKhoanApp.Api.Controllers
         public string? BatchId { get; set; }
         public DateTime? ImportDate { get; set; }
         public List<DPDAHistory> Data { get; set; } = new List<DPDAHistory>();
-    }
-
-    public class ImportBC57RequestDto
-    {
-        public string? BatchId { get; set; }
-        public DateTime? ImportDate { get; set; }
-        public List<BC57History> Data { get; set; } = new List<BC57History>();
     }
 }

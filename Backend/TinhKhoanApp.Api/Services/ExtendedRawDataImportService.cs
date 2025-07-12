@@ -22,7 +22,7 @@ namespace TinhKhoanApp.Api.Services
         Task<ImportResponseDto> ImportDPDADataAsync(ImportRequestDto request, List<DPDAHistory> data);
 
 
-        Task<ImportResponseDto> ImportBC57DataAsync(ImportRequestDto request, List<BC57History> data);
+
 
         // 🆕 Statistics for all tables
         Task<List<TableSummaryDto>> GetAllTablesSummaryAsync();
@@ -60,10 +60,7 @@ namespace TinhKhoanApp.Api.Services
             return await ImportDataAsync(request, data, "DPDA");
         }
 
-        public async Task<ImportResponseDto> ImportBC57DataAsync(ImportRequestDto request, List<BC57History> data)
-        {
-            return await ImportDataAsync(request, data, "BC57");
-        }
+
 
         // 🔧 Generic Import Method
         // =======================================
@@ -193,9 +190,6 @@ namespace TinhKhoanApp.Api.Services
                 case "DPDA":
                     _context.DPDAHistory.AddRange(data.Cast<DPDAHistory>());
                     break;
-                case "BC57":
-                    _context.BC57History.AddRange(data.Cast<BC57History>());
-                    break;
                 default:
                     throw new ArgumentException($"Unknown table name: {tableName}");
             }
@@ -259,11 +253,6 @@ namespace TinhKhoanApp.Api.Services
                     _context.DPDAHistory.Where(x => x.IsCurrent),
                     "DPDA",
                     "Dữ liệu Phát hành thẻ"));
-
-                summaries.Add(await GetTableSummary(
-                    _context.BC57History.Where(x => x.IsCurrent),
-                    "BC57",
-                    "Sao kê Lãi dự thu"));
 
             }
             catch (Exception ex)

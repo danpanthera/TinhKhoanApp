@@ -93,8 +93,6 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<EI01History> EI01History { get; set; }
         public DbSet<DPDAHistory> DPDAHistory { get; set; }
 
-        public DbSet<BC57History> BC57History { get; set; }
-
         // 🚀 DbSets cho các bảng còn thiếu temporal tables
         public DbSet<GAHR26_History> GAHR26_History { get; set; }
         public DbSet<GL41_History> GL41_History { get; set; }
