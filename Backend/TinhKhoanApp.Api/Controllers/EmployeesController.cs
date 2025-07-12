@@ -56,8 +56,8 @@ namespace TinhKhoanApp.Api.Controllers
                 // Log error and return a simpler result
                 var simpleEmployees = await _context.Database
                     .SqlQueryRaw<SimpleEmployeeDto>(@"
-                        SELECT 
-                            ""Id"", 
+                        SELECT
+                            ""Id"",
                             COALESCE(""EmployeeCode"", '') as ""EmployeeCode"",
                             COALESCE(""CBCode"", '') as ""CBCode"",
                             COALESCE(""FullName"", '') as ""FullName"",
@@ -67,7 +67,7 @@ namespace TinhKhoanApp.Api.Controllers
                             ""IsActive"",
                             ""UnitId"",
                             ""PositionId""
-                        FROM ""Employees"" 
+                        FROM ""Employees""
                         ORDER BY ""EmployeeCode""
                     ")
                     .ToListAsync();
@@ -169,7 +169,7 @@ namespace TinhKhoanApp.Api.Controllers
                     .Where(r => employeeDto.RoleIds.Contains(r.Id))
                     .Select(r => r.Id)
                     .ToListAsync();
-                
+
                 var invalidRoleIds = employeeDto.RoleIds.Except(validRoleIds).ToList();
                 if (invalidRoleIds.Any())
                 {
@@ -290,7 +290,7 @@ namespace TinhKhoanApp.Api.Controllers
                     .Where(r => employeeDto.RoleIds.Contains(r.Id))
                     .Select(r => r.Id)
                     .ToListAsync();
-                
+
                 var invalidRoleIds = employeeDto.RoleIds.Except(validRoleIds).ToList();
                 if (invalidRoleIds.Any())
                 {
@@ -313,7 +313,7 @@ namespace TinhKhoanApp.Api.Controllers
             existingEmployee.IsActive = employeeDto.IsActive;
             existingEmployee.UnitId = employeeDto.UnitId;
             existingEmployee.PositionId = employeeDto.PositionId;
-            
+
             // Cập nhật password chỉ khi có giá trị mới
             if (!string.IsNullOrEmpty(employeeDto.PasswordHash))
             {
@@ -375,21 +375,27 @@ namespace TinhKhoanApp.Api.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteEmployee(int id)
         {
-            var employee = await _context.Employees.FindAsync(id);
-            if (employee == null)
+            try
             {
-                return NotFound();
+                var employee = await _context.Employees
+                    .Include(e => e.EmployeeRoles)
+                    .FirstOrDefaultAsync(e => e.Id == id);
+
+                if (employee == null)
+                {
+                    return NotFound();
+                }
+
+                // Xóa employee (CASCADE sẽ tự động xóa EmployeeRoles)
+                _context.Employees.Remove(employee);
+                await _context.SaveChangesAsync();
+
+                return NoContent();
             }
-
-            // Cân nhắc nghiệp vụ trước khi xóa:
-            // - Nhân viên có đang được gán các khoán không?
-            // - Các dữ liệu lịch sử liên quan?
-            // - Xóa mềm (đánh dấu IsActive = false) hay xóa cứng?
-            // Tạm thời xóa cứng để đơn giản.
-            _context.Employees.Remove(employee);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Error deleting employee", details = ex.Message });
+            }
         }
 
         // DELETE: api/Employees/bulk (Xóa nhiều nhân viên cùng lúc)
@@ -431,7 +437,7 @@ namespace TinhKhoanApp.Api.Controllers
                 var employeeRolesToDelete = await _context.EmployeeRoles
                     .Where(er => validIds.Contains(er.EmployeeId))
                     .ToListAsync();
-                
+
                 if (employeeRolesToDelete.Any())
                 {
                     _context.EmployeeRoles.RemoveRange(employeeRolesToDelete);
@@ -441,7 +447,8 @@ namespace TinhKhoanApp.Api.Controllers
                 _context.Employees.RemoveRange(employeesToDelete);
                 await _context.SaveChangesAsync();
 
-                return Ok(new { 
+                return Ok(new
+                {
                     message = $"Đã xóa thành công {employeesToDelete.Count} nhân viên.",
                     deletedCount = employeesToDelete.Count,
                     deletedEmployees = employeesToDelete.Select(e => new { e.Id, e.EmployeeCode, e.FullName }).ToList()
@@ -463,7 +470,7 @@ namespace TinhKhoanApp.Api.Controllers
                 var adminUser = await _context.Employees
                     .Include(e => e.Position)
                     .FirstOrDefaultAsync(e => e.Username == "admin");
-                
+
                 if (adminUser == null)
                 {
                     return NotFound("Admin user not found.");
@@ -474,20 +481,21 @@ namespace TinhKhoanApp.Api.Controllers
                     .FirstOrDefaultAsync(p => p.Name == "Nhân viên") ??
                     await _context.Positions
                     .FirstOrDefaultAsync(p => p.Name != "Giám đốc" && !p.Name.Contains("Giám đốc"));
-                
+
                 if (basicPosition == null)
                 {
                     return BadRequest("No suitable basic position found in the system.");
                 }
 
                 var oldPositionName = adminUser.Position?.Name ?? "Unknown";
-                
+
                 // Update admin position to basic position
                 adminUser.PositionId = basicPosition.Id;
-                
+
                 await _context.SaveChangesAsync();
 
-                return Ok(new { 
+                return Ok(new
+                {
                     message = $"Admin user position updated successfully from '{oldPositionName}' to '{basicPosition.Name}'",
                     adminId = adminUser.Id,
                     oldPosition = oldPositionName,
