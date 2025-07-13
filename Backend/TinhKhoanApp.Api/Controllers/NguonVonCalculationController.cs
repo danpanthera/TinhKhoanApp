@@ -125,7 +125,7 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 // Query directly from DP01 table
-                var dp01Data = await _context.DP01s
+                var dp01Data = await _context.DP01
                     .Where(x => x.MA_CN == branchCode && (pgdCode == null || x.MA_PGD == pgdCode))
                     .Select(x => new
                     {

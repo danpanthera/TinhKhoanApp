@@ -58,7 +58,7 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<DataTables.RR01> RR01 { get; set; }
 
         // 🔄 DbSets with plural names for backward compatibility
-        public DbSet<DataTables.DP01> DP01s { get; set; }
+        // Note: DP01s removed - using DP01 directly
         public DbSet<DataTables.LN01> LN01s { get; set; }
         public DbSet<DataTables.LN03> LN03s { get; set; }
         public DbSet<DataTables.GL01> GL01s { get; set; }
@@ -66,9 +66,6 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<DataTables.DPDA> DPDAs { get; set; }
         public DbSet<DataTables.EI01> EI01s { get; set; }
         public DbSet<DataTables.RR01> RR01s { get; set; }
-
-        // Legacy naming compatibility
-        public DbSet<DataTables.DP01> DP01_News { get; set; }
 
         // 🗄️ DbSets cho hệ thống Kho Dữ liệu Thô (Legacy)
         public DbSet<Models.RawDataImport> LegacyRawDataImports { get; set; }

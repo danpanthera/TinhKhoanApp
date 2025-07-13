@@ -549,7 +549,7 @@ namespace TinhKhoanApp.Api.Services
                     branchCode, pgdCode ?? "NULL", date?.ToString("dd/MM/yyyy") ?? "latest");
 
                 // Xây dựng query cho bảng DP01 trực tiếp
-                var query = _context.DP01s.AsQueryable();
+                var query = _context.DP01.AsQueryable();
 
                 // Lọc theo chi nhánh
                 query = query.Where(x => x.MA_CN == branchCode);
@@ -566,7 +566,7 @@ namespace TinhKhoanApp.Api.Services
                     _logger.LogInformation("📅 No date specified, finding latest date...");
 
                     // Nếu không có tham số date, lấy ngày gần nhất
-                    var latestDate = await _context.DP01s
+                    var latestDate = await _context.DP01
                         .Where(x => x.MA_CN == branchCode && !string.IsNullOrEmpty(x.NgayDL))
                         .Select(x => x.NgayDL)
                         .Distinct()

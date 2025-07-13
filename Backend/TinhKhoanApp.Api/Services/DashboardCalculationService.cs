@@ -98,7 +98,7 @@ namespace TinhKhoanApp.Api.Services
                 }
 
                 // Lấy dữ liệu chi tiết từ bảng DP01 mới nhất
-                var dp01Data = await _context.DP01s
+                var dp01Data = await _context.DP01
                     .Where(i => i.FILE_NAME == latestImportRecord.FileName)
                     .ToListAsync();
 

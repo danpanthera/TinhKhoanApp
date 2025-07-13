@@ -95,7 +95,8 @@ namespace TinhKhoanApp.Api.Services
         /// </summary>
         public async Task<DirectImportResult> ImportDP01DirectAsync(IFormFile file, string? statementDate = null)
         {
-            return await ImportGenericCSVAsync<TinhKhoanApp.Api.Models.DataTables.DP01>("DP01", "DP01_New", file, statementDate);
+            _logger.LogInformation("🚀 [DP01_DIRECT] FORCE Import vào bảng DP01, NOT DP01_New");
+            return await ImportGenericCSVAsync<TinhKhoanApp.Api.Models.DataTables.DP01>("DP01", "DP01", file, statementDate);
         }
 
         /// <summary>
@@ -465,7 +466,7 @@ namespace TinhKhoanApp.Api.Services
 
             var dataTable = ConvertToDataTable(records);
 
-            _logger.LogInformation("💾 [BULK_INSERT] Table: {TableName}, DataTable columns: {Columns}",
+            _logger.LogInformation("💾 [BULK_INSERT] IMPORTANT: Table: {TableName}, DataTable columns: {Columns}",
                 tableName, string.Join(", ", dataTable.Columns.Cast<DataColumn>().Select(c => c.ColumnName)));
 
             using var connection = new SqlConnection(_connectionString);
@@ -477,6 +478,8 @@ namespace TinhKhoanApp.Api.Services
                 BatchSize = 10000,
                 BulkCopyTimeout = 300
             };
+
+            _logger.LogWarning("🎯 [BULK_INSERT] DEFINITELY inserting into table: {TableName}", tableName);
 
             // Auto-map columns
             foreach (DataColumn column in dataTable.Columns)
@@ -847,7 +850,7 @@ namespace TinhKhoanApp.Api.Services
         {
             return category?.ToUpper() switch
             {
-                "DP01" => "DP01_New",
+                "DP01" => "DP01",
                 "LN01" => "LN01",
                 "LN03" => "LN03",
                 "GL01" => "GL01",
@@ -888,7 +891,7 @@ namespace TinhKhoanApp.Api.Services
                 // Danh sách các bảng cần xóa dữ liệu
                 var tablesToClear = new[]
                 {
-                    "DP01_New", "LN01", "LN03", "GL01", "GL41",
+                    "DP01", "LN01", "LN03", "GL01", "GL41",
                     "DPDA", "EI01", "RR01"
                 };
 

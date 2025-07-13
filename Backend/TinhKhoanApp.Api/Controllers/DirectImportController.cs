@@ -72,7 +72,7 @@ namespace TinhKhoanApp.Api.Controllers
         }
 
         /// <summary>
-        /// Import trực tiếp file DP01 vào bảng DP01_New
+        /// Import trực tiếp file DP01 vào bảng DP01
         /// </summary>
         [HttpPost("dp01")]
         [DisableRequestSizeLimit]

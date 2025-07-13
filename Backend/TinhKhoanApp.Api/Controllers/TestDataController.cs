@@ -29,7 +29,7 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                var dp01Records = await _context.DP01_News
+                var dp01Records = await _context.DP01
                     .OrderByDescending(x => x.CREATED_DATE)
                     .Take(5)
                     .Select(x => new
@@ -158,13 +158,13 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 var summary = new
                 {
-                    DP01_Count = await _context.DP01_News.CountAsync(),
-                    LN01_Count = await _context.LN01s.CountAsync(),
-                    LN03_Count = await _context.LN03s.CountAsync(),
-                    GL01_Count = await _context.GL01s.CountAsync(),
-                    DPDA_Count = await _context.DPDAs.CountAsync(),
-                    EI01_Count = await _context.EI01s.CountAsync(),
-                    RR01_Count = await _context.RR01s.CountAsync(),
+                    DP01_Count = await _context.DP01.CountAsync(),
+                    LN01_Count = await _context.LN01.CountAsync(),
+                    LN03_Count = await _context.LN03.CountAsync(),
+                    GL01_Count = await _context.GL01.CountAsync(),
+                    DPDA_Count = await _context.DPDA.CountAsync(),
+                    EI01_Count = await _context.EI01.CountAsync(),
+                    RR01_Count = await _context.RR01.CountAsync(),
                     LastImport = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")
                 };
 
