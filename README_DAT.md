@@ -7,8 +7,11 @@ LUÔN commit từng phần nhỏ, không commit cả một lần quá nhiều fi
 databasse là "TinhKhoanDB" và mật khẩu là "YourStrong@Password123"
 trên docker có container chứa SQL server với tên là "azure_sql_edge_tinhkhoan"
 Luôn để backend port là 5055, frontend port là 3000.
-# chỉ chạy backend bằng lệnh ./start_backend.sh
-Luôn chạy backend bằng lệnh ./start_backend.sh
+
+🚨 **QUY TẮC KHỞI ĐỘNG DỰ ÁN:**
+- **Backend:** LUÔN dùng `./start_backend.sh` 
+- **Frontend:** LUÔN dùng `./start_frontend.sh`
+- **NGHIÊM CẤM** sử dụng shell VS Code để chạy npm/dotnet commands!
 ## 🆕 TinhKhoanApp Maintenance Notes (July 2025)
 
 ### Dọn dẹp Dự án
@@ -778,8 +781,25 @@ Em đã thực hiện rà soát chi tiết tất cả 10 bảng dữ liệu theo
 - Database up-to-date với tất cả structural changes
 
 **📋 NEXT STEPS:** Sẵn sàng import CSV data vào 8 bảng core tables!
-🚨 QUY TẮC TUYỆT ĐỐI: KHÔNG BAO GIỜ DÙNG SHELL VSC CHO BACKEND!
-ĐỪNG BAO GIỜ KHỞI ĐỘNG LẠI BACKEND BẰNG SHELL trên VS Code, hãy dùng ./start_backend.sh để start/restart backend đúng cách.
+
+🚨 **QUY TẮC TUYỆT ĐỐI: KHÔNG BAO GIỜ DÙNG SHELL VS CODE!**
+=======================================================
+
+**❌ NGHIÊM CẤM:**
+- ĐỪNG BAO GIỜ KHỞI ĐỘNG BACKEND bằng shell VS Code
+- ĐỪNG BAO GIỜ KHỞI ĐỘNG FRONTEND bằng shell VS Code  
+- ĐỪNG BAO GIỜ chạy npm/dotnet commands trong terminal VS Code
+
+**✅ SỬ DỤNG ĐÚNG CÁCH:**
+- **Backend:** `./start_backend.sh` (trong thư mục Backend/TinhKhoanApp.Api)
+- **Frontend:** `./start_frontend.sh` (trong thư mục Frontend/tinhkhoan-app-ui-vite)
+- **Scripts được tối ưu** với process cleanup và error handling đầy đủ
+
+**🎯 LÝ DO:**
+- Tránh xung đột port và process zombie
+- Đảm bảo môi trường khởi động sạch sẽ
+- Logs được quản lý tốt hơn
+- Dễ dàng debug và troubleshoot
 
 ### ✅ **KHÔI PHỤC DỮ LIỆU CƠ BẢN - JULY 13, 2025 20:15**
 

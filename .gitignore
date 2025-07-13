@@ -148,3 +148,33 @@ yarn-debug.log*
 *.db-shm
 *.db-wal
 
+# Files to ignore for faster commits
+*.DS_Store
+*.pdf
+*.xls
+*.xlsx
+*.log
+*.code-workspace
+*.csv
+*.json
+test_*
+TEST_*
+*_REPORT*
+*_COMPLETION*
+*_FIX*
+logs/
+test_files/
+scripts/verification_*
+*.sh.backup
+*_BACKUP*
+Backup_*
+database_backup/
+*.md.backup
+qd186.pdf
+verification_*.sh
+test-*.sh
+*-demo.html
+debug-*
+GLCB41_*
+7800_*
+*.txt
