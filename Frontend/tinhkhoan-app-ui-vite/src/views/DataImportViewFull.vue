@@ -1644,9 +1644,9 @@ const formatRecordCount = (count) => {
     return '0'
   }
 
-  // Convert to number and format with thousands separator
+  // Convert to number and format with thousands separator - US format (1,000,000)
   const numericCount = Number(count)
-  return new Intl.NumberFormat('vi-VN').format(numericCount)
+  return new Intl.NumberFormat('en-US').format(numericCount)
 }
 
 // ✅ THÊM MỚI: Hàm format giá trị trong cell để hiển thị đẹp hơn
@@ -1662,9 +1662,9 @@ const formatCellValue = (value) => {
     return value
   }
 
-  // Nếu là số, format với dấu phân cách
+  // Nếu là số, format với dấu phân cách - US format (1,000,000)
   if (typeof value === 'number') {
-    return new Intl.NumberFormat('vi-VN').format(value)
+    return new Intl.NumberFormat('en-US').format(value)
   }
 
   // Nếu là date, format ngày

@@ -82,10 +82,10 @@ export const formatNumberRealtime = (value) => {
   let integerPart = parts[0];
   let decimalPart = parts[1];
 
-  // Loại bỏ dấu phẩy cũ và thêm dấu phẩy mới cho phần nguyên
+  // Loại bỏ dấu phẩy cũ và thêm dấu phẩy mới cho phần nguyên (US format: 1,000,000)
   integerPart = integerPart.replace(/,/g, '');
   if (integerPart) {
-    integerPart = parseInt(integerPart).toLocaleString('vi-VN');
+    integerPart = parseInt(integerPart).toLocaleString('en-US');
   }
 
   // Kết hợp lại

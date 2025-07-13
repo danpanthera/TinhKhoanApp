@@ -12,6 +12,7 @@ using TinhKhoanApp.Api.HealthChecks; // Thêm namespace cho HealthChecks
 using TinhKhoanApp.Api.Utils; // 🕐 Thêm Utils cho VietnamDateTime
 using TinhKhoanApp.Api.Repositories; // Thêm namespace cho Repositories
 using TinhKhoanApp.Api.Converters; // Thêm namespace cho DateTime Converters
+using TinhKhoanApp.Api.Extensions; // 🔥 Thêm Extensions cho SqlConnectionOptimizer
 using System.Text.Json.Serialization;
 using BCrypt.Net;
 using Microsoft.AspNetCore.Http.Features; // For FormOptions
@@ -653,6 +654,14 @@ internal partial class Program
             Console.WriteLine("Đang cập nhật terminology chuẩn hóa...");
             TerminologyUpdater.UpdateTerminology(db);
             Console.WriteLine("Hoàn thành cập nhật terminology!");
+        }
+
+        // 🔥 WARM UP SQL CONNECTION POOL - Tối ưu connection time
+        var warmupConnectionString = app.Configuration.GetConnectionString("DefaultConnection");
+        if (!string.IsNullOrEmpty(warmupConnectionString))
+        {
+            Console.WriteLine("🔥 Starting SQL connection pool warm-up...");
+            SqlConnectionOptimizer.WarmUpConnection(warmupConnectionString);
         }
     }
 }

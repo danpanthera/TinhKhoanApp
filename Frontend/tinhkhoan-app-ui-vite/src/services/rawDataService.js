@@ -293,7 +293,7 @@ class RawDataService {
   }
 
   formatRecordCount(count) {
-    return new Intl.NumberFormat('vi-VN').format(count || 0);
+    return new Intl.NumberFormat('en-US').format(count || 0);
   }
 
   // 🔊 Audio notifications (optional)

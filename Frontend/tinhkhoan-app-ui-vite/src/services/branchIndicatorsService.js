@@ -337,7 +337,7 @@ export const branchIndicatorsService = {
    */
   formatCurrency(value) {
     if (value === null || value === undefined) return '0'
-    return new Intl.NumberFormat('vi-VN').format(value)
+    return new Intl.NumberFormat('en-US').format(value)
   },
 
   /**

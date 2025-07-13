@@ -220,5 +220,106 @@ namespace TinhKhoanApp.Api.Controllers
             // Database đã có category đúng rồi, return nguyên bản
             return originalCategory?.ToUpper() ?? "CANBO";
         }
+
+        /// <summary>
+        /// Cleanup dropdown descriptions - Remove 'Bảng KPI cho ' prefix
+        /// </summary>
+        [HttpPost("cleanup-descriptions")]
+        public async Task<ActionResult> CleanupDescriptions()
+        {
+            try
+            {
+                using var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = @"
+                    UPDATE KpiAssignmentTables
+                    SET Description = REPLACE(Description, N'Bảng KPI cho ', N'')
+                    WHERE Description LIKE N'Bảng KPI cho %'";
+
+                var rowsAffected = await command.ExecuteNonQueryAsync();
+
+                _logger.LogInformation($"🧹 Cleaned up {rowsAffected} KPI table descriptions");
+
+                return Ok(new
+                {
+                    success = true,
+                    message = $"Đã xóa 'Bảng KPI cho ' khỏi {rowsAffected} mô tả bảng KPI",
+                    rowsAffected = rowsAffected
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Lỗi khi cleanup descriptions: {Message}", ex.Message);
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Force update descriptions - Remove 'Bảng KPI cho ' prefix one by one
+        /// </summary>
+        [HttpPost("force-cleanup-descriptions")]
+        public async Task<ActionResult> ForceCleanupDescriptions()
+        {
+            try
+            {
+                using var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                // First, get all records with the prefix
+                var selectCommand = connection.CreateCommand();
+                selectCommand.CommandText = "SELECT Id, Description FROM KpiAssignmentTables WHERE Description LIKE N'Bảng KPI cho %'";
+
+                var updates = new List<(int Id, string OldDesc, string NewDesc)>();
+                using var reader = await selectCommand.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    var id = reader.GetInt32(0);
+                    var oldDesc = reader.GetString(1);
+                    var newDesc = oldDesc.Replace("Bảng KPI cho ", "");
+                    updates.Add((id, oldDesc, newDesc));
+                }
+                await reader.CloseAsync();
+
+                // Update each record individually
+                int totalUpdated = 0;
+                foreach (var (id, oldDesc, newDesc) in updates)
+                {
+                    var updateCommand = connection.CreateCommand();
+                    updateCommand.CommandText = "UPDATE KpiAssignmentTables SET Description = @newDesc WHERE Id = @id";
+
+                    var param1 = updateCommand.CreateParameter();
+                    param1.ParameterName = "@newDesc";
+                    param1.Value = newDesc;
+                    updateCommand.Parameters.Add(param1);
+
+                    var param2 = updateCommand.CreateParameter();
+                    param2.ParameterName = "@id";
+                    param2.Value = id;
+                    updateCommand.Parameters.Add(param2);
+
+                    var rowsAffected = await updateCommand.ExecuteNonQueryAsync();
+                    totalUpdated += rowsAffected;
+
+                    _logger.LogInformation($"Updated ID {id}: '{oldDesc}' -> '{newDesc}'");
+                }
+
+                _logger.LogInformation($"🧹 Force cleaned up {totalUpdated} KPI table descriptions");
+
+                return Ok(new
+                {
+                    success = true,
+                    message = $"Đã xóa 'Bảng KPI cho ' khỏi {totalUpdated} mô tả bảng KPI",
+                    rowsAffected = totalUpdated,
+                    updates = updates.Select(u => new { u.Id, OldDescription = u.OldDesc, NewDescription = u.NewDesc })
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Lỗi khi force cleanup descriptions: {Message}", ex.Message);
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
     }
 }

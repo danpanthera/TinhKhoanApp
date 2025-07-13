@@ -102,5 +102,74 @@ namespace TinhKhoanApp.Api.Controllers
                 return StatusCode(500, new { message = "Lỗi khi verify KPI structure", error = ex.Message });
             }
         }
+
+        [HttpPost("seed-kpi-definitions")]
+        public async Task<IActionResult> SeedKpiDefinitions()
+        {
+            try
+            {
+                _logger.LogInformation("=== Bắt đầu seed KPI Definitions ===");
+
+                // 1. Seed KPI Definitions
+                _logger.LogInformation("🌱 Chạy SeedKPIDefinitionMaxScore...");
+                SeedKPIDefinitionMaxScore.SeedKPIDefinitions(_context);
+
+                // 2. Get results
+                var totalDefinitions = await _context.KPIDefinitions.CountAsync();
+
+                _logger.LogInformation($"✅ Hoàn thành seed {totalDefinitions} KPI definitions");
+
+                return Ok(new
+                {
+                    message = "Seed KPI definitions thành công",
+                    totalDefinitions = totalDefinitions,
+                    timestamp = DateTime.UtcNow
+                });
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Lỗi khi seed KPI definitions");
+                return StatusCode(500, new { message = "Lỗi khi seed KPI definitions", error = ex.Message });
+            }
+        }
+
+        [HttpPost("populate-158-indicators")]
+        public async Task<IActionResult> Populate158Indicators()
+        {
+            try
+            {
+                _logger.LogInformation("=== Bắt đầu populate 158 indicators ===");
+
+                // 1. Xóa indicators cũ
+                _logger.LogInformation("🧹 Xóa indicators cũ...");
+                _context.KpiIndicators.RemoveRange(_context.KpiIndicators);
+                await _context.SaveChangesAsync();
+
+                // 2. Re-run seeder to populate indicators
+                _logger.LogInformation("📊 Re-run seeder để populate indicators từ KPIDefinitions...");
+                KpiAssignmentTableSeeder.SeedKpiAssignmentTables(_context);
+
+                // 3. Get results
+                var totalIndicators = await _context.KpiIndicators.CountAsync();
+
+                _logger.LogInformation($"✅ Hoàn thành populate {totalIndicators} indicators");
+
+                return Ok(new
+                {
+                    message = "Populate 158 indicators thành công",
+                    totalIndicators = totalIndicators,
+                    expectedIndicators = 158,
+                    isCorrect = totalIndicators == 158,
+                    timestamp = DateTime.UtcNow
+                });
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Lỗi khi populate indicators");
+                return StatusCode(500, new { message = "Lỗi khi populate indicators", error = ex.Message });
+            }
+        }
     }
 }
