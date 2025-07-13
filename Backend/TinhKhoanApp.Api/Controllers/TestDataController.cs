@@ -106,6 +106,49 @@ namespace TinhKhoanApp.Api.Controllers
         }
 
         /// <summary>
+        /// Test EI01 data với model mới 24 cột
+        /// </summary>
+        [HttpGet("ei01/test")]
+        public async Task<ActionResult> TestEI01Data()
+        {
+            try
+            {
+                var ei01Records = await _context.EI01s
+                    .OrderByDescending(x => x.Id)
+                    .Take(5)
+                    .Select(x => new
+                    {
+                        x.Id,
+                        x.NgayDL,
+                        x.MA_CN,
+                        x.MA_KH,
+                        x.TEN_KH,
+                        x.LOAI_KH,
+                        x.SDT_EMB,
+                        x.TRANG_THAI_EMB,
+                        x.NGAY_DK_EMB,
+                        x.SDT_OTT,
+                        x.TRANG_THAI_OTT,
+                        x.NGAY_DK_OTT
+                    })
+                    .ToListAsync();
+
+                return Ok(new
+                {
+                    Success = true,
+                    Message = "EI01 data test thành công",
+                    Count = ei01Records.Count,
+                    Data = ei01Records
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi test EI01 data");
+                return BadRequest(new { Error = "Lỗi test EI01 data", Message = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Summary về số lượng records trong các bảng chính
         /// </summary>
         [HttpGet("summary")]
