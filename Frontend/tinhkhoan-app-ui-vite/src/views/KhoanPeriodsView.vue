@@ -69,13 +69,13 @@
           <input
             type="text"
             id="periodName"
-            v-model.trim="currentKhoanPeriod.Name"
+            v-model.trim="currentKhoanPeriod.name"
             required
           />
         </div>
         <div class="form-group">
           <label for="periodType">Loại Kỳ:</label>
-          <select id="periodType" v-model="currentKhoanPeriod.Type" required>
+          <select id="periodType" v-model="currentKhoanPeriod.type" required>
             <option :value="null" disabled>-- Chọn Loại Kỳ --</option>
             <option value="MONTHLY">Tháng</option>
             <option value="QUARTERLY">Quý</option>
@@ -104,7 +104,7 @@
           <label for="periodStatus">Trạng thái:</label>
           <select
             id="periodStatus"
-            v-model="currentKhoanPeriod.Status"
+            v-model="currentKhoanPeriod.status"
             required
           >
             <option :value="null" disabled>-- Chọn Trạng thái --</option>
@@ -234,19 +234,19 @@ const handleSubmitKhoanPeriod = async () => {
   let dataToSubmit = { ...currentKhoanPeriod.value };
 
   // Client-side Validation
-  if (!dataToSubmit.Name?.trim()) {
+  if (!dataToSubmit.name?.trim()) {
     formError.value = "Tên Kỳ Khoán không được để trống!";
     return;
   }
-  if (!dataToSubmit.Type) {
+  if (!dataToSubmit.type) {
     formError.value = "Vui lòng chọn Loại Kỳ Khoán.";
     return;
   }
-  if (!dataToSubmit.startDate) {
+  if (!dataToSubmit.startDate && !dataToSubmit.StartDate) {
     formError.value = "Vui lòng chọn Ngày Bắt đầu.";
     return;
   }
-  if (!dataToSubmit.endDate) {
+  if (!dataToSubmit.endDate && !dataToSubmit.EndDate) {
     formError.value = "Vui lòng chọn Ngày Kết thúc.";
     return;
   }
@@ -257,11 +257,43 @@ const handleSubmitKhoanPeriod = async () => {
   if (!dataToSubmit.Status) {
     formError.value = "Vui lòng chọn Trạng thái.";
     return;
+  }  // Convert camelCase to PascalCase cho backend API
+  dataToSubmit.Name = dataToSubmit.name;
+
+  // Convert enum strings to integers for backend
+  const typeMapping = {
+    'MONTHLY': 0,
+    'QUARTERLY': 1,
+    'ANNUAL': 2
+  };
+  const statusMapping = {
+    'DRAFT': 0,
+    'OPEN': 1,
+    'PROCESSING': 2,
+    'PENDINGAPPROVAL': 3,
+    'CLOSED': 4,
+    'ARCHIVED': 5
+  };
+
+  dataToSubmit.Type = typeMapping[dataToSubmit.type] ?? dataToSubmit.type;
+  dataToSubmit.Status = statusMapping[dataToSubmit.status] ?? dataToSubmit.status;
+  dataToSubmit.StartDate = dataToSubmit.startDate || dataToSubmit.StartDate;
+  dataToSubmit.EndDate = dataToSubmit.endDate || dataToSubmit.EndDate;
+
+  // Đảm bảo format đúng cho API
+  if (dataToSubmit.StartDate) {
+    dataToSubmit.StartDate = toDateInputValue(dataToSubmit.StartDate);
+  }
+  if (dataToSubmit.EndDate) {
+    dataToSubmit.EndDate = toDateInputValue(dataToSubmit.EndDate);
   }
 
-  // Đảm bảo startDate và endDate đúng định dạng
-  dataToSubmit.startDate = toDateInputValue(dataToSubmit.startDate);
-  dataToSubmit.endDate = toDateInputValue(dataToSubmit.endDate);
+  // Remove camelCase fields để tránh conflict
+  delete dataToSubmit.name;
+  delete dataToSubmit.type;
+  delete dataToSubmit.status;
+  delete dataToSubmit.startDate;
+  delete dataToSubmit.endDate;
 
   console.log('🔍 handleSubmitKhoanPeriod - dataToSubmit:', dataToSubmit);
   console.log('🔍 handleSubmitKhoanPeriod - isEditing:', isEditing.value);
@@ -277,12 +309,12 @@ const handleSubmitKhoanPeriod = async () => {
     }
   } else {
     try {
-      //const { id, ...newPeriodData } = dataToSubmit;
-      //await khoanPeriodStore.createKhoanPeriod(newPeriodData);
       const newPeriodData = { ...dataToSubmit };
-      // Remove both camelCase and PascalCase ID fields to let backend generate new ID
+      // Remove ID fields để backend tự generate
       delete newPeriodData.Id;
-      delete newPeriodData.Id;
+      delete newPeriodData.id;
+
+      console.log('🔄 Calling createKhoanPeriod with:', newPeriodData);
       await khoanPeriodStore.createKhoanPeriod(newPeriodData);
       alert("Thêm Kỳ Khoán thành công!");
       resetForm();

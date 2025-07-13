@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test KhoanPeriod Create</title>
+</head>
+<body>
+    <h1>Test Tạo Kỳ Khoán</h1>
+
+    <form id="testForm">
+        <div>
+            <label>Tên: <input type="text" id="name" value="Test từ HTML" required /></label>
+        </div>
+        <div>
+            <label>Loại:
+                <select id="type" required>
+                    <option value="MONTHLY">Tháng</option>
+                    <option value="QUARTERLY">Quý</option>
+                    <option value="ANNUAL">Năm</option>
+                </select>
+            </label>
+        </div>
+        <div>
+            <label>Ngày bắt đầu: <input type="date" id="startDate" value="2025-10-01" required /></label>
+        </div>
+        <div>
+            <label>Ngày kết thúc: <input type="date" id="endDate" value="2025-10-31" required /></label>
+        </div>
+        <div>
+            <label>Trạng thái:
+                <select id="status" required>
+                    <option value="DRAFT">Nháp</option>
+                    <option value="OPEN">Mở</option>
+                    <option value="PROCESSING">Đang xử lý</option>
+                </select>
+            </label>
+        </div>
+        <div>
+            <button type="submit">Tạo Kỳ Khoán</button>
+        </div>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('testForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const data = {
+                name: document.getElementById('name').value,
+                type: document.getElementById('type').value,
+                startDate: document.getElementById('startDate').value,
+                endDate: document.getElementById('endDate').value,
+                status: document.getElementById('status').value
+            };
+
+            console.log('Form Data:', data);
+
+            // Convert như frontend
+            const typeMapping = {
+                'MONTHLY': 0,
+                'QUARTERLY': 1,
+                'ANNUAL': 2
+            };
+            const statusMapping = {
+                'DRAFT': 0,
+                'OPEN': 1,
+                'PROCESSING': 2,
+                'PENDINGAPPROVAL': 3,
+                'CLOSED': 4,
+                'ARCHIVED': 5
+            };
+
+            const apiData = {
+                Name: data.name,
+                Type: typeMapping[data.type],
+                Status: statusMapping[data.status],
+                StartDate: data.startDate,
+                EndDate: data.endDate
+            };
+
+            console.log('API Data:', apiData);
+
+            try {
+                const response = await fetch('http://localhost:5055/api/KhoanPeriods', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(apiData)
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    document.getElementById('result').innerHTML = `
+                        <h3 style="color: green;">✅ Thành công!</h3>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                } else {
+                    const error = await response.json();
+                    document.getElementById('result').innerHTML = `
+                        <h3 style="color: red;">❌ Lỗi!</h3>
+                        <pre>${JSON.stringify(error, null, 2)}</pre>
+                    `;
+                }
+            } catch (err) {
+                document.getElementById('result').innerHTML = `
+                    <h3 style="color: red;">❌ Lỗi kết nối!</h3>
+                    <p>${err.message}</p>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

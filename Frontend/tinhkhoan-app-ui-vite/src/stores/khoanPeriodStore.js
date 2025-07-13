@@ -27,36 +27,36 @@ export const useKhoanPeriodStore = defineStore("khoanPeriod", {
     // Helper methods for mapping between frontend and backend formats
     mapTypeToEnum(type) {
       const typeMap = {
-        'Tháng': 'MONTHLY',
-        'Quý': 'QUARTERLY',
-        'Năm': 'ANNUAL',
-        'MONTHLY': 'MONTHLY',
-        'QUARTERLY': 'QUARTERLY',
-        'ANNUAL': 'ANNUAL',
-        // Handle numeric values if needed (convert to string enum)
-        0: 'MONTHLY', 1: 'QUARTERLY', 2: 'ANNUAL'
+        'Tháng': 0,
+        'Quý': 1,
+        'Năm': 2,
+        'MONTHLY': 0,
+        'QUARTERLY': 1,
+        'ANNUAL': 2,
+        // Handle numeric values already integers
+        0: 0, 1: 1, 2: 2
       };
-      return typeMap[type] || 'MONTHLY'; // Default to MONTHLY
+      return typeMap[type] ?? 0; // Default to MONTHLY (0)
     },
 
     mapStatusToEnum(status) {
       const statusMap = {
-        'Nháp': 'DRAFT',
-        'Mở': 'OPEN',
-        'Tạm dừng': 'PROCESSING',
-        'Chờ duyệt': 'PENDINGAPPROVAL',
-        'Đóng': 'CLOSED',
-        'Lưu trữ': 'ARCHIVED',
-        'DRAFT': 'DRAFT',
-        'OPEN': 'OPEN',
-        'PROCESSING': 'PROCESSING',
-        'PENDINGAPPROVAL': 'PENDINGAPPROVAL',
-        'CLOSED': 'CLOSED',
-        'ARCHIVED': 'ARCHIVED',
-        // Handle numeric values if needed (convert to string enum)
-        0: 'DRAFT', 1: 'OPEN', 2: 'PROCESSING', 3: 'PENDINGAPPROVAL', 4: 'CLOSED', 5: 'ARCHIVED'
+        'Nháp': 0,
+        'Mở': 1,
+        'Tạm dừng': 2,
+        'Chờ duyệt': 3,
+        'Đóng': 4,
+        'Lưu trữ': 5,
+        'DRAFT': 0,
+        'OPEN': 1,
+        'PROCESSING': 2,
+        'PENDINGAPPROVAL': 3,
+        'CLOSED': 4,
+        'ARCHIVED': 5,
+        // Handle numeric values already integers
+        0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5
       };
-      return statusMap[status] || 'DRAFT'; // Default to DRAFT
+      return statusMap[status] ?? 0; // Default to DRAFT (0)
     },
 
     // Helper methods for mapping from backend to frontend display
