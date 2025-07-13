@@ -321,5 +321,55 @@ namespace TinhKhoanApp.Api.Controllers
                 return BadRequest(new { success = false, message = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Tạo mới KPI Assignment Table
+        /// </summary>
+        [HttpPost]
+        public async Task<ActionResult<KpiAssignmentTable>> PostKpiAssignmentTable([FromBody] KpiAssignmentTable table)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                table.CreatedDate = DateTime.UtcNow;
+                _context.KpiAssignmentTables.Add(table);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Created KPI Assignment Table: {TableName} (Category: {Category})",
+                    table.TableName, table.Category);
+
+                return CreatedAtAction(nameof(GetKpiAssignmentTables), new { id = table.Id }, table);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating KPI Assignment Table: {TableName}", table.TableName);
+                return StatusCode(500, new { message = "Internal server error", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Xóa tất cả KPI Assignment Tables (cleanup)
+        /// </summary>
+        [HttpDelete("cleanup")]
+        public async Task<ActionResult> CleanupAllTables()
+        {
+            try
+            {
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM KpiAssignmentTables");
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("Cleaned up all KPI Assignment Tables");
+                return Ok(new { message = "All KPI Assignment Tables deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error cleaning up KPI Assignment Tables");
+                return StatusCode(500, new { message = "Internal server error", details = ex.Message });
+            }
+        }
     }
 }
