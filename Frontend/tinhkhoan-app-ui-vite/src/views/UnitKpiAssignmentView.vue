@@ -421,7 +421,7 @@ async function onBranchChange() {
 
     // Log all available branch tables
     const branchTables = kpiTables.value.filter(t =>
-      t && t.Category === 'CHINHANH'
+      t && t.Category === 'CHI NHÁNH'
     )
     console.log('🏢 Branch KPI tables found:', branchTables.length)
     branchTables.forEach(table => {
