@@ -190,10 +190,14 @@ onMounted(() => {
 // Hàm định dạng ngày tháng YYYY-MM-DD cho input type="date"
 const toDateInputValue = (dateString) => {
   if (!dateString) return "";
+
+  // Handle timezone offset - convert to local date
   const date = new Date(dateString);
-  const year = date.getFullYear();
-  const month = ("0" + (date.getMonth() + 1)).slice(-2);
-  const day = ("0" + date.getDate()).slice(-2);
+  const localDate = new Date(date.getTime() - (date.getTimezoneOffset() * 60000));
+
+  const year = localDate.getFullYear();
+  const month = ("0" + (localDate.getMonth() + 1)).slice(-2);
+  const day = ("0" + localDate.getDate()).slice(-2);
   return `${year}-${month}-${day}`;
 };
 
