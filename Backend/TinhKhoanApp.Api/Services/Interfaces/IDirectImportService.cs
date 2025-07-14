@@ -10,7 +10,7 @@ namespace TinhKhoanApp.Api.Services.Interfaces
     public interface IDirectImportService
     {
         /// <summary>
-        /// Import trực tiếp file CSV vào bảng DP01_New sử dụng SqlBulkCopy
+        /// Import trực tiếp file CSV vào bảng DP01 sử dụng SqlBulkCopy
         /// </summary>
         Task<DirectImportResult> ImportDP01DirectAsync(IFormFile file, string? statementDate = null);
 
