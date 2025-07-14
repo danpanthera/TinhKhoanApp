@@ -108,4 +108,25 @@ namespace TinhKhoanApp.Api.Models
             }
         }
     }
+
+    /// <summary>
+    /// Kết quả kiểm tra dữ liệu tồn tại
+    /// </summary>
+    public class DataCheckResult
+    {
+        /// <summary>
+        /// Dữ liệu có tồn tại hay không
+        /// </summary>
+        public bool DataExists { get; set; }
+
+        /// <summary>
+        /// Số lượng bản ghi tìm thấy
+        /// </summary>
+        public int RecordCount { get; set; }
+
+        /// <summary>
+        /// Thông báo kết quả
+        /// </summary>
+        public string Message { get; set; } = string.Empty;
+    }
 }

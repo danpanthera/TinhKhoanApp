@@ -502,6 +502,38 @@ class RawDataService {
       };
     }
   }
+
+  // 🔍 Kiểm tra dữ liệu trùng lặp theo dataType và dateStr
+  async checkDuplicateData(dataType, dateStr) {
+    try {
+      console.log(`🔍 Checking duplicate data for ${dataType} on date ${dateStr}`);
+      
+      const response = await axios.get(`${this.apiUrl}/api/DataImport/check-duplicate/${dataType}/${dateStr}`);
+      
+      if (response.data) {
+        return {
+          success: true,
+          data: {
+            hasDuplicate: response.data.hasDuplicate || false,
+            count: response.data.count || 0,
+            message: response.data.message || `No data found for ${dataType} on ${dateStr}`
+          }
+        };
+      } else {
+        return {
+          success: true,
+          data: { hasDuplicate: false, count: 0 }
+        };
+      }
+    } catch (error) {
+      console.error(`❌ Error checking duplicate data for ${dataType}:`, error);
+      return {
+        success: false,
+        error: `Failed to check duplicate data: ${error.response?.data?.message || error.message}`,
+        data: { hasDuplicate: false, count: 0 }
+      };
+    }
+  }
 }
 
 // Create and export service instance

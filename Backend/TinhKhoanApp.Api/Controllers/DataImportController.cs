@@ -296,6 +296,61 @@ namespace TinhKhoanApp.Api.Controllers
                 migrationStatus = "Legacy endpoints disabled for DirectImport migration"
             });
         }
+
+        // 🔍 GET: api/DataImport/check-duplicate/{dataType}/{date} - Check if data exists for specific date
+        [HttpGet("check-duplicate/{dataType}/{date}")]
+        public async Task<IActionResult> CheckDuplicateData(string dataType, string date)
+        {
+            try
+            {
+                _logger.LogInformation("🔍 Checking duplicate data for {DataType} on {Date}", dataType, date);
+
+                var result = await _directImportService.CheckDataExistsAsync(dataType, date);
+
+                return Ok(new
+                {
+                    hasDuplicate = result.DataExists,
+                    count = result.RecordCount,
+                    message = result.DataExists ? 
+                        $"Found {result.RecordCount} records for {dataType} on {date}" : 
+                        $"No data found for {dataType} on {date}"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error checking duplicate data: {DataType}, {Date}", dataType, date);
+                return StatusCode(500, new { message = "Error checking duplicate data", error = ex.Message });
+            }
+        }
+
+        // 🗑️ DELETE: api/DataImport/clear-table/{dataType} - Clear all data for specific table
+        [HttpDelete("clear-table/{dataType}")]
+        public async Task<IActionResult> ClearTableData(string dataType)
+        {
+            try
+            {
+                _logger.LogInformation("🗑️ Clearing all data for table: {DataType}", dataType);
+
+                var result = await _directImportService.ClearTableDataAsync(dataType);
+
+                if (!result.Success)
+                {
+                    return BadRequest(new { message = result.ErrorMessage });
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    message = $"Đã xóa toàn bộ dữ liệu bảng {dataType}",
+                    recordsDeleted = result.RecordsDeleted
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error clearing table data: {DataType}", dataType);
+                return StatusCode(500, new { message = "Error clearing table data", error = ex.Message });
+            }
+        }
     }
 
     // 📊 Data Transfer Objects
