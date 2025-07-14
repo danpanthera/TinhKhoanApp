@@ -95,7 +95,7 @@ namespace TinhKhoanApp.Api.Services
         /// </summary>
         public async Task<DirectImportResult> ImportDP01DirectAsync(IFormFile file, string? statementDate = null)
         {
-            _logger.LogInformation("🚀 [DP01_DIRECT] FORCE Import vào bảng DP01, NOT DP01_New");
+            _logger.LogInformation("🚀 [DP01_DIRECT] Import vào bảng DP01");
             return await ImportGenericCSVAsync<TinhKhoanApp.Api.Models.DataTables.DP01>("DP01", "DP01", file, statementDate);
         }
 
@@ -712,13 +712,63 @@ namespace TinhKhoanApp.Api.Services
                 {
                     try
                     {
-                        // Lấy 20 bản ghi mới nhất từ bảng tương ứng
-                        var sql = $"SELECT TOP 20 * FROM {tableName} ORDER BY ID DESC";
+                        // 🔧 FIX: Filter dữ liệu theo import record cụ thể
+                        // Extract ngày từ FileName (format: 7800_dp01_20241231.csv)
+                        string sql;
+                        string? targetDate = null;
+
+                        if (!string.IsNullOrEmpty(importRecord.FileName))
+                        {
+                            // Extract date from filename pattern: *_YYYYMMDD.csv
+                            var fileNamePattern = System.Text.RegularExpressions.Regex.Match(
+                                importRecord.FileName, @"(\d{8})");
+
+                            if (fileNamePattern.Success)
+                            {
+                                var dateStr = fileNamePattern.Groups[1].Value;
+                                if (DateTime.TryParseExact(dateStr, "yyyyMMdd", null,
+                                    System.Globalization.DateTimeStyles.None, out DateTime parsedDate))
+                                {
+                                    targetDate = parsedDate.ToString("dd/MM/yyyy");
+                                    _logger.LogInformation("📅 Extracted date from filename: {Date}", targetDate);
+                                }
+                            }
+                        }
+
+                        if (!string.IsNullOrEmpty(targetDate))
+                        {
+                            // Filter theo NGAY_DL với ngày extracted từ filename
+                            sql = $@"SELECT TOP 20 * FROM {tableName}
+                                   WHERE NGAY_DL = @targetDate
+                                   ORDER BY ID ASC";
+                        }
+                        else
+                        {
+                            // Fallback: Lấy dữ liệu theo ImportDate
+                            var importDateStr = importRecord.ImportDate.ToString("dd/MM/yyyy");
+                            sql = $@"SELECT TOP 20 * FROM {tableName}
+                                   WHERE CAST(CREATED_DATE AS DATE) = @importDate
+                                   ORDER BY ID DESC";
+                        }
+
+                        _logger.LogInformation("🔍 Executing preview query for {FileName}: {SQL}",
+                            importRecord.FileName, sql);
 
                         using var connection = new SqlConnection(_connectionString);
                         await connection.OpenAsync();
 
                         using var command = new SqlCommand(sql, connection);
+
+                        // Thêm parameters để tránh SQL injection
+                        if (!string.IsNullOrEmpty(targetDate))
+                        {
+                            command.Parameters.AddWithValue("@targetDate", targetDate);
+                        }
+                        else
+                        {
+                            command.Parameters.AddWithValue("@importDate", importRecord.ImportDate.Date);
+                        }
+
                         using var reader = await command.ExecuteReaderAsync();
 
                         var rows = new List<Dictionary<string, object>>();
@@ -734,7 +784,39 @@ namespace TinhKhoanApp.Api.Services
                         }
 
                         previewRows = rows.Cast<object>().ToList();
-                        _logger.LogInformation("📊 Retrieved {Count} preview rows from {TableName}", previewRows.Count, tableName);
+                        _logger.LogInformation("📊 Retrieved {Count} preview rows from {TableName} for date {Date}",
+                            previewRows.Count, tableName, targetDate ?? "ImportDate");
+
+                        // 🔍 Nếu không tìm thấy data với NGAY_DL, thử fallback query
+                        if (previewRows.Count == 0 && !string.IsNullOrEmpty(targetDate))
+                        {
+                            _logger.LogWarning("⚠️ No data found with NGAY_DL filter, trying fallback query");
+
+                            // Fallback: Lấy theo CREATED_DATE gần nhất với ImportDate
+                            var fallbackSql = $@"SELECT TOP 20 * FROM {tableName}
+                                               WHERE ABS(DATEDIFF(day, CREATED_DATE, @importDate)) <= 1
+                                               ORDER BY CREATED_DATE DESC, ID DESC";
+
+                            using var fallbackCommand = new SqlCommand(fallbackSql, connection);
+                            fallbackCommand.Parameters.AddWithValue("@importDate", importRecord.ImportDate.Date);
+
+                            using var fallbackReader = await fallbackCommand.ExecuteReaderAsync();
+
+                            var fallbackRows = new List<Dictionary<string, object>>();
+                            while (await fallbackReader.ReadAsync())
+                            {
+                                var row = new Dictionary<string, object>();
+                                for (int i = 0; i < fallbackReader.FieldCount; i++)
+                                {
+                                    var value = fallbackReader.GetValue(i);
+                                    row[fallbackReader.GetName(i)] = value == DBNull.Value ? null : value;
+                                }
+                                fallbackRows.Add(row);
+                            }
+
+                            previewRows = fallbackRows.Cast<object>().ToList();
+                            _logger.LogInformation("📊 Fallback query retrieved {Count} preview rows", previewRows.Count);
+                        }
                     }
                     catch (Exception ex)
                     {

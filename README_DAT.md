@@ -14,6 +14,10 @@ Luôn để backend port là 5055, frontend port là 3000.
 - **Full Project:** LUÔN dùng `./restart_project.sh`
 - **Fast Commit:** LUÔN dùng `./fast_commit.sh "message"`
 - **NGHIÊM CẤM** sử dụng shell VS Code để chạy npm/dotnet commands!
+
+🚨DỮ LIỆU MẪU CHUẨN CHO 08 CORE DATA - TUYỆT ĐỐI KHÔNG TẠO DỮ LIỆU MOCK DATA
+/Users/nguyendat/Documents/DuLieuImport
+
 ## 🆕 TinhKhoanApp Maintenance Notes (July 2025)
 
 ### Dọn dẹp Dự án
@@ -147,7 +151,7 @@ sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C
 
 | File Type | Target Table | Performance | Status | Test Result |
 |-----------|--------------|-------------|--------|-------------|
-| **DP01** | DP01_New | 31.54 records/sec | ✅ SUCCESS | Auto-detect ✅ |
+| **DP01** | DP01 | 31.54 records/sec | ✅ SUCCESS | Auto-detect ✅ |
 | **EI01** | EI01 | 46.01 records/sec | ✅ SUCCESS | Auto-detect ✅ |
 | **LN01** | LN01 | Tested | ✅ SUCCESS | Auto-detect ✅ |
 | **GL01** | GL01 | Tested | ✅ SUCCESS | Auto-detect ✅ |
@@ -165,16 +169,7 @@ sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C
 - ✅ **Error Handling:** 0 errors, 100% success rate
 - ✅ **Logging:** Chi tiết logs cho monitoring và debug
 
-#### **📋 Supported Data Types:**
-```
-DP01 → DP01_New (Tiền gửi)
-EI01 → EI01 (Mobile Banking)  
-LN01 → LN01 (Cho vay)
-GL01 → GL01 (Bút toán GDV)
-GL41 → GL41 (Cân đối kế toán)
-DPDA → DPDA (Phát hành thẻ)
-LN03 → LN03 (Nợ XLRR)
-RR01 → RR01 (Dư nợ gốc, lãi XLRR)
+
 ```
 
 ### 🔄 **CONTAINER INFO:**
@@ -643,9 +638,7 @@ Em đã thực hiện rà soát chi tiết tất cả 10 bảng dữ liệu theo
 - ✅ **DPDA** (Phát hành thẻ): **13 cột** - CHÍNH XÁC 100%
 - ✅ **EI01** (Mobile Banking): **24 cột** - CHÍNH XÁC 100%
 - ✅ **GL01** (Bút toán GDV): **27 cột** - CHÍNH XÁC 100%
-
 - ✅ **LN01** (Cho vay): **79 cột** - CHÍNH XÁC 100%
-
 - ✅ **LN03** (Nợ XLRR): **17 cột** - CHÍNH XÁC 100%
 - ✅ **RR01** (Dư nợ gốc, lãi XLRR): **25 cột** - CHÍNH XÁC 100%
 - ✅ **TSDB01** (Tài sản đảm bảo): **16 cột** - CHÍNH XÁC 100%
@@ -752,147 +745,70 @@ Em đã thực hiện rà soát chi tiết tất cả 10 bảng dữ liệu theo
 - ✅ **Validation**: Cập nhật validation arrays loại bỏ DB01
 - ✅ **FileNameParsingService**: Xóa DB01 mapping
 
-#### **🔧 8 CORE DATA TABLES:**
+#### **🎯 KẾT QUẢ ĐẠT ĐƯỢC:**
 
-```
-1. DP01 - Dữ liệu Tiền gửi (63 cột) ✅ VERIFIED
-2. LN01 - Dữ liệu LOAN (79 cột) ✅ VERIFIED
-3. LN03 - Dữ liệu Nợ XLRR (17 cột) ✅ VERIFIED
-4. GL01 - Dữ liệu bút toán GDV (27 cột) ✅ VERIFIED
-5. GL41 - Bảng cân đối kế toán (13 cột) ✅ VERIFIED
-6. DPDA - Dữ liệu sao kê phát hành thẻ (13 cột) ✅ VERIFIED
-7. EI01 - Dữ liệu mobile banking (24 cột) ✅ VERIFIED
-8. RR01 - Sao kê dư nợ gốc, lãi XLRR (25 cột) ✅ VERIFIED
-```
+- ✅ **33 EmployeeKpiAssignments**
+- ✅ **API endpoints hoạt động** chính xác với đúng field names và structure
+- ✅ **Mapping role-table** cho 23 vai trò với 22 bảng KPI (thiếu TqHkKtnb)
+- ✅ **Frontend có thể fetch** assignments qua `/api/EmployeeKpiAssignment`
 
-### ✅ **VERIFICATION HOÀN THÀNH - JULY 13, 2025**
+---
 
-**📊 KẾT QUẢ KIỂM TRA 8 BẢNG CORE DATA:**
+## 🔄 PHASE 9.3: KPI ASSIGNMENT FRAMEWORK - ISSUES & FIXES (ĐANG THỰC HIỆN 🔄)
 
-- **Migration Status:** ✅ RecreateDP01Table applied successfully
-- **Database Schema:** ✅ All 8 tables synced with CSV structure
-- **Column Count:** ✅ Matching README specifications exactly
-- **Temporal Tables:** ✅ History tracking enabled for all tables
-- **Columnstore Indexes:** ✅ Analytics optimization ready
-- **Backend API:** ✅ Running stable on http://localhost:5055
-- **CSV Import Ready:** ✅ All tables prepared for data import
+_Thời gian: 07/01/2025 15:00-..._
 
-**🎯 MIGRATION TIMELINE:**
-- `SyncAllTableStructuresWithCSV` - Đồng bộ tất cả bảng theo CSV
-- `RecreateDP01Table` - Khôi phục bảng DP01 với đủ 63 cột
-- Database up-to-date với tất cả structural changes
+### Vấn đề gặp phải
 
-**📋 NEXT STEPS:** Sẵn sàng import CSV data vào 8 bảng core tables!
+1. **Khoảng trống dữ liệu** trong giao khoán KPI cho nhân viên và đơn vị
+2. **Cần tạo Khoan Periods** để hoàn thiện hệ thống giao khoán
 
-🚨 **QUY TẮC TUYỆT ĐỐI: KHÔNG BAO GIỜ DÙNG SHELL VS CODE!**
-=======================================================
+### Bước giải quyết
 
-**❌ NGHIÊM CẤM:**
-- ĐỪNG BAO GIỜ KHỞI ĐỘNG BACKEND bằng shell VS Code
-- ĐỪNG BAO GIỜ KHỞI ĐỘNG FRONTEND bằng shell VS Code  
-- ĐỪNG BAO GIỜ chạy npm/dotnet commands trong terminal VS Code
+- Tạo các bản ghi mẫu cho `EmployeeKpiAssignments` và `UnitKpiScorings`
+- Thiết lập các Khoan Periods cho năm 2025
 
-**✅ SỬ DỤNG ĐÚNG CÁCH:**
-- **Backend:** `./start_backend.sh` (trong thư mục Backend/TinhKhoanApp.Api)
-- **Frontend:** `./start_frontend.sh` (trong thư mục Frontend/tinhkhoan-app-ui-vite)
-- **Scripts được tối ưu** với process cleanup và error handling đầy đủ
+### Tiến độ hiện tại
 
-**🎯 LÝ DO:**
-- Tránh xung đột port và process zombie
-- Đảm bảo môi trường khởi động sạch sẽ
-- Logs được quản lý tốt hơn
-- Dễ dàng debug và troubleshoot
+- Đã tạo 17 Khoan Periods cho năm 2025
+- Đang phân tích và điền dữ liệu cho `EmployeeKpiAssignments` và `UnitKpiScorings`
 
-### ✅ **KHÔI PHỤC DỮ LIỆU CƠ BẢN - JULY 13, 2025 20:15**
+---
 
-**🔧 TÌNH TRẠNG HIỆN TẠI:**
-- ✅ **Backend API:** Running stable trên http://localhost:5055
-- ✅ **Frontend:** Running stable trên http://localhost:3000
-- ✅ **Database:** Azure SQL Edge container hoạt động tốt
-- ✅ **46 Units:** Đã tạo lại thành công toàn bộ cấu trúc đơn vị
-- ✅ **5 Positions:** Đã tạo các chức vụ cơ bản (Giám đốc, Phó GĐ, TP, PP, Cán bộ)
-- ✅ **46 Roles:** Đã tạo đầy đủ 23 vai trò chuẩn + 23 roles bổ sung
-- ✅ **10 Employees:** Đã tạo nhân viên mẫu đầy đủ với đa dạng chức vụ
+## **🛠️ SQLCMD GIẢI PHÁP - JULY 14, 2025**
 
-**🎯 DỮ LIỆU HIỆN CÓ:**
-- **Units Count:** 46/46 ✅
-- **Positions Count:** 5/5 ✅ 
-- **Roles Count:** 23/23 ✅ (đã sửa về đúng 23 roles chuẩn)
-- **Employees Count:** 9/9 ✅ (đã tạo mẫu)
-- **DP01 Data:** 2 records ✅ (test data)
+#### **🔍 NGUYÊN NHÂN SQLCMD KHÓ CÀI:**
 
-**🚀 FRONTEND STATUS:** 
-- ✅ API calls hoạt động bình thường
-- ✅ Units dropdown hiển thị 46 đơn vị
-- ✅ Positions dropdown hiển thị 5 chức vụ  
-- ✅ Roles dropdown hiển thị 23 vai trò
-- ✅ Employees listing hiển thị 9 nhân viên mẫu
-- ✅ **HỆ THỐNG ĐÃ SẴN SÀNG HOẠT ĐỘNG ĐẦY ĐỦ!**
+1. **Container permission issues:** Azure SQL Edge container có restricted permissions
+2. **Missing packages:** Container thiếu gnupg, apt-key và các tools cần thiết
+3. **Interactive bash hangs:** `docker exec -it` bị treo do resource constraints
+4. **Package repo access:** Container không thể access Microsoft package repos
 
-**👥 NHÂN VIÊN MẪU ĐÃ TẠO:**
-1. Nguyễn Văn An - Giám đốc Ban Giám đốc
-2. Trần Thị Bình - Trưởng phòng KHDN  
-3. Lê Văn Cường - Trưởng phòng KHCN
-4. Phạm Thị Dung - Trưởng phòng KTNQ
-5. Hoàng Văn Em - Trưởng phòng KH&QLRR
-6. Vũ Thị Phương - Giám đốc CNL2 Bình Lư
-7. Đỗ Văn Giang - Cán bộ Phòng Khách hàng
-8. Ngô Thị Hạnh - Cán bộ Phòng KTNQ
-9. Bùi Văn Ích - Giám đốc PGD Số 5
-10. Cao Thị Kim - Cán bộ Phòng Tổng hợp
+#### **✅ GIẢI PHÁP HOÀN CHỈNH:**
 
-### ✅ **HOÀN THÀNH HỆ THỐNG KPI & CRUD - JULY 13, 2025 21:00**
-
-**🎯 YÊU CẦU ĐÃ THỰC HIỆN THEO CHỈ THỊ:**
-
-1. **✅ Chỉ 23 vai trò:** Đã xóa 23 roles thừa, chỉ giữ lại đúng 23 roles chuẩn
-2. **✅ Kỳ khoán CRUD:** Đã có API endpoints đầy đủ cho người dùng tự quản lý
-3. **✅ KPI Assignment Tables:** 32 bảng (23 CANBO + 9 CHINHANH) không tự động mapping
-
-**📊 HỆ THỐNG KPI HOÀN CHỈNH:**
-
-- **✅ 32 KPI Assignment Tables:**
-  - 23 bảng "Dành cho Cán bộ" (Category = "CANBO")
-  - 9 bảng "Dành cho Chi nhánh" (Category = "CHINHANH")
-  - Người dùng tự chọn bảng KPI cho từng cán bộ
-
-- **✅ CRUD APIs Available:**
-  - `/api/KhoanPeriods` - CRUD kỳ khoán hoàn chỉnh
-  - `/api/KpiAssignmentTables` - Quản lý bảng KPI
-  - `/api/roles` - Quản lý 23 vai trò chuẩn
-  - `/api/employees` - Quản lý nhân viên
-
-**🔧 NGƯỜI DÙNG CÓ THỂ:**
-- ✅ Tạo/Sửa/Xóa kỳ khoán theo nhu cầu
-- ✅ Chọn bảng KPI phù hợp cho từng cán bộ (không tự động)
-- ✅ Gán vai trò cho nhân viên một cách linh hoạt
-- ✅ Quản lý toàn bộ hệ thống qua Frontend UI
-
-**🚀 READY FOR PRODUCTION:** Hệ thống sẵn sàng sử dụng với đầy đủ CRUD functionality!
-
-### 🚀 **COMMIT OPTIMIZATION - JULY 13, 2025**
-
-**⚡ NGUYÊN NHÂN COMMIT CHẬM:**
-- Quá nhiều file test, backup, logs trong repo
-- Git phải index hàng trăm files không cần thiết
-- Thiếu .gitignore tối ưu cho large projects
-
-**✅ GIẢI PHÁP ĐÃ THỰC HIỆN:**
-- **📋 Improved .gitignore:** Loại trừ *.pdf, *.xlsx, test files, logs, backups
-- **🚀 fast_commit.sh:** Script commit siêu nhanh chỉ focus vào code files
-- **⚙️ Git Config Tuning:** preloadindex + fscache + auto gc optimization
-
-**🎯 SỬ DỤNG:**
+**Sử dụng sqlcmd từ macOS host** (RECOMMENDED):
 ```bash
-# Commit nhanh (recommended)
-./fast_commit.sh "Your commit message"
+# Sqlcmd đã có sẵn trên macOS
+which sqlcmd  # /opt/homebrew/bin/sqlcmd
 
-# Hoặc commit thủ công với selective staging
-git add src/ README_DAT.md
-git commit -m "message"
+# Test connection
+sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -Q "SELECT @@VERSION"
+
+# Interactive mode
+sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d TinhKhoanDB
 ```
 
-**📊 KẾT QUẢ:**
-- **Trước:** 30+ seconds commit time
-- **Sau:** <3 seconds commit time  
-- **Improvement:** 10x faster commits! 🎉
+**Các scripts đã tối ưu:**
+- `./test_sql.sh` - Test SQL queries nhanh chóng
+- `./check_database.sh` - Health check với SQL verification
+- `./start_database.sh` - Smart connection testing
+
+#### **🎯 LỢI ÍCH:**
+
+✅ **Không cần cài trong container:** Sử dụng sqlcmd từ host  
+✅ **Performance cao:** Kết nối trực tiếp, không qua container exec  
+✅ **Stable connection:** Không bị timeout hay permission issues  
+✅ **Full SQL features:** Access đầy đủ tính năng sqlcmd  
+✅ **Easy debugging:** Có thể run queries interactive dễ dàng  
+
+**🔥 KHÔNG CẦN VÀO CONTAINER NỮA!**

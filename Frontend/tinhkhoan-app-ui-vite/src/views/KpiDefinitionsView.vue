@@ -693,7 +693,7 @@ const filteredKpiTables = computed(() => {
   if (activeTab.value === 'employee') {
     // Filter for employee tables using Category field and sort alphabetically by Description
     return kpiTables.value
-      .filter(table => (table.Category || table.category) === 'VAI TRÒ CÁN BỘ')
+      .filter(table => (table.Category || table.category) === 'CANBO')
       .sort((a, b) => {
         const nameA = (a.Description || a.description || a.TableName || a.tableName || '').toLowerCase();
         const nameB = (b.Description || b.description || b.TableName || b.tableName || '').toLowerCase();
@@ -703,7 +703,7 @@ const filteredKpiTables = computed(() => {
     // Filter for branch tables and sort by specific order based on TableName
     const branchOrder = ['HoiSo_KPI_Assignment', 'CnBinhLu_KPI_Assignment', 'CnPhongTho_KPI_Assignment', 'CnSinHo_KPI_Assignment', 'CnBumTo_KPI_Assignment', 'CnThanUyen_KPI_Assignment', 'CnDoanKet_KPI_Assignment', 'CnTanUyen_KPI_Assignment', 'CnNamHang_KPI_Assignment'];
     return kpiTables.value
-      .filter(table => (table.Category || table.category) === 'CHI NHÁNH')
+      .filter(table => (table.Category || table.category) === 'CHINHANH')
       .sort((a, b) => {
         const nameA = a.TableName || a.tableName || '';
         const nameB = b.TableName || b.tableName || '';
