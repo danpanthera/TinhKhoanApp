@@ -699,6 +699,59 @@ namespace TinhKhoanApp.Api.Services
                 "TIME_DP_TYPE", "STATES_CODE", "ZIP_CODE", "COUNTRY_CODE", "TAX_CODE_LOCATION", "MA_CAN_BO_PT",
                 "TEN_CAN_BO_PT", "PHONG_CAN_BO_PT", "NGUOI_NUOC_NGOAI", "QUOC_TICH", "MA_CAN_BO_AGRIBANK",
                 "NGUOI_GIOI_THIEU", "TEN_NGUOI_GIOI_THIEU", "CONTRACT_COUTS_DAY", "SO_KY_AD_LSDB", "UNTBUSCD", "TYGIA"
+            },
+            ["RR01"] = new[]
+            {
+                "CN_LOAI_I", "BRCD", "MA_KH", "TEN_KH", "SO_LDS", "CCY", "SO_LAV", "LOAI_KH", "NGAY_GIAI_NGAN",
+                "NGAY_DEN_HAN", "VAMC_FLG", "NGAY_XLRR", "DUNO_GOC_BAN_DAU", "DUNO_LAI_TICHLUY_BD", "DOC_DAUKY_DA_THU_HT",
+                "DUNO_GOC_HIENTAI", "DUNO_LAI_HIENTAI", "DUNO_NGAN_HAN", "DUNO_TRUNG_HAN", "DUNO_DAI_HAN",
+                "THU_GOC", "THU_LAI", "BDS", "DS", "TSK"
+            },
+            ["DPDA"] = new[]
+            {
+                "MA_CHI_NHANH", "MA_KHACH_HANG", "TEN_KHACH_HANG", "SO_TAI_KHOAN", "LOAI_THE", "SO_THE",
+                "NGAY_NOP_DON", "NGAY_PHAT_HANH", "USER_PHAT_HANH", "TRANG_THAI", "PHAN_LOAI", "GIAO_THE", "LOAI_PHAT_HANH"
+            },
+            ["EI01"] = new[]
+            {
+                "MA_CN", "MA_KH", "TEN_KH", "LOAI_KH", "SDT_EMB", "TRANG_THAI_EMB", "NGAY_DK_EMB", "SDT_OTT",
+                "TRANG_THAI_OTT", "NGAY_DK_OTT", "SDT_SMS", "TRANG_THAI_SMS", "NGAY_DK_SMS", "SDT_SAV",
+                "TRANG_THAI_SAV", "NGAY_DK_SAV", "SDT_LN", "TRANG_THAI_LN", "NGAY_DK_LN", "USER_EMB",
+                "USER_OTT", "USER_SMS", "USER_SAV", "USER_LN"
+            },
+            ["GL01"] = new[]
+            {
+                "STS", "NGAY_GD", "NGUOI_TAO", "DYSEQ", "TR_TYPE", "DT_SEQ", "TAI_KHOAN", "TEN_TK", "SO_TIEN_GD",
+                "POST_BR", "LOAI_TIEN", "DR_CR", "MA_KH", "TEN_KH", "CCA_USRID", "TR_EX_RT", "REMARK",
+                "BUS_CODE", "UNIT_BUS_CODE", "TR_CODE", "TR_NAME", "REFERENCE", "VALUE_DATE", "DEPT_CODE",
+                "TR_TIME", "COMFIRM", "TRDT_TIME"
+            },
+            ["GL41"] = new[]
+            {
+                "MA_CN", "LOAI_TIEN", "MA_TK", "TEN_TK", "LOAI_BT", "DN_DAUKY", "DC_DAUKY", "SBT_NO", "ST_GHINO",
+                "SBT_CO", "ST_GHICO", "DN_CUOIKY", "DC_CUOIKY"
+            },
+            ["LN01"] = new[]
+            {
+                "BRCD", "CUSTSEQ", "CUSTNM", "TAI_KHOAN", "CCY", "DU_NO", "DSBSSEQ", "TRANSACTION_DATE", "DSBSDT",
+                "DISBUR_CCY", "DISBURSEMENT_AMOUNT", "DSBSMATDT", "BSRTCD", "INTEREST_RATE", "APPRSEQ", "APPRDT",
+                "APPR_CCY", "APPRAMT", "APPRMATDT", "LOAN_TYPE", "FUND_RESOURCE_CODE", "FUND_PURPOSE_CODE",
+                "REPAYMENT_AMOUNT", "NEXT_REPAY_DATE", "NEXT_REPAY_AMOUNT", "NEXT_INT_REPAY_DATE", "OFFICER_ID",
+                "OFFICER_NAME", "INTEREST_AMOUNT", "PASTDUE_INTEREST_AMOUNT", "TOTAL_INTEREST_REPAY_AMOUNT",
+                "CUSTOMER_TYPE_CODE", "CUSTOMER_TYPE_CODE_DETAIL", "TRCTCD", "TRCTNM", "ADDR1", "PROVINCE",
+                "LCLPROVINNM", "DISTRICT", "LCLDISTNM", "COMMCD", "LCLWARDNM", "LAST_REPAY_DATE", "SECURED_PERCENT",
+                "NHOM_NO", "LAST_INT_CHARGE_DATE", "EXEMPTINT", "EXEMPTINTTYPE", "EXEMPTINTAMT", "GRPNO", "BUSCD",
+                "BSNSSCLTPCD", "USRIDOP", "ACCRUAL_AMOUNT", "ACCRUAL_AMOUNT_END_OF_MONTH", "INTCMTH", "INTRPYMTH",
+                "INTTRMMTH", "YRDAYS", "REMARK", "CHITIEU", "CTCV", "CREDIT_LINE_YPE", "INT_LUMPSUM_PARTIAL_TYPE",
+                "INT_PARTIAL_PAYMENT_TYPE", "INT_PAYMENT_INTERVAL", "AN_HAN_LAI", "PHUONG_THUC_GIAI_NGAN_1",
+                "TAI_KHOAN_GIAI_NGAN_1", "SO_TIEN_GIAI_NGAN_1", "PHUONG_THUC_GIAI_NGAN_2", "TAI_KHOAN_GIAI_NGAN_2",
+                "SO_TIEN_GIAI_NGAN_2", "CMT_HC", "NGAY_SINH", "MA_CB_AGRI", "MA_NGANH_KT", "TY_GIA", "OFFICER_IPCAS"
+            },
+            ["LN03"] = new[]
+            {
+                "MACHINHANH", "TENCHINHANH", "MAKH", "TENKH", "SOHOPDONG", "SOTIENXLRR", "NGAYPHATSINHXL",
+                "THUNOSAUXL", "CONLAINGOAIBANG", "DUNONOIBANG", "NHOMNO", "MACBTD", "TENCBTD", "MAPGD",
+                "TAIKHOANHACHTOAN", "REFNO", "LOAINGUONVON"
             }
         };
 
@@ -764,6 +817,7 @@ namespace TinhKhoanApp.Api.Services
                 // Lấy dữ liệu thực tế từ bảng tương ứng
                 var previewRows = new List<object>();
                 var tableName = GetTableNameFromCategory(importRecord.Category);
+                int actualTotalRecords = 0; // 🔧 FIX: Đếm thực tế số records trong database
 
                 if (!string.IsNullOrEmpty(tableName))
                 {
@@ -772,6 +826,7 @@ namespace TinhKhoanApp.Api.Services
                         // 🔧 FIX: Filter dữ liệu theo import record cụ thể
                         // Extract ngày từ FileName (format: 7800_dp01_20241231.csv)
                         string sql;
+                        string countSql;
                         string? targetDate = null;
 
                         if (!string.IsNullOrEmpty(importRecord.FileName))
@@ -798,6 +853,8 @@ namespace TinhKhoanApp.Api.Services
                             sql = $@"SELECT TOP 20 * FROM {tableName}
                                    WHERE NGAY_DL = @targetDate
                                    ORDER BY ID ASC";
+                            countSql = $@"SELECT COUNT(*) FROM {tableName}
+                                        WHERE NGAY_DL = @targetDate";
                         }
                         else
                         {
@@ -806,6 +863,8 @@ namespace TinhKhoanApp.Api.Services
                             sql = $@"SELECT TOP 20 * FROM {tableName}
                                    WHERE CAST(CREATED_DATE AS DATE) = @importDate
                                    ORDER BY ID DESC";
+                            countSql = $@"SELECT COUNT(*) FROM {tableName}
+                                        WHERE CAST(CREATED_DATE AS DATE) = @importDate";
                         }
 
                         _logger.LogInformation("🔍 Executing preview query for {FileName}: {SQL}",
@@ -813,6 +872,24 @@ namespace TinhKhoanApp.Api.Services
 
                         using var connection = new SqlConnection(_connectionString);
                         await connection.OpenAsync();
+
+                        // 🔧 FIX: Đếm tổng số records thực tế trước
+                        using (var countCommand = new SqlCommand(countSql, connection))
+                        {
+                            // Thêm parameters để tránh SQL injection
+                            if (!string.IsNullOrEmpty(targetDate))
+                            {
+                                countCommand.Parameters.AddWithValue("@targetDate", targetDate);
+                            }
+                            else
+                            {
+                                countCommand.Parameters.AddWithValue("@importDate", importRecord.ImportDate.Date);
+                            }
+
+                            var countResult = await countCommand.ExecuteScalarAsync();
+                            actualTotalRecords = Convert.ToInt32(countResult ?? 0);
+                            _logger.LogInformation("📊 Actual total records in database: {Count}", actualTotalRecords);
+                        }
 
                         using var command = new SqlCommand(sql, connection);
 
@@ -846,7 +923,7 @@ namespace TinhKhoanApp.Api.Services
                             previewRows.Count, tableName, targetDate ?? "ImportDate");
 
                         // 🔍 Nếu không tìm thấy data với NGAY_DL, thử fallback query
-                        if (previewRows.Count == 0 && !string.IsNullOrEmpty(targetDate))
+                        if (previewRows.Count == 0 && actualTotalRecords == 0 && !string.IsNullOrEmpty(targetDate))
                         {
                             _logger.LogWarning("⚠️ No data found with NGAY_DL filter, trying fallback query");
 
@@ -854,6 +931,18 @@ namespace TinhKhoanApp.Api.Services
                             var fallbackSql = $@"SELECT TOP 20 * FROM {tableName}
                                                WHERE ABS(DATEDIFF(day, CREATED_DATE, @importDate)) <= 1
                                                ORDER BY CREATED_DATE DESC, ID DESC";
+
+                            var fallbackCountSql = $@"SELECT COUNT(*) FROM {tableName}
+                                                     WHERE ABS(DATEDIFF(day, CREATED_DATE, @importDate)) <= 1";
+
+                            // Đếm fallback total
+                            using (var fallbackCountCommand = new SqlCommand(fallbackCountSql, connection))
+                            {
+                                fallbackCountCommand.Parameters.AddWithValue("@importDate", importRecord.ImportDate.Date);
+                                var fallbackCountResult = await fallbackCountCommand.ExecuteScalarAsync();
+                                actualTotalRecords = Convert.ToInt32(fallbackCountResult ?? 0);
+                                _logger.LogInformation("📊 Fallback actual total records: {Count}", actualTotalRecords);
+                            }
 
                             using var fallbackCommand = new SqlCommand(fallbackSql, connection);
                             fallbackCommand.Parameters.AddWithValue("@importDate", importRecord.ImportDate.Date);
@@ -874,7 +963,8 @@ namespace TinhKhoanApp.Api.Services
                             }
 
                             previewRows = fallbackRows.Cast<object>().ToList();
-                            _logger.LogInformation("📊 Fallback query retrieved {Count} preview rows", previewRows.Count);
+                            _logger.LogInformation("📊 Fallback query retrieved {Count} preview rows, total: {Total}",
+                                previewRows.Count, actualTotalRecords);
                         }
                     }
                     catch (Exception ex)
@@ -891,7 +981,7 @@ namespace TinhKhoanApp.Api.Services
                     FileName = importRecord.FileName,
                     Category = importRecord.Category,
                     ImportDate = importRecord.ImportDate,
-                    TotalRecords = importRecord.RecordsCount,
+                    TotalRecords = actualTotalRecords, // 🔧 FIX: Sử dụng số thực tế từ database
                     PreviewRows = previewRows
                 };
             }
