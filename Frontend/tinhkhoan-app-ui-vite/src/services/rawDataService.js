@@ -109,8 +109,8 @@ class RawDataService {
               'Content-Type': 'multipart/form-data'
             },
             timeout: 300000, // 5 phút timeout cho mỗi file
-            maxContentLength: 300 * 1024 * 1024, // 300MB max per file (tăng từ 100MB)
-            maxBodyLength: 300 * 1024 * 1024, // 300MB max body length
+            maxContentLength: 100 * 1024 * 1024, // 100MB max per file
+            maxBodyLength: 100 * 1024 * 1024,
             onUploadProgress: (progressEvent) => {
               if (options.onProgress) {
                 const fileProgress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
