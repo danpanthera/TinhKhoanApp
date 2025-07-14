@@ -683,6 +683,63 @@ namespace TinhKhoanApp.Api.Services
         #region Preview and Delete Methods
 
         /// <summary>
+        /// Mapping thứ tự cột theo CSV gốc cho từng bảng
+        /// </summary>
+        private readonly Dictionary<string, string[]> _csvColumnOrder = new Dictionary<string, string[]>
+        {
+            ["DP01"] = new[]
+            {
+                "MA_CN", "TAI_KHOAN_HACH_TOAN", "MA_KH", "TEN_KH", "DP_TYPE_NAME", "CCY", "CURRENT_BALANCE", "RATE",
+                "SO_TAI_KHOAN", "OPENING_DATE", "MATURITY_DATE", "ADDRESS", "NOTENO", "MONTH_TERM", "TERM_DP_NAME",
+                "TIME_DP_NAME", "MA_PGD", "TEN_PGD", "DP_TYPE_CODE", "RENEW_DATE", "CUST_TYPE", "CUST_TYPE_NAME",
+                "CUST_TYPE_DETAIL", "CUST_DETAIL_NAME", "PREVIOUS_DP_CAP_DATE", "NEXT_DP_CAP_DATE", "ID_NUMBER",
+                "ISSUED_BY", "ISSUE_DATE", "SEX_TYPE", "BIRTH_DATE", "TELEPHONE", "ACRUAL_AMOUNT", "ACRUAL_AMOUNT_END",
+                "ACCOUNT_STATUS", "DRAMT", "CRAMT", "EMPLOYEE_NUMBER", "EMPLOYEE_NAME", "SPECIAL_RATE", "AUTO_RENEWAL",
+                "CLOSE_DATE", "LOCAL_PROVIN_NAME", "LOCAL_DISTRICT_NAME", "LOCAL_WARD_NAME", "TERM_DP_TYPE",
+                "TIME_DP_TYPE", "STATES_CODE", "ZIP_CODE", "COUNTRY_CODE", "TAX_CODE_LOCATION", "MA_CAN_BO_PT",
+                "TEN_CAN_BO_PT", "PHONG_CAN_BO_PT", "NGUOI_NUOC_NGOAI", "QUOC_TICH", "MA_CAN_BO_AGRIBANK",
+                "NGUOI_GIOI_THIEU", "TEN_NGUOI_GIOI_THIEU", "CONTRACT_COUTS_DAY", "SO_KY_AD_LSDB", "UNTBUSCD", "TYGIA"
+            }
+        };
+
+        /// <summary>
+        /// Sắp xếp lại dictionary theo thứ tự cột CSV gốc
+        /// </summary>
+        private object ReorderColumnsToMatchCSV(Dictionary<string, object> row, string category)
+        {
+            if (!_csvColumnOrder.ContainsKey(category))
+            {
+                return row; // Nếu không có mapping, trả về nguyên bản
+            }
+
+            var csvColumns = _csvColumnOrder[category];
+
+            // Tạo ordered dictionary để đảm bảo thứ tự
+            var orderedData = new System.Collections.Specialized.OrderedDictionary();
+
+            // Thêm các cột business theo thứ tự CSV gốc
+            foreach (var columnName in csvColumns)
+            {
+                if (row.ContainsKey(columnName))
+                {
+                    orderedData[columnName] = row[columnName];
+                }
+            }
+
+            // Thêm các cột temporal/system cuối cùng
+            var systemColumns = new[] { "Id", "NGAY_DL", "CREATED_DATE", "UPDATED_DATE", "FILE_NAME" };
+            foreach (var columnName in systemColumns)
+            {
+                if (row.ContainsKey(columnName))
+                {
+                    orderedData[columnName] = row[columnName];
+                }
+            }
+
+            return orderedData;
+        }
+
+        /// <summary>
         /// Lấy preview data cho import record
         /// </summary>
         public async Task<object?> GetImportPreviewAsync(int importId)
@@ -769,9 +826,7 @@ namespace TinhKhoanApp.Api.Services
                             command.Parameters.AddWithValue("@importDate", importRecord.ImportDate.Date);
                         }
 
-                        using var reader = await command.ExecuteReaderAsync();
-
-                        var rows = new List<Dictionary<string, object>>();
+                        using var reader = await command.ExecuteReaderAsync(); var rows = new List<object>();
                         while (await reader.ReadAsync())
                         {
                             var row = new Dictionary<string, object>();
@@ -780,7 +835,10 @@ namespace TinhKhoanApp.Api.Services
                                 var value = reader.GetValue(i);
                                 row[reader.GetName(i)] = value == DBNull.Value ? null : value;
                             }
-                            rows.Add(row);
+
+                            // 🔄 Sắp xếp lại cột theo thứ tự CSV gốc
+                            var orderedRow = ReorderColumnsToMatchCSV(row, importRecord.Category);
+                            rows.Add(orderedRow);
                         }
 
                         previewRows = rows.Cast<object>().ToList();
@@ -800,9 +858,7 @@ namespace TinhKhoanApp.Api.Services
                             using var fallbackCommand = new SqlCommand(fallbackSql, connection);
                             fallbackCommand.Parameters.AddWithValue("@importDate", importRecord.ImportDate.Date);
 
-                            using var fallbackReader = await fallbackCommand.ExecuteReaderAsync();
-
-                            var fallbackRows = new List<Dictionary<string, object>>();
+                            using var fallbackReader = await fallbackCommand.ExecuteReaderAsync(); var fallbackRows = new List<object>();
                             while (await fallbackReader.ReadAsync())
                             {
                                 var row = new Dictionary<string, object>();
@@ -811,7 +867,10 @@ namespace TinhKhoanApp.Api.Services
                                     var value = fallbackReader.GetValue(i);
                                     row[fallbackReader.GetName(i)] = value == DBNull.Value ? null : value;
                                 }
-                                fallbackRows.Add(row);
+
+                                // 🔄 Sắp xếp lại cột theo thứ tự CSV gốc cho fallback query
+                                var orderedRow = ReorderColumnsToMatchCSV(row, importRecord.Category);
+                                fallbackRows.Add(orderedRow);
                             }
 
                             previewRows = fallbackRows.Cast<object>().ToList();
