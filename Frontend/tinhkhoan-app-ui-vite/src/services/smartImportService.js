@@ -11,7 +11,7 @@ class SmartImportService {
   constructor() {
     // Cấu hình chunked upload
     this.CHUNK_SIZE = 1024 * 1024 * 2 // 2MB mỗi chunk
-    this.MAX_FILE_SIZE = 1024 * 1024 * 100 // 100MB max file size
+    this.MAX_FILE_SIZE = 1024 * 1024 * 300 // 300MB max file size (tăng từ 100MB để xử lý GL01)
     this.LARGE_FILE_THRESHOLD = 1024 * 1024 * 10 // 10MB để quyết định có dùng chunked upload
   }
 

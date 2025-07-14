@@ -109,8 +109,8 @@ class RawDataService {
               'Content-Type': 'multipart/form-data'
             },
             timeout: 300000, // 5 phút timeout cho mỗi file
-            maxContentLength: 100 * 1024 * 1024, // 100MB max per file
-            maxBodyLength: 100 * 1024 * 1024,
+            maxContentLength: 300 * 1024 * 1024, // 300MB max per file (tăng từ 100MB)
+            maxBodyLength: 300 * 1024 * 1024, // 300MB max body length
             onUploadProgress: (progressEvent) => {
               if (options.onProgress) {
                 const fileProgress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -507,9 +507,9 @@ class RawDataService {
   async checkDuplicateData(dataType, dateStr) {
     try {
       console.log(`🔍 Checking duplicate data for ${dataType} on date ${dateStr}`);
-      
+
       const response = await axios.get(`${this.apiUrl}/api/DataImport/check-duplicate/${dataType}/${dateStr}`);
-      
+
       if (response.data) {
         return {
           success: true,

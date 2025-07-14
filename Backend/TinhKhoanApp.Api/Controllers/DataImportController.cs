@@ -311,8 +311,8 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     hasDuplicate = result.DataExists,
                     count = result.RecordCount,
-                    message = result.DataExists ? 
-                        $"Found {result.RecordCount} records for {dataType} on {date}" : 
+                    message = result.DataExists ?
+                        $"Found {result.RecordCount} records for {dataType} on {date}" :
                         $"No data found for {dataType} on {date}"
                 });
             }

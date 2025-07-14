@@ -1183,31 +1183,31 @@ namespace TinhKhoanApp.Api.Services
         public async Task<DataCheckResult> CheckDataExistsAsync(string dataType, string date)
         {
             var result = new DataCheckResult();
-            
+
             try
             {
                 _logger.LogInformation("🔍 Checking data exists for {DataType} on {Date}", dataType, date);
 
                 // Convert date string to NGAY_DL format (dd/MM/yyyy)
                 var ngayDL = ConvertDateStringToNgayDL(date);
-                
+
                 using var connection = new SqlConnection(_connectionString);
                 await connection.OpenAsync();
 
                 var sql = $@"
-                    SELECT COUNT(*) 
-                    FROM [{dataType}] 
+                    SELECT COUNT(*)
+                    FROM [{dataType}]
                     WHERE NGAY_DL = @NgayDL";
 
                 using var cmd = new SqlCommand(sql, connection);
                 cmd.Parameters.Add("@NgayDL", SqlDbType.NVarChar).Value = ngayDL;
 
                 var count = (int)await cmd.ExecuteScalarAsync();
-                
+
                 result.DataExists = count > 0;
                 result.RecordCount = count;
-                result.Message = result.DataExists ? 
-                    $"Found {count} records for {dataType} on {ngayDL}" : 
+                result.Message = result.DataExists ?
+                    $"Found {count} records for {dataType} on {ngayDL}" :
                     $"No data found for {dataType} on {ngayDL}";
 
                 _logger.LogInformation("📊 Data check result: {Count} records found", count);
@@ -1262,7 +1262,7 @@ namespace TinhKhoanApp.Api.Services
 
                 // Also clear from ImportedDataRecords
                 var clearImportSql = @"
-                    DELETE FROM ImportedDataRecords 
+                    DELETE FROM ImportedDataRecords
                     WHERE Category = @DataType OR FileType = @DataType";
                 using var clearImportCmd = new SqlCommand(clearImportSql, connection);
                 clearImportCmd.Parameters.Add("@DataType", SqlDbType.NVarChar).Value = dataType;
@@ -1491,7 +1491,7 @@ namespace TinhKhoanApp.Api.Services
                     try
                     {
                         var record = new GL01();
-                        
+
                         // Map all CSV columns to model properties
                         MapGL01Record(csv, record);
 
@@ -1567,7 +1567,7 @@ namespace TinhKhoanApp.Api.Services
             {
                 var pattern = @"_gl01_(\d{8})(\d{8})\.csv$";
                 var match = Regex.Match(fileName.ToLower(), pattern);
-                
+
                 if (!match.Success)
                 {
                     return null;
@@ -1656,7 +1656,7 @@ namespace TinhKhoanApp.Api.Services
         {
             // TODO: Implement actual column mapping based on CSV structure
             // This will need to be customized based on the actual GL01 CSV columns
-            
+
             // Example mapping (adjust based on actual CSV columns):
             record.NGAY_DL = csv.GetField("NGAY_DL") ?? "";
             record.MA_CN = csv.GetField("MA_CN") ?? "";

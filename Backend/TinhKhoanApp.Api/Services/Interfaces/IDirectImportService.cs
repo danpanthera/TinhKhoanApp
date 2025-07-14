@@ -85,5 +85,15 @@ namespace TinhKhoanApp.Api.Services.Interfaces
         /// 🔧 TEMPORARY: Fix GL41 database structure to match CSV (13 columns)
         /// </summary>
         Task<DirectImportResult> FixGL41DatabaseStructureAsync();
+
+        /// <summary>
+        /// Kiểm tra xem dữ liệu có tồn tại cho dataType và date cụ thể
+        /// </summary>
+        Task<DataCheckResult> CheckDataExistsAsync(string dataType, string date);
+
+        /// <summary>
+        /// Xóa toàn bộ dữ liệu của một bảng cụ thể
+        /// </summary>
+        Task<DirectImportResult> ClearTableDataAsync(string dataType);
     }
 }
