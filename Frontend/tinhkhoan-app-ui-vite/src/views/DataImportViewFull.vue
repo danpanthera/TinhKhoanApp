@@ -764,15 +764,20 @@ const calculateDataTypeStats = () => {
 
   // Calculate from imports
   allImports.value.forEach(imp => {
-    const dataType = imp.category || imp.dataType || imp.fileType || 'UNKNOWN'
+    // 🔧 FIX: Đồng bộ với rawDataService mapping logic
+    const dataType = imp.dataType || imp.Category || imp.FileType || imp.category || imp.fileType || 'UNKNOWN'
 
     if (!stats[dataType]) {
       stats[dataType] = { totalRecords: 0, lastUpdate: null, count: 0 }
     }
 
     stats[dataType].count++
-    const recordCount = parseInt(imp.recordsCount) || 0
+    // 🔧 FIX: Đồng bộ với rawDataService field mapping
+    const recordCount = parseInt(imp.recordsCount || imp.RecordsCount) || 0
     stats[dataType].totalRecords += recordCount
+
+    // 🐛 DEBUG: Log để xem data mapping
+    console.log(`📊 Processing ${dataType}: ${recordCount} records from`, imp.fileName || imp.FileName)
 
     const importDate = imp.importDate;
     if (importDate && importDate !== "0001-01-01T00:00:00") {
