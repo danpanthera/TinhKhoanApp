@@ -626,155 +626,6 @@ _Thời gian: 07/01/2025 15:00-..._
 
 ---
 
-## ✅ **RÀ SOÁT HOÀN THÀNH TẤT CẢ BẢNG DỮ LIỆU - JULY 10, 2025**
-
-### **🎯 KẾT QUẢ RÀ SOÁT TOÀN DIỆN**
-
-Em đã thực hiện rà soát chi tiết tất cả 10 bảng dữ liệu theo yêu cầu của anh:
-
-**📊 TỔNG KẾT KẾT QUẢ KIỂM TRA:**
-
-- ✅ **DP01** (Tiền gửi): **63 cột** - CHÍNH XÁC 100%
-- ✅ **DPDA** (Phát hành thẻ): **13 cột** - CHÍNH XÁC 100%
-- ✅ **EI01** (Mobile Banking): **24 cột** - CHÍNH XÁC 100%
-- ✅ **GL01** (Bút toán GDV): **27 cột** - CHÍNH XÁC 100%
-- ✅ **LN01** (Cho vay): **79 cột** - CHÍNH XÁC 100%
-- ✅ **LN03** (Nợ XLRR): **17 cột** - CHÍNH XÁC 100%
-- ✅ **RR01** (Dư nợ gốc, lãi XLRR): **25 cột** - CHÍNH XÁC 100%
-- ✅ **TSDB01** (Tài sản đảm bảo): **16 cột** - CHÍNH XÁC 100%
-
-### **🔍 CHI TIẾT KIỂM TRA:**
-
-**✅ Số lượng cột:** Tất cả 10/10 bảng có đúng số cột theo header CSV gốc  
-**✅ Tên cột:** Tất cả 10/10 bảng có tên cột chính xác theo header CSV gốc  
-**✅ Temporal columns:** Đã có đúng `NGAY_DL`, `CREATED_DATE`, `UPDATED_DATE`  
-**✅ System columns:** Đã có đúng `Id` (Primary Key)
-
-### **📈 SỬA CHỮA ĐÃ THỰC HIỆN:**
-
-- 🔧 **DP01:** Cập nhật từ 55 → **63 cột** (theo phát hiện của anh)
-- 🔧 **LN01:** Cập nhật từ 67 → **79 cột** (theo phát hiện của anh)
-- 🔧 **Tất cả model khác:** Đã đúng từ trước
-- 🔧 **Scripts verify:** Tạo tooling tự động kiểm tra (`check-all-tables.sh`)
-- 🔧 **Báo cáo:** Cập nhật `MODEL_RESTRUCTURE_REPORT.md`
-
-### **✅ KẾT LUẬN CUỐI CÙNG:**
-
-🎯 **HOÀN THÀNH 100%:** Tất cả bảng dữ liệu đã được rà soát và chính xác  
-🎯 **SỐ LƯỢNG CỘT:** Chính xác 100% theo header CSV gốc  
-🎯 **TÊN CỘT:** Chính xác 100% theo header CSV gốc  
-🎯 **CẤU TRÚC:** Tuân thủ Temporal Tables + Columnstore Indexes  
-🎯 **READY:** Sẵn sàng import dữ liệu thực tế
-
-**🎉 Anh đã phát hiện chính xác sai sót về số cột DP01 và LN01. Em đã sửa hoàn toàn và verify tất cả bảng!**
-
-✅ **Backend build thành công:** Đã fix tất cả 31 lỗi do property cũ trong controllers/service
-
-### **🚀 TEST IMPORT THỰC TẾ & API VERIFICATION - JULY 10, 2025**
-
-**✅ HOÀN THÀNH 100%:** Test import CSV thực tế và verify API endpoints với model mới
-
-#### **📊 KẾT QUẢ TEST IMPORT:**
-
-**🎯 DP01 Import (63 cột):**
-
-- ✅ **File**: `test_dp01_63_columns.csv` - 2 records
-- ✅ **API**: `/api/directimport/smart`
-- ✅ **Kết quả**: 100% thành công, 0 errors
-- ✅ **Hiệu suất**: 49.37 records/sec, 40.5ms duration
-- ✅ **Detection**: Auto-detect DataType = "DP01", TargetTable = "DP01"
-
-**🎯 LN01 Import (79 cột):**
-
-- ✅ **File**: `test_ln01_79_columns.csv` - 2 records
-- ✅ **API**: `/api/directimport/smart`
-- ✅ **Kết quả**: 100% thành công, 0 errors
-- ✅ **Hiệu suất**: 75.15 records/sec, 26.6ms duration
-- ✅ **Detection**: Auto-detect DataType = "LN01", TargetTable = "LN01"
-
-#### **🔧 MIGRATION & DATABASE SYNC:**
-
-**✅ Migration Applied:** `UpdateDataTablesStructure`
-
-- ✅ **Old Properties**: Đã xóa các cột cũ không còn dùng
-- ✅ **New Properties**: Đã thêm tất cả cột mới theo header CSV
-- ✅ **Database Schema**: 100% đồng bộ với model mới
-- ✅ **Warnings**: Chỉ còn decimal precision warnings (không ảnh hưởng)
-
-#### **🛠️ API VERIFICATION:**
-
-**✅ TestDataController** - New verification APIs:
-
-- ✅ `/api/TestData/summary` - Tổng quan database
-- ✅ `/api/TestData/dp01/test` - Test DP01 với property mới
-- ✅ `/api/TestData/ln01/test` - Test LN01 với property mới
-
-#### **🎉 FINAL STATUS:**
-
-🎯 **HOÀN THÀNH 100%:** Model restructure + Import testing + API verification  
-🎯 **BACKEND**: Build thành công, running stable trên port 5055  
-🎯 **DATABASE**: Schema sync 100%, migration applied successfully  
-🎯 **IMPORT**: CSV import working perfectly với tốc độ cao  
-🎯 **APIs**: Tất cả endpoints hoạt động đúng với property mới
-
-**Anh có thể confidently sử dụng hệ thống với model mới!** 🎊
-
-### 🗑️ **DT_KHKD CLEANUP HOÀN THÀNH - JULY 11, 2025**
-
-**✅ HOÀN THÀNH TRIỆT ĐỂ:** Xóa bỏ hoàn toàn mọi thứ liên quan đến `DT_KHKD` khỏi dự án theo yêu cầu anh
-
-#### **🎯 CLEANUP RESULTS:**
-
-**Database Cleanup:**
-
-- ✅ **0 Tables**: Không còn bảng DT_KHKD nào trong database
-- ✅ **Temporal Tables**: Đã tắt system versioning và xóa history tables
-- ✅ **Indexes**: Xóa tất cả columnstore indexes liên quan
-
-**Code Cleanup:**
-
-- ✅ **0 C# Files**: Không còn file C# nào chứa reference đến DT_KHKD
-- ✅ **ApplicationDbContext**: Đã xóa DbSet cho DT_KHKD
-- ✅ **Services**: SmartDataImportService, DirectImportController cleaned
-- ✅ **Build Status**: ✅ SUCCESS với 0 lỗi compilation
-
-**Active C# References:**
-
-- ✅ **0 Files**: Không còn file C# nào chứa reference đến DB01/TSDB01/TSDB01 (ngoại trừ migration history)
-- ✅ **RawDataModels**: Đã xóa DB01 khỏi enum RawDataType
-- ✅ **Validation**: Cập nhật validation arrays loại bỏ DB01
-- ✅ **FileNameParsingService**: Xóa DB01 mapping
-
-#### **🎯 KẾT QUẢ ĐẠT ĐƯỢC:**
-
-- ✅ **33 EmployeeKpiAssignments**
-- ✅ **API endpoints hoạt động** chính xác với đúng field names và structure
-- ✅ **Mapping role-table** cho 23 vai trò với 22 bảng KPI (thiếu TqHkKtnb)
-- ✅ **Frontend có thể fetch** assignments qua `/api/EmployeeKpiAssignment`
-
----
-
-## 🔄 PHASE 9.3: KPI ASSIGNMENT FRAMEWORK - ISSUES & FIXES (ĐANG THỰC HIỆN 🔄)
-
-_Thời gian: 07/01/2025 15:00-..._
-
-### Vấn đề gặp phải
-
-1. **Khoảng trống dữ liệu** trong giao khoán KPI cho nhân viên và đơn vị
-2. **Cần tạo Khoan Periods** để hoàn thiện hệ thống giao khoán
-
-### Bước giải quyết
-
-- Tạo các bản ghi mẫu cho `EmployeeKpiAssignments` và `UnitKpiScorings`
-- Thiết lập các Khoan Periods cho năm 2025
-
-### Tiến độ hiện tại
-
-- Đã tạo 17 Khoan Periods cho năm 2025
-- Đang phân tích và điền dữ liệu cho `EmployeeKpiAssignments` và `UnitKpiScorings`
-
----
-
 ## **🛠️ SQLCMD GIẢI PHÁP - JULY 14, 2025**
 
 #### **🔍 NGUYÊN NHÂN SQLCMD KHÓ CÀI:**
@@ -812,3 +663,71 @@ sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d TinhKhoanDB
 ✅ **Easy debugging:** Có thể run queries interactive dễ dàng  
 
 **🔥 KHÔNG CẦN VÀO CONTAINER NỮA!**
+
+## 🐞 **VẤN ĐỀ VÀ GIẢI PHÁP DATA REFRESH - JULY 14, 2025**
+
+### **❌ VẤN ĐỀ PHÁT HIỆN:**
+
+**Mô tả:** Sau khi import dữ liệu thành công, frontend không tự động refresh để hiển thị tổng số bản ghi mới. Button "Tải lại dữ liệu" cũng không hiển thị được số liệu cho bảng DP01.
+
+**Kiểm tra kết quả:**
+- ✅ **Database**: 12,741 bản ghi DP01 (thực tế)
+- ✅ **API**: Trả về đúng RecordsCount = 12,741  
+- ✅ **Metadata**: ImportedDataRecords chính xác
+- ❌ **Frontend**: Không hiển thị số liệu sau import
+
+### **🔍 NGUYÊN NHÂN PHÁT HIỆN:**
+
+1. **Field Mapping Mismatch:** Frontend `calculateDataTypeStats()` đang ưu tiên `imp.dataType` nhưng API trả về `Category`
+2. **Progress Display Issue:** Refresh được gọi nhưng stats không được cập nhật đúng
+3. **Date Parsing Error:** Import date có thể bị parse sai làm stats không hiển thị
+
+### **🛠️ GIẢI PHÁP ĐÃ THỰC HIỆN:**
+
+#### **1. Fix Field Mapping Priority:**
+```javascript
+// BEFORE: Sai thứ tự ưu tiên
+const dataType = imp.dataType || imp.Category || imp.FileType || 'UNKNOWN'
+const recordCount = parseInt(imp.recordsCount || imp.RecordsCount) || 0
+
+// AFTER: Ưu tiên field từ API response
+const dataType = imp.Category || imp.FileType || imp.dataType || 'UNKNOWN' 
+const recordCount = parseInt(imp.RecordsCount || imp.recordsCount) || 0
+```
+
+#### **2. Enhanced Date Validation:**
+```javascript
+// BEFORE: Không check date validity
+const importDateTime = new Date(importDate)
+
+// AFTER: Validate date trước khi dùng
+const importDateTime = new Date(importDate)
+if (!isNaN(importDateTime.getTime()) && ...)
+```
+
+#### **3. Enhanced Debug Function:**
+```javascript
+// NEW: Force refresh với debug logging
+const debugRecalculateStats = async () => {
+  await refreshAllData(true)  // Force refresh data first
+  calculateDataTypeStats()    // Then recalculate stats  
+  console.log('📊 Current dataTypeStats:', dataTypeStats.value)
+}
+```
+
+### **🎯 CÁCH SỬ DỤNG:**
+
+1. **Sau khi import:** Hệ thống sẽ tự động refresh (đã có trong code)
+2. **Nếu vẫn không hiển thị:** Click button "🔧 Debug Stats" để force refresh
+3. **Debug console:** Check browser console để xem log chi tiết
+
+### **✅ KẾT QUẢ MONG ĐỢI:**
+
+- ✅ **Auto refresh** sau import thành công
+- ✅ **Hiển thị đúng** tổng số records cho tất cả data types
+- ✅ **Button refresh** hoạt động đúng 
+- ✅ **Debug tools** để troubleshoot
+
+**🎯 Status:** Đã fix code, cần test lại import workflow để confirm.
+
+---

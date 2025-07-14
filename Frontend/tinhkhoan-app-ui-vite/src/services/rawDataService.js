@@ -474,6 +474,34 @@ class RawDataService {
       };
     }
   }
+
+  // 🗑️ Xóa toàn bộ dữ liệu của một bảng cụ thể
+  async deleteAllDataType(dataType) {
+    try {
+      console.log(`🗑️ Deleting all data for table: ${dataType}`);
+
+      const response = await axios.delete(`${this.apiUrl}/api/DataImport/clear-table/${dataType}`);
+
+      if (response.data && response.data.success) {
+        console.log(`✅ Successfully deleted all ${dataType} data:`, response.data.message);
+        return {
+          success: true,
+          data: {
+            message: response.data.message || `Đã xóa toàn bộ dữ liệu ${dataType}`,
+            recordsDeleted: response.data.recordsDeleted || 0
+          }
+        };
+      } else {
+        throw new Error(response.data?.error || 'Unknown error occurred');
+      }
+    } catch (error) {
+      console.error(`❌ Error deleting all ${dataType} data:`, error);
+      return {
+        success: false,
+        error: `Failed to delete all ${dataType} data: ${error.response?.data?.message || error.message}`
+      };
+    }
+  }
 }
 
 // Create and export service instance

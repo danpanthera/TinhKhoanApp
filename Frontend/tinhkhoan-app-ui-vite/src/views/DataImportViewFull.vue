@@ -158,6 +158,14 @@
                 >
                   🗑️
                 </button>
+                <button
+                  @click="deleteAllDataType(key)"
+                  class="btn-action btn-delete-all btn-icon-only"
+                  title="Xóa toàn bộ dữ liệu bảng này"
+                  :disabled="getDataTypeStats(key).totalRecords === 0"
+                >
+                  💥
+                </button>
               </td>
             </tr>
           </tbody>
@@ -749,7 +757,7 @@ const getDataTypeStats = (dataType) => {
   const totalRecords = parseInt(stats.totalRecords) || 0
   return {
     ...stats,
-    totalRecords: formatRecordCount(totalRecords) // Use local formatRecordCount instead
+    totalRecords: totalRecords // Return raw number, formatting will be done in template
   }
 }
 
@@ -764,26 +772,27 @@ const calculateDataTypeStats = () => {
 
   // Calculate from imports
   allImports.value.forEach(imp => {
-    // 🔧 FIX: Đồng bộ với rawDataService mapping logic
-    const dataType = imp.dataType || imp.Category || imp.FileType || imp.category || imp.fileType || 'UNKNOWN'
+    // 🔧 FIX: Consistent với rawDataService mapping - dataType đã được map từ Category
+    const dataType = imp.dataType || imp.Category || imp.FileType || 'UNKNOWN'
 
     if (!stats[dataType]) {
       stats[dataType] = { totalRecords: 0, lastUpdate: null, count: 0 }
     }
 
     stats[dataType].count++
-    // 🔧 FIX: Đồng bộ với rawDataService field mapping
+    // 🔧 FIX: Ưu tiên recordsCount đã được map trong rawDataService
     const recordCount = parseInt(imp.recordsCount || imp.RecordsCount) || 0
     stats[dataType].totalRecords += recordCount
 
     // 🐛 DEBUG: Log để xem data mapping
     console.log(`📊 Processing ${dataType}: ${recordCount} records from`, imp.fileName || imp.FileName)
+    console.log(`📊 Full import item:`, imp)
 
-    const importDate = imp.importDate;
+    const importDate = imp.ImportDate || imp.importDate;
     if (importDate && importDate !== "0001-01-01T00:00:00") {
       const importDateTime = new Date(importDate)
-      if (!stats[dataType].lastUpdate ||
-          importDateTime > new Date(stats[dataType].lastUpdate)) {
+      if (!isNaN(importDateTime.getTime()) && (!stats[dataType].lastUpdate ||
+          importDateTime > new Date(stats[dataType].lastUpdate))) {
         stats[dataType].lastUpdate = importDate
       }
     }
@@ -793,10 +802,31 @@ const calculateDataTypeStats = () => {
 }
 
 // Debug function
-const debugRecalculateStats = () => {
+const debugRecalculateStats = async () => {
   console.log('🔧 DEBUG: Manual recalculate stats')
+
+  // Force refresh data first
+  console.log('🔄 Force refreshing data...')
+  await refreshAllData(true)
+
+  // Log all imports để kiểm tra data
+  console.log('📊 All imports after refresh:', allImports.value)
+
+  if (allImports.value.length > 0) {
+    console.log('📊 Sample import item:', allImports.value[0])
+    console.log('📊 DP01 items:', allImports.value.filter(imp =>
+      imp.Category === 'DP01' || imp.dataType === 'DP01' || imp.FileType === 'DP01'
+    ))
+  }
+
+  // Then recalculate stats
   calculateDataTypeStats()
-  showSuccess(`🔧 Debug: Recalculated stats. Check console for details.`)
+
+  // Log current stats for debugging
+  console.log('📊 Current dataTypeStats:', dataTypeStats.value)
+  console.log('📊 Current allImports count:', allImports.value.length)
+
+  showSuccess(`🔧 Debug: Recalculated stats. Found ${allImports.value.length} imports. Check console for details.`)
 }
 
 // Date filtering methods
@@ -1172,6 +1202,46 @@ const performDeleteByDate = async (dataType, dateStr) => {
     }
   } catch (error) {
     console.error('Error deleting data:', error)
+    showError(`Lỗi khi xóa dữ liệu: ${error.message}`)
+  } finally {
+    loading.value = false
+    loadingMessage.value = ''
+  }
+}
+
+// Xóa toàn bộ dữ liệu của một bảng
+const deleteAllDataType = async (dataType) => {
+  const stats = getDataTypeStats(dataType)
+  if (stats.totalRecords === 0) {
+    showError(`Không có dữ liệu trong bảng ${dataType}`)
+    return
+  }
+
+  // Hiển thị xác nhận nguy hiểm
+  const confirmMsg = `⚠️ CẢNH BÁO: Bạn có chắc chắn muốn xóa TOÀN BỘ ${stats.totalRecords} bản ghi của bảng ${dataType}?\n\nHành động này KHÔNG THỂ HOÀN TÁC!`
+
+  if (!confirm(confirmMsg)) {
+    return
+  }
+
+  // Xác nhận lần 2
+  if (!confirm(`Xác nhận lần cuối: XÓA TOÀN BỘ dữ liệu bảng ${dataType}?`)) {
+    return
+  }
+
+  try {
+    loading.value = true
+    loadingMessage.value = `Đang xóa toàn bộ dữ liệu ${dataType}...`
+
+    const result = await rawDataService.deleteAllDataType(dataType)
+    if (result.success) {
+      showSuccess(`✅ ${result.data.message || 'Đã xóa toàn bộ dữ liệu thành công'}`)
+      await refreshAllData() // Refresh để cập nhật stats
+    } else {
+      showError(`Lỗi khi xóa dữ liệu: ${result.error}`)
+    }
+  } catch (error) {
+    console.error('Error deleting all data:', error)
     showError(`Lỗi khi xóa dữ liệu: ${error.message}`)
   } finally {
     loading.value = false
