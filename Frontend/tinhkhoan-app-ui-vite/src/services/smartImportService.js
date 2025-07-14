@@ -9,10 +9,10 @@ import apiClient from './api.js'
 class SmartImportService {
 
   constructor() {
-    // Cấu hình chunked upload cho file lớn GL01
-    this.CHUNK_SIZE = 1024 * 1024 * 5 // 5MB mỗi chunk (tăng từ 2MB)
-    this.MAX_FILE_SIZE = 1024 * 1024 * 300 // 300MB max file size (tăng từ 100MB cho GL01)
-    this.LARGE_FILE_THRESHOLD = 1024 * 1024 * 10 // 10MB để quyết định có dùng chunked upload
+    // Cấu hình chunked upload cho file siêu lớn 2GB
+    this.CHUNK_SIZE = 1024 * 1024 * 10 // 10MB mỗi chunk (tăng từ 5MB để upload nhanh hơn)
+    this.MAX_FILE_SIZE = 1024 * 1024 * 1024 * 2 // 2GB max file size
+    this.LARGE_FILE_THRESHOLD = 1024 * 1024 * 50 // 50MB để quyết định có dùng chunked upload
   }
 
   /**

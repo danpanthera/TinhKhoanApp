@@ -107,10 +107,10 @@ internal partial class Program
                 options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
             });
 
-        // 🔧 Cấu hình cho file upload lớn
+        // 🔧 Cấu hình cho file upload siêu lớn 2GB cho GL01
         builder.Services.Configure<FormOptions>(options =>
         {
-            options.MultipartBodyLengthLimit = 500_000_000; // 500MB
+            options.MultipartBodyLengthLimit = 2_147_483_648; // 2GB = 2^31 bytes
             options.ValueLengthLimit = int.MaxValue;
             options.ValueCountLimit = int.MaxValue;
             options.KeyLengthLimit = int.MaxValue;
@@ -118,10 +118,10 @@ internal partial class Program
 
         builder.WebHost.ConfigureKestrel(options =>
         {
-            options.Limits.MaxRequestBodySize = 500_000_000; // 500MB
-            // 🕐 Thêm timeout configuration cho file upload lớn
-            options.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes(10);
-            options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(10);
+            options.Limits.MaxRequestBodySize = 2_147_483_648; // 2GB = 2^31 bytes
+            // 🕐 Thêm timeout configuration cho file upload siêu lớn
+            options.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes(30); // 30 phút cho 2GB
+            options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(30);
         });        // 3.5. Đăng ký các business services        builder.Services.AddScoped<IKpiScoringService, KpiScoringService>();
         builder.Services.AddScoped<IEmployeeKpiAssignmentService, EmployeeKpiAssignmentService>();
         builder.Services.AddScoped<UnitKpiScoringService>();

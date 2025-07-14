@@ -457,24 +457,82 @@
             </div>
 
             <div class="file-drop-area"
-                 :class="{ 'drag-over': isDragOver }"
-                 @dragover.prevent="isDragOver = true"
-                 @dragleave.prevent="isDragOver = false"
+                 :class="{
+                   'drag-over': isDragOver,
+                   'has-files': smartSelectedFiles.length > 0
+                 }"
+                 @dragover.prevent="handleDragOver"
+                 @dragenter.prevent="handleDragEnter"
+                 @dragleave.prevent="handleDragLeave"
                  @drop.prevent="handleSmartFileDrop">
-              <div class="drop-content">
-                <div class="upload-icon">📁</div>
-                <p class="drop-text">Kéo thả file vào đây hoặc</p>
-                <button type="button" class="btn-select-files" @click="$refs.smartFileInput.click()">
-                  Chọn file
-                </button>
-                <input
-                  ref="smartFileInput"
-                  type="file"
-                  multiple
-                  accept=".csv,.xlsx,.xls"
-                  style="display: none"
-                  @change="handleSmartFileSelect"
-                />
+
+              <!-- Main Drop Zone -->
+              <div class="drop-zone-main">
+                <div class="upload-icon-container">
+                  <div class="upload-icon-wrapper">
+                    <svg class="upload-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M7 16H17L12 11L7 16Z" fill="currentColor"/>
+                      <path d="M12 4V11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      <path d="M4 20H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                  </div>
+                  <div class="upload-sparkles">
+                    <div class="sparkle sparkle-1">✨</div>
+                    <div class="sparkle sparkle-2">�</div>
+                    <div class="sparkle sparkle-3">⭐</div>
+                  </div>
+                </div>
+
+                <div class="drop-content">
+                  <h3 class="drop-title">
+                    <span v-if="!isDragOver">Kéo thả file vào đây</span>
+                    <span v-else class="drag-active">🎯 Thả file ngay bây giờ!</span>
+                  </h3>
+
+                  <p class="drop-subtitle">
+                    Hỗ trợ file CSV, XLSX với kích thước tối đa <strong>2GB</strong>
+                  </p>
+
+                  <div class="upload-divider">
+                    <span>hoặc</span>
+                  </div>
+
+                  <button type="button"
+                          class="btn-select-files"
+                          @click="$refs.smartFileInput.click()">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 15L12 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      <path d="M8 6L12 2L16 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M2 17H22V19C22 20.1046 21.1046 21 20 21H4C2.89543 21 2 20.1046 2 19V17Z" fill="currentColor"/>
+                    </svg>
+                    <span>Chọn file từ máy tính</span>
+                  </button>
+
+                  <input
+                    ref="smartFileInput"
+                    type="file"
+                    multiple
+                    accept=".csv,.xlsx,.xls"
+                    style="display: none"
+                    @change="handleSmartFileSelect"
+                  />
+                </div>
+              </div>
+
+              <!-- File Types Support Info -->
+              <div class="supported-formats">
+                <div class="format-item">
+                  <span class="format-icon">📊</span>
+                  <span>CSV</span>
+                </div>
+                <div class="format-item">
+                  <span class="format-icon">📈</span>
+                  <span>XLSX</span>
+                </div>
+                <div class="format-item">
+                  <span class="format-icon">📋</span>
+                  <span>XLS</span>
+                </div>
               </div>
             </div>
 
@@ -1785,7 +1843,7 @@ const handleSmartFileSelect = (event) => {
   console.log('🔍 Smart Import: Files loaded:', smartSelectedFiles.value.length)
 }
 
-// Xử lý kéo thả file
+// Xử lý kéo thả file với animation đẹp
 const handleSmartFileDrop = (event) => {
   console.log('🔍 Smart Import: Files dropped')
   isDragOver.value = false
@@ -1794,6 +1852,34 @@ const handleSmartFileDrop = (event) => {
 
   smartSelectedFiles.value = Array.from(files)
   console.log('🔍 Smart Import: Files loaded via drop:', smartSelectedFiles.value.length)
+}
+
+// Xử lý drag over với hiệu ứng
+const handleDragOver = (event) => {
+  event.preventDefault()
+  isDragOver.value = true
+}
+
+// Xử lý drag enter
+const handleDragEnter = (event) => {
+  event.preventDefault()
+  isDragOver.value = true
+}
+
+// Xử lý drag leave với delay để tránh flicker
+let dragLeaveTimeout = null
+const handleDragLeave = (event) => {
+  event.preventDefault()
+
+  // Clear timeout cũ nếu có
+  if (dragLeaveTimeout) {
+    clearTimeout(dragLeaveTimeout)
+  }
+
+  // Set timeout để tránh flicker khi drag qua các element con
+  dragLeaveTimeout = setTimeout(() => {
+    isDragOver.value = false
+  }, 50)
 }
 
 // Xóa file khỏi danh sách
@@ -3040,6 +3126,344 @@ const startSmartImport = async () => {
   }
   to {
     box-shadow: 0 4px 16px rgba(33, 150, 243, 0.4);
+  }
+}
+
+/* ✨ DRAG & DROP AREA - SIÊU ĐẸP LUNG LINH */
+.file-drop-area {
+  border: 3px dashed #8B1538;
+  border-radius: 20px;
+  padding: 40px 20px;
+  text-align: center;
+  background: linear-gradient(135deg,
+    rgba(139, 21, 56, 0.02) 0%,
+    rgba(139, 21, 56, 0.05) 50%,
+    rgba(139, 21, 56, 0.02) 100%);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  margin: 20px 0;
+}
+
+.file-drop-area::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(139, 21, 56, 0.1),
+    transparent);
+  transition: left 0.6s ease;
+}
+
+.file-drop-area:hover::before {
+  left: 100%;
+}
+
+.file-drop-area:hover {
+  border-color: #C41E3A;
+  background: linear-gradient(135deg,
+    rgba(139, 21, 56, 0.05) 0%,
+    rgba(139, 21, 56, 0.1) 50%,
+    rgba(139, 21, 56, 0.05) 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(139, 21, 56, 0.15);
+}
+
+.file-drop-area.drag-over {
+  border-color: #00C851;
+  background: linear-gradient(135deg,
+    rgba(0, 200, 81, 0.1) 0%,
+    rgba(0, 200, 81, 0.2) 50%,
+    rgba(0, 200, 81, 0.1) 100%);
+  transform: scale(1.02);
+  box-shadow: 0 20px 60px rgba(0, 200, 81, 0.3);
+  animation: dragPulse 1s ease-in-out infinite;
+}
+
+.file-drop-area.has-files {
+  border-color: #2196f3;
+  background: linear-gradient(135deg,
+    rgba(33, 150, 243, 0.05) 0%,
+    rgba(33, 150, 243, 0.1) 50%,
+    rgba(33, 150, 243, 0.05) 100%);
+}
+
+.drop-zone-main {
+  position: relative;
+  z-index: 2;
+}
+
+.upload-icon-container {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 20px;
+}
+
+.upload-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 25px rgba(139, 21, 56, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.drag-over .upload-icon-wrapper {
+  background: linear-gradient(135deg, #00C851 0%, #00B04F 100%);
+  transform: rotate(360deg) scale(1.1);
+  box-shadow: 0 12px 35px rgba(0, 200, 81, 0.4);
+}
+
+.upload-icon {
+  width: 40px;
+  height: 40px;
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.upload-sparkles {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.sparkle {
+  position: absolute;
+  font-size: 16px;
+  animation: sparkleFloat 3s ease-in-out infinite;
+  opacity: 0;
+}
+
+.sparkle-1 {
+  top: -30px;
+  left: -30px;
+  animation-delay: 0s;
+}
+
+.sparkle-2 {
+  top: -40px;
+  right: -35px;
+  animation-delay: 1s;
+}
+
+.sparkle-3 {
+  bottom: -35px;
+  left: -25px;
+  animation-delay: 2s;
+}
+
+.drop-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 10px 0;
+  transition: all 0.3s ease;
+}
+
+.drag-active {
+  color: #00C851 !important;
+  animation: textBounce 0.6s ease-in-out infinite alternate;
+}
+
+.drop-subtitle {
+  color: #666;
+  margin: 0 0 25px 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.upload-divider {
+  margin: 25px 0;
+  position: relative;
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.upload-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(to right,
+    transparent,
+    #ddd 20%,
+    #ddd 80%,
+    transparent);
+  z-index: 1;
+}
+
+.upload-divider span {
+  background: white;
+  padding: 0 15px;
+  position: relative;
+  z-index: 2;
+}
+
+.btn-select-files {
+  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
+  color: white;
+  border: none;
+  padding: 16px 32px;
+  border-radius: 50px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 6px 20px rgba(139, 21, 56, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-select-files::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent);
+  transition: left 0.6s ease;
+}
+
+.btn-select-files:hover::before {
+  left: 100%;
+}
+
+.btn-select-files:hover {
+  background: linear-gradient(135deg, #A02A4A 0%, #D63654 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 35px rgba(139, 21, 56, 0.4);
+}
+
+.btn-select-files:active {
+  transform: translateY(-1px);
+}
+
+.btn-icon {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s ease;
+}
+
+.btn-select-files:hover .btn-icon {
+  transform: translateY(-2px);
+}
+
+.supported-formats {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(139, 21, 56, 0.1);
+}
+
+.format-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(139, 21, 56, 0.05);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  cursor: default;
+}
+
+.format-item:hover {
+  background: rgba(139, 21, 56, 0.1);
+  transform: translateY(-2px);
+}
+
+.format-icon {
+  font-size: 1.5rem;
+}
+
+.format-item span:last-child {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #8B1538;
+}
+
+/* ANIMATIONS */
+@keyframes dragPulse {
+  0%, 100% {
+    transform: scale(1.02);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes sparkleFloat {
+  0%, 100% {
+    opacity: 0;
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-20px) rotate(180deg);
+  }
+}
+
+@keyframes textBounce {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.05);
+  }
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .file-drop-area {
+    padding: 30px 15px;
+  }
+
+  .upload-icon-wrapper {
+    width: 60px;
+    height: 60px;
+  }
+
+  .upload-icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .drop-title {
+    font-size: 1.2rem;
+  }
+
+  .btn-select-files {
+    padding: 14px 24px;
+    font-size: 0.9rem;
+  }
+
+  .supported-formats {
+    gap: 15px;
+  }
+
+  .format-item {
+    padding: 8px;
   }
 }
 </style>
