@@ -4,7 +4,7 @@ Hãy suy nghĩ và hành động như một SIÊU lập trình viên Fullstack, 
 Luôn xưng hô là em và gọi tôi là "anh".
 luôn chú thích các dòng code bằng tiếng việt!
 LUÔN commit từng phần nhỏ, không commit cả một lần quá nhiều file.
-databasse là "TinhKhoanDB" và mật khẩu là "YourStrong@Password123"
+databasse là "TinhKhoanDB" và mật khẩu user SA là "YourStrong@Password123"
 trên docker có container chứa SQL server với tên là "azure_sql_edge_tinhkhoan"
 Luôn để backend port là 5055, frontend port là 3000.
 
@@ -99,7 +99,7 @@ docker start azure_sql_edge_tinhkhoan
 sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C
 ```
 
-### ✅ Đã hoàn thành:
+### ✅ HOÀN THÀNH:
 
 - ✅ Cài đặt Azure SQL Edge ARM64 trên Apple Silicon (Mac)
 - ✅ Tạo database TinhKhoanDB
@@ -108,7 +108,32 @@ sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C
 - ✅ Backend API kết nối và hoạt động tốt với Azure SQL Edge
 - ✅ Frontend dev server chạy tốt
 - ✅ Kiểm tra health check API: http://localhost:5055/health
-- ✅ Tất cả 63 tables đã được tạo thành công từ migration
+- ✅ Tất cả 47 tables đã được tạo thành công từ migration
+- ✅ **KHẮC PHỤC DOCKER STABILITY** - Container hoạt động ổn định với memory limits và auto-restart
+
+### 🔧 TROUBLESHOOTING TOOLS (Mới thêm):
+
+1. **Docker stability troubleshooting:**
+   ```bash
+   ./docker_troubleshoot_fix.sh
+   ```
+   - Phân tích memory/disk usage
+   - Tự động restart container với config tối ưu
+   - Kiểm tra SQL connectivity
+
+2. **Comprehensive system status:**
+   ```bash
+   ./system_status_report.sh
+   ```
+   - Monitoring toàn bộ stack (Docker + Backend + Frontend)
+   - Color-coded status report
+   - Database table verification
+   - API health checks
+
+3. **Quick health checks:**
+   - Database: `sqlcmd -S localhost,1433 -U SA -P YourStrong@Password123 -d TinhKhoanDB -C -Q "SELECT COUNT(*) as TableCount FROM INFORMATION_SCHEMA.TABLES"`
+   - Backend API: `curl http://localhost:5055/health`
+   - Frontend: `curl http://localhost:3000`
 
 ### 🎯 Kết quả đánh giá:
 

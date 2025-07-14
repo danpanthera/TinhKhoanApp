@@ -342,7 +342,7 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     success = true,
                     message = $"Đã xóa toàn bộ dữ liệu bảng {dataType}",
-                    recordsDeleted = result.RecordsDeleted
+                    recordsDeleted = result.ProcessedRecords
                 });
             }
             catch (Exception ex)

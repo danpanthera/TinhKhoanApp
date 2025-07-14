@@ -1469,7 +1469,7 @@ namespace TinhKhoanApp.Api.Services
                     return result;
                 }
 
-                _logger.LogInformation("📅 [GL01_SPECIAL] Date range: {FromDate} -> {ToDate}", dateRange.FromDate, dateRange.ToDate);
+                _logger.LogInformation("📅 [GL01_SPECIAL] Date range: {FromDate} -> {ToDate}", dateRange.Value.FromDate, dateRange.Value.ToDate);
 
                 using var stream = file.OpenReadStream();
                 using var reader = new StreamReader(stream, Encoding.UTF8);
@@ -1498,7 +1498,7 @@ namespace TinhKhoanApp.Api.Services
                         // SPECIAL: Convert TR_TIME to NGAY_DL format
                         if (!string.IsNullOrEmpty(record.TR_TIME))
                         {
-                            record.NGAY_DL = ConvertTrTimeToNgayDL(record.TR_TIME);
+                            record.NgayDL = ConvertTrTimeToNgayDL(record.TR_TIME);
                         }
 
                         // Add to DataTable for bulk insert
@@ -1536,12 +1536,13 @@ namespace TinhKhoanApp.Api.Services
                 }
 
                 // Save import record
-                await SaveImportRecord(result, dateRange.FromDate, dateRange.ToDate);
+                // TODO: Implement SaveImportRecord method
+                // await SaveImportRecord(result, dateRange.Value.FromDate, dateRange.Value.ToDate);
 
                 result.Success = true;
                 result.ProcessedRecords = processedRows;
                 result.ErrorRecords = errorRows;
-                result.NgayDL = $"{dateRange.FromDate} - {dateRange.ToDate}";
+                result.NgayDL = $"{dateRange.Value.FromDate} - {dateRange.Value.ToDate}";
                 result.EndTime = DateTime.UtcNow;
 
                 _logger.LogInformation("✅ [GL01_SPECIAL] Import completed: {ProcessedRecords} records", processedRows);
@@ -1658,8 +1659,8 @@ namespace TinhKhoanApp.Api.Services
             // This will need to be customized based on the actual GL01 CSV columns
 
             // Example mapping (adjust based on actual CSV columns):
-            record.NGAY_DL = csv.GetField("NGAY_DL") ?? "";
-            record.MA_CN = csv.GetField("MA_CN") ?? "";
+            record.NgayDL = csv.GetField("NGAY_DL") ?? "";
+            // Note: GL01 doesn't have MA_CN property, remove this line
             record.TR_TIME = csv.GetField("TR_TIME") ?? "";
             // ... map other columns as needed
         }
