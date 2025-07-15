@@ -582,45 +582,32 @@ namespace TinhKhoanApp.Api.Services
                 decimal totalServiceRevenue = 0;
                 var processedRecords = 0;
 
-                // Các tài khoản thu dịch vụ (có thể cần điều chỉnh theo thực tế)
-                var serviceRevenueAccounts = new[] { "7111", "7112", "7113", "7114", "7115", "7121", "7122" };
+                // 🚨 GL41 cấu trúc đã thay đổi - bây giờ là dữ liệu đầu tư chứng khoán
+                // TODO: Cần review lại logic tính toán thu dịch vụ với cấu trúc mới
+                // GL41 cũ: MA_TK, ST_GHICO, ST_GHINO -> GL41 mới: MA_TKPK, GIA_MUA, GIA_BAN, etc.
 
-                foreach (var record in gl41Records)
-                {
-                    var accountCode = record.MA_TK ?? "";
-
-                    // Chỉ tính các tài khoản thu dịch vụ
-                    if (serviceRevenueAccounts.Any(acc => accountCode.StartsWith(acc)))
-                    {
-                        // Thu dịch vụ = Credit - Debit
-                        var serviceAmount = (record.ST_GHICO ?? 0) - (record.ST_GHINO ?? 0);
-                        totalServiceRevenue += serviceAmount;
-                        processedRecords++;
-                    }
-                }
-
-                var finalValue = totalServiceRevenue / 1_000_000m; // Chuyển sang triệu VND
+                // Tạm thời trả về 0 và log warning
+                _logger.LogWarning("GL41 structure has changed - ThuDichVu calculation needs to be redesigned for securities investment data");
 
                 var calculationDetails = new
                 {
-                    Formula = "Tổng (Credit - Debit) từ các tài khoản thu dịch vụ trong bảng GL41",
-                    DataSource = "GL41 table",
+                    Formula = "GL41 cấu trúc đã thay đổi - cần thiết kế lại logic tính toán",
+                    DataSource = "GL41 table (new structure)",
                     StatementDate = targetStatementDate,
-                    TotalServiceRevenue = totalServiceRevenue,
-                    FinalValue = finalValue,
+                    TotalServiceRevenue = 0m,
+                    FinalValue = 0m,
                     Unit = "Triệu VND",
-                    ProcessedRecords = processedRecords,
-                    ServiceRevenueAccounts = serviceRevenueAccounts,
+                    ProcessedRecords = 0,
+                    Note = "GL41 is now securities investment data, not accounting entries",
                     CalculationDate = date,
                     UnitInfo = new { unit.Code, unit.Name },
                     BranchCode = branchCode
                 };
 
-                await SaveCalculation("ThuDichVu", unitId, date, finalValue, calculationDetails, startTime);
+                await SaveCalculation("ThuDichVu", unitId, date, 0m, calculationDetails, startTime);
 
-                _logger.LogInformation("Hoàn thành tính Thu dịch vụ: {Value} triệu VND (từ {Records} bản ghi)",
-                    finalValue, processedRecords);
-                return finalValue;
+                _logger.LogInformation("Thu dịch vụ tạm thời = 0 (cần thiết kế lại logic cho GL41 mới)");
+                return 0m;
             }
             catch (Exception ex)
             {
@@ -669,60 +656,31 @@ namespace TinhKhoanApp.Api.Services
                     throw new InvalidOperationException(errorMessage);
                 }
 
-                decimal totalRevenue = 0; // Thu nhập
-                decimal totalExpense = 0; // Chi phí
-                var processedRecords = 0;
-
-                // Thu nhập (7 + 790001 + 8511)
-                var revenueAccounts = new[] { "7", "790001", "8511" };
-                // Chi phí (8 + 882)
-                var expenseAccounts = new[] { "8", "882" };
-
-                foreach (var record in gl41Records)
-                {
-                    var accountCode = record.MA_TK ?? "";
-
-                    // Tính thu nhập từ các tài khoản thu
-                    if (revenueAccounts.Any(acc => accountCode.StartsWith(acc)))
-                    {
-                        totalRevenue += (record.ST_GHICO ?? 0) - (record.ST_GHINO ?? 0); // Credit - Debit cho tài khoản thu
-                    }
-
-                    // Tính chi phí từ các tài khoản chi
-                    if (expenseAccounts.Any(acc => accountCode.StartsWith(acc)))
-                    {
-                        totalExpense += (record.ST_GHINO ?? 0) - (record.ST_GHICO ?? 0); // Debit - Credit cho tài khoản chi
-                    }
-
-                    processedRecords++;
-                }
-
-                var profit = totalRevenue - totalExpense;
-                var finalValue = profit / 1_000_000m; // Chuyển sang triệu VND
+                // 🚨 GL41 cấu trúc đã thay đổi - bây giờ là dữ liệu đầu tư chứng khoán
+                // TODO: Cần review lại logic tính toán lợi nhuận với cấu trúc mới
+                _logger.LogWarning("GL41 structure has changed - LoiNhuan calculation needs to be redesigned for securities investment data");
 
                 var calculationDetails = new
                 {
-                    Formula = "(TK 7+790001+8511) - (TK 8+882) từ bảng GL41",
-                    DataSource = "GL41 table",
+                    Formula = "GL41 cấu trúc đã thay đổi - cần thiết kế lại logic tính toán",
+                    DataSource = "GL41 table (new structure)",
                     StatementDate = targetStatementDate,
-                    TotalRevenue = totalRevenue,
-                    TotalExpense = totalExpense,
-                    Profit = profit,
-                    FinalValue = finalValue,
+                    TotalRevenue = 0m,
+                    TotalExpense = 0m,
+                    Profit = 0m,
+                    FinalValue = 0m,
                     Unit = "Triệu VND",
-                    ProcessedRecords = processedRecords,
-                    RevenueAccounts = revenueAccounts,
-                    ExpenseAccounts = expenseAccounts,
+                    ProcessedRecords = 0,
+                    Note = "GL41 is now securities investment data, not P&L accounts",
                     CalculationDate = date,
                     UnitInfo = new { unit.Code, unit.Name },
                     BranchCode = branchCode
                 };
 
-                await SaveCalculation("LoiNhuan", unitId, date, finalValue, calculationDetails, startTime);
+                await SaveCalculation("LoiNhuan", unitId, date, 0m, calculationDetails, startTime);
 
-                _logger.LogInformation("Hoàn thành tính Lợi nhuận từ file thực: {Value} triệu VND (từ {Records} bản ghi)",
-                    finalValue, processedRecords);
-                return finalValue;
+                _logger.LogInformation("Lợi nhuận tạm thời = 0 (cần thiết kế lại logic cho GL41 mới)");
+                return 0m;
             }
             catch (Exception ex)
             {

@@ -13,7 +13,7 @@ Luôn để backend port là 5055, frontend port là 3000.
 - **Backend:** LUÔN dùng `./start_backend.sh`
 - **Frontend:** LUÔN dùng `./start_frontend.sh`
 -
-- **Fast Commit:** LUÔN dùng `./fast_commit.sh "message"`
+- **Fast Commit:** LUÔN dùng `./fast_commit.sh 
 - **NGHIÊM CẤM** sử dụng shell VS Code để chạy npm/dotnet commands!
 
 🚨DỮ LIỆU MẪU CHUẨN CHO 08 CORE DATA - TUYỆT ĐỐI KHÔNG TẠO DỮ LIỆU MOCK DATA
