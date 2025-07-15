@@ -38,7 +38,7 @@ export const employeeKpiAssignmentApi = {
   },
 
   // Bulk operations - aligned with backend endpoints and DTOs
-  
+
   // Create bulk assignments using individual assignment DTOs
   bulkCreateAssignments: (bulkCreateDto) => {
     return apiClient.post('/EmployeeKpiAssignment/bulk', bulkCreateDto);
@@ -56,12 +56,12 @@ export const employeeKpiAssignmentApi = {
 
   // Bulk delete assignments
   bulkDeleteAssignments: (bulkDeleteDto) => {
-    return apiClient.delete('/EmployeeKpiAssignment/bulk-delete', { 
-      data: bulkDeleteDto 
+    return apiClient.delete('/EmployeeKpiAssignment/bulk-delete', {
+      data: bulkDeleteDto
     });
   },
 
-  // Export functions  
+  // Export functions
   exportAssignments: (khoanPeriodId) => {
     return apiClient.get(`/EmployeeKpiAssignment/export?khoanPeriodId=${khoanPeriodId}`, {
       responseType: 'blob'
