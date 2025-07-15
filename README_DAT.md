@@ -364,9 +364,6 @@ cấu trúc như sau: Tên, code, MA_CN
 **✅ HOÀN THÀNH:** Đã tạo thành công 46 đơn vị theo cấu trúc hierarchical
 
 #### Cấu trúc tổ chức:
-
-```
-
 Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
 ├── Hội Sở (ID=2, CNL1)
 │ ├── Ban Giám đốc (ID=3, PNVL1)
@@ -405,13 +402,6 @@ Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
 - **PGDL2:** 4 phòng giao dịch
 - **Tổng:** 46 đơn vị ✅
 
-#### Công cụ sử dụng:
-
-- **Shell script:** `create_46_units.sh` - Automation tạo toàn bộ cấu trúc
-- **API Units:** POST `/api/units` - Tạo từng đơn vị với parentUnitId
-- **MaintenanceController:** Backup và management endpoints
-- **Verification:** JSON validation và count checking
-
 #### Đặc điểm kỹ thuật:
 
 - **Auto-increment ID:** Database tự động gán ID tuần tự
@@ -429,104 +419,6 @@ Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
 
 | ID  | Mã vai trò          | Tên vai trò                              | Mô tả                                          |
 | --- | ------------------- | ---------------------------------------- | ---------------------------------------------- |
-| 1   | TruongphongKhdn     | Trưởng phòng KHDN                        | Trưởng phòng Khách hàng Doanh nghiệp           |
-| 2   | TruongphongKhcn     | Trưởng phòng KHCN                        | Trưởng phòng Khách hàng Cá nhân                |
-| 3   | PhophongKhdn        | Phó phòng KHDN                           | Phó phòng Khách hàng Doanh nghiệp              |
-| 4   | PhophongKhcn        | Phó phòng KHCN                           | Phó phòng Khách hàng Cá nhân                   |
-| 5   | TruongphongKhqlrr   | Trưởng phòng KH&QLRR                     | Trưởng phòng Kế hoạch & Quản lý rủi ro         |
-| 6   | PhophongKhqlrr      | Phó phòng KH&QLRR                        | Phó phòng Kế hoạch & Quản lý rủi ro            |
-| 7   | Cbtd                | Cán bộ tín dụng                          | Cán bộ tín dụng                                |
-| 8   | TruongphongKtnqCnl1 | Trưởng phòng KTNQ CNL1                   | Trưởng phòng Kế toán & Ngân quỹ CNL1           |
-| 9   | PhophongKtnqCnl1    | Phó phòng KTNQ CNL1                      | Phó phòng Kế toán & Ngân quỹ CNL1              |
-| 10  | Gdv                 | GDV                                      | Giao dịch viên                                 |
-| 11  | TqHkKtnb            | Thủ quỹ \| Hậu kiểm \| KTNB              | Thủ quỹ \| Hậu kiểm \| Kế toán nghiệp vụ       |
-| 12  | TruongphoItThKtgs   | Trưởng phó IT \| Tổng hợp \| KTGS        | Trưởng phó IT \| Tổng hợp \| Kiểm tra giám sát |
-| 13  | CBItThKtgsKhqlrr    | Cán bộ IT \| Tổng hợp \| KTGS \| KH&QLRR | Cán bộ IT \| Tổng hợp \| KTGS \| KH&QLRR       |
-| 14  | GiamdocPgd          | Giám đốc Phòng giao dịch                 | Giám đốc Phòng giao dịch                       |
-| 15  | PhogiamdocPgd       | Phó giám đốc Phòng giao dịch             | Phó giám đốc Phòng giao dịch                   |
-| 16  | PhogiamdocPgdCbtd   | Phó giám đốc PGD kiêm CBTD               | Phó giám đốc Phòng giao dịch kiêm CBTD         |
-| 17  | GiamdocCnl2         | Giám đốc CNL2                            | Giám đốc Chi nhánh cấp 2                       |
-| 18  | PhogiamdocCnl2Td    | Phó giám đốc CNL2 phụ trách TD           | Phó giám đốc CNL2 phụ trách Tín dụng           |
-| 19  | PhogiamdocCnl2Kt    | Phó giám đốc CNL2 phụ trách KT           | Phó giám đốc CNL2 phụ trách Kế toán            |
-| 20  | TruongphongKhCnl2   | Trưởng phòng KH CNL2                     | Trưởng phòng Khách hàng CNL2                   |
-| 21  | PhophongKhCnl2      | Phó phòng KH CNL2                        | Phó phòng Khách hàng CNL2                      |
-| 22  | TruongphongKtnqCnl2 | Trưởng phòng KTNQ CNL2                   | Trưởng phòng Kế toán & Ngân quỹ CNL2           |
-| 23  | PhophongKtnqCnl2    | Phó phòng KTNQ CNL2                      | Phó phòng Kế toán & Ngân quỹ CNL2              |
-
-#### Công cụ sử dụng:
-
-- **Shell script:** `create_23_roles.sh` - Automation tạo toàn bộ 23 vai trò
-- **API Roles:** POST `/api/roles` - Tạo từng vai trò với Name và Description
-- **Model:** Role entity với properties Id, Name, Description, EmployeeRoles
-- **Validation:** JSON schema và backend validation đầy đủ
-
-#### Đặc điểm kỹ thuật:
-
-- **Auto-increment ID:** Database tự động gán ID tuần tự từ 1-23
-- **Unicode support:** Tên và mô tả tiếng Việt hiển thị đúng
-- **API compatible:** Frontend có thể fetch và hiển thị đầy đủ
-- **Mã vai trò:** Giữ nguyên không thay đổi theo yêu cầu
-- **Navigation properties:** Hỗ trợ quan hệ many-to-many với Employees
-
-**🎯 Status:** Sẵn sàng để gán vai trò cho nhân viên trong từng đơn vị.
-
-### 📊 **CẤU HÌNH KPI ASSIGNMENT TABLES - 06/07/2025**
-
-**✅ HOÀN THÀNH:** Đã có đủ 32 bảng KPI theo đúng cấu trúc
-
-#### 🧑‍💼 Tab "Dành cho Cán bộ" - 23 bảng KPI:
-
-| ID  | Tên Bảng KPI        | Mô tả                                    |
-| --- | ------------------- | ---------------------------------------- | -------------- |
-| 1   | TruongphongKhdn     | Trưởng phòng KHDN                        | Trưởng phòng Khách hàng Doanh nghiệp           |
-| 2   | TruongphongKhcn     | Trưởng phòng KHCN                        | Trưởng phòng Khách hàng Cá nhân                |
-| 3   | PhophongKhdn        | Phó phòng KHDN                           | Phó phòng Khách hàng Doanh nghiệp              |
-| 4   | PhophongKhcn        | Phó phòng KHCN                           | Phó phòng Khách hàng Cá nhân                   |
-| 5   | TruongphongKhqlrr   | Trưởng phòng KH&QLRR                     | Trưởng phòng Kế hoạch & Quản lý rủi ro         |
-| 6   | PhophongKhqlrr      | Phó phòng KH&QLRR                        | Phó phòng Kế hoạch & Quản lý rủi ro            |
-| 7   | Cbtd                | Cán bộ tín dụng                          | Cán bộ tín dụng                                |
-| 8   | TruongphongKtnqCnl1 | Trưởng phòng KTNQ CNL1                   | Trưởng phòng Kế toán & Ngân quỹ CNL1           |
-| 9   | PhophongKtnqCnl1    | Phó phòng KTNQ CNL1                      | Phó phòng Kế toán & Ngân quỹ CNL1              |
-| 10  | Gdv                 | GDV                                      | Giao dịch viên                                 |
-| 11  | TqHkKtnb            | Thủ quỹ \| Hậu kiểm \| KTNB              | Thủ quỹ \| Hậu kiểm \| Kế toán nghiệp vụ       |
-| 12  | TruongphoItThKtgs   | Trưởng phó IT \| Tổng hợp \| KTGS        | Trưởng phó IT \| Tổng hợp \| Kiểm tra giám sát |
-| 13  | CBItThKtgsKhqlrr    | Cán bộ IT \| Tổng hợp \| KTGS \| KH&QLRR | Cán bộ IT \| Tổng hợp \| KTGS \| KH&QLRR       |
-| 14  | GiamdocPgd          | Giám đốc Phòng giao dịch                 | Giám đốc Phòng giao dịch                       |
-| 15  | PhogiamdocPgd       | Phó giám đốc Phòng giao dịch             | Phó giám đốc Phòng giao dịch                   |
-| 16  | PhogiamdocPgdCbtd   | Phó giám đốc PGD kiêm CBTD               | Phó giám đốc Phòng giao dịch kiêm CBTD         |
-| 17  | GiamdocCnl2         | Giám đốc CNL2                            | Giám đốc Chi nhánh cấp 2                       |
-| 18  | PhogiamdocCnl2Td    | Phó giám đốc CNL2 phụ trách TD           | Phó giám đốc CNL2 phụ trách Tín dụng           |
-| 19  | PhogiamdocCnl2Kt    | Phó giám đốc CNL2 phụ trách KT           | Phó giám đốc CNL2 phụ trách Kế toán            |
-| 20  | TruongphongKhCnl2   | Trưởng phòng KH CNL2                     | Trưởng phòng Khách hàng CNL2                   |
-| 21  | PhophongKhCnl2      | Phó phòng KH CNL2                        | Phó phòng Khách hàng CNL2                      |
-| 22  | TruongphongKtnqCnl2 | Trưởng phòng KTNQ CNL2                   | Trưởng phòng Kế toán & Ngân quỹ CNL2           |
-| 23  | PhophongKtnqCnl2    | Phó phòng KTNQ CNL2                      | Phó phòng Kế toán & Ngân quỹ CNL2              |
-
-#### Công cụ sử dụng:
-
-- **Shell script:** `create_23_roles.sh` - Automation tạo toàn bộ 23 vai trò
-- **API Roles:** POST `/api/roles` - Tạo từng vai trò với Name và Description
-- **Model:** Role entity với properties Id, Name, Description, EmployeeRoles
-- **Validation:** JSON schema và backend validation đầy đủ
-
-#### Đặc điểm kỹ thuật:
-
-- **Auto-increment ID:** Database tự động gán ID tuần tự từ 1-23
-- **Unicode support:** Tên và mô tả tiếng Việt hiển thị đúng
-- **API compatible:** Frontend có thể fetch và hiển thị đầy đủ
-- **Mã vai trò:** Giữ nguyên không thay đổi theo yêu cầu
-- **Navigation properties:** Hỗ trợ quan hệ many-to-many với Employees
-
-**🎯 Status:** Sẵn sàng để gán vai trò cho nhân viên trong từng đơn vị.
-
-### 📊 **CẤU HÌNH KPI ASSIGNMENT TABLES - 06/07/2025**
-
-**✅ HOÀN THÀNH:** Đã có đủ 32 bảng KPI theo đúng cấu trúc
-
-#### 🧑‍💼 Tab "Dành cho Cán bộ" - 23 bảng KPI:
-
-| ID  | Tên Bảng KPI        | Mô tả                                    |
-| --- | ------------------- | ---------------------------------------- | -------------- |
 | 1   | TruongphongKhdn     | Trưởng phòng KHDN                        | Trưởng phòng Khách hàng Doanh nghiệp           |
 | 2   | TruongphongKhcn     | Trưởng phòng KHCN                        | Trưởng phòng Khách hàng Cá nhân                |
 | 3   | PhophongKhdn        | Phó phòng KHDN                           | Phó phòng Khách hàng Doanh nghiệp              |
@@ -733,15 +625,6 @@ curl -s "http://localhost:5055/api/employees/{id}" | jq '.EmployeeRoles'
 - **EmployeeRoles table**: Quan hệ Many-to-Many giữa Employee và Role
 - **API endpoint**: `PUT /api/employees/{id}` với `RoleIds` array
 - **Payload format**: Bao gồm tất cả fields của Employee + RoleIds mới
-
-#### 8.4 Kết quả achieved
-
-✅ 10/10 employees có roles được gán  
-✅ Quan hệ Employee-Role lưu trong bảng `EmployeeRoles`  
-✅ API trả về đúng cấu trúc role data  
-✅ Mapping logic documented và scripts automated
-
----
 
 ## 🔧 PHASE 9: KPI ASSIGNMENT FRAMEWORK (ĐANG THỰC HIỆN 🔄)
 
@@ -990,31 +873,6 @@ const debugRecalculateStats = async () => {
 
 **🎯 Status:** Đã fix code, cần test lại import workflow để confirm.
 
----
-
-## 🔍 **COLUMN ORDER VERIFICATION STATUS**
-
-### ✅ **PERFECT TABLES** (Business columns → System columns)
-
-**4 bảng đã có thứ tự cột chính xác:**
-- ✅ **DP01**: 63 business columns in correct CSV order
-- ✅ **DPDA**: 13 business columns in correct CSV order  
-- ✅ **EI01**: 24 business columns in correct CSV order
-- ✅ **GL01**: 27 business columns in correct CSV order (Partitioned Columnstore)
-
-### ⚠️ **TABLES NEEDING COLUMN ORDER FIX**
-
-**4 bảng cần sắp xếp lại thứ tự cột:**
-- ❌ **GL41**: Column order mismatch with CSV - needs reordering
-- ❌ **LN01**: Column order mismatch with CSV - needs reordering  
-- ❌ **LN03**: Column order mismatch with CSV - needs reordering
-- ❌ **RR01**: Column order mismatch with CSV - needs reordering
-
-**⚡ Action Required:**
-```bash
-# Run verification script to see exact differences:
-./verify_7_tables_column_order.sh
-```
 
 **📋 Expected Structure:** Business columns from CSV → System/Temporal columns
 ```
@@ -1025,3 +883,22 @@ Position N+2: CREATED_DATE
 Position N+3: UPDATED_DATE  
 Position N+4: FILE_NAME
 ```
+
+### 📊 Kết quả Dọn dẹp (July 15, 2025)
+
+**🧹 FILES ĐÃ XÓA:**
+- ✅ **140 files** đã được xóa (23,645 dòng code)
+- ✅ **29 file CSV test** → Giờ chỉ dùng DuLieuMau chuẩn
+- ✅ **69+ file log/backup/debug** → Project gọn gàng
+- ✅ **Thư mục không cần thiết:** database_backup, test_files, Database/Archive
+- ✅ **Controllers legacy và scripts cũ** → Code base sạch sẽ
+
+**🎯 HIỆU QUẢ:**
+- Dung lượng project: **555MB** (giảm đáng kể)
+- Workspace gọn gàng, dễ navigate
+- Chỉ giữ lại code production quan trọng
+- Tăng hiệu suất build và commit
+
+**📂 DỮ LIỆU TEST CHUẨN:**
+Tất cả dữ liệu test CSV chuẩn được tập trung tại:
+`/Users/nguyendat/Documents/DuLieuImport/DuLieuMau/`

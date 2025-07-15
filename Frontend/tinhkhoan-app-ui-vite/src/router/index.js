@@ -29,18 +29,6 @@ const routes = [
     name: "login",
     component: LoginView,
   },
-  // 🔍 Debug route for testing stores
-  {
-    path: "/store-debug",
-    name: "store-debug",
-    component: () => import("../components/StoreDebugPanel.vue"),
-  },
-  // 🧪 Frontend debug route for testing API and stores
-  {
-    path: "/frontend-debug",
-    name: "frontend-debug",
-    component: () => import("../components/FrontendDebug.vue"),
-  },
   {
     path: "/about",
     name: "about",
@@ -118,20 +106,7 @@ const routes = [
     name: "kpi-actual-values",
     component: () =>
       import(/* webpackChunkName: "kpi" */ "../views/KpiActualValuesView.vue"),
-    meta: { public: true }, // Temporarily allow access without authentication for debugging
-  },
-  {
-    path: "/kpi-scoring",
-    name: "kpi-scoring",
-    component: () =>
-      import(/* webpackChunkName: "kpi" */ "../views/KpiScoringView.vue"),
-  },
-  {
-    path: "/unit-kpi-scoring",
-    name: "unit-kpi-scoring",
-    component: () =>
-      import(/* webpackChunkName: "kpi" */ "../views/UnitKpiScoringView.vue"),
-    meta: { public: true }, // Temporarily allow access for debugging
+    meta: { requiresAuth: true }
   },
   {
     path: "/data-import",
@@ -145,25 +120,6 @@ const routes = [
     component: () =>
       import(/* webpackChunkName: "reports" */ '../views/PayrollReportView.vue'),
     meta: { requiresAuth: true }
-  },
-  {
-    path: "/debug-dropdown",
-    name: "debug-dropdown",
-    component: () =>
-      import(/* webpackChunkName: "debug" */ "../components/DebugDropdown.vue"),
-  },
-  {
-    path: "/performance-dashboard",
-    name: "performance-dashboard",
-    component: () =>
-      import(/* webpackChunkName: "admin" */ "../components/PerformanceDashboard.vue"),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: "/debug-api",
-    name: "debug-api",
-    component: () =>
-      import(/* webpackChunkName: "debug" */ "../components/DebugAPIComponent.vue"),
   },
   // === DASHBOARD ROUTES ===
   {
@@ -193,6 +149,13 @@ const routes = [
       import(/* webpackChunkName: "dashboard" */ "../views/dashboard/BusinessPlanDashboard.vue"),
     meta: { requiresAuth: true }
   },
+  {
+    path: "/performance-dashboard",
+    name: "performance-dashboard",
+    component: () =>
+      import(/* webpackChunkName: "admin" */ "../components/PerformanceDashboard.vue"),
+    meta: { requiresAuth: true }
+  },
 ];
 
 const router = createRouter({
@@ -202,23 +165,11 @@ const router = createRouter({
 
 // Route guard: bảo vệ các route cần đăng nhập
 router.beforeEach((to, from, next) => {
-  // Tạm thời bypass authentication để debug - kiểm tra xem vấn đề có ở đây không
   const bypassAuth = process.env.NODE_ENV === 'development'; // Chỉ bypass trong development
 
   if (!to.meta.public && !bypassAuth && !isAuthenticated()) {
-    console.log('Router guard: redirecting to login', {
-      route: to.path,
-      isAuth: isAuthenticated(),
-      token: localStorage.getItem('token') ? 'exists' : 'missing'
-    });
     next({ name: "login" });
   } else {
-    console.log('Router guard: allowing access', {
-      route: to.path,
-      isAuth: isAuthenticated(),
-      bypassAuth,
-      public: to.meta.public
-    });
     next();
   }
 });
