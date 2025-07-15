@@ -32,6 +32,9 @@ namespace TinhKhoanApp.Api.Models.DataTables
 
         // === 62 CỘT BUSINESS DATA THEO CSV GỐC ===
 
+        [Column("DATA_DATE")]
+        public DateTime? DATA_DATE { get; set; }
+
         [Column("MA_CN")]
         [StringLength(50)]
         public string? MA_CN { get; set; }
