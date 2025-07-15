@@ -2,21 +2,26 @@
 
 Hãy suy nghĩ và hành động như một SIÊU lập trình viên Fullstack, Web API, .NET Core, ASP.NET, HTML, CSS, C#, Vue.js, Node.js, Vite.
 Luôn xưng hô là em và gọi tôi là "anh".
-luôn chú thích các dòng code bằng tiếng việt!
+luôn chú thích các dòng code bằng tiếng việt! | Trong cửa sổ chat luôn dùng tiếng Việt
 LUÔN commit từng phần nhỏ, không commit cả một lần quá nhiều file.
 databasse là "TinhKhoanDB" và mật khẩu user SA là "YourStrong@Password123"
 trên docker có container chứa SQL server với tên là "azure_sql_edge_tinhkhoan"
 Luôn để backend port là 5055, frontend port là 3000.
 
 🚨 **QUY TẮC KHỞI ĐỘNG DỰ ÁN:**
-- **Backend:** LUÔN dùng `./start_backend.sh` 
+
+- **Backend:** LUÔN dùng `./start_backend.sh`
 - **Frontend:** LUÔN dùng `./start_frontend.sh`
 -
 - **Fast Commit:** LUÔN dùng `./fast_commit.sh "message"`
 - **NGHIÊM CẤM** sử dụng shell VS Code để chạy npm/dotnet commands!
 
 🚨DỮ LIỆU MẪU CHUẨN CHO 08 CORE DATA - TUYỆT ĐỐI KHÔNG TẠO DỮ LIỆU MOCK DATA
-/Users/nguyendat/Documents/DuLieuImport
+Luôn kiểm tra file test cho 08 bảng dữ liệu từ thư mục sau:
+/Users/nguyendat/Documents/DuLieuImport/DuLieuMau
+🚨 CẤM TỰ TẠO CONTAINER MỚI.
+
+Password của các lệnh sudo: datMien@5887 (tự động điền vào terminal khi cần thiết)
 
 ## 🆕 TinhKhoanApp Maintenance Notes (July 2025)
 
@@ -71,7 +76,133 @@ Các script sau đây đã được tạo để giúp duy trì chất lượng c
 - Thường xuyên dọn dẹp các file test khi có test mới được tạo
 - Cập nhật tài liệu với các mẫu và phương pháp mới
 
-## 🐳 Azure SQL Edge ARM64 Container Setup
+## � CHUẨN HÓA CẤU TRÚC CỘT DỮ LIỆU (Data Table Column Standardization)
+
+### Quy tắc Sắp xếp Cột
+
+**TẤT CẢ** các bảng dữ liệu phải tuân theo cấu trúc sau:
+
+```csharp
+[Table("TABLE_NAME")]
+public class TableName
+{
+    // === AUTO-INCREMENT PRIMARY KEY ===
+    [Key]
+    public int Id { get; set; }
+
+    // === [N] CỘT BUSINESS DATA THEO CSV GỐC (Positions 2-N+1) ===
+    [Column("BUSINESS_COLUMN_1")]
+    public string? BUSINESS_COLUMN_1 { get; set; }
+    
+    [Column("BUSINESS_COLUMN_2")]
+    public string? BUSINESS_COLUMN_2 { get; set; }
+    
+    // ... tất cả business columns từ CSV gốc ...
+    
+    [Column("LAST_BUSINESS_COLUMN")]
+    public string? LAST_BUSINESS_COLUMN { get; set; }
+
+    // === SYSTEM/TEMPORAL COLUMNS (Positions N+2+) ===
+    
+    [Column("NGAY_DL")]
+    [StringLength(10)]
+    public string NgayDL { get; set; } = null!;
+
+    [Column("CREATED_DATE")]
+    public DateTime CREATED_DATE { get; set; } = DateTime.Now;
+
+    [Column("UPDATED_DATE")]
+    public DateTime? UPDATED_DATE { get; set; }
+
+    [Column("FILE_NAME")]
+    [StringLength(255)]
+    public string? FILE_NAME { get; set; }
+}
+```
+
+### ✅ Đã Chuẩn hóa
+
+- **DP01**: 63 business columns + 4 system columns (Positions 2-64 business, 65+ system)
+- **LN01**: 79 business columns + 4 system columns (Positions 2-80 business, 81+ system)  
+- **EI01**: 24 business columns + 4 system columns (Positions 2-25 business, 26+ system)
+- **GL01**: 27 business columns + 4 system columns + **PARTITIONED COLUMNSTORE** 🚀
+- **DPDA**: 13 business columns + 4 system columns (Positions 2-14 business, 15+ system) ✨
+- **LN03**: 20 business columns + 4 system columns (Positions 2-21 business, 22+ system) ✨
+- **RR01**: 25 business columns + 4 system columns (Positions 2-26 business, 27+ system) ✨
+- **GL41**: 13 business columns + 4 system columns (Positions 2-14 business, 15+ system) ✨
+
+### 🎯 Hoàn thành Chuẩn hóa
+
+✅ **TẤT CẢ** 8 bảng dữ liệu chính đã được chuẩn hóa theo pattern:
+```
+[Id] + [Business Columns from CSV] + [NGAY_DL, CREATED_DATE, UPDATED_DATE, FILE_NAME]
+```
+
+### 🚀 **OPTIMIZATION ĐẶC BIỆT CHO GL01**
+
+**GL01** có kiến trúc riêng biệt vì đặc điểm dữ liệu thay đổi hoàn toàn mỗi tháng:
+
+```sql
+-- ⚡ PARTITIONED COLUMNSTORE ARCHITECTURE
+- 122 partitions theo tháng (2020-2030)
+- Clustered Columnstore Index (nén 10-20x)
+- Partition elimination cho query nhanh
+- Auto-archive system cho dữ liệu cũ
+```
+
+**Lợi ích so với Temporal Tables:**
+- 🗜️ **Tiết kiệm dung lượng**: 10-20x compression
+- ⚡ **Truy vấn nhanh**: Partition elimination + vectorized processing
+- 📦 **Auto-archive**: Sliding window cho dữ liệu > 24 tháng
+- 🔧 **Maintenance**: Optimized cho monthly batch import
+
+### Lợi ích của Chuẩn hóa
+
+1. **Tính nhất quán**: Tất cả bảng có cùng cấu trúc dễ hiểu
+2. **CSV Import**: Business columns khớp hoàn toàn với CSV headers
+3. **Database Performance**: System columns được nhóm lại cuối bảng
+4. **Maintenance**: Dễ thêm system columns mới mà không ảnh hưởng business logic
+5. **SqlBulkCopy**: Mapping columns đơn giản và hiệu quả
+
+### Template cho Bảng Mới
+
+Khi tạo bảng dữ liệu mới, sử dụng template sau:
+
+```csharp
+/// <summary>
+/// Bảng [TABLE_NAME] - [N] cột theo header_[filename].csv
+/// STRUCTURE: [N Business Columns] + [System/Temporal Columns]
+/// HEADERS: [liệt kê tất cả CSV headers]
+/// </summary>
+[Table("[TABLE_NAME]")]
+public class [TABLE_NAME]
+{
+    // === AUTO-INCREMENT PRIMARY KEY ===
+    [Key]
+    public int Id { get; set; }
+
+    // === [N] CỘT BUSINESS DATA THEO CSV GỐC (Positions 2-N+1) ===
+    // ... business columns here ...
+
+    // === SYSTEM/TEMPORAL COLUMNS (Positions N+2+) ===
+    
+    [Column("NGAY_DL")]
+    [StringLength(10)]
+    public string NgayDL { get; set; } = null!;
+
+    [Column("CREATED_DATE")]
+    public DateTime CREATED_DATE { get; set; } = DateTime.Now;
+
+    [Column("UPDATED_DATE")]
+    public DateTime? UPDATED_DATE { get; set; }
+
+    [Column("FILE_NAME")]
+    [StringLength(255)]
+    public string? FILE_NAME { get; set; }
+}
+```
+
+## �🐳 Azure SQL Edge ARM64 Container Setup
 
 **Container Name:** azure_sql_edge_tinhkhoan
 **Image:** mcr.microsoft.com/azure-sql-edge:latest
@@ -114,17 +245,21 @@ sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C
 ### 🔧 TROUBLESHOOTING TOOLS (Mới thêm):
 
 1. **Docker stability troubleshooting:**
+
    ```bash
    ./docker_troubleshoot_fix.sh
    ```
+
    - Phân tích memory/disk usage
    - Tự động restart container với config tối ưu
    - Kiểm tra SQL connectivity
 
 2. **Comprehensive system status:**
+
    ```bash
    ./system_status_report.sh
    ```
+
    - Monitoring toàn bộ stack (Docker + Backend + Frontend)
    - Color-coded status report
    - Database table verification
@@ -150,16 +285,16 @@ sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C
 
 **✅ HOÀN THÀNH 100%:** Tất cả 08 bảng dữ liệu thô đã được cấu hình thành công!
 
-| Bảng | File Type | Temporal Tables | History Table | Columnstore | Mục đích | Business Columns|
-| ---- | --------- | --------------- | ------------- | ----------- | -------- | ---------------- |
-| **DP01** | CSV | ✅ | DP01_History | ✅ | Import files "_DP01_" | 63
-| **DPDA** | CSV | ✅ | DPDA_History | ✅ | Import files "_DPDA_" | 13
-| **EI01** | CSV | ✅ | EI01_History | ✅ | Import files "_EI01_" | 24
-| **GL01** | CSV | ✅ | GL01_History | ✅ | Import files "_GL01_" | 27
-| **GL41** | CSV | ✅ | GL41_History | ✅ | Import files "_GL41_" | 13
-| **LN01** | CSV | ✅ | LN01_History | ✅ | Import files "_LN01_" | 79
-| **LN03** | CSV | ✅ | LN03_History | ✅ | Import files "_LN03_" | 20
-| **RR01** | CSV | ✅ | RR01_History | ✅ | Import files "_RR01_" | 25
+| Bảng     | File Type | Temporal Tables | History Table | Columnstore | Mục đích              | Business Columns       |
+| -------- | --------- | --------------- | ------------- | ----------- | --------------------- | ---------------------- |
+| **DP01** | CSV       | ✅              | DP01_History  | ✅          | Import files "_DP01_" | 9 ❌ (documented: 63)  |
+| **DPDA** | CSV       | ✅              | DPDA_History  | ✅          | Import files "_DPDA_" | 16 ❌ (documented: 13) |
+| **EI01** | CSV       | ✅              | EI01_History  | ✅          | Import files "_EI01_" | 27 ❌ (documented: 24) |
+| **GL01** | CSV       | ✅              | GL01_History  | ✅          | Import files "_GL01_" | 30 ❌ (documented: 27) |
+| **GL41** | CSV       | ✅              | GL41_History  | ✅          | Import files "_GL41_" | 16 ❌ (documented: 13) |
+| **LN01** | CSV       | ✅              | LN01_History  | ✅          | Import files "_LN01_" | 82 ❌ (documented: 79) |
+| **LN03** | CSV       | ✅              | LN03_History  | ✅          | Import files "_LN03_" | 20 ✅                  |
+| **RR01** | CSV       | ✅              | RR01_History  | ✅          | Import files "_RR01_" | 28 ❌ (documented: 25) |
 
 **🚀 Lợi ích:**
 
@@ -174,16 +309,16 @@ sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C
 
 #### **📊 Test Results (13/07/2025):**
 
-| File Type | Target Table | Performance | Status | Test Result |
-|-----------|--------------|-------------|--------|-------------|
-| **DP01** | DP01 | 31.54 records/sec | ✅ SUCCESS | Auto-detect ✅ |
-| **EI01** | EI01 | 46.01 records/sec | ✅ SUCCESS | Auto-detect ✅ |
-| **LN01** | LN01 | Tested | ✅ SUCCESS | Auto-detect ✅ |
-| **GL01** | GL01 | Tested | ✅ SUCCESS | Auto-detect ✅ |
-| **GL41** | GL41 | Tested | ✅ SUCCESS | Auto-detect ✅ |
-| **DPDA** | DPDA | Tested | ✅ SUCCESS | Auto-detect ✅ |
-| **LN03** | LN03 | Tested | ✅ SUCCESS | Auto-detect ✅ |
-| **RR01** | RR01 | Tested | ✅ SUCCESS | Auto-detect ✅ |
+| File Type | Target Table | Performance       | Status     | Test Result    |
+| --------- | ------------ | ----------------- | ---------- | -------------- |
+| **DP01**  | DP01         | 31.54 records/sec | ✅ SUCCESS | Auto-detect ✅ |
+| **EI01**  | EI01         | 46.01 records/sec | ✅ SUCCESS | Auto-detect ✅ |
+| **LN01**  | LN01         | Tested            | ✅ SUCCESS | Auto-detect ✅ |
+| **GL01**  | GL01         | Tested            | ✅ SUCCESS | Auto-detect ✅ |
+| **GL41**  | GL41         | Tested            | ✅ SUCCESS | Auto-detect ✅ |
+| **DPDA**  | DPDA         | Tested            | ✅ SUCCESS | Auto-detect ✅ |
+| **LN03**  | LN03         | Tested            | ✅ SUCCESS | Auto-detect ✅ |
+| **RR01**  | RR01         | Tested            | ✅ SUCCESS | Auto-detect ✅ |
 
 #### **🎯 Features Confirmed:**
 
@@ -193,7 +328,6 @@ sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C
 - ✅ **Performance:** Tốc độ import từ 31-46 records/sec
 - ✅ **Error Handling:** 0 errors, 100% success rate
 - ✅ **Logging:** Chi tiết logs cho monitoring và debug
-
 
 ```
 
@@ -232,33 +366,35 @@ cấu trúc như sau: Tên, code, MA_CN
 #### Cấu trúc tổ chức:
 
 ```
+
 Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
 ├── Hội Sở (ID=2, CNL1)
-│   ├── Ban Giám đốc (ID=3, PNVL1)
-│   ├── Phòng Khách hàng Doanh nghiệp (ID=4, PNVL1)
-│   ├── Phòng Khách hàng Cá nhân (ID=5, PNVL1)
-│   ├── Phòng Kế toán & Ngân quỹ (ID=6, PNVL1)
-│   ├── Phòng Tổng hợp (ID=7, PNVL1)
-│   ├── Phòng Kế hoạch & Quản lý rủi ro (ID=8, PNVL1)
-│   └── Phòng Kiểm tra giám sát (ID=9, PNVL1)
+│ ├── Ban Giám đốc (ID=3, PNVL1)
+│ ├── Phòng Khách hàng Doanh nghiệp (ID=4, PNVL1)
+│ ├── Phòng Khách hàng Cá nhân (ID=5, PNVL1)
+│ ├── Phòng Kế toán & Ngân quỹ (ID=6, PNVL1)
+│ ├── Phòng Tổng hợp (ID=7, PNVL1)
+│ ├── Phòng Kế hoạch & Quản lý rủi ro (ID=8, PNVL1)
+│ └── Phòng Kiểm tra giám sát (ID=9, PNVL1)
 ├── Chi nhánh Bình Lư (ID=10, CNL2)
-│   ├── Ban Giám đốc (PNVL2)
-│   ├── Phòng Kế toán & Ngân quỹ (PNVL2)
-│   └── Phòng Khách hàng (PNVL2)
+│ ├── Ban Giám đốc (PNVL2)
+│ ├── Phòng Kế toán & Ngân quỹ (PNVL2)
+│ └── Phòng Khách hàng (PNVL2)
 ├── Chi nhánh Phong Thổ (ID=11, CNL2)
-│   ├── Ban Giám đốc, Phòng KT&NQ, Phòng KH (PNVL2)
-│   └── Phòng giao dịch Số 5 (PGDL2)
+│ ├── Ban Giám đốc, Phòng KT&NQ, Phòng KH (PNVL2)
+│ └── Phòng giao dịch Số 5 (PGDL2)
 ├── Chi nhánh Sìn Hồ (ID=12, CNL2)
 ├── Chi nhánh Bum Tở (ID=13, CNL2)
 ├── Chi nhánh Than Uyên (ID=14, CNL2)
-│   └── + Phòng giao dịch số 6 (PGDL2)
+│ └── + Phòng giao dịch số 6 (PGDL2)
 ├── Chi nhánh Đoàn Kết (ID=15, CNL2)
-│   ├── + Phòng giao dịch số 1 (PGDL2)
-│   └── + Phòng giao dịch số 2 (PGDL2)
+│ ├── + Phòng giao dịch số 1 (PGDL2)
+│ └── + Phòng giao dịch số 2 (PGDL2)
 ├── Chi nhánh Tân Uyên (ID=16, CNL2)
-│   └── + Phòng giao dịch số 3 (PGDL2)
+│ └── + Phòng giao dịch số 3 (PGDL2)
 └── Chi nhánh Nậm Hàng (ID=17, CNL2)
-```
+
+````
 
 #### Thống kê:
 
@@ -293,6 +429,104 @@ Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
 
 | ID  | Mã vai trò          | Tên vai trò                              | Mô tả                                          |
 | --- | ------------------- | ---------------------------------------- | ---------------------------------------------- |
+| 1   | TruongphongKhdn     | Trưởng phòng KHDN                        | Trưởng phòng Khách hàng Doanh nghiệp           |
+| 2   | TruongphongKhcn     | Trưởng phòng KHCN                        | Trưởng phòng Khách hàng Cá nhân                |
+| 3   | PhophongKhdn        | Phó phòng KHDN                           | Phó phòng Khách hàng Doanh nghiệp              |
+| 4   | PhophongKhcn        | Phó phòng KHCN                           | Phó phòng Khách hàng Cá nhân                   |
+| 5   | TruongphongKhqlrr   | Trưởng phòng KH&QLRR                     | Trưởng phòng Kế hoạch & Quản lý rủi ro         |
+| 6   | PhophongKhqlrr      | Phó phòng KH&QLRR                        | Phó phòng Kế hoạch & Quản lý rủi ro            |
+| 7   | Cbtd                | Cán bộ tín dụng                          | Cán bộ tín dụng                                |
+| 8   | TruongphongKtnqCnl1 | Trưởng phòng KTNQ CNL1                   | Trưởng phòng Kế toán & Ngân quỹ CNL1           |
+| 9   | PhophongKtnqCnl1    | Phó phòng KTNQ CNL1                      | Phó phòng Kế toán & Ngân quỹ CNL1              |
+| 10  | Gdv                 | GDV                                      | Giao dịch viên                                 |
+| 11  | TqHkKtnb            | Thủ quỹ \| Hậu kiểm \| KTNB              | Thủ quỹ \| Hậu kiểm \| Kế toán nghiệp vụ       |
+| 12  | TruongphoItThKtgs   | Trưởng phó IT \| Tổng hợp \| KTGS        | Trưởng phó IT \| Tổng hợp \| Kiểm tra giám sát |
+| 13  | CBItThKtgsKhqlrr    | Cán bộ IT \| Tổng hợp \| KTGS \| KH&QLRR | Cán bộ IT \| Tổng hợp \| KTGS \| KH&QLRR       |
+| 14  | GiamdocPgd          | Giám đốc Phòng giao dịch                 | Giám đốc Phòng giao dịch                       |
+| 15  | PhogiamdocPgd       | Phó giám đốc Phòng giao dịch             | Phó giám đốc Phòng giao dịch                   |
+| 16  | PhogiamdocPgdCbtd   | Phó giám đốc PGD kiêm CBTD               | Phó giám đốc Phòng giao dịch kiêm CBTD         |
+| 17  | GiamdocCnl2         | Giám đốc CNL2                            | Giám đốc Chi nhánh cấp 2                       |
+| 18  | PhogiamdocCnl2Td    | Phó giám đốc CNL2 phụ trách TD           | Phó giám đốc CNL2 phụ trách Tín dụng           |
+| 19  | PhogiamdocCnl2Kt    | Phó giám đốc CNL2 phụ trách KT           | Phó giám đốc CNL2 phụ trách Kế toán            |
+| 20  | TruongphongKhCnl2   | Trưởng phòng KH CNL2                     | Trưởng phòng Khách hàng CNL2                   |
+| 21  | PhophongKhCnl2      | Phó phòng KH CNL2                        | Phó phòng Khách hàng CNL2                      |
+| 22  | TruongphongKtnqCnl2 | Trưởng phòng KTNQ CNL2                   | Trưởng phòng Kế toán & Ngân quỹ CNL2           |
+| 23  | PhophongKtnqCnl2    | Phó phòng KTNQ CNL2                      | Phó phòng Kế toán & Ngân quỹ CNL2              |
+
+#### Công cụ sử dụng:
+
+- **Shell script:** `create_23_roles.sh` - Automation tạo toàn bộ 23 vai trò
+- **API Roles:** POST `/api/roles` - Tạo từng vai trò với Name và Description
+- **Model:** Role entity với properties Id, Name, Description, EmployeeRoles
+- **Validation:** JSON schema và backend validation đầy đủ
+
+#### Đặc điểm kỹ thuật:
+
+- **Auto-increment ID:** Database tự động gán ID tuần tự từ 1-23
+- **Unicode support:** Tên và mô tả tiếng Việt hiển thị đúng
+- **API compatible:** Frontend có thể fetch và hiển thị đầy đủ
+- **Mã vai trò:** Giữ nguyên không thay đổi theo yêu cầu
+- **Navigation properties:** Hỗ trợ quan hệ many-to-many với Employees
+
+**🎯 Status:** Sẵn sàng để gán vai trò cho nhân viên trong từng đơn vị.
+
+### 📊 **CẤU HÌNH KPI ASSIGNMENT TABLES - 06/07/2025**
+
+**✅ HOÀN THÀNH:** Đã có đủ 32 bảng KPI theo đúng cấu trúc
+
+#### 🧑‍💼 Tab "Dành cho Cán bộ" - 23 bảng KPI:
+
+| ID  | Tên Bảng KPI        | Mô tả                                    |
+| --- | ------------------- | ---------------------------------------- | -------------- |
+| 1   | TruongphongKhdn     | Trưởng phòng KHDN                        | Trưởng phòng Khách hàng Doanh nghiệp           |
+| 2   | TruongphongKhcn     | Trưởng phòng KHCN                        | Trưởng phòng Khách hàng Cá nhân                |
+| 3   | PhophongKhdn        | Phó phòng KHDN                           | Phó phòng Khách hàng Doanh nghiệp              |
+| 4   | PhophongKhcn        | Phó phòng KHCN                           | Phó phòng Khách hàng Cá nhân                   |
+| 5   | TruongphongKhqlrr   | Trưởng phòng KH&QLRR                     | Trưởng phòng Kế hoạch & Quản lý rủi ro         |
+| 6   | PhophongKhqlrr      | Phó phòng KH&QLRR                        | Phó phòng Kế hoạch & Quản lý rủi ro            |
+| 7   | Cbtd                | Cán bộ tín dụng                          | Cán bộ tín dụng                                |
+| 8   | TruongphongKtnqCnl1 | Trưởng phòng KTNQ CNL1                   | Trưởng phòng Kế toán & Ngân quỹ CNL1           |
+| 9   | PhophongKtnqCnl1    | Phó phòng KTNQ CNL1                      | Phó phòng Kế toán & Ngân quỹ CNL1              |
+| 10  | Gdv                 | GDV                                      | Giao dịch viên                                 |
+| 11  | TqHkKtnb            | Thủ quỹ \| Hậu kiểm \| KTNB              | Thủ quỹ \| Hậu kiểm \| Kế toán nghiệp vụ       |
+| 12  | TruongphoItThKtgs   | Trưởng phó IT \| Tổng hợp \| KTGS        | Trưởng phó IT \| Tổng hợp \| Kiểm tra giám sát |
+| 13  | CBItThKtgsKhqlrr    | Cán bộ IT \| Tổng hợp \| KTGS \| KH&QLRR | Cán bộ IT \| Tổng hợp \| KTGS \| KH&QLRR       |
+| 14  | GiamdocPgd          | Giám đốc Phòng giao dịch                 | Giám đốc Phòng giao dịch                       |
+| 15  | PhogiamdocPgd       | Phó giám đốc Phòng giao dịch             | Phó giám đốc Phòng giao dịch                   |
+| 16  | PhogiamdocPgdCbtd   | Phó giám đốc PGD kiêm CBTD               | Phó giám đốc Phòng giao dịch kiêm CBTD         |
+| 17  | GiamdocCnl2         | Giám đốc CNL2                            | Giám đốc Chi nhánh cấp 2                       |
+| 18  | PhogiamdocCnl2Td    | Phó giám đốc CNL2 phụ trách TD           | Phó giám đốc CNL2 phụ trách Tín dụng           |
+| 19  | PhogiamdocCnl2Kt    | Phó giám đốc CNL2 phụ trách KT           | Phó giám đốc CNL2 phụ trách Kế toán            |
+| 20  | TruongphongKhCnl2   | Trưởng phòng KH CNL2                     | Trưởng phòng Khách hàng CNL2                   |
+| 21  | PhophongKhCnl2      | Phó phòng KH CNL2                        | Phó phòng Khách hàng CNL2                      |
+| 22  | TruongphongKtnqCnl2 | Trưởng phòng KTNQ CNL2                   | Trưởng phòng Kế toán & Ngân quỹ CNL2           |
+| 23  | PhophongKtnqCnl2    | Phó phòng KTNQ CNL2                      | Phó phòng Kế toán & Ngân quỹ CNL2              |
+
+#### Công cụ sử dụng:
+
+- **Shell script:** `create_23_roles.sh` - Automation tạo toàn bộ 23 vai trò
+- **API Roles:** POST `/api/roles` - Tạo từng vai trò với Name và Description
+- **Model:** Role entity với properties Id, Name, Description, EmployeeRoles
+- **Validation:** JSON schema và backend validation đầy đủ
+
+#### Đặc điểm kỹ thuật:
+
+- **Auto-increment ID:** Database tự động gán ID tuần tự từ 1-23
+- **Unicode support:** Tên và mô tả tiếng Việt hiển thị đúng
+- **API compatible:** Frontend có thể fetch và hiển thị đầy đủ
+- **Mã vai trò:** Giữ nguyên không thay đổi theo yêu cầu
+- **Navigation properties:** Hỗ trợ quan hệ many-to-many với Employees
+
+**🎯 Status:** Sẵn sàng để gán vai trò cho nhân viên trong từng đơn vị.
+
+### 📊 **CẤU HÌNH KPI ASSIGNMENT TABLES - 06/07/2025**
+
+**✅ HOÀN THÀNH:** Đã có đủ 32 bảng KPI theo đúng cấu trúc
+
+#### 🧑‍💼 Tab "Dành cho Cán bộ" - 23 bảng KPI:
+
+| ID  | Tên Bảng KPI        | Mô tả                                    |
+| --- | ------------------- | ---------------------------------------- | -------------- |
 | 1   | TruongphongKhdn     | Trưởng phòng KHDN                        | Trưởng phòng Khách hàng Doanh nghiệp           |
 | 2   | TruongphongKhcn     | Trưởng phòng KHCN                        | Trưởng phòng Khách hàng Cá nhân                |
 | 3   | PhophongKhdn        | Phó phòng KHDN                           | Phó phòng Khách hàng Doanh nghiệp              |
@@ -492,7 +726,7 @@ _Thời gian: 07/01/2025 14:00-15:00_
 
 # Verification
 curl -s "http://localhost:5055/api/employees/{id}" | jq '.EmployeeRoles'
-```
+````
 
 #### 8.3 Cấu trúc dữ liệu Employee-Role
 
@@ -644,11 +878,6 @@ _Thời gian: 07/01/2025 15:00-..._
 - Tạo các bản ghi mẫu cho `EmployeeKpiAssignments` và `UnitKpiScorings`
 - Thiết lập các Khoan Periods cho năm 2025
 
-### Tiến độ hiện tại
-
-- Đã tạo 17 Khoan Periods cho năm 2025
-- Đang phân tích và điền dữ liệu cho `EmployeeKpiAssignments` và `UnitKpiScorings`
-
 ---
 
 ## **🛠️ SQLCMD GIẢI PHÁP - JULY 14, 2025**
@@ -663,6 +892,7 @@ _Thời gian: 07/01/2025 15:00-..._
 #### **✅ GIẢI PHÁP HOÀN CHỈNH:**
 
 **Sử dụng sqlcmd từ macOS host** (RECOMMENDED):
+
 ```bash
 # Sqlcmd đã có sẵn trên macOS
 which sqlcmd  # /opt/homebrew/bin/sqlcmd
@@ -675,6 +905,7 @@ sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d TinhKhoanDB
 ```
 
 **Các scripts đã tối ưu:**
+
 - `./test_sql.sh` - Test SQL queries nhanh chóng
 - `./check_database.sh` - Health check với SQL verification
 - `./start_database.sh` - Smart connection testing
@@ -685,7 +916,7 @@ sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d TinhKhoanDB
 ✅ **Performance cao:** Kết nối trực tiếp, không qua container exec  
 ✅ **Stable connection:** Không bị timeout hay permission issues  
 ✅ **Full SQL features:** Access đầy đủ tính năng sqlcmd  
-✅ **Easy debugging:** Có thể run queries interactive dễ dàng  
+✅ **Easy debugging:** Có thể run queries interactive dễ dàng
 
 **🔥 KHÔNG CẦN VÀO CONTAINER NỮA!**
 
@@ -696,8 +927,9 @@ sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d TinhKhoanDB
 **Mô tả:** Sau khi import dữ liệu thành công, frontend không tự động refresh để hiển thị tổng số bản ghi mới. Button "Tải lại dữ liệu" cũng không hiển thị được số liệu cho bảng DP01.
 
 **Kiểm tra kết quả:**
+
 - ✅ **Database**: 12,741 bản ghi DP01 (thực tế)
-- ✅ **API**: Trả về đúng RecordsCount = 12,741  
+- ✅ **API**: Trả về đúng RecordsCount = 12,741
 - ✅ **Metadata**: ImportedDataRecords chính xác
 - ❌ **Frontend**: Không hiển thị số liệu sau import
 
@@ -710,17 +942,19 @@ sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d TinhKhoanDB
 ### **🛠️ GIẢI PHÁP ĐÃ THỰC HIỆN:**
 
 #### **1. Fix Field Mapping Priority:**
+
 ```javascript
 // BEFORE: Sai thứ tự ưu tiên
-const dataType = imp.dataType || imp.Category || imp.FileType || 'UNKNOWN'
-const recordCount = parseInt(imp.recordsCount || imp.RecordsCount) || 0
+const dataType = imp.dataType || imp.Category || imp.FileType || "UNKNOWN";
+const recordCount = parseInt(imp.recordsCount || imp.RecordsCount) || 0;
 
 // AFTER: Ưu tiên field từ API response
-const dataType = imp.Category || imp.FileType || imp.dataType || 'UNKNOWN' 
-const recordCount = parseInt(imp.RecordsCount || imp.recordsCount) || 0
+const dataType = imp.Category || imp.FileType || imp.dataType || "UNKNOWN";
+const recordCount = parseInt(imp.RecordsCount || imp.recordsCount) || 0;
 ```
 
 #### **2. Enhanced Date Validation:**
+
 ```javascript
 // BEFORE: Không check date validity
 const importDateTime = new Date(importDate)
@@ -731,13 +965,14 @@ if (!isNaN(importDateTime.getTime()) && ...)
 ```
 
 #### **3. Enhanced Debug Function:**
+
 ```javascript
 // NEW: Force refresh với debug logging
 const debugRecalculateStats = async () => {
-  await refreshAllData(true)  // Force refresh data first
-  calculateDataTypeStats()    // Then recalculate stats  
-  console.log('📊 Current dataTypeStats:', dataTypeStats.value)
-}
+  await refreshAllData(true); // Force refresh data first
+  calculateDataTypeStats(); // Then recalculate stats
+  console.log("📊 Current dataTypeStats:", dataTypeStats.value);
+};
 ```
 
 ### **🎯 CÁCH SỬ DỤNG:**
@@ -750,9 +985,43 @@ const debugRecalculateStats = async () => {
 
 - ✅ **Auto refresh** sau import thành công
 - ✅ **Hiển thị đúng** tổng số records cho tất cả data types
-- ✅ **Button refresh** hoạt động đúng 
+- ✅ **Button refresh** hoạt động đúng
 - ✅ **Debug tools** để troubleshoot
 
 **🎯 Status:** Đã fix code, cần test lại import workflow để confirm.
 
 ---
+
+## 🔍 **COLUMN ORDER VERIFICATION STATUS**
+
+### ✅ **PERFECT TABLES** (Business columns → System columns)
+
+**4 bảng đã có thứ tự cột chính xác:**
+- ✅ **DP01**: 63 business columns in correct CSV order
+- ✅ **DPDA**: 13 business columns in correct CSV order  
+- ✅ **EI01**: 24 business columns in correct CSV order
+- ✅ **GL01**: 27 business columns in correct CSV order (Partitioned Columnstore)
+
+### ⚠️ **TABLES NEEDING COLUMN ORDER FIX**
+
+**4 bảng cần sắp xếp lại thứ tự cột:**
+- ❌ **GL41**: Column order mismatch with CSV - needs reordering
+- ❌ **LN01**: Column order mismatch with CSV - needs reordering  
+- ❌ **LN03**: Column order mismatch with CSV - needs reordering
+- ❌ **RR01**: Column order mismatch with CSV - needs reordering
+
+**⚡ Action Required:**
+```bash
+# Run verification script to see exact differences:
+./verify_7_tables_column_order.sh
+```
+
+**📋 Expected Structure:** Business columns from CSV → System/Temporal columns
+```
+Position 1: Id (auto-increment)
+Position 2-N: Business columns (exact CSV order)
+Position N+1: NGAY_DL
+Position N+2: CREATED_DATE
+Position N+3: UPDATED_DATE  
+Position N+4: FILE_NAME
+```

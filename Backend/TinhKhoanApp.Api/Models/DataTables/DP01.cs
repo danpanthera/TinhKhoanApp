@@ -7,33 +7,17 @@ namespace TinhKhoanApp.Api.Models.DataTables
     /// <summary>
     /// Bảng DP01 - Dữ liệu tiền gửi
     /// Cấu trúc theo file: 7808_dp01_20241231.csv
-    /// 62 cột business data + temporal columns
+    /// 63 cột business data + system/temporal columns
+    /// STRUCTURE: [63 Business Columns] + [System/Temporal Columns]
     /// </summary>
     [Table("DP01")]
     public class DP01
     {
+        // === AUTO-INCREMENT PRIMARY KEY ===
         [Key]
         public int Id { get; set; }
 
-        // === TEMPORAL COLUMNS ===
-        [Column("NGAY_DL")]
-        [StringLength(10)]
-        public string NgayDL { get; set; } = null!;
-
-        [Column("CREATED_DATE")]
-        public DateTime CREATED_DATE { get; set; } = DateTime.UtcNow;
-
-        [Column("UPDATED_DATE")]
-        public DateTime? UPDATED_DATE { get; set; }
-
-        [Column("FILE_NAME")]
-        [StringLength(255)]
-        public string? FILE_NAME { get; set; }
-
-        // === 62 CỘT BUSINESS DATA THEO CSV GỐC ===
-
-        [Column("DATA_DATE")]
-        public DateTime? DATA_DATE { get; set; }
+        // === 63 CỘT BUSINESS DATA THEO CSV GỐC (Positions 2-64) ===
 
         [Column("MA_CN")]
         [StringLength(50)]
@@ -274,5 +258,21 @@ namespace TinhKhoanApp.Api.Models.DataTables
 
         [Column("TYGIA")]
         public decimal? TYGIA { get; set; }
+
+        // === SYSTEM/TEMPORAL COLUMNS (Positions 65+) ===
+
+        [Column("NGAY_DL")]
+        [StringLength(10)]
+        public string NgayDL { get; set; } = null!;
+
+        [Column("CREATED_DATE")]
+        public DateTime CREATED_DATE { get; set; } = DateTime.UtcNow;
+
+        [Column("UPDATED_DATE")]
+        public DateTime? UPDATED_DATE { get; set; }
+
+        [Column("FILE_NAME")]
+        [StringLength(255)]
+        public string? FILE_NAME { get; set; }
     }
 }

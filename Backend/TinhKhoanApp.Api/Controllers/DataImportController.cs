@@ -286,6 +286,7 @@ namespace TinhKhoanApp.Api.Controllers
         }
 
         // [HttpDelete("{id}")] // ❌ DISABLED: Conflict with new delete route
+        [HttpPost("legacy-delete/{id}")]
         [Obsolete("Use DirectImportService instead")]
         public async Task<IActionResult> DeleteImportedData(int id)
         {

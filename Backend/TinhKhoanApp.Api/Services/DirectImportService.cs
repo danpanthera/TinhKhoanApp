@@ -294,7 +294,7 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Extract NgayDL từ filename (pattern YYYYMMDD -> dd/MM/yyyy)
+        /// Extract NgayDL từ filename (pattern YYYYMMDD -> yyyy-MM-dd for SQL Server compatibility)
         /// </summary>
         private string ExtractNgayDLFromFileName(string fileName)
         {
@@ -309,11 +309,11 @@ namespace TinhKhoanApp.Api.Services
                     var year = dateStr.Substring(0, 4);
                     var month = dateStr.Substring(4, 2);
                     var day = dateStr.Substring(6, 2);
-                    return $"{day}/{month}/{year}";
+                    return $"{year}-{month}-{day}"; // SQL Server compatible format
                 }
             }
 
-            return DateTime.Now.ToString("dd/MM/yyyy");
+            return DateTime.Now.ToString("yyyy-MM-dd"); // SQL Server compatible format
         }
 
         /// <summary>
@@ -364,7 +364,13 @@ namespace TinhKhoanApp.Api.Services
                     foreach (var prop in typeof(T).GetProperties())
                     {
                         // Bỏ qua auto-increment và system fields
-                        if (prop.Name == "Id" || prop.Name == "CreatedDate" || prop.Name == "UpdatedDate")
+                        if (prop.Name == "Id" ||
+                            prop.Name == "CREATED_DATE" ||
+                            prop.Name == "UPDATED_DATE" ||
+                            prop.Name == "NgayDL" ||
+                            prop.Name == "FILE_NAME" ||
+                            prop.Name.StartsWith("Valid") ||
+                            prop.Name == "DATA_DATE")
                             continue;
 
                         // ✅ FIX: Sử dụng Column attribute name thay vì property name
@@ -443,15 +449,15 @@ namespace TinhKhoanApp.Api.Services
                 ngayDLProp.SetValue(record, ngayDL);
             }
 
-            // Set FileName if property exists
-            var fileNameProp = type.GetProperty("FileName");
+            // Set FILE_NAME if property exists (correct property name)
+            var fileNameProp = type.GetProperty("FILE_NAME");
             if (fileNameProp != null && fileNameProp.CanWrite)
             {
                 fileNameProp.SetValue(record, fileName);
             }
 
-            // Set CreatedDate if property exists
-            var createdDateProp = type.GetProperty("CreatedDate");
+            // Set CREATED_DATE if property exists (correct property name)
+            var createdDateProp = type.GetProperty("CREATED_DATE");
             if (createdDateProp != null && createdDateProp.CanWrite)
             {
                 createdDateProp.SetValue(record, DateTime.Now);
@@ -502,7 +508,10 @@ namespace TinhKhoanApp.Api.Services
         {
             var table = new DataTable();
             var properties = typeof(T).GetProperties()
-                .Where(p => p.Name != "Id" && p.Name != "UpdatedDate") // Chỉ bỏ qua Id và UpdatedDate, giữ lại CreatedDate
+                .Where(p => p.Name != "Id" &&
+                           p.Name != "UPDATED_DATE" && // Use correct property name
+                           !p.Name.StartsWith("Valid") && // Exclude ValidFrom, ValidTo temporal columns
+                           p.Name != "DATA_DATE") // Exclude DATA_DATE as it's not in CSV
                 .ToArray();
 
             var columnMappings = new Dictionary<string, string>(); // PropertyName -> ColumnName
@@ -524,6 +533,14 @@ namespace TinhKhoanApp.Api.Services
                 {
                     columnType = columnType.GetGenericArguments()[0];
                 }
+
+                // Special handling for NGAY_DL column - database expects Date but model uses String
+                if (columnName == "NGAY_DL" && columnType == typeof(string))
+                {
+                    columnType = typeof(DateTime);
+                    _logger.LogInformation("📊 [DATATABLE] Converting NGAY_DL column type from String to DateTime for database compatibility");
+                }
+
                 table.Columns.Add(columnName, columnType);
             }
 
@@ -538,7 +555,24 @@ namespace TinhKhoanApp.Api.Services
                 {
                     var value = property.GetValue(record);
                     var columnName = columnMappings[property.Name];
-                    row[columnName] = value ?? DBNull.Value;
+
+                    // Special handling for NGAY_DL conversion from string to DateTime
+                    if (columnName == "NGAY_DL" && value is string stringValue && !string.IsNullOrEmpty(stringValue))
+                    {
+                        if (DateTime.TryParse(stringValue, out var dateValue))
+                        {
+                            row[columnName] = dateValue;
+                        }
+                        else
+                        {
+                            _logger.LogWarning("⚠️ [DATATABLE] Cannot parse NGAY_DL value: {Value}", stringValue);
+                            row[columnName] = DBNull.Value;
+                        }
+                    }
+                    else
+                    {
+                        row[columnName] = value ?? DBNull.Value;
+                    }
                 }
                 table.Rows.Add(row);
             }
@@ -1202,7 +1236,8 @@ namespace TinhKhoanApp.Api.Services
                 using var cmd = new SqlCommand(sql, connection);
                 cmd.Parameters.Add("@NgayDL", SqlDbType.NVarChar).Value = ngayDL;
 
-                var count = (int)await cmd.ExecuteScalarAsync();
+                var countResult = await cmd.ExecuteScalarAsync();
+                var count = countResult != null ? (int)countResult : 0;
 
                 result.DataExists = count > 0;
                 result.RecordCount = count;
@@ -1244,7 +1279,8 @@ namespace TinhKhoanApp.Api.Services
                 // First count records
                 var countSql = $"SELECT COUNT(*) FROM [{dataType}]";
                 using var countCmd = new SqlCommand(countSql, connection);
-                var recordCount = (int)await countCmd.ExecuteScalarAsync();
+                var countResult = await countCmd.ExecuteScalarAsync();
+                var recordCount = countResult != null ? (int)countResult : 0;
 
                 if (recordCount == 0)
                 {
@@ -1469,7 +1505,8 @@ namespace TinhKhoanApp.Api.Services
                     return result;
                 }
 
-                _logger.LogInformation("📅 [GL01_SPECIAL] Date range: {FromDate} -> {ToDate}", dateRange.Value.FromDate, dateRange.Value.ToDate);
+                _logger.LogInformation("📅 [GL01_SPECIAL] Date range: {FromDate} -> {ToDate}",
+                    dateRange?.FromDate ?? "N/A", dateRange?.ToDate ?? "N/A");
 
                 using var stream = file.OpenReadStream();
                 using var reader = new StreamReader(stream, Encoding.UTF8);
@@ -1535,14 +1572,14 @@ namespace TinhKhoanApp.Api.Services
                     await bulkCopy.WriteToServerAsync(dataTable);
                 }
 
-                // Save import record
-                // TODO: Implement SaveImportRecord method
-                // await SaveImportRecord(result, dateRange.Value.FromDate, dateRange.Value.ToDate);
+                // Save import record - commented out for now
+                // TODO: Implement SaveImportRecord method if needed
+                // await SaveImportRecord(result, dateRange?.FromDate, dateRange?.ToDate);
 
                 result.Success = true;
                 result.ProcessedRecords = processedRows;
                 result.ErrorRecords = errorRows;
-                result.NgayDL = $"{dateRange.Value.FromDate} - {dateRange.Value.ToDate}";
+                result.NgayDL = dateRange.HasValue ? $"{dateRange.Value.FromDate} - {dateRange.Value.ToDate}" : "N/A";
                 result.EndTime = DateTime.UtcNow;
 
                 _logger.LogInformation("✅ [GL01_SPECIAL] Import completed: {ProcessedRecords} records", processedRows);
@@ -1659,8 +1696,7 @@ namespace TinhKhoanApp.Api.Services
             // This will need to be customized based on the actual GL01 CSV columns
 
             // Example mapping (adjust based on actual CSV columns):
-            record.NgayDL = csv.GetField("NGAY_DL") ?? "";
-            // Note: GL01 doesn't have MA_CN property, remove this line
+            // record.NgayDL = csv.GetField("NGAY_DL") ?? "";  // GL01 doesn't have NGAY_DL property
             record.TR_TIME = csv.GetField("TR_TIME") ?? "";
             // ... map other columns as needed
         }

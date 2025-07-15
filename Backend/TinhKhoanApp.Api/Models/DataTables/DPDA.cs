@@ -14,11 +14,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
         [Key]
         public int Id { get; set; }
 
-        [Column("NGAY_DL")]
-        [StringLength(10)]
-        public string NgayDL { get; set; } = null!;
-
-        // === 13 CỘT THEO HEADER CSV GỐC ===
+        // === 13 CỘT BUSINESS DATA THEO CSV GỐC (Positions 2-14) ===
         [Column("MA_CHI_NHANH")]
         [StringLength(50)]
         public string? MA_CHI_NHANH { get; set; }
@@ -71,7 +67,12 @@ namespace TinhKhoanApp.Api.Models.DataTables
         [StringLength(50)]
         public string? LOAI_PHAT_HANH { get; set; }
 
-        // === TEMPORAL COLUMNS ===
+        // === SYSTEM/TEMPORAL COLUMNS (Positions 15+) ===
+
+        [Column("NGAY_DL")]
+        [StringLength(10)]
+        public string NgayDL { get; set; } = null!;
+
         [Column("CREATED_DATE")]
         public DateTime CREATED_DATE { get; set; } = DateTime.Now;
 

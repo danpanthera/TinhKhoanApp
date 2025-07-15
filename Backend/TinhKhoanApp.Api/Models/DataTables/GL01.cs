@@ -5,20 +5,21 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TinhKhoanApp.Api.Models.DataTables
 {
     /// <summary>
-    /// Bảng GL01 - 27 cột theo header_7800_gl01_2025050120250531.csv
-    /// STS,NGAY_GD,NGUOI_TAO,DYSEQ,TR_TYPE,DT_SEQ,TAI_KHOAN,TEN_TK,SO_TIEN_GD,POST_BR,LOAI_TIEN,DR_CR,MA_KH,TEN_KH,CCA_USRID,TR_EX_RT,REMARK,BUS_CODE,UNIT_BUS_CODE,TR_CODE,TR_NAME,REFERENCE,VALUE_DATE,DEPT_CODE,TR_TIME,COMFIRM,TRDT_TIME
+    /// Bảng GL01 - Partitioned Columnstore (Monthly Data Pattern)
+    /// ARCHITECTURE: Partitioned by IMPORT_MONTH + Clustered Columnstore Index
+    /// OPTIMIZATION: Tiết kiệm 10-20x dung lượng, truy vấn nhanh cho monthly batch data
+    /// STRUCTURE: [27 Business Columns] + [System Columns] + [Partition Key]
+    /// HEADERS: STS,NGAY_GD,NGUOI_TAO,DYSEQ,TR_TYPE,DT_SEQ,TAI_KHOAN,TEN_TK,SO_TIEN_GD,POST_BR,LOAI_TIEN,DR_CR,MA_KH,TEN_KH,CCA_USRID,TR_EX_RT,REMARK,BUS_CODE,UNIT_BUS_CODE,TR_CODE,TR_NAME,REFERENCE,VALUE_DATE,DEPT_CODE,TR_TIME,COMFIRM,TRDT_TIME
     /// </summary>
     [Table("GL01")]
     public class GL01
     {
+        // === AUTO-INCREMENT PRIMARY KEY ===
         [Key]
-        public int Id { get; set; }
+        [Column("Id")]
+        public long Id { get; set; } // Changed to BIGINT for large monthly datasets
 
-        [Column("NGAY_DL")]
-        [StringLength(10)]
-        public string NgayDL { get; set; } = null!;
-
-        // === 27 CỘT THEO HEADER CSV GỐC ===
+        // === 27 CỘT BUSINESS DATA THEO CSV GỐC (Positions 2-28) ===
         [Column("STS")]
         [StringLength(20)]
         public string? STS { get; set; }
@@ -125,7 +126,12 @@ namespace TinhKhoanApp.Api.Models.DataTables
         [StringLength(20)]
         public string? TRDT_TIME { get; set; }
 
-        // === TEMPORAL COLUMNS ===
+        // === SYSTEM/TEMPORAL COLUMNS (Positions 29+) ===
+
+        [Column("NGAY_DL")]
+        [StringLength(10)]
+        public string NgayDL { get; set; } = null!;
+
         [Column("CREATED_DATE")]
         public DateTime CREATED_DATE { get; set; } = DateTime.Now;
 
@@ -135,5 +141,14 @@ namespace TinhKhoanApp.Api.Models.DataTables
         [Column("FILE_NAME")]
         [StringLength(255)]
         public string? FILE_NAME { get; set; }
+
+        // === PARTITION KEY (Computed Column) ===
+        /// <summary>
+        /// Partition key được tính tự động từ NGAY_DL để phân chia dữ liệu theo tháng
+        /// Tối ưu cho Columnstore compression và query performance
+        /// </summary>
+        [Column("IMPORT_MONTH")]
+        [DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+        public DateTime IMPORT_MONTH { get; set; }
     }
 }
