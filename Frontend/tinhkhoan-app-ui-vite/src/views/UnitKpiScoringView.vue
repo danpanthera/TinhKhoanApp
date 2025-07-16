@@ -455,6 +455,7 @@ export default {
     // API Methods
     const apiCall = async (url, options = {}) => {
       try {
+        console.log(`🌐 API Call: ${options.method || 'GET'} ${API_BASE_URL}${url}`)
         const token = localStorage.getItem('authToken')
 
         const requestConfig = {
@@ -466,7 +467,11 @@ export default {
           ...options
         }
 
+        console.log('📤 Request config:', requestConfig)
+
         const response = await fetch(`${API_BASE_URL}${url}`, requestConfig)
+
+        console.log(`📥 Response status: ${response.status} ${response.statusText}`)
 
         if (!response.ok) {
           const errorText = await response.text()
@@ -475,6 +480,7 @@ export default {
         }
 
         const data = await response.json()
+        console.log('✅ API Success Response:', data)
         return data
       } catch (error) {
         console.error('❌ API call error:', error)
@@ -485,7 +491,9 @@ export default {
     // Load data methods
     const loadPeriods = async () => {
       try {
+        console.log('🔄 UnitKpiScoringView: Loading periods...')
         const data = await apiCall('/KhoanPeriods')
+        console.log('📅 Raw periods data:', data)
 
         // Handle .NET $values format
         let periodsData = []
@@ -496,6 +504,7 @@ export default {
         }
 
         periods.value = periodsData || []
+        console.log('✅ Periods loaded:', periods.value.length)
       } catch (error) {
         toast.error('Lỗi khi tải danh sách kỳ tính khoán')
         console.error('❌ Error loading periods:', error)
@@ -505,7 +514,9 @@ export default {
 
     const loadUnits = async () => {
       try {
+        console.log('🔄 Loading units for scoring...')
         const data = await apiCall('/Units')
+        console.log('📊 Raw units data:', data)
 
         // Handle .NET $values format
         let unitsData = []

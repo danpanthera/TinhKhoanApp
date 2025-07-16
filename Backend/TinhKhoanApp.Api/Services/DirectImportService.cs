@@ -294,7 +294,7 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Extract NgayDL từ filename (pattern YYYYMMDD -> yyyy-MM-dd for SQL Server compatibility)
+        /// Extract NgayDL từ filename (pattern YYYYMMDD -> dd/MM/yyyy)
         /// </summary>
         private string ExtractNgayDLFromFileName(string fileName)
         {
@@ -309,11 +309,11 @@ namespace TinhKhoanApp.Api.Services
                     var year = dateStr.Substring(0, 4);
                     var month = dateStr.Substring(4, 2);
                     var day = dateStr.Substring(6, 2);
-                    return $"{year}-{month}-{day}"; // SQL Server compatible format
+                    return $"{day}/{month}/{year}";
                 }
             }
 
-            return DateTime.Now.ToString("yyyy-MM-dd"); // SQL Server compatible format
+            return DateTime.Now.ToString("dd/MM/yyyy");
         }
 
         /// <summary>
@@ -364,13 +364,7 @@ namespace TinhKhoanApp.Api.Services
                     foreach (var prop in typeof(T).GetProperties())
                     {
                         // Bỏ qua auto-increment và system fields
-                        if (prop.Name == "Id" ||
-                            prop.Name == "CREATED_DATE" ||
-                            prop.Name == "UPDATED_DATE" ||
-                            prop.Name == "NgayDL" ||
-                            prop.Name == "FILE_NAME" ||
-                            prop.Name.StartsWith("Valid") ||
-                            prop.Name == "DATA_DATE")
+                        if (prop.Name == "Id" || prop.Name == "CreatedDate" || prop.Name == "UpdatedDate")
                             continue;
 
                         // ✅ FIX: Sử dụng Column attribute name thay vì property name
@@ -449,15 +443,15 @@ namespace TinhKhoanApp.Api.Services
                 ngayDLProp.SetValue(record, ngayDL);
             }
 
-            // Set FILE_NAME if property exists (correct property name)
-            var fileNameProp = type.GetProperty("FILE_NAME");
+            // Set FileName if property exists
+            var fileNameProp = type.GetProperty("FileName");
             if (fileNameProp != null && fileNameProp.CanWrite)
             {
                 fileNameProp.SetValue(record, fileName);
             }
 
-            // Set CREATED_DATE if property exists (correct property name)
-            var createdDateProp = type.GetProperty("CREATED_DATE");
+            // Set CreatedDate if property exists
+            var createdDateProp = type.GetProperty("CreatedDate");
             if (createdDateProp != null && createdDateProp.CanWrite)
             {
                 createdDateProp.SetValue(record, DateTime.Now);
@@ -508,10 +502,7 @@ namespace TinhKhoanApp.Api.Services
         {
             var table = new DataTable();
             var properties = typeof(T).GetProperties()
-                .Where(p => p.Name != "Id" &&
-                           p.Name != "UPDATED_DATE" && // Use correct property name
-                           !p.Name.StartsWith("Valid") && // Exclude ValidFrom, ValidTo temporal columns
-                           p.Name != "DATA_DATE") // Exclude DATA_DATE as it's not in CSV
+                .Where(p => p.Name != "Id" && p.Name != "UpdatedDate") // Chỉ bỏ qua Id và UpdatedDate, giữ lại CreatedDate
                 .ToArray();
 
             var columnMappings = new Dictionary<string, string>(); // PropertyName -> ColumnName
@@ -533,14 +524,6 @@ namespace TinhKhoanApp.Api.Services
                 {
                     columnType = columnType.GetGenericArguments()[0];
                 }
-
-                // Special handling for NGAY_DL column - database expects Date but model uses String
-                if (columnName == "NGAY_DL" && columnType == typeof(string))
-                {
-                    columnType = typeof(DateTime);
-                    _logger.LogInformation("📊 [DATATABLE] Converting NGAY_DL column type from String to DateTime for database compatibility");
-                }
-
                 table.Columns.Add(columnName, columnType);
             }
 
@@ -555,24 +538,7 @@ namespace TinhKhoanApp.Api.Services
                 {
                     var value = property.GetValue(record);
                     var columnName = columnMappings[property.Name];
-
-                    // Special handling for NGAY_DL conversion from string to DateTime
-                    if (columnName == "NGAY_DL" && value is string stringValue && !string.IsNullOrEmpty(stringValue))
-                    {
-                        if (DateTime.TryParse(stringValue, out var dateValue))
-                        {
-                            row[columnName] = dateValue;
-                        }
-                        else
-                        {
-                            _logger.LogWarning("⚠️ [DATATABLE] Cannot parse NGAY_DL value: {Value}", stringValue);
-                            row[columnName] = DBNull.Value;
-                        }
-                    }
-                    else
-                    {
-                        row[columnName] = value ?? DBNull.Value;
-                    }
+                    row[columnName] = value ?? DBNull.Value;
                 }
                 table.Rows.Add(row);
             }

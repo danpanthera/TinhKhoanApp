@@ -5,9 +5,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TinhKhoanApp.Api.Models.DataTables
 {
     /// <summary>
-    /// Bảng LN03 - 17 cột theo header_7808_ln03_20241231.csv
-    /// STRUCTURE: [17 Business Columns] + [System/Temporal Columns]
-    /// HEADERS: MACHINHANH,TENCHINHANH,MAKH,TENKH,SOHOPDONG,SOTIENXLRR,NGAYPHATSINHXL,THUNOSAUXL,CONLAINGOAIBANG,DUNONOIBANG,NHOMNO,MACBTD,TENCBTD,MAPGD,TAIKHOANHACHTOAN,REFNO,LOAINGUONVON
+    /// Bảng LN03 - 20 cột theo header_7808_ln03_20241231.csv
+    /// MACHINHANH,TENCHINHANH,MAKH,TENKH,SOHOPDONG,SOTIENXLRR,NGAYPHATSINHXL,THUNOSAUXL,CONLAINGOAIBANG,DUNONOIBANG,NHOMNO,MACBTD,TENCBTD,MAPGD,TAIKHOANHACHTOAN,REFNO,LOAINGUONVON,R,S,T
     /// </summary>
     [Table("LN03")]
     public class LN03
@@ -15,7 +14,11 @@ namespace TinhKhoanApp.Api.Models.DataTables
         [Key]
         public int Id { get; set; }
 
-        // === 17 CỘT BUSINESS DATA THEO CSV GỐC (Positions 2-18) ===
+        [Column("NGAY_DL")]
+        [StringLength(10)]
+        public string NgayDL { get; set; } = null!;
+
+        // === 20 CỘT THEO HEADER CSV GỐC (17 + 3 cột cuối R, S, T) ===
         [Column("MACHINHANH")]
         [StringLength(50)]
         public string? MACHINHANH { get; set; }
@@ -80,12 +83,19 @@ namespace TinhKhoanApp.Api.Models.DataTables
         [StringLength(50)]
         public string? LOAINGUONVON { get; set; }
 
-        // === SYSTEM/TEMPORAL COLUMNS (Positions 19+) ===
+        // === 3 CỘT CUỐI (TRỐNG TIÊU ĐỀ NHƯNG CÓ DỮ LIỆU) ===
+        [Column("R")]
+        [StringLength(50)]
+        public string? R { get; set; }
 
-        [Column("NGAY_DL")]
-        [StringLength(10)]
-        public string NgayDL { get; set; } = null!;
+        [Column("S")]
+        [StringLength(50)]
+        public string? S { get; set; }
 
+        [Column("T")]
+        public decimal? T { get; set; }
+
+        // === TEMPORAL COLUMNS ===
         [Column("CREATED_DATE")]
         public DateTime CREATED_DATE { get; set; } = DateTime.Now;
 

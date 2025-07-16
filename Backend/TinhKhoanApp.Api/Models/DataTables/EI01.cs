@@ -6,17 +6,19 @@ namespace TinhKhoanApp.Api.Models.DataTables
 {
     /// <summary>
     /// Bảng EI01 - 24 cột theo header_7800_ei01_20250430.csv
-    /// STRUCTURE: [24 Business Columns] + [System/Temporal Columns]
     /// MA_CN,MA_KH,TEN_KH,LOAI_KH,SDT_EMB,TRANG_THAI_EMB,NGAY_DK_EMB,SDT_OTT,TRANG_THAI_OTT,NGAY_DK_OTT,SDT_SMS,TRANG_THAI_SMS,NGAY_DK_SMS,SDT_SAV,TRANG_THAI_SAV,NGAY_DK_SAV,SDT_LN,TRANG_THAI_LN,NGAY_DK_LN,USER_EMB,USER_OTT,USER_SMS,USER_SAV,USER_LN
     /// </summary>
     [Table("EI01")]
     public class EI01
     {
-        // === AUTO-INCREMENT PRIMARY KEY ===
         [Key]
         public int Id { get; set; }
 
-        // === 24 CỘT BUSINESS DATA THEO CSV GỐC (Positions 2-25) ===
+        [Column("NGAY_DL")]
+        [StringLength(10)]
+        public string NgayDL { get; set; } = null!;
+
+        // === 24 CỘT THEO HEADER CSV GỐC ===
         [Column("MA_CN")]
         [StringLength(50)]
         public string? MA_CN { get; set; }
@@ -113,12 +115,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
         [StringLength(100)]
         public string? USER_LN { get; set; }
 
-        // === SYSTEM/TEMPORAL COLUMNS (Positions 26+) ===
-
-        [Column("NGAY_DL")]
-        [StringLength(10)]
-        public string NgayDL { get; set; } = null!;
-
+        // === TEMPORAL COLUMNS ===
         [Column("CREATED_DATE")]
         public DateTime CREATED_DATE { get; set; } = DateTime.Now;
 
