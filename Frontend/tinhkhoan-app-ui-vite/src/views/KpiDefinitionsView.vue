@@ -74,14 +74,14 @@
                   :key="table.Id || table.Id"
                   :value="table.Id || table.Id"
                 >
-                  {{ (table.Description || table.description || table.TableName || table.tableName) }} ({{ getIndicatorCount(table.Id || table.Id) }} chỉ tiêu)
+                  {{ cleanTableDescription(table.Description || table.description || table.TableName || table.tableName) }} ({{ getIndicatorCount(table.Id || table.Id) }} chỉ tiêu)
                 </option>
               </select>
             </div>
 
             <!-- Thông tin bảng đã chọn -->
             <div v-if="selectedTable" class="selected-table-info">
-              <h3>{{ (selectedTable.Description || selectedTable.description || selectedTable.TableName || selectedTable.tableName) }}</h3>
+              <h3>{{ cleanTableDescription(selectedTable.Description || selectedTable.description || selectedTable.TableName || selectedTable.tableName) }}</h3>
 
               <div class="table-details">
                 <div class="detail-item">
@@ -664,6 +664,7 @@ const activeTab = ref('employee'); // Default to employee tab
 const kpiTables = ref([]);
 const selectedTableId = ref(null);
 const indicators = ref([]);
+const currentIndicators = ref([]); // All indicators for counting purposes
 const indicatorForm = ref({
   indicatorName: '',
   maxScore: null,
@@ -693,7 +694,7 @@ const filteredKpiTables = computed(() => {
   if (activeTab.value === 'employee') {
     // Filter for employee tables using Category field and sort alphabetically by Description
     return kpiTables.value
-      .filter(table => (table.Category || table.category) === 'CANBO')
+      .filter(table => (table.Category || table.category) === 'VAI TRÒ CÁN BỘ')
       .sort((a, b) => {
         const nameA = (a.Description || a.description || a.TableName || a.tableName || '').toLowerCase();
         const nameB = (b.Description || b.description || b.TableName || b.tableName || '').toLowerCase();
@@ -703,7 +704,7 @@ const filteredKpiTables = computed(() => {
     // Filter for branch tables and sort by specific order based on TableName
     const branchOrder = ['HoiSo_KPI_Assignment', 'CnBinhLu_KPI_Assignment', 'CnPhongTho_KPI_Assignment', 'CnSinHo_KPI_Assignment', 'CnBumTo_KPI_Assignment', 'CnThanUyen_KPI_Assignment', 'CnDoanKet_KPI_Assignment', 'CnTanUyen_KPI_Assignment', 'CnNamHang_KPI_Assignment'];
     return kpiTables.value
-      .filter(table => (table.Category || table.category) === 'CHINHANH')
+      .filter(table => (table.Category || table.category) === 'CHI NHÁNH')
       .sort((a, b) => {
         const nameA = a.TableName || a.tableName || '';
         const nameB = b.TableName || b.tableName || '';
@@ -826,8 +827,20 @@ const switchTab = (tab) => {
 };
 
 const getIndicatorCount = (tableId) => {
-  const table = kpiTables.value.find(t => (t.Id || t.Id) === tableId);
-  return (table?.IndicatorCount ?? table?.indicatorCount) ?? 0;
+  if (!tableId) return 0;
+
+  // Try to get count from cached data first
+  const cachedTable = kpiTables.value.find(t => (t.Id || t.id) === tableId);
+  if (cachedTable && (cachedTable.IndicatorCount !== undefined || cachedTable.indicatorCount !== undefined)) {
+    return cachedTable.IndicatorCount ?? cachedTable.indicatorCount;
+  }
+
+  // If not available, try to count from indicators if we have them
+  if (currentIndicators.value && currentIndicators.value.length > 0) {
+    return currentIndicators.value.filter(ind => (ind.TableId || ind.tableId) === tableId).length;
+  }
+
+  return 0;
 };
 
 const getTableTypeName = (tableType, tableName, description) => {
@@ -1370,9 +1383,30 @@ onMounted(async () => {
   // Load KPI tables khi component được mount
   await fetchKpiTables();
 
+  // Load all indicators for counting purposes
+  await loadAllIndicators();
+
   // Load indicators cho dropdown scoring rules
   await loadAllBranchIndicators();
 });
+
+// Load all indicators from API for counting purposes
+const loadAllIndicators = async () => {
+  try {
+    console.log('🔄 Loading all indicators for counting...');
+    const response = await apiCall('/KpiIndicators');
+    if (response.success && response.data) {
+      currentIndicators.value = response.data;
+      console.log(`✅ Loaded ${currentIndicators.value.length} indicators for counting`);
+    } else {
+      console.warn('⚠️ Failed to load indicators:', response);
+      currentIndicators.value = [];
+    }
+  } catch (error) {
+    console.error('❌ Error loading all indicators:', error);
+    currentIndicators.value = [];
+  }
+};
 
 // Hàm load tất cả indicators từ bảng chi nhánh cho dropdown
 const loadAllBranchIndicators = async () => {
@@ -1399,6 +1433,13 @@ const loadAllBranchIndicators = async () => {
   } catch (error) {
     console.error('Error loading branch indicators:', error);
   }
+};
+
+// Clean table description by removing "Bảng KPI cho " prefix
+const cleanTableDescription = (description) => {
+  if (!description) return '';
+  // Bỏ chữ "Bảng KPI cho " ở đầu
+  return description.replace(/^Bảng KPI cho\s*/i, '');
 };
 </script>
 

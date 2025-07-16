@@ -158,14 +158,14 @@
             <select v-model="selectedTableId" @change="onTableChange" class="form-control">
               <option value="">-- Chọn bảng KPI --</option>
               <option v-for="table in staffKpiTables" :key="getId(table)" :value="getId(table)">
-                📊 {{ safeGet(table, 'Description') || safeGet(table, 'TableName') }} ({{ safeGet(table, 'IndicatorCount') }} chỉ tiêu)
+                📊 {{ cleanTableDescription(safeGet(table, 'Description') || safeGet(table, 'TableName')) }} ({{ safeGet(table, 'IndicatorCount') }} chỉ tiêu)
               </option>
             </select>
           </div>
 
           <div class="alert-agribank alert-info" v-if="selectedTableId && selectedKpiTable">
             <strong>📊 Đã chọn:</strong>
-            "{{ safeGet(selectedKpiTable, 'Description') || safeGet(selectedKpiTable, 'TableName') }}" → <strong>{{ safeGet(selectedKpiTable, 'IndicatorCount') }}</strong> chỉ tiêu KPI
+            "{{ cleanTableDescription(safeGet(selectedKpiTable, 'Description') || safeGet(selectedKpiTable, 'TableName')) }}" → <strong>{{ safeGet(selectedKpiTable, 'IndicatorCount') }}</strong> chỉ tiêu KPI
           </div>
         </div>
       </div>
@@ -286,7 +286,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import api from '../services/api.js';
-import { logApiResponse, normalizeNetArray } from '../utils/apiHelpers.js';
+import { logApiResponse } from '../utils/apiHelpers.js';
 import { getId, getName, safeGet } from '../utils/casingSafeAccess.js';
 import { useNumberInput } from '../utils/numberFormat';
 
@@ -689,22 +689,19 @@ async function loadTableDetails() {
   }
 
   try {
-    console.log('🔄 Fetching KPI table details...')
-    const response = await api.get(`/KpiAssignment/tables/${selectedTableId.value}`)
+    console.log('🔄 Fetching KPI indicators from new API...')
+    const response = await api.get(`/KpiIndicators/table/${selectedTableId.value}`)
 
     // Use helper function to log API response
-    logApiResponse(`/KpiAssignment/tables/${selectedTableId.value}`, response, 'indicators')
+    logApiResponse(`/KpiIndicators/table/${selectedTableId.value}`, response, 'indicators')
 
-    // Handle both 'indicators' (lowercase) and 'Indicators' (PascalCase) from API
-    const indicatorsData = response.data?.indicators || response.data?.Indicators
-    if (response.data && indicatorsData) {
-      // Use helper function to normalize .NET array format
-      const normalizedData = normalizeNetArray(indicatorsData)
+    if (response.data && Array.isArray(response.data)) {
+      // API trả về trực tiếp array indicators
+      const indicatorsData = response.data
       console.log('🔄 Raw indicators data:', indicatorsData)
-      console.log('🔄 Normalized data:', normalizedData)
-      console.log('🔄 Normalized data length:', normalizedData.length)
+      console.log('🔄 Indicators count:', indicatorsData.length)
 
-      indicators.value = normalizedData
+      indicators.value = indicatorsData
       console.log('✅ Loaded KPI indicators:', indicators.value.length)
       console.log('✅ Indicators array:', indicators.value)
 
@@ -712,10 +709,10 @@ async function loadTableDetails() {
       if (indicators.value.length > 0) {
         console.log('📋 Sample indicators:')
         indicators.value.slice(0, 3).forEach((ind, idx) => {
-          console.log(`   ${idx + 1}. ${ind.indicatorName || ind.IndicatorName} (${ind.maxScore || ind.MaxScore} points, ${ind.unit || ind.Unit || 'N/A'})`)
+          console.log(`   ${idx + 1}. ${ind.IndicatorName || ind.indicatorName} (${ind.MaxScore || ind.maxScore} points, ${ind.Unit || ind.unit || 'N/A'})`)
         })
       } else {
-        console.log('⚠️ Indicators array is empty after normalization')
+        console.log('⚠️ Indicators array is empty')
       }
     } else {
       console.log('⚠️ API response missing indicators array')
@@ -1179,6 +1176,13 @@ watch(selectedPeriodId, (newPeriodId) => {
     targetErrors.value = {}
   }
 })
+
+// Clean table description function
+const cleanTableDescription = (description) => {
+  if (!description) return '';
+  // Bỏ chữ "Bảng KPI cho " ở đầu
+  return description.replace(/^Bảng KPI cho\s*/i, '');
+};
 </script>
 
 <style scoped>
