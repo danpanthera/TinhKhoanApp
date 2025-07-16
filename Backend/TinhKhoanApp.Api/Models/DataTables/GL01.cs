@@ -15,8 +15,8 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public int Id { get; set; }
 
         [Column("NGAY_DL")]
-        [StringLength(10)]
-        public string NgayDL { get; set; } = null!;
+        
+        public DateTime NGAY_DL { get; set; }
 
         // === 27 CỘT THEO HEADER CSV GỐC ===
         [Column("STS")]
@@ -59,11 +59,11 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public string? POST_BR { get; set; }
 
         [Column("LOAI_TIEN")]
-        [StringLength(10)]
+        
         public string? LOAI_TIEN { get; set; }
 
         [Column("DR_CR")]
-        [StringLength(10)]
+        
         public string? DR_CR { get; set; }
 
         [Column("MA_KH")]

@@ -557,9 +557,8 @@ namespace TinhKhoanApp.Api.Services
                 // Lọc theo ngày nếu có tham số date
                 if (date.HasValue)
                 {
-                    var targetDate = date.Value.ToString("dd/MM/yyyy");
-                    _logger.LogInformation("🎯 Filter by specific date: {Date}", targetDate);
-                    query = query.Where(x => x.NgayDL == targetDate);
+                    _logger.LogInformation("🎯 Filter by specific date: {Date}", date.Value.ToString("yyyy-MM-dd"));
+                    query = query.Where(x => x.NGAY_DL.Date == date.Value.Date);
                 }
                 else
                 {
@@ -567,20 +566,19 @@ namespace TinhKhoanApp.Api.Services
 
                     // Nếu không có tham số date, lấy ngày gần nhất
                     var latestDate = await _context.DP01
-                        .Where(x => x.MA_CN == branchCode && !string.IsNullOrEmpty(x.NgayDL))
-                        .Select(x => x.NgayDL)
-                        .Distinct()
-                        .OrderByDescending(x => x)
+                        .Where(x => x.MA_CN == branchCode)
+                        .OrderByDescending(x => x.NGAY_DL)
+                        .Select(x => x.NGAY_DL)
                         .FirstOrDefaultAsync();
 
-                    if (!string.IsNullOrEmpty(latestDate))
+                    if (latestDate != default(DateTime))
                     {
-                        query = query.Where(x => x.NgayDL == latestDate);
-                        _logger.LogInformation("📅 Sử dụng ngày gần nhất: {LatestDate}", latestDate);
+                        query = query.Where(x => x.NGAY_DL.Date == latestDate.Date);
+                        _logger.LogInformation("📅 Sử dụng ngày gần nhất: {LatestDate}", latestDate.ToString("yyyy-MM-dd"));
                     }
                     else
                     {
-                        _logger.LogWarning("❌ Không tìm thấy NgayDL nào trong bảng DP01");
+                        _logger.LogWarning("❌ Không tìm thấy NGAY_DL nào trong bảng DP01");
                     }
                 }
 
@@ -620,7 +618,7 @@ namespace TinhKhoanApp.Api.Services
                         var maCn = dp01Record.MA_CN ?? "";
                         var maPgd = dp01Record.MA_PGD ?? "";
                         var taiKhoanHachToan = dp01Record.TAI_KHOAN_HACH_TOAN ?? "";
-                        var currentBalance = dp01Record.CURRENT_BALANCE ?? 0;
+                        var currentBalance = decimal.TryParse(dp01Record.CURRENT_BALANCE, out var balance) ? balance : 0;
 
                         // Lọc theo chi nhánh và PGD
                         bool pgdMatch;

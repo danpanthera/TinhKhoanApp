@@ -17,8 +17,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
 
         // === TEMPORAL COLUMNS ===
         [Column("NGAY_DL")]
-        [StringLength(10)]
-        public string NgayDL { get; set; } = null!;
+        public DateTime NGAY_DL { get; set; }
 
         [Column("CREATED_DATE")]
         public DateTime CREATED_DATE { get; set; } = DateTime.UtcNow;
@@ -32,8 +31,8 @@ namespace TinhKhoanApp.Api.Models.DataTables
 
         // === 62 CỘT BUSINESS DATA THEO CSV GỐC ===
 
-        [Column("DATA_DATE")]
-        public DateTime? DATA_DATE { get; set; }
+        // [Column("DATA_DATE")]
+        // public DateTime? DATA_DATE { get; set; }
 
         [Column("MA_CN")]
         [StringLength(50)]
@@ -60,10 +59,12 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public string? CCY { get; set; }
 
         [Column("CURRENT_BALANCE")]
-        public decimal? CURRENT_BALANCE { get; set; }
+        [StringLength(500)] // Keep as string to match database nvarchar(500)
+        public string? CURRENT_BALANCE { get; set; }
 
         [Column("RATE")]
-        public decimal? RATE { get; set; }
+        [StringLength(500)]
+        public string? RATE { get; set; }
 
         [Column("SO_TAI_KHOAN")]
         [StringLength(50)]
@@ -86,7 +87,8 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public string? NOTENO { get; set; }
 
         [Column("MONTH_TERM")]
-        public int? MONTH_TERM { get; set; }
+        [StringLength(50)]
+        public string? MONTH_TERM { get; set; }
 
         [Column("TERM_DP_NAME")]
         [StringLength(255)]
@@ -161,20 +163,24 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public string? TELEPHONE { get; set; }
 
         [Column("ACRUAL_AMOUNT")]
-        public decimal? ACRUAL_AMOUNT { get; set; }
+        [StringLength(500)]
+        public string? ACRUAL_AMOUNT { get; set; }
 
         [Column("ACRUAL_AMOUNT_END")]
-        public decimal? ACRUAL_AMOUNT_END { get; set; }
+        [StringLength(500)]
+        public string? ACRUAL_AMOUNT_END { get; set; }
 
         [Column("ACCOUNT_STATUS")]
         [StringLength(50)]
         public string? ACCOUNT_STATUS { get; set; }
 
         [Column("DRAMT")]
-        public decimal? DRAMT { get; set; }
+        [StringLength(500)]
+        public string? DRAMT { get; set; }
 
         [Column("CRAMT")]
-        public decimal? CRAMT { get; set; }
+        [StringLength(500)]
+        public string? CRAMT { get; set; }
 
         [Column("EMPLOYEE_NUMBER")]
         [StringLength(50)]
@@ -185,10 +191,12 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public string? EMPLOYEE_NAME { get; set; }
 
         [Column("SPECIAL_RATE")]
-        public decimal? SPECIAL_RATE { get; set; }
+        [StringLength(500)]
+        public string? SPECIAL_RATE { get; set; }
 
         [Column("AUTO_RENEWAL")]
-        public int? AUTO_RENEWAL { get; set; }
+        [StringLength(50)]
+        public string? AUTO_RENEWAL { get; set; }
 
         [Column("CLOSE_DATE")]
         [StringLength(20)]
@@ -263,16 +271,19 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public string? TEN_NGUOI_GIOI_THIEU { get; set; }
 
         [Column("CONTRACT_COUTS_DAY")]
-        public int? CONTRACT_COUTS_DAY { get; set; }
+        [StringLength(50)]
+        public string? CONTRACT_COUTS_DAY { get; set; }
 
         [Column("SO_KY_AD_LSDB")]
-        public int? SO_KY_AD_LSDB { get; set; }
+        [StringLength(50)]
+        public string? SO_KY_AD_LSDB { get; set; }
 
         [Column("UNTBUSCD")]
         [StringLength(50)]
         public string? UNTBUSCD { get; set; }
 
         [Column("TYGIA")]
-        public decimal? TYGIA { get; set; }
+        [StringLength(500)]
+        public string? TYGIA { get; set; }
     }
 }

@@ -126,7 +126,7 @@ namespace TinhKhoanApp.Api.Services
                         // Chỉ tính các tài khoản không thuộc danh sách loại trừ
                         if (!excludedPrefixes.Any(prefix => accountCode.StartsWith(prefix)))
                         {
-                            var balance = dp01Record.CURRENT_BALANCE ?? 0m;
+                            var balance = decimal.TryParse(dp01Record.CURRENT_BALANCE, out var balanceValue) ? balanceValue : 0m;
                             totalNguonVon += balance;
                             processedRecords++;
                         }
@@ -219,7 +219,7 @@ namespace TinhKhoanApp.Api.Services
 
                 // Lấy dữ liệu chi tiết từ bảng LN01 mới nhất
                 var ln01Data = await _context.LN01s
-                    .Where(i => i.NgayDL == date.ToString("dd/MM/yyyy"))
+                    .Where(i => i.NGAY_DL.Date == date.Date)
                     .ToListAsync();
 
                 decimal totalDisbursement = 0;
@@ -334,7 +334,7 @@ namespace TinhKhoanApp.Api.Services
 
                 // Lấy dữ liệu chi tiết từ bảng LN01 mới nhất
                 var ln01Data = await _context.LN01s
-                    .Where(i => i.NgayDL == date.ToString("dd/MM/yyyy"))
+                    .Where(i => i.NGAY_DL.Date == date.Date)
                     .ToListAsync();
 
                 decimal totalDebt = 0;
@@ -563,12 +563,11 @@ namespace TinhKhoanApp.Api.Services
                 // Xác định ngày cụ thể cần tìm dữ liệu dựa trên chỉ tiêu lũy kế
                 var targetStatementDate = GetTargetStatementDate(date);
 
-                _logger.LogInformation("Tìm dữ liệu GL41 có NgayDL = {TargetDate}", targetStatementDate.Value.ToString("dd/MM/yyyy"));
+                _logger.LogInformation("Tìm dữ liệu GL41 có NGAY_DL = {TargetDate}", targetStatementDate.Value.ToString("yyyy-MM-dd"));
 
-                // Lấy dữ liệu GL41 trực tiếp từ bảng với NgayDL = targetStatementDate và MA_CN
-                var targetDateString = targetStatementDate.Value.ToString("dd/MM/yyyy");
+                // Lấy dữ liệu GL41 trực tiếp từ bảng với NGAY_DL = targetStatementDate và MA_CN
                 var gl41Records = await _context.GL41s
-                    .Where(g => g.NgayDL == targetDateString && g.MA_CN == branchCode)
+                    .Where(g => g.NGAY_DL.Date == targetStatementDate.Value.Date && g.MA_CN == branchCode)
                     .ToListAsync();
 
                 if (!gl41Records.Any())
@@ -653,12 +652,11 @@ namespace TinhKhoanApp.Api.Services
                 // Xác định ngày cụ thể cần tìm file dựa trên chỉ tiêu lũy kế
                 var targetStatementDate = GetTargetStatementDate(date);
 
-                _logger.LogInformation("Tìm dữ liệu GL41 có NgayDL = {TargetDate}", targetStatementDate.Value.ToString("dd/MM/yyyy"));
+                _logger.LogInformation("Tìm dữ liệu GL41 có NGAY_DL = {TargetDate}", targetStatementDate.Value.ToString("yyyy-MM-dd"));
 
-                // Lấy dữ liệu GL41 trực tiếp từ bảng với NgayDL = targetStatementDate và MA_CN (mã chi nhánh)
-                var targetDateString = targetStatementDate.Value.ToString("dd/MM/yyyy");
+                // Lấy dữ liệu GL41 trực tiếp từ bảng với NGAY_DL = targetStatementDate và MA_CN (mã chi nhánh)
                 var gl41Records = await _context.GL41s
-                    .Where(g => g.NgayDL == targetDateString && g.MA_CN == branchCode)
+                    .Where(g => g.NGAY_DL.Date == targetStatementDate.Value.Date && g.MA_CN == branchCode)
                     .ToListAsync();
 
                 if (!gl41Records.Any())

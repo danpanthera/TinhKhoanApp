@@ -124,17 +124,19 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                // Query directly from DP01 table
-                var dp01Data = await _context.DP01
+                // Query directly from DP01 table - get raw data first
+                var dp01Records = await _context.DP01
                     .Where(x => x.MA_CN == branchCode && (pgdCode == null || x.MA_PGD == pgdCode))
-                    .Select(x => new
-                    {
-                        MA_CN = x.MA_CN,
-                        MA_PGD = x.MA_PGD,
-                        TAI_KHOAN_HACH_TOAN = x.TAI_KHOAN_HACH_TOAN,
-                        CURRENT_BALANCE = x.CURRENT_BALANCE ?? 0
-                    })
                     .ToListAsync();
+
+                // Convert CURRENT_BALANCE from string to decimal in memory
+                var dp01Data = dp01Records.Select(x => new
+                {
+                    MA_CN = x.MA_CN,
+                    MA_PGD = x.MA_PGD,
+                    TAI_KHOAN_HACH_TOAN = x.TAI_KHOAN_HACH_TOAN,
+                    CURRENT_BALANCE = decimal.TryParse(x.CURRENT_BALANCE, out var balance) ? balance : 0
+                }).ToList();
 
                 return dp01Data.Cast<dynamic>().ToList();
             }

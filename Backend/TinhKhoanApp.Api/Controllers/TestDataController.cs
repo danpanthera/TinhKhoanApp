@@ -119,7 +119,7 @@ namespace TinhKhoanApp.Api.Controllers
                     .Select(x => new
                     {
                         x.Id,
-                        x.NgayDL,
+                        x.NGAY_DL,
                         x.MA_CN,
                         x.MA_KH,
                         x.TEN_KH,

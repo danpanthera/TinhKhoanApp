@@ -16,8 +16,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
 
         // === TEMPORAL COLUMNS ===
         [Column("NGAY_DL")]
-        [StringLength(10)]
-        public string NgayDL { get; set; } = null!;
+        public DateTime NGAY_DL { get; set; }
 
         [Column("CREATED_DATE")]
         public DateTime CREATED_DATE { get; set; } = DateTime.UtcNow;

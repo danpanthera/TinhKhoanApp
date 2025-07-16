@@ -1819,7 +1819,7 @@ namespace TinhKhoanApp.Api.Services
                         // SPECIAL: Convert TR_TIME to NGAY_DL format
                         if (!string.IsNullOrEmpty(record.TR_TIME))
                         {
-                            record.NgayDL = ConvertTrTimeToNgayDL(record.TR_TIME);
+                            record.NGAY_DL = DateTime.TryParseExact(ConvertTrTimeToNgayDL(record.TR_TIME), "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out var date) ? date : DateTime.Now;
                         }
 
                         // Add to DataTable for bulk insert

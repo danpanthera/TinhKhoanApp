@@ -31,10 +31,11 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 // Truy vấn trực tiếp từ bảng LN01 mới
+                var targetDates = new[] { new DateTime(2025, 4, 30), new DateTime(2025, 5, 31) };
                 var lnData = await _context.LN01s
                     .Where(x => x.BRCD == "7808" &&
-                               x.NgayDL == "30/04/2025" || x.NgayDL == "31/05/2025")
-                    .OrderByDescending(x => x.NgayDL)
+                               targetDates.Contains(x.NGAY_DL.Date))
+                    .OrderByDescending(x => x.NGAY_DL)
                     .ToListAsync();
 
                 if (!lnData.Any())
@@ -53,9 +54,13 @@ namespace TinhKhoanApp.Api.Controllers
                     });
                 }
 
-                // Group by NgayDL to calculate changes
-                var april30Data = lnData.Where(x => x.NgayDL == "30/04/2025").ToList();
-                var may31Data = lnData.Where(x => x.NgayDL == "31/05/2025").ToList();
+                // Define target dates
+                var april30 = new DateTime(2025, 4, 30);
+                var may31 = new DateTime(2025, 5, 31);
+
+                // Group by NGAY_DL to calculate changes
+                var april30Data = lnData.Where(x => x.NGAY_DL.Date == april30.Date).ToList();
+                var may31Data = lnData.Where(x => x.NGAY_DL.Date == may31.Date).ToList();
 
                 return Ok(new
                 {
@@ -97,7 +102,7 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 var totalRecords = await _context.LN01s.CountAsync();
                 var uniqueBranches = await _context.LN01s.Select(x => x.BRCD).Distinct().CountAsync();
-                var latestDate = await _context.LN01s.OrderByDescending(x => x.NgayDL).Select(x => x.NgayDL).FirstOrDefaultAsync();
+                var latestDate = await _context.LN01s.OrderByDescending(x => x.NGAY_DL).Select(x => x.NGAY_DL).FirstOrDefaultAsync();
 
                 return Ok(new
                 {
@@ -452,24 +457,24 @@ namespace TinhKhoanApp.Api.Controllers
                 if (april30Record != null && may31Record != null)
                 {
                     var april30Data = await _context.LN01s
-                        .Where(x => x.NgayDL == "30/04/2025" && x.BRCD == "7808")
+                        .Where(x => x.NGAY_DL == new DateTime(2025, 4, 30).Date && x.BRCD == "7808")
                         .Take(20)
                         .Select(x => new
                         {
                             Id = x.Id,
                             RawData = $"Branch: {x.BRCD}, Customer: {x.CUSTSEQ}, Contract: {x.APPRSEQ}, Amount: {x.DU_NO}",
-                            ProcessedDate = x.NgayDL
+                            ProcessedDate = x.NGAY_DL
                         })
                         .ToListAsync();
 
                     var may31Data = await _context.LN01s
-                        .Where(x => x.NgayDL == "31/05/2025" && x.BRCD == "7808")
+                        .Where(x => x.NGAY_DL == new DateTime(2025, 5, 31).Date && x.BRCD == "7808")
                         .Take(20)
                         .Select(x => new
                         {
                             Id = x.Id,
                             RawData = $"Branch: {x.BRCD}, Customer: {x.CUSTSEQ}, Contract: {x.APPRSEQ}, Amount: {x.DU_NO}",
-                            ProcessedDate = x.NgayDL
+                            ProcessedDate = x.NGAY_DL
                         })
                         .ToListAsync();
 
@@ -519,12 +524,12 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     // Lấy một vài bản ghi mẫu từ bảng LN01 dựa vào ngày và chi nhánh
                     var sampleData = await _context.LN01s
-                        .Where(x => x.BRCD == "7808" && x.NgayDL == "30/04/2025")
+                        .Where(x => x.BRCD == "7808" && x.NGAY_DL == new DateTime(2025, 4, 30).Date)
                         .Take(5)
                         .Select(x => new
                         {
                             RawData = $"Branch: {x.BRCD}, Customer: {x.CUSTSEQ}, Contract: {x.APPRSEQ}",
-                            ProcessedDate = x.NgayDL
+                            ProcessedDate = x.NGAY_DL
                         })
                         .ToListAsync();
 
@@ -586,7 +591,7 @@ namespace TinhKhoanApp.Api.Controllers
                 {
                     // Lấy tất cả dữ liệu chi tiết từ bảng LN01 cho file này
                     var detailData = await _context.LN01s
-                        .Where(x => x.NgayDL == "30/04/2025" && x.BRCD == "7808")
+                        .Where(x => x.NGAY_DL == new DateTime(2025, 4, 30).Date && x.BRCD == "7808")
                         .ToListAsync();
 
                     foreach (var lnRecord in detailData)
@@ -711,24 +716,24 @@ namespace TinhKhoanApp.Api.Controllers
 
                 // Lấy dữ liệu từ bảng LN01 tháng 4
                 var april30Data = await _context.LN01s
-                    .Where(x => x.NgayDL == "30/04/2025" && x.BRCD == "7808")
+                    .Where(x => x.NGAY_DL == new DateTime(2025, 4, 30).Date && x.BRCD == "7808")
                     .ToListAsync();
 
                 // Lấy dữ liệu từ bảng LN01 tháng 5
                 var may31Data = await _context.LN01s
-                    .Where(x => x.NgayDL == "31/05/2025" && x.BRCD == "7808")
+                    .Where(x => x.NGAY_DL == new DateTime(2025, 5, 31).Date && x.BRCD == "7808")
                     .ToListAsync();
 
                 // Xuất dữ liệu tháng 4
                 foreach (var lnRecord in april30Data.Take(100)) // Giới hạn 100 bản ghi đầu tiên
                 {
-                    AddLN01DataRowToCSV(csvData, "30/04/2025", april30Record.FileName, lnRecord);
+                    AddLN01DataRowToCSV(csvData, "2025-04-30", april30Record.FileName, lnRecord);
                 }
 
                 // Xuất dữ liệu tháng 5
                 foreach (var lnRecord in may31Data.Take(100)) // Giới hạn 100 bản ghi đầu tiên
                 {
-                    AddLN01DataRowToCSV(csvData, "31/05/2025", may31Record.FileName, lnRecord);
+                    AddLN01DataRowToCSV(csvData, "2025-05-31", may31Record.FileName, lnRecord);
                 }
 
                 var csvBytes = Encoding.UTF8.GetBytes(csvData.ToString());

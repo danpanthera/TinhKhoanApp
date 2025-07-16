@@ -572,25 +572,26 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
             modelBuilder.Entity<T>(entity =>
             {
                 // Cấu hình bảng thành Temporal Table
-                entity.ToTable(tableName, tb => tb.IsTemporal(ttb =>
-                {
-                    ttb.HasPeriodStart("SysStartTime").HasColumnName("SysStartTime");
-                    ttb.HasPeriodEnd("SysEndTime").HasColumnName("SysEndTime");
-                    ttb.UseHistoryTable($"{tableName}_History");
-                }));
+                // Comment temporal tables for now - database doesn't have these columns
+                // entity.ToTable(tableName, tb => tb.IsTemporal(ttb =>
+                // {
+                //     ttb.HasPeriodStart("SysStartTime").HasColumnName("SysStartTime");
+                //     ttb.HasPeriodEnd("SysEndTime").HasColumnName("SysEndTime");
+                //     ttb.UseHistoryTable($"{tableName}_History");
+                // }));
 
-                // Thêm shadow properties cho temporal columns
-                entity.Property<DateTime>("SysStartTime")
-                    .HasColumnName("SysStartTime");
-                entity.Property<DateTime>("SysEndTime")
-                    .HasColumnName("SysEndTime");
+                // Thêm shadow properties cho temporal columns - COMMENTED OUT
+                // entity.Property<DateTime>("SysStartTime")
+                //     .HasColumnName("SysStartTime");
+                // entity.Property<DateTime>("SysEndTime")
+                //     .HasColumnName("SysEndTime");
 
                 // Indexes tối ưu cho báo cáo và truy vấn
                 var entityType = typeof(T);
 
-                // Index cho NgayDL (tất cả bảng đều có)
-                entity.HasIndex("NgayDL")
-                    .HasDatabaseName($"IX_{tableName}_NgayDL");
+                // Index cho NGAY_DL (tất cả bảng đều có)
+                entity.HasIndex("NGAY_DL")
+                    .HasDatabaseName($"IX_{tableName}_NGAY_DL");
 
                 // Index cho MA_CN (tất cả bảng đều có)
                 if (entityType.GetProperty("MA_CN") != null)
@@ -602,8 +603,8 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
                 // Index kết hợp cho performance tốt nhất
                 if (entityType.GetProperty("MA_CN") != null)
                 {
-                    entity.HasIndex(new[] { "NgayDL", "MA_CN" })
-                        .HasDatabaseName($"IX_{tableName}_NgayDL_MaCN");
+                    entity.HasIndex(new[] { "NGAY_DL", "MA_CN" })
+                        .HasDatabaseName($"IX_{tableName}_NGAY_DL_MaCN");
                 }
 
                 // Index cho MA_PGD nếu có

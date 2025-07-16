@@ -124,7 +124,7 @@ namespace TinhKhoanApp.Api.Services
 
             // Query dữ liệu từ DP01 theo ngày và chi nhánh
             var query = _context.DP01
-                .Where(d => d.NgayDL == targetDate.ToString("dd/MM/yyyy") && d.MA_CN == maCN);
+                .Where(d => d.NGAY_DL.Date == targetDate.Date && d.MA_CN == maCN);
 
             // Nếu là PGD thì lọc thêm theo MA_PGD
             if (!string.IsNullOrEmpty(maPGD))
@@ -140,9 +140,12 @@ namespace TinhKhoanApp.Api.Services
                 d.TAI_KHOAN_HACH_TOAN != "211108"
             );
 
-            // Tính tổng CURRENT_BALANCE
-            var totalBalance = await query.SumAsync(d => d.CURRENT_BALANCE ?? 0);
-            var recordCount = await query.CountAsync();
+            // Tính tổng CURRENT_BALANCE - convert từ string sang decimal
+            var records = await query.ToListAsync();
+            var totalBalance = records
+                .Where(d => !string.IsNullOrEmpty(d.CURRENT_BALANCE))
+                .Sum(d => decimal.TryParse(d.CURRENT_BALANCE, out var balance) ? balance : 0);
+            var recordCount = records.Count;
 
             _logger.LogInformation("💰 Kết quả tính toán: {Balance:N0} VND từ {Count} bản ghi", totalBalance, recordCount);
 
@@ -150,7 +153,7 @@ namespace TinhKhoanApp.Api.Services
             if (totalBalance == 0 && recordCount == 0)
             {
                 var hasAnyData = await _context.DP01
-                    .AnyAsync(d => d.NgayDL == targetDate.ToString("dd/MM/yyyy") && d.MA_CN == maCN);
+                    .AnyAsync(d => d.NGAY_DL.Date == targetDate.Date && d.MA_CN == maCN);
 
                 if (!hasAnyData)
                 {
@@ -181,7 +184,7 @@ namespace TinhKhoanApp.Api.Services
 
             // Query tổng cho tất cả chi nhánh
             var query = _context.DP01
-                .Where(d => d.NgayDL == targetDate.ToString("dd/MM/yyyy") && allBranchCodes.Contains(d.MA_CN))
+                .Where(d => d.NGAY_DL.Date == targetDate.Date && allBranchCodes.Contains(d.MA_CN))
                 .Where(d =>
                     !d.TAI_KHOAN_HACH_TOAN.StartsWith("40") &&
                     !d.TAI_KHOAN_HACH_TOAN.StartsWith("41") &&
@@ -189,8 +192,12 @@ namespace TinhKhoanApp.Api.Services
                     d.TAI_KHOAN_HACH_TOAN != "211108"
                 );
 
-            var totalBalance = await query.SumAsync(d => d.CURRENT_BALANCE ?? 0);
-            var recordCount = await query.CountAsync();
+            // Tính tổng CURRENT_BALANCE - convert từ string sang decimal
+            var records = await query.ToListAsync();
+            var totalBalance = records
+                .Where(d => !string.IsNullOrEmpty(d.CURRENT_BALANCE))
+                .Sum(d => decimal.TryParse(d.CURRENT_BALANCE, out var balance) ? balance : 0);
+            var recordCount = records.Count;
 
             _logger.LogInformation("💰 Tổng nguồn vốn toàn tỉnh: {Balance:N0} VND từ {Count} bản ghi", totalBalance, recordCount);
 
@@ -198,7 +205,7 @@ namespace TinhKhoanApp.Api.Services
             if (totalBalance == 0 && recordCount == 0)
             {
                 var hasAnyData = await _context.DP01
-                    .AnyAsync(d => d.NgayDL == targetDate.ToString("dd/MM/yyyy") && allBranchCodes.Contains(d.MA_CN));
+                    .AnyAsync(d => d.NGAY_DL.Date == targetDate.Date && allBranchCodes.Contains(d.MA_CN));
 
                 if (!hasAnyData)
                 {
@@ -235,8 +242,8 @@ namespace TinhKhoanApp.Api.Services
             }
 
             // Lấy chi tiết các tài khoản (top 20 có số dư lớn nhất)
-            string maCN = null;
-            string maPGD = null;
+            string? maCN = null;
+            string? maPGD = null;
 
             if (_pgdMapping.ContainsKey(unitCode))
             {
@@ -253,28 +260,31 @@ namespace TinhKhoanApp.Api.Services
                 // Xử lý tất cả đơn vị
                 var allBranchCodes = _branchMapping.Values.ToList();
                 var accountDetails = await _context.DP01
-                    .Where(d => d.NgayDL == targetDate.ToString("dd/MM/yyyy") && allBranchCodes.Contains(d.MA_CN))
+                    .Where(d => d.NGAY_DL.Date == targetDate.Date && allBranchCodes.Contains(d.MA_CN))
                     .Where(d =>
                         !d.TAI_KHOAN_HACH_TOAN.StartsWith("40") &&
                         !d.TAI_KHOAN_HACH_TOAN.StartsWith("41") &&
                         !d.TAI_KHOAN_HACH_TOAN.StartsWith("427") &&
                         d.TAI_KHOAN_HACH_TOAN != "211108"
                     )
+                    .ToListAsync(); // Get all records first, then process
+
+                var groupedDetails = accountDetails
                     .GroupBy(d => d.TAI_KHOAN_HACH_TOAN)
                     .Select(g => new AccountDetail
                     {
                         AccountCode = g.Key,
-                        TotalBalance = g.Sum(x => x.CURRENT_BALANCE ?? 0),
+                        TotalBalance = g.Sum(x => decimal.TryParse(x.CURRENT_BALANCE, out var balance) ? balance : 0),
                         RecordCount = g.Count()
                     })
                     .OrderByDescending(a => a.TotalBalance)
                     .Take(20)
-                    .ToListAsync();
+                    .ToList();
 
                 return new NguonVonDetails
                 {
                     Summary = result,
-                    TopAccounts = accountDetails,
+                    TopAccounts = groupedDetails,
                     HasData = true,
                     Message = "Thành công"
                 };
@@ -284,7 +294,7 @@ namespace TinhKhoanApp.Api.Services
             if (!string.IsNullOrEmpty(maCN))
             {
                 var query = _context.DP01
-                    .Where(d => d.NgayDL == targetDate.ToString("dd/MM/yyyy") && d.MA_CN == maCN)
+                    .Where(d => d.NGAY_DL.Date == targetDate.Date && d.MA_CN == maCN)
                     .Where(d =>
                         !d.TAI_KHOAN_HACH_TOAN.StartsWith("40") &&
                         !d.TAI_KHOAN_HACH_TOAN.StartsWith("41") &&
@@ -298,17 +308,18 @@ namespace TinhKhoanApp.Api.Services
                     query = query.Where(d => d.MA_PGD == maPGD);
                 }
 
-                var accountDetails = await query
+                var records = await query.ToListAsync();
+                var accountDetails = records
                     .GroupBy(d => d.TAI_KHOAN_HACH_TOAN)
                     .Select(g => new AccountDetail
                     {
                         AccountCode = g.Key,
-                        TotalBalance = g.Sum(x => x.CURRENT_BALANCE ?? 0),
+                        TotalBalance = g.Sum(x => decimal.TryParse(x.CURRENT_BALANCE, out var balance) ? balance : 0),
                         RecordCount = g.Count()
                     })
                     .OrderByDescending(a => a.TotalBalance)
                     .Take(20)
-                    .ToListAsync();
+                    .ToList();
 
                 return new NguonVonDetails
                 {
