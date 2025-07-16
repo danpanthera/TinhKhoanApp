@@ -534,22 +534,6 @@ namespace TinhKhoanApp.Api.Services
             var headers = csv.HeaderRecord;
             _logger.LogInformation("📊 [CSV_PARSE] Headers found: {Headers}", string.Join(", ", headers ?? new string[0]));
 
-            // 🔧 DEBUG: Log first few raw fields to understand parsing
-            if (csv.Read())
-            {
-                _logger.LogInformation("🔍 [CSV_PARSE] First data row - raw fields count: {Count}", csv.Parser.Count);
-                for (int i = 0; i < Math.Min(5, csv.Parser.Count); i++)
-                {
-                    var rawField = csv.Parser[i];
-                    _logger.LogInformation("🔍 [CSV_PARSE] Field[{Index}]: '{Value}' (length: {Length})",
-                        i, rawField?.Replace("\r", "\\r").Replace("\n", "\\n") ?? "NULL", rawField?.Length ?? 0);
-                }
-
-                // Reset để parse lại dòng đầu tiên trong main loop
-                // Note: Cannot set Parser.Row directly as it's read-only
-                // The main loop will handle this row properly
-            }
-
             // Log model properties để debug
             var modelProps = typeof(T).GetProperties().Select(p => p.Name);
             _logger.LogInformation("🔧 [CSV_PARSE] Model properties: {Properties}", string.Join(", ", modelProps));
