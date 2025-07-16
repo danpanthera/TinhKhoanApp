@@ -1,7 +1,8 @@
 import apiClient from './api.js'
+import ChunkedUploadService from './chunkedUploadService.js'
 
 /**
- * Data Import Service - Handles file upload and data management
+ * 🚀 Enhanced Data Import Service - Multiple upload strategies for optimal performance
  */
 class DataImportService {
 
@@ -9,24 +10,43 @@ class DataImportService {
    * Upload a file to the server using Direct Import (tăng tốc 2-5x)
    * @param {File} file - The file to upload
    * @param {string} category - The category of data (không dùng nữa)
+   * @param {Function} onProgress - Progress callback function
    * @returns {Promise} Upload result
    */
-  async uploadFile(file, category = 'General') {
+  async uploadFile(file, category = 'General', onProgress = null) {
     try {
       const formData = new FormData()
       formData.append('file', file)
 
-      // 🚀 Sử dụng Direct Import API - tăng tốc 2-5x
-      const response = await apiClient.post('/DirectImport/smart', formData, {
+      // 🚀 Enhanced config for large files
+      const config = {
         headers: {
           'Content-Type': 'multipart/form-data'
         },
-        timeout: 600000 // 10 phút cho file lớn
-      })
+        timeout: 900000, // 15 phút cho file rất lớn
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
+        // 📊 Progress tracking
+        onUploadProgress: (progressEvent) => {
+          if (onProgress && progressEvent.total) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            onProgress(percentCompleted, progressEvent.loaded, progressEvent.total)
+          }
+        }
+      }
 
+      console.log(`🚀 Starting upload for ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`)
+
+      // 🚀 Sử dụng Direct Import API - tăng tốc 2-5x
+      const response = await apiClient.post('/DirectImport/smart', formData, config)
+
+      console.log(`✅ Upload completed for ${file.name}`)
       return response.data
     } catch (error) {
       console.error('Error uploading file:', error)
+      if (error.code === 'ECONNABORTED') {
+        throw new Error(`Upload timeout: File quá lớn hoặc kết nối chậm. Thử lại với file nhỏ hơn.`)
+      }
       throw new Error(`Direct Import failed: ${error.response?.data?.message || error.message}`)
     }
   }
@@ -307,6 +327,144 @@ class DataImportService {
       return '📄'
     }
     return '📁'
+  }
+
+  // 🎯 SMART UPLOAD - Automatically choose best upload method based on file size
+  async uploadFileSmart(file, category = 'General', onProgress = null) {
+    const fileSizeMB = file.size / 1024 / 1024
+
+    try {
+      if (fileSizeMB < 50) {
+        // Small files: regular upload
+        console.log(`📤 [SMART_UPLOAD] Using regular upload for ${file.name} (${fileSizeMB.toFixed(2)} MB)`)
+        return await this.uploadFile(file, category, onProgress)
+      }
+      else if (fileSizeMB < 200) {
+        // Medium files: streaming upload
+        console.log(`🚀 [SMART_UPLOAD] Using streaming upload for ${file.name} (${fileSizeMB.toFixed(2)} MB)`)
+        return await this.uploadFileStreaming(file, onProgress)
+      }
+      else if (fileSizeMB < 500) {
+        // Large files: chunked upload
+        console.log(`🔄 [SMART_UPLOAD] Using chunked upload for ${file.name} (${fileSizeMB.toFixed(2)} MB)`)
+        return await this.uploadFileChunked(file, { onProgress })
+      }
+      else {
+        // Very large files: parallel chunked upload
+        console.log(`⚡ [SMART_UPLOAD] Using parallel upload for ${file.name} (${fileSizeMB.toFixed(2)} MB)`)
+        return await this.uploadFileParallel(file, { onProgress })
+      }
+    } catch (error) {
+      console.error('❌ [SMART_UPLOAD] Smart upload error:', error)
+      throw error
+    }
+  }
+
+  // 🚀 STREAMING UPLOAD - For large files (50MB+)
+  async uploadFileStreaming(file, onProgress = null) {
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+
+      const config = {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+        timeout: 30 * 60 * 1000, // 30 minutes for streaming
+        maxContentLength: Infinity,
+        maxBodyLength: Infinity,
+        onUploadProgress: (progressEvent) => {
+          if (onProgress && progressEvent.total) {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            onProgress(percentCompleted, progressEvent.loaded, progressEvent.total)
+          }
+        }
+      }
+
+      console.log(`🚀 [STREAMING_UPLOAD] Starting streaming upload: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`)
+
+      const response = await apiClient.post('/DirectImport/stream', formData, config)
+      return response.data
+    } catch (error) {
+      console.error('❌ [STREAMING_UPLOAD] Upload error:', error)
+      throw error
+    }
+  }
+
+  // 🔄 CHUNKED UPLOAD - For very large files (100MB+) with resume capability
+  async uploadFileChunked(file, options = {}) {
+    try {
+      const chunkedService = new ChunkedUploadService('/api/DirectImport')
+
+      const uploadOptions = {
+        onProgress: options.onProgress || (() => {}),
+        onChunkProgress: options.onChunkProgress || (() => {}),
+        chunkSize: options.chunkSize || (5 * 1024 * 1024) // 5MB chunks
+      }
+
+      console.log(`🔄 [CHUNKED_UPLOAD] Starting chunked upload: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`)
+
+      const result = await chunkedService.uploadFileChunked(file, uploadOptions)
+      return result
+    } catch (error) {
+      console.error('❌ [CHUNKED_UPLOAD] Upload error:', error)
+      throw error
+    }
+  }
+
+  // 🔄 PARALLEL CHUNKED UPLOAD - For extremely large files with parallel processing
+  async uploadFileParallel(file, options = {}) {
+    try {
+      const chunkedService = new ChunkedUploadService('/api/DirectImport')
+
+      const uploadOptions = {
+        onProgress: options.onProgress || (() => {}),
+        maxConcurrent: options.maxConcurrent || 3,
+        chunkSize: options.chunkSize || (10 * 1024 * 1024) // 10MB chunks for parallel
+      }
+
+      console.log(`🔄 [PARALLEL_UPLOAD] Starting parallel upload: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`)
+
+      const result = await chunkedService.uploadFileParallel(file, uploadOptions)
+      return result
+    } catch (error) {
+      console.error('❌ [PARALLEL_UPLOAD] Upload error:', error)
+      throw error
+    }
+  }
+
+  // Resume interrupted chunked upload
+  async resumeUpload(sessionId, file, options = {}) {
+    try {
+      const chunkedService = new ChunkedUploadService('/api/DirectImport')
+
+      console.log(`🔄 [RESUME_UPLOAD] Resuming upload for session: ${sessionId}`)
+
+      const result = await chunkedService.resumeUpload(sessionId, file, options)
+      return result
+    } catch (error) {
+      console.error('❌ [RESUME_UPLOAD] Resume error:', error)
+      throw error
+    }
+  }
+
+  // Cancel active upload
+  async cancelUpload(uploadId) {
+    try {
+      const chunkedService = new ChunkedUploadService('/api/DirectImport')
+      await chunkedService.cancelUpload(uploadId)
+
+      console.log(`🚫 [CANCEL_UPLOAD] Cancelled upload: ${uploadId}`)
+    } catch (error) {
+      console.error('❌ [CANCEL_UPLOAD] Cancel error:', error)
+      throw error
+    }
+  }
+
+  // Get active uploads
+  getActiveUploads() {
+    const chunkedService = new ChunkedUploadService('/api/DirectImport')
+    return chunkedService.getActiveUploads()
   }
 }
 

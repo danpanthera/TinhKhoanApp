@@ -5,6 +5,8 @@ class RawDataService {
   constructor() {
     // ✅ Sử dụng endpoint DataImport/records để lấy import history
     this.baseURL = '/DataImport/records';
+    // 🔧 Fix axios undefined - sử dụng api instance
+    this.axios = api;
   }
 
   // 📋 Lấy danh sách tất cả dữ liệu thô đã import

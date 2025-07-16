@@ -100,5 +100,47 @@ namespace TinhKhoanApp.Api.Services.Interfaces
         /// Lấy số lượng records thực tế từ tất cả database tables
         /// </summary>
         Task<Dictionary<string, int>> GetTableRecordCountsAsync();
+
+        /// <summary>
+        /// 🚀 STREAMING IMPORT - Import file lớn bằng streaming để tránh OutOfMemory
+        /// Stream trực tiếp từ HTTP request vào database
+        /// </summary>
+        Task<DirectImportResult> StreamImportAsync(Stream fileStream, string fileName, string dataType);
+
+        /// <summary>
+        /// Phát hiện loại dữ liệu từ tên file
+        /// </summary>
+        string DetectDataTypeFromFileName(string fileName);
+
+        /// <summary>
+        /// 🔄 PARALLEL IMPORT - Import với parallel processing cho file cực lớn
+        /// Chia file thành chunks và xử lý song song
+        /// </summary>
+        Task<DirectImportResult> ParallelImportAsync(Stream fileStream, string fileName, string dataType, int chunkSize = 50000);
+
+        /// <summary>
+        /// 🆔 Tạo upload session cho chunked upload
+        /// </summary>
+        Task CreateUploadSessionAsync(UploadSession session);
+
+        /// <summary>
+        /// 📤 Upload chunk
+        /// </summary>
+        Task<ChunkUploadResult> UploadChunkAsync(string sessionId, int chunkIndex, IFormFile chunk);
+
+        /// <summary>
+        /// ✅ Finalize chunked upload và process file
+        /// </summary>
+        Task<DirectImportResult> FinalizeUploadAsync(string sessionId);
+
+        /// <summary>
+        /// 📊 Get upload info (for resume functionality)
+        /// </summary>
+        Task<UploadInfoResponse> GetUploadInfoAsync(string sessionId);
+
+        /// <summary>
+        /// 🚫 Cancel upload session
+        /// </summary>
+        Task CancelUploadAsync(string sessionId);
     }
 }

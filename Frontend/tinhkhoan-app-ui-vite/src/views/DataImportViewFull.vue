@@ -1247,12 +1247,18 @@ const viewDataType = async (dataType) => {
         filteredResults.value = []
       }
     } else {
-      // Filter current results by data type
-      const dataTypeResults = allImports.value.filter(imp =>
-        imp.dataType === dataType ||
-        imp.category === dataType ||
-        imp.fileType === dataType
-      )
+      // Filter current results by data type - improved logic
+      const dataTypeResults = allImports.value.filter(imp => {
+        // 🔧 Enhanced filtering with multiple field checks
+        return imp.dataType === dataType ||
+               imp.category === dataType ||
+               imp.fileType === dataType ||
+               imp.originalFileType === dataType ||
+               imp.originalDataType === dataType ||
+               imp.originalCategory === dataType ||
+               (imp.Category && imp.Category === dataType) ||
+               (imp.FileType && imp.FileType === dataType);
+      });
       filteredResults.value = dataTypeResults
 
       if (dataTypeResults.length === 0) {

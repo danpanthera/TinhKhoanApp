@@ -1,6 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using TinhKhoanApp.Api.Models;
 using TinhKhoanApp.Api.Services.Interfaces;
+using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Net.Http.Headers;
+using System.Threading.Channels;
+using TinhKhoanApp.Api.Helpers;
 
 namespace TinhKhoanApp.Api.Controllers
 {
@@ -203,6 +207,211 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 _logger.LogError(ex, "❌ Error getting table counts");
                 return StatusCode(500, new { Error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// 🚀 STREAMING UPLOAD - Import file lớn bằng streaming (hàng trăm MB)
+        /// Không load toàn bộ file vào memory, stream trực tiếp vào database
+        /// </summary>
+        [HttpPost("stream")]
+        [DisableRequestSizeLimit]
+        [RequestFormLimits(ValueLengthLimit = int.MaxValue, MultipartBodyLengthLimit = long.MaxValue)]
+        public async Task<IActionResult> StreamImport()
+        {
+            try
+            {
+                _logger.LogInformation("🚀 [STREAM_IMPORT] Starting streaming upload");
+
+                if (!MultipartRequestHelper.IsMultipartContentType(Request.ContentType))
+                {
+                    return BadRequest("Request must be multipart/form-data");
+                }
+
+                var boundary = MultipartRequestHelper.GetBoundary(
+                    MediaTypeHeaderValue.Parse(Request.ContentType),
+                    70);
+
+                var reader = new MultipartReader(boundary, HttpContext.Request.Body);
+                var section = await reader.ReadNextSectionAsync();
+
+                while (section != null)
+                {
+                    var hasContentDispositionHeader = ContentDispositionHeaderValue.TryParse(
+                        section.ContentDisposition, out var contentDisposition);
+
+                    if (hasContentDispositionHeader &&
+                        contentDisposition.DispositionType.Equals("form-data") &&
+                        !string.IsNullOrEmpty(contentDisposition.FileName.Value))
+                    {
+                        var fileName = contentDisposition.FileName.Value.Trim('"');
+                        var dataType = _directImportService.DetectDataTypeFromFileName(fileName);
+
+                        _logger.LogInformation("📂 [STREAM_IMPORT] Processing file: {FileName}, Type: {DataType}",
+                            fileName, dataType);
+
+                        // Stream trực tiếp vào database
+                        var result = await _directImportService.StreamImportAsync(
+                            section.Body, fileName, dataType);
+
+                        return Ok(result);
+                    }
+
+                    section = await reader.ReadNextSectionAsync();
+                }
+
+                return BadRequest("No file found in request");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [STREAM_IMPORT] Stream import error");
+                return StatusCode(500, new
+                {
+                    success = false,
+                    error = ex.Message,
+                    type = "STREAM_IMPORT_ERROR"
+                });
+            }
+        }
+
+        /// <summary>
+        /// 🆔 Tạo session cho chunked upload
+        /// </summary>
+        [HttpPost("create-session")]
+        public async Task<IActionResult> CreateUploadSession([FromBody] CreateSessionRequest request)
+        {
+            try
+            {
+                var sessionId = Guid.NewGuid().ToString();
+
+                // Store session info (có thể dùng Redis hoặc database)
+                var sessionInfo = new UploadSession
+                {
+                    SessionId = sessionId,
+                    FileName = request.FileName,
+                    FileSize = request.FileSize,
+                    TotalChunks = request.TotalChunks,
+                    DataType = request.DataType,
+                    CreatedAt = DateTime.UtcNow,
+                    UploadedChunks = new List<int>()
+                };
+
+                // Lưu session vào cache/database
+                await _directImportService.CreateUploadSessionAsync(sessionInfo);
+
+                _logger.LogInformation("🆔 [CREATE_SESSION] Created session {SessionId} for file {FileName}",
+                    sessionId, request.FileName);
+
+                return Ok(new { sessionId, success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [CREATE_SESSION] Error creating upload session");
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// 📤 Upload chunk
+        /// </summary>
+        [HttpPost("upload-chunk")]
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> UploadChunk([FromForm] UploadChunkRequest request)
+        {
+            try
+            {
+                var result = await _directImportService.UploadChunkAsync(
+                    request.SessionId,
+                    request.ChunkIndex,
+                    request.Chunk);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [UPLOAD_CHUNK] Error uploading chunk {ChunkIndex} for session {SessionId}",
+                    request.ChunkIndex, request.SessionId);
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// ✅ Finalize chunked upload và process file
+        /// </summary>
+        [HttpPost("finalize/{sessionId}")]
+        public async Task<IActionResult> FinalizeUpload(string sessionId)
+        {
+            try
+            {
+                var result = await _directImportService.FinalizeUploadAsync(sessionId);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [FINALIZE_UPLOAD] Error finalizing upload for session {SessionId}", sessionId);
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// 📊 Get upload info (for resume functionality)
+        /// </summary>
+        [HttpGet("upload-info/{sessionId}")]
+        public async Task<IActionResult> GetUploadInfo(string sessionId)
+        {
+            try
+            {
+                var info = await _directImportService.GetUploadInfoAsync(sessionId);
+                return Ok(info);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [UPLOAD_INFO] Error getting upload info for session {SessionId}", sessionId);
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// 🚫 Cancel upload session
+        /// </summary>
+        [HttpDelete("cancel/{sessionId}")]
+        public async Task<IActionResult> CancelUpload(string sessionId)
+        {
+            try
+            {
+                await _directImportService.CancelUploadAsync(sessionId);
+                return Ok(new { success = true, message = "Upload cancelled" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [CANCEL_UPLOAD] Error cancelling upload for session {SessionId}", sessionId);
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// 🔄 PARALLEL CHUNKED UPLOAD - Xử lý nhiều chunks song song
+        /// </summary>
+        [HttpPost("parallel")]
+        [DisableRequestSizeLimit]
+        public async Task<IActionResult> ParallelImport(IFormFile file, [FromQuery] int chunkSize = 50000)
+        {
+            try
+            {
+                var dataType = _directImportService.DetectDataTypeFromFileName(file.FileName);
+
+                var result = await _directImportService.ParallelImportAsync(
+                    file.OpenReadStream(),
+                    file.FileName,
+                    dataType,
+                    chunkSize);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [PARALLEL_IMPORT] Error in parallel import");
+                return StatusCode(500, new { success = false, error = ex.Message });
             }
         }
     }

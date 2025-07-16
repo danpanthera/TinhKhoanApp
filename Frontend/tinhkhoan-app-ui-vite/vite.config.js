@@ -6,11 +6,6 @@ import { VitePWA } from 'vite-plugin-pwa'
 // https://vite.dev/config/
 export default defineConfig({
   // 🇻🇳 Cấu hình UTF-8 cho tiếng Việt
-  server: {
-    host: '0.0.0.0',
-    port: 3000,
-    open: true
-  },
   build: {
     target: 'esnext',
     // Đảm bảo UTF-8 encoding trong build

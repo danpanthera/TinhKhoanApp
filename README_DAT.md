@@ -12,7 +12,7 @@ Luôn để backend port là 5055, frontend port là 3000.
 
 - **Backend:** LUÔN dùng `./start_backend.sh`
 - **Frontend:** LUÔN dùng `./start_frontend.sh`
-- **Fast Commit:** LUÔN dùng `./fast_commit.sh
+- **Fast Commit:** LUÔN dùng `./fast_commit.sh, nội dung ngắn gọn nhất có thể
 - **NGHIÊM CẤM** sử dụng shell VS Code để chạy fullstack
 - **chạy bằng sqlcmd từ macOS host**
 🚨DỮ LIỆU MẪU CHUẨN CHO 08 CORE DATA - TUYỆT ĐỐI KHÔNG TẠO DỮ LIỆU MOCK DATA
@@ -673,6 +673,43 @@ const debugRecalculateStats = async () => {
 | **LN01** | 79           | 79                  | 86         | ✅ **YES** (BRCD, CUSTSEQ, CUSTNM, etc.)       | ✅ **YES**      | 🎉 **PERFECT** |
 | **LN03** | 17           | 17                  | 24         | ✅ **YES** (MACHINHANH, TENCHINHANH, etc.)     | ✅ **YES**      | 🎉 **PERFECT** |
 | **RR01** | 25           | 25                  | 32         | ✅ **YES** (CN_LOAI_I, BRCD, MA_KH, etc.)      | ✅ **YES**      | 🎉 **PERFECT** |
+
+### ✅ **CRITICAL FIXES APPLIED - July 16, 2025:**
+
+**🔧 3 VẤN ĐỀ QUAN TRỌNG ĐÃ KHẮC PHỤC:**
+
+#### **1. Fix axios undefined trong rawDataService.js**
+- **Lỗi:** `Cannot read properties of undefined (reading 'get')` 
+- **Nguyên nhân:** Constructor thiếu `this.axios = api`
+- **Giải pháp:** ✅ Thêm `this.axios = api` trong constructor
+- **Kết quả:** API `/DirectImport/table-counts` hoạt động bình thường
+
+#### **2. Fix lỗi filter RR01 data**
+- **Lỗi:** "Chưa có dữ liệu import nào cho loại RR01" 
+- **Nguyên nhân:** Logic filter chỉ check 3 fields, thiếu original fields
+- **Giải pháp:** ✅ Enhanced filter logic với 8 fields mapping
+- **Kết quả:** RR01 data hiển thị đúng với 81 records
+
+#### **3. Tối ưu upload file lớn (170MB)**
+- **Vấn đề:** File GL01 170MB upload chậm >3 phút
+- **Cải tiến Backend:**
+  - ✅ Kestrel timeout: 30 phút
+  - ✅ MaxRequestBodySize: 2GB
+  - ✅ Disable MinDataRate cho file lớn
+  - ✅ FormOptions: 2GB limit
+- **Cải tiến Frontend:**
+  - ✅ Upload timeout: 15 phút (900s)
+  - ✅ Progress tracking callback
+  - ✅ MaxContentLength: Infinity
+  - ✅ Enhanced error handling cho timeout
+- **Kết quả:** Hỗ trợ file lên đến 2GB với progress tracking
+
+**📊 PERFORMANCE IMPROVEMENTS:**
+- ✅ **File Size Limit:** 2GB (từ 1GB)
+- ✅ **Upload Timeout:** 15 phút (từ 10 phút)  
+- ✅ **Progress Tracking:** Real-time upload progress
+- ✅ **Error Handling:** Timeout detection và error messages chi tiết
+- ✅ **Bulk Insert:** BatchSize 10,000 với 300s timeout
 
 **🚀 THÀNH QUẢ ĐẠT ĐƯỢC:**
 

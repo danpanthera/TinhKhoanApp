@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.Concurrent;
 using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models;
 using TinhKhoanApp.Api.Models.DataTables;
@@ -318,7 +319,7 @@ namespace TinhKhoanApp.Api.Services
         /// <summary>
         /// Detect data type từ filename
         /// </summary>
-        private string? DetectDataTypeFromFileName(string fileName)
+        public string DetectDataTypeFromFileName(string fileName)
         {
             var upperFileName = fileName.ToUpper();
 
@@ -328,11 +329,13 @@ namespace TinhKhoanApp.Api.Services
             if (upperFileName.Contains("LN03")) return "LN03";
             if (upperFileName.Contains("GL01")) return "GL01";
             if (upperFileName.Contains("GL41")) return "GL41";
+            if (upperFileName.Contains("CA01")) return "CA01";
+            if (upperFileName.Contains("RR01")) return "RR01";
+            if (upperFileName.Contains("TR01")) return "TR01";
             if (upperFileName.Contains("DPDA")) return "DPDA";
             if (upperFileName.Contains("EI01")) return "EI01";
-            if (upperFileName.Contains("RR01")) return "RR01";
 
-            return null;
+            return "DP01"; // Default
         }
 
         /// <summary>
@@ -1746,6 +1749,504 @@ namespace TinhKhoanApp.Api.Services
             }
         }
 
-        #endregion
+        /// <summary>
+        /// 🚀 STREAMING IMPORT - Import file lớn bằng streaming để tránh OutOfMemory
+        /// Stream trực tiếp từ HTTP request vào database
+        /// </summary>
+        public async Task<DirectImportResult> StreamImportAsync(Stream fileStream, string fileName, string dataType)
+        {
+            var result = new DirectImportResult
+            {
+                FileName = fileName,
+                DataType = dataType,
+                StartTime = DateTime.UtcNow
+            };
+
+            try
+            {
+                _logger.LogInformation("🚀 [STREAM_IMPORT] Starting streaming import for {FileName}", fileName);
+
+                using var streamReader = new StreamReader(fileStream, Encoding.UTF8, leaveOpen: true);
+                using var csvReader = new CsvReader(streamReader, CultureInfo.InvariantCulture);
+
+                // Read header
+                await csvReader.ReadAsync();
+                csvReader.ReadHeader();
+                var headers = csvReader.HeaderRecord;
+
+                if (headers == null || !headers.Any())
+                {
+                    throw new InvalidDataException("File không có header hoặc header trống");
+                }
+
+                // Create DataTable based on data type
+                var dataTable = CreateDataTableForType(dataType, headers);
+
+                // Stream read and batch insert
+                const int batchSize = 10000;
+                var batch = new List<string[]>();
+                var totalRecords = 0;
+
+                _logger.LogInformation("📊 [STREAM_IMPORT] Processing batches of {BatchSize} records", batchSize);
+
+                while (await csvReader.ReadAsync())
+                {
+                    var record = new string[headers.Length];
+                    for (int i = 0; i < headers.Length; i++)
+                    {
+                        record[i] = csvReader.GetField(i) ?? "";
+                    }
+
+                    batch.Add(record);
+
+                    if (batch.Count >= batchSize)
+                    {
+                        await ProcessBatchAsync(dataTable, batch, dataType);
+                        totalRecords += batch.Count;
+                        batch.Clear();
+
+                        _logger.LogInformation("✅ [STREAM_IMPORT] Processed {TotalRecords} records", totalRecords);
+                    }
+                }
+
+                // Process remaining records
+                if (batch.Any())
+                {
+                    await ProcessBatchAsync(dataTable, batch, dataType);
+                    totalRecords += batch.Count;
+                }
+
+                result.ProcessedRecords = totalRecords;
+                result.Success = true;
+                result.Details = $"Stream import thành công: {totalRecords} records";
+
+                _logger.LogInformation("🎉 [STREAM_IMPORT] Completed: {TotalRecords} records in {Duration}ms",
+                    totalRecords, (DateTime.UtcNow - result.StartTime).TotalMilliseconds);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [STREAM_IMPORT] Error in streaming import");
+                result.Success = false;
+                result.ErrorMessage = $"Lỗi stream import: {ex.Message}";
+            }
+            finally
+            {
+                result.EndTime = DateTime.UtcNow;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 🔄 PARALLEL IMPORT - Import với parallel processing cho file cực lớn
+        /// </summary>
+        public async Task<DirectImportResult> ParallelImportAsync(Stream fileStream, string fileName, string dataType, int chunkSize = 50000)
+        {
+            var result = new DirectImportResult
+            {
+                FileName = fileName,
+                DataType = dataType,
+                StartTime = DateTime.UtcNow
+            };
+
+            try
+            {
+                _logger.LogInformation("🔄 [PARALLEL_IMPORT] Starting parallel import for {FileName} with chunk size {ChunkSize}",
+                    fileName, chunkSize);
+
+                // Pre-read file into memory chunks for parallel processing
+                var chunks = await ReadFileIntoChunksAsync(fileStream, chunkSize);
+
+                var totalRecords = 0;
+                var tasks = new List<Task<int>>();
+
+                // Process chunks in parallel
+                var semaphore = new SemaphoreSlim(Environment.ProcessorCount); // Limit concurrent tasks
+
+                foreach (var chunk in chunks)
+                {
+                    tasks.Add(ProcessChunkParallelAsync(chunk, dataType, semaphore));
+                }
+
+                var results = await Task.WhenAll(tasks);
+                totalRecords = results.Sum();
+
+                result.ProcessedRecords = totalRecords;
+                result.Success = true;
+                result.Details = $"Parallel import thành công: {totalRecords} records từ {chunks.Count} chunks";
+
+                _logger.LogInformation("🎉 [PARALLEL_IMPORT] Completed: {TotalRecords} records from {ChunkCount} chunks in {Duration}ms",
+                    totalRecords, chunks.Count, (DateTime.UtcNow - result.StartTime).TotalMilliseconds);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [PARALLEL_IMPORT] Error in parallel import");
+                result.Success = false;
+                result.ErrorMessage = $"Lỗi parallel import: {ex.Message}";
+            }
+            finally
+            {
+                result.EndTime = DateTime.UtcNow;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Xử lý batch data với DataTable và SqlBulkCopy
+        /// </summary>
+        private async Task ProcessBatchAsync(DataTable dataTable, List<string[]> batch, string dataType)
+        {
+            dataTable.Clear();
+
+            foreach (var record in batch)
+            {
+                var row = dataTable.NewRow();
+                for (int i = 0; i < Math.Min(record.Length, dataTable.Columns.Count); i++)
+                {
+                    row[i] = string.IsNullOrWhiteSpace(record[i]) ? DBNull.Value : record[i];
+                }
+                dataTable.Rows.Add(row);
+            }
+
+            var tableName = GetTableNameForDataType(dataType);
+
+            using var connection = new SqlConnection(_connectionString);
+            await connection.OpenAsync();
+
+            using var bulkCopy = new SqlBulkCopy(connection)
+            {
+                DestinationTableName = tableName,
+                BatchSize = 10000,
+                BulkCopyTimeout = 300
+            };
+
+            await bulkCopy.WriteToServerAsync(dataTable);
+        }
+
+        /// <summary>
+        /// Đọc file thành chunks để xử lý parallel
+        /// </summary>
+        private async Task<List<List<string[]>>> ReadFileIntoChunksAsync(Stream fileStream, int chunkSize)
+        {
+            var chunks = new List<List<string[]>>();
+
+            using var streamReader = new StreamReader(fileStream, Encoding.UTF8);
+            using var csvReader = new CsvReader(streamReader, CultureInfo.InvariantCulture);
+
+            // Read header
+            await csvReader.ReadAsync();
+            csvReader.ReadHeader();
+            var headers = csvReader.HeaderRecord;
+
+            var currentChunk = new List<string[]>();
+
+            while (await csvReader.ReadAsync())
+            {
+                var record = new string[headers.Length];
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    record[i] = csvReader.GetField(i) ?? "";
+                }
+
+                currentChunk.Add(record);
+
+                if (currentChunk.Count >= chunkSize)
+                {
+                    chunks.Add(new List<string[]>(currentChunk));
+                    currentChunk.Clear();
+                }
+            }
+
+            if (currentChunk.Any())
+            {
+                chunks.Add(currentChunk);
+            }
+
+            return chunks;
+        }
+
+        /// <summary>
+        /// Xử lý một chunk trong parallel processing
+        /// </summary>
+        private async Task<int> ProcessChunkParallelAsync(List<string[]> chunk, string dataType, SemaphoreSlim semaphore)
+        {
+            await semaphore.WaitAsync();
+
+            try
+            {
+                var dataTable = CreateDataTableForType(dataType, null);
+                await ProcessBatchAsync(dataTable, chunk, dataType);
+                return chunk.Count;
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        }
+
+        /// <summary>
+        /// Tạo DataTable cho loại dữ liệu cụ thể
+        /// </summary>
+        private DataTable CreateDataTableForType(string dataType, string[]? headers)
+        {
+            var dataTable = new DataTable();
+
+            // If headers provided, use them
+            if (headers != null && headers.Any())
+            {
+                foreach (var header in headers)
+                {
+                    dataTable.Columns.Add(header, typeof(string));
+                }
+            }
+            else
+            {
+                // Create generic columns based on data type - simplified for streaming
+                switch (dataType.ToUpper())
+                {
+                    case "DP01":
+                        for (int i = 1; i <= 50; i++) // DP01 has many columns
+                        {
+                            dataTable.Columns.Add($"Column{i}", typeof(string));
+                        }
+                        break;
+                    case "GL01":
+                        for (int i = 1; i <= 30; i++) // GL01 columns
+                        {
+                            dataTable.Columns.Add($"Column{i}", typeof(string));
+                        }
+                        break;
+                    default:
+                        for (int i = 1; i <= 20; i++) // Default columns
+                        {
+                            dataTable.Columns.Add($"Column{i}", typeof(string));
+                        }
+                        break;
+                }
+            }
+
+            return dataTable;
+        }
+
+        /// <summary>
+        /// Lấy tên bảng database cho loại dữ liệu
+        /// </summary>
+        private string GetTableNameForDataType(string dataType)
+        {
+            return dataType.ToUpper() switch
+            {
+                "DP01" => "DP01",
+                "LN01" => "LN01",
+                "LN03" => "LN03",
+                "GL01" => "GL01",
+                "GL41" => "GL41",
+                "CA01" => "CA01",
+                "RR01" => "RR01",
+                "TR01" => "TR01",
+                _ => "DP01"
+            };
+        }
+
+        // Dictionary để lưu upload sessions trong memory (production nên dùng Redis)
+        private readonly ConcurrentDictionary<string, UploadSession> _uploadSessions = new();
+
+        /// <summary>
+        /// 🆔 Tạo upload session cho chunked upload
+        /// </summary>
+        public async Task CreateUploadSessionAsync(UploadSession session)
+        {
+            // Tạo thư mục tạm cho session
+            var tempDir = Path.Combine(Path.GetTempPath(), "chunked_uploads", session.SessionId);
+            Directory.CreateDirectory(tempDir);
+
+            session.TempDirectoryPath = tempDir;
+            _uploadSessions[session.SessionId] = session;
+
+            _logger.LogInformation("🆔 [CREATE_SESSION] Created session {SessionId} with temp dir {TempDir}",
+                session.SessionId, tempDir);
+
+            await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// 📤 Upload chunk
+        /// </summary>
+        public async Task<ChunkUploadResult> UploadChunkAsync(string sessionId, int chunkIndex, IFormFile chunk)
+        {
+            if (!_uploadSessions.TryGetValue(sessionId, out var session))
+            {
+                throw new InvalidOperationException($"Upload session {sessionId} not found");
+            }
+
+            try
+            {
+                var chunkPath = Path.Combine(session.TempDirectoryPath!, $"chunk_{chunkIndex:D6}");
+
+                using var fileStream = new FileStream(chunkPath, FileMode.Create);
+                await chunk.CopyToAsync(fileStream);
+
+                // Update session
+                session.UploadedChunks.Add(chunkIndex);
+                session.UploadedChunks.Sort();
+
+                _logger.LogInformation("📤 [UPLOAD_CHUNK] Saved chunk {ChunkIndex} for session {SessionId}",
+                    chunkIndex, sessionId);
+
+                return new ChunkUploadResult
+                {
+                    Success = true,
+                    ChunkIndex = chunkIndex,
+                    SessionId = sessionId,
+                    ChunkSize = chunk.Length,
+                    Message = "Chunk uploaded successfully"
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [UPLOAD_CHUNK] Error uploading chunk {ChunkIndex} for session {SessionId}",
+                    chunkIndex, sessionId);
+
+                return new ChunkUploadResult
+                {
+                    Success = false,
+                    ChunkIndex = chunkIndex,
+                    SessionId = sessionId,
+                    Message = ex.Message
+                };
+            }
+        }
+
+        /// <summary>
+        /// ✅ Finalize chunked upload và process file
+        /// </summary>
+        public async Task<DirectImportResult> FinalizeUploadAsync(string sessionId)
+        {
+            if (!_uploadSessions.TryGetValue(sessionId, out var session))
+            {
+                throw new InvalidOperationException($"Upload session {sessionId} not found");
+            }
+
+            try
+            {
+                _logger.LogInformation("✅ [FINALIZE_UPLOAD] Starting finalization for session {SessionId}", sessionId);
+
+                // Verify all chunks uploaded
+                if (session.UploadedChunks.Count != session.TotalChunks)
+                {
+                    throw new InvalidOperationException(
+                        $"Missing chunks: expected {session.TotalChunks}, got {session.UploadedChunks.Count}");
+                }
+
+                // Combine chunks into single file
+                var combinedFilePath = Path.Combine(session.TempDirectoryPath!, "combined_file");
+                await CombineChunksAsync(session, combinedFilePath);
+
+                // Process combined file
+                using var fileStream = new FileStream(combinedFilePath, FileMode.Open, FileAccess.Read);
+                var result = await StreamImportAsync(fileStream, session.FileName, session.DataType);
+
+                // Cleanup
+                session.IsCompleted = true;
+                await CleanupSessionAsync(sessionId);
+
+                _logger.LogInformation("🎉 [FINALIZE_UPLOAD] Completed session {SessionId}: {RecordsProcessed} records",
+                    sessionId, result.ProcessedRecords);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [FINALIZE_UPLOAD] Error finalizing session {SessionId}", sessionId);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 📊 Get upload info (for resume functionality)
+        /// </summary>
+        public async Task<UploadInfoResponse> GetUploadInfoAsync(string sessionId)
+        {
+            if (!_uploadSessions.TryGetValue(sessionId, out var session))
+            {
+                throw new InvalidOperationException($"Upload session {sessionId} not found");
+            }
+
+            var remainingChunks = session.TotalChunks - session.UploadedChunks.Count;
+            var progressPercentage = (double)session.UploadedChunks.Count / session.TotalChunks * 100;
+
+            return await Task.FromResult(new UploadInfoResponse
+            {
+                SessionId = session.SessionId,
+                FileName = session.FileName,
+                FileSize = session.FileSize,
+                TotalChunks = session.TotalChunks,
+                UploadedChunks = new List<int>(session.UploadedChunks),
+                RemainingChunks = remainingChunks,
+                ProgressPercentage = progressPercentage,
+                CreatedAt = session.CreatedAt,
+                IsCompleted = session.IsCompleted
+            });
+        }
+
+        /// <summary>
+        /// 🚫 Cancel upload session
+        /// </summary>
+        public async Task CancelUploadAsync(string sessionId)
+        {
+            if (_uploadSessions.TryRemove(sessionId, out var session))
+            {
+                await CleanupSessionAsync(sessionId);
+
+                _logger.LogInformation("🚫 [CANCEL_UPLOAD] Cancelled session {SessionId}", sessionId);
+            }
+        }
+
+        /// <summary>
+        /// 🔗 Combine chunks into single file
+        /// </summary>
+        private async Task CombineChunksAsync(UploadSession session, string outputPath)
+        {
+            using var outputStream = new FileStream(outputPath, FileMode.Create);
+
+            for (int i = 0; i < session.TotalChunks; i++)
+            {
+                var chunkPath = Path.Combine(session.TempDirectoryPath!, $"chunk_{i:D6}");
+
+                if (!File.Exists(chunkPath))
+                {
+                    throw new FileNotFoundException($"Chunk {i} not found at {chunkPath}");
+                }
+
+                using var chunkStream = new FileStream(chunkPath, FileMode.Open);
+                await chunkStream.CopyToAsync(outputStream);
+            }
+
+            _logger.LogInformation("🔗 [COMBINE_CHUNKS] Combined {TotalChunks} chunks for session {SessionId}",
+                session.TotalChunks, session.SessionId);
+        }
+
+        /// <summary>
+        /// 🧹 Cleanup session files
+        /// </summary>
+        private async Task CleanupSessionAsync(string sessionId)
+        {
+            if (_uploadSessions.TryGetValue(sessionId, out var session) &&
+                !string.IsNullOrEmpty(session.TempDirectoryPath) &&
+                Directory.Exists(session.TempDirectoryPath))
+            {
+                try
+                {
+                    Directory.Delete(session.TempDirectoryPath, recursive: true);
+                    _logger.LogInformation("🧹 [CLEANUP] Deleted temp directory for session {SessionId}", sessionId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "⚠️ [CLEANUP] Failed to delete temp directory for session {SessionId}", sessionId);
+                }
+            }
+
+            await Task.CompletedTask;
+        }
     }
 }
