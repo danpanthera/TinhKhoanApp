@@ -124,7 +124,7 @@ internal partial class Program
             options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(30);
             // 🚀 Tối ưu thêm cho performance
             options.Limits.MinRequestBodyDataRate = null; // Disable minimum data rate
-            options.Limits.MinResponseDataRate = null; // Disable minimum data rate  
+            options.Limits.MinResponseDataRate = null; // Disable minimum data rate
         });        // 3.5. Đăng ký các business services        builder.Services.AddScoped<IKpiScoringService, KpiScoringService>();
         builder.Services.AddScoped<IEmployeeKpiAssignmentService, EmployeeKpiAssignmentService>();
         builder.Services.AddScoped<UnitKpiScoringService>();
