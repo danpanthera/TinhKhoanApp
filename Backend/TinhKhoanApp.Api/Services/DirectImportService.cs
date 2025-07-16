@@ -1144,7 +1144,7 @@ namespace TinhKhoanApp.Api.Services
                                 if (DateTime.TryParseExact(dateStr, "yyyyMMdd", null,
                                     System.Globalization.DateTimeStyles.None, out DateTime parsedDate))
                                 {
-                                    targetDate = parsedDate.ToString("dd/MM/yyyy");
+                                    targetDate = parsedDate.ToString("yyyy-MM-dd"); // 🔧 FIX: Sử dụng ISO format cho SQL Server
                                     _logger.LogInformation("📅 Extracted date from filename: {Date}", targetDate);
                                 }
                             }
@@ -1152,12 +1152,16 @@ namespace TinhKhoanApp.Api.Services
 
                         if (!string.IsNullOrEmpty(targetDate))
                         {
-                            // Filter theo NGAY_DL với ngày extracted từ filename
+                            // Filter theo NGAY_DL với ngày extracted từ filename VÀ timerange của import
                             sql = $@"SELECT TOP 20 * FROM {tableName}
                                    WHERE NGAY_DL = @targetDate
-                                   ORDER BY ID ASC";
+                                   AND CREATED_DATE >= DATEADD(minute, -10, @importDate)
+                                   AND CREATED_DATE <= DATEADD(minute, 10, @importDate)
+                                   ORDER BY CREATED_DATE DESC, ID DESC";
                             countSql = $@"SELECT COUNT(*) FROM {tableName}
-                                        WHERE NGAY_DL = @targetDate";
+                                        WHERE NGAY_DL = @targetDate
+                                        AND CREATED_DATE >= DATEADD(minute, -10, @importDate)
+                                        AND CREATED_DATE <= DATEADD(minute, 10, @importDate)";
                         }
                         else
                         {
@@ -1183,6 +1187,7 @@ namespace TinhKhoanApp.Api.Services
                             if (!string.IsNullOrEmpty(targetDate))
                             {
                                 countCommand.Parameters.AddWithValue("@targetDate", targetDate);
+                                countCommand.Parameters.AddWithValue("@importDate", importRecord.ImportDate);
                             }
                             else
                             {
@@ -1200,6 +1205,7 @@ namespace TinhKhoanApp.Api.Services
                         if (!string.IsNullOrEmpty(targetDate))
                         {
                             command.Parameters.AddWithValue("@targetDate", targetDate);
+                            command.Parameters.AddWithValue("@importDate", importRecord.ImportDate);
                         }
                         else
                         {
@@ -1296,7 +1302,7 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Xóa import record và dữ liệu liên quan
+        /// Xóa import record và dữ liệu liên quan (bao gồm cả dữ liệu thực tế trong bảng)
         /// </summary>
         public async Task<(bool Success, string ErrorMessage, int RecordsDeleted)> DeleteImportAsync(int importId)
         {
@@ -1317,20 +1323,92 @@ namespace TinhKhoanApp.Api.Services
                 _logger.LogInformation("🔍 Found import record: {FileName}, Category: {Category}, Records: {RecordsCount}",
                     importRecord.FileName, importRecord.Category, importRecord.RecordsCount);
 
+                var totalDeletedRecords = 0;
+
+                // 🔥 XÓA DỮ LIỆU THỰC TẾ từ bảng tương ứng dựa trên import date và file name
+                using var connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+
+                var dataType = importRecord.Category?.ToUpper();
+                if (!string.IsNullOrEmpty(dataType) && IsValidDataType(dataType))
+                {
+                    // 🎯 CHIẾN LƯỢC XÓA DỮ LIỆU CHÍNH XÁC:
+                    // 1. Ưu tiên xóa theo FILE_NAME và NGAY_DL (nếu có)
+                    // 2. Fallback: Xóa theo CREATED_DATE trong khoảng thời gian import (±10 phút)
+                    // 3. Last resort: Xóa theo batch ID nếu có
+
+                    int deletedDataRecords = 0;
+
+                    // Thử xóa theo FILE_NAME và NGAY_DL trước
+                    if (!string.IsNullOrEmpty(importRecord.FileName))
+                    {
+                        var deleteSql1 = $@"
+                            DELETE FROM [{dataType}]
+                            WHERE FILE_NAME = @FileName
+                               OR (FILE_NAME IS NULL AND NGAY_DL = @NgayDl)";
+
+                        using var deleteCmd1 = new SqlCommand(deleteSql1, connection);
+                        deleteCmd1.Parameters.Add("@FileName", SqlDbType.NVarChar).Value = importRecord.FileName;
+                        deleteCmd1.Parameters.Add("@NgayDl", SqlDbType.Date).Value = importRecord.ImportDate.Date;
+
+                        deletedDataRecords = await deleteCmd1.ExecuteNonQueryAsync();
+
+                        _logger.LogInformation("🗑️ Deleted {DeletedDataRecords} records using FILE_NAME/NGAY_DL strategy", deletedDataRecords);
+                    }
+
+                    // Nếu không xóa được record nào, thử xóa theo CREATED_DATE trong khoảng thời gian import
+                    if (deletedDataRecords == 0)
+                    {
+                        var startTime = importRecord.ImportDate.AddMinutes(-10);
+                        var endTime = importRecord.ImportDate.AddMinutes(10);
+
+                        var deleteSql2 = $@"
+                            DELETE FROM [{dataType}]
+                            WHERE CREATED_DATE >= @StartTime AND CREATED_DATE <= @EndTime";
+
+                        using var deleteCmd2 = new SqlCommand(deleteSql2, connection);
+                        deleteCmd2.Parameters.Add("@StartTime", SqlDbType.DateTime2).Value = startTime;
+                        deleteCmd2.Parameters.Add("@EndTime", SqlDbType.DateTime2).Value = endTime;
+
+                        deletedDataRecords = await deleteCmd2.ExecuteNonQueryAsync();
+
+                        _logger.LogInformation("🗑️ Deleted {DeletedDataRecords} records using CREATED_DATE strategy ({StartTime} - {EndTime})",
+                            deletedDataRecords, startTime, endTime);
+                    }
+
+                    totalDeletedRecords += deletedDataRecords;
+
+                    if (deletedDataRecords == 0)
+                    {
+                        _logger.LogWarning("⚠️ No data records found to delete for import {ImportId} in table {DataType}",
+                            importId, dataType);
+                    }
+                }
+
                 // Xóa import record từ ImportedDataRecords
                 _context.ImportedDataRecords.Remove(importRecord);
-                var deletedRecords = await _context.SaveChangesAsync();
+                var deletedImportRecords = await _context.SaveChangesAsync();
+                totalDeletedRecords += deletedImportRecords;
 
-                _logger.LogInformation("✅ Successfully deleted import record {ImportId}, deleted {RecordsDeleted} records",
-                    importId, deletedRecords);
+                _logger.LogInformation("✅ Successfully deleted import {ImportId}: {ImportRecords} import records + {DataRecords} data records = {Total} total",
+                    importId, deletedImportRecords, totalDeletedRecords - deletedImportRecords, totalDeletedRecords);
 
-                return (true, "Import record deleted successfully", deletedRecords);
+                return (true, "Import record and associated data deleted successfully", totalDeletedRecords);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "❌ Error deleting import record {ImportId}", importId);
                 return (false, $"Error deleting import: {ex.Message}", 0);
             }
+        }
+
+        /// <summary>
+        /// Kiểm tra data type có hợp lệ không
+        /// </summary>
+        private bool IsValidDataType(string dataType)
+        {
+            var validTypes = new[] { "DP01", "DPDA", "EI01", "GL01", "GL41", "LN01", "LN03", "RR01" };
+            return validTypes.Contains(dataType?.ToUpper());
         }
 
         /// <summary>
@@ -1477,511 +1555,55 @@ namespace TinhKhoanApp.Api.Services
 
         #endregion
 
-        #region Data Management Methods
+        #region Table Record Counts
 
         /// <summary>
-        /// Kiểm tra xem dữ liệu có tồn tại cho dataType và date cụ thể
+        /// Lấy số lượng records thực tế từ tất cả database tables
         /// </summary>
-        public async Task<DataCheckResult> CheckDataExistsAsync(string dataType, string date)
+        public async Task<Dictionary<string, int>> GetTableRecordCountsAsync()
         {
-            var result = new DataCheckResult();
+            var counts = new Dictionary<string, int>();
 
             try
             {
-                _logger.LogInformation("🔍 Checking data exists for {DataType} on {Date}", dataType, date);
-
-                // Convert date string to NGAY_DL format (dd/MM/yyyy)
-                var ngayDL = ConvertDateStringToNgayDL(date);
+                _logger.LogInformation("📊 Getting actual table record counts");
 
                 using var connection = new SqlConnection(_connectionString);
                 await connection.OpenAsync();
 
-                var sql = $@"
-                    SELECT COUNT(*)
-                    FROM [{dataType}]
-                    WHERE NGAY_DL = @NgayDL";
+                var sql = @"
+                    WITH TableCounts AS (
+                        SELECT 'DP01' as TableName, COUNT(*) as RecordCount FROM DP01
+                        UNION ALL SELECT 'DPDA', COUNT(*) FROM DPDA
+                        UNION ALL SELECT 'EI01', COUNT(*) FROM EI01
+                        UNION ALL SELECT 'GL01', COUNT(*) FROM GL01
+                        UNION ALL SELECT 'GL41', COUNT(*) FROM GL41
+                        UNION ALL SELECT 'LN01', COUNT(*) FROM LN01
+                        UNION ALL SELECT 'LN03', COUNT(*) FROM LN03
+                        UNION ALL SELECT 'RR01', COUNT(*) FROM RR01
+                    )
+                    SELECT TableName, RecordCount FROM TableCounts
+                    ORDER BY TableName";
 
-                using var cmd = new SqlCommand(sql, connection);
-                cmd.Parameters.Add("@NgayDL", SqlDbType.NVarChar).Value = ngayDL;
+                using var command = new SqlCommand(sql, connection);
+                using var reader = await command.ExecuteReaderAsync();
 
-                var countResult = await cmd.ExecuteScalarAsync();
-                var count = countResult != null ? (int)countResult : 0;
+                while (await reader.ReadAsync())
+                {
+                    var tableName = reader.GetString("TableName");
+                    var recordCount = reader.GetInt32("RecordCount");
+                    counts[tableName] = recordCount;
 
-                result.DataExists = count > 0;
-                result.RecordCount = count;
-                result.Message = result.DataExists ?
-                    $"Found {count} records for {dataType} on {ngayDL}" :
-                    $"No data found for {dataType} on {ngayDL}";
+                    _logger.LogDebug("📊 {TableName}: {RecordCount} records", tableName, recordCount);
+                }
 
-                _logger.LogInformation("📊 Data check result: {Count} records found", count);
-                return result;
+                _logger.LogInformation("✅ Successfully retrieved record counts for {TableCount} tables", counts.Count);
+                return counts;
             }
             catch (Exception ex)
             {
-                result.DataExists = false;
-                result.RecordCount = 0;
-                result.Message = $"Error checking data: {ex.Message}";
-                _logger.LogError(ex, "❌ Error checking data exists for {DataType}", dataType);
-                return result;
-            }
-        }
-
-        /// <summary>
-        /// Xóa toàn bộ dữ liệu của một bảng cụ thể
-        /// </summary>
-        public async Task<DirectImportResult> ClearTableDataAsync(string dataType)
-        {
-            var result = new DirectImportResult
-            {
-                DataType = dataType,
-                StartTime = DateTime.UtcNow
-            };
-
-            try
-            {
-                _logger.LogInformation("🗑️ Clearing all data from table: {DataType}", dataType);
-
-                using var connection = new SqlConnection(_connectionString);
-                await connection.OpenAsync();
-
-                // First count records
-                var countSql = $"SELECT COUNT(*) FROM [{dataType}]";
-                using var countCmd = new SqlCommand(countSql, connection);
-                var countResult = await countCmd.ExecuteScalarAsync();
-                var recordCount = countResult != null ? (int)countResult : 0;
-
-                if (recordCount == 0)
-                {
-                    result.Success = true;
-                    result.ProcessedRecords = 0;
-                    result.Details = $"Table {dataType} is already empty";
-                    result.EndTime = DateTime.UtcNow;
-                    return result;
-                }
-
-                // Clear the table
-                var deleteSql = $"DELETE FROM [{dataType}]";
-                using var deleteCmd = new SqlCommand(deleteSql, connection);
-                var deletedCount = await deleteCmd.ExecuteNonQueryAsync();
-
-                // Also clear from ImportedDataRecords
-                var clearImportSql = @"
-                    DELETE FROM ImportedDataRecords
-                    WHERE Category = @DataType OR FileType = @DataType";
-                using var clearImportCmd = new SqlCommand(clearImportSql, connection);
-                clearImportCmd.Parameters.Add("@DataType", SqlDbType.NVarChar).Value = dataType;
-                await clearImportCmd.ExecuteNonQueryAsync();
-
-                result.Success = true;
-                result.ProcessedRecords = deletedCount;
-                result.Details = $"Deleted {deletedCount} records from {dataType} table";
-                result.EndTime = DateTime.UtcNow;
-
-                _logger.LogInformation("✅ Successfully cleared {Count} records from {DataType}", deletedCount, dataType);
-                return result;
-            }
-            catch (Exception ex)
-            {
-                result.Success = false;
-                result.ErrorMessage = ex.Message;
-                result.EndTime = DateTime.UtcNow;
-                _logger.LogError(ex, "❌ Error clearing table data for {DataType}", dataType);
-                return result;
-            }
-        }
-
-        /// <summary>
-        /// Convert date string (yyyyMMdd) to NGAY_DL format (dd/MM/yyyy)
-        /// </summary>
-        private string ConvertDateStringToNgayDL(string dateStr)
-        {
-            try
-            {
-                if (dateStr.Length == 8) // yyyyMMdd
-                {
-                    var year = dateStr.Substring(0, 4);
-                    var month = dateStr.Substring(4, 2);
-                    var day = dateStr.Substring(6, 2);
-                    return $"{day}/{month}/{year}";
-                }
-                return dateStr; // Return as-is if not in expected format
-            }
-            catch
-            {
-                return dateStr; // Return as-is if conversion fails
-            }
-        }
-
-        #endregion
-
-        #region GL41 Structure Fix
-
-        /// <summary>
-        /// 🔧 TEMPORARY: Fix GL41 database structure to match CSV (13 columns)
-        /// </summary>
-        public async Task<DirectImportResult> FixGL41DatabaseStructureAsync()
-        {
-            var result = new DirectImportResult
-            {
-                FileName = "GL41_Structure_Fix",
-                DataType = "GL41",
-                StartTime = DateTime.UtcNow
-            };
-
-            try
-            {
-                _logger.LogInformation("🔧 Starting GL41 database structure fix...");
-
-                using var connection = new SqlConnection(_connectionString);
-                await connection.OpenAsync();
-
-                var messages = new List<string>();
-
-                // 1. Rename SO_TK to MA_TK if exists
-                var checkSOTK = @"
-                    SELECT COUNT(*) FROM sys.columns
-                    WHERE object_id = OBJECT_ID('GL41') AND name = 'SO_TK'";
-
-                using (var cmd = new SqlCommand(checkSOTK, connection))
-                {
-                    var existsResult = await cmd.ExecuteScalarAsync();
-                    int exists = existsResult != null ? (int)existsResult : 0;
-                    if (exists > 0)
-                    {
-                        var renameSql = "EXEC sp_rename 'GL41.SO_TK', 'MA_TK', 'COLUMN'";
-                        using var renameCmd = new SqlCommand(renameSql, connection);
-                        await renameCmd.ExecuteNonQueryAsync();
-                        messages.Add("✅ Renamed SO_TK to MA_TK");
-                        _logger.LogInformation("✅ Renamed SO_TK to MA_TK");
-                    }
-                    else
-                    {
-                        messages.Add("ℹ️ SO_TK column not found or already renamed");
-                        _logger.LogInformation("ℹ️ SO_TK column not found or already renamed");
-                    }
-                }
-
-                // 2. Add LOAI_TIEN column if not exists
-                var checkLOAI_TIEN = @"
-                    SELECT COUNT(*) FROM sys.columns
-                    WHERE object_id = OBJECT_ID('GL41') AND name = 'LOAI_TIEN'";
-
-                using (var cmd = new SqlCommand(checkLOAI_TIEN, connection))
-                {
-                    var existsResult = await cmd.ExecuteScalarAsync();
-                    int exists = existsResult != null ? (int)existsResult : 0;
-                    if (exists == 0)
-                    {
-                        var addSql = "ALTER TABLE GL41 ADD LOAI_TIEN NVARCHAR(50)";
-                        using var addCmd = new SqlCommand(addSql, connection);
-                        await addCmd.ExecuteNonQueryAsync();
-                        messages.Add("✅ Added LOAI_TIEN column");
-                        _logger.LogInformation("✅ Added LOAI_TIEN column");
-                    }
-                    else
-                    {
-                        messages.Add("ℹ️ LOAI_TIEN column already exists");
-                        _logger.LogInformation("ℹ️ LOAI_TIEN column already exists");
-                    }
-                }
-
-                // 3. Add LOAI_BT column if not exists
-                var checkLOAI_BT = @"
-                    SELECT COUNT(*) FROM sys.columns
-                    WHERE object_id = OBJECT_ID('GL41') AND name = 'LOAI_BT'";
-
-                using (var cmd = new SqlCommand(checkLOAI_BT, connection))
-                {
-                    var existsResult = await cmd.ExecuteScalarAsync();
-                    int exists = existsResult != null ? (int)existsResult : 0;
-                    if (exists == 0)
-                    {
-                        var addSql = "ALTER TABLE GL41 ADD LOAI_BT NVARCHAR(50)";
-                        using var addCmd = new SqlCommand(addSql, connection);
-                        await addCmd.ExecuteNonQueryAsync();
-                        messages.Add("✅ Added LOAI_BT column");
-                        _logger.LogInformation("✅ Added LOAI_BT column");
-                    }
-                    else
-                    {
-                        messages.Add("ℹ️ LOAI_BT column already exists");
-                        _logger.LogInformation("ℹ️ LOAI_BT column already exists");
-                    }
-                }
-
-                // 4. Verify final structure
-                var verifySql = @"
-                    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
-                    WHERE TABLE_NAME = 'GL41'";
-
-                using (var cmd = new SqlCommand(verifySql, connection))
-                {
-                    var countResult = await cmd.ExecuteScalarAsync();
-                    int columnCount = countResult != null ? (int)countResult : 0;
-                    messages.Add($"📊 GL41 now has {columnCount} columns");
-                    _logger.LogInformation("📊 GL41 now has {ColumnCount} columns", columnCount);
-
-                    result.ProcessedRecords = columnCount;
-                }
-
-                result.Success = true;
-                result.Details = string.Join("\n", messages);
-                result.EndTime = DateTime.UtcNow;
-
-                _logger.LogInformation("🎉 GL41 structure fix completed successfully");
-                return result;
-            }
-            catch (Exception ex)
-            {
-                result.Success = false;
-                result.ErrorMessage = ex.Message;
-                result.EndTime = DateTime.UtcNow;
-                _logger.LogError(ex, "❌ Error fixing GL41 structure");
-                return result;
-            }
-        }
-
-        #endregion
-
-        #region GL01 Special Processing
-
-        /// <summary>
-        /// Import GL01 đặc biệt - filename có range ngày, NGAY_DL từ TR_TIME column
-        /// VD: 7800_gl01_2025050120250531.csv (từ 01/05/2025 -> 31/05/2025)
-        /// </summary>
-        private async Task<DirectImportResult> ImportGL01SpecialAsync(IFormFile file, string? statementDate = null)
-        {
-            var result = new DirectImportResult
-            {
-                FileName = file.FileName,
-                DataType = "GL01",
-                TargetTable = "GL01",
-                FileSizeBytes = file.Length,
-                StartTime = DateTime.UtcNow
-            };
-
-            try
-            {
-                _logger.LogInformation("🚀 [GL01_SPECIAL] Starting GL01 special import: {FileName}", file.FileName);
-
-                // Parse filename to extract date range
-                var dateRange = ParseGL01DateRange(file.FileName);
-                if (dateRange == null)
-                {
-                    result.Success = false;
-                    result.ErrorMessage = $"Không thể parse date range từ filename: {file.FileName}. Expected format: 7800_gl01_YYYYMMDDYYYYMMDD.csv";
-                    return result;
-                }
-
-                _logger.LogInformation("📅 [GL01_SPECIAL] Date range: {FromDate} -> {ToDate}",
-                    dateRange?.FromDate ?? "N/A", dateRange?.ToDate ?? "N/A");
-
-                using var stream = file.OpenReadStream();
-                using var reader = new StreamReader(stream, Encoding.UTF8);
-                using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
-
-                var records = new List<GL01>();
-                var dataTable = new DataTable();
-                var processedRows = 0;
-                var errorRows = 0;
-
-                // Setup DataTable structure based on GL01 model
-                SetupGL01DataTable(dataTable);
-
-                await csv.ReadAsync();
-                csv.ReadHeader();
-
-                while (await csv.ReadAsync())
-                {
-                    try
-                    {
-                        var record = new GL01();
-
-                        // Map all CSV columns to model properties
-                        MapGL01Record(csv, record);
-
-                        // SPECIAL: Convert TR_TIME to NGAY_DL format
-                        if (!string.IsNullOrEmpty(record.TR_TIME))
-                        {
-                            record.NGAY_DL = DateTime.TryParseExact(ConvertTrTimeToNgayDL(record.TR_TIME), "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out var date) ? date : DateTime.Now;
-                        }
-
-                        // Add to DataTable for bulk insert
-                        var row = dataTable.NewRow();
-                        PopulateGL01DataRow(row, record);
-                        dataTable.Rows.Add(row);
-
-                        processedRows++;
-                    }
-                    catch (Exception ex)
-                    {
-                        errorRows++;
-                        _logger.LogWarning("⚠️ [GL01_SPECIAL] Error processing row {Row}: {Error}", processedRows + errorRows, ex.Message);
-                    }
-                }
-
-                // Bulk insert using SqlBulkCopy
-                if (dataTable.Rows.Count > 0)
-                {
-                    using var connection = new SqlConnection(_connectionString);
-                    await connection.OpenAsync();
-
-                    using var bulkCopy = new SqlBulkCopy(connection);
-                    bulkCopy.DestinationTableName = "GL01";
-                    bulkCopy.BatchSize = 1000;
-                    bulkCopy.BulkCopyTimeout = 300;
-
-                    // Map columns
-                    foreach (DataColumn column in dataTable.Columns)
-                    {
-                        bulkCopy.ColumnMappings.Add(column.ColumnName, column.ColumnName);
-                    }
-
-                    await bulkCopy.WriteToServerAsync(dataTable);
-                }
-
-                // Save import record - commented out for now
-                // TODO: Implement SaveImportRecord method if needed
-                // await SaveImportRecord(result, dateRange?.FromDate, dateRange?.ToDate);
-
-                result.Success = true;
-                result.ProcessedRecords = processedRows;
-                result.ErrorRecords = errorRows;
-                result.NgayDL = dateRange.HasValue ? $"{dateRange.Value.FromDate} - {dateRange.Value.ToDate}" : "N/A";
-                result.EndTime = DateTime.UtcNow;
-
-                _logger.LogInformation("✅ [GL01_SPECIAL] Import completed: {ProcessedRecords} records", processedRows);
-                return result;
-            }
-            catch (Exception ex)
-            {
-                result.Success = false;
-                result.ErrorMessage = ex.Message;
-                result.EndTime = DateTime.UtcNow;
-                _logger.LogError(ex, "❌ [GL01_SPECIAL] Import failed: {FileName}", file.FileName);
-                return result;
-            }
-        }
-
-        /// <summary>
-        /// Parse GL01 filename để extract date range
-        /// VD: 7800_gl01_2025050120250531.csv -> FromDate: 01/05/2025, ToDate: 31/05/2025
-        /// </summary>
-        private (string FromDate, string ToDate)? ParseGL01DateRange(string fileName)
-        {
-            try
-            {
-                var pattern = @"_gl01_(\d{8})(\d{8})\.csv$";
-                var match = Regex.Match(fileName.ToLower(), pattern);
-
-                if (!match.Success)
-                {
-                    return null;
-                }
-
-                var fromDateStr = match.Groups[1].Value; // YYYYMMDD
-                var toDateStr = match.Groups[2].Value;   // YYYYMMDD
-
-                var fromDate = ConvertDateStringToNgayDL(fromDateStr);
-                var toDate = ConvertDateStringToNgayDL(toDateStr);
-
-                return (fromDate, toDate);
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Convert TR_TIME (01-MAY-2025) to NGAY_DL format (01/05/2025)
-        /// </summary>
-        private string ConvertTrTimeToNgayDL(string trTime)
-        {
-            try
-            {
-                // Parse "01-MAY-2025" format
-                if (DateTime.TryParseExact(trTime, "dd-MMM-yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime date))
-                {
-                    return date.ToString("dd/MM/yyyy");
-                }
-
-                // Fallback: try other common formats
-                if (DateTime.TryParse(trTime, out DateTime fallbackDate))
-                {
-                    return fallbackDate.ToString("dd/MM/yyyy");
-                }
-
-                return trTime; // Return as-is if conversion fails
-            }
-            catch
-            {
-                return trTime;
-            }
-        }
-
-        /// <summary>
-        /// Setup DataTable structure for GL01
-        /// </summary>
-        private void SetupGL01DataTable(DataTable dataTable)
-        {
-            var properties = typeof(GL01).GetProperties()
-                .Where(p => !p.GetCustomAttributes(typeof(NotMappedAttribute), false).Any())
-                .ToList();
-
-            foreach (var prop in properties)
-            {
-                var columnType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
-                if (columnType == typeof(string))
-                {
-                    dataTable.Columns.Add(prop.Name, typeof(string));
-                }
-                else if (columnType == typeof(int))
-                {
-                    dataTable.Columns.Add(prop.Name, typeof(int));
-                }
-                else if (columnType == typeof(decimal))
-                {
-                    dataTable.Columns.Add(prop.Name, typeof(decimal));
-                }
-                else if (columnType == typeof(DateTime))
-                {
-                    dataTable.Columns.Add(prop.Name, typeof(DateTime));
-                }
-                else
-                {
-                    dataTable.Columns.Add(prop.Name, typeof(string));
-                }
-            }
-        }
-
-        /// <summary>
-        /// Map CSV record to GL01 object
-        /// </summary>
-        private void MapGL01Record(CsvReader csv, GL01 record)
-        {
-            // TODO: Implement actual column mapping based on CSV structure
-            // This will need to be customized based on the actual GL01 CSV columns
-
-            // Example mapping (adjust based on actual CSV columns):
-            // record.NgayDL = csv.GetField("NGAY_DL") ?? "";  // GL01 doesn't have NGAY_DL property
-            record.TR_TIME = csv.GetField("TR_TIME") ?? "";
-            // ... map other columns as needed
-        }
-
-        /// <summary>
-        /// Populate DataTable row with GL01 data
-        /// </summary>
-        private void PopulateGL01DataRow(DataRow row, GL01 record)
-        {
-            var properties = typeof(GL01).GetProperties()
-                .Where(p => !p.GetCustomAttributes(typeof(NotMappedAttribute), false).Any())
-                .ToList();
-
-            foreach (var prop in properties)
-            {
-                var value = prop.GetValue(record);
-                row[prop.Name] = value ?? DBNull.Value;
+                _logger.LogError(ex, "❌ Error getting table record counts");
+                throw;
             }
         }
 

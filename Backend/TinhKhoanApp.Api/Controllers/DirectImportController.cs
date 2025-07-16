@@ -184,5 +184,26 @@ namespace TinhKhoanApp.Api.Controllers
                 return StatusCode(500, new { Error = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Lấy số lượng records thực tế từ database tables (không phải metadata)
+        /// </summary>
+        [HttpGet("table-counts")]
+        public async Task<ActionResult<Dictionary<string, int>>> GetTableCounts()
+        {
+            try
+            {
+                _logger.LogInformation("📊 Getting actual table record counts");
+
+                var counts = await _directImportService.GetTableRecordCountsAsync();
+
+                return Ok(counts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error getting table counts");
+                return StatusCode(500, new { Error = ex.Message });
+            }
+        }
     }
 }

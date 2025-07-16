@@ -95,5 +95,10 @@ namespace TinhKhoanApp.Api.Services.Interfaces
         /// Xóa toàn bộ dữ liệu của một bảng cụ thể
         /// </summary>
         Task<DirectImportResult> ClearTableDataAsync(string dataType);
+
+        /// <summary>
+        /// Lấy số lượng records thực tế từ tất cả database tables
+        /// </summary>
+        Task<Dictionary<string, int>> GetTableRecordCountsAsync();
     }
 }

@@ -480,7 +480,7 @@ class RawDataService {
     try {
       console.log(`🗑️ Deleting all data for table: ${dataType}`);
 
-      const response = await axios.delete(`${this.apiUrl}/api/DataImport/clear-table/${dataType}`);
+      const response = await api.delete(`/api/DataImport/clear-table/${dataType}`);
 
       if (response.data && response.data.success) {
         console.log(`✅ Successfully deleted all ${dataType} data:`, response.data.message);
@@ -508,7 +508,7 @@ class RawDataService {
     try {
       console.log(`🔍 Checking duplicate data for ${dataType} on date ${dateStr}`);
 
-      const response = await axios.get(`${this.apiUrl}/api/DataImport/check-duplicate/${dataType}/${dateStr}`);
+      const response = await api.get(`/api/DataImport/check-duplicate/${dataType}/${dateStr}`);
 
       if (response.data) {
         return {
@@ -531,6 +531,37 @@ class RawDataService {
         success: false,
         error: `Failed to check duplicate data: ${error.response?.data?.message || error.message}`,
         data: { hasDuplicate: false, count: 0 }
+      };
+    }
+  }
+
+  // 📊 Lấy số lượng records thực tế từ database tables (thay vì metadata)
+  async getTableRecordCounts() {
+    try {
+      console.log('📊 Fetching actual table record counts from database');
+
+      const response = await this.axios.get('/DirectImport/table-counts');
+
+      if (response.data) {
+        console.log('✅ Table record counts:', response.data);
+        return {
+          success: true,
+          data: response.data
+        };
+      } else {
+        console.error('❌ No data returned from table counts API');
+        return {
+          success: false,
+          error: 'No data returned from server',
+          data: {}
+        };
+      }
+    } catch (error) {
+      console.error('❌ Error getting table record counts:', error);
+      return {
+        success: false,
+        error: error.response?.data?.message || error.message || 'Network error',
+        data: {}
       };
     }
   }

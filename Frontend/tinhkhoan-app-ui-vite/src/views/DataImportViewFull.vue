@@ -71,6 +71,9 @@
           <button @click="refreshAllData" class="btn-refresh" :disabled="loading">
             🔄 Tải lại dữ liệu
           </button>
+          <button @click="loadTableRecordCounts" class="btn-table-counts" :disabled="loading" title="Lấy số lượng records thực tế từ database">
+            📊 Real Counts
+          </button>
           <button @click="debugRecalculateStats" class="btn-debug" :disabled="loading" title="Debug: Force recalculate stats">
             🔧 Debug Stats
           </button>
@@ -808,6 +811,59 @@ const formatDate = (dateString) => {
   }
 }
 
+// 📊 Load actual table record counts from database
+const loadTableRecordCounts = async () => {
+  try {
+    console.log('📊 Loading actual table record counts from database');
+
+    const result = await rawDataService.getTableRecordCounts();
+
+    if (result.success && result.data) {
+      console.log('✅ Real table counts loaded:', result.data);
+
+      // Update dataTypeStats with real counts from database
+      const updatedStats = { ...dataTypeStats.value };
+
+      Object.keys(result.data).forEach(tableName => {
+        const realCount = result.data[tableName];
+
+        if (updatedStats[tableName]) {
+          updatedStats[tableName] = {
+            ...updatedStats[tableName],
+            totalRecords: realCount, // Override with real database count
+            realRecords: realCount,  // Store original real count
+            isFromDatabase: true     // Flag to indicate data source
+          };
+        } else {
+          // Initialize if not exists
+          updatedStats[tableName] = {
+            totalRecords: realCount,
+            realRecords: realCount,
+            lastUpdate: null,
+            count: 0,
+            isFromDatabase: true
+          };
+        }
+
+        console.log(`📊 ${tableName}: ${realCount} records (from database)`);
+      });
+
+      dataTypeStats.value = updatedStats;
+
+      showSuccess(`✅ Đã cập nhật số lượng records thực tế từ database`);
+      return true;
+    } else {
+      console.error('❌ Failed to load table counts:', result.error);
+      showError(`Lỗi khi tải số lượng records: ${result.error}`);
+      return false;
+    }
+  } catch (error) {
+    console.error('❌ Error loading table record counts:', error);
+    showError(`Lỗi khi tải số lượng records: ${error.message}`);
+    return false;
+  }
+}
+
 // Data type statistics
 const getDataTypeStats = (dataType) => {
   const stats = dataTypeStats.value[dataType] || { totalRecords: 0, lastUpdate: null }
@@ -972,6 +1028,9 @@ const refreshAllData = async (skipSuccessMessage = false) => {
       }
 
       calculateDataTypeStats()
+
+      // 📊 IMPORTANT: Load actual table record counts from database
+      await loadTableRecordCounts()
 
       if (!skipSuccessMessage) {
         showSuccess(`✅ Đã tải lại dữ liệu thành công (${allImports.value.length} imports)`)
@@ -1753,6 +1812,7 @@ const getFileIcon = (fileName) => {
 const getUploadStatusIcon = () => {
   if (uploadProgress.value === 0) return '⏳'
   if (uploadProgress.value < 20) return '📤'
+
   if (uploadProgress.value < 50) return '📤'
   if (uploadProgress.value < 90) return '🔄'
   if (uploadProgress.value < 100) return '🔄'
@@ -2772,10 +2832,6 @@ const startSmartImport = async () => {
   box-shadow: none;
 }
 
-.btn-icon {
-  font-size: 1.1rem;
-}
-
 /* Agribank import styling */
 .btn-submit {
   background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
@@ -3062,11 +3118,11 @@ const startSmartImport = async () => {
 }
 
 @keyframes uploadPulse {
-  from {
-    box-shadow: 0 8px 25px rgba(139, 21, 56, 0.2);
+  0%, 100% {
+    transform: scale(1.02);
   }
-  to {
-    box-shadow: 0 12px 35px rgba(139, 21, 56, 0.3);
+  50% {
+    transform: scale(1.05);
   }
 }
 
