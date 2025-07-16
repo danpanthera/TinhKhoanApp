@@ -436,11 +436,14 @@ namespace TinhKhoanApp.Api.Services
         {
             var type = typeof(T);
 
-            // Set NgayDL if property exists
+            // Set NgayDL if property exists - Keep as string to match model definition
             var ngayDLProp = type.GetProperty("NgayDL");
             if (ngayDLProp != null && ngayDLProp.CanWrite)
             {
+                // Model NgayDL property is string type, so set directly as string
+                // SqlBulkCopy will handle the conversion from string to date column
                 ngayDLProp.SetValue(record, ngayDL);
+                _logger.LogDebug("🗓️ [NGAY_DL] Set NgayDL property to: {NgayDL}", ngayDL);
             }
 
             // Set FileName if property exists
@@ -502,7 +505,7 @@ namespace TinhKhoanApp.Api.Services
         {
             var table = new DataTable();
             var properties = typeof(T).GetProperties()
-                .Where(p => p.Name != "Id" && p.Name != "UpdatedDate") // Chỉ bỏ qua Id và UpdatedDate, giữ lại CreatedDate
+                .Where(p => p.Name != "Id" && p.Name != "UpdatedDate" && p.Name != "DATA_DATE") // Bỏ qua Id, UpdatedDate và DATA_DATE
                 .ToArray();
 
             var columnMappings = new Dictionary<string, string>(); // PropertyName -> ColumnName
@@ -524,6 +527,14 @@ namespace TinhKhoanApp.Api.Services
                 {
                     columnType = columnType.GetGenericArguments()[0];
                 }
+
+                // 🔧 SPECIAL HANDLING: For NgayDL column, use DateTime type for database compatibility
+                if (columnName == "NGAY_DL" && columnType == typeof(string))
+                {
+                    _logger.LogInformation("🗓️ [DATATABLE] Converting NGAY_DL column from string to DateTime for database compatibility");
+                    columnType = typeof(DateTime);
+                }
+
                 table.Columns.Add(columnName, columnType);
             }
 
@@ -538,7 +549,26 @@ namespace TinhKhoanApp.Api.Services
                 {
                     var value = property.GetValue(record);
                     var columnName = columnMappings[property.Name];
-                    row[columnName] = value ?? DBNull.Value;
+
+                    // 🔧 SPECIAL HANDLING: Convert NgayDL string to DateTime for database
+                    if (columnName == "NGAY_DL" && value is string ngayDLStr && !string.IsNullOrEmpty(ngayDLStr))
+                    {
+                        if (DateTime.TryParseExact(ngayDLStr, "dd/MM/yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateValue))
+                        {
+                            row[columnName] = dateValue;
+                            _logger.LogDebug("🗓️ [DATATABLE] Converted NgayDL '{NgayDLStr}' to DateTime: {DateTime}", ngayDLStr, dateValue);
+                        }
+                        else
+                        {
+                            // Fallback to current date if parsing fails
+                            row[columnName] = DateTime.Now.Date;
+                            _logger.LogWarning("⚠️ [DATATABLE] Failed to parse NgayDL '{NgayDLStr}', using current date", ngayDLStr);
+                        }
+                    }
+                    else
+                    {
+                        row[columnName] = value ?? DBNull.Value;
+                    }
                 }
                 table.Rows.Add(row);
             }
