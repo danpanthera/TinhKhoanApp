@@ -12,10 +12,9 @@ Luôn để backend port là 5055, frontend port là 3000.
 
 - **Backend:** LUÔN dùng `./start_backend.sh`
 - **Frontend:** LUÔN dùng `./start_frontend.sh`
--
-- **Fast Commit:** LUÔN dùng `./fast_commit.sh "message"`
-- **NGHIÊM CẤM** sử dụng shell VS Code để chạy npm/dotnet commands!
-
+- **Fast Commit:** LUÔN dùng `./fast_commit.sh
+- **NGHIÊM CẤM** sử dụng shell VS Code để chạy fullstack
+- **chạy bằng sqlcmd từ macOS host**
 🚨DỮ LIỆU MẪU CHUẨN CHO 08 CORE DATA - TUYỆT ĐỐI KHÔNG TẠO DỮ LIỆU MOCK DATA
 Luôn kiểm tra file test cho 08 bảng dữ liệu từ thư mục sau:
 /Users/nguyendat/Documents/DuLieuImport/DuLieuMau
@@ -23,56 +22,6 @@ Luôn kiểm tra file test cho 08 bảng dữ liệu từ thư mục sau:
 
 ## 🆕 TinhKhoanApp Maintenance Notes (July 2025)
 
-### Dọn dẹp Dự án
-
-Một cuộc dọn dẹp toàn diện đã được thực hiện để giảm kích thước dự án và cải thiện khả năng bảo trì:
-
-1. **Dọn dẹp File Test**
-
-   - Đã xóa các file test thừa/lỗi thời
-   - Giữ lại các file test thiết yếu cho kiểm tra hồi quy
-   - Sắp xếp các file test theo cách có cấu trúc hơn
-
-2. **Nhất quán PascalCase**
-   - Đã triển khai đánh giá hệ thống về việc sử dụng PascalCase/camelCase
-   - Sử dụng helper `safeGet` trong toàn bộ codebase để xử lý cả hai kiểu viết hoa
-   - Chuẩn hóa API response và data binding
-
-### Scripts Bảo trì
-
-Các script sau đây đã được tạo để giúp duy trì chất lượng code:
-
-- `cleanup-test-files.sh`: Xóa các file test không cần thiết nhưng vẫn giữ lại các file thiết yếu
-- `review-pascalcase.sh`: Quét codebase để tìm kiếm cách viết hoa không nhất quán và tạo báo cáo
-- `fix-pascalcase.sh`: Giúp thêm import safeGet vào các file cần truy cập casing-safe
-
-### Các Phương pháp Tốt nhất
-
-1. **Truy cập Thuộc tính**
-
-   - Luôn sử dụng các helper `safeGet`, `getId`, `getName` v.v. từ `casingSafeAccess.js`
-   - Ví dụ: `safeGet(employee, 'FullName')` thay vì `employee.FullName`
-
-2. **API Responses**
-
-   - Backend trả về thuộc tính PascalCase (ví dụ: `"FullName": "Nguyen Van A"`)
-   - Frontend nên sử dụng safeGet để xử lý cả hai trường hợp, nhưng ưu tiên PascalCase trong code
-
-3. **File Test**
-
-   - Chỉ giữ lại các file test thiết yếu cho kiểm tra hồi quy
-   - Đặt tên file test với tên mô tả và chỉ rõ phiên bản (ví dụ: `test-final-kpi-assignment-fixes.html`)
-   - Xóa các file test khi không còn cần thiết
-
-4. **Debugging**
-   - Sử dụng debug logging có sẵn trong components
-   - Test với các file HTML trong `/public` cho kiểm tra độc lập
-
-### Nhiệm vụ Còn lại
-
-- Tiếp tục giám sát API responses về tính nhất quán của casing
-- Thường xuyên dọn dẹp các file test khi có test mới được tạo
-- Cập nhật tài liệu với các mẫu và phương pháp mới
 
 ## 🐳 Azure SQL Edge ARM64 Container Setup
 
@@ -153,8 +102,6 @@ sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C
 - JSON Functions: ✅ Hoạt động
 - Analytics Features: ✅ Hoạt động
 
-
-
 **🚀 Lợi ích:**
 
 - **Temporal Tables:** Theo dõi lịch sử thay đổi dữ liệu, audit trail hoàn chỉnh
@@ -192,16 +139,11 @@ sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C
 
 ### 🔄 **CONTAINER INFO:**
 
-- **Container cũ:** sql_server_tinhkhoan (SQL Server) - ✅ ĐÃ XÓA
-- **Container extract:** sqlserver-extract - ✅ ĐÃ XÓA (06/07/2025)
+
 - **Container chính:** azure_sql_edge_tinhkhoan (Azure SQL Edge ARM64) ✅ ĐANG SỬ DỤNG
 - **Port:** 1433:1433
 - **Performance:** Tối ưu cho Apple Silicon Mac
 - **Status:** Môi trường đã được dọn dẹp, chỉ còn container chính
-
-### 🗑️ **XÓA DỮ LIỆU UNITS VÀ ROLES - 06/07/2025**
-
-**✅ HOÀN THÀNH:** Đã xóa toàn bộ dữ liệu liên quan đến Đơn vị (Units) và Vai trò (Roles)
 
 ### QUY ƯỚC MÃ CHI NHÁNH (MA_CN) theo tên gọi như sau:
 
@@ -264,12 +206,7 @@ Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
 - **PGDL2:** 4 phòng giao dịch
 - **Tổng:** 46 đơn vị ✅
 
-#### Công cụ sử dụng:
 
-- **Shell script:** `create_46_units.sh` - Automation tạo toàn bộ cấu trúc
-- **API Units:** POST `/api/units` - Tạo từng đơn vị với parentUnitId
-- **MaintenanceController:** Backup và management endpoints
-- **Verification:** JSON validation và count checking
 
 #### Đặc điểm kỹ thuật:
 
@@ -288,55 +225,6 @@ Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
 
 | ID  | Mã vai trò          | Tên vai trò                              | Mô tả                                          |
 | --- | ------------------- | ---------------------------------------- | ---------------------------------------------- |
-| 1   | TruongphongKhdn     | Trưởng phòng KHDN                        | Trưởng phòng Khách hàng Doanh nghiệp           |
-| 2   | TruongphongKhcn     | Trưởng phòng KHCN                        | Trưởng phòng Khách hàng Cá nhân                |
-| 3   | PhophongKhdn        | Phó phòng KHDN                           | Phó phòng Khách hàng Doanh nghiệp              |
-| 4   | PhophongKhcn        | Phó phòng KHCN                           | Phó phòng Khách hàng Cá nhân                   |
-| 5   | TruongphongKhqlrr   | Trưởng phòng KH&QLRR                     | Trưởng phòng Kế hoạch & Quản lý rủi ro         |
-| 6   | PhophongKhqlrr      | Phó phòng KH&QLRR                        | Phó phòng Kế hoạch & Quản lý rủi ro            |
-| 7   | Cbtd                | Cán bộ tín dụng                          | Cán bộ tín dụng                                |
-| 8   | TruongphongKtnqCnl1 | Trưởng phòng KTNQ CNL1                   | Trưởng phòng Kế toán & Ngân quỹ CNL1           |
-| 9   | PhophongKtnqCnl1    | Phó phòng KTNQ CNL1                      | Phó phòng Kế toán & Ngân quỹ CNL1              |
-| 10  | Gdv                 | GDV                                      | Giao dịch viên                                 |
-| 11  | TqHkKtnb            | Thủ quỹ \| Hậu kiểm \| KTNB              | Thủ quỹ \| Hậu kiểm \| Kế toán nghiệp vụ       |
-| 12  | TruongphoItThKtgs   | Trưởng phó IT \| Tổng hợp \| KTGS        | Trưởng phó IT \| Tổng hợp \| Kiểm tra giám sát |
-| 13  | CBItThKtgsKhqlrr    | Cán bộ IT \| Tổng hợp \| KTGS \| KH&QLRR | Cán bộ IT \| Tổng hợp \| KTGS \| KH&QLRR       |
-| 14  | GiamdocPgd          | Giám đốc Phòng giao dịch                 | Giám đốc Phòng giao dịch                       |
-| 15  | PhogiamdocPgd       | Phó giám đốc Phòng giao dịch             | Phó giám đốc Phòng giao dịch                   |
-| 16  | PhogiamdocPgdCbtd   | Phó giám đốc PGD kiêm CBTD               | Phó giám đốc Phòng giao dịch kiêm CBTD         |
-| 17  | GiamdocCnl2         | Giám đốc CNL2                            | Giám đốc Chi nhánh cấp 2                       |
-| 18  | PhogiamdocCnl2Td    | Phó giám đốc CNL2 phụ trách TD           | Phó giám đốc CNL2 phụ trách Tín dụng           |
-| 19  | PhogiamdocCnl2Kt    | Phó giám đốc CNL2 phụ trách KT           | Phó giám đốc CNL2 phụ trách Kế toán            |
-| 20  | TruongphongKhCnl2   | Trưởng phòng KH CNL2                     | Trưởng phòng Khách hàng CNL2                   |
-| 21  | PhophongKhCnl2      | Phó phòng KH CNL2                        | Phó phòng Khách hàng CNL2                      |
-| 22  | TruongphongKtnqCnl2 | Trưởng phòng KTNQ CNL2                   | Trưởng phòng Kế toán & Ngân quỹ CNL2           |
-| 23  | PhophongKtnqCnl2    | Phó phòng KTNQ CNL2                      | Phó phòng Kế toán & Ngân quỹ CNL2              |
-
-#### Công cụ sử dụng:
-
-- **Shell script:** `create_23_roles.sh` - Automation tạo toàn bộ 23 vai trò
-- **API Roles:** POST `/api/roles` - Tạo từng vai trò với Name và Description
-- **Model:** Role entity với properties Id, Name, Description, EmployeeRoles
-- **Validation:** JSON schema và backend validation đầy đủ
-
-#### Đặc điểm kỹ thuật:
-
-- **Auto-increment ID:** Database tự động gán ID tuần tự từ 1-23
-- **Unicode support:** Tên và mô tả tiếng Việt hiển thị đúng
-- **API compatible:** Frontend có thể fetch và hiển thị đầy đủ
-- **Mã vai trò:** Giữ nguyên không thay đổi theo yêu cầu
-- **Navigation properties:** Hỗ trợ quan hệ many-to-many với Employees
-
-**🎯 Status:** Sẵn sàng để gán vai trò cho nhân viên trong từng đơn vị.
-
-### 📊 **CẤU HÌNH KPI ASSIGNMENT TABLES - 06/07/2025**
-
-**✅ HOÀN THÀNH:** Đã có đủ 32 bảng KPI theo đúng cấu trúc
-
-#### 🧑‍💼 Tab "Dành cho Cán bộ" - 23 bảng KPI:
-
-| ID  | Tên Bảng KPI        | Mô tả                                    |
-| --- | ------------------- | ---------------------------------------- | -------------- |
 | 1   | TruongphongKhdn     | Trưởng phòng KHDN                        | Trưởng phòng Khách hàng Doanh nghiệp           |
 | 2   | TruongphongKhcn     | Trưởng phòng KHCN                        | Trưởng phòng Khách hàng Cá nhân                |
 | 3   | PhophongKhdn        | Phó phòng KHDN                           | Phó phòng Khách hàng Doanh nghiệp              |
@@ -527,35 +415,6 @@ _Thời gian: 07/01/2025 14:00-15:00_
 
 ✅ **Gán roles cho tất cả 10 employees** dựa trên chức vụ và đơn vị làm việc
 
-#### 8.2 Scripts và tools
-
-```bash
-# Script chính gán roles
-./execute_role_assignments_fixed.sh  # Gán roles với payload đầy đủ
-./complete_role_assignments.sh       # Xác nhận tất cả assignments
-
-# Verification
-curl -s "http://localhost:5055/api/employees/{id}" | jq '.EmployeeRoles'
-````
-
-#### 8.3 Cấu trúc dữ liệu Employee-Role
-
-- **EmployeeRoles table**: Quan hệ Many-to-Many giữa Employee và Role
-- **API endpoint**: `PUT /api/employees/{id}` với `RoleIds` array
-- **Payload format**: Bao gồm tất cả fields của Employee + RoleIds mới
-
-#### 8.4 Kết quả achieved
-
-✅ 10/10 employees có roles được gán  
-✅ Quan hệ Employee-Role lưu trong bảng `EmployeeRoles`  
-✅ API trả về đúng cấu trúc role data  
-✅ Mapping logic documented và scripts automated
-
----
-
-## 🔧 PHASE 9: KPI ASSIGNMENT FRAMEWORK (ĐANG THỰC HIỆN 🔄)
-
-_Thời gian: 07/01/2025 15:00-..._
 
 ### Tiến độ hiện tại
 
@@ -800,23 +659,6 @@ const debugRecalculateStats = async () => {
 
 **🎯 Status:** Đã fix code, cần test lại import workflow để confirm.
 
----
-
-### 🚨 **PHÁT HIỆN VẤN ĐỀ NGHIÊM TRỌNG VỀ CẤU TRÚC CỘT - July 15, 2025:**
-
-**🔍 Kiểm tra chi tiết so sánh với file CSV gốc - ⚠️ PHÁT HIỆN VẤN ĐỀ:**
-
-| Bảng     | CSV Expected | DB Business Current | DB Total | Generic Cols | Status                | Gap Analysis                            |
-| -------- | ------------ | ------------------- | -------- | ------------ | --------------------- | --------------------------------------- |
-| **DP01** | 63           | 63                  | 70       | 63           | ✅ **CORRECT COUNT**  | ⚠️ **Generic naming (Col1-Col63)**      |
-| **DPDA** | 13           | 13                  | 20       | 13           | ✅ **CORRECT COUNT**  | ⚠️ **Generic naming (Col1-Col13)**      |
-| **EI01** | 24           | 30                  | 37       | 30           | ❌ **MISMATCH (+6)**  | ⚠️ **Generic naming + Extra cols**      |
-| **GL01** | 27           | 30                  | 37       | 30           | ❌ **MISMATCH (+3)**  | ⚠️ **Generic naming + Extra cols**      |
-| **GL41** | 13           | 30                  | 37       | 30           | ❌ **MISMATCH (+17)** | ⚠️ **Generic naming + Many extra cols** |
-| **LN01** | 79           | 30                  | 37       | 30           | ❌ **MISMATCH (-49)** | ⚠️ **Generic naming + Missing cols**    |
-| **LN03** | 17           | 30                  | 37       | 30           | ❌ **MISMATCH (+13)** | ⚠️ **Generic naming + Extra cols**      |
-| **RR01** | 25           | 75                  | 82       | 75           | ❌ **MISMATCH (+50)** | ⚠️ **Generic naming + Many extra cols** |
-
 ### ✅ **HOÀN THÀNH REBUILD TABLE STRUCTURES - July 15, 2025:**
 
 **🎉 ĐÃ THỰC HIỆN THÀNH CÔNG TẤT CẢ YÊU CẦU:**
@@ -950,11 +792,3 @@ const debugRecalculateStats = async () => {
 - `create_proper_analytics_indexes.sh` - Tạo indexes với correct column names ✅
 - `rebuild_table_structures.sh` - Complete table rebuild với real column names ✅
 - `validate_rebuilt_tables.sh` - Validation cuối cùng ✅
-
-**🎯 PRODUCTION READY:**
-
-1. **100% Temporal Functionality**: Tất cả 8 bảng đã có full temporal features
-2. **100% Analytics Performance**: Optimized indexes cho reporting và analytics
-3. **100% Audit Trail**: Complete history tracking cho compliance
-4. **100% CSV Compatibility**: Real column names từ CSV headers
-5. **Azure SQL Edge Compatible**: Hoạt động hoàn hảo với all limitations addressed
