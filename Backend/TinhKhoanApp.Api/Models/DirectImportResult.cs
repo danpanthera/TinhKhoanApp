@@ -115,6 +115,16 @@ namespace TinhKhoanApp.Api.Models
     public class DataCheckResult
     {
         /// <summary>
+        /// Loại dữ liệu đang kiểm tra
+        /// </summary>
+        public string DataType { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Ngày kiểm tra
+        /// </summary>
+        public string Date { get; set; } = string.Empty;
+
+        /// <summary>
         /// Dữ liệu có tồn tại hay không
         /// </summary>
         public bool DataExists { get; set; }
@@ -122,11 +132,25 @@ namespace TinhKhoanApp.Api.Models
         /// <summary>
         /// Số lượng bản ghi tìm thấy
         /// </summary>
-        public int RecordCount { get; set; }
+        public int RecordsFound { get; set; }
+
+        /// <summary>
+        /// Số lượng bản ghi tìm thấy (alias cho backward compatibility)
+        /// </summary>
+        public int RecordCount
+        {
+            get => RecordsFound;
+            set => RecordsFound = value;
+        }
 
         /// <summary>
         /// Thông báo kết quả
         /// </summary>
         public string Message { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Thông báo lỗi nếu có
+        /// </summary>
+        public string ErrorMessage { get; set; } = string.Empty;
     }
 }
