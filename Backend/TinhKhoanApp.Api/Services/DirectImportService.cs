@@ -149,11 +149,53 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Import RR01 - Risk rating data
+        /// Import RR01 - Risk rating data (uses special parser for non-standard CSV format)
         /// </summary>
         public async Task<DirectImportResult> ImportRR01DirectAsync(IFormFile file, string? statementDate = null)
         {
-            return await ImportGenericCSVAsync<RR01>("RR01", "RR01", file, statementDate);
+            var result = new DirectImportResult
+            {
+                FileName = file.FileName,
+                DataType = "RR01",
+                TargetTable = "RR01",
+                FileSizeBytes = file.Length,
+                StartTime = DateTime.UtcNow
+            };
+
+            try
+            {
+                _logger.LogInformation("🚀 [RR01_DIRECT] Bắt đầu Direct Import với special parser: {FileName}", file.FileName);
+
+                // Use special parser for RR01 format
+                var records = await ParseRR01SpecialFormatAsync<RR01>(file, statementDate);
+
+                result.ProcessedRecords = records.Count;
+                _logger.LogInformation("📊 [IMPORT_DEBUG] Parsed {RecordCount} records from CSV", records.Count);
+
+                if (records.Count > 0)
+                {
+                    // Bulk insert vào database
+                    var insertedCount = await BulkInsertGenericAsync(records, "RR01");
+                }
+
+                result.Success = true;
+                result.NgayDL = ExtractNgayDLFromFileName(file.FileName);
+                result.EndTime = DateTime.UtcNow;
+
+                _logger.LogInformation("✅ [RR01_DIRECT] Direct Import thành công: {RecordCount} records trong {Duration}ms",
+                    result.ProcessedRecords, result.Duration.TotalMilliseconds);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.EndTime = DateTime.UtcNow;
+                result.Success = false;
+                result.ErrorMessage = ex.Message;
+
+                _logger.LogError(ex, "❌ [RR01_DIRECT] Lỗi import: {Error}", ex.Message);
+                return result;
+            }
         }
 
         #endregion
@@ -317,8 +359,146 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Generic CSV parsing method
+        /// Special parser for RR01 format which has non-standard CSV structure
+        /// Format: "field1,""field2"",""field3""..."
         /// </summary>
+        private async Task<List<T>> ParseRR01SpecialFormatAsync<T>(IFormFile file, string? statementDate = null)
+            where T : class, new()
+        {
+            var records = new List<T>();
+            var ngayDL = ExtractNgayDLFromFileName(file.FileName);
+
+            _logger.LogInformation("🔍 [RR01_SPECIAL] Parsing RR01 special format: {FileName}", file.FileName);
+
+            using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
+
+            // Read header line
+            var headerLine = await reader.ReadLineAsync();
+            if (string.IsNullOrEmpty(headerLine))
+            {
+                _logger.LogWarning("❌ [RR01_SPECIAL] No header found");
+                return records;
+            }
+
+            // Remove BOM if present
+            if (headerLine.StartsWith("\uFEFF"))
+            {
+                headerLine = headerLine.Substring(1);
+            }
+
+            var headers = headerLine.Split(',').Select(h => h.Trim()).ToArray();
+            _logger.LogInformation("📊 [RR01_SPECIAL] Headers: {Headers}", string.Join(", ", headers));
+
+            // Read data lines
+            string? dataLine;
+            int lineNumber = 1;
+            while ((dataLine = await reader.ReadLineAsync()) != null)
+            {
+                lineNumber++;
+                if (string.IsNullOrWhiteSpace(dataLine)) continue;
+
+                try
+                {
+                    // Parse the special RR01 format: "field1,""field2"",""field3""..."
+                    var fields = ParseRR01DataLine(dataLine);
+
+                    _logger.LogDebug("🔍 [RR01_SPECIAL] Line {LineNumber}: Parsed {FieldCount} fields", lineNumber, fields.Length);
+
+                    if (fields.Length != headers.Length)
+                    {
+                        _logger.LogWarning("⚠️ [RR01_SPECIAL] Field count mismatch on line {LineNumber}: expected {Expected}, got {Actual}",
+                            lineNumber, headers.Length, fields.Length);
+                    }
+
+                    // Create model instance
+                    var record = new T();
+                    var properties = typeof(T).GetProperties();
+
+                    for (int i = 0; i < Math.Min(headers.Length, fields.Length); i++)
+                    {
+                        var headerName = headers[i];
+                        var fieldValue = fields[i];
+
+                        // Find property by column name or property name
+                        var property = properties.FirstOrDefault(p =>
+                        {
+                            var columnAttr = p.GetCustomAttribute<ColumnAttribute>();
+                            var targetName = columnAttr?.Name ?? p.Name;
+                            return string.Equals(targetName, headerName, StringComparison.OrdinalIgnoreCase);
+                        });
+
+                        if (property != null && property.CanWrite)
+                        {
+                            try
+                            {
+                                var convertedValue = ConvertCsvValue(fieldValue, property.PropertyType);
+                                property.SetValue(record, convertedValue);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogWarning("⚠️ [RR01_SPECIAL] Field conversion error for {Property}: {Error}",
+                                    property.Name, ex.Message);
+                            }
+                        }
+                    }
+
+                    // Set common properties
+                    SetCommonProperties(record, ngayDL, file.FileName);
+                    records.Add(record);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning("❌ [RR01_SPECIAL] Error parsing line {LineNumber}: {Error}", lineNumber, ex.Message);
+                }
+            }
+
+            _logger.LogInformation("✅ [RR01_SPECIAL] Parsed {RecordCount} records", records.Count);
+            return records;
+        }
+
+        /// <summary>
+        /// Parse RR01 data line with special format: "field1,""field2"",""field3""..."
+        /// </summary>
+        private string[] ParseRR01DataLine(string dataLine)
+        {
+            var fields = new List<string>();
+
+            // Remove outer quotes if present
+            var trimmed = dataLine.Trim();
+            if (trimmed.StartsWith("\"") && trimmed.EndsWith("\""))
+            {
+                trimmed = trimmed.Substring(1, trimmed.Length - 2);
+            }
+
+            // Split by ,"" pattern
+            var parts = trimmed.Split(new string[] { ",\"\"" }, StringSplitOptions.None);
+
+            for (int i = 0; i < parts.Length; i++)
+            {
+                var part = parts[i];
+
+                // Clean up the field value
+                if (i == 0)
+                {
+                    // First field: remove trailing space and comma if any
+                    part = part.TrimEnd(' ', ',');
+                }
+                else
+                {
+                    // Other fields: remove trailing quotes if present
+                    if (part.EndsWith("\""))
+                    {
+                        part = part.Substring(0, part.Length - 1);
+                    }
+                }
+
+                // Unescape any remaining double quotes
+                part = part.Replace("\"\"", "\"").Trim();
+                fields.Add(part);
+            }
+
+            return fields.ToArray();
+        }
         private async Task<List<T>> ParseGenericCSVAsync<T>(IFormFile file, string? statementDate = null)
             where T : class, new()
         {
@@ -330,10 +510,21 @@ namespace TinhKhoanApp.Api.Services
             using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
             using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
 
-            // Configure CSV để bỏ qua missing fields và handle auto-increment fields
+            // 🔧 ENHANCED CSV Configuration để handle complex formats như RR01
             csv.Context.Configuration.MissingFieldFound = null; // Bỏ qua fields không tồn tại
             csv.Context.Configuration.HeaderValidated = null; // Bỏ qua validation header
             csv.Context.Configuration.PrepareHeaderForMatch = args => args.Header.ToUpper(); // Case insensitive
+
+            // 🔧 FIX: Enhanced CSV parsing for complex formats with nested quotes
+            csv.Context.Configuration.BadDataFound = null; // Bỏ qua bad data thay vì throw exception
+            csv.Context.Configuration.Quote = '"'; // Standard quote character
+            csv.Context.Configuration.Escape = '"'; // Escape character for nested quotes
+            csv.Context.Configuration.Mode = CsvMode.RFC4180; // Standard CSV mode
+            // csv.Context.Configuration.TrimOptions = TrimOptions.Trim; // TrimOptions not available - removed
+            csv.Context.Configuration.IgnoreBlankLines = true; // Skip empty lines
+            csv.Context.Configuration.AllowComments = false; // No comment support
+
+            _logger.LogInformation("🔧 [CSV_PARSE] Enhanced CSV configuration applied for complex format handling");
 
             // Auto-configure CSV mapping
             csv.Read();
@@ -342,6 +533,22 @@ namespace TinhKhoanApp.Api.Services
             // Log headers để debug
             var headers = csv.HeaderRecord;
             _logger.LogInformation("📊 [CSV_PARSE] Headers found: {Headers}", string.Join(", ", headers ?? new string[0]));
+
+            // 🔧 DEBUG: Log first few raw fields to understand parsing
+            if (csv.Read())
+            {
+                _logger.LogInformation("🔍 [CSV_PARSE] First data row - raw fields count: {Count}", csv.Parser.Count);
+                for (int i = 0; i < Math.Min(5, csv.Parser.Count); i++)
+                {
+                    var rawField = csv.Parser[i];
+                    _logger.LogInformation("🔍 [CSV_PARSE] Field[{Index}]: '{Value}' (length: {Length})",
+                        i, rawField?.Replace("\r", "\\r").Replace("\n", "\\n") ?? "NULL", rawField?.Length ?? 0);
+                }
+
+                // Reset để parse lại dòng đầu tiên trong main loop
+                // Note: Cannot set Parser.Row directly as it's read-only
+                // The main loop will handle this row properly
+            }
 
             // Log model properties để debug
             var modelProps = typeof(T).GetProperties().Select(p => p.Name);
@@ -386,14 +593,53 @@ namespace TinhKhoanApp.Api.Services
                         {
                             try
                             {
-                                var value = csv.GetField(headerName);
+                                // 🔧 ENHANCED: Try multiple approaches to get field value
+                                string? value = null;
+
+                                try
+                                {
+                                    value = csv.GetField(headerName);
+                                }
+                                catch (Exception getFieldEx)
+                                {
+                                    _logger.LogDebug("🔧 [CSV_PARSE] GetField failed for {HeaderName}, trying by index: {Error}",
+                                        headerName, getFieldEx.Message);
+
+                                    // Fallback: Try getting by header index
+                                    var headerIndex = Array.IndexOf(headers ?? new string[0], headerName);
+                                    if (headerIndex >= 0 && headerIndex < csv.Parser.Count)
+                                    {
+                                        try
+                                        {
+                                            value = csv.Parser[headerIndex];
+                                        }
+                                        catch (Exception indexEx)
+                                        {
+                                            _logger.LogDebug("🔧 [CSV_PARSE] Index access also failed: {Error}", indexEx.Message);
+                                        }
+                                    }
+                                }
+
                                 if (!string.IsNullOrEmpty(value))
                                 {
+                                    // 🔧 ENHANCED: Clean up value (remove extra quotes, trim)
+                                    value = value.Trim();
+
+                                    // Handle nested quotes: remove outer quotes if present
+                                    if (value.StartsWith("\"") && value.EndsWith("\"") && value.Length > 1)
+                                    {
+                                        value = value.Substring(1, value.Length - 2);
+                                        // Replace escaped quotes with single quotes
+                                        value = value.Replace("\"\"", "\"");
+                                    }
+
                                     // Convert value based on property type
                                     var convertedValue = ConvertCsvValue(value, prop.PropertyType);
                                     if (convertedValue != null)
                                     {
                                         prop.SetValue(record, convertedValue);
+                                        _logger.LogDebug("✅ [CSV_PARSE] Successfully set {PropertyName} = {Value}",
+                                            prop.Name, value.Length > 50 ? value.Substring(0, 50) + "..." : value);
                                     }
                                 }
                             }
@@ -647,7 +893,7 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Convert CSV string value to proper type với number formatting chuẩn
+        /// Convert CSV string value to proper type với number formatting chuẩn và enhanced cleaning
         /// </summary>
         private object? ConvertCsvValue(string csvValue, Type targetType)
         {
@@ -656,35 +902,63 @@ namespace TinhKhoanApp.Api.Services
 
             try
             {
+                // 🔧 ENHANCED: Advanced string cleaning for complex CSV formats
+                var cleanedValue = csvValue.Trim();
+
+                // Remove BOM if present
+                if (cleanedValue.Length > 0 && cleanedValue[0] == '\uFEFF')
+                {
+                    cleanedValue = cleanedValue.Substring(1);
+                }
+
+                // Handle quoted values with potential nested content
+                if (cleanedValue.StartsWith("\"") && cleanedValue.EndsWith("\"") && cleanedValue.Length > 1)
+                {
+                    cleanedValue = cleanedValue.Substring(1, cleanedValue.Length - 2);
+                    cleanedValue = cleanedValue.Replace("\"\"", "\""); // Unescape quotes
+                }
+
+                // Remove extra whitespace
+                cleanedValue = cleanedValue.Trim();
+
                 // Handle nullable types
                 var underlyingType = Nullable.GetUnderlyingType(targetType) ?? targetType;
 
                 if (underlyingType == typeof(string))
                 {
-                    return csvValue.Trim();
+                    // 🔧 For strings, apply additional cleaning for bank data
+                    var result = cleanedValue;
+
+                    // Handle special characters in bank data
+                    if (result.Contains("'") && result.StartsWith("'"))
+                    {
+                        result = result.Substring(1); // Remove leading quote
+                    }
+
+                    return result;
                 }
                 else if (underlyingType == typeof(decimal))
                 {
-                    // Chuẩn hóa format số: ngăn cách hàng nghìn = dấu phẩy, thập phân = dấu chấm
-                    var normalizedValue = csvValue.Replace(",", "").Trim(); // Bỏ dấu phẩy ngăn cách hàng nghìn
+                    // 🔧 ENHANCED: Use cleaned value for number parsing
+                    var normalizedValue = cleanedValue.Replace(",", "").Replace(" ", "").Trim();
                     return decimal.TryParse(normalizedValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var decimalResult)
                         ? decimalResult : (decimal?)null;
                 }
                 else if (underlyingType == typeof(int))
                 {
-                    var normalizedValue = csvValue.Replace(",", "").Trim();
+                    var normalizedValue = cleanedValue.Replace(",", "").Replace(" ", "").Trim();
                     return int.TryParse(normalizedValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var intResult)
                         ? intResult : (int?)null;
                 }
                 else if (underlyingType == typeof(long))
                 {
-                    var normalizedValue = csvValue.Replace(",", "").Trim();
+                    var normalizedValue = cleanedValue.Replace(",", "").Replace(" ", "").Trim();
                     return long.TryParse(normalizedValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var longResult)
                         ? longResult : (long?)null;
                 }
                 else if (underlyingType == typeof(double))
                 {
-                    var normalizedValue = csvValue.Replace(",", "").Trim();
+                    var normalizedValue = cleanedValue.Replace(",", "").Replace(" ", "").Trim();
                     return double.TryParse(normalizedValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var doubleResult)
                         ? doubleResult : (double?)null;
                 }
