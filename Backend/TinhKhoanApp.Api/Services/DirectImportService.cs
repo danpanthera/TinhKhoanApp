@@ -660,7 +660,21 @@ namespace TinhKhoanApp.Api.Services
                 }
                 else if (underlyingType == typeof(DateTime))
                 {
-                    return DateTime.TryParse(csvValue, out var dateResult) ? dateResult : (DateTime?)null;
+                    // Support multiple date formats: dd/MM/yyyy, yyyy-MM-dd, dd-MM-yyyy, etc.
+                    string[] dateFormats = {
+                        "dd/MM/yyyy", "MM/dd/yyyy", "yyyy-MM-dd", "dd-MM-yyyy",
+                        "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "yyyy-MM-dd HH:mm:ss",
+                        "yyyyMMdd", "ddMMyyyy"
+                    };
+
+                    if (DateTime.TryParseExact(csvValue.Trim(), dateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateResult))
+                    {
+                        return dateResult;
+                    }
+
+                    // Fallback to standard parsing
+                    return DateTime.TryParse(csvValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out var fallbackDate)
+                        ? fallbackDate : (DateTime?)null;
                 }
                 else if (underlyingType == typeof(bool))
                 {
