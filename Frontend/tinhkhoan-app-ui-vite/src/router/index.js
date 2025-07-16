@@ -29,18 +29,6 @@ const routes = [
     name: "login",
     component: LoginView,
   },
-  // 🔍 Debug route for testing stores
-  {
-    path: "/store-debug",
-    name: "store-debug",
-    component: () => import("../components/StoreDebugPanel.vue"),
-  },
-  // 🧪 Frontend debug route for testing API and stores
-  {
-    path: "/frontend-debug",
-    name: "frontend-debug",
-    component: () => import("../components/FrontendDebug.vue"),
-  },
   {
     path: "/about",
     name: "about",
@@ -147,23 +135,11 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: "/debug-dropdown",
-    name: "debug-dropdown",
-    component: () =>
-      import(/* webpackChunkName: "debug" */ "../components/DebugDropdown.vue"),
-  },
-  {
     path: "/performance-dashboard",
     name: "performance-dashboard",
     component: () =>
       import(/* webpackChunkName: "admin" */ "../components/PerformanceDashboard.vue"),
     meta: { requiresAuth: true }
-  },
-  {
-    path: "/debug-api",
-    name: "debug-api",
-    component: () =>
-      import(/* webpackChunkName: "debug" */ "../components/DebugAPIComponent.vue"),
   },
   // === DASHBOARD ROUTES ===
   {
