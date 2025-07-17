@@ -321,7 +321,7 @@
             <div v-else-if="filteredResults[0]?.directPreview && filteredResults[0]?.previewData" class="direct-preview-section">
               <div class="table-summary">
                 <p><strong>🎯 Direct Preview từ {{ filteredResults[0].dataType }} Table</strong></p>
-                <p>Hiển thị {{ filteredResults[0].previewData.length }} / {{ filteredResults[0].recordCount }} bản ghi</p>
+                <p>Hiển thị {{ filteredResults[0].previewData.rows?.length || 0 }} / {{ filteredResults[0].recordCount }} bản ghi</p>
                 <p class="data-source-info">Nguồn: Trực tiếp từ DataTable (không qua Import Records)</p>
               </div>
 
@@ -330,13 +330,13 @@
                   <thead class="agribank-thead">
                     <tr>
                       <th style="width: 50px; text-align: center;">#</th>
-                      <th v-for="(column, index) in Object.keys(filteredResults[0].previewData[0] || {}).slice(0, 10)" :key="index">
+                      <th v-for="(column, index) in Object.keys(filteredResults[0].previewData.rows?.[0] || {}).slice(0, 10)" :key="index">
                         {{ column }}
                       </th>
                     </tr>
                   </thead>
                   <tbody class="agribank-tbody">
-                    <tr v-for="(record, recordIndex) in filteredResults[0].previewData.slice(0, 50)" :key="recordIndex">
+                    <tr v-for="(record, recordIndex) in (filteredResults[0].previewData.rows || []).slice(0, 50)" :key="recordIndex">
                       <td style="text-align: center; font-weight: bold; color: #8B1538;">{{ recordIndex + 1 }}</td>
                       <td v-for="(column, columnIndex) in Object.keys(record).slice(0, 10)" :key="columnIndex">
                         <span :title="record[column]">{{ formatCellValue(record[column]) }}</span>
@@ -1265,7 +1265,7 @@ const viewDataType = async (dataType) => {
 
       // Set data cho modal với additional date info if selected
       const dateInfo = selectedFromDate.value ? ` (Date: ${formatDate(selectedFromDate.value)})` : ''
-      
+
       filteredResults.value = [{
         dataType: dataType,
         recordCount: previewResult.totalRecords,
@@ -1274,7 +1274,7 @@ const viewDataType = async (dataType) => {
         dateFilter: selectedFromDate.value || null
       }]
 
-      showSuccess(`📊 Xem trước ${previewResult.data.length}/${previewResult.totalRecords} records ${dataType}${dateInfo} (Direct Preview)`)
+      showSuccess(`📊 Xem trước ${formattedData.rows?.length || 0}/${previewResult.totalRecords} records ${dataType}${dateInfo} (Direct Preview)`)
       showDataViewModal.value = true
 
     } catch (error) {
