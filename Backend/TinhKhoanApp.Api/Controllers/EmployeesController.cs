@@ -518,5 +518,35 @@ namespace TinhKhoanApp.Api.Controllers
                 return StatusCode(500, $"Error updating admin position: {ex.Message}");
             }
         }
+
+        // 🔍 TEST: Direct Preview endpoint trong existing controller
+        [HttpGet("direct-preview-test")]
+        public async Task<ActionResult<object>> DirectPreviewTest()
+        {
+            try
+            {
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                var command = connection.CreateCommand();
+                command.CommandText = "SELECT COUNT(*) FROM DP01";
+
+                var result = await command.ExecuteScalarAsync();
+                var count = result != null ? Convert.ToInt32(result) : 0;
+
+                await connection.CloseAsync();
+
+                return Ok(new
+                {
+                    Message = "✅ Direct Preview Test Success",
+                    DP01Count = count,
+                    Timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+        }
     }
 }

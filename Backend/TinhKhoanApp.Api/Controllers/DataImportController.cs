@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using TinhKhoanApp.Api.Services.Interfaces;
+using TinhKhoanApp.Api.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace TinhKhoanApp.Api.Controllers
 {
@@ -14,13 +16,16 @@ namespace TinhKhoanApp.Api.Controllers
     {
         private readonly ILogger<DataImportController> _logger;
         private readonly IDirectImportService _directImportService;
+        private readonly ApplicationDbContext _context;
 
         public DataImportController(
             ILogger<DataImportController> logger,
-            IDirectImportService directImportService)
+            IDirectImportService directImportService,
+            ApplicationDbContext context)
         {
             _logger = logger;
             _directImportService = directImportService;
+            _context = context;
         }
 
         // 🆕 NEW: POST: api/DataImport/upload-direct - Upload using DirectImportService
@@ -286,6 +291,7 @@ namespace TinhKhoanApp.Api.Controllers
         }
 
         // [HttpDelete("{id}")] // ❌ DISABLED: Conflict with new delete route
+        [HttpDelete("legacy/{id}")]  // 🔧 FIX: Add explicit HTTP method to fix Swagger error
         [Obsolete("Use DirectImportService instead")]
         public async Task<IActionResult> DeleteImportedData(int id)
         {
@@ -351,6 +357,176 @@ namespace TinhKhoanApp.Api.Controllers
                 return StatusCode(500, new { message = "Error clearing table data", error = ex.Message });
             }
         }
+
+        // 🚀 DIRECT PREVIEW ENDPOINTS - Bypass ImportedDataRecords for better performance
+
+        /// <summary>
+        /// Lấy danh sách tất cả data types với record counts trực tiếp từ DataTables
+        /// </summary>
+        [HttpGet("direct-preview/data-types")]
+        public async Task<ActionResult<object>> GetDirectPreviewDataTypes()
+        {
+            try
+            {
+                var dataTypeCounts = new Dictionary<string, int>();
+                var countQueries = new Dictionary<string, string>
+                {
+                    ["DP01"] = "SELECT COUNT(*) FROM DP01",
+                    ["DPDA"] = "SELECT COUNT(*) FROM DPDA",
+                    ["EI01"] = "SELECT COUNT(*) FROM EI01",
+                    ["GL01"] = "SELECT COUNT(*) FROM GL01",
+                    ["GL41"] = "SELECT COUNT(*) FROM GL41",
+                    ["LN01"] = "SELECT COUNT(*) FROM LN01",
+                    ["LN03"] = "SELECT COUNT(*) FROM LN03",
+                    ["RR01"] = "SELECT COUNT(*) FROM RR01"
+                };
+
+                foreach (var (dataType, query) in countQueries)
+                {
+                    try
+                    {
+                        var connection = _context.Database.GetDbConnection();
+                        await connection.OpenAsync();
+
+                        var command = connection.CreateCommand();
+                        command.CommandText = query;
+
+                        var countResult = await command.ExecuteScalarAsync();
+                        var count = countResult != null ? Convert.ToInt32(countResult) : 0;
+
+                        dataTypeCounts[dataType] = count;
+                        await connection.CloseAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning($"⚠️ Không thể đếm bảng {dataType}: {ex.Message}");
+                        dataTypeCounts[dataType] = 0;
+                    }
+                }
+
+                var result = dataTypeCounts.Select(kvp => new
+                {
+                    DataType = kvp.Key,
+                    RecordCount = kvp.Value,
+                    LastUpdated = DateTime.Now
+                }).ToArray();
+
+                _logger.LogInformation($"📊 Direct preview data types: {result.Length} types found");
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Lỗi khi lấy direct preview data types");
+                return StatusCode(500, new { error = "Lỗi server", details = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Preview data trực tiếp từ bảng theo data type với pagination
+        /// </summary>
+        [HttpGet("direct-preview/{dataType}")]
+        public async Task<ActionResult<object>> PreviewDataTypeDirect(string dataType, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(dataType))
+                    return BadRequest(new { error = "Data type không được để trống" });
+
+                var validDataTypes = new[] { "DP01", "DPDA", "EI01", "GL01", "GL41", "LN01", "LN03", "RR01" };
+                var normalizedDataType = dataType.ToUpper();
+
+                if (!validDataTypes.Contains(normalizedDataType))
+                    return BadRequest(new { error = $"Data type '{dataType}' không được hỗ trợ" });
+
+                if (page < 1) page = 1;
+                if (pageSize < 1 || pageSize > 1000) pageSize = 50;
+
+                var offset = (page - 1) * pageSize;
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                // Count total records
+                var countCommand = connection.CreateCommand();
+                countCommand.CommandText = $"SELECT COUNT(*) FROM {normalizedDataType}";
+                var countResult = await countCommand.ExecuteScalarAsync();
+                var totalRecords = countResult != null ? Convert.ToInt32(countResult) : 0;
+
+                // Get paginated data
+                var dataCommand = connection.CreateCommand();
+                dataCommand.CommandText = $@"
+                    SELECT * FROM {normalizedDataType}
+                    ORDER BY Id
+                    OFFSET {offset} ROWS
+                    FETCH NEXT {pageSize} ROWS ONLY";
+
+                var results = new List<Dictionary<string, object>>();
+                using (var reader = await dataCommand.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var row = new Dictionary<string, object>();
+                        for (int i = 0; i < reader.FieldCount; i++)
+                        {
+                            var value = reader.GetValue(i);
+                            var columnName = reader.GetName(i);
+
+                            if (value == DBNull.Value || value == null)
+                            {
+                                row[columnName] = null!;
+                            }
+                            else if (value is DateTime dateTime)
+                            {
+                                // Always convert DateTime to string to avoid VietnamDateTimeConverter issues
+                                try
+                                {
+                                    if (dateTime == DateTime.MinValue || dateTime.Year < 1900 || dateTime.Year > 9999)
+                                    {
+                                        row[columnName] = "InvalidDate";
+                                    }
+                                    else
+                                    {
+                                        row[columnName] = dateTime.ToString("yyyy-MM-dd HH:mm:ss");
+                                    }
+                                }
+                                catch
+                                {
+                                    row[columnName] = "DateFormatError";
+                                }
+                            }
+                            else
+                            {
+                                row[columnName] = value;
+                            }
+                        }
+                        results.Add(row);
+                    }
+                }
+
+                await connection.CloseAsync();
+
+                var response = new
+                {
+                    DataType = normalizedDataType,
+                    TotalRecords = totalRecords,
+                    Page = page,
+                    PageSize = pageSize,
+                    TotalPages = (int)Math.Ceiling((double)totalRecords / pageSize),
+                    Data = results,
+                    Success = true,
+                    Message = $"✅ Lấy thành công {results.Count} records từ bảng {normalizedDataType}"
+                };
+
+                _logger.LogInformation($"📋 Direct preview {normalizedDataType}: page {page}, {results.Count}/{totalRecords} records");
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"❌ Lỗi khi preview {dataType}");
+                return StatusCode(500, new { error = $"Lỗi server khi preview {dataType}", details = ex.Message });
+            }
+        }
+
+        // ...existing code...
     }
 
     // 📊 Data Transfer Objects

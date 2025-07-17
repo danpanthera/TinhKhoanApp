@@ -317,6 +317,40 @@
               </div>
             </div>
 
+            <!-- Show direct preview data -->
+            <div v-else-if="filteredResults[0]?.directPreview && filteredResults[0]?.previewData" class="direct-preview-section">
+              <div class="table-summary">
+                <p><strong>🎯 Direct Preview từ {{ filteredResults[0].dataType }} Table</strong></p>
+                <p>Hiển thị {{ filteredResults[0].previewData.length }} / {{ filteredResults[0].recordCount }} bản ghi</p>
+                <p class="data-source-info">Nguồn: Trực tiếp từ DataTable (không qua Import Records)</p>
+              </div>
+
+              <div class="responsive-table-wrapper">
+                <table class="data-table enhanced-table">
+                  <thead class="agribank-thead">
+                    <tr>
+                      <th style="width: 50px; text-align: center;">#</th>
+                      <th v-for="(column, index) in Object.keys(filteredResults[0].previewData[0] || {}).slice(0, 10)" :key="index">
+                        {{ column }}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="agribank-tbody">
+                    <tr v-for="(record, recordIndex) in filteredResults[0].previewData.slice(0, 50)" :key="recordIndex">
+                      <td style="text-align: center; font-weight: bold; color: #8B1538;">{{ recordIndex + 1 }}</td>
+                      <td v-for="(column, columnIndex) in Object.keys(record).slice(0, 10)" :key="columnIndex">
+                        <span :title="record[column]">{{ formatCellValue(record[column]) }}</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="table-note">
+                <p><i>🎯 Hiển thị 10 cột đầu tiên và tối đa 50 bản ghi từ Direct Preview. Đây là dữ liệu trực tiếp từ DataTable.</i></p>
+              </div>
+            </div>
+
             <!-- Show import list if no processed data -->
             <div v-else>
               <table class="data-table enhanced-table">
@@ -337,7 +371,7 @@
                     <td>{{ item.Status }}</td>
                     <td>
                       <button
-                        @click="previewData(item.Id)"
+                        @click="previewImportRecord(item.Id)"
                         class="btn-action btn-view"
                         title="Xem chi tiết"
                       >
@@ -1205,73 +1239,55 @@ const viewDataType = async (dataType) => {
     loadingMessage.value = `Đang tải dữ liệu ${dataType}...`
     selectedDataType.value = dataType
 
-    // If a date is selected, fetch data by date
-    if (selectedFromDate.value) {
-      const dateStr = selectedFromDate.value.replace(/-/g, '')
-      const result = await rawDataService.getByStatementDate(dataType, dateStr)
+    // � ALWAYS USE DIRECT PREVIEW - bỏ logic cũ với selectedFromDate
+    console.log(`🎯 Direct preview for ${dataType}...`)
 
-      if (result.success) {
-        filteredResults.value = result.data || []
+    try {
+      // Import DirectPreviewService
+      const { default: directPreviewService } = await import('../services/directPreviewService.js')
 
-        if (filteredResults.value.length === 0) {
-          showError(`Không có dữ liệu ${dataType} cho ngày ${formatDate(selectedFromDate.value)}`)
-        } else {
-          // 🔥 ENHANCED: For BC57, DPDA, LN01, GL41, try to show processed data instead of raw import data
-          if (['BC57', 'DPDA', 'LN01', 'GL41'].includes(dataType.toUpperCase()) && filteredResults.value.length > 0) {
-            const importId = filteredResults.value[0].Id
-            console.log(`🔄 Fetching processed data for ${dataType} import ID: ${importId}`)
-
-            const processedResult = await rawDataService.getProcessedData(importId)
-            if (processedResult.success && processedResult.data.processedData && processedResult.data.processedData.length > 0) {
-              // Replace import list with processed data for better viewing
-              filteredResults.value = [{
-                ...filteredResults.value[0],
-                processedData: processedResult.data.processedData,
-                tableName: processedResult.data.tableName,
-                dataSource: processedResult.data.dataSource,
-                isProcessedView: true
-              }]
-
-              showSuccess(`📊 Hiển thị ${processedResult.data.processedData.length} bản ghi đã xử lý từ ${processedResult.data.tableName}`)
-            } else {
-              showSuccess(`Hiển thị ${filteredResults.value.length} import(s) cho loại ${dataType} ngày ${formatDate(selectedFromDate.value)}`)
-            }
-          } else {
-            showSuccess(`Hiển thị ${filteredResults.value.length} import(s) cho loại ${dataType} ngày ${formatDate(selectedFromDate.value)}`)
-          }
-
-          showDataViewModal.value = true
-        }
-      } else {
-        showError(`Lỗi khi tải dữ liệu: ${result.error}`)
-        filteredResults.value = []
-      }
-    } else {
-      // Filter current results by data type - improved logic
-      const dataTypeResults = allImports.value.filter(imp => {
-        // 🔧 Enhanced filtering with multiple field checks
-        return imp.dataType === dataType ||
-               imp.category === dataType ||
-               imp.fileType === dataType ||
-               imp.originalFileType === dataType ||
-               imp.originalDataType === dataType ||
-               imp.originalCategory === dataType ||
-               (imp.Category && imp.Category === dataType) ||
-               (imp.FileType && imp.FileType === dataType);
-      });
-      filteredResults.value = dataTypeResults
-
-      if (dataTypeResults.length === 0) {
-        showError(`Chưa có dữ liệu import nào cho loại ${dataType}`)
+      // Kiểm tra xem có dữ liệu không
+      const hasData = await directPreviewService.hasData(dataType)
+      if (!hasData) {
+        showError(`Chưa có dữ liệu ${dataType} trong database`)
         return
       }
 
-      showSuccess(`Hiển thị ${dataTypeResults.length} import(s) cho loại ${dataType}`)
+      // Lấy preview data
+      const previewResult = await directPreviewService.previewDataType(dataType, 1, 100)
+      if (!previewResult.success) {
+        showError(`Lỗi khi xem trước ${dataType}: ${previewResult.error}`)
+        return
+      }
+
+      // Format data cho hiển thị
+      const formattedData = directPreviewService.formatDataForDisplay(previewResult.data, dataType)
+
+      // Set data cho modal với additional date info if selected
+      const dateInfo = selectedFromDate.value ? ` (Date: ${formatDate(selectedFromDate.value)})` : ''
+      
+      filteredResults.value = [{
+        dataType: dataType,
+        recordCount: previewResult.totalRecords,
+        previewData: formattedData,
+        directPreview: true, // Flag để biết đây là direct preview
+        dateFilter: selectedFromDate.value || null
+      }]
+
+      showSuccess(`📊 Xem trước ${previewResult.data.length}/${previewResult.totalRecords} records ${dataType}${dateInfo} (Direct Preview)`)
       showDataViewModal.value = true
+
+    } catch (error) {
+      console.error('Error viewing data type:', error)
+      showError(`Lỗi khi tải dữ liệu: ${error.message}`)
+    } finally {
+      loading.value = false
+      loadingMessage.value = ''
     }
+
   } catch (error) {
-    console.error('Error viewing data type:', error)
-    showError(`Lỗi khi tải dữ liệu: ${error.message}`)
+    console.error('Error in viewDataType:', error)
+    showError(`Lỗi khi xem dữ liệu: ${error.message}`)
   } finally {
     loading.value = false
     loadingMessage.value = ''
@@ -1476,6 +1492,46 @@ const exportRawData = () => {
   } catch (error) {
     console.error('Error exporting data:', error);
     showError(`Lỗi khi xuất dữ liệu: ${error.message}`);
+  }
+}
+
+// Preview import record method - for actual import records with valid IDs
+const previewImportRecord = async (importId) => {
+  try {
+    if (!importId) {
+      showError('Import ID không hợp lệ')
+      return
+    }
+
+    loading.value = true
+    loadingMessage.value = 'Đang tải dữ liệu chi tiết...'
+
+    const result = await rawDataService.previewData(importId)
+
+    if (result.success && result.data) {
+      // ✅ Hiển thị modal với dữ liệu thực tế từ database
+      const previewRows = result.data.PreviewRows || result.data.previewRows || []
+
+      if (previewRows && previewRows.length > 0) {
+        // Hiển thị tối đa 20 bản ghi đầu
+        const recordsToShow = previewRows.slice(0, 20)
+
+        // Cập nhật state để hiển thị modal
+        rawDataRecords.value = recordsToShow
+        showRawDataModal.value = true
+        showSuccess(`Hiển thị ${recordsToShow.length} bản ghi từ import ID: ${importId}`)
+      } else {
+        showError('Không có dữ liệu preview cho import này')
+      }
+    } else {
+      showError(`Lỗi khi tải dữ liệu preview: ${result.error}`)
+    }
+  } catch (error) {
+    console.error('Error previewing import record:', error)
+    showError(`Lỗi khi xem trước: ${error.message}`)
+  } finally {
+    loading.value = false
+    loadingMessage.value = ''
   }
 }
 

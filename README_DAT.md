@@ -10,11 +10,11 @@ Luôn để backend port là 5055, frontend port là 3000.
 
 🚨 **QUY TẮC KHỞI ĐỘNG DỰ ÁN:**
 
-- **Backend:** LUÔN dùng `./start_backend.sh`
-- **Frontend:** LUÔN dùng `./start_frontend.sh`
-- **Fast Commit:** LUÔN dùng `./fast_commit.sh, nội dung ngắn gọn nhất có thể
-- **NGHIÊM CẤM** sử dụng shell VS Code để chạy fullstack
-- **chạy bằng sqlcmd từ macOS host**
+- **Backend:** LUÔN dùng `./start_backend.sh` (từ thư mục Backend/TinhKhoanApp.Api)
+- **Frontend:** LUÔN dùng `./start_frontend.sh` (từ thư mục Frontend/tinhkhoan-app-ui-vite)
+- **Fast Commit:** LUÔN dùng `./fast_commit.sh` (từ thư mục root), nội dung ngắn gọn nhất có thể
+- **NGHIÊM CẤM** sử dụng VS Code tasks để chạy fullstack - CHỈ DÙNG SCRIPTS
+- **Database:** Chạy bằng sqlcmd từ macOS host, KHÔNG vào container
 🚨DỮ LIỆU MẪU CHUẨN CHO 08 CORE DATA - TUYỆT ĐỐI KHÔNG TẠO DỮ LIỆU MOCK DATA
 Luôn kiểm tra file test cho 08 bảng dữ liệu từ thư mục sau:
 /Users/nguyendat/Documents/DuLieuImport/DuLieuMau
