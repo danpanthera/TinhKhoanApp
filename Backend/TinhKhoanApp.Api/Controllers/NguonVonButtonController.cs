@@ -47,7 +47,15 @@ namespace TinhKhoanApp.Api.Controllers
                 var hasData = await CheckDataExists(targetDate.Value, maCN, maPGD);
                 if (!hasData)
                 {
-                    return BadRequest(new { error = "Kho dữ liệu chưa có ngày này!" });
+                    // Fallback: tìm ngày có dữ liệu gần nhất cho chi nhánh này
+                    var availableDate = await GetLatestAvailableDate(maCN, maPGD);
+                    if (!availableDate.HasValue)
+                    {
+                        return BadRequest(new { error = "Không có dữ liệu cho đơn vị này!" });
+                    }
+
+                    _logger.LogInformation("🔄 [NGUON_VON] Fallback to available date: {AvailableDate}", availableDate.Value.ToString("dd/MM/yyyy"));
+                    targetDate = availableDate.Value;
                 }
 
                 // Tính toán Nguồn vốn
@@ -163,8 +171,54 @@ namespace TinhKhoanApp.Api.Controllers
         }
 
         /// <summary>
-        /// Tính toán Nguồn vốn từ bảng DP01
+        /// Tìm ngày có dữ liệu gần nhất cho chi nhánh
         /// </summary>
+        private async Task<DateTime?> GetLatestAvailableDate(string? maCN, string? maPGD)
+        {
+            _logger.LogInformation("🔍 [NGUON_VON] Finding latest date for MA_CN: {MaCN}, MA_PGD: {MaPGD}", maCN, maPGD);
+
+            var query = _context.DP01.AsQueryable();
+
+            // Lọc theo chi nhánh
+            if (!string.IsNullOrEmpty(maCN))
+            {
+                query = query.Where(x => x.MA_CN == maCN);
+
+                // Lọc thêm theo PGD nếu có
+                if (!string.IsNullOrEmpty(maPGD))
+                {
+                    query = query.Where(x => x.MA_PGD == maPGD);
+                }
+            }
+
+            // Đếm records trước khi filter tài khoản
+            var totalBeforeFilter = await query.CountAsync();
+            _logger.LogInformation("📊 [NGUON_VON] Records before account filter: {Count}", totalBeforeFilter);
+
+            // Lọc bỏ các tài khoản không tính vào nguồn vốn
+            query = query.Where(x => x.TAI_KHOAN_HACH_TOAN != null &&
+                !x.TAI_KHOAN_HACH_TOAN.StartsWith("40") &&
+                !x.TAI_KHOAN_HACH_TOAN.StartsWith("41") &&
+                !x.TAI_KHOAN_HACH_TOAN.StartsWith("427") &&
+                x.TAI_KHOAN_HACH_TOAN != "211108");
+
+            // Đếm records sau khi filter tài khoản
+            var totalAfterFilter = await query.CountAsync();
+            _logger.LogInformation("📊 [NGUON_VON] Records after account filter: {Count}", totalAfterFilter);
+
+            // Lấy ngày gần nhất
+            var latestDate = await query
+                .OrderByDescending(x => x.NGAY_DL)
+                .Select(x => x.NGAY_DL)
+                .FirstOrDefaultAsync();
+
+            _logger.LogInformation("📅 [NGUON_VON] Latest available date: {Date}", latestDate == default(DateTime) ? "null" : latestDate.ToString("dd/MM/yyyy"));
+
+            // DateTime.MinValue (01/01/0001) cũng là valid date
+            return latestDate;
+        }        /// <summary>
+                 /// Tính toán Nguồn vốn từ bảng DP01
+                 /// </summary>
         private async Task<object> CalculateNguonVonFromDP01(DateTime targetDate, string? maCN, string? maPGD, string unitCode)
         {
             var query = _context.DP01.Where(x => x.NGAY_DL.Date == targetDate.Date);

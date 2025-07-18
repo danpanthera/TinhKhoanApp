@@ -986,8 +986,8 @@ const calculateNguonVon = async () => {
       queryParams.set('targetMonth', `${monthStr}/${selectedYear.value}`);
       calculationDescription = `quý ${selectedPeriod.value}/${selectedYear.value}`;
     } else if (selectedYear.value) {
-      // Năm - backend sẽ tự động lấy 31/12/year
-      queryParams.set('targetYear', selectedYear.value.toString());
+      // Năm - backend sẽ tự động lấy 31/12/year, gửi tháng 12
+      queryParams.set('targetMonth', `12/${selectedYear.value}`);
       calculationDescription = `năm ${selectedYear.value}`;
     } else {
       // Mặc định - ngày hiện tại

@@ -692,29 +692,47 @@ namespace TinhKhoanApp.Api.Services
             else
             {
                 // For other tables, use filename-based NGAY_DL
-                // Set NgayDL if property exists - Keep as string to match model definition
-                var ngayDLProp = type.GetProperty("NgayDL");
+                // Set NGAY_DL if property exists
+                var ngayDLProp = type.GetProperty("NGAY_DL");
                 if (ngayDLProp != null && ngayDLProp.CanWrite)
                 {
-                    // Model NgayDL property is string type, so set directly as string
-                    // SqlBulkCopy will handle the conversion from string to date column
-                    ngayDLProp.SetValue(record, ngayDL);
-                    _logger.LogDebug("🗓️ [NGAY_DL] Set NgayDL property to: {NgayDL}", ngayDL);
+                    // Check if property is DateTime type and convert from string
+                    if (ngayDLProp.PropertyType == typeof(DateTime) || ngayDLProp.PropertyType == typeof(DateTime?))
+                    {
+                        if (DateTime.TryParseExact(ngayDL, "dd/MM/yyyy", System.Globalization.CultureInfo.InvariantCulture,
+                            System.Globalization.DateTimeStyles.None, out DateTime dateValue))
+                        {
+                            ngayDLProp.SetValue(record, dateValue);
+                            _logger.LogDebug("🗓️ [NGAY_DL] Set NGAY_DL property to DateTime: {NgayDL}", dateValue.ToString("dd/MM/yyyy"));
+                        }
+                        else
+                        {
+                            _logger.LogWarning("⚠️ [NGAY_DL] Could not parse date string '{NgayDL}' to DateTime", ngayDL);
+                        }
+                    }
+                    else
+                    {
+                        // Property is string type, set directly
+                        ngayDLProp.SetValue(record, ngayDL);
+                        _logger.LogDebug("🗓️ [NGAY_DL] Set NGAY_DL property to string: {NgayDL}", ngayDL);
+                    }
                 }
             }
 
-            // Set FileName if property exists
-            var fileNameProp = type.GetProperty("FileName");
+            // Set FILE_NAME if property exists
+            var fileNameProp = type.GetProperty("FILE_NAME");
             if (fileNameProp != null && fileNameProp.CanWrite)
             {
                 fileNameProp.SetValue(record, fileName);
+                _logger.LogDebug("📁 [FILE_NAME] Set FILE_NAME property to: {FileName}", fileName);
             }
 
-            // Set CreatedDate if property exists
-            var createdDateProp = type.GetProperty("CreatedDate");
+            // Set CREATED_DATE if property exists
+            var createdDateProp = type.GetProperty("CREATED_DATE");
             if (createdDateProp != null && createdDateProp.CanWrite)
             {
-                createdDateProp.SetValue(record, DateTime.Now);
+                createdDateProp.SetValue(record, DateTime.UtcNow);
+                _logger.LogDebug("🕒 [CREATED_DATE] Set CREATED_DATE property to: {CreatedDate}", DateTime.UtcNow);
             }
         }
 
