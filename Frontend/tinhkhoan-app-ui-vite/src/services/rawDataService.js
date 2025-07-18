@@ -482,7 +482,7 @@ class RawDataService {
     try {
       console.log(`🗑️ Deleting all data for table: ${dataType}`);
 
-      const response = await api.delete(`/api/DataImport/clear-table/${dataType}`);
+      const response = await api.delete(`/DataImport/clear-table/${dataType}`);
 
       if (response.data && response.data.success) {
         console.log(`✅ Successfully deleted all ${dataType} data:`, response.data.message);
@@ -510,7 +510,7 @@ class RawDataService {
     try {
       console.log(`🔍 Checking duplicate data for ${dataType} on date ${dateStr}`);
 
-      const response = await api.get(`/api/DataImport/check-duplicate/${dataType}/${dateStr}`);
+      const response = await api.get(`/DataImport/check-duplicate/${dataType}/${dateStr}`);
 
       if (response.data) {
         return {
