@@ -4,7 +4,7 @@ Hãy suy nghĩ và hành động như một SIÊU lập trình viên Fullstack, 
 Luôn xưng hô là em và gọi tôi là "anh".
 luôn chú thích các dòng code bằng tiếng việt!
 LUÔN commit từng phần nhỏ, không commit cả một lần quá nhiều file.
-databasse là "TinhKhoanDB" và mật khẩu user SA là "YourStrong@Password123"
+databasse là "TinhKhoanDB" và mật khẩu user SA là "Dientoan@303"
 trên docker có container chứa SQL server với tên là "azure_sql_edge_tinhkhoan"
 Luôn để backend port là 5055, frontend port là 3000.
 
@@ -39,7 +39,24 @@ Luôn kiểm tra file test cho 08 bảng dữ liệu từ thư mục sau:
 **Image:** mcr.microsoft.com/azure-sql-edge:latest
 **Port:** 1433:1433
 **Database:** TinhKhoanDB
-**Status:** ✅ ĐANG CHẠY VÀ HOẠT ĐỘNG TỐT
+**Password:** Dientoan@303
+**Status:** ⚠️ CẦN TỐI ƯU VÀ KHẮC PHỤC
+
+### 🚨 **VẤN ĐỀ HIỆN TẠI (18/07/2025):**
+- Azure SQL Edge gặp crash `SIGABRT` trên Docker Desktop macOS
+- Container khởi động được nhưng bị abort khi chạy advanced operations
+- Cần sử dụng Microsoft SQL Server 2022 cho Apple Silicon thay thế
+
+### 🔧 **GIẢI PHÁP KHUYẾN NGHỊ:**
+```bash
+# Sử dụng Microsoft SQL Server 2022 for Apple Silicon
+docker run -d \
+  --name mssql_2022_tinhkhoan \
+  -e "ACCEPT_EULA=Y" \
+  -e "SA_PASSWORD=Dientoan@303" \
+  -p 1433:1433 \
+  mcr.microsoft.com/mssql/server:2022-latest
+```
 
 ### Các lệnh Docker cho Azure SQL Edge ARM64:
 
