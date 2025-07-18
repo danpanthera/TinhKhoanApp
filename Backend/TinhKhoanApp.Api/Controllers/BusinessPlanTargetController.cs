@@ -10,7 +10,7 @@ namespace TinhKhoanApp.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // Kích hoạt authentication cho Business Plan Target
+    // [Authorize] // Tạm thời bỏ authentication cho dashboard access
     public class BusinessPlanTargetController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
