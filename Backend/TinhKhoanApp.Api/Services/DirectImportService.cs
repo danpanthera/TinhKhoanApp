@@ -39,6 +39,7 @@ namespace TinhKhoanApp.Api.Services
 
         /// <summary>
         /// Import Smart Direct - tự động detect loại file và import trực tiếp
+        /// Hỗ trợ cấu hình mới: GL01 với NGAY_DL từ TR_TIME, 7 bảng khác từ filename
         /// </summary>
         public async Task<DirectImportResult> ImportSmartDirectAsync(IFormFile file, string? statementDate = null)
         {

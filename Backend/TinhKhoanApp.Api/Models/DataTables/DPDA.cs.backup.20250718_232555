@@ -1,0 +1,73 @@
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace TinhKhoanApp.Api.Models.DataTables
+{
+    /// <summary>
+    /// Bảng DPDA - Generated from database structure
+    /// Business columns first, system/temporal columns last
+    /// Synchronized with database schema
+    /// </summary>
+    [Table("DPDA")]
+    public class DPDA
+    {
+        [Column("MA_CHI_NHANH nvarchar 50 1 1")]
+        public string MA_CHI_NHANH nvarchar 50 1 1 { get; set; }
+
+        [Column("MA_KHACH_HANG nvarchar 50 1 2")]
+        public string MA_KHACH_HANG nvarchar 50 1 2 { get; set; }
+
+        [Column("TEN_KHACH_HANG nvarchar 255 1 3")]
+        public string TEN_KHACH_HANG nvarchar 255 1 3 { get; set; }
+
+        [Column("SO_TAI_KHOAN nvarchar 50 1 4")]
+        public string SO_TAI_KHOAN nvarchar 50 1 4 { get; set; }
+
+        [Column("LOAI_THE nvarchar 50 1 5")]
+        public string LOAI_THE nvarchar 50 1 5 { get; set; }
+
+        [Column("SO_THE nvarchar 50 1 6")]
+        public string SO_THE nvarchar 50 1 6 { get; set; }
+
+        [Column("NGAY_NOP_DON datetime 0 1 7")]
+        public string NGAY_NOP_DON datetime 0 1 7 { get; set; }
+
+        [Column("NGAY_PHAT_HANH datetime 0 1 8")]
+        public string NGAY_PHAT_HANH datetime 0 1 8 { get; set; }
+
+        [Column("USER_PHAT_HANH nvarchar 50 1 9")]
+        public string USER_PHAT_HANH nvarchar 50 1 9 { get; set; }
+
+        [Column("TRANG_THAI nvarchar 50 1 10")]
+        public string TRANG_THAI nvarchar 50 1 10 { get; set; }
+
+        [Column("PHAN_LOAI nvarchar 50 1 11")]
+        public string PHAN_LOAI nvarchar 50 1 11 { get; set; }
+
+        [Column("GIAO_THE nvarchar 50 1 12")]
+        public string GIAO_THE nvarchar 50 1 12 { get; set; }
+
+        [Column("LOAI_PHAT_HANH nvarchar 50 1 13")]
+        public string LOAI_PHAT_HANH nvarchar 50 1 13 { get; set; }
+
+        [Column("Id bigint 19 0 14")]
+        public string Id bigint 19 0 14 { get; set; }
+
+        [Column("NGAY_DL datetime 0 0 15")]
+        public string NGAY_DL datetime 0 0 15 { get; set; }
+
+        [Column("CREATED_DATE datetime2 0 0 16")]
+        public string CREATED_DATE datetime2 0 0 16 { get; set; }
+
+        [Column("UPDATED_DATE datetime2 0 0 17")]
+        public string UPDATED_DATE datetime2 0 0 17 { get; set; }
+
+        [Column("FILE_NAME nvarchar 255 1 18")]
+        public string FILE_NAME nvarchar 255 1 18 { get; set; }
+
+        [Column("(18 rows affected)")]
+        public string (18 rows affected) { get; set; }
+
+    }
+}

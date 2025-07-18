@@ -1,0 +1,115 @@
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace TinhKhoanApp.Api.Models.DataTables
+{
+    /// <summary>
+    /// Bảng GL01 - Generated from database structure
+    /// Business columns first, system/temporal columns last
+    /// Synchronized with database schema
+    /// </summary>
+    [Table("GL01")]
+    public class GL01
+    {
+        [Column("STS nvarchar 50 1 1")]
+        public string STS nvarchar 50 1 1 { get; set; }
+
+        [Column("NGAY_GD datetime 0 1 2")]
+        public string NGAY_GD datetime 0 1 2 { get; set; }
+
+        [Column("NGUOI_TAO nvarchar 50 1 3")]
+        public string NGUOI_TAO nvarchar 50 1 3 { get; set; }
+
+        [Column("DYSEQ bigint 19 1 4")]
+        public string DYSEQ bigint 19 1 4 { get; set; }
+
+        [Column("TR_TYPE nvarchar 50 1 5")]
+        public string TR_TYPE nvarchar 50 1 5 { get; set; }
+
+        [Column("DT_SEQ bigint 19 1 6")]
+        public string DT_SEQ bigint 19 1 6 { get; set; }
+
+        [Column("TAI_KHOAN nvarchar 50 1 7")]
+        public string TAI_KHOAN nvarchar 50 1 7 { get; set; }
+
+        [Column("TEN_TK nvarchar 255 1 8")]
+        public string TEN_TK nvarchar 255 1 8 { get; set; }
+
+        [Column("SO_TIEN_GD decimal 18 1 9")]
+        public string SO_TIEN_GD decimal 18 1 9 { get; set; }
+
+        [Column("POST_BR nvarchar 50 1 10")]
+        public string POST_BR nvarchar 50 1 10 { get; set; }
+
+        [Column("LOAI_TIEN nvarchar 10 1 11")]
+        public string LOAI_TIEN nvarchar 10 1 11 { get; set; }
+
+        [Column("DR_CR nvarchar 10 1 12")]
+        public string DR_CR nvarchar 10 1 12 { get; set; }
+
+        [Column("MA_KH nvarchar 50 1 13")]
+        public string MA_KH nvarchar 50 1 13 { get; set; }
+
+        [Column("TEN_KH nvarchar 255 1 14")]
+        public string TEN_KH nvarchar 255 1 14 { get; set; }
+
+        [Column("CCA_USRID nvarchar 50 1 15")]
+        public string CCA_USRID nvarchar 50 1 15 { get; set; }
+
+        [Column("TR_EX_RT decimal 10 1 16")]
+        public string TR_EX_RT decimal 10 1 16 { get; set; }
+
+        [Column("REMARK nvarchar 500 1 17")]
+        public string REMARK nvarchar 500 1 17 { get; set; }
+
+        [Column("BUS_CODE nvarchar 50 1 18")]
+        public string BUS_CODE nvarchar 50 1 18 { get; set; }
+
+        [Column("UNIT_BUS_CODE nvarchar 50 1 19")]
+        public string UNIT_BUS_CODE nvarchar 50 1 19 { get; set; }
+
+        [Column("TR_CODE nvarchar 50 1 20")]
+        public string TR_CODE nvarchar 50 1 20 { get; set; }
+
+        [Column("TR_NAME nvarchar 255 1 21")]
+        public string TR_NAME nvarchar 255 1 21 { get; set; }
+
+        [Column("REFERENCE nvarchar 255 1 22")]
+        public string REFERENCE nvarchar 255 1 22 { get; set; }
+
+        [Column("VALUE_DATE datetime 0 1 23")]
+        public string VALUE_DATE datetime 0 1 23 { get; set; }
+
+        [Column("DEPT_CODE nvarchar 50 1 24")]
+        public string DEPT_CODE nvarchar 50 1 24 { get; set; }
+
+        [Column("TR_TIME datetime 0 1 25")]
+        public string TR_TIME datetime 0 1 25 { get; set; }
+
+        [Column("COMFIRM nvarchar 50 1 26")]
+        public string COMFIRM nvarchar 50 1 26 { get; set; }
+
+        [Column("TRDT_TIME datetime 0 1 27")]
+        public string TRDT_TIME datetime 0 1 27 { get; set; }
+
+        [Column("Id bigint 19 0 28")]
+        public string Id bigint 19 0 28 { get; set; }
+
+        [Column("NGAY_DL datetime 0 0 29")]
+        public string NGAY_DL datetime 0 0 29 { get; set; }
+
+        [Column("CREATED_DATE datetime2 0 0 30")]
+        public string CREATED_DATE datetime2 0 0 30 { get; set; }
+
+        [Column("UPDATED_DATE datetime2 0 0 31")]
+        public string UPDATED_DATE datetime2 0 0 31 { get; set; }
+
+        [Column("FILE_NAME nvarchar 255 1 32")]
+        public string FILE_NAME nvarchar 255 1 32 { get; set; }
+
+        [Column("(32 rows affected)")]
+        public string (32 rows affected) { get; set; }
+
+    }
+}
