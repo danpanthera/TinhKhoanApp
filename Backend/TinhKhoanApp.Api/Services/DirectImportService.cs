@@ -669,14 +669,38 @@ namespace TinhKhoanApp.Api.Services
         {
             var type = typeof(T);
 
-            // Set NgayDL if property exists - Keep as string to match model definition
-            var ngayDLProp = type.GetProperty("NgayDL");
-            if (ngayDLProp != null && ngayDLProp.CanWrite)
+            // Special handling for GL01 - get NGAY_DL from TR_TIME column instead of filename
+            if (type.Name == "GL01")
             {
-                // Model NgayDL property is string type, so set directly as string
-                // SqlBulkCopy will handle the conversion from string to date column
-                ngayDLProp.SetValue(record, ngayDL);
-                _logger.LogDebug("🗓️ [NGAY_DL] Set NgayDL property to: {NgayDL}", ngayDL);
+                var ngayDLProp = type.GetProperty("NGAY_DL");
+                var trTimeProp = type.GetProperty("TR_TIME");
+
+                if (ngayDLProp != null && ngayDLProp.CanWrite && trTimeProp != null)
+                {
+                    var trTimeValue = trTimeProp.GetValue(record) as string;
+                    if (!string.IsNullOrEmpty(trTimeValue))
+                    {
+                        var convertedDate = ConvertTrTimeToNgayDL(trTimeValue);
+                        if (convertedDate.HasValue)
+                        {
+                            ngayDLProp.SetValue(record, convertedDate.Value);
+                            _logger.LogDebug("🗓️ [GL01_NGAY_DL] Converted TR_TIME '{TrTime}' to NGAY_DL: {NgayDL}", trTimeValue, convertedDate.Value);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // For other tables, use filename-based NGAY_DL
+                // Set NgayDL if property exists - Keep as string to match model definition
+                var ngayDLProp = type.GetProperty("NgayDL");
+                if (ngayDLProp != null && ngayDLProp.CanWrite)
+                {
+                    // Model NgayDL property is string type, so set directly as string
+                    // SqlBulkCopy will handle the conversion from string to date column
+                    ngayDLProp.SetValue(record, ngayDL);
+                    _logger.LogDebug("🗓️ [NGAY_DL] Set NgayDL property to: {NgayDL}", ngayDL);
+                }
             }
 
             // Set FileName if property exists
@@ -691,6 +715,40 @@ namespace TinhKhoanApp.Api.Services
             if (createdDateProp != null && createdDateProp.CanWrite)
             {
                 createdDateProp.SetValue(record, DateTime.Now);
+            }
+        }
+
+        /// <summary>
+        /// Convert TR_TIME format (DD-MMM-YY) to DateTime for GL01 NGAY_DL
+        /// Examples: "02-Jun-25" -> 02/06/2025, "15-Dec-24" -> 15/12/2024
+        /// </summary>
+        private DateTime? ConvertTrTimeToNgayDL(string trTime)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(trTime))
+                    return null;
+
+                // Parse format DD-MMM-YY (e.g., "02-Jun-25")
+                var formats = new[] { "dd-MMM-yy", "d-MMM-yy", "dd-MMM-yyyy", "d-MMM-yyyy" };
+
+                foreach (var format in formats)
+                {
+                    if (DateTime.TryParseExact(trTime, format, System.Globalization.CultureInfo.InvariantCulture,
+                        System.Globalization.DateTimeStyles.None, out DateTime result))
+                    {
+                        _logger.LogDebug("🗓️ [TR_TIME_CONVERT] Successfully converted '{TrTime}' to {DateTime}", trTime, result.ToString("dd/MM/yyyy"));
+                        return result;
+                    }
+                }
+
+                _logger.LogWarning("⚠️ [TR_TIME_CONVERT] Could not parse TR_TIME value: '{TrTime}'", trTime);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [TR_TIME_CONVERT] Error converting TR_TIME '{TrTime}': {Error}", trTime, ex.Message);
+                return null;
             }
         }
 
