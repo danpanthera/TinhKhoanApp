@@ -851,6 +851,9 @@ namespace TinhKhoanApp.Api.Services
                     p.Name != "UpdatedAt" &&
                     p.Name != "ValidFrom" &&
                     p.Name != "ValidTo" &&
+                    p.Name != "IsDeleted" &&
+                    p.Name != "SysStartTime" &&
+                    p.Name != "SysEndTime" &&
                     !p.Name.StartsWith("System") &&
                     p.GetCustomAttributes(typeof(ColumnAttribute), false).Length > 0) // Chỉ lấy properties có Column attribute
                 .ToArray();
