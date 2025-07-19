@@ -53,20 +53,23 @@ Luôn để backend port là 5055, frontend port là 3000.
 ✅ **Direct Import & Preview System:**
 - **Backend APIs**: `/api/datatables/{table}/preview` và `/api/datatables/{table}/import`
 - **Frontend UI**: DataTablesView.vue với direct import/preview capabilities
+- **Preview Data**: Luôn hiển thị **10 bản ghi đầu tiên** trực tiếp từ database tables (TOP 10)
 - **No Mock Data**: Tuyệt đối không có mock data, chỉ lấy từ actual tables
 - **CSV Upload**: Direct import từ CSV files vào database tables
 
 ## 🚨 QUY TẮC KHỞI ĐỘNG DỰ ÁN - NGHIÊM CẤM VI PHẠM
-- **Backend:** LUÔN dùng `./start_backend.sh` (từ thư mục Backend/TinhKhoanApp.Api)
-- **Frontend:** LUÔN dùng `./start_frontend.sh` (từ thư mục Frontend/tinhkhoan-app-ui-vite)
+- **Backend:** LUÔN dùng `./start_backend.sh` (từ root)
+- **Frontend:** LUÔN dùng `./start_frontend.sh` (từ root)
 - **Fast Commit:** LUÔN dùng `./fast_commit.sh` (từ thư mục root), nội dung ngắn gọn nhất có thể
 - **NGHIÊM CẤM** sử dụng VS Code tasks để chạy fullstack - CHỈ DÙNG SCRIPTS
 - **Database:** TinhKhoanDB, username=sa, password=Dientoan@303
 
 ✅ **TẤT CẢ SCRIPTS ĐÃ CÓ SẴN VÀ HOẠT ĐỘNG:**
-- ✅ `/Backend/TinhKhoanApp.Api/start_backend.sh` - Khởi động backend API (http://localhost:5055)
-- ✅ `/Frontend/tinhkhoan-app-ui-vite/start_frontend.sh` - Khởi động frontend UI (http://localhost:3000)
+- ✅ `/start_backend.sh` - Khởi động backend API từ root (http://localhost:5055)
+- ✅ `/start_frontend.sh` - Khởi động frontend UI từ root (http://localhost:3000) 
 - ✅ `/fast_commit.sh` - Commit nhanh từ root project
+- ✅ `/Backend/TinhKhoanApp.Api/start_backend.sh` - Original backend script
+- ✅ `/Frontend/tinhkhoan-app-ui-vite/start_frontend.sh` - Original frontend script
 - ✅ `/Backend/TinhKhoanApp.Api/sqlserver2022_ultimate.sh` - Setup SQL Server 2022
 
 🎯 **DATABASE STATUS:**
@@ -949,6 +952,7 @@ docker run -e "ACCEPT_EULA=Y" \
 - ✅ Test with files khác (EI01, LN01) - ALL TESTED SUCCESSFULLY  
 - ✅ Review ParseGenericCSVAsync method - WORKING CORRECTLY
 - ✅ Kiểm tra NGAY_DL field handling - PROPER DATETIME CONVERSION CONFIRMED
+- ✅ Preview data optimization - ALWAYS SHOWS 10 RECORDS FROM DATABASE TABLES
 
 **🚀 STATUS:** Smart Import API now production-ready with robust error handling!
 

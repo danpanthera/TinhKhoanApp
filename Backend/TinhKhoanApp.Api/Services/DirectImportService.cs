@@ -1273,7 +1273,7 @@ namespace TinhKhoanApp.Api.Services
                         if (!string.IsNullOrEmpty(targetDate))
                         {
                             // Filter theo NGAY_DL với ngày extracted từ filename VÀ timerange của import
-                            sql = $@"SELECT TOP 20 * FROM {tableName}
+                            sql = $@"SELECT TOP 10 * FROM {tableName}
                                    WHERE NGAY_DL = @targetDate
                                    AND CREATED_DATE >= DATEADD(minute, -10, @importDate)
                                    AND CREATED_DATE <= DATEADD(minute, 10, @importDate)
@@ -1287,7 +1287,7 @@ namespace TinhKhoanApp.Api.Services
                         {
                             // Fallback: Lấy dữ liệu theo ImportDate
                             var importDateStr = importRecord.ImportDate.ToString("dd/MM/yyyy");
-                            sql = $@"SELECT TOP 20 * FROM {tableName}
+                            sql = $@"SELECT TOP 10 * FROM {tableName}
                                    WHERE CAST(CREATED_DATE AS DATE) = @importDate
                                    ORDER BY ID DESC";
                             countSql = $@"SELECT COUNT(*) FROM {tableName}
@@ -1357,7 +1357,7 @@ namespace TinhKhoanApp.Api.Services
                             _logger.LogWarning("⚠️ No data found with NGAY_DL filter, trying fallback query");
 
                             // Fallback: Lấy theo CREATED_DATE gần nhất với ImportDate
-                            var fallbackSql = $@"SELECT TOP 20 * FROM {tableName}
+                            var fallbackSql = $@"SELECT TOP 10 * FROM {tableName}
                                                WHERE ABS(DATEDIFF(day, CREATED_DATE, @importDate)) <= 1
                                                ORDER BY CREATED_DATE DESC, ID DESC";
 
