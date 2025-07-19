@@ -4,369 +4,329 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TinhKhoanApp.Api.Models.DataTables
 {
     /// <summary>
-    /// Bảng LN01 - Auto-generated from database structure
-    /// Generated: $(date '+%Y-%m-%d %H:%M:%S')
-    /// Temporal Table with History tracking
+    /// Model cho bảng LN01 - Dữ liệu Tín dụng chi tiết
+    /// Business columns first (79 columns from CSV), then system columns, then temporal columns
+    /// Temporal table with history tracking and columnstore index
     /// </summary>
     [Table("LN01")]
     public class LN01
     {
-        // Column: Id, Type: bigint
+        // ======= BUSINESS COLUMNS (79 columns - exactly from CSV) =======
+        [Column("BRCD")]
+        [StringLength(50)]
+        public string? BRCD { get; set; }
+
+        [Column("CUSTSEQ")]
+        [StringLength(100)]
+        public string? CUSTSEQ { get; set; }
+
+        [Column("CUSTNM")]
+        [StringLength(500)]
+        public string? CUSTNM { get; set; }
+
+        [Column("TAI_KHOAN")]
+        [StringLength(100)]
+        public string? TAI_KHOAN { get; set; }
+
+        [Column("CCY")]
+        [StringLength(10)]
+        public string? CCY { get; set; }
+
+        [Column("DU_NO", TypeName = "decimal(18,2)")]
+        public decimal? DU_NO { get; set; }
+
+        [Column("DSBSSEQ")]
+        [StringLength(100)]
+        public string? DSBSSEQ { get; set; }
+
+        [Column("TRANSACTION_DATE")]
+        public DateTime? TRANSACTION_DATE { get; set; }
+
+        [Column("DSBSDT")]
+        public DateTime? DSBSDT { get; set; }
+
+        [Column("DISBUR_CCY")]
+        [StringLength(10)]
+        public string? DISBUR_CCY { get; set; }
+
+        [Column("DISBURSEMENT_AMOUNT", TypeName = "decimal(18,2)")]
+        public decimal? DISBURSEMENT_AMOUNT { get; set; }
+
+        [Column("DSBSMATDT")]
+        public DateTime? DSBSMATDT { get; set; }
+
+        [Column("BSRTCD")]
+        [StringLength(50)]
+        public string? BSRTCD { get; set; }
+
+        [Column("INTEREST_RATE", TypeName = "decimal(10,4)")]
+        public decimal? INTEREST_RATE { get; set; }
+
+        [Column("APPRSEQ")]
+        [StringLength(100)]
+        public string? APPRSEQ { get; set; }
+
+        [Column("APPRDT")]
+        public DateTime? APPRDT { get; set; }
+
+        [Column("APPR_CCY")]
+        [StringLength(10)]
+        public string? APPR_CCY { get; set; }
+
+        [Column("APPRAMT", TypeName = "decimal(18,2)")]
+        public decimal? APPRAMT { get; set; }
+
+        [Column("APPRMATDT")]
+        public DateTime? APPRMATDT { get; set; }
+
+        [Column("LOAN_TYPE")]
+        [StringLength(200)]
+        public string? LOAN_TYPE { get; set; }
+
+        [Column("FUND_RESOURCE_CODE")]
+        [StringLength(200)]
+        public string? FUND_RESOURCE_CODE { get; set; }
+
+        [Column("FUND_PURPOSE_CODE")]
+        [StringLength(200)]
+        public string? FUND_PURPOSE_CODE { get; set; }
+
+        [Column("REPAYMENT_AMOUNT", TypeName = "decimal(18,2)")]
+        public decimal? REPAYMENT_AMOUNT { get; set; }
+
+        [Column("NEXT_REPAY_DATE")]
+        public DateTime? NEXT_REPAY_DATE { get; set; }
+
+        [Column("NEXT_REPAY_AMOUNT", TypeName = "decimal(18,2)")]
+        public decimal? NEXT_REPAY_AMOUNT { get; set; }
+
+        [Column("NEXT_INT_REPAY_DATE")]
+        public DateTime? NEXT_INT_REPAY_DATE { get; set; }
+
+        [Column("OFFICER_ID")]
+        [StringLength(100)]
+        public string? OFFICER_ID { get; set; }
+
+        [Column("OFFICER_NAME")]
+        [StringLength(500)]
+        public string? OFFICER_NAME { get; set; }
+
+        [Column("INTEREST_AMOUNT", TypeName = "decimal(18,2)")]
+        public decimal? INTEREST_AMOUNT { get; set; }
+
+        [Column("PASTDUE_INTEREST_AMOUNT", TypeName = "decimal(18,2)")]
+        public decimal? PASTDUE_INTEREST_AMOUNT { get; set; }
+
+        [Column("TOTAL_INTEREST_REPAY_AMOUNT", TypeName = "decimal(18,2)")]
+        public decimal? TOTAL_INTEREST_REPAY_AMOUNT { get; set; }
+
+        [Column("CUSTOMER_TYPE_CODE")]
+        [StringLength(50)]
+        public string? CUSTOMER_TYPE_CODE { get; set; }
+
+        [Column("CUSTOMER_TYPE_CODE_DETAIL")]
+        [StringLength(50)]
+        public string? CUSTOMER_TYPE_CODE_DETAIL { get; set; }
+
+        [Column("TRCTCD")]
+        [StringLength(50)]
+        public string? TRCTCD { get; set; }
+
+        [Column("TRCTNM")]
+        [StringLength(500)]
+        public string? TRCTNM { get; set; }
+
+        [Column("ADDR1")]
+        [StringLength(1000)]
+        public string? ADDR1 { get; set; }
+
+        [Column("PROVINCE")]
+        [StringLength(50)]
+        public string? PROVINCE { get; set; }
+
+        [Column("LCLPROVINNM")]
+        [StringLength(200)]
+        public string? LCLPROVINNM { get; set; }
+
+        [Column("DISTRICT")]
+        [StringLength(50)]
+        public string? DISTRICT { get; set; }
+
+        [Column("LCLDISTNM")]
+        [StringLength(200)]
+        public string? LCLDISTNM { get; set; }
+
+        [Column("COMMCD")]
+        [StringLength(50)]
+        public string? COMMCD { get; set; }
+
+        [Column("LCLWARDNM")]
+        [StringLength(200)]
+        public string? LCLWARDNM { get; set; }
+
+        [Column("LAST_REPAY_DATE")]
+        public DateTime? LAST_REPAY_DATE { get; set; }
+
+        [Column("SECURED_PERCENT", TypeName = "decimal(5,2)")]
+        public decimal? SECURED_PERCENT { get; set; }
+
+        [Column("NHOM_NO")]
+        [StringLength(50)]
+        public string? NHOM_NO { get; set; }
+
+        [Column("LAST_INT_CHARGE_DATE")]
+        public DateTime? LAST_INT_CHARGE_DATE { get; set; }
+
+        [Column("EXEMPTINT")]
+        [StringLength(10)]
+        public string? EXEMPTINT { get; set; }
+
+        [Column("EXEMPTINTTYPE")]
+        [StringLength(50)]
+        public string? EXEMPTINTTYPE { get; set; }
+
+        [Column("EXEMPTINTAMT", TypeName = "decimal(18,2)")]
+        public decimal? EXEMPTINTAMT { get; set; }
+
+        [Column("GRPNO")]
+        [StringLength(50)]
+        public string? GRPNO { get; set; }
+
+        [Column("BUSCD")]
+        [StringLength(50)]
+        public string? BUSCD { get; set; }
+
+        [Column("BSNSSCLTPCD")]
+        [StringLength(50)]
+        public string? BSNSSCLTPCD { get; set; }
+
+        [Column("USRIDOP")]
+        [StringLength(100)]
+        public string? USRIDOP { get; set; }
+
+        [Column("ACCRUAL_AMOUNT", TypeName = "decimal(18,2)")]
+        public decimal? ACCRUAL_AMOUNT { get; set; }
+
+        [Column("ACCRUAL_AMOUNT_END_OF_MONTH", TypeName = "decimal(18,2)")]
+        public decimal? ACCRUAL_AMOUNT_END_OF_MONTH { get; set; }
+
+        [Column("INTCMTH")]
+        [StringLength(10)]
+        public string? INTCMTH { get; set; }
+
+        [Column("INTRPYMTH")]
+        [StringLength(10)]
+        public string? INTRPYMTH { get; set; }
+
+        [Column("INTTRMMTH")]
+        [StringLength(10)]
+        public string? INTTRMMTH { get; set; }
+
+        [Column("YRDAYS")]
+        public int? YRDAYS { get; set; }
+
+        [Column("REMARK")]
+        [StringLength(1000)]
+        public string? REMARK { get; set; }
+
+        [Column("CHITIEU")]
+        [StringLength(500)]
+        public string? CHITIEU { get; set; }
+
+        [Column("CTCV")]
+        [StringLength(500)]
+        public string? CTCV { get; set; }
+
+        [Column("CREDIT_LINE_YPE")]
+        [StringLength(100)]
+        public string? CREDIT_LINE_YPE { get; set; }
+
+        [Column("INT_LUMPSUM_PARTIAL_TYPE")]
+        [StringLength(100)]
+        public string? INT_LUMPSUM_PARTIAL_TYPE { get; set; }
+
+        [Column("INT_PARTIAL_PAYMENT_TYPE")]
+        [StringLength(100)]
+        public string? INT_PARTIAL_PAYMENT_TYPE { get; set; }
+
+        [Column("INT_PAYMENT_INTERVAL")]
+        [StringLength(50)]
+        public string? INT_PAYMENT_INTERVAL { get; set; }
+
+        [Column("AN_HAN_LAI")]
+        public int? AN_HAN_LAI { get; set; }
+
+        [Column("PHUONG_THUC_GIAI_NGAN_1")]
+        [StringLength(100)]
+        public string? PHUONG_THUC_GIAI_NGAN_1 { get; set; }
+
+        [Column("TAI_KHOAN_GIAI_NGAN_1")]
+        [StringLength(100)]
+        public string? TAI_KHOAN_GIAI_NGAN_1 { get; set; }
+
+        [Column("SO_TIEN_GIAI_NGAN_1", TypeName = "decimal(18,2)")]
+        public decimal? SO_TIEN_GIAI_NGAN_1 { get; set; }
+
+        [Column("PHUONG_THUC_GIAI_NGAN_2")]
+        [StringLength(100)]
+        public string? PHUONG_THUC_GIAI_NGAN_2 { get; set; }
+
+        [Column("TAI_KHOAN_GIAI_NGAN_2")]
+        [StringLength(100)]
+        public string? TAI_KHOAN_GIAI_NGAN_2 { get; set; }
+
+        [Column("SO_TIEN_GIAI_NGAN_2", TypeName = "decimal(18,2)")]
+        public decimal? SO_TIEN_GIAI_NGAN_2 { get; set; }
+
+        [Column("CMT_HC")]
+        [StringLength(100)]
+        public string? CMT_HC { get; set; }
+
+        [Column("NGAY_SINH")]
+        public DateTime? NGAY_SINH { get; set; }
+
+        [Column("MA_CB_AGRI")]
+        [StringLength(100)]
+        public string? MA_CB_AGRI { get; set; }
+
+        [Column("MA_NGANH_KT")]
+        [StringLength(50)]
+        public string? MA_NGANH_KT { get; set; }
+
+        [Column("TY_GIA", TypeName = "decimal(10,4)")]
+        public decimal? TY_GIA { get; set; }
+
+        [Column("OFFICER_IPCAS")]
+        [StringLength(100)]
+        public string? OFFICER_IPCAS { get; set; }
+
+        // ======= SYSTEM COLUMNS =======
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Column("Id")]
         public long Id { get; set; }
 
-        // Column: NGAY_DL, Type: date
         [Column("NGAY_DL")]
+        [Required]
         public DateTime NGAY_DL { get; set; }
 
-        // Column: MA_CN, Type: nvarchar
-        [Column("MA_CN")]
-        public string? MA_CN { get; set; }
-
-        // Column: MA_KH, Type: nvarchar
-        [Column("MA_KH")]
-        public string? MA_KH { get; set; }
-
-        // Column: TEN_KH, Type: nvarchar
-        [Column("TEN_KH")]
-        public string? TEN_KH { get; set; }
-
-        // Column: LOAI_KH, Type: nvarchar
-        [Column("LOAI_KH")]
-        public string? LOAI_KH { get; set; }
-
-        // Column: SO_HSV, Type: nvarchar
-        [Column("SO_HSV")]
-        public string? SO_HSV { get; set; }
-
-        // Column: SO_TD, Type: nvarchar
-        [Column("SO_TD")]
-        public string? SO_TD { get; set; }
-
-        // Column: TEN_SP, Type: nvarchar
-        [Column("TEN_SP")]
-        public string? TEN_SP { get; set; }
-
-        // Column: LOAI_TIEN, Type: nvarchar
-        [Column("LOAI_TIEN")]
-        public string? LOAI_TIEN { get; set; }
-
-        // Column: SO_TIEN_VAY, Type: decimal
-        [Column("SO_TIEN_VAY")]
-        public decimal? SO_TIEN_VAY { get; set; }
-
-        // Column: LS_VAY, Type: decimal
-        [Column("LS_VAY")]
-        public decimal? LS_VAY { get; set; }
-
-        // Column: NGAY_TT_GOC, Type: nvarchar
-        [Column("NGAY_TT_GOC")]
-        public string? NGAY_TT_GOC { get; set; }
-
-        // Column: NGAY_TT_LAI, Type: nvarchar
-        [Column("NGAY_TT_LAI")]
-        public string? NGAY_TT_LAI { get; set; }
-
-        // Column: DU_NO_GOC, Type: decimal
-        [Column("DU_NO_GOC")]
-        public decimal? DU_NO_GOC { get; set; }
-
-        // Column: DU_NO_LAI, Type: decimal
-        [Column("DU_NO_LAI")]
-        public decimal? DU_NO_LAI { get; set; }
-
-        // Column: DU_NO_PHI, Type: decimal
-        [Column("DU_NO_PHI")]
-        public decimal? DU_NO_PHI { get; set; }
-
-        // Column: NGAY_HIEU_LUC, Type: nvarchar
-        [Column("NGAY_HIEU_LUC")]
-        public string? NGAY_HIEU_LUC { get; set; }
-
-        // Column: NGAY_DAO_HAN, Type: nvarchar
-        [Column("NGAY_DAO_HAN")]
-        public string? NGAY_DAO_HAN { get; set; }
-
-        // Column: MHANG_BAO_DAM, Type: nvarchar
-        [Column("MHANG_BAO_DAM")]
-        public string? MHANG_BAO_DAM { get; set; }
-
-        // Column: LOAI_BD, Type: nvarchar
-        [Column("LOAI_BD")]
-        public string? LOAI_BD { get; set; }
-
-        // Column: TH_CVAY, Type: nvarchar
-        [Column("TH_CVAY")]
-        public string? TH_CVAY { get; set; }
-
-        // Column: KH_NO_NHOM, Type: nvarchar
-        [Column("KH_NO_NHOM")]
-        public string? KH_NO_NHOM { get; set; }
-
-        // Column: PHAN_LOAI, Type: nvarchar
-        [Column("PHAN_LOAI")]
-        public string? PHAN_LOAI { get; set; }
-
-        // Column: LY_DO_PHAN_LOAI, Type: nvarchar
-        [Column("LY_DO_PHAN_LOAI")]
-        public string? LY_DO_PHAN_LOAI { get; set; }
-
-        // Column: TRANG_THAI_HD, Type: nvarchar
-        [Column("TRANG_THAI_HD")]
-        public string? TRANG_THAI_HD { get; set; }
-
-        // Column: MUCTICH_VAY, Type: nvarchar
-        [Column("MUCTICH_VAY")]
-        public string? MUCTICH_VAY { get; set; }
-
-        // Column: NGANH_KT, Type: nvarchar
-        [Column("NGANH_KT")]
-        public string? NGANH_KT { get; set; }
-
-        // Column: MA_CAN_BO, Type: nvarchar
-        [Column("MA_CAN_BO")]
-        public string? MA_CAN_BO { get; set; }
-
-        // Column: TEN_CAN_BO, Type: nvarchar
-        [Column("TEN_CAN_BO")]
-        public string? TEN_CAN_BO { get; set; }
-
-        // Column: MA_NV, Type: nvarchar
-        [Column("MA_NV")]
-        public string? MA_NV { get; set; }
-
-        // Column: TEN_NV, Type: nvarchar
-        [Column("TEN_NV")]
-        public string? TEN_NV { get; set; }
-
-        // Column: MA_PHONG, Type: nvarchar
-        [Column("MA_PHONG")]
-        public string? MA_PHONG { get; set; }
-
-        // Column: TEN_PHONG, Type: nvarchar
-        [Column("TEN_PHONG")]
-        public string? TEN_PHONG { get; set; }
-
-        // Column: SO_CMT, Type: nvarchar
-        [Column("SO_CMT")]
-        public string? SO_CMT { get; set; }
-
-        // Column: NGAY_CAP_CMT, Type: nvarchar
-        [Column("NGAY_CAP_CMT")]
-        public string? NGAY_CAP_CMT { get; set; }
-
-        // Column: NOI_CAP_CMT, Type: nvarchar
-        [Column("NOI_CAP_CMT")]
-        public string? NOI_CAP_CMT { get; set; }
-
-        // Column: NGAY_SINH, Type: nvarchar
-        [Column("NGAY_SINH")]
-        public string? NGAY_SINH { get; set; }
-
-        // Column: GIOI_TINH, Type: nvarchar
-        [Column("GIOI_TINH")]
-        public string? GIOI_TINH { get; set; }
-
-        // Column: DIA_CHI, Type: nvarchar
-        [Column("DIA_CHI")]
-        public string? DIA_CHI { get; set; }
-
-        // Column: SO_DT, Type: nvarchar
-        [Column("SO_DT")]
-        public string? SO_DT { get; set; }
-
-        // Column: EMAIL, Type: nvarchar
-        [Column("EMAIL")]
-        public string? EMAIL { get; set; }
-
-        // Column: NGHE_NGHIEP, Type: nvarchar
-        [Column("NGHE_NGHIEP")]
-        public string? NGHE_NGHIEP { get; set; }
-
-        // Column: LOAI_HO, Type: nvarchar
-        [Column("LOAI_HO")]
-        public string? LOAI_HO { get; set; }
-
-        // Column: QUAN_HE_VOU, Type: nvarchar
-        [Column("QUAN_HE_VOU")]
-        public string? QUAN_HE_VOU { get; set; }
-
-        // Column: HON_NHAN, Type: nvarchar
-        [Column("HON_NHAN")]
-        public string? HON_NHAN { get; set; }
-
-        // Column: LOAI_CTVAY, Type: nvarchar
-        [Column("LOAI_CTVAY")]
-        public string? LOAI_CTVAY { get; set; }
-
-        // Column: TEN_CTVAY, Type: nvarchar
-        [Column("TEN_CTVAY")]
-        public string? TEN_CTVAY { get; set; }
-
-        // Column: SO_CMT_CTVAY, Type: nvarchar
-        [Column("SO_CMT_CTVAY")]
-        public string? SO_CMT_CTVAY { get; set; }
-
-        // Column: NGAY_CAP_CMT_CTVAY, Type: nvarchar
-        [Column("NGAY_CAP_CMT_CTVAY")]
-        public string? NGAY_CAP_CMT_CTVAY { get; set; }
-
-        // Column: NOI_CAP_CMT_CTVAY, Type: nvarchar
-        [Column("NOI_CAP_CMT_CTVAY")]
-        public string? NOI_CAP_CMT_CTVAY { get; set; }
-
-        // Column: NGAY_SINH_CTVAY, Type: nvarchar
-        [Column("NGAY_SINH_CTVAY")]
-        public string? NGAY_SINH_CTVAY { get; set; }
-
-        // Column: GIOI_TINH_CTVAY, Type: nvarchar
-        [Column("GIOI_TINH_CTVAY")]
-        public string? GIOI_TINH_CTVAY { get; set; }
-
-        // Column: DIA_CHI_CTVAY, Type: nvarchar
-        [Column("DIA_CHI_CTVAY")]
-        public string? DIA_CHI_CTVAY { get; set; }
-
-        // Column: SO_DT_CTVAY, Type: nvarchar
-        [Column("SO_DT_CTVAY")]
-        public string? SO_DT_CTVAY { get; set; }
-
-        // Column: EMAIL_CTVAY, Type: nvarchar
-        [Column("EMAIL_CTVAY")]
-        public string? EMAIL_CTVAY { get; set; }
-
-        // Column: NGHE_NGHIEP_CTVAY, Type: nvarchar
-        [Column("NGHE_NGHIEP_CTVAY")]
-        public string? NGHE_NGHIEP_CTVAY { get; set; }
-
-        // Column: QUAN_HE_VOU_CTVAY, Type: nvarchar
-        [Column("QUAN_HE_VOU_CTVAY")]
-        public string? QUAN_HE_VOU_CTVAY { get; set; }
-
-        // Column: HON_NHAN_CTVAY, Type: nvarchar
-        [Column("HON_NHAN_CTVAY")]
-        public string? HON_NHAN_CTVAY { get; set; }
-
-        // Column: KY_HAN_VAY, Type: nvarchar
-        [Column("KY_HAN_VAY")]
-        public string? KY_HAN_VAY { get; set; }
-
-        // Column: HINH_THUC_TT, Type: nvarchar
-        [Column("HINH_THUC_TT")]
-        public string? HINH_THUC_TT { get; set; }
-
-        // Column: SO_KY_TT, Type: nvarchar
-        [Column("SO_KY_TT")]
-        public string? SO_KY_TT { get; set; }
-
-        // Column: SO_NGAY_QUA_HAN, Type: nvarchar
-        [Column("SO_NGAY_QUA_HAN")]
-        public string? SO_NGAY_QUA_HAN { get; set; }
-
-        // Column: NGAY_QUA_HAN, Type: nvarchar
-        [Column("NGAY_QUA_HAN")]
-        public string? NGAY_QUA_HAN { get; set; }
-
-        // Column: TYLE_BD, Type: decimal
-        [Column("TYLE_BD")]
-        public decimal? TYLE_BD { get; set; }
-
-        // Column: GIATRI_BD, Type: decimal
-        [Column("GIATRI_BD")]
-        public decimal? GIATRI_BD { get; set; }
-
-        // Column: NGAY_DANH_GIA_BD, Type: nvarchar
-        [Column("NGAY_DANH_GIA_BD")]
-        public string? NGAY_DANH_GIA_BD { get; set; }
-
-        // Column: LS_QUA_HAN, Type: decimal
-        [Column("LS_QUA_HAN")]
-        public decimal? LS_QUA_HAN { get; set; }
-
-        // Column: PHI_TD, Type: decimal
-        [Column("PHI_TD")]
-        public decimal? PHI_TD { get; set; }
-
-        // Column: TK_TIEN_VAY, Type: nvarchar
-        [Column("TK_TIEN_VAY")]
-        public string? TK_TIEN_VAY { get; set; }
-
-        // Column: TK_TT_LAI, Type: nvarchar
-        [Column("TK_TT_LAI")]
-        public string? TK_TT_LAI { get; set; }
-
-        // Column: TK_TT_GOC, Type: nvarchar
-        [Column("TK_TT_GOC")]
-        public string? TK_TT_GOC { get; set; }
-
-        // Column: TK_TONG_THU, Type: nvarchar
-        [Column("TK_TONG_THU")]
-        public string? TK_TONG_THU { get; set; }
-
-        // Column: MA_KV, Type: nvarchar
-        [Column("MA_KV")]
-        public string? MA_KV { get; set; }
-
-        // Column: TEN_KV, Type: nvarchar
-        [Column("TEN_KV")]
-        public string? TEN_KV { get; set; }
-
-        // Column: TINH_TP, Type: nvarchar
-        [Column("TINH_TP")]
-        public string? TINH_TP { get; set; }
-
-        // Column: QUAN_HUYEN, Type: nvarchar
-        [Column("QUAN_HUYEN")]
-        public string? QUAN_HUYEN { get; set; }
-
-        // Column: PHUONG_XA, Type: nvarchar
-        [Column("PHUONG_XA")]
-        public string? PHUONG_XA { get; set; }
-
-        // Column: LOAI_HINH_DN, Type: nvarchar
-        [Column("LOAI_HINH_DN")]
-        public string? LOAI_HINH_DN { get; set; }
-
-        // Column: LOAI_HINH_DN_CHI_TIET, Type: nvarchar
-        [Column("LOAI_HINH_DN_CHI_TIET")]
-        public string? LOAI_HINH_DN_CHI_TIET { get; set; }
-
-        // Column: QUY_MO_DN, Type: nvarchar
-        [Column("QUY_MO_DN")]
-        public string? QUY_MO_DN { get; set; }
-
-        // Column: NGANH_CHINH, Type: nvarchar
-        [Column("NGANH_CHINH")]
-        public string? NGANH_CHINH { get; set; }
-
-        // Column: NGANH_PHU, Type: nvarchar
-        [Column("NGANH_PHU")]
-        public string? NGANH_PHU { get; set; }
-
-        // Column: CreatedAt, Type: datetime2
         [Column("CreatedAt")]
-        public DateTime CreatedAt { get; set; }
+        [Required]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // Column: UpdatedAt, Type: datetime2
         [Column("UpdatedAt")]
-        public DateTime UpdatedAt { get; set; }
+        [Required]
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        // Column: IsDeleted, Type: bit
         [Column("IsDeleted")]
-        public bool IsDeleted { get; set; }
+        [Required]
+        public bool IsDeleted { get; set; } = false;
 
-        // Column: SysStartTime, Type: datetime2
+        // ======= TEMPORAL COLUMNS (managed by SQL Server) =======
         [Column("SysStartTime")]
         public DateTime SysStartTime { get; set; }
 
-        // Column: SysEndTime, Type: datetime2
         [Column("SysEndTime")]
         public DateTime SysEndTime { get; set; }
-
-        // Column: (88rowsaffected), Type: 
-        [Column("(88rowsaffected)")]
-        public string? (88rowsaffected) { get; set; }
-
     }
 }

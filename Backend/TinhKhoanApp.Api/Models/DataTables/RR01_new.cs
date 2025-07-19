@@ -5,13 +5,22 @@ namespace TinhKhoanApp.Api.Models.DataTables
 {
     /// <summary>
     /// Model cho bảng RR01 - Dữ liệu Rủi ro tín dụng
-    /// Business columns first (25 columns from CSV), then system columns, then temporal columns
-    /// Temporal table with history tracking and columnstore index
+    /// Exactly matches CSV structure with 25 business columns
+    /// Temporal table với history tracking và columnstore index
     /// </summary>
     [Table("RR01")]
     public class RR01
     {
-        // ======= BUSINESS COLUMNS (25 columns - exactly from CSV) =======
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Column("Id")]
+        public long Id { get; set; }
+
+        [Column("NGAY_DL")]
+        [Required]
+        public DateTime NGAY_DL { get; set; }
+
+        // Business columns - exactly matching CSV structure (25 columns)
         [Column("CN_LOAI_I")]
         [StringLength(50)]
         public string? CN_LOAI_I { get; set; }
@@ -96,16 +105,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
         [Column("TSK", TypeName = "decimal(18,2)")]
         public decimal? TSK { get; set; }
 
-        // ======= SYSTEM COLUMNS =======
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        [Column("Id")]
-        public long Id { get; set; }
-
-        [Column("NGAY_DL")]
-        [Required]
-        public DateTime NGAY_DL { get; set; }
-
+        // System columns
         [Column("CreatedAt")]
         [Required]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -118,7 +118,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
         [Required]
         public bool IsDeleted { get; set; } = false;
 
-        // ======= TEMPORAL COLUMNS (managed by SQL Server) =======
+        // Temporal table columns (managed by SQL Server)
         [Column("SysStartTime")]
         public DateTime SysStartTime { get; set; }
 

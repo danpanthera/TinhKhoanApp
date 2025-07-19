@@ -4,145 +4,140 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TinhKhoanApp.Api.Models.DataTables
 {
     /// <summary>
-    /// Bảng GL01 - Auto-generated from database structure
-    /// Generated: $(date '+%Y-%m-%d %H:%M:%S')
-    /// Partitioned Table by NGAY_DL
+    /// Model cho bảng GL01 - Dữ liệu Giao dịch chi tiết
+    /// Business columns first (27 columns from CSV), then system columns
+    /// Partitioned Columnstore table (NO temporal columns)
     /// </summary>
     [Table("GL01")]
     public class GL01
     {
-        // Column: Id, Type: bigint
+        // ======= BUSINESS COLUMNS (27 columns - exactly from CSV) =======
+        [Column("STS")]
+        [StringLength(50)]
+        public string? STS { get; set; }
+
+        [Column("NGAY_GD")]
+        public DateTime? NGAY_GD { get; set; }
+
+        [Column("NGUOI_TAO")]
+        [StringLength(100)]
+        public string? NGUOI_TAO { get; set; }
+
+        [Column("DYSEQ")]
+        [StringLength(100)]
+        public string? DYSEQ { get; set; }
+
+        [Column("TR_TYPE")]
+        [StringLength(50)]
+        public string? TR_TYPE { get; set; }
+
+        [Column("DT_SEQ")]
+        [StringLength(100)]
+        public string? DT_SEQ { get; set; }
+
+        [Column("TAI_KHOAN")]
+        [StringLength(100)]
+        public string? TAI_KHOAN { get; set; }
+
+        [Column("TEN_TK")]
+        [StringLength(500)]
+        public string? TEN_TK { get; set; }
+
+        [Column("SO_TIEN_GD", TypeName = "decimal(18,2)")]
+        public decimal? SO_TIEN_GD { get; set; }
+
+        [Column("POST_BR")]
+        [StringLength(50)]
+        public string? POST_BR { get; set; }
+
+        [Column("LOAI_TIEN")]
+        [StringLength(10)]
+        public string? LOAI_TIEN { get; set; }
+
+        [Column("DR_CR")]
+        [StringLength(10)]
+        public string? DR_CR { get; set; }
+
+        [Column("MA_KH")]
+        [StringLength(100)]
+        public string? MA_KH { get; set; }
+
+        [Column("TEN_KH")]
+        [StringLength(500)]
+        public string? TEN_KH { get; set; }
+
+        [Column("CCA_USRID")]
+        [StringLength(100)]
+        public string? CCA_USRID { get; set; }
+
+        [Column("TR_EX_RT", TypeName = "decimal(10,4)")]
+        public decimal? TR_EX_RT { get; set; }
+
+        [Column("REMARK")]
+        [StringLength(1000)]
+        public string? REMARK { get; set; }
+
+        [Column("BUS_CODE")]
+        [StringLength(50)]
+        public string? BUS_CODE { get; set; }
+
+        [Column("UNIT_BUS_CODE")]
+        [StringLength(50)]
+        public string? UNIT_BUS_CODE { get; set; }
+
+        [Column("TR_CODE")]
+        [StringLength(50)]
+        public string? TR_CODE { get; set; }
+
+        [Column("TR_NAME")]
+        [StringLength(200)]
+        public string? TR_NAME { get; set; }
+
+        [Column("REFERENCE")]
+        [StringLength(200)]
+        public string? REFERENCE { get; set; }
+
+        [Column("VALUE_DATE")]
+        public DateTime? VALUE_DATE { get; set; }
+
+        [Column("DEPT_CODE")]
+        [StringLength(50)]
+        public string? DEPT_CODE { get; set; }
+
+        [Column("TR_TIME")]
+        [StringLength(50)]
+        public string? TR_TIME { get; set; }
+
+        [Column("COMFIRM")]
+        [StringLength(10)]
+        public string? COMFIRM { get; set; }
+
+        [Column("TRDT_TIME")]
+        [StringLength(50)]
+        public string? TRDT_TIME { get; set; }
+
+        // ======= SYSTEM COLUMNS =======
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Column("Id")]
         public long Id { get; set; }
 
-        // Column: NGAY_DL, Type: date
         [Column("NGAY_DL")]
+        [Required]
         public DateTime NGAY_DL { get; set; }
 
-        // Column: STS, Type: nvarchar
-        [Column("STS")]
-        public string? STS { get; set; }
-
-        // Column: NGAY_GD, Type: nvarchar
-        [Column("NGAY_GD")]
-        public string? NGAY_GD { get; set; }
-
-        // Column: NGUOI_TAO, Type: nvarchar
-        [Column("NGUOI_TAO")]
-        public string? NGUOI_TAO { get; set; }
-
-        // Column: DYSEQ, Type: nvarchar
-        [Column("DYSEQ")]
-        public string? DYSEQ { get; set; }
-
-        // Column: TR_TYPE, Type: nvarchar
-        [Column("TR_TYPE")]
-        public string? TR_TYPE { get; set; }
-
-        // Column: DT_SEQ, Type: nvarchar
-        [Column("DT_SEQ")]
-        public string? DT_SEQ { get; set; }
-
-        // Column: TAI_KHOAN, Type: nvarchar
-        [Column("TAI_KHOAN")]
-        public string? TAI_KHOAN { get; set; }
-
-        // Column: TEN_TK, Type: nvarchar
-        [Column("TEN_TK")]
-        public string? TEN_TK { get; set; }
-
-        // Column: SO_TIEN_GD, Type: decimal
-        [Column("SO_TIEN_GD")]
-        public decimal? SO_TIEN_GD { get; set; }
-
-        // Column: POST_BR, Type: nvarchar
-        [Column("POST_BR")]
-        public string? POST_BR { get; set; }
-
-        // Column: LOAI_TIEN, Type: nvarchar
-        [Column("LOAI_TIEN")]
-        public string? LOAI_TIEN { get; set; }
-
-        // Column: DR_CR, Type: nvarchar
-        [Column("DR_CR")]
-        public string? DR_CR { get; set; }
-
-        // Column: MA_KH, Type: nvarchar
-        [Column("MA_KH")]
-        public string? MA_KH { get; set; }
-
-        // Column: TEN_KH, Type: nvarchar
-        [Column("TEN_KH")]
-        public string? TEN_KH { get; set; }
-
-        // Column: CCA_USRID, Type: nvarchar
-        [Column("CCA_USRID")]
-        public string? CCA_USRID { get; set; }
-
-        // Column: TR_EX_RT, Type: decimal
-        [Column("TR_EX_RT")]
-        public decimal? TR_EX_RT { get; set; }
-
-        // Column: REMARK, Type: nvarchar
-        [Column("REMARK")]
-        public string? REMARK { get; set; }
-
-        // Column: BUS_CODE, Type: nvarchar
-        [Column("BUS_CODE")]
-        public string? BUS_CODE { get; set; }
-
-        // Column: UNIT_BUS_CODE, Type: nvarchar
-        [Column("UNIT_BUS_CODE")]
-        public string? UNIT_BUS_CODE { get; set; }
-
-        // Column: TR_CODE, Type: nvarchar
-        [Column("TR_CODE")]
-        public string? TR_CODE { get; set; }
-
-        // Column: TR_NAME, Type: nvarchar
-        [Column("TR_NAME")]
-        public string? TR_NAME { get; set; }
-
-        // Column: REFERENCE, Type: nvarchar
-        [Column("REFERENCE")]
-        public string? REFERENCE { get; set; }
-
-        // Column: VALUE_DATE, Type: nvarchar
-        [Column("VALUE_DATE")]
-        public string? VALUE_DATE { get; set; }
-
-        // Column: DEPT_CODE, Type: nvarchar
-        [Column("DEPT_CODE")]
-        public string? DEPT_CODE { get; set; }
-
-        // Column: TR_TIME, Type: nvarchar
-        [Column("TR_TIME")]
-        public string? TR_TIME { get; set; }
-
-        // Column: COMFIRM, Type: nvarchar
-        [Column("COMFIRM")]
-        public string? COMFIRM { get; set; }
-
-        // Column: TRDT_TIME, Type: nvarchar
-        [Column("TRDT_TIME")]
-        public string? TRDT_TIME { get; set; }
-
-        // Column: CreatedAt, Type: datetime2
         [Column("CreatedAt")]
-        public DateTime CreatedAt { get; set; }
+        [Required]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // Column: UpdatedAt, Type: datetime2
         [Column("UpdatedAt")]
-        public DateTime UpdatedAt { get; set; }
+        [Required]
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        // Column: IsDeleted, Type: bit
         [Column("IsDeleted")]
-        public bool IsDeleted { get; set; }
+        [Required]
+        public bool IsDeleted { get; set; } = false;
 
-        // Column: (32rowsaffected), Type: 
-        [Column("(32rowsaffected)")]
-        public string? (32rowsaffected) { get; set; }
-
+        // ======= NO TEMPORAL COLUMNS (Partitioned Columnstore) =======
     }
 }

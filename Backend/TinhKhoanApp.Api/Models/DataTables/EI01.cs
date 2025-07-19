@@ -4,141 +4,132 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TinhKhoanApp.Api.Models.DataTables
 {
     /// <summary>
-    /// Bảng EI01 - Auto-generated from database structure
-    /// Generated: $(date '+%Y-%m-%d %H:%M:%S')
-    /// Temporal Table with History tracking
+    /// Model cho bảng EI01 - Dữ liệu Ebanking/Internet Banking
+    /// Business columns first (24 columns from CSV), then system columns, then temporal columns
+    /// Temporal table with history tracking and columnstore index
     /// </summary>
     [Table("EI01")]
     public class EI01
     {
-        // Column: Id, Type: bigint
+        // ======= BUSINESS COLUMNS (24 columns - exactly from CSV) =======
+        [Column("MA_CN")]
+        [StringLength(50)]
+        public string? MA_CN { get; set; }
+
+        [Column("MA_KH")]
+        [StringLength(100)]
+        public string? MA_KH { get; set; }
+
+        [Column("TEN_KH")]
+        [StringLength(500)]
+        public string? TEN_KH { get; set; }
+
+        [Column("LOAI_KH")]
+        [StringLength(50)]
+        public string? LOAI_KH { get; set; }
+
+        [Column("SDT_EMB")]
+        [StringLength(50)]
+        public string? SDT_EMB { get; set; }
+
+        [Column("TRANG_THAI_EMB")]
+        [StringLength(50)]
+        public string? TRANG_THAI_EMB { get; set; }
+
+        [Column("NGAY_DK_EMB")]
+        public DateTime? NGAY_DK_EMB { get; set; }
+
+        [Column("SDT_OTT")]
+        [StringLength(50)]
+        public string? SDT_OTT { get; set; }
+
+        [Column("TRANG_THAI_OTT")]
+        [StringLength(50)]
+        public string? TRANG_THAI_OTT { get; set; }
+
+        [Column("NGAY_DK_OTT")]
+        public DateTime? NGAY_DK_OTT { get; set; }
+
+        [Column("SDT_SMS")]
+        [StringLength(50)]
+        public string? SDT_SMS { get; set; }
+
+        [Column("TRANG_THAI_SMS")]
+        [StringLength(50)]
+        public string? TRANG_THAI_SMS { get; set; }
+
+        [Column("NGAY_DK_SMS")]
+        public DateTime? NGAY_DK_SMS { get; set; }
+
+        [Column("SDT_SAV")]
+        [StringLength(50)]
+        public string? SDT_SAV { get; set; }
+
+        [Column("TRANG_THAI_SAV")]
+        [StringLength(50)]
+        public string? TRANG_THAI_SAV { get; set; }
+
+        [Column("NGAY_DK_SAV")]
+        public DateTime? NGAY_DK_SAV { get; set; }
+
+        [Column("SDT_LN")]
+        [StringLength(50)]
+        public string? SDT_LN { get; set; }
+
+        [Column("TRANG_THAI_LN")]
+        [StringLength(50)]
+        public string? TRANG_THAI_LN { get; set; }
+
+        [Column("NGAY_DK_LN")]
+        public DateTime? NGAY_DK_LN { get; set; }
+
+        [Column("USER_EMB")]
+        [StringLength(100)]
+        public string? USER_EMB { get; set; }
+
+        [Column("USER_OTT")]
+        [StringLength(100)]
+        public string? USER_OTT { get; set; }
+
+        [Column("USER_SMS")]
+        [StringLength(100)]
+        public string? USER_SMS { get; set; }
+
+        [Column("USER_SAV")]
+        [StringLength(100)]
+        public string? USER_SAV { get; set; }
+
+        [Column("USER_LN")]
+        [StringLength(100)]
+        public string? USER_LN { get; set; }
+
+        // ======= SYSTEM COLUMNS =======
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Column("Id")]
         public long Id { get; set; }
 
-        // Column: NGAY_DL, Type: date
         [Column("NGAY_DL")]
+        [Required]
         public DateTime NGAY_DL { get; set; }
 
-        // Column: MA_CN, Type: nvarchar
-        [Column("MA_CN")]
-        public string? MA_CN { get; set; }
-
-        // Column: MA_KH, Type: nvarchar
-        [Column("MA_KH")]
-        public string? MA_KH { get; set; }
-
-        // Column: TEN_KH, Type: nvarchar
-        [Column("TEN_KH")]
-        public string? TEN_KH { get; set; }
-
-        // Column: LOAI_KH, Type: nvarchar
-        [Column("LOAI_KH")]
-        public string? LOAI_KH { get; set; }
-
-        // Column: SDT_EMB, Type: nvarchar
-        [Column("SDT_EMB")]
-        public string? SDT_EMB { get; set; }
-
-        // Column: TRANG_THAI_EMB, Type: nvarchar
-        [Column("TRANG_THAI_EMB")]
-        public string? TRANG_THAI_EMB { get; set; }
-
-        // Column: NGAY_DK_EMB, Type: nvarchar
-        [Column("NGAY_DK_EMB")]
-        public string? NGAY_DK_EMB { get; set; }
-
-        // Column: SDT_OTT, Type: nvarchar
-        [Column("SDT_OTT")]
-        public string? SDT_OTT { get; set; }
-
-        // Column: TRANG_THAI_OTT, Type: nvarchar
-        [Column("TRANG_THAI_OTT")]
-        public string? TRANG_THAI_OTT { get; set; }
-
-        // Column: NGAY_DK_OTT, Type: nvarchar
-        [Column("NGAY_DK_OTT")]
-        public string? NGAY_DK_OTT { get; set; }
-
-        // Column: SDT_SMS, Type: nvarchar
-        [Column("SDT_SMS")]
-        public string? SDT_SMS { get; set; }
-
-        // Column: TRANG_THAI_SMS, Type: nvarchar
-        [Column("TRANG_THAI_SMS")]
-        public string? TRANG_THAI_SMS { get; set; }
-
-        // Column: NGAY_DK_SMS, Type: nvarchar
-        [Column("NGAY_DK_SMS")]
-        public string? NGAY_DK_SMS { get; set; }
-
-        // Column: SDT_SAV, Type: nvarchar
-        [Column("SDT_SAV")]
-        public string? SDT_SAV { get; set; }
-
-        // Column: TRANG_THAI_SAV, Type: nvarchar
-        [Column("TRANG_THAI_SAV")]
-        public string? TRANG_THAI_SAV { get; set; }
-
-        // Column: NGAY_DK_SAV, Type: nvarchar
-        [Column("NGAY_DK_SAV")]
-        public string? NGAY_DK_SAV { get; set; }
-
-        // Column: SDT_LN, Type: nvarchar
-        [Column("SDT_LN")]
-        public string? SDT_LN { get; set; }
-
-        // Column: TRANG_THAI_LN, Type: nvarchar
-        [Column("TRANG_THAI_LN")]
-        public string? TRANG_THAI_LN { get; set; }
-
-        // Column: NGAY_DK_LN, Type: nvarchar
-        [Column("NGAY_DK_LN")]
-        public string? NGAY_DK_LN { get; set; }
-
-        // Column: USER_EMB, Type: nvarchar
-        [Column("USER_EMB")]
-        public string? USER_EMB { get; set; }
-
-        // Column: USER_OTT, Type: nvarchar
-        [Column("USER_OTT")]
-        public string? USER_OTT { get; set; }
-
-        // Column: USER_SMS, Type: nvarchar
-        [Column("USER_SMS")]
-        public string? USER_SMS { get; set; }
-
-        // Column: USER_SAV, Type: nvarchar
-        [Column("USER_SAV")]
-        public string? USER_SAV { get; set; }
-
-        // Column: USER_LN, Type: nvarchar
-        [Column("USER_LN")]
-        public string? USER_LN { get; set; }
-
-        // Column: CreatedAt, Type: datetime2
         [Column("CreatedAt")]
-        public DateTime CreatedAt { get; set; }
+        [Required]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        // Column: UpdatedAt, Type: datetime2
         [Column("UpdatedAt")]
-        public DateTime UpdatedAt { get; set; }
+        [Required]
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-        // Column: IsDeleted, Type: bit
         [Column("IsDeleted")]
-        public bool IsDeleted { get; set; }
+        [Required]
+        public bool IsDeleted { get; set; } = false;
 
-        // Column: SysStartTime, Type: datetime2
+        // ======= TEMPORAL COLUMNS (managed by SQL Server) =======
         [Column("SysStartTime")]
         public DateTime SysStartTime { get; set; }
 
-        // Column: SysEndTime, Type: datetime2
         [Column("SysEndTime")]
         public DateTime SysEndTime { get; set; }
-
-        // Column: (31rowsaffected), Type: 
-        [Column("(31rowsaffected)")]
-        public string? (31rowsaffected) { get; set; }
-
     }
 }
