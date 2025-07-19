@@ -26,7 +26,7 @@ export const useUnitStore = defineStore("unit", {
         console.log('📡 Calling API: /Units');
         console.log('📡 Base URL:', import.meta.env.VITE_API_BASE_URL);
         const response = await apiClient.get("/Units");
-        console.log('📨 API Response received:', response.Status, response.data);
+        console.log('📨 API Response received:', response.status, response.data);
         console.log('📨 Response headers:', response.headers);
 
         let unitsData = [];

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models;
+using TinhKhoanApp.Api.Models.Dtos;
 
 namespace TinhKhoanApp.Api.Controllers
 {
@@ -92,9 +93,177 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
+        // DELETE: api/KpiIndicators/DeleteAll
+        [HttpDelete("DeleteAll")]
+        public async Task<IActionResult> DeleteAllKpiIndicators()
+        {
+            try
+            {
+                var indicators = await _context.KpiIndicators.ToListAsync();
+                if (indicators.Count > 0)
+                {
+                    _context.KpiIndicators.RemoveRange(indicators);
+                    await _context.SaveChangesAsync();
+                    _logger.LogInformation($"✅ Deleted {indicators.Count} KPI indicators");
+                }
+
+                return Ok(new { message = $"Đã xóa {indicators.Count} chỉ tiêu KPI" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error deleting all KPI indicators");
+                return StatusCode(500, new { message = "Lỗi khi xóa tất cả chỉ tiêu KPI", error = ex.Message });
+            }
+        }
+
+        // POST: api/KpiIndicators/Batch
+        [HttpPost("Batch")]
+        public async Task<ActionResult> PostKpiIndicatorsBatch([FromBody] IEnumerable<KpiIndicatorDto> indicators)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var createdIndicators = new List<KpiIndicator>();
+
+                foreach (var dto in indicators)
+                {
+                    // Kiểm tra table tồn tại
+                    var table = await _context.KpiAssignmentTables.FindAsync(dto.TableId);
+                    if (table == null)
+                    {
+                        return BadRequest(new { message = $"Không tìm thấy bảng KPI với ID {dto.TableId}" });
+                    }
+
+                    var indicator = new KpiIndicator
+                    {
+                        TableId = dto.TableId,
+                        IndicatorName = dto.IndicatorName,
+                        MaxScore = dto.MaxScore,
+                        Unit = dto.Unit,
+                        OrderIndex = dto.OrderIndex > 0 ? dto.OrderIndex : (await _context.KpiIndicators
+                            .Where(k => k.TableId == dto.TableId)
+                            .MaxAsync(k => (int?)k.OrderIndex) ?? 0) + 1,
+                        ValueType = dto.ValueType,
+                        IsActive = dto.IsActive,
+                        Table = table // Set the navigation property to satisfy [Required] validation
+                    };
+
+                    createdIndicators.Add(indicator);
+                }
+
+                _context.KpiIndicators.AddRange(createdIndicators);
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation($"✅ Created {createdIndicators.Count} KPI indicators in batch");
+                return Ok(new { message = $"Đã tạo {createdIndicators.Count} chỉ tiêu KPI", count = createdIndicators.Count });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error creating KPI indicators batch");
+                return StatusCode(500, new { message = "Lỗi khi tạo chỉ tiêu KPI hàng loạt", error = ex.Message });
+            }
+        }
+
         // POST: api/KpiIndicators
         [HttpPost]
-        public async Task<ActionResult<KpiIndicator>> PostKpiIndicator([FromBody] KpiIndicator indicator)
+        public async Task<ActionResult<KpiIndicator>> PostKpiIndicator([FromBody] KpiIndicatorDto dto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                // Kiểm tra table tồn tại
+                var table = await _context.KpiAssignmentTables.FindAsync(dto.TableId);
+                if (table == null)
+                {
+                    return BadRequest(new { message = $"Không tìm thấy bảng KPI với ID {dto.TableId}" });
+                }
+
+                var indicator = new KpiIndicator
+                {
+                    TableId = dto.TableId,
+                    IndicatorName = dto.IndicatorName,
+                    MaxScore = dto.MaxScore,
+                    Unit = dto.Unit,
+                    OrderIndex = dto.OrderIndex > 0 ? dto.OrderIndex : (await _context.KpiIndicators
+                        .Where(k => k.TableId == dto.TableId)
+                        .MaxAsync(k => (int?)k.OrderIndex) ?? 0) + 1,
+                    ValueType = dto.ValueType,
+                    IsActive = dto.IsActive,
+                    Table = table // Set the navigation property to satisfy [Required] validation
+                };
+
+                _context.KpiIndicators.Add(indicator);
+                await _context.SaveChangesAsync();
+
+                var created = await _context.KpiIndicators
+                    .Include(k => k.Table)
+                    .FirstOrDefaultAsync(k => k.Id == indicator.Id);
+
+                _logger.LogInformation($"✅ Created KPI indicator: {indicator.IndicatorName}");
+                return CreatedAtAction(nameof(GetKpiIndicator), new { id = indicator.Id }, created);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error creating KPI indicator");
+                return StatusCode(500, new { message = "Lỗi khi tạo chỉ tiêu KPI", error = ex.Message });
+            }
+        }
+
+        // POST: api/KpiIndicators/CreateFromDto - Bypass validation issues
+        [HttpPost("CreateFromDto")]
+        public async Task<ActionResult<KpiIndicator>> PostKpiIndicatorFromDto([FromBody] KpiIndicatorDto dto)
+        {
+            try
+            {
+                // Kiểm tra table tồn tại
+                var table = await _context.KpiAssignmentTables.FindAsync(dto.TableId);
+                if (table == null)
+                {
+                    return BadRequest(new { message = $"Không tìm thấy bảng KPI với ID {dto.TableId}" });
+                }
+
+                var indicator = new KpiIndicator
+                {
+                    TableId = dto.TableId,
+                    IndicatorName = dto.IndicatorName,
+                    MaxScore = dto.MaxScore,
+                    Unit = dto.Unit,
+                    OrderIndex = dto.OrderIndex > 0 ? dto.OrderIndex : (await _context.KpiIndicators
+                        .Where(k => k.TableId == dto.TableId)
+                        .MaxAsync(k => (int?)k.OrderIndex) ?? 0) + 1,
+                    ValueType = dto.ValueType,
+                    IsActive = dto.IsActive
+                };
+
+                _context.KpiIndicators.Add(indicator);
+                await _context.SaveChangesAsync();
+
+                // Reload with navigation property
+                var created = await _context.KpiIndicators
+                    .Include(k => k.Table)
+                    .FirstOrDefaultAsync(k => k.Id == indicator.Id);
+
+                _logger.LogInformation($"✅ Created KPI indicator: {indicator.IndicatorName}");
+                return CreatedAtAction(nameof(GetKpiIndicator), new { id = indicator.Id }, created);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error creating KPI indicator from DTO");
+                return StatusCode(500, new { message = "Lỗi khi tạo chỉ tiêu KPI từ DTO", error = ex.Message });
+            }
+        }
+
+        // POST: api/KpiIndicators
+        [HttpPost("Original")]
+        public async Task<ActionResult<KpiIndicator>> PostKpiIndicatorOriginal([FromBody] KpiIndicator indicator)
         {
             try
             {

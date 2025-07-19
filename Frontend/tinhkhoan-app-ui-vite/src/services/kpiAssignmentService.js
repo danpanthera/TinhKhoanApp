@@ -3,17 +3,31 @@ import api from './api';
 export const kpiAssignmentService = {
   // Get all KPI assignment tables
   async getTables() {
+    console.log('🔄 kpiAssignmentService.getTables() started');
+    console.log('📡 Calling API: /KpiAssignmentTables');
+    console.log('📡 Base URL:', import.meta.env.VITE_API_BASE_URL);
+
     const response = await api.get('/KpiAssignmentTables'); // Use raw SQL endpoint
+    console.log('📨 KPI Tables API Response received:', response.status, response.data);
 
     let tablesData = [];
     if (response.data && Array.isArray(response.data.$values)) {
+      console.log('✅ Found $values array with length:', response.data.$values.length);
       tablesData = response.data.$values;
     } else if (Array.isArray(response.data)) {
+      console.log('✅ Found direct array with length:', response.data.length);
       tablesData = response.data;
+    } else {
+      console.error('❌ Invalid response format:', response.data);
     }
 
+    console.log('📊 Final tablesData length:', tablesData.length);
+
+
+    console.log('📊 Final tablesData length:', tablesData.length);
+
     // Enhanced categorization logic for better table classification
-    return tablesData.map(table => {
+    const processedTables = tablesData.map(table => {
       // Use the category from backend if available, otherwise apply our logic
       if (table.category) {
         // Backend already provides the category, just ensure consistent naming
@@ -126,6 +140,11 @@ export const kpiAssignmentService = {
       // Default alphabetical sort for everything else
       return aType.localeCompare(bType);
     });
+
+    console.log('✅ Processed KPI tables:', processedTables.length);
+    console.log('🏷️ Categories found:', [...new Set(processedTables.map(t => t.category))]);
+
+    return processedTables;
   },
 
   // Get table details with indicators

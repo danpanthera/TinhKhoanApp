@@ -1,6 +1,60 @@
 ß<template>
   <div class="positions-view">
     <h1>Quản lý Chức vụ</h1>
+
+    <!-- Selection Management -->
+    <div class="selection-management" style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e9ecef;">
+      <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 16px;">
+        <button
+          @click="toggleSelectionMode"
+          class="action-button"
+          :style="{
+            backgroundColor: isSelectionMode ? '#e74c3c' : '#2ecc71',
+            borderColor: isSelectionMode ? '#c0392b' : '#27ae60'
+          }"
+        >
+          {{ isSelectionMode ? '✕ Thoát chế độ chọn' : '☑ Chọn Chức vụ' }}
+        </button>
+
+        <button
+          v-if="isSelectionMode && selectedPositions.size > 0"
+          @click="selectAllVisible"
+          class="action-button"
+          style="background-color: #3498db; border-color: #2980b9;"
+        >
+          Chọn tất cả hiển thị
+        </button>
+
+        <button
+          v-if="isSelectionMode && selectedPositions.size > 0"
+          @click="clearSelection"
+          class="action-button"
+          style="background-color: #95a5a6; border-color: #7f8c8d;"
+        >
+          Bỏ chọn tất cả
+        </button>
+
+        <button
+          v-if="selectedPositions.size > 0"
+          @click="deleteSelectedPositions"
+          class="action-button"
+          style="background-color: #e74c3c; border-color: #c0392b;"
+        >
+          🗑 Xóa đã chọn ({{ selectedPositions.size }})
+        </button>
+      </div>
+
+      <div v-if="selectedPositions.size > 0" class="selected-positions-display">
+        <h4 style="margin: 0 0 12px 0; color: #2c3e50;">Chức vụ đã chọn ({{ selectedPositions.size }}):</h4>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+          <span v-for="positionId in Array.from(selectedPositions)" :key="positionId"
+                style="background: #3498db; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">
+            {{ getPositionName(positionId) }}
+          </span>
+        </div>
+      </div>
+    </div>
+
     <button
       @click="loadPositions"
       :disabled="positionStore.isLoading"
@@ -22,26 +76,36 @@
         v-for="position in sortedPositions"
         :key="position.Id"
         class="list-item"
+        :style="{ backgroundColor: selectedPositions.has(position.Id) ? '#e3f2fd' : '' }"
       >
-        <div class="item-info">
-          <div class="position-header">
-            <strong>{{ position.Name }}</strong>
-            <span class="position-id">ID: {{ position.Id }}</span>
+        <div style="display: flex; align-items: center; gap: 15px;">
+          <input
+            v-if="isSelectionMode"
+            type="checkbox"
+            :checked="selectedPositions.has(position.Id)"
+            @change="togglePositionSelection(position.Id)"
+            style="transform: scale(1.2);"
+          />
+          <div class="item-info" style="flex-grow: 1;">
+            <div class="position-header">
+              <strong>{{ position.Name }}</strong>
+              <span class="position-id">ID: {{ position.Id }}</span>
+            </div>
+            <span class="item-details" v-if="position.Description"
+              >(Mô tả: {{ position.Description }})</span
+            >
           </div>
-          <span class="item-details" v-if="position.Description"
-            >(Mô tả: {{ position.Description }})</span
-          >
-        </div>
-        <div class="actions">
-          <button @click="startEditPosition(position)" class="edit-btn">
-            Sửa
-          </button>
-          <button
-            @click="deletePosition(position.Id)"
-            class="delete-btn"
-          >
-            Xóa
-          </button>
+          <div class="actions" v-if="!isSelectionMode">
+            <button @click="startEditPosition(position)" class="edit-btn">
+              Sửa
+            </button>
+            <button
+              @click="deletePosition(position.Id)"
+              class="delete-btn"
+            >
+              Xóa
+            </button>
+          </div>
         </div>
       </li>
     </ul>
@@ -114,6 +178,10 @@ import { computed, onMounted, ref } from "vue";
 import { usePositionStore } from "../stores/positionStore.js";
 
 const positionStore = usePositionStore();
+
+// Multiselection functionality
+const isSelectionMode = ref(false);
+const selectedPositions = ref(new Set());
 
 // Computed property để sort positions theo ID
 const sortedPositions = computed(() => {
@@ -240,6 +308,78 @@ const deletePosition = async (positionId) => {
       formError.value = positionStore.error;
     } else {
       formError.value = "Không thể xóa chức vụ. Vui lòng thử lại.";
+    }
+  }
+};
+
+// Multiselection methods
+const toggleSelectionMode = () => {
+  isSelectionMode.value = !isSelectionMode.value;
+  if (!isSelectionMode.value) {
+    selectedPositions.value.clear();
+  }
+};
+
+const togglePositionSelection = (positionId) => {
+  if (selectedPositions.value.has(positionId)) {
+    selectedPositions.value.delete(positionId);
+  } else {
+    selectedPositions.value.add(positionId);
+  }
+};
+
+const selectAllVisible = () => {
+  sortedPositions.value.forEach(position => {
+    selectedPositions.value.add(position.Id);
+  });
+};
+
+const clearSelection = () => {
+  selectedPositions.value.clear();
+};
+
+const getPositionName = (positionId) => {
+  const position = positionStore.allPositions.find(p => p.Id === positionId);
+  return position ? position.Name : `ID: ${positionId}`;
+};
+
+const deleteSelectedPositions = async () => {
+  if (selectedPositions.value.size === 0) return;
+
+  const selectedPositionsArray = positionStore.allPositions.filter(position =>
+    selectedPositions.value.has(position.Id)
+  );
+  const positionNames = selectedPositionsArray.map(position => position.Name).join(', ');
+
+  if (confirm(`Bạn có chắc muốn xóa ${selectedPositions.value.size} chức vụ: ${positionNames}?`)) {
+    let successCount = 0;
+    let failCount = 0;
+    const errors = [];
+
+    for (const positionId of selectedPositions.value) {
+      try {
+        await positionStore.deletePosition(positionId);
+        successCount++;
+      } catch (error) {
+        failCount++;
+        const positionName = selectedPositionsArray.find(p => p.Id === positionId)?.Name || `ID: ${positionId}`;
+        const errorMessage = error.message || 'Lỗi không xác định';
+        errors.push(`${positionName}: ${errorMessage}`);
+        console.error(`Error deleting position ${positionId}:`, error);
+      }
+    }
+
+    // Clear selection after deletion attempt
+    selectedPositions.value.clear();
+    isSelectionMode.value = false;
+
+    // Show results
+    if (successCount > 0 && failCount === 0) {
+      alert(`Xóa thành công ${successCount} chức vụ!`);
+    } else if (successCount > 0 && failCount > 0) {
+      alert(`Xóa thành công ${successCount} chức vụ, thất bại ${failCount} chức vụ.\n\nLỗi:\n${errors.join('\n')}`);
+    } else {
+      alert(`Xóa thất bại tất cả ${failCount} chức vụ.\n\nLỗi:\n${errors.join('\n')}`);
     }
   }
 };

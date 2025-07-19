@@ -60,19 +60,20 @@ internal partial class Program
 
         var builder = WebApplication.CreateBuilder(args);
 
-        // Định nghĩa URL của Vue app dev server (Sếp thay 8080 bằng port thực tế của Vue app nếu khác)
-        // var vueAppDevServerUrl = "http://localhost:8080";        // 1. Lấy connection string cho SQL Server
+        // 1. Lấy connection string cho Azure SQL Edge
         var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
         if (string.IsNullOrEmpty(connectionString))
         {
-            throw new InvalidOperationException("SQL Server connection string is not configured.");
-        }        // 2. Đăng ký ApplicationDbContext với SQL Server provider - OPTIMIZED
+            throw new InvalidOperationException("Azure SQL Edge connection string is not configured.");
+        }
+
+        // 2. Đăng ký ApplicationDbContext với SQL Server provider cho Azure SQL Edge - OPTIMIZED
         builder.Services.AddDbContext<ApplicationDbContext>(options =>
         {
             options.UseSqlServer(connectionString, sqlOptions =>
             {
-                // 🚀 PERFORMANCE OPTIMIZATIONS
+                // 🚀 PERFORMANCE OPTIMIZATIONS for Azure SQL Edge ARM64
                 sqlOptions.CommandTimeout(120); // 2 phút timeout cho commands
                 sqlOptions.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null); // Retry logic
             });

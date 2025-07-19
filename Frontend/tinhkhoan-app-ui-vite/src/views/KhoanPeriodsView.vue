@@ -1,6 +1,60 @@
 <template>
   <div class="khoan-periods-view">
     <h1>Quản lý Kỳ Khoán</h1>
+
+    <!-- Selection Management -->
+    <div class="selection-management" style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e9ecef;">
+      <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 16px;">
+        <button
+          @click="toggleSelectionMode"
+          class="action-button"
+          :style="{
+            backgroundColor: isSelectionMode ? '#e74c3c' : '#2ecc71',
+            borderColor: isSelectionMode ? '#c0392b' : '#27ae60'
+          }"
+        >
+          {{ isSelectionMode ? '✕ Thoát chế độ chọn' : '☑ Chọn Kỳ khoán' }}
+        </button>
+
+        <button
+          v-if="isSelectionMode && selectedPeriods.size > 0"
+          @click="selectAllVisible"
+          class="action-button"
+          style="background-color: #3498db; border-color: #2980b9;"
+        >
+          Chọn tất cả hiển thị
+        </button>
+
+        <button
+          v-if="isSelectionMode && selectedPeriods.size > 0"
+          @click="clearSelection"
+          class="action-button"
+          style="background-color: #95a5a6; border-color: #7f8c8d;"
+        >
+          Bỏ chọn tất cả
+        </button>
+
+        <button
+          v-if="selectedPeriods.size > 0"
+          @click="deleteSelectedPeriods"
+          class="action-button"
+          style="background-color: #e74c3c; border-color: #c0392b;"
+        >
+          🗑 Xóa đã chọn ({{ selectedPeriods.size }})
+        </button>
+      </div>
+
+      <div v-if="selectedPeriods.size > 0" class="selected-periods-display">
+        <h4 style="margin: 0 0 12px 0; color: #2c3e50;">Kỳ khoán đã chọn ({{ selectedPeriods.size }}):</h4>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+          <span v-for="periodId in Array.from(selectedPeriods)" :key="periodId"
+                style="background: #3498db; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">
+            {{ getPeriodName(periodId) }}
+          </span>
+        </div>
+      </div>
+    </div>
+
     <button
       @click="loadKhoanPeriods"
       :disabled="khoanPeriodStore.isLoading"
@@ -26,25 +80,35 @@
         v-for="period in khoanPeriodStore.sortedKhoanPeriods"
         :key="getId(period)"
         class="list-item"
+        :style="{ backgroundColor: selectedPeriods.has(getId(period)) ? '#e3f2fd' : '' }"
       >
-        <div class="item-info">
-          <strong>{{ period.Name }}</strong>
-          <span class="item-details">
-            <div class="period-type">📊 Loại: <strong>{{ period.typeDisplay || period.Type }}</strong></div>
-            <div class="period-dates">📅 Thời gian: {{ formatDate(period.StartDate || period.startDate) }} → {{ formatDate(period.EndDate || period.endDate) }}</div>
-            <div class="period-status">🏷️ Trạng thái: <span class="status-badge" :class="getStatusClass(period.Status || period.Status)">{{ period.statusDisplay || period.Status }}</span></div>
-          </span>
-        </div>
-        <div class="actions">
-          <button @click="startEditKhoanPeriod(period)" class="edit-btn">
-            Sửa
-          </button>
-          <button
-            @click="confirmDeleteKhoanPeriod(period.Id)"
-            class="delete-btn"
-          >
-            Xóa
-          </button>
+        <div style="display: flex; align-items: center; gap: 15px;">
+          <input
+            v-if="isSelectionMode"
+            type="checkbox"
+            :checked="selectedPeriods.has(getId(period))"
+            @change="togglePeriodSelection(getId(period))"
+            style="transform: scale(1.2);"
+          />
+          <div class="item-info" style="flex-grow: 1;">
+            <strong>{{ period.Name }}</strong>
+            <span class="item-details">
+              <div class="period-type">📊 Loại: <strong>{{ period.typeDisplay || period.Type }}</strong></div>
+              <div class="period-dates">📅 Thời gian: {{ formatDate(period.StartDate || period.startDate) }} → {{ formatDate(period.EndDate || period.endDate) }}</div>
+              <div class="period-status">🏷️ Trạng thái: <span class="status-badge" :class="getStatusClass(period.Status || period.Status)">{{ period.statusDisplay || period.Status }}</span></div>
+            </span>
+          </div>
+          <div class="actions" v-if="!isSelectionMode">
+            <button @click="startEditKhoanPeriod(period)" class="edit-btn">
+              Sửa
+            </button>
+            <button
+              @click="confirmDeleteKhoanPeriod(period.Id)"
+              class="delete-btn"
+            >
+              Xóa
+            </button>
+          </div>
         </div>
       </li>
     </ul>
@@ -167,6 +231,10 @@ const initialKhoanPeriodData = () => ({
 const currentKhoanPeriod = ref(initialKhoanPeriodData());
 const isEditing = ref(false);
 const formError = ref(null);
+
+// Multiselect variables
+const isSelectionMode = ref(false);
+const selectedPeriods = ref(new Set());
 
 const displayError = computed(() => {
   return formError.value || khoanPeriodStore.error;
@@ -395,6 +463,78 @@ const confirmDeleteKhoanPeriod = async (periodId) => {
       alert("Xóa Kỳ Khoán thành công!");
     } catch (error) {
       console.error("Lỗi khi xóa Kỳ Khoán:", error);
+    }
+  }
+};
+
+// Multiselect methods
+const toggleSelectionMode = () => {
+  isSelectionMode.value = !isSelectionMode.value;
+  if (!isSelectionMode.value) {
+    selectedPeriods.value.clear();
+  }
+};
+
+const togglePeriodSelection = (periodId) => {
+  if (selectedPeriods.value.has(periodId)) {
+    selectedPeriods.value.delete(periodId);
+  } else {
+    selectedPeriods.value.add(periodId);
+  }
+};
+
+const selectAllVisible = () => {
+  selectedPeriods.value.clear();
+  khoanPeriodStore.sortedKhoanPeriods.forEach(period => {
+    selectedPeriods.value.add(getId(period));
+  });
+};
+
+const clearSelection = () => {
+  selectedPeriods.value.clear();
+};
+
+const getPeriodName = (periodId) => {
+  const period = khoanPeriodStore.khoanPeriods.find(p => getId(p) === periodId);
+  return period ? getName(period) : `ID: ${periodId}`;
+};
+
+const deleteSelectedPeriods = async () => {
+  if (selectedPeriods.value.size === 0) {
+    alert('Vui lòng chọn ít nhất một kỳ khoán để xóa!');
+    return;
+  }
+
+  const count = selectedPeriods.value.size;
+  if (confirm(`Bạn có chắc chắn muốn xóa ${count} kỳ khoán đã chọn không?`)) {
+    let successCount = 0;
+    let failCount = 0;
+    const errors = [];
+
+    for (const periodId of selectedPeriods.value) {
+      try {
+        await khoanPeriodStore.deleteKhoanPeriod(periodId);
+        successCount++;
+      } catch (error) {
+        failCount++;
+        const periodName = getPeriodName(periodId);
+        const errorMessage = error.message || 'Lỗi không xác định';
+        errors.push(`${periodName}: ${errorMessage}`);
+        console.error(`Error deleting period ${periodId}:`, error);
+      }
+    }
+
+    // Clear selection after deletion attempt
+    selectedPeriods.value.clear();
+    isSelectionMode.value = false;
+
+    // Show results
+    if (successCount > 0 && failCount === 0) {
+      alert(`Xóa thành công ${successCount} kỳ khoán!`);
+    } else if (successCount > 0 && failCount > 0) {
+      alert(`Xóa thành công ${successCount} kỳ khoán, thất bại ${failCount} kỳ khoán.\n\nLỗi:\n${errors.join('\n')}`);
+    } else {
+      alert(`Xóa thất bại tất cả ${failCount} kỳ khoán.\n\nLỗi:\n${errors.join('\n')}`);
     }
   }
 };

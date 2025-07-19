@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Data;
+using TinhKhoanApp.Api.Models;
 
 namespace TinhKhoanApp.Api.Controllers
 {
@@ -230,6 +231,9 @@ namespace TinhKhoanApp.Api.Controllers
         public string IndicatorName { get; set; } = "";
         public string Description { get; set; } = "";
         public string Unit { get; set; } = "";
+        public decimal MaxScore { get; set; }
+        public int OrderIndex { get; set; }
+        public KpiValueType ValueType { get; set; } = KpiValueType.NUMBER;
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime UpdatedAt { get; set; }

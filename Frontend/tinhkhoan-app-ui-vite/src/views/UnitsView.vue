@@ -783,11 +783,9 @@ const confirmDeleteUnit = async (unitId) => {
 
 // Computed property cho các nhánh gốc (CNL1)
 const branches = computed(() => {
-  // Chỉ lấy các đơn vị CNL1 (ParentUnitId null hoặc 0) làm root và sort theo Id
-  return unitStore.allUnits.filter(u => {
-    const type = (u.Type || '').toUpperCase(); // ✅ Sử dụng u.Type thay vì u.type
-    return type === 'CNL1' && (!u.ParentUnitId || u.ParentUnitId === 0); // ✅ Sử dụng u.ParentUnitId
-  }).sort((a, b) => (a.Id || 0) - (b.Id || 0)); // ✅ Sử dụng a.Id và b.Id
+  // Dựa vào dữ liệu thực tế, units chỉ có Id, Code, Name - không có Type hay ParentUnitId
+  // Hiển thị tất cả units và sắp xếp theo Id
+  return unitStore.allUnits.sort((a, b) => (a.Id || 0) - (b.Id || 0));
 });
 
 // Computed property cho các phòng ban theo từng nhánh

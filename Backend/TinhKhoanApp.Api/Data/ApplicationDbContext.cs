@@ -622,13 +622,35 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
                         var propertyName = property.Name;
                         if (propertyName.Contains("TIEN") || propertyName.Contains("DU_NO") ||
                             propertyName.Contains("GIA_TRI") || propertyName.Contains("BALANCE") ||
-                            propertyName.Contains("PLAN_") || propertyName.Contains("ACTUAL_"))
+                            propertyName.Contains("PLAN_") || propertyName.Contains("ACTUAL_") ||
+                            propertyName.Contains("AMOUNT") || propertyName.Contains("APPRAMT") ||
+                            propertyName.Contains("DISBURSEMENT") || propertyName.Contains("REPAYMENT") ||
+                            propertyName.Contains("INTEREST") || propertyName.Contains("EXEMPT") ||
+                            propertyName.Contains("INTCMTH") || propertyName.Contains("INTRPYMTH") ||
+                            propertyName.Contains("ACCRUAL") || propertyName.Contains("PASTDUE") ||
+                            propertyName.Contains("TOTAL_") || propertyName.Contains("NEXT_") ||
+                            propertyName.Contains("BDS") || propertyName.Contains("DS") ||
+                            propertyName.Contains("DUNO") || propertyName.Contains("THU_") ||
+                            propertyName.Contains("TSK") || propertyName.Contains("DOC_") ||
+                            propertyName.Contains("CONLAINGOAIBANG") || propertyName.Contains("DUNONOIBANG") ||
+                            propertyName.Contains("THUNOSAUXL"))
                         {
                             entity.Property(propertyName).HasPrecision(18, 2);
                         }
-                        else if (propertyName.Contains("LAI_SUAT") || propertyName.Contains("TY_LE"))
+                        else if (propertyName.Contains("LAI_SUAT") || propertyName.Contains("TY_LE") ||
+                                propertyName.Contains("RATE") || propertyName.Contains("PERCENT") ||
+                                propertyName.Contains("TY_GIA"))
                         {
                             entity.Property(propertyName).HasPrecision(10, 6);
+                        }
+                        else if (propertyName.Equals("ACHIEVEMENT_RATE"))
+                        {
+                            entity.Property(propertyName).HasPrecision(18, 2);
+                        }
+                        else
+                        {
+                            // Default precision for other decimal fields
+                            entity.Property(propertyName).HasPrecision(18, 2);
                         }
                     }
                 }

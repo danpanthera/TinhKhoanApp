@@ -186,11 +186,15 @@
 
     <!-- Offline Indicator and Sync Status -->
     <OfflineIndicator />
+
+    <!-- Debug Panel for development -->
+    <DebugPanel v-if="isDevelopment" />
   </div>
 </template>
 
 <script setup>
 import AppFooter from '@/components/AppFooter.vue';
+import DebugPanel from '@/components/DebugPanel.vue';
 import OfflineIndicator from '@/components/OfflineIndicator.vue';
 import PWAInstallPrompt from '@/components/PWAInstallPrompt.vue';
 import ThemeSwitcher from '@/components/ThemeSwitcher.vue';
@@ -200,6 +204,10 @@ import { useRoute, useRouter } from 'vue-router';
 
 const router = useRouter();
 const route = useRoute();
+
+// Development flag for debug panel
+const isDevelopment = ref(import.meta.env.DEV);
+
 if (!isAuthenticated() && router.currentRoute.value.path !== '/login') {
   router.push('/login');
 }
@@ -339,7 +347,7 @@ const isHRSectionActive = computed(() => {
 
 // Check if current route is in KPI section
 const isKPISectionActive = computed(() => {
-  const kpiRoutes = ['/khoan-periods', '/kpi-definitions', '/employee-kpi-assignment', '/unit-kpi-assignment', '/kpi-actual-values', '/kpi-input', '/kpi-score', '/kpi-scoring', '/payroll-report'];
+  const kpiRoutes = ['/khoan-periods', '/kpi-definitions', '/kpi-config', '/employee-kpi-assignment', '/unit-kpi-assignment', '/kpi-actual-values', '/kpi-input', '/kpi-score', '/kpi-scoring', '/payroll-report'];
   return kpiRoutes.includes(route.path);
 });
 

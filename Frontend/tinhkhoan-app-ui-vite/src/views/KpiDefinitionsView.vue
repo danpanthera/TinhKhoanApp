@@ -692,33 +692,28 @@ const selectedTable = computed(() => {
 // Filter tables based on active tab using Category field
 const filteredKpiTables = computed(() => {
   if (activeTab.value === 'employee') {
-    // Filter for employee tables using Category field and sort alphabetically by Description
+    // Filter for employee tables using actual Category values from API: "CANBO"
     return kpiTables.value
-      .filter(table => (table.Category || table.category) === 'VAI TRÒ CÁN BỘ')
+      .filter(table => {
+        const category = (table.Category || table.category || '').toUpperCase();
+        return category === 'CANBO' || category === 'VAI TRÒ CÁN BỘ';
+      })
       .sort((a, b) => {
         const nameA = (a.Description || a.description || a.TableName || a.tableName || '').toLowerCase();
         const nameB = (b.Description || b.description || b.TableName || b.tableName || '').toLowerCase();
         return nameA.localeCompare(nameB, 'vi', { numeric: true });
       });
   } else if (activeTab.value === 'branch') {
-    // Filter for branch tables and sort by specific order based on TableName
-    const branchOrder = ['HoiSo_KPI_Assignment', 'CnBinhLu_KPI_Assignment', 'CnPhongTho_KPI_Assignment', 'CnSinHo_KPI_Assignment', 'CnBumTo_KPI_Assignment', 'CnThanUyen_KPI_Assignment', 'CnDoanKet_KPI_Assignment', 'CnTanUyen_KPI_Assignment', 'CnNamHang_KPI_Assignment'];
+    // Filter for branch tables - all others that are not employee tables
     return kpiTables.value
-      .filter(table => (table.Category || table.category) === 'CHI NHÁNH')
+      .filter(table => {
+        const category = (table.Category || table.category || '').toUpperCase();
+        return category !== 'CANBO' && category !== 'VAI TRÒ CÁN BỘ';
+      })
       .sort((a, b) => {
+        // Sort by TableName for branch tables
         const nameA = a.TableName || a.tableName || '';
         const nameB = b.TableName || b.tableName || '';
-        const indexA = branchOrder.indexOf(nameA);
-        const indexB = branchOrder.indexOf(nameB);
-
-        // If both are in the predefined order, sort by index
-        if (indexA !== -1 && indexB !== -1) {
-          return indexA - indexB;
-        }
-        // If only one is in the predefined order, prioritize it
-        if (indexA !== -1) return -1;
-        if (indexB !== -1) return 1;
-        // If neither is in the predefined order, sort alphabetically
         return nameA.localeCompare(nameB);
       });
   }
