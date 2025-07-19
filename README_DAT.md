@@ -175,24 +175,67 @@ Luôn kiểm tra file test cho 08 bảng dữ liệu từ thư mục sau:
 - **Performance:** Tối ưu cho Apple Silicon Mac
 - **Status:** Môi trường đã được dọn dẹp, chỉ còn container chính
 
-### QUY ƯỚC MÃ CHI NHÁNH (MA_CN) theo tên gọi như sau:
+### 🏢 **CẤU TRÚC TỔ CHỨC CHI NHÁNH LAI CHÂU - 19/07/2025**
 
-cấu trúc như sau: Tên, code, MA_CN
+**✅ HOÀN THÀNH:** Cấu trúc phân cấp chi nhánh|đơn vị như sau
 
-- Hội Sở, HoiSo, 7800
-- Bình Lư, BinhLu, 7801
-- Phong Thổ, PhongTho, 7802
-- Sìn Hồ, SinHo, 7803
-- Bum Tở, BumTo, 7804
-- Than Uyên, ThanUyen, 7805
-- Doan Kết, DoanKet, 7806
-- Tân Uyên, TanUyen, 7807
-- Nậm Hàng, NamHang, 7808
-- Toàn tỉnh, ToanTinh, Tổng của 9 Chi nhánh từ Hội Sở -> Nậm Hàng
+#### Cấu trúc tổ chức (46 đơn vị):
 
-### 🏢 **TẠO CẤU TRÚC 46 ĐƠN VỊ - 06/07/2025**
+```
+Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
+├── Hội Sở (ID=2, CNL1, Parent ID=1)
+│ ├── Ban Giám đốc (ID=3, PNVL1, parent ID=2)
+│ ├── Phòng Khách hàng Doanh nghiệp (ID=4, PNVL1, parent ID=2)
+│ ├── Phòng Khách hàng Cá nhân (ID=5, PNVL1, parent ID=2)
+│ ├── Phòng Kế toán & Ngân quỹ (ID=6, PNVL1, parent ID=2)
+│ ├── Phòng Tổng hợp (ID=7, PNVL1, parent ID=2)
+│ ├── Phòng Kế hoạch & Quản lý rủi ro (ID=8, PNVL1, parent ID=2)
+│ └── Phòng Kiểm tra giám sát (ID=9, PNVL1, parent ID=2)
+├── Chi nhánh Bình Lư (ID=10, CNL2, parent ID=1)
+│ ├── Ban Giám đốc (ID=18, PNVL2, parent ID=10)
+│ ├── Phòng Kế toán & Ngân quỹ (ID=19, PNVL2, parent ID=10)
+│ └── Phòng Khách hàng (ID=20, PNVL2, parent ID=10)
+├── Chi nhánh Phong Thổ (ID=11, CNL2, parent ID=1)
+│ ├── Ban Giám đốc (ID=21, PNVL2, parent ID=11)
+│ ├── Phòng Kế toán & Ngân quỹ (ID=22, PNVL2, parent ID=11)
+│ ├── Phòng Khách hàng (ID=23, PNVL2, parent ID=11)
+│ └── Phòng giao dịch Số 5 (ID=24, PGDL2, parent ID=11)
+├── Chi nhánh Sìn Hồ (ID=12, CNL2, parent ID=1)
+│ ├── Ban Giám đốc (ID=25, PNVL2, parent ID=12)
+│ ├── Phòng Kế toán & Ngân quỹ (ID=26, PNVL2, parent ID=12)
+│ └── Phòng Khách hàng (ID=27, PNVL2, parent ID=12)
+├── Chi nhánh Bum Tở (ID=13, CNL2, parent ID=1)
+│ ├── Ban Giám đốc (ID=28, PNVL2, parent ID=13)
+│ ├── Phòng Kế toán & Ngân quỹ (ID=29, PNVL2, parent ID=13)
+│ └── Phòng Khách hàng (ID=30, PNVL2, parent ID=13)
+├── Chi nhánh Than Uyên (ID=14, CNL2, parent ID=1)
+│ ├── Ban Giám đốc (ID=31, PNVL2, parent ID=14)
+│ ├── Phòng Kế toán & Ngân quỹ (ID=32, PNVL2, parent ID=14)
+│ ├── Phòng Khách hàng (ID=33, PNVL2, parent ID=14)
+│ └── Phòng giao dịch số 6 (ID=34, PGDL2, parent ID=14)
+├── Chi nhánh Đoàn Kết (ID=15, CNL2, parent ID=1)
+│ ├── Ban Giám đốc (ID=35, PNVL2, parent ID=15)
+│ ├── Phòng Kế toán & Ngân quỹ (ID=36, PNVL2, parent ID=15)
+│ ├── Phòng Khách hàng (ID=37, PNVL2, parent ID=15)
+│ ├── Phòng giao dịch số 1 (ID=38, PGDL2, parent ID=15)
+│ └── Phòng giao dịch số 2 (ID=39, PGDL2, parent ID=15)
+├── Chi nhánh Tân Uyên (ID=16, CNL2, parent ID=1)
+│ ├── Ban Giám đốc (ID=40, PNVL2, parent ID=16)
+│ ├── Phòng Kế toán & Ngân quỹ (ID=41, PNVL2, parent ID=16)
+│ ├── Phòng Khách hàng (ID=42, PNVL2, parent ID=16)
+│ └── Phòng giao dịch số 3 (ID=43, PGDL2, parent ID=16)
+└── Chi nhánh Nậm Hàng (ID=17, CNL2, parent ID=1)
+    ├── Ban Giám đốc (ID=44, PNVL2, parent ID=17)
+    ├── Phòng Kế toán & Ngân quỹ (ID=45, PNVL2, parent ID=17)
+    └── Phòng Khách hàng (ID=46, PNVL2, parent ID=17)
+```
 
-**✅ HOÀN THÀNH:** Đã tạo thành công 46 đơn vị theo cấu trúc hierarchical
+#### Phân loại đơn vị:
+- **CNL1**: Chi nhánh cấp 1 (Hội Sở)
+- **CNL2**: Chi nhánh cấp 2 (8 chi nhánh trực thuộc)
+- **PNVL1**: Phòng/ban cấp 1 (thuộc Hội Sở)
+- **PNVL2**: Phòng/ban cấp 2 (thuộc chi nhánh)
+- **PGDL2**: Phòng giao dịch cấp 2
 
 #### Cấu trúc tổ chức:
 

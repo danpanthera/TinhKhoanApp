@@ -772,7 +772,8 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Generic bulk insert method
+        /// <summary>
+        /// Generic bulk insert method với improved column mapping
         /// </summary>
         private async Task<int> BulkInsertGenericAsync<T>(List<T> records, string tableName)
         {
@@ -780,11 +781,25 @@ namespace TinhKhoanApp.Api.Services
 
             var dataTable = ConvertToDataTable(records);
 
-            _logger.LogInformation("💾 [BULK_INSERT] IMPORTANT: Table: {TableName}, DataTable columns: {Columns}",
-                tableName, string.Join(", ", dataTable.Columns.Cast<DataColumn>().Select(c => c.ColumnName)));
+            _logger.LogInformation("💾 [BULK_INSERT] Table: {TableName}, DataTable columns: {Count} - {Columns}",
+                tableName, dataTable.Columns.Count, string.Join(", ", dataTable.Columns.Cast<DataColumn>().Select(c => c.ColumnName)));
 
             using var connection = new SqlConnection(_connectionString);
             await connection.OpenAsync();
+
+            // Check which columns exist in target table
+            var targetColumns = new HashSet<string>();
+            using (var command = new SqlCommand($"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '{tableName}'", connection))
+            {
+                using var reader = await command.ExecuteReaderAsync();
+                while (await reader.ReadAsync())
+                {
+                    targetColumns.Add(reader.GetString(0));
+                }
+            }
+
+            _logger.LogInformation("🎯 [BULK_INSERT] Target table '{TableName}' has {Count} columns: {Columns}",
+                tableName, targetColumns.Count, string.Join(", ", targetColumns.Take(10)) + (targetColumns.Count > 10 ? "..." : ""));
 
             using var bulkCopy = new SqlBulkCopy(connection)
             {
@@ -793,35 +808,57 @@ namespace TinhKhoanApp.Api.Services
                 BulkCopyTimeout = 300
             };
 
-            _logger.LogWarning("🎯 [BULK_INSERT] DEFINITELY inserting into table: {TableName}", tableName);
-
-            // Auto-map columns
+            // Smart column mapping - chỉ map columns có trong cả source và destination
+            var mappedColumns = 0;
             foreach (DataColumn column in dataTable.Columns)
             {
-                bulkCopy.ColumnMappings.Add(column.ColumnName, column.ColumnName);
-                _logger.LogInformation("💾 [BULK_MAPPING] {SourceColumn} -> {DestColumn}", column.ColumnName, column.ColumnName);
+                if (targetColumns.Contains(column.ColumnName))
+                {
+                    bulkCopy.ColumnMappings.Add(column.ColumnName, column.ColumnName);
+                    _logger.LogInformation("✅ [BULK_MAPPING] {Column} -> {Column}", column.ColumnName, column.ColumnName);
+                    mappedColumns++;
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ [BULK_MAPPING] Column '{Column}' not found in target table, skipping", column.ColumnName);
+                }
+            }
+
+            if (mappedColumns == 0)
+            {
+                throw new InvalidOperationException($"No columns could be mapped between source and target table '{tableName}'");
             }
 
             await bulkCopy.WriteToServerAsync(dataTable);
 
-            _logger.LogInformation("💾 [{TableName}_BULK] Bulk insert hoàn thành: {Count} records", tableName, records.Count);
+            _logger.LogInformation("💾 [{TableName}_BULK] Bulk insert hoàn thành: {Count} records với {MappedColumns} columns",
+                tableName, records.Count, mappedColumns);
             return records.Count;
         }
 
         /// <summary>
-        /// Convert generic list to DataTable - sử dụng Column attribute names
+        /// Convert generic list to DataTable - chỉ map business columns, bỏ qua system/temporal columns
         /// </summary>
         private DataTable ConvertToDataTable<T>(List<T> records)
         {
             var table = new DataTable();
             var properties = typeof(T).GetProperties()
-                .Where(p => p.Name != "Id" && p.Name != "UpdatedDate" && p.Name != "DATA_DATE") // Bỏ qua Id, UpdatedDate và DATA_DATE
+                .Where(p =>
+                    p.Name != "Id" &&
+                    p.Name != "UpdatedDate" &&
+                    p.Name != "DATA_DATE" &&
+                    p.Name != "CreatedAt" &&
+                    p.Name != "UpdatedAt" &&
+                    p.Name != "ValidFrom" &&
+                    p.Name != "ValidTo" &&
+                    !p.Name.StartsWith("System") &&
+                    p.GetCustomAttributes(typeof(ColumnAttribute), false).Length > 0) // Chỉ lấy properties có Column attribute
                 .ToArray();
 
             var columnMappings = new Dictionary<string, string>(); // PropertyName -> ColumnName
 
-            _logger.LogInformation("📊 [DATATABLE] Creating DataTable with columns: {Columns}",
-                string.Join(", ", properties.Select(p => p.Name)));
+            _logger.LogInformation("📊 [DATATABLE] Creating DataTable with {Count} business columns from {Total} total properties",
+                properties.Length, typeof(T).GetProperties().Length);
 
             // Create columns sử dụng Column attribute names
             foreach (var property in properties)
