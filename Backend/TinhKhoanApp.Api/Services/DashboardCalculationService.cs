@@ -126,7 +126,7 @@ namespace TinhKhoanApp.Api.Services
                         // Chỉ tính các tài khoản không thuộc danh sách loại trừ
                         if (!excludedPrefixes.Any(prefix => accountCode.StartsWith(prefix)))
                         {
-                            var balance = decimal.TryParse(dp01Record.CURRENT_BALANCE, out var balanceValue) ? balanceValue : 0m;
+                            var balance = dp01Record.CURRENT_BALANCE ?? 0m;
                             totalNguonVon += balance;
                             processedRecords++;
                         }

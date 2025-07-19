@@ -284,68 +284,87 @@ namespace TinhKhoanApp.Api.Controllers
         /// Bulk Import - Import hàng loạt vào nhiều bảng
         /// </summary>
         [HttpPost("bulk-import")]
-        public async Task<IActionResult> BulkImport([FromBody] DataTablesBulkImportRequest request)
+        public async Task<ActionResult<DataTableImportResult>> BulkImport([FromBody] DataTablesBulkImportRequest request)
         {
-            var results = new List<DataTableImportResult>();
-
             try
             {
+                var results = new List<DataTableSummary>();
+                int totalProcessed = 0;
+                int totalErrors = 0;
+
                 foreach (var tableData in request.Tables)
                 {
                     try
                     {
-                        var importCount = 0;
-
-                        // Thực hiện import cho từng bảng
-                        switch (tableData.TableName.ToUpper())
+                        // Process each table data
+                        switch (tableData.TableName?.ToUpper())
                         {
-                            case "GL01":
-                                importCount = await ImportDataToTable("GL01", tableData.Data);
-                                break;
                             case "DP01":
-                                importCount = await ImportDataToTable("DP01", tableData.Data);
+                                var dp01Data = ConvertToDP01Models(tableData.Data);
+                                await ProcessDP01Data(dp01Data);
+                                totalProcessed += dp01Data.Count;
+                                results.Add(new DataTableSummary
+                                {
+                                    TableName = "DP01",
+                                    RecordCount = dp01Data.Count,
+                                    Status = "Success"
+                                });
                                 break;
-                            case "EI01":
-                                importCount = await ImportDataToTable("EI01", tableData.Data);
-                                break;
-                                // Thêm các bảng khác...
-                        }
 
-                        results.Add(new DataTableImportResult
-                        {
-                            TableName = tableData.TableName,
-                            Success = true,
-                            ImportedRecords = importCount,
-                            Message = $"Import thành công {importCount} bản ghi",
-                            StorageType = GetStorageType(tableData.TableName)
-                        });
+                            case "LN01":
+                                var ln01Data = ConvertToLN01Models(tableData.Data);
+                                await ProcessLN01Data(ln01Data);
+                                totalProcessed += ln01Data.Count;
+                                results.Add(new DataTableSummary
+                                {
+                                    TableName = "LN01",
+                                    RecordCount = ln01Data.Count,
+                                    Status = "Success"
+                                });
+                                break;
+
+                            default:
+                                results.Add(new DataTableSummary
+                                {
+                                    TableName = tableData.TableName ?? "Unknown",
+                                    RecordCount = 0,
+                                    Status = $"Table {tableData.TableName} not supported"
+                                });
+                                totalErrors++;
+                                break;
+                        }
                     }
                     catch (Exception ex)
                     {
-                        results.Add(new DataTableImportResult
+                        results.Add(new DataTableSummary
                         {
-                            TableName = tableData.TableName,
-                            Success = false,
-                            ImportedRecords = 0,
-                            Message = ex.Message,
-                            StorageType = GetStorageType(tableData.TableName)
+                            TableName = tableData.TableName ?? "Unknown",
+                            RecordCount = 0,
+                            Status = $"Error: {ex.Message}"
                         });
+                        totalErrors++;
                     }
                 }
 
-                return Ok(new
+                return Ok(new DataTableImportResult
                 {
-                    success = true,
-                    results = results,
-                    totalTables = results.Count,
-                    successfulTables = results.Count(r => r.Success),
-                    message = "Bulk import hoàn thành"
+                    Success = totalErrors == 0,
+                    TotalRecordsProcessed = totalProcessed,
+                    ErrorCount = totalErrors,
+                    Message = totalErrors == 0 ? "All tables imported successfully" : $"Completed with {totalErrors} errors",
+                    TableSummaries = results
                 });
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in bulk import");
-                return StatusCode(500, new { success = false, message = ex.Message });
+                return BadRequest(new DataTableImportResult
+                {
+                    Success = false,
+                    TotalRecordsProcessed = 0,
+                    ErrorCount = 1,
+                    Message = $"Bulk import failed: {ex.Message}",
+                    TableSummaries = new List<DataTableSummary>()
+                });
             }
         }
 
@@ -368,6 +387,116 @@ namespace TinhKhoanApp.Api.Controllers
                 "GL01" => "Partitioned",
                 _ => "Temporal"
             };
+        }
+
+        // Helper methods for data conversion and processing
+        private List<DP01> ConvertToDP01Models(List<Dictionary<string, object>> data)
+        {
+            var result = new List<DP01>();
+            foreach (var item in data)
+            {
+                var dp01 = new DP01();
+
+                // Map properties from dictionary to DP01 model (using actual CSV column names)
+                if (item.ContainsKey("MA_CN") && item["MA_CN"] != null)
+                    dp01.MA_CN = item["MA_CN"].ToString();
+
+                if (item.ContainsKey("TAI_KHOAN_HACH_TOAN") && item["TAI_KHOAN_HACH_TOAN"] != null)
+                    dp01.TAI_KHOAN_HACH_TOAN = item["TAI_KHOAN_HACH_TOAN"].ToString();
+
+                if (item.ContainsKey("MA_KH") && item["MA_KH"] != null)
+                    dp01.MA_KH = item["MA_KH"].ToString();
+
+                if (item.ContainsKey("TEN_KH") && item["TEN_KH"] != null)
+                    dp01.TEN_KH = item["TEN_KH"].ToString();
+
+                if (item.ContainsKey("CURRENT_BALANCE") && item["CURRENT_BALANCE"] != null)
+                    dp01.CURRENT_BALANCE = Convert.ToDecimal(item["CURRENT_BALANCE"]);
+
+                if (item.ContainsKey("DP_TYPE_NAME") && item["DP_TYPE_NAME"] != null)
+                    dp01.DP_TYPE_NAME = item["DP_TYPE_NAME"].ToString();
+
+                if (item.ContainsKey("SO_TAI_KHOAN") && item["SO_TAI_KHOAN"] != null)
+                    dp01.SO_TAI_KHOAN = item["SO_TAI_KHOAN"].ToString();
+
+                if (item.ContainsKey("OPENING_DATE") && item["OPENING_DATE"] != null)
+                    dp01.OPENING_DATE = Convert.ToDateTime(item["OPENING_DATE"]);
+
+                if (item.ContainsKey("FILE_NAME") && item["FILE_NAME"] != null)
+                    dp01.FILE_NAME = item["FILE_NAME"].ToString() ?? string.Empty;
+
+                // Set system fields
+                dp01.CreatedAt = DateTime.UtcNow;
+                dp01.UpdatedAt = DateTime.UtcNow;
+
+                result.Add(dp01);
+            }
+            return result;
+        }
+
+        private List<LN01> ConvertToLN01Models(List<Dictionary<string, object>> data)
+        {
+            var result = new List<LN01>();
+            foreach (var item in data)
+            {
+                var ln01 = new LN01();
+
+                // Map properties from dictionary to LN01 model (using actual CSV column names)
+                if (item.ContainsKey("BRCD") && item["BRCD"] != null)
+                    ln01.BRCD = item["BRCD"].ToString();
+
+                if (item.ContainsKey("CUSTSEQ") && item["CUSTSEQ"] != null)
+                    ln01.CUSTSEQ = item["CUSTSEQ"].ToString();
+
+                if (item.ContainsKey("CUSTNM") && item["CUSTNM"] != null)
+                    ln01.CUSTNM = item["CUSTNM"].ToString();
+
+                if (item.ContainsKey("TAI_KHOAN") && item["TAI_KHOAN"] != null)
+                    ln01.TAI_KHOAN = item["TAI_KHOAN"].ToString();
+
+                if (item.ContainsKey("DU_NO") && item["DU_NO"] != null)
+                    ln01.DU_NO = Convert.ToDecimal(item["DU_NO"]);
+
+                if (item.ContainsKey("TRANSACTION_DATE") && item["TRANSACTION_DATE"] != null)
+                    ln01.TRANSACTION_DATE = Convert.ToDateTime(item["TRANSACTION_DATE"]);
+
+                // Set system fields
+                ln01.CreatedAt = DateTime.UtcNow;
+                ln01.UpdatedAt = DateTime.UtcNow;
+
+                result.Add(ln01);
+            }
+            return result;
+        }
+
+        private async Task ProcessDP01Data(List<DP01> data)
+        {
+            if (data == null || !data.Any()) return;
+
+            try
+            {
+                _context.DP01.AddRange(data);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to process DP01 data: {ex.Message}", ex);
+            }
+        }
+
+        private async Task ProcessLN01Data(List<LN01> data)
+        {
+            if (data == null || !data.Any()) return;
+
+            try
+            {
+                _context.LN01.AddRange(data);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to process LN01 data: {ex.Message}", ex);
+            }
         }
 
         #endregion

@@ -250,16 +250,11 @@ namespace TinhKhoanApp.Api.Controllers
                 !x.TAI_KHOAN_HACH_TOAN.StartsWith("427") &&
                 x.TAI_KHOAN_HACH_TOAN != "211108");
 
-            // Tính tổng CURRENT_BALANCE (convert từ string sang decimal)
+            // Tính tổng CURRENT_BALANCE (dùng decimal? type)
             var records = await query.ToListAsync();
             var totalAmount = records
-                .Where(x => !string.IsNullOrEmpty(x.CURRENT_BALANCE))
-                .Sum(x =>
-                {
-                    if (decimal.TryParse(x.CURRENT_BALANCE, out decimal amount))
-                        return amount;
-                    return 0;
-                });
+                .Where(x => x.CURRENT_BALANCE.HasValue)
+                .Sum(x => x.CURRENT_BALANCE.Value);
             var recordCount = records.Count;
 
             _logger.LogInformation("📊 [NGUON_VON] Tổng {RecordCount} records, Total: {Amount:N0}", recordCount, totalAmount);

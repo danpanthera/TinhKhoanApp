@@ -618,7 +618,7 @@ namespace TinhKhoanApp.Api.Services
                         var maCn = dp01Record.MA_CN ?? "";
                         var maPgd = dp01Record.MA_PGD ?? "";
                         var taiKhoanHachToan = dp01Record.TAI_KHOAN_HACH_TOAN ?? "";
-                        var currentBalance = decimal.TryParse(dp01Record.CURRENT_BALANCE, out var balance) ? balance : 0;
+                        var currentBalance = dp01Record.CURRENT_BALANCE ?? 0;
 
                         // Lọc theo chi nhánh và PGD
                         bool pgdMatch;

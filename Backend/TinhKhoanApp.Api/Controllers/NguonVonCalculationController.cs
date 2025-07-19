@@ -135,7 +135,7 @@ namespace TinhKhoanApp.Api.Controllers
                     MA_CN = x.MA_CN,
                     MA_PGD = x.MA_PGD,
                     TAI_KHOAN_HACH_TOAN = x.TAI_KHOAN_HACH_TOAN,
-                    CURRENT_BALANCE = decimal.TryParse(x.CURRENT_BALANCE, out var balance) ? balance : 0
+                    CURRENT_BALANCE = x.CURRENT_BALANCE ?? 0
                 }).ToList();
 
                 return dp01Data.Cast<dynamic>().ToList();

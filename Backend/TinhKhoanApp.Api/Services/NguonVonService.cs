@@ -101,8 +101,8 @@ namespace TinhKhoanApp.Api.Services
         private async Task<NguonVonResult> CalculateSingleUnitAsync(string unitCode, DateTime targetDate)
         {
             // Xác định mã chi nhánh và PGD
-            string maCN = null;
-            string maPGD = null;
+            string? maCN = null;
+            string? maPGD = null;
 
             // Kiểm tra xem có phải là PGD không
             if (_pgdMapping.ContainsKey(unitCode))
@@ -140,11 +140,11 @@ namespace TinhKhoanApp.Api.Services
                 d.TAI_KHOAN_HACH_TOAN != "211108"
             );
 
-            // Tính tổng CURRENT_BALANCE - convert từ string sang decimal
+            // Tính tổng CURRENT_BALANCE - dùng decimal? type
             var records = await query.ToListAsync();
             var totalBalance = records
-                .Where(d => !string.IsNullOrEmpty(d.CURRENT_BALANCE))
-                .Sum(d => decimal.TryParse(d.CURRENT_BALANCE, out var balance) ? balance : 0);
+                .Where(d => d.CURRENT_BALANCE.HasValue)
+                .Sum(d => d.CURRENT_BALANCE.Value);
             var recordCount = records.Count;
 
             _logger.LogInformation("💰 Kết quả tính toán: {Balance:N0} VND từ {Count} bản ghi", totalBalance, recordCount);
@@ -158,7 +158,13 @@ namespace TinhKhoanApp.Api.Services
                 if (!hasAnyData)
                 {
                     _logger.LogWarning("⚠️ Không tìm thấy dữ liệu cho ngày {Date} và mã CN {Branch}", targetDate.ToString("dd/MM/yyyy"), maCN);
-                    return null; // Không có dữ liệu cho ngày này
+                    return new NguonVonResult
+                    {
+                        UnitCode = unitCode,
+                        UnitName = unitCode,
+                        TotalBalance = 0,
+                        CalculatedDate = targetDate
+                    };
                 }
             }
 
@@ -192,11 +198,11 @@ namespace TinhKhoanApp.Api.Services
                     d.TAI_KHOAN_HACH_TOAN != "211108"
                 );
 
-            // Tính tổng CURRENT_BALANCE - convert từ string sang decimal
+            // Tính tổng CURRENT_BALANCE - dùng decimal? type
             var records = await query.ToListAsync();
             var totalBalance = records
-                .Where(d => !string.IsNullOrEmpty(d.CURRENT_BALANCE))
-                .Sum(d => decimal.TryParse(d.CURRENT_BALANCE, out var balance) ? balance : 0);
+                .Where(d => d.CURRENT_BALANCE.HasValue)
+                .Sum(d => d.CURRENT_BALANCE.Value);
             var recordCount = records.Count;
 
             _logger.LogInformation("💰 Tổng nguồn vốn toàn tỉnh: {Balance:N0} VND từ {Count} bản ghi", totalBalance, recordCount);
@@ -210,7 +216,13 @@ namespace TinhKhoanApp.Api.Services
                 if (!hasAnyData)
                 {
                     _logger.LogWarning("⚠️ Không tìm thấy dữ liệu toàn tỉnh cho ngày {Date}", targetDate.ToString("dd/MM/yyyy"));
-                    return null; // Không có dữ liệu cho ngày này
+                    return new NguonVonResult
+                    {
+                        UnitCode = "ALL",
+                        UnitName = "Toàn tỉnh",
+                        TotalBalance = 0,
+                        CalculatedDate = targetDate
+                    };
                 }
             }
 
@@ -274,7 +286,7 @@ namespace TinhKhoanApp.Api.Services
                     .Select(g => new AccountDetail
                     {
                         AccountCode = g.Key,
-                        TotalBalance = g.Sum(x => decimal.TryParse(x.CURRENT_BALANCE, out var balance) ? balance : 0),
+                        TotalBalance = g.Sum(x => x.CURRENT_BALANCE ?? 0),
                         RecordCount = g.Count()
                     })
                     .OrderByDescending(a => a.TotalBalance)
@@ -314,7 +326,7 @@ namespace TinhKhoanApp.Api.Services
                     .Select(g => new AccountDetail
                     {
                         AccountCode = g.Key,
-                        TotalBalance = g.Sum(x => decimal.TryParse(x.CURRENT_BALANCE, out var balance) ? balance : 0),
+                        TotalBalance = g.Sum(x => x.CURRENT_BALANCE ?? 0),
                         RecordCount = g.Count()
                     })
                     .OrderByDescending(a => a.TotalBalance)

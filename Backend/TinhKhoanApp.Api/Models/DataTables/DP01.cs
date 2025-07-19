@@ -268,6 +268,10 @@ namespace TinhKhoanApp.Api.Models.DataTables
         [Required]
         public bool IsDeleted { get; set; } = false;
 
+        [Column("FILE_NAME")]
+        [StringLength(255)]
+        public string? FILE_NAME { get; set; }
+
         // ======= TEMPORAL COLUMNS (managed by SQL Server) =======
         [Column("SysStartTime")]
         public DateTime SysStartTime { get; set; }

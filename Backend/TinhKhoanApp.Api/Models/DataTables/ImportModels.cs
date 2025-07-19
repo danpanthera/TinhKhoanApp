@@ -31,6 +31,21 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public string? TR_TIME { get; set; }
         public string? COMFIRM { get; set; }
         public string? TRDT_TIME { get; set; }
+
+        // Mapping properties cho compatibility với controller cũ
+        public DateTime DataDate => NGAY_DL;
+        public string? BranchCode => MA_CN;
+        public string? AccountNumber => MA_TK;
+        public string? CustomerCode => MA_KH;
+        public string? Currency => LOAI_TIEN;
+        public decimal? DebitAmount => DR_CR == "D" ? SO_TIEN_GD : 0;
+        public decimal? CreditAmount => DR_CR == "C" ? SO_TIEN_GD : 0;
+        public decimal? Balance => SO_TIEN_GD;
+        public string? TransactionCode => TR_CODE;
+        public string? Description => REMARK;
+        public string? Reference => REFERENCE;
+        public string? ValueDate => VALUE_DATE;
+        public string? BookingDate => TR_TIME;
     }
 
     /// <summary>
@@ -58,6 +73,29 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public string? TIME_DP_NAME { get; set; }
         public string? MA_PGD { get; set; }
         public string? TEN_PGD { get; set; }
+
+        // Mapping properties cho compatibility với controller cũ
+        public DateTime DataDate => NGAY_DL;
+        public string? BranchCode => MA_CN;
+        public string? AccountNumber => TAI_KHOAN_HACH_TOAN;
+        public string? CustomerCode => MA_KH;
+        public string? ProductType => DP_TYPE_NAME;
+        public string? Currency => CCY;
+        public decimal? DepositAmount => CURRENT_BALANCE;
+        public decimal? Balance => CURRENT_BALANCE;
+        public decimal? InterestRate => RATE;
+        public string? MaturityDate => MATURITY_DATE;
+        public string? OpeningDate => OPENING_DATE;
+        public string? Status => "Active";
+    }
+
+    /// <summary>
+    /// Table data for bulk import
+    /// </summary>
+    public class TableImportData
+    {
+        public string TableName { get; set; } = string.Empty;
+        public List<Dictionary<string, object>> Data { get; set; } = new List<Dictionary<string, object>>();
     }
 
     /// <summary>
@@ -69,5 +107,30 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public List<object> Data { get; set; } = new List<object>();
         public bool ClearExistingData { get; set; } = false;
         public string? ImportNote { get; set; }
+        public List<TableImportData> Tables { get; set; } = new List<TableImportData>(); // Change back to proper structure
+    }
+
+    /// <summary>
+    /// DataTable summary response model
+    /// </summary>
+    public class DataTableSummary
+    {
+        public string TableName { get; set; } = string.Empty;
+        public int RecordCount { get; set; }
+        public DateTime? LastUpdated { get; set; }
+        public string Status { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Result cho bulk import operation
+    /// </summary>
+    public class DataTableImportResult
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public int ErrorCount { get; set; }
+        public int TotalRecordsProcessed { get; set; }
+        public List<DataTableSummary> TableSummaries { get; set; } = new List<DataTableSummary>();
+        public DateTime ImportedAt { get; set; } = DateTime.UtcNow;
     }
 }
