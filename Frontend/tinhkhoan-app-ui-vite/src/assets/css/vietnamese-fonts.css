@@ -20,21 +20,35 @@
 }
 
 /* Heading fonts */
-h1, h2, h3, h4, h5, h6,
-.heading, .title, .page-title {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.heading,
+.title,
+.page-title {
   font-family: var(--font-heading);
   font-weight: 600;
 }
 
 /* Monospace fonts */
-code, pre, .code, .monospace,
-.json-display, .sql-display {
+code,
+pre,
+.code,
+.monospace,
+.json-display,
+.sql-display {
   font-family: var(--font-mono);
 }
 
 /* Inter font cho UI elements */
-.ui-element, .form-element, .button-text,
-.table-content, .card-content {
+.ui-element,
+.form-element,
+.button-text,
+.table-content,
+.card-content {
   font-family: var(--font-inter);
 }
 
@@ -43,6 +57,33 @@ body {
   unicode-bidi: normal;
   -webkit-text-size-adjust: 100%;
   direction: ltr;
+}
+
+/* Force UTF-8 rendering cho tất cả elements */
+*,
+*::before,
+*::after {
+  unicode-bidi: normal;
+  -webkit-font-feature-settings: "liga" on, "calt" on;
+  -moz-font-feature-settings: "liga" on, "calt" on;
+  font-feature-settings: "liga" on, "calt" on;
+}
+
+/* Đặc biệt cho form inputs */
+input,
+textarea,
+select,
+option {
+  font-family: var(--font-primary);
+  unicode-bidi: normal;
+}
+
+/* Đặc biệt cho tables */
+table,
+th,
+td {
+  font-family: var(--font-primary);
+  unicode-bidi: normal;
 }
 
 /* Font size tối ưu cho tiếng Việt */
@@ -67,7 +108,8 @@ body {
 }
 
 /* High DPI displays */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+@media (-webkit-min-device-pixel-ratio: 2),
+(min-resolution: 192dpi) {
   * {
     -webkit-font-smoothing: subpixel-antialiased;
   }

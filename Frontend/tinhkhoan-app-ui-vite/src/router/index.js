@@ -106,7 +106,7 @@ const routes = [
     name: "kpi-actual-values",
     component: () =>
       import(/* webpackChunkName: "kpi" */ "../views/KpiActualValuesView.vue"),
-    meta: { public: true }, // Temporarily allow access without authentication for debugging
+    meta: { public: true },
   },
   {
     path: "/kpi-scoring",
@@ -119,7 +119,7 @@ const routes = [
     name: "unit-kpi-scoring",
     component: () =>
       import(/* webpackChunkName: "kpi" */ "../views/UnitKpiScoringView.vue"),
-    meta: { public: true }, // Temporarily allow access for debugging
+    meta: { public: true },
   },
   {
     path: "/data-import",
@@ -178,23 +178,12 @@ const router = createRouter({
 
 // Route guard: bảo vệ các route cần đăng nhập
 router.beforeEach((to, from, next) => {
-  // Tạm thời bypass authentication để debug - kiểm tra xem vấn đề có ở đây không
-  const bypassAuth = process.env.NODE_ENV === 'development'; // Chỉ bypass trong development
+  // Bypass authentication trong development mode
+  const bypassAuth = process.env.NODE_ENV === 'development';
 
   if (!to.meta.public && !bypassAuth && !isAuthenticated()) {
-    console.log('Router guard: redirecting to login', {
-      route: to.path,
-      isAuth: isAuthenticated(),
-      token: localStorage.getItem('token') ? 'exists' : 'missing'
-    });
     next({ name: "login" });
   } else {
-    console.log('Router guard: allowing access', {
-      route: to.path,
-      isAuth: isAuthenticated(),
-      bypassAuth,
-      public: to.meta.public
-    });
     next();
   }
 });
