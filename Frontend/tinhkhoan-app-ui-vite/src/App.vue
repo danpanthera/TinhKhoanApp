@@ -205,8 +205,8 @@ import { useRoute, useRouter } from 'vue-router';
 const router = useRouter();
 const route = useRoute();
 
-// Development flag for debug panel
-const isDevelopment = ref(import.meta.env.DEV);
+// Development flag for debug panel - DISABLED for production
+const isDevelopment = ref(false);
 
 if (!isAuthenticated() && router.currentRoute.value.path !== '/login') {
   router.push('/login');
