@@ -8,9 +8,9 @@ databasse là "TinhKhoanDB" và mật khẩu user SA là "Dientoan@303"
 trên docker có container chứa SQL server với tên là "azure_sql_edge_tinhkhoan"
 Luôn để backend port là 5055, frontend port là 3000.
 
-## 🎯 AZURE SQL EDGE ARM64 M3 OPTIMIZED - CLEANUP COMPLETED
+## 🎯 AZURE SQL EDGE ARM64 M3 OPTIMIZED - DATACORES SETUP COMPLETED
 
-✅ **Performance Metrics (Post-Cleanup):**
+✅ **Performance Metrics (Latest):**
 - **RAM Usage**: 12.63% (517MB/4GB) - Extremely efficient
 - **CPU Usage**: 1.08% - Optimal M3 performance  
 - **Architecture**: Native ARM64 execution
@@ -18,16 +18,37 @@ Luôn để backend port là 5055, frontend port là 3000.
 
 ✅ **System Status:**
 - **Database**: Azure SQL Edge 1.0.7 on localhost:1433 (TinhKhoanDB)
-- **Backend**: .NET Core API on localhost:5055 - Zero warnings
-- **Frontend**: Vue.js + Vite on localhost:3000
-- **Container**: azure_sql_edge_tinhkhoan (only remaining container)
+- **Backend**: .NET Core API on localhost:5055 with DataTables APIs
+- **Frontend**: Vue.js + Vite on localhost:3000 with DataTables UI
+- **Container**: azure_sql_edge_tinhkhoan (optimized)
 
-✅ **Cleanup Results:**
-- 🗑️ Removed: All PostgreSQL/SQL Server legacy scripts and containers
-- 🗑️ Removed: Obsolete connection strings and configurations  
-- 🗑️ Fixed: All decimal precision warnings in EF Core models
-- 🗑️ Cleaned: 10+ obsolete Azure SQL scripts, keeping only optimize_azure_sql_edge_m3.sh
-- ✅ Verified: 46 Units seeded successfully with IDENTITY_INSERT fix
+## 🗄️ **8 CORE DATATABLES - STRUCTURE COMPLETE, MODELS SYNC PENDING**
+
+✅ **Database Structure Completed (2025-07-19):**
+- **GL01**: Partitioned Table (27 CSV columns) + Columnstore Index - TR_TIME → NGAY_DL
+- **DP01**: Temporal Table (63 CSV columns) + Columnstore Index + History tracking
+- **DPDA**: Temporal Table (13 CSV columns) + Columnstore Index + History tracking  
+- **EI01**: Temporal Table (24 CSV columns) + Columnstore Index + History tracking
+- **GL41**: Temporal Table (13 CSV columns) + Columnstore Index + History tracking
+- **LN01**: Temporal Table (79 CSV columns) + Columnstore Index + History tracking
+- **LN03**: Temporal Table (17 CSV columns) + Columnstore Index + History tracking
+- **RR01**: Temporal Table (25 CSV columns) + Columnstore Index + History tracking
+
+🚨 **PENDING: EF Models Synchronization**
+- Database: ✅ 261 CSV columns across 8 tables, exact structure match
+- Models: ❌ Need manual creation (auto-generated has syntax errors)
+- CSV Analysis: ✅ Headers verified against actual DuLieuMau files
+
+✅ **Column Order Standards:**
+- **Business Columns**: ALWAYS FIRST (Id, DataDate, BranchCode, AccountNumber, etc.)
+- **System Columns**: MIDDLE (CreatedAt, UpdatedAt, IsDeleted)
+- **Temporal Columns**: ALWAYS LAST (SysStartTime, SysEndTime)
+
+✅ **Direct Import & Preview System:**
+- **Backend APIs**: `/api/datatables/{table}/preview` và `/api/datatables/{table}/import`
+- **Frontend UI**: DataTablesView.vue với direct import/preview capabilities
+- **No Mock Data**: Tuyệt đối không có mock data, chỉ lấy từ actual tables
+- **CSV Upload**: Direct import từ CSV files vào database tables
 ## 🚨 QUY TẮC KHỞI ĐỘNG DỰ ÁN - NGHIÊM CẤM VI PHẠM
 
 - **Backend:** LUÔN dùng `./start_backend.sh` (từ thư mục Backend/TinhKhoanApp.Api)
@@ -170,53 +191,54 @@ cấu trúc như sau: Tên, code, MA_CN
 #### Cấu trúc tổ chức:
 
 ```
-
+Cấu trúc phân cấp chi nhánh|đơn vị như sau
+Tên CN (ID=x, Loại CN, Parent ID)
 Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
-├── Hội Sở (ID=2, CNL1)
-│ ├── Ban Giám đốc (ID=3, PNVL1)
-│ ├── Phòng Khách hàng Doanh nghiệp (ID=4, PNVL1)
-│ ├── Phòng Khách hàng Cá nhân (ID=5, PNVL1)
-│ ├── Phòng Kế toán & Ngân quỹ (ID=6, PNVL1)
-│ ├── Phòng Tổng hợp (ID=7, PNVL1)
-│ ├── Phòng Kế hoạch & Quản lý rủi ro (ID=8, PNVL1)
+├── Hội Sở (ID=2, CNL1, Parent ID=1)
+│ ├── Ban Giám đốc (ID=3, PNVL1, parent ID=2)
+│ ├── Phòng Khách hàng Doanh nghiệp (ID=4, PNVL1, parent ID=2)
+│ ├── Phòng Khách hàng Cá nhân (ID=5, PNVL1, parent ID=2)
+│ ├── Phòng Kế toán & Ngân quỹ (ID=6, PNVL1, parent ID=2)
+│ ├── Phòng Tổng hợp (ID=7, PNVL1, parent ID=2)
+│ ├── Phòng Kế hoạch & Quản lý rủi ro (ID=8, PNVL1, parent ID=2)
 │ └── Phòng Kiểm tra giám sát (ID=9, PNVL1)
-├── Chi nhánh Bình Lư (ID=10, CNL2)
-│ ├── Ban Giám đốc (PNVL2)
-│ ├── Phòng Kế toán & Ngân quỹ (PNVL2)
-│ └── Phòng Khách hàng (PNVL2)
-├── Chi nhánh Phong Thổ (ID=11, CNL2)
-│ ├── Ban Giám đốc (PNVL2)
-│ ├── Phòng Kế toán & Ngân quỹ (PNVL2)
-│ └── Phòng Khách hàng (PNVL2)
-│ └── Phòng giao dịch Số 5 (PGDL2)
-├── Chi nhánh Sìn Hồ (ID=12, CNL2)
-│ ├── Ban Giám đốc (PNVL2)
-│ ├── Phòng Kế toán & Ngân quỹ (PNVL2)
-│ └── Phòng Khách hàng (PNVL2)
-├── Chi nhánh Bum Tở (ID=13, CNL2)
-│ ├── Ban Giám đốc (PNVL2)
-│ ├── Phòng Kế toán & Ngân quỹ (PNVL2)
-│ └── Phòng Khách hàng (PNVL2)
-├── Chi nhánh Than Uyên (ID=14, CNL2)
-│ ├── Ban Giám đốc (PNVL2)
-│ ├── Phòng Kế toán & Ngân quỹ (PNVL2)
-│ └── Phòng Khách hàng (PNVL2)
-│ └── Phòng giao dịch số 6 (PGDL2)
-├── Chi nhánh Đoàn Kết (ID=15, CNL2)
-│ ├── Ban Giám đốc (PNVL2)
-│ ├── Phòng Kế toán & Ngân quỹ (PNVL2)
-│ └── Phòng Khách hàng (PNVL2)
-│ ├── Phòng giao dịch số 1 (PGDL2)
-│ └── Phòng giao dịch số 2 (PGDL2)
-├── Chi nhánh Tân Uyên (ID=16, CNL2)
-│ ├── Ban Giám đốc (PNVL2)
-│ ├── Phòng Kế toán & Ngân quỹ (PNVL2)
-│ └── Phòng Khách hàng (PNVL2)
-│ └── Phòng giao dịch số 3 (PGDL2)
-└── Chi nhánh Nậm Hàng (ID=17, CNL2)
-│ ├── Ban Giám đốc (PNVL2)
-│ ├── Phòng Kế toán & Ngân quỹ (PNVL2)
-│ └── Phòng Khách hàng (PNVL2)
+├── Chi nhánh Bình Lư (ID=10, CNL2, parent ID=1)
+│ ├── Ban Giám đốc (ID = 18, PNVL2, parent ID=10)
+│ ├── Phòng Kế toán & Ngân quỹ (ID = 19, PNVL2, parent ID=10)
+│ └── Phòng Khách hàng (ID = 20, PNVL2, parent ID=10)
+├── Chi nhánh Phong Thổ (ID=11, CNL2, parent ID=1)
+│ ├── Ban Giám đốc (ID = 21, PNVL2, parent ID=11)
+│ ├── Phòng Kế toán & Ngân quỹ (ID = 22, PNVL2, parent ID=11)
+│ └── Phòng Khách hàng (ID = 23, PNVL2, parent ID=11)
+│ └── Phòng giao dịch Số 5 (ID = 24, PGDL2, parent ID=11)
+├── Chi nhánh Sìn Hồ (ID=12, CNL2, parent ID=1)
+│ ├── Ban Giám đốc (ID = 25, PNVL2, parent ID=12)
+│ ├── Phòng Kế toán & Ngân quỹ (ID = 26, PNVL2, parent ID=12)
+│ └── Phòng Khách hàng (ID = 27, PNVL2, parent ID=12)
+├── Chi nhánh Bum Tở (ID=13, CNL2, parent ID=1)
+│ ├── Ban Giám đốc (ID = 28, PNVL2, parent ID=13)
+│ ├── Phòng Kế toán & Ngân quỹ (ID = 29, PNVL2, parent ID=13)
+│ └── Phòng Khách hàng (ID = 30, PNVL2, parent ID=13)
+├── Chi nhánh Than Uyên (ID=14, CNL2, parent ID=1)
+│ ├── Ban Giám đốc (ID = 31, PNVL2, parent ID=14)
+│ ├── Phòng Kế toán & Ngân quỹ (ID = 32, PNVL2, parent ID=14)
+│ └── Phòng Khách hàng (ID = 33, PNVL2, parent ID=14)
+│ └── Phòng giao dịch số 6 (ID = 34, PGDL2, parent ID=14)
+├── Chi nhánh Đoàn Kết (ID=15, CNL2, parent ID=1)
+│ ├── Ban Giám đốc (ID = 35, PNVL2, parent ID=15)
+│ ├── Phòng Kế toán & Ngân quỹ (ID = 36, PNVL2, parent ID=15)
+│ └── Phòng Khách hàng (ID = 37, PNVL2, parent ID=15)
+│ ├── Phòng giao dịch số 1 (ID = 38, PGDL2, parent ID=15)
+│ └── Phòng giao dịch số 2 (ID = 39, PGDL2, parent ID=15)
+├── Chi nhánh Tân Uyên (ID=16, CNL2, parent ID=1)
+│ ├── Ban Giám đốc (ID = 40, PNVL2, parent ID=16)
+│ ├── Phòng Kế toán & Ngân quỹ (ID = 41, PNVL2, parent ID=16)
+│ └── Phòng Khách hàng (ID = 42, PNVL2, parent ID=16)
+│ └── Phòng giao dịch số 3 (ID = 43, PGDL2, parent ID=16)
+└── Chi nhánh Nậm Hàng (ID=17, CNL2, parent ID=1)
+│ ├── Ban Giám đốc (ID = 44, PNVL2, parent ID=17)
+│ ├── Phòng Kế toán & Ngân quỹ (ID = 45, PNVL2, parent ID=17)
+│ └── Phòng Khách hàng (ID = 46, PNVL2, parent ID=17)
 
 #### Thống kê:
 

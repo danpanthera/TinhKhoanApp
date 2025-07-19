@@ -128,6 +128,13 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: "/datatables",
+    name: "datatables",
+    component: () =>
+      import(/* webpackChunkName: "datatables" */ "../views/DataTablesView.vue"),
+    meta: { requiresAuth: true }
+  },
+  {
     path: "/payroll-report",
     name: "PayrollReport",
     component: () =>

@@ -1,120 +1,148 @@
-using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TinhKhoanApp.Api.Models.DataTables
 {
     /// <summary>
-    /// Bảng RR01 - 25 cột theo header_7800_rr01_20250430.csv
-    /// CN_LOAI_I,BRCD,MA_KH,TEN_KH,SO_LDS,CCY,SO_LAV,LOAI_KH,NGAY_GIAI_NGAN,NGAY_DEN_HAN,VAMC_FLG,NGAY_XLRR,DUNO_GOC_BAN_DAU,DUNO_LAI_TICHLUY_BD,DOC_DAUKY_DA_THU_HT,DUNO_GOC_HIENTAI,DUNO_LAI_HIENTAI,DUNO_NGAN_HAN,DUNO_TRUNG_HAN,DUNO_DAI_HAN,THU_GOC,THU_LAI,BDS,DS,TSK
+    /// Bảng RR01 - Auto-generated from database structure
+    /// Generated: $(date '+%Y-%m-%d %H:%M:%S')
+    /// Temporal Table with History tracking
     /// </summary>
     [Table("RR01")]
     public class RR01
     {
+        // Column: Id, Type: bigint
         [Key]
-        public int Id { get; set; }
+        [Column("Id")]
+        public long Id { get; set; }
 
+        // Column: NGAY_DL, Type: date
         [Column("NGAY_DL")]
-        
         public DateTime NGAY_DL { get; set; }
 
-        // === 25 CỘT THEO HEADER CSV GỐC ===
-        [Column("CN_LOAI_I")]
-        [StringLength(50)]
-        public string? CN_LOAI_I { get; set; }
+        // Column: MA_CN, Type: nvarchar
+        [Column("MA_CN")]
+        public string? MA_CN { get; set; }
 
-        [Column("BRCD")]
-        [StringLength(50)]
-        public string? BRCD { get; set; }
-
+        // Column: MA_KH, Type: nvarchar
         [Column("MA_KH")]
-        [StringLength(50)]
         public string? MA_KH { get; set; }
 
+        // Column: TEN_KH, Type: nvarchar
         [Column("TEN_KH")]
-        [StringLength(255)]
         public string? TEN_KH { get; set; }
 
-        [Column("SO_LDS")]
-        [StringLength(50)]
-        public string? SO_LDS { get; set; }
+        // Column: SO_TAI_KHOAN, Type: nvarchar
+        [Column("SO_TAI_KHOAN")]
+        public string? SO_TAI_KHOAN { get; set; }
 
-        [Column("CCY")]
-        
-        public string? CCY { get; set; }
+        // Column: TEN_TAI_KHOAN, Type: nvarchar
+        [Column("TEN_TAI_KHOAN")]
+        public string? TEN_TAI_KHOAN { get; set; }
 
-        [Column("SO_LAV")]
-        [StringLength(50)]
-        public string? SO_LAV { get; set; }
+        // Column: LOAI_TIEN, Type: nvarchar
+        [Column("LOAI_TIEN")]
+        public string? LOAI_TIEN { get; set; }
 
-        [Column("LOAI_KH")]
-        [StringLength(50)]
-        public string? LOAI_KH { get; set; }
+        // Column: SO_DU_TD, Type: decimal
+        [Column("SO_DU_TD")]
+        public decimal? SO_DU_TD { get; set; }
 
-        [Column("NGAY_GIAI_NGAN")]
-        [StringLength(20)]
-        public string? NGAY_GIAI_NGAN { get; set; }
+        // Column: SO_DU_KT, Type: decimal
+        [Column("SO_DU_KT")]
+        public decimal? SO_DU_KT { get; set; }
 
-        [Column("NGAY_DEN_HAN")]
-        [StringLength(20)]
-        public string? NGAY_DEN_HAN { get; set; }
+        // Column: NGAY_MO_TK, Type: nvarchar
+        [Column("NGAY_MO_TK")]
+        public string? NGAY_MO_TK { get; set; }
 
-        [Column("VAMC_FLG")]
-        
-        public string? VAMC_FLG { get; set; }
+        // Column: TRANG_THAI_TK, Type: nvarchar
+        [Column("TRANG_THAI_TK")]
+        public string? TRANG_THAI_TK { get; set; }
 
-        [Column("NGAY_XLRR")]
-        [StringLength(20)]
-        public string? NGAY_XLRR { get; set; }
+        // Column: NGAY_DONG_TK, Type: nvarchar
+        [Column("NGAY_DONG_TK")]
+        public string? NGAY_DONG_TK { get; set; }
 
-        [Column("DUNO_GOC_BAN_DAU")]
-        public decimal? DUNO_GOC_BAN_DAU { get; set; }
+        // Column: LY_DO_DONG, Type: nvarchar
+        [Column("LY_DO_DONG")]
+        public string? LY_DO_DONG { get; set; }
 
-        [Column("DUNO_LAI_TICHLUY_BD")]
-        public decimal? DUNO_LAI_TICHLUY_BD { get; set; }
+        // Column: MA_NHAN_VIEN, Type: nvarchar
+        [Column("MA_NHAN_VIEN")]
+        public string? MA_NHAN_VIEN { get; set; }
 
-        [Column("DOC_DAUKY_DA_THU_HT")]
-        public decimal? DOC_DAUKY_DA_THU_HT { get; set; }
+        // Column: TEN_NHAN_VIEN, Type: nvarchar
+        [Column("TEN_NHAN_VIEN")]
+        public string? TEN_NHAN_VIEN { get; set; }
 
-        [Column("DUNO_GOC_HIENTAI")]
-        public decimal? DUNO_GOC_HIENTAI { get; set; }
+        // Column: MA_PHONG, Type: nvarchar
+        [Column("MA_PHONG")]
+        public string? MA_PHONG { get; set; }
 
-        [Column("DUNO_LAI_HIENTAI")]
-        public decimal? DUNO_LAI_HIENTAI { get; set; }
+        // Column: TEN_PHONG, Type: nvarchar
+        [Column("TEN_PHONG")]
+        public string? TEN_PHONG { get; set; }
 
-        [Column("DUNO_NGAN_HAN")]
-        public decimal? DUNO_NGAN_HAN { get; set; }
+        // Column: LOAI_TK, Type: nvarchar
+        [Column("LOAI_TK")]
+        public string? LOAI_TK { get; set; }
 
-        [Column("DUNO_TRUNG_HAN")]
-        public decimal? DUNO_TRUNG_HAN { get; set; }
+        // Column: UB_VAY, Type: decimal
+        [Column("UB_VAY")]
+        public decimal? UB_VAY { get; set; }
 
-        [Column("DUNO_DAI_HAN")]
-        public decimal? DUNO_DAI_HAN { get; set; }
+        // Column: SO_THE, Type: nvarchar
+        [Column("SO_THE")]
+        public string? SO_THE { get; set; }
 
-        [Column("THU_GOC")]
-        public decimal? THU_GOC { get; set; }
+        // Column: TRANG_THAI_THE, Type: nvarchar
+        [Column("TRANG_THAI_THE")]
+        public string? TRANG_THAI_THE { get; set; }
 
-        [Column("THU_LAI")]
-        public decimal? THU_LAI { get; set; }
+        // Column: HINH_THUC_TT, Type: nvarchar
+        [Column("HINH_THUC_TT")]
+        public string? HINH_THUC_TT { get; set; }
 
-        [Column("BDS")]
-        public decimal? BDS { get; set; }
+        // Column: THAM_SO_LAI, Type: decimal
+        [Column("THAM_SO_LAI")]
+        public decimal? THAM_SO_LAI { get; set; }
 
-        [Column("DS")]
-        public decimal? DS { get; set; }
+        // Column: BIEN_DO_LAI, Type: decimal
+        [Column("BIEN_DO_LAI")]
+        public decimal? BIEN_DO_LAI { get; set; }
 
-        [Column("TSK")]
-        public decimal? TSK { get; set; }
+        // Column: LAI_SUAT_HIEN_TAI, Type: decimal
+        [Column("LAI_SUAT_HIEN_TAI")]
+        public decimal? LAI_SUAT_HIEN_TAI { get; set; }
 
-        // === TEMPORAL COLUMNS ===
-        [Column("CREATED_DATE")]
-        public DateTime CREATED_DATE { get; set; } = DateTime.Now;
+        // Column: GHI_CHU, Type: nvarchar
+        [Column("GHI_CHU")]
+        public string? GHI_CHU { get; set; }
 
-        [Column("UPDATED_DATE")]
-        public DateTime? UPDATED_DATE { get; set; }
+        // Column: CreatedAt, Type: datetime2
+        [Column("CreatedAt")]
+        public DateTime CreatedAt { get; set; }
 
-        [Column("FILE_NAME")]
-        [StringLength(255)]
-        public string? FILE_NAME { get; set; }
+        // Column: UpdatedAt, Type: datetime2
+        [Column("UpdatedAt")]
+        public DateTime UpdatedAt { get; set; }
+
+        // Column: IsDeleted, Type: bit
+        [Column("IsDeleted")]
+        public bool IsDeleted { get; set; }
+
+        // Column: SysStartTime, Type: datetime2
+        [Column("SysStartTime")]
+        public DateTime SysStartTime { get; set; }
+
+        // Column: SysEndTime, Type: datetime2
+        [Column("SysEndTime")]
+        public DateTime SysEndTime { get; set; }
+
+        // Column: (32rowsaffected), Type: 
+        [Column("(32rowsaffected)")]
+        public string? (32rowsaffected) { get; set; }
+
     }
 }

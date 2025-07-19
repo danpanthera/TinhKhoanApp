@@ -1,97 +1,116 @@
-using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TinhKhoanApp.Api.Models.DataTables
 {
     /// <summary>
-    /// Bảng LN03 - 17 cột theo CSV format thực tế
-    /// MACHINHANH,TENCHINHANH,MAKH,TENKH,SOHOPDONG,SOTIENXLRR,NGAYPHATSINHXL,THUNOSAUXL,CONLAINGOAIBANG,DUNONOIBANG,NHOMNO,MACBTD,TENCBTD,MAPGD,TAIKHOANHACHTOAN,REFNO,LOAINGUONVON
+    /// Bảng LN03 - Auto-generated from database structure
+    /// Generated: $(date '+%Y-%m-%d %H:%M:%S')
+    /// Temporal Table with History tracking
     /// </summary>
     [Table("LN03")]
     public class LN03
     {
+        // Column: Id, Type: bigint
         [Key]
-        public int Id { get; set; }
+        [Column("Id")]
+        public long Id { get; set; }
 
+        // Column: NGAY_DL, Type: date
         [Column("NGAY_DL")]
-
         public DateTime NGAY_DL { get; set; }
 
-        // === 20 CỘT THEO HEADER CSV GỐC (chỉ 17 cột thực tế) ===
-        [Column("MACHINHANH")]
-        [StringLength(50)]
-        public string? MACHINHANH { get; set; }
+        // Column: MA_CN, Type: nvarchar
+        [Column("MA_CN")]
+        public string? MA_CN { get; set; }
 
-        [Column("TENCHINHANH")]
-        [StringLength(255)]
-        public string? TENCHINHANH { get; set; }
+        // Column: SO_HSV, Type: nvarchar
+        [Column("SO_HSV")]
+        public string? SO_HSV { get; set; }
 
-        [Column("MAKH")]
-        [StringLength(50)]
-        public string? MAKH { get; set; }
+        // Column: MA_KH, Type: nvarchar
+        [Column("MA_KH")]
+        public string? MA_KH { get; set; }
 
-        [Column("TENKH")]
-        [StringLength(255)]
-        public string? TENKH { get; set; }
+        // Column: TEN_KH, Type: nvarchar
+        [Column("TEN_KH")]
+        public string? TEN_KH { get; set; }
 
-        [Column("SOHOPDONG")]
-        [StringLength(50)]
-        public string? SOHOPDONG { get; set; }
+        // Column: SO_TD, Type: nvarchar
+        [Column("SO_TD")]
+        public string? SO_TD { get; set; }
 
-        [Column("SOTIENXLRR")]
-        public decimal? SOTIENXLRR { get; set; }
+        // Column: LOAI_TIEN, Type: nvarchar
+        [Column("LOAI_TIEN")]
+        public string? LOAI_TIEN { get; set; }
 
-        [Column("NGAYPHATSINHXL")]
-        [StringLength(20)]
-        public string? NGAYPHATSINHXL { get; set; }
+        // Column: SO_TIEN_TU, Type: decimal
+        [Column("SO_TIEN_TU")]
+        public decimal? SO_TIEN_TU { get; set; }
 
-        [Column("THUNOSAUXL")]
-        public decimal? THUNOSAUXL { get; set; }
+        // Column: LAI_SUAT, Type: decimal
+        [Column("LAI_SUAT")]
+        public decimal? LAI_SUAT { get; set; }
 
-        [Column("CONLAINGOAIBANG")]
-        public decimal? CONLAINGOAIBANG { get; set; }
+        // Column: NGAY_BAT_DAU, Type: nvarchar
+        [Column("NGAY_BAT_DAU")]
+        public string? NGAY_BAT_DAU { get; set; }
 
-        [Column("DUNONOIBANG")]
-        public decimal? DUNONOIBANG { get; set; }
+        // Column: NGAY_KET_THUC, Type: nvarchar
+        [Column("NGAY_KET_THUC")]
+        public string? NGAY_KET_THUC { get; set; }
 
-        [Column("NHOMNO")]
-        [StringLength(20)]
-        public string? NHOMNO { get; set; }
+        // Column: SO_DU, Type: decimal
+        [Column("SO_DU")]
+        public decimal? SO_DU { get; set; }
 
-        [Column("MACBTD")]
-        [StringLength(50)]
-        public string? MACBTD { get; set; }
+        // Column: TK_TIEN_GUI, Type: nvarchar
+        [Column("TK_TIEN_GUI")]
+        public string? TK_TIEN_GUI { get; set; }
 
-        [Column("TENCBTD")]
-        [StringLength(255)]
-        public string? TENCBTD { get; set; }
+        // Column: TK_TIEN_LAI, Type: nvarchar
+        [Column("TK_TIEN_LAI")]
+        public string? TK_TIEN_LAI { get; set; }
 
-        [Column("MAPGD")]
-        [StringLength(50)]
-        public string? MAPGD { get; set; }
+        // Column: TRANG_THAI, Type: nvarchar
+        [Column("TRANG_THAI")]
+        public string? TRANG_THAI { get; set; }
 
-        [Column("TAIKHOANHACHTOAN")]
-        [StringLength(50)]
-        public string? TAIKHOANHACHTOAN { get; set; }
+        // Column: NGAY_TAO, Type: nvarchar
+        [Column("NGAY_TAO")]
+        public string? NGAY_TAO { get; set; }
 
-        [Column("REFNO")]
-        [StringLength(50)]
-        public string? REFNO { get; set; }
+        // Column: NGUOI_TAO, Type: nvarchar
+        [Column("NGUOI_TAO")]
+        public string? NGUOI_TAO { get; set; }
 
-        [Column("LOAINGUONVON")]
-        [StringLength(50)]
-        public string? LOAINGUONVON { get; set; }
+        // Column: GHI_CHU, Type: nvarchar
+        [Column("GHI_CHU")]
+        public string? GHI_CHU { get; set; }
 
-        // === TEMPORAL COLUMNS ===
-        [Column("CREATED_DATE")]
-        public DateTime CREATED_DATE { get; set; } = DateTime.Now;
+        // Column: CreatedAt, Type: datetime2
+        [Column("CreatedAt")]
+        public DateTime CreatedAt { get; set; }
 
-        [Column("UPDATED_DATE")]
-        public DateTime? UPDATED_DATE { get; set; }
+        // Column: UpdatedAt, Type: datetime2
+        [Column("UpdatedAt")]
+        public DateTime UpdatedAt { get; set; }
 
-        [Column("FILE_NAME")]
-        [StringLength(255)]
-        public string? FILE_NAME { get; set; }
+        // Column: IsDeleted, Type: bit
+        [Column("IsDeleted")]
+        public bool IsDeleted { get; set; }
+
+        // Column: SysStartTime, Type: datetime2
+        [Column("SysStartTime")]
+        public DateTime SysStartTime { get; set; }
+
+        // Column: SysEndTime, Type: datetime2
+        [Column("SysEndTime")]
+        public DateTime SysEndTime { get; set; }
+
+        // Column: (24rowsaffected), Type: 
+        [Column("(24rowsaffected)")]
+        public string? (24rowsaffected) { get; set; }
+
     }
 }

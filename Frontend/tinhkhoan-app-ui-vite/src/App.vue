@@ -107,6 +107,10 @@
               <span class="item-icon">🗄️</span>
               <span>KHO DỮ LIỆU THÔ</span>
             </router-link>
+            <router-link to="/datatables" class="dropdown-item">
+              <span class="item-icon">📊</span>
+              <span>DATATABLES CHÍNH</span>
+            </router-link>
             <router-link to="/payroll-report" class="dropdown-item">
               <span class="item-icon">💰</span>
               <span>Bảng lương/Báo cáo</span>
