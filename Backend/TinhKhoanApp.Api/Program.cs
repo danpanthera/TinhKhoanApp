@@ -51,10 +51,16 @@ internal partial class Program
         Environment.SetEnvironmentVariable("TZ", "Asia/Ho_Chi_Minh");
         Console.WriteLine($"🌏 Application timezone: {TimeZoneInfo.Local.DisplayName}");
 
-        // Kiểm tra nếu có argument "seed" hoặc "reseed"
+        // Kiểm tra nếu có argument "seed", "reseed", hoặc "kpi-seed"
         if (args.Length > 0 && (args[0] == "seed" || args[0] == "reseed"))
         {
             await RunSeedOnly(args);
+            return;
+        }
+
+        if (args.Length > 0 && args[0] == "kpi-seed")
+        {
+            await RunKpiSeedOnly(args);
             return;
         }
 
@@ -667,6 +673,72 @@ internal partial class Program
             Console.WriteLine("🔥 Starting SQL connection pool warm-up...");
             SqlConnectionOptimizer.WarmUpConnection(warmupConnectionString);
         }
+    }
+
+    private static async Task RunKpiSeedOnly(string[] args)
+    {
+        Console.WriteLine("🚀 Chạy KPI System seeding...");
+
+        var builder = WebApplication.CreateBuilder(args);
+        var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+        builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseSqlServer(connectionString));
+
+        var app = builder.Build();
+
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            // Nếu có args reseed thì xóa dữ liệu KPI cũ trước
+            if (args.Length > 1 && args[1] == "reseed")
+            {
+                Console.WriteLine("🧹 Xóa dữ liệu KPI cũ...");
+                db.KpiIndicators.RemoveRange(db.KpiIndicators);
+                db.EmployeeKpiAssignments.RemoveRange(db.EmployeeKpiAssignments);
+                db.UnitKpiScorings.RemoveRange(db.UnitKpiScorings);
+                db.KpiAssignmentTables.RemoveRange(db.KpiAssignmentTables);
+                db.KPIDefinitions.RemoveRange(db.KPIDefinitions);
+                db.KhoanPeriods.RemoveRange(db.KhoanPeriods);
+                db.SaveChanges();
+            }
+
+            Console.WriteLine("📋 Đang seed KPI Assignment Tables (32 templates)...");
+            KpiAssignmentTableSeeder.SeedKpiAssignmentTables(db);
+            Console.WriteLine("✅ Hoàn thành KPI Assignment Tables!");
+
+            Console.WriteLine("📊 Đang seed KPI Definitions (135)...");
+            SeedKPIDefinitionMaxScore.SeedKPIDefinitions(db);
+            Console.WriteLine("✅ Hoàn thành KPI Definitions!");
+
+            Console.WriteLine("📅 Đang seed Khoan Periods (17)...");
+            KhoanPeriodSeeder.SeedKhoanPeriods(db);
+            Console.WriteLine("✅ Hoàn thành Khoan Periods!");
+
+            Console.WriteLine("🎯 Đang seed KPI Indicators (257)...");
+            // KPI Indicators sẽ được tạo tự động từ KPI Definitions
+            var indicatorCount = db.KpiIndicators.Count();
+            Console.WriteLine($"✅ Hoàn thành KPI Indicators: {indicatorCount}!");
+
+            // Cập nhật terminology chuẩn hóa cuối cùng
+            Console.WriteLine("📝 Đang cập nhật terminology chuẩn hóa...");
+            TerminologyUpdater.UpdateTerminology(db);
+            Console.WriteLine("✅ Hoàn thành cập nhật terminology!");
+
+            // Final verification
+            var kpiTables = db.KpiAssignmentTables.Count();
+            var kpiDefs = db.KPIDefinitions.Count();
+            var periods = db.KhoanPeriods.Count();
+            var indicators = db.KpiIndicators.Count();
+
+            Console.WriteLine("\n🎉 KPI System Seeding Summary:");
+            Console.WriteLine($"📋 KPI Assignment Tables: {kpiTables}/32");
+            Console.WriteLine($"📊 KPI Definitions: {kpiDefs}/135");
+            Console.WriteLine($"📅 Khoan Periods: {periods}/17");
+            Console.WriteLine($"🎯 KPI Indicators: {indicators}/257");
+        }
+
+        Console.WriteLine("✅ KPI System seeding hoàn thành!");
     }
 }
 

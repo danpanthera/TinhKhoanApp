@@ -18,6 +18,8 @@ import { useThemeStore } from './stores/themeStore';
 import { useOfflineStore } from './stores/offlineStore';
 // Import offline API service
 import offlineApi from './services/offlineApi';
+// 🌍 Import global number formatting utilities
+import { formatCurrency, formatNumber, formatPercentage } from './utils/numberFormat.js';
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -39,6 +41,14 @@ app.use(Vue3Toastify, {
   pauseOnHover: true,
   draggable: true
 });
+
+// 🌍 Add global number formatting methods
+app.config.globalProperties.$formatNumber = formatNumber;
+app.config.globalProperties.$formatCurrency = formatCurrency;
+app.config.globalProperties.$formatPercentage = formatPercentage;
+
+// 🌍 Set global locale to Vietnamese UTF-8
+app.config.globalProperties.$locale = 'vi-VN';
 
 app.mount("#app");
 
