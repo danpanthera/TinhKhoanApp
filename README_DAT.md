@@ -97,6 +97,19 @@ Luôn kiểm tra file test cho 08 bảng dữ liệu từ thư mục sau:
 
 ## 🆕 TinhKhoanApp Maintenance Notes (July 2025)
 
+### ✅ DOCKER VOLUMES CLEANUP COMPLETED (July 20, 2025):
+- **🗑️ Removed 6 dangling volumes** (total 4.335kB reclaimed)
+- **✅ Protected volumes**: azure_sql_edge_data (cho azure_sql_edge_tinhkhoan)
+- **✅ Both critical containers still running**:
+  - azure_sql_edge_tinhkhoan (Up 7+ hours, port 1433)
+  - azure_sql_edge_maubieu (Up 4+ hours, port 1435)
+- **📊 Current volumes**: 4 active volumes, 0 reclaimable space
+
+### ✅ MENU SCREEN CODES IMPLEMENTED (July 20, 2025):
+- **🏢 Chi nhánh/Nhân sự**: (A1) Đơn vị, (A2) Nhân viên, (A3) Chức vụ, (A4) Vai trò
+- **📊 Quản lý KPI**: (B1-B5, B9, B10) - Các chức năng chính với mã màn hình
+- **📈 Dashboard**: (C1) Giao chỉ tiêu, (C2) Cập nhật, (C3) DASHBOARD
+- **✅ Fixed clearAllData**: B9 (KHO DỮ LIỆU THÔ) xóa thật sự tất cả dữ liệu
 
 ### ✅ HOÀN THÀNH:
 

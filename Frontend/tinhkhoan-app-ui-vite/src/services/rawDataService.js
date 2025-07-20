@@ -446,8 +446,8 @@ class RawDataService {
       return {
         success: true,
         message: result.message || "Successfully cleared all data",
-        data: { 
-          recordsCleared: result.recordsDeleted || 0 
+        data: {
+          recordsCleared: result.recordsDeleted || 0
         }
       };
 
