@@ -427,45 +427,28 @@ class RawDataService {
     try {
       console.log('🗑️ Clearing all import data');
 
-      // TẠM THỜI: Sử dụng phương pháp xóa từng record thay vì API clear-all
-      // Do backend API clear-all có thể chưa hoạt động
-      const importsResult = await this.getAllImports();
-
-      if (!importsResult.success || !importsResult.data || importsResult.data.length === 0) {
-        return {
-          success: true,
-          message: "No data to clear",
-          data: { recordsCleared: 0 }
-        };
-      }
-
-      let totalDeleted = 0;
-      const failedDeletes = [];
-
-      // Xóa từng record một
-      for (const importRecord of importsResult.data) {
-        try {
-          const deleteResult = await this.deleteImport(importRecord.Id);
-          if (deleteResult.success) {
-            totalDeleted++;
-          } else {
-            failedDeletes.push(importRecord.FileName);
-          }
-        } catch (error) {
-          console.error(`❌ Failed to delete record ${importRecord.Id}:`, error);
-          failedDeletes.push(importRecord.FileName);
+      // SỬ DỤNG API BACKEND CLEAR-ALL
+      const response = await fetch(`${this.baseUrl}/api/DataImport/clear-all`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
         }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
-      const message = failedDeletes.length > 0
-        ? `Deleted ${totalDeleted} records. Failed to delete: ${failedDeletes.join(', ')}`
-        : `Successfully cleared ${totalDeleted} import records`;
+      const result = await response.json();
+      console.log('✅ Clear all data API response:', result);
 
-      console.log('✅ Clear all data completed:', message);
       return {
         success: true,
-        message: message,
-        data: { recordsCleared: totalDeleted }
+        message: result.message || "Successfully cleared all data",
+        data: { 
+          recordsCleared: result.recordsDeleted || 0 
+        }
       };
 
     } catch (error) {

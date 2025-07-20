@@ -278,40 +278,23 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="roleIds">Vai trò:</label>
-            <div class="role-dropdown-container">
-              <div
-                class="role-dropdown-header"
-                @click="toggleRoleDropdown"
-                :class="{ 'active': isRoleDropdownOpen }"
+            <label for="roleId">Vai trò:</label>
+            <select
+              id="roleId"
+              v-model.number="currentEmployee.roleId"
+              required
+            >
+              <option :value="null" disabled>-- Chọn Vai trò --</option>
+              <option
+                v-for="role in sortedRoles"
+                :key="role.Id || role.Id"
+                :value="role.Id || role.Id"
               >
-                <span class="selected-roles-text">
-                  {{ getSelectedRolesText() }}
-                </span>
-                <span class="dropdown-arrow" :class="{ 'rotated': isRoleDropdownOpen }">▼</span>
-              </div>
-              <div v-if="isRoleDropdownOpen" class="role-dropdown-menu">
-                <div
-                  v-for="role in roleStore.allRoles"
-                  :key="role.Id"
-                  class="role-option"
-                  @click="toggleRoleSelection(getId(role))"
-                >
-                  <input
-                    type="checkbox"
-                    :checked="isRoleSelected(getId(role))"
-                    @click.stop
-                    @change="toggleRoleSelection(getId(role))"
-                  />
-                  <label>{{ getName(role) }}</label>
-                  <small v-if="safeGet(role, 'Description')" class="role-description">{{ safeGet(role, 'Description') }}</small>
-                </div>
-                <div v-if="roleStore.allRoles.length === 0" class="no-roles">
-                  Không có vai trò nào
-                </div>
-              </div>
-            </div>
-            <small style="color: #666; font-size: 0.8em;">Chọn một hoặc nhiều vai trò cho nhân viên</small>
+                {{ role.Name || role.Name }}
+                <span v-if="role.Description" style="color: #666;">- {{ role.Description }}</span>
+              </option>
+            </select>
+            <small style="color: #666; font-size: 0.8em;">Chọn một vai trò cho nhân viên</small>
           </div>
         </div>
         <div class="form-row">
@@ -365,7 +348,7 @@ import { useEmployeeStore } from "../stores/employeeStore.js";
 import { usePositionStore } from "../stores/positionStore.js";
 import { useRoleStore } from "../stores/roleStore.js";
 import { useUnitStore } from "../stores/unitStore.js";
-import { getId, getName, safeGet } from "../utils/casingSafeAccess.js";
+import { getId, safeGet } from "../utils/casingSafeAccess.js";
 
 const employeeStore = useEmployeeStore();
 const unitStore = useUnitStore();
@@ -385,7 +368,7 @@ const initialEmployeeData = () => ({
   isActive: true,
   unitId: null,
   positionId: null,
-  roleIds: [],
+  roleId: null, // Changed from roleIds to roleId
 });
 
 // Core reactive variables
@@ -426,6 +409,15 @@ const isOverallLoading = computed(() => {
   return (
     employeeStore.isLoading || unitStore.isLoading || positionStore.isLoading || roleStore.isLoading
   );
+});
+
+// Computed để sắp xếp roles theo ABC
+const sortedRoles = computed(() => {
+  return [...roleStore.allRoles].sort((a, b) => {
+    const nameA = (a.Name || a.name || '').toLowerCase();
+    const nameB = (b.Name || b.name || '').toLowerCase();
+    return nameA.localeCompare(nameB, 'vi');
+  });
 });
 
 const formError = ref(null);
@@ -642,25 +634,36 @@ function getNextEmployeeCode() {
 function extractEmployeePrimitives(employee) {
   if (!employee) return {};
 
-  // Extract role IDs from different possible structures
-  let roleIds = [];
-  if (employee.employeeRoles && Array.isArray(employee.employeeRoles)) {
-    // Try different possible field names to ensure compatibility
-    roleIds = employee.employeeRoles.map(er =>
-      er.RoleId || er.roleId || er.role?.id
-    ).filter(id => id && !isNaN(Number(id))).map(id => Number(id));
-  } else if (employee.roleIds && Array.isArray(employee.roleIds)) {
-    roleIds = employee.roleIds.filter(id => id && !isNaN(Number(id))).map(id => Number(id));
-  } else if (employee.roles && employee.roles.$values && Array.isArray(employee.roles.$values)) {
+  // Extract single role ID from different possible structures
+  let roleId = null;
+  if (employee.employeeRoles && Array.isArray(employee.employeeRoles) && employee.employeeRoles.length > 0) {
+    // Take first role if multiple exist (for backward compatibility)
+    const firstRole = employee.employeeRoles[0];
+    roleId = firstRole.RoleId || firstRole.roleId || firstRole.role?.id;
+  } else if (employee.roleId && !isNaN(Number(employee.roleId))) {
+    roleId = Number(employee.roleId);
+  } else if (employee.roleIds && Array.isArray(employee.roleIds) && employee.roleIds.length > 0) {
+    // Take first role if multiple exist (for backward compatibility)
+    roleId = employee.roleIds[0];
+  } else if (employee.roles && employee.roles.$values && Array.isArray(employee.roles.$values) && employee.roles.$values.length > 0) {
     // Handle case where roles is an object with $values array (current API format)
-    roleIds = employee.roles.$values.map(role => role.Id || role.Id).filter(id => id && !isNaN(Number(id))).map(id => Number(id));
-  } else if (employee.roles && Array.isArray(employee.roles)) {
+    const firstRole = employee.roles.$values[0];
+    roleId = firstRole.Id || firstRole.id;
+  } else if (employee.roles && Array.isArray(employee.roles) && employee.roles.length > 0) {
     // Handle case where roles array contains role objects directly
-    roleIds = employee.roles.map(role => getId(role)).filter(id => id && !isNaN(Number(id))).map(id => Number(id));
+    const firstRole = employee.roles[0];
+    roleId = getId(firstRole);
+  }
+
+  // Ensure roleId is a valid number or null
+  if (roleId && !isNaN(Number(roleId))) {
+    roleId = Number(roleId);
+  } else {
+    roleId = null;
   }
 
   console.log('🔍 extractEmployeePrimitives - employee:', employee);
-  console.log('🔍 extractEmployeePrimitives - extracted roleIds:', roleIds);
+  console.log('🔍 extractEmployeePrimitives - extracted roleId:', roleId);
 
   const extractedId = getId(employee);
   console.log('🔍 extractEmployeePrimitives - extracted ID:', extractedId);
@@ -678,7 +681,7 @@ function extractEmployeePrimitives(employee) {
     isActive: typeof employee.IsActive === 'boolean' ? employee.IsActive : (typeof employee.isActive === 'boolean' ? employee.isActive : true),
     unitId: safeGet(employee, 'UnitId'),
     positionId: safeGet(employee, 'PositionId'),
-    roleIds: roleIds,
+    roleId: roleId,
   };
 }
 
@@ -690,9 +693,9 @@ const handleSubmitEmployee = async () => {
   // Extract and clean data for submission
   let dataToProcess = extractEmployeePrimitives(currentEmployee.value);
 
-  // Override roleIds with current form values to ensure latest selection is used
-  if (currentEmployee.value.roleIds && Array.isArray(currentEmployee.value.roleIds)) {
-    dataToProcess.roleIds = currentEmployee.value.roleIds.map(id => Number(id));
+  // Override roleId with current form value to ensure latest selection is used
+  if (currentEmployee.value.roleId && !isNaN(Number(currentEmployee.value.roleId))) {
+    dataToProcess.roleId = Number(currentEmployee.value.roleId);
   }
 
   console.log('🔍 handleSubmitEmployee - dataToProcess before trim:', dataToProcess);
@@ -702,7 +705,7 @@ const handleSubmitEmployee = async () => {
       key !== "unitId" &&
       key !== "positionId" &&
       key !== "isActive" &&
-      key !== "roleIds" &&
+      key !== "roleId" &&
       typeof dataToProcess[key] === "string"
     ) {
       dataToProcess[key] = dataToProcess[key].trim();
@@ -945,48 +948,6 @@ watch(() => employeeStore.allEmployees, () => {
 
 // ========================================
 // ROLE DROPDOWN FUNCTIONS
-// ========================================
-const isRoleDropdownOpen = ref(false);
-
-const toggleRoleDropdown = () => {
-  isRoleDropdownOpen.value = !isRoleDropdownOpen.value;
-};
-
-const toggleRoleSelection = (roleId) => {
-  if (!currentEmployee.value.roleIds) {
-    currentEmployee.value.roleIds = [];
-  }
-
-  const index = currentEmployee.value.roleIds.indexOf(roleId);
-  if (index > -1) {
-    currentEmployee.value.roleIds.splice(index, 1);
-  } else {
-    currentEmployee.value.roleIds.push(roleId);
-  }
-};
-
-const isRoleSelected = (roleId) => {
-  return currentEmployee.value.roleIds && currentEmployee.value.roleIds.includes(roleId);
-};
-
-const getSelectedRolesText = () => {
-  if (!currentEmployee.value.roleIds || currentEmployee.value.roleIds.length === 0) {
-    return "Chọn vai trò...";
-  }
-
-  const selectedRoles = roleStore.allRoles.filter(role =>
-    currentEmployee.value.roleIds.includes(role.Id || role.Id)
-  );
-
-    if (selectedRoles.length === 1) {
-    return selectedRoles[0].Name || selectedRoles[0].Name;
-  } else if (selectedRoles.length > 1) {
-    return `${selectedRoles.length} vai trò đã chọn`;
-  }
-
-  return "Chọn vai trò...";
-};
-
 // ========================================
 // INPUT VALIDATION FUNCTIONS
 // ========================================

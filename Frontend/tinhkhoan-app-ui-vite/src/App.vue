@@ -45,19 +45,19 @@
           <div class="nav-dropdown-menu" :class="{ show: showHRMenu }" @click="hideAllMenus">
             <router-link to="/units" class="dropdown-item">
               <span class="item-icon">🏬</span>
-              <span>Đơn vị</span>
+              <span>(A1) Đơn vị</span>
             </router-link>
             <router-link to="/employees" class="dropdown-item">
               <span class="item-icon">👥</span>
-              <span>Nhân viên</span>
+              <span>(A2) Nhân viên</span>
             </router-link>
             <router-link to="/positions" class="dropdown-item">
               <span class="item-icon">💼</span>
-              <span>Chức vụ</span>
+              <span>(A3) Chức vụ</span>
             </router-link>
             <router-link to="/roles" class="dropdown-item">
               <span class="item-icon">🎭</span>
-              <span>Vai trò</span>
+              <span>(A4) Vai trò</span>
             </router-link>
           </div>
         </div>
@@ -73,23 +73,23 @@
           <div class="nav-dropdown-menu" :class="{ show: showKPIMenu }" @click="hideAllMenus">
             <router-link to="/khoan-periods" class="dropdown-item">
               <span class="item-icon">📅</span>
-              <span>Kỳ khoán</span>
+              <span>(B1) Kỳ khoán</span>
             </router-link>
             <router-link to="/kpi-definitions" class="dropdown-item">
               <span class="item-icon">⚙️</span>
-              <span>Cấu hình KPI</span>
+              <span>(B2) Cấu hình KPI</span>
             </router-link>
             <router-link to="/employee-kpi-assignment" class="dropdown-item">
               <span class="item-icon">👤</span>
-              <span>Giao khoán KPI theo Cán bộ</span>
+              <span>(B3) Giao khoán KPI theo Cán bộ</span>
             </router-link>
             <router-link to="/unit-kpi-assignment" class="dropdown-item">
               <span class="item-icon">🏢</span>
-              <span>Giao khoán KPI theo Chi nhánh</span>
+              <span>(B4) Giao khoán KPI theo CN</span>
             </router-link>
             <router-link to="/kpi-actual-values" class="dropdown-item">
               <span class="item-icon">📊</span>
-              <span>Cập nhật Giá trị thực hiện</span>
+              <span>(B5) Cập nhật tình hình thực hiện</span>
             </router-link>
             <router-link to="/kpi-scoring" class="dropdown-item">
               <span class="item-icon">🎯</span>
@@ -105,7 +105,7 @@
             </router-link>
             <router-link to="/data-import" class="dropdown-item">
               <span class="item-icon">🗄️</span>
-              <span>KHO DỮ LIỆU THÔ</span>
+              <span>(B9) KHO DỮ LIỆU THÔ</span>
             </router-link>
             <router-link to="/datatables" class="dropdown-item">
               <span class="item-icon">📊</span>
@@ -113,7 +113,7 @@
             </router-link>
             <router-link to="/payroll-report" class="dropdown-item">
               <span class="item-icon">💰</span>
-              <span>Bảng lương/Báo cáo</span>
+              <span>(B10) Bảng lương/Báo cáo</span>
             </router-link>
           </div>
         </div>
@@ -129,15 +129,15 @@
           <div class="nav-dropdown-menu" :class="{ show: showDashboardMenu }" @click="hideAllMenus">
             <router-link to="/dashboard/target-assignment" class="dropdown-item">
               <span class="item-icon">🎯</span>
-              <span>1. Giao chỉ tiêu</span>
+              <span>(C1) Giao chỉ tiêu</span>
             </router-link>
             <router-link to="/dashboard/calculation" class="dropdown-item">
               <span class="item-icon">🧮</span>
-              <span>2. Cập nhật</span>
+              <span>(C2) Cập nhật</span>
             </router-link>
             <router-link to="/dashboard/business-plan" class="dropdown-item">
-              <span class="item-icon">�</span>
-              <span>3. Dashboard</span>
+              <span class="item-icon">📈</span>
+              <span>(C3) DASHBOARD</span>
             </router-link>
           </div>
         </div>
