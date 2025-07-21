@@ -235,7 +235,203 @@ namespace TinhKhoanApp.Api.Controllers
 
         #endregion
 
+        #region LN01 - Temporal Table Operations
+
+        /// <summary>
+        /// Preview Direct LN01 - Lấy 10 bản ghi trực tiếp từ bảng LN01 theo thứ tự business columns
+        /// </summary>
+        [HttpGet("ln01/preview")]
+        public async Task<IActionResult> PreviewLN01()
+        {
+            try
+            {
+                // Lấy TOP 10 records - trả về raw object
+                using var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = @"
+                    SELECT TOP 10 *
+                    FROM LN01
+                    ORDER BY Id DESC";
+
+                var result = new List<Dictionary<string, object>>();
+                using var reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    var row = new Dictionary<string, object>();
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        var value = reader.GetValue(i);
+                        row[reader.GetName(i)] = value == DBNull.Value ? null : value;
+                    }
+                    result.Add(row);
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    tableName = "LN01",
+                    storageType = "Temporal",
+                    totalRecords = result.Count,
+                    data = result,
+                    message = "Preview LN01 - tất cả business columns theo thứ tự CSV"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error previewing LN01 data");
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        #endregion
+
+        #region LN03 - Temporal Table Operations
+
+        /// <summary>
+        /// Preview Direct LN03 - Lấy 10 bản ghi trực tiếp từ bảng LN03 theo thứ tự business columns
+        /// </summary>
+        [HttpGet("ln03/preview")]
+        public async Task<IActionResult> PreviewLN03()
+        {
+            try
+            {
+                using var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = @"
+                    SELECT TOP 10 *
+                    FROM LN03
+                    ORDER BY Id DESC";
+
+                var result = new List<Dictionary<string, object>>();
+                using var reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    var row = new Dictionary<string, object>();
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        var value = reader.GetValue(i);
+                        row[reader.GetName(i)] = value == DBNull.Value ? null : value;
+                    }
+                    result.Add(row);
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    tableName = "LN03",
+                    storageType = "Temporal",
+                    totalRecords = result.Count,
+                    data = result,
+                    message = "Preview LN03 - tất cả business columns theo thứ tự CSV"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error previewing LN03 data");
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        #endregion
+
+        #region RR01 - Temporal Table Operations
+
+        /// <summary>
+        /// Preview Direct RR01 - Lấy 10 bản ghi trực tiếp từ bảng RR01 theo thứ tự business columns
+        /// </summary>
+        [HttpGet("rr01/preview")]
+        public async Task<IActionResult> PreviewRR01()
+        {
+            try
+            {
+                using var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = @"
+                    SELECT TOP 10 *
+                    FROM RR01
+                    ORDER BY Id DESC";
+
+                var result = new List<Dictionary<string, object>>();
+                using var reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    var row = new Dictionary<string, object>();
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        var value = reader.GetValue(i);
+                        row[reader.GetName(i)] = value == DBNull.Value ? null : value;
+                    }
+                    result.Add(row);
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    tableName = "RR01",
+                    storageType = "Temporal",
+                    totalRecords = result.Count,
+                    data = result,
+                    message = "Preview RR01 - tất cả business columns theo thứ tự CSV"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error previewing RR01 data");
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        #endregion
+
         #region Generic Operations for All DataTables
+
+        /// <summary>
+        /// Lấy số lượng records của tất cả 8 bảng dữ liệu
+        /// </summary>
+        [HttpGet("table-counts")]
+        public async Task<IActionResult> GetTableCounts()
+        {
+            try
+            {
+                var counts = new Dictionary<string, int>();
+
+                // Count records in each table
+                var tables = new[] { "DP01", "DPDA", "EI01", "GL01", "GL41", "LN01", "LN03", "RR01" };
+
+                foreach (var table in tables)
+                {
+                    try
+                    {
+                        var countQuery = $"SELECT COUNT(*) AS Value FROM [{table}]";
+                        var count = await _context.Database
+                            .SqlQueryRaw<int>(countQuery)
+                            .FirstOrDefaultAsync();
+                        counts[table] = count;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning("Error counting {Table}: {Error}", table, ex.Message);
+                        counts[table] = 0;
+                    }
+                }
+
+                return Ok(counts);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting table counts");
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
 
         /// <summary>
         /// Lấy thống kê tổng quan của tất cả 8 bảng dữ liệu

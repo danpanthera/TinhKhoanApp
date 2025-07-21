@@ -72,8 +72,8 @@ Luôn cập nhật file này với các thông tin mới nhất về dự án Ti
 - **CSV Upload**: Direct import từ CSV files vào database tables
 
 ## 🚨 QUY TẮC KHỞI ĐỘNG DỰ ÁN - NGHIÊM CẤM VI PHẠM
-- **Backend:** LUÔN dùng `./start_backend.sh` 
-- **Frontend:** LUÔN dùng `./start_frontend.sh` 
+- **Backend:** LUÔN dùng `./start_backend.sh` /Users/nguyendat/Documents/Projects/TinhKhoanApp/start_backend.sh
+- **Frontend:** LUÔN dùng `./start_frontend.sh` /Users/nguyendat/Documents/Projects/TinhKhoanApp/start_frontend.sh
 - **Fast Commit:** LUÔN dùng `./fast_commit.sh` (từ thư mục root), nội dung ngắn gọn nhất có thể
 - **NGHIÊM CẤM** sử dụng VS Code tasks để chạy fullstack - CHỈ DÙNG SCRIPTS
 - **Database:** TinhKhoanDB, username=sa, password=Dientoan@303
