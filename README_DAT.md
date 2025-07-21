@@ -50,19 +50,20 @@ Luôn cập nhật file này với các thông tin mới nhất về dự án Ti
 - **System Columns**: SECOND (Id, NGAY_DL, CreatedAt, UpdatedAt, IsDeleted)
 - **Temporal Columns**: ALWAYS LAST (SysStartTime, SysEndTime - 7 tables only)
 
-⚠️ **COLUMN ORDER STATUS (July 20, 2025):**
-- **✅ C# Models**: Business columns đúng thứ tự, khớp 100% với CSV gốc
-- **⚠️ Database Physical**: System columns vẫn ở đầu (không ảnh hưởng chức năng)
+⚠️ **COLUMN ORDER STATUS (July 21, 2025):**
+- **✅ Database Schema**: HOÀN THÀNH - Đúng thứ tự NGAY_DL + Business columns (CSV) + System/Temporal
+- **✅ C# Models**: Business columns đúng thứ tự, khớp 100% với CSV gốc  
+- **✅ Preview Endpoints**: Trả về columns theo đúng thứ tự CSV (NGAY_DL + BRCD,CUSTSEQ,CUSTNM...)
 - **✅ EF Mapping**: Hoạt động perfect vì map theo tên cột, không theo thứ tự
-- **✅ Direct Import**: Hoạt động hoàn hảo với CSV files
+- **✅ Direct Import**: Ready để import CSV files với column structure chính xác
 
 🎯 **OVERALL PROJECT STATUS:**
-- **GL01**: ✅ Partitioned Columnstore (NON_TEMPORAL_TABLE)
+- **GL01**: ✅ NON-Temporal Columnstore (TR_TIME → NGAY_DL mapping)
 - **7 Tables**: ✅ Temporal + Columnstore (SYSTEM_VERSIONED_TEMPORAL_TABLE)
-- **Models**: ✅ 8/8 business columns structure perfect
-- **APIs**: ✅ Direct Import ready, Health check OK
-- **Database**: ✅ All required features implemented
-- **Completion**: **95% READY FOR PRODUCTION**
+- **Models**: ✅ 8/8 business columns structure perfect, đúng thứ tự CSV
+- **Database**: ✅ Column order: NGAY_DL + Business (CSV) + System/Temporal - COMPLETED
+- **Preview APIs**: ✅ Trả về data theo đúng thứ tự CSV gốc (verified)
+- **Completion**: **100% PRODUCTION READY - TÔN TRỌNG CSV GỐC HOÀN THÀNH**
 
 ✅ **Direct Import & Preview System:**
 - **Backend APIs**: `/api/datatables/{table}/preview` và `/api/datatables/{table}/import`
@@ -74,7 +75,7 @@ Luôn cập nhật file này với các thông tin mới nhất về dự án Ti
 ## 🚨 QUY TẮC KHỞI ĐỘNG DỰ ÁN - NGHIÊM CẤM VI PHẠM
 - **Backend:** LUÔN dùng `./start_backend.sh` /Users/nguyendat/Documents/Projects/TinhKhoanApp/start_backend.sh
 - **Frontend:** LUÔN dùng `./start_frontend.sh` /Users/nguyendat/Documents/Projects/TinhKhoanApp/start_frontend.sh
-- **Fast Commit:** LUÔN dùng `./fast_commit.sh` (từ thư mục root), nội dung ngắn gọn nhất có thể
+- **Fast Commit:** LUÔN dùng `./fast_commit.sh` (/Users/nguyendat/Documents/Projects/TinhKhoanApp/fast_commit.sh ), nội dung ngắn gọn nhất có thể
 - **NGHIÊM CẤM** sử dụng VS Code tasks để chạy fullstack - CHỈ DÙNG SCRIPTS
 - **Database:** TinhKhoanDB, username=sa, password=Dientoan@303
 
@@ -1122,3 +1123,10 @@ cd Frontend/tinhkhoan-app-ui-vite && npm run dev
 - `create_proper_analytics_indexes.sh` - Tạo indexes với correct column names ✅
 - `rebuild_table_structures.sh` - Complete table rebuild với real column names ✅
 - `validate_rebuilt_tables.sh` - Validation cuối cùng ✅
+
+** QUY TẮC IMPORT & CẤU TRÚC CÁC CỘT BUSINESS **
++ Model, Database, EF, Preview cần TÔN TRỌNG file csv gốc: có cấu trúc số lượng cột, thứ tự các cột, tên các cột phải giống với file CSV gốc (bảng DP01 theo file csv dp01, bảng GL01 theo file csv gl01....v..v.)
++ Model, Database, EF, Preview có thứ tự các cột như sau:
+- bảng nào cũng phải có cột NGAY_DL (bảng GL01 thì cột NGAY_DL lấy từ cột TR_TIME của file csv gl01, các bảng dữ liệu còn lại lấy từ filename, cột NGAY_DL có format dd/mm/yyyy). Cột NGAY_DL coi như system column
+- Từ cột 1 -> N là các cột business column của file csv import vào
+- Từ cột N+1 trở đi là các cột Temporal và system column

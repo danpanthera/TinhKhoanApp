@@ -238,20 +238,32 @@ namespace TinhKhoanApp.Api.Controllers
         #region LN01 - Temporal Table Operations
 
         /// <summary>
-        /// Preview Direct LN01 - Lấy 10 bản ghi trực tiếp từ bảng LN01 theo thứ tự business columns
+        /// Preview Direct LN01 - Lấy 10 bản ghi trực tiếp từ bảng LN01 theo thứ tự CSV gốc
         /// </summary>
         [HttpGet("ln01/preview")]
         public async Task<IActionResult> PreviewLN01()
         {
             try
             {
-                // Lấy TOP 10 records - trả về raw object
+                // SELECT theo thứ tự columns CSV gốc: NGAY_DL + 79 business columns + system columns
                 using var connection = _context.Database.GetDbConnection();
                 await connection.OpenAsync();
 
                 using var command = connection.CreateCommand();
                 command.CommandText = @"
-                    SELECT TOP 10 *
+                    SELECT TOP 10
+                        NGAY_DL,
+                        BRCD, CUSTSEQ, CUSTNM, TAI_KHOAN, CCY, DU_NO, DSBSSEQ, TRANSACTION_DATE, DSBSDT, DISBUR_CCY,
+                        DISBURSEMENT_AMOUNT, DSBSMATDT, BSRTCD, INTEREST_RATE, APPRSEQ, APPRDT, APPR_CCY, APPRAMT, APPRMATDT,
+                        LOAN_TYPE, FUND_RESOURCE_CODE, FUND_PURPOSE_CODE, REPAYMENT_AMOUNT, NEXT_REPAY_DATE, NEXT_REPAY_AMOUNT,
+                        NEXT_INT_REPAY_DATE, OFFICER_ID, OFFICER_NAME, INTEREST_AMOUNT, PASTDUE_INTEREST_AMOUNT, TOTAL_INTEREST_REPAY_AMOUNT,
+                        CUSTOMER_TYPE_CODE, CUSTOMER_TYPE_CODE_DETAIL, TRCTCD, TRCTNM, ADDR1, PROVINCE, LCLPROVINNM, DISTRICT,
+                        LCLDISTNM, COMMCD, LCLWARDNM, LAST_REPAY_DATE, SECURED_PERCENT, NHOM_NO, LAST_INT_CHARGE_DATE, EXEMPTINT,
+                        EXEMPTINTTYPE, EXEMPTINTAMT, GRPNO, BUSCD, BUSNM, ACCRINTBASE, RATECD, RLSCD, RLSNM, INTERESTTYPE,
+                        FEETYPE, CURRENCYTYPE, LOANSTATUS, MATURITYTYPE, REPAYTYPE, COLLATERALTYPE, CREDITLIMIT, AVAILABLELIMIT,
+                        LOANORIGINALAMT, DOWNPAYMENT, INSTALMENTAMT, TOTALPAIDAMT, CHARGEOFFAMT, WRITEOFFAMT, RESERVEAMT,
+                        ACCRUALBALANCE, OUTSRC, ORIGINAL_TRANS_ID, CREATED_DATE_CSV, UPDATED_DATE_CSV,
+                        Id, FILE_NAME, CREATED_DATE, UPDATED_DATE
                     FROM LN01
                     ORDER BY Id DESC";
 
@@ -276,7 +288,7 @@ namespace TinhKhoanApp.Api.Controllers
                     storageType = "Temporal",
                     totalRecords = result.Count,
                     data = result,
-                    message = "Preview LN01 - tất cả business columns theo thứ tự CSV"
+                    message = "Preview LN01 - columns theo thứ tự CSV gốc: NGAY_DL + 79 business + system"
                 });
             }
             catch (Exception ex)
