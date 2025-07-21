@@ -429,8 +429,8 @@ class RawDataService {
     try {
       console.log('🗑️ Clearing all import data');
 
-      // SỬ DỤNG API INSTANCE THAY VÌ FETCH ĐỂ TRÁNH LỖI URL
-      const response = await api.delete('/Maintenance/clear-all');
+      // SỬ DỤNG ĐÚNG ENDPOINT DataImport/clear-all THAY VÌ Maintenance/clear-all
+      const response = await api.delete('/DataImport/clear-all');
 
       const result = response.data;
       console.log('✅ Clear all data API response:', result);
