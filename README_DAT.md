@@ -7,7 +7,7 @@ LUÔN commit từng phần nhỏ, không commit cả một lần quá nhiều fi
 databasse là "TinhKhoanDB" và mật khẩu user SA là "Dientoan@303"
 trên docker có container chứa SQL server với tên là "azure_sql_edge_tinhkhoan"
 Luôn để backend port là 5055, frontend port là 3000.
-Luôn cập nhật file này với các thông tin mới nhất về dự án TinhKhoanApp.
+Luôn cập nhật file này với các thông tin mới nhất về dự án TinhKhoanApp.doc
 ## 🎯 AZURE SQL EDGE ARM64 M3 OPTIMIZED - DATACORES SETUP COMPLETED
 
 ✅ **Performance Metrics (Latest):**
