@@ -1,39 +1,41 @@
 #!/bin/bash
+# 🎨 TinhKhoan Frontend UI - Local Start Script  
+# Usage: ./start_frontend.sh (from Frontend/tinhkhoan-app-ui-vite directory OR anywhere)
 
-# =====================================================
-# FRONTEND STARTUP SCRIPT - JULY 13, 2025
-# Script chuyên dụng để khởi động Frontend một cách an toàn
-# KHÔNG BAO GIỜ SỬ DỤNG SHELL VS CODE ĐỂ CHẠY FRONTEND!
-# =====================================================
+echo "🎨 Starting TinhKhoan Frontend UI..."
 
-echo "🎨 KHỞI ĐỘNG FRONTEND UI..."
-echo "🧹 Dọn dẹp processes cũ..."
+# Auto-navigate to correct directory if not already there
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
 
+echo "📂 Current directory: $(pwd)"
+
+# Kiểm tra nếu đang ở đúng thư mục
+if [ ! -f "package.json" ]; then
+    echo "❌ Error: Cannot find package.json!"
+    echo "💡 Script should be in Frontend/tinhkhoan-app-ui-vite directory"
+    exit 1
+fi
+
+# Kiểm tra Node.js
+if ! command -v node &> /dev/null; then
+    echo "❌ Node.js not installed"
+    exit 1
+fi
+
+echo "🧹 Cleaning up old processes..."
 # Tìm và kill các process frontend cũ
-pkill -f "vite"
-pkill -f "npm run dev"
+pkill -f "vite" 2>/dev/null || true
+pkill -f "npm run dev" 2>/dev/null || true
 sleep 2
 
-echo "📦 Kiểm tra dependencies..."
+echo "📦 Checking dependencies..."
 if [ ! -d "node_modules" ]; then
     echo "📦 Installing dependencies..."
     npm install
 fi
 
-echo "🔍 Kiểm tra kết nối backend..."
-if curl -s http://localhost:5055/health > /dev/null; then
-    echo "✅ Backend connection OK"
-else
-    echo "⚠️  Backend không phản hồi trên port 5055"
-    echo "   Hãy chắc chắn backend đang chạy bằng ./start_backend.sh"
-fi
-
-echo "🚀 Starting frontend trên http://localhost:3000..."
-echo "📝 Logs sẽ hiển thị bên dưới. Nhấn Ctrl+C để dừng."
-echo "==========================================="
-
-# Khởi động frontend với port cố định
-npm run dev -- --port 3000 --host 0.0.0.0
-
+echo "🌐 Starting frontend on http://localhost:3000"
+echo "🛑 Press Ctrl+C to stop the server"
 echo ""
-echo "🛑 Frontend đã dừng"
+npm run dev

@@ -4,7 +4,9 @@ import api from './api';
 class RawDataService {
   constructor() {
     // ✅ Sử dụng endpoint DataImport/records để lấy import history
-    this.baseURL = '/DataImport/records';
+    this.importRecordsEndpoint = '/DataImport/records';
+    // 🔧 Base URL cho API server
+    this.baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:5055";
     // 🔧 Fix axios undefined - sử dụng api instance
     this.axios = api;
   }
@@ -12,8 +14,8 @@ class RawDataService {
   // 📋 Lấy danh sách tất cả dữ liệu thô đã import
   async getAllImports() {
     try {
-      console.log('📊 Calling API endpoint:', this.baseURL);
-      const response = await api.get(this.baseURL);
+      console.log('📊 Calling API endpoint:', this.importRecordsEndpoint);
+      const response = await api.get(this.importRecordsEndpoint);
 
       // Debug response data structure
       console.log('📊 Raw API response:', typeof response.data, response.data ? Object.keys(response.data) : 'No data');
@@ -427,20 +429,10 @@ class RawDataService {
     try {
       console.log('🗑️ Clearing all import data');
 
-      // SỬ DỤNG API BACKEND CLEAR-ALL
-      const response = await fetch(`${this.baseUrl}/api/DataImport/clear-all`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      // SỬ DỤNG API INSTANCE THAY VÌ FETCH ĐỂ TRÁNH LỖI URL
+      const response = await api.delete('/Maintenance/clear-all');
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errorText}`);
-      }
-
-      const result = await response.json();
+      const result = response.data;
       console.log('✅ Clear all data API response:', result);
 
       return {

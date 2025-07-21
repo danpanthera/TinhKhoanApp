@@ -1,5 +1,5 @@
 #!/bin/bash
-# 🎨 TinhKhoan App - Frontend Startup Script  
+# 🎨 TinhKhoan App - Frontend Startup Script (Root)
 # Usage: ./start_frontend.sh (from project root)
 
 echo "🎨 Starting TinhKhoan Frontend UI..."
@@ -13,13 +13,11 @@ if [ ! -d "." ]; then
     exit 1
 fi
 
-# Check if the frontend script exists
-if [ -f "./start_frontend.sh" ]; then
-    echo "📦 Using local frontend startup script..."
-    ./start_frontend.sh
-else
-    echo "📦 Starting frontend with npm run dev..."
-    npm run dev
-fi
+# Make sure local script is executable
+chmod +x start_frontend.sh
+
+# Run the local frontend script
+echo "📦 Running local frontend startup script..."
+./start_frontend.sh
 
 echo "✅ Frontend startup script completed!"

@@ -1,5 +1,5 @@
 #!/bin/bash
-# 🚀 TinhKhoan App - Backend Startup Script
+# 🚀 TinhKhoan App - Backend Startup Script (Root)
 # Usage: ./start_backend.sh (from project root)
 
 echo "🚀 Starting TinhKhoan Backend API..."
@@ -13,13 +13,11 @@ if [ ! -d "." ]; then
     exit 1
 fi
 
-# Check if the backend script exists
-if [ -f "./start_backend.sh" ]; then
-    echo "📦 Using local backend startup script..."
-    ./start_backend.sh
-else
-    echo "📦 Starting backend with dotnet run..."
-    dotnet run --urls=http://localhost:5055
-fi
+# Make sure local script is executable
+chmod +x start_backend.sh
+
+# Run the local backend script
+echo "📦 Running local backend startup script..."
+./start_backend.sh
 
 echo "✅ Backend startup script completed!"

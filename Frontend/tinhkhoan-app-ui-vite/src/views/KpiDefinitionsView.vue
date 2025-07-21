@@ -711,9 +711,37 @@ const filteredKpiTables = computed(() => {
         return category !== 'CANBO' && category !== 'VAI TRÒ CÁN BỘ';
       })
       .sort((a, b) => {
-        // Sort by TableName for branch tables
-        const nameA = a.TableName || a.tableName || '';
-        const nameB = b.TableName || b.tableName || '';
+        // Custom ordering theo yêu cầu: Hội Sở → Bình Lư → Phong Thổ → Sìn Hồ → Bum Tở → Than Uyên → Đoàn Kết → Tân Uyên → Nậm Hàng
+        const customOrder = [
+          'HoiSo',           // KPI Hội sở
+          'CnBinhLu',        // KPI Chi nhánh Bình Lư
+          'CnPhongTho',      // KPI Chi nhánh Phong Thổ
+          'CnSinHo',         // KPI Chi nhánh Sìn Hồ
+          'CnBumTo',         // KPI Chi nhánh Bum Tở
+          'CnThanUyen',      // KPI Chi nhánh Than Uyên
+          'CnDoanKet',       // KPI Chi nhánh Đoàn Kết
+          'CnTanUyen',       // KPI Chi nhánh Tân Uyên
+          'CnNamHang'        // KPI Chi nhánh Nậm Hàng
+        ];
+
+        const tableNameA = a.TableName || a.tableName || '';
+        const tableNameB = b.TableName || b.tableName || '';
+
+        const indexA = customOrder.indexOf(tableNameA);
+        const indexB = customOrder.indexOf(tableNameB);
+
+        // If both tables are in the predefined order, sort by that order
+        if (indexA !== -1 && indexB !== -1) {
+          return indexA - indexB;
+        }
+
+        // If only one table is in the order, prioritize it
+        if (indexA !== -1) return -1;
+        if (indexB !== -1) return 1;
+
+        // For other tables, sort alphabetically by description/name
+        const nameA = a.Description || a.description || tableNameA;
+        const nameB = b.Description || b.description || tableNameB;
         return nameA.localeCompare(nameB);
       });
   }
