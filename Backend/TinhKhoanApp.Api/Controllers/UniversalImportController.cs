@@ -51,47 +51,53 @@ namespace TinhKhoanApp.Api.Controllers
                 using var connection = new SqlConnection(connectionString);
                 await connection.OpenAsync();
 
-                // Create DataTable
+                // Create DataTable with exact database schema
                 var dataTable = new DataTable();
-                dataTable.Columns.Add("ImportedAt", typeof(DateTime));
-                dataTable.Columns.Add("StatementDate", typeof(string));
-                
+
+                // Required system columns (these will be auto-populated)
+                // Note: Id is auto-increment, CREATED_DATE and UPDATED_DATE might be auto-populated
+
+                // Add CSV business columns
                 foreach (var col in header)
                 {
                     dataTable.Columns.Add(col, typeof(string));
                 }
 
-                // Add common columns if not present
+                // Add common columns if not present in CSV
                 if (!header.Contains("FILE_NAME"))
                     dataTable.Columns.Add("FILE_NAME", typeof(string));
                 if (!header.Contains("NGAY_DL"))
                     dataTable.Columns.Add("NGAY_DL", typeof(string));
+                if (!header.Contains("CREATED_DATE"))
+                    dataTable.Columns.Add("CREATED_DATE", typeof(DateTime));
+                if (!header.Contains("UPDATED_DATE"))
+                    dataTable.Columns.Add("UPDATED_DATE", typeof(DateTime));
 
                 // Parse data rows
                 var importedCount = 0;
                 var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
-                
+
                 for (int i = 1; i < lines.Length; i++)
                 {
                     var line = lines[i].Trim();
                     if (string.IsNullOrEmpty(line)) continue;
 
                     var values = line.Split(',').Select(v => v.Trim(' ', '"')).ToArray();
-                    
+
                     var row = dataTable.NewRow();
-                    row["ImportedAt"] = DateTime.UtcNow;
-                    row["StatementDate"] = today;
-                    
+
                     // Map CSV values to columns
                     for (int j = 0; j < Math.Min(values.Length, header.Length); j++)
                     {
                         row[header[j]] = string.IsNullOrEmpty(values[j]) ? DBNull.Value : values[j];
                     }
-                    
+
                     // Set common fields
                     row["FILE_NAME"] = file.FileName;
                     row["NGAY_DL"] = today;
-                    
+                    row["CREATED_DATE"] = DateTime.UtcNow;
+                    row["UPDATED_DATE"] = DateTime.UtcNow;
+
                     dataTable.Rows.Add(row);
                     importedCount++;
                 }
@@ -104,10 +110,13 @@ namespace TinhKhoanApp.Api.Controllers
                     BulkCopyTimeout = 300
                 };
 
-                // Map columns
+                // Map columns (skip Id column as it's auto-increment)
                 foreach (DataColumn column in dataTable.Columns)
                 {
-                    bulkCopy.ColumnMappings.Add(column.ColumnName, column.ColumnName);
+                    if (column.ColumnName != "Id") // Skip auto-increment Id column
+                    {
+                        bulkCopy.ColumnMappings.Add(column.ColumnName, column.ColumnName);
+                    }
                 }
 
                 await bulkCopy.WriteToServerAsync(dataTable);

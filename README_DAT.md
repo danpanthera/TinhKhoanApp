@@ -1127,12 +1127,10 @@ cd Frontend/tinhkhoan-app-ui-vite && npm run dev
 **QUY TẮC IMPORT & CẤU TRÚC CÁC CỘT BUSINESS**
 + Model, Database, EF, Preview cần TÔN TRỌNG file csv gốc: có cấu trúc số lượng cột, thứ tự các cột, tên các cột phải giống với file CSV gốc (bảng DP01 theo file csv dp01, bảng GL01 theo file csv gl01....v..v.)
 + Model, Database, EF, Preview có thứ tự các cột như sau:
-- bảng nào cũng phải có cột NGAY_DL (bảng GL01 thì cột NGAY_DL lấy từ cột TR_TIME của file csv gl01, các bảng dữ liệu còn lại lấy từ filename, cột NGAY_DL có format dd/mm/yyyy). Cột NGAY_DL coi như system column
+- bảng nào cũng phải có cột NGAY_DL (bảng GL01 thì cột NGAY_DL lấy từ cột TR_TIME của file csv gl01, các bảng dữ liệu còn lại lấy từ filename, cột NGAY_DL có format (yyyy-mm-dd). Cột NGAY_DL coi như system column
 - Từ cột 1 -> N là các cột business column của file csv import vào
 - Từ cột N+1 trở đi là các cột Temporal và system column
 Sửa lại hết database, model, EF, BulkCopy, migration của các bảng dữ liệu:
-+ Từ cột 1-N: các cột business theo 100% số cột của file csv, tên cột, thứ tự cột phải giống hoàn toàn cột trong file csv theo từng loại bảng dữ liệu đó
-+ Ấn định cột NGAY_DL như 1 system column.
 + Từ cột thứ N+1 trở đi là các cột Temporal và System column (tính cả NGAY_DL)
 + Vẫn giữ được cơ chế Direct Import
 + Preview cũng theo cơ chế Direct từ bảng dữ liệu

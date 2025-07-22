@@ -137,7 +137,7 @@ internal partial class Program
         builder.Services.AddScoped<UnitKpiScoringService>();
         builder.Services.AddScoped<IStatementDateService, StatementDateService>();
         builder.Services.AddScoped<DashboardCalculationService>();
-        builder.Services.AddScoped<IBranchCalculationService, BranchCalculationService>();
+        // TEMPORARILY DISABLED: builder.Services.AddScoped<IBranchCalculationService, BranchCalculationService>();
         // 💰 Đăng ký service tính toán nguồn vốn từ DP01 (dữ liệu thô)
         // ❌ LEGACY SERVICE - DISABLED: Depends on ImportedDataItems which has been removed
         // builder.Services.AddScoped<IRawDataService, RawDataService>();
