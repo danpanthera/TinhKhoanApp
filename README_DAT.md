@@ -1,4 +1,4 @@
-### 📝 **HƯỚNG DẪN LẬP TRÌNH VIÊN TINH KHOẢN APP**
+### 📝 **HƯỚNG DẪN LẬP TRÌNH VIÊN TINH KHOẢN APP** (Quan trọng)
 
 Hãy suy nghĩ và hành động như một SIÊU lập trình viên Fullstack, Web API, .NET Core, ASP.NET, HTML, CSS, C#, Vue.js, Node.js, Vite.
 Luôn xưng hô là em và gọi tôi là "anh".
@@ -29,7 +29,7 @@ Luôn cập nhật file này với các thông tin mới nhất về dự án Ti
 - **Perfect CSV Alignment**: 100% match với structure từ DuLieuMau folder
 - **Verification Passed**: 8/8 tables pass automated verification script
 
-✅ **Database & Models Structure:**
+✅ **Database & Models Structure:** (Quan trọng)
 - **GL01**: Partitioned Table (27 business columns) + Columnstore Index - NO temporal
 - **DP01**: Temporal Table (63 business columns) + Columnstore Index + History tracking
 - **DPDA**: Temporal Table (13 business columns) + Columnstore Index + History tracking  
@@ -65,21 +65,21 @@ Luôn cập nhật file này với các thông tin mới nhất về dự án Ti
 - **Preview APIs**: ✅ Trả về data theo đúng thứ tự CSV gốc (verified)
 - **Completion**: **100% PRODUCTION READY - TÔN TRỌNG CSV GỐC HOÀN THÀNH**
 
-✅ **Direct Import & Preview System:**
+✅ **Direct Import & Preview System:** (Quan trọng)
 - **Backend APIs**: `/api/datatables/{table}/preview` và `/api/datatables/{table}/import`
 - **Frontend UI**: DataTablesView.vue với direct import/preview capabilities
 - **Preview Data**: Luôn hiển thị **10 bản ghi đầu tiên** trực tiếp từ database tables (TOP 10)
 - **No Mock Data**: Tuyệt đối không có mock data, chỉ lấy từ actual tables
 - **CSV Upload**: Direct import từ CSV files vào database tables
 
-## 🚨 QUY TẮC KHỞI ĐỘNG DỰ ÁN - NGHIÊM CẤM VI PHẠM
+## 🚨 QUY TẮC KHỞI ĐỘNG DỰ ÁN - NGHIÊM CẤM VI PHẠM (RẤT Quan trọng)
 - **Backend:** LUÔN dùng  `/Users/nguyendat/Documents/Projects/TinhKhoanApp/start_backend.sh`
 - **Frontend:** LUÔN dùng `cd /Users/nguyendat/Documents/Projects/TinhKhoanApp/Frontend/tinhkhoan-app-ui-vite && ./start_frontend.sh`
 - **Fast Commit:** LUÔN dùng `./fast_commit.sh` (/Users/nguyendat/Documents/Projects/TinhKhoanApp/fast_commit.sh ), nội dung ngắn gọn nhất có thể
 - **NGHIÊM CẤM** sử dụng VS Code tasks để chạy fullstack - CHỈ DÙNG SCRIPTS
 - **Database:** TinhKhoanDB, username=sa, password=Dientoan@303
 
-✅ **TẤT CẢ SCRIPTS ĐÃ CÓ SẴN VÀ HOẠT ĐỘNG:**
+✅ **TẤT CẢ SCRIPTS ĐÃ CÓ SẴN VÀ HOẠT ĐỘNG:** (Khá Quan trọng)
 - ✅ `/start_backend.sh` - Khởi động backend API từ root (http://localhost:5055)
 - ✅ `/start_frontend.sh` - Khởi động frontend UI từ root (http://localhost:3000) 
 - ✅ `/fast_commit.sh` - Commit nhanh từ root project
@@ -87,7 +87,7 @@ Luôn cập nhật file này với các thông tin mới nhất về dự án Ti
 - ✅ `/Frontend/tinhkhoan-app-ui-vite/start_frontend.sh` - Original frontend script
 - ✅ `/Backend/TinhKhoanApp.Api/sqlserver2022_ultimate.sh` - Setup SQL Server 2022
 
-🎯 **DATABASE STATUS:**
+🎯 **DATABASE STATUS:** (Quan trọng)
 - ✅ GL01: KHÔNG Temporal + CÓ Columnstore (theo yêu cầu mới)
 - ✅ 7 bảng (DP01,EI01,GL41,LN01,LN03,RR01,DPDA): CÓ Temporal + CÓ Columnstore
 - ✅ Tất cả business columns khớp hoàn hảo với CSV gốc
@@ -112,7 +112,7 @@ Luôn kiểm tra file test cho 08 bảng dữ liệu từ thư mục sau:
 - **📈 Dashboard**: (C1) Giao chỉ tiêu, (C2) Cập nhật, (C3) DASHBOARD
 - **✅ Fixed clearAllData**: B9 (KHO DỮ LIỆU THÔ) xóa thật sự tất cả dữ liệu
 
-### ✅ HOÀN THÀNH:
+### ✅ HOÀN THÀNH: (Quan trọng)
 
 - ✅ Cài đặt Azure SQL Edge ARM64 trên Apple Silicon (Mac)
 - ✅ Tạo database TinhKhoanDB
@@ -174,18 +174,6 @@ Luôn kiểm tra file test cho 08 bảng dữ liệu từ thư mục sau:
 
 **✅ HOÀN THÀNH 100%:** Cơ chế Direct Import hoạt động hoàn hảo cho tất cả 8 bảng!
 
-#### **📊 Test Results (13/07/2025):**
-
-| File Type | Target Table | Performance       | Status     | Test Result    |
-| --------- | ------------ | ----------------- | ---------- | -------------- |
-| **DP01**  | DP01         | 31.54 records/sec | ✅ SUCCESS | Auto-detect ✅ |
-| **EI01**  | EI01         | 46.01 records/sec | ✅ SUCCESS | Auto-detect ✅ |
-| **LN01**  | LN01         | Tested            | ✅ SUCCESS | Auto-detect ✅ |
-| **GL01**  | GL01         | Tested            | ✅ SUCCESS | Auto-detect ✅ |
-| **GL41**  | GL41         | Tested            | ✅ SUCCESS | Auto-detect ✅ |
-| **DPDA**  | DPDA         | Tested            | ✅ SUCCESS | Auto-detect ✅ |
-| **LN03**  | LN03         | Tested            | ✅ SUCCESS | Auto-detect ✅ |
-| **RR01**  | RR01         | Tested            | ✅ SUCCESS | Auto-detect ✅ |
 
 #### **🎯 Features Confirmed:**
 
@@ -206,60 +194,6 @@ Luôn kiểm tra file test cho 08 bảng dữ liệu từ thư mục sau:
 - **Performance:** Tối ưu cho Apple Silicon Mac
 - **Status:** Môi trường đã được dọn dẹp, chỉ còn container chính
 
-### 🏢 **CẤU TRÚC TỔ CHỨC CHI NHÁNH LAI CHÂU - 19/07/2025**
-
-**✅ HOÀN THÀNH:** Cấu trúc phân cấp chi nhánh|đơn vị như sau
-
-#### Cấu trúc tổ chức (46 đơn vị):
-
-```
-Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
-├── Hội Sở (ID=2, CNL1, Parent ID=1)
-│ ├── Ban Giám đốc (ID=3, PNVL1, parent ID=2)
-│ ├── Phòng Khách hàng Doanh nghiệp (ID=4, PNVL1, parent ID=2)
-│ ├── Phòng Khách hàng Cá nhân (ID=5, PNVL1, parent ID=2)
-│ ├── Phòng Kế toán & Ngân quỹ (ID=6, PNVL1, parent ID=2)
-│ ├── Phòng Tổng hợp (ID=7, PNVL1, parent ID=2)
-│ ├── Phòng Kế hoạch & Quản lý rủi ro (ID=8, PNVL1, parent ID=2)
-│ └── Phòng Kiểm tra giám sát (ID=9, PNVL1, parent ID=2)
-├── Chi nhánh Bình Lư (ID=10, CNL2, parent ID=1)
-│ ├── Ban Giám đốc (ID=18, PNVL2, parent ID=10)
-│ ├── Phòng Kế toán & Ngân quỹ (ID=19, PNVL2, parent ID=10)
-│ └── Phòng Khách hàng (ID=20, PNVL2, parent ID=10)
-├── Chi nhánh Phong Thổ (ID=11, CNL2, parent ID=1)
-│ ├── Ban Giám đốc (ID=21, PNVL2, parent ID=11)
-│ ├── Phòng Kế toán & Ngân quỹ (ID=22, PNVL2, parent ID=11)
-│ ├── Phòng Khách hàng (ID=23, PNVL2, parent ID=11)
-│ └── Phòng giao dịch Số 5 (ID=24, PGDL2, parent ID=11)
-├── Chi nhánh Sìn Hồ (ID=12, CNL2, parent ID=1)
-│ ├── Ban Giám đốc (ID=25, PNVL2, parent ID=12)
-│ ├── Phòng Kế toán & Ngân quỹ (ID=26, PNVL2, parent ID=12)
-│ └── Phòng Khách hàng (ID=27, PNVL2, parent ID=12)
-├── Chi nhánh Bum Tở (ID=13, CNL2, parent ID=1)
-│ ├── Ban Giám đốc (ID=28, PNVL2, parent ID=13)
-│ ├── Phòng Kế toán & Ngân quỹ (ID=29, PNVL2, parent ID=13)
-│ └── Phòng Khách hàng (ID=30, PNVL2, parent ID=13)
-├── Chi nhánh Than Uyên (ID=14, CNL2, parent ID=1)
-│ ├── Ban Giám đốc (ID=31, PNVL2, parent ID=14)
-│ ├── Phòng Kế toán & Ngân quỹ (ID=32, PNVL2, parent ID=14)
-│ ├── Phòng Khách hàng (ID=33, PNVL2, parent ID=14)
-│ └── Phòng giao dịch số 6 (ID=34, PGDL2, parent ID=14)
-├── Chi nhánh Đoàn Kết (ID=15, CNL2, parent ID=1)
-│ ├── Ban Giám đốc (ID=35, PNVL2, parent ID=15)
-│ ├── Phòng Kế toán & Ngân quỹ (ID=36, PNVL2, parent ID=15)
-│ ├── Phòng Khách hàng (ID=37, PNVL2, parent ID=15)
-│ ├── Phòng giao dịch số 1 (ID=38, PGDL2, parent ID=15)
-│ └── Phòng giao dịch số 2 (ID=39, PGDL2, parent ID=15)
-├── Chi nhánh Tân Uyên (ID=16, CNL2, parent ID=1)
-│ ├── Ban Giám đốc (ID=40, PNVL2, parent ID=16)
-│ ├── Phòng Kế toán & Ngân quỹ (ID=41, PNVL2, parent ID=16)
-│ ├── Phòng Khách hàng (ID=42, PNVL2, parent ID=16)
-│ └── Phòng giao dịch số 3 (ID=43, PGDL2, parent ID=16)
-└── Chi nhánh Nậm Hàng (ID=17, CNL2, parent ID=1)
-    ├── Ban Giám đốc (ID=44, PNVL2, parent ID=17)
-    ├── Phòng Kế toán & Ngân quỹ (ID=45, PNVL2, parent ID=17)
-    └── Phòng Khách hàng (ID=46, PNVL2, parent ID=17)
-```
 
 #### Phân loại đơn vị:
 - **CNL1**: Chi nhánh cấp 1 (Hội Sở)
@@ -268,10 +202,8 @@ Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
 - **PNVL2**: Phòng/ban cấp 2 (thuộc chi nhánh)
 - **PGDL2**: Phòng giao dịch cấp 2
 
-#### Cấu trúc tổ chức:
+** Cấu trúc tổ chức: (Quan trọng)
 
-```
-Cấu trúc phân cấp chi nhánh|đơn vị như sau
 Tên CN (ID=x, Loại CN, Parent ID)
 Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
 ├── Hội Sở (ID=2, CNL1, Parent ID=1)
@@ -344,7 +276,7 @@ Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
 
 **✅ HOÀN THÀNH:** Đã tạo thành công 23 vai trò theo danh sách chuẩn
 
-#### Danh sách 23 vai trò:
+#### Danh sách 23 vai trò: (Quan trọng)
 
 | ID  | Mã vai trò          | Tên vai trò                              | Mô tả                                          |
 | --- | ------------------- | ---------------------------------------- | ---------------------------------------------- |
@@ -393,7 +325,7 @@ Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
 
 **✅ HOÀN THÀNH:** Đã có đủ 32 bảng KPI theo đúng cấu trúc
 
-#### 🧑‍💼 Tab "Dành cho Cán bộ" - 23 bảng KPI:
+#### 🧑‍💼 Tab "Dành cho Cán bộ" - 23 bảng KPI: (Quan trọng)
 
 | ID  | Tên Bảng KPI        | Mô tả                                    |
 | --- | ------------------- | ---------------------------------------- | -------------- |
@@ -442,7 +374,7 @@ Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
 
 **✅ HOÀN THÀNH:** Đã có đủ 32 bảng KPI với 257 chỉ tiêu hoàn chỉnh
 
-#### 🏢 Tab "Dành cho Chi nhánh" - 9 bảng KPI:
+#### 🏢 Tab "Dành cho Chi nhánh" - 9 bảng KPI: (Quan trọng)
 
 | ID  | Tên Bảng KPI | Mô tả                       |
 | --- | ------------ | --------------------------- |
@@ -487,19 +419,6 @@ Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
 - ✅ **Column consistency:** Perfect CSV-Database column count match
 - ✅ **Build verification:** Project compiles successfully với models hiện tại
 
-**📊 Kết quả kiểm tra:**
-
-| Bảng     | CSV Cols | DB Business | DB Total | Temporal | Build Status |
-|----------|----------|-------------|----------|----------|--------------|
-| **DP01** | 63       | 63          | 68       | ✅ YES   | ✅ **OK**   |
-| **EI01** | 24       | 24          | 29       | ✅ YES   | ✅ **OK**   |
-| **GL01** | 27       | 27          | 32       | ✅ YES   | ✅ **OK**   |
-| **GL41** | 13       | 13          | 18       | ✅ YES   | ✅ **OK**   |
-| **LN01** | 79       | 79          | 84       | ✅ YES   | ✅ **OK**   |
-| **LN03** | 17       | 17          | 22       | ✅ YES   | ✅ **OK**   |
-| **RR01** | 25       | 25          | 30       | ✅ YES   | ✅ **OK**   |
-| **DPDA** | 13       | 13          | 18       | ✅ YES   | ✅ **OK**   |
-
 **🔧 Vấn đề đã khắc phục:**
 - ✅ **Migration conflicts:** Mark pending migrations as applied
 - ✅ **Database structure:** Business columns first (1-N), system columns last (N+1 to N+5)
@@ -519,7 +438,7 @@ Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
 
 **Ngày:** 18/07/2025
 
-#### 🎯 Kết quả đạt được:
+#### 🎯 Kết quả đạt được: (Quan trọng)
 
 - ✅ **Rebuild 8 bảng dữ liệu:** Business columns ở đầu, system/temporal columns ở cuối
 - ✅ **GL01 đặc biệt:** Partitioned Columnstore, NGAY_DL lấy từ TR_TIME (column 25)
@@ -527,7 +446,7 @@ Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
 - ✅ **NGAY_DL kiểu DateTime:** Thống nhất format dd/mm/yyyy cho tất cả bảng
 - ✅ **Docker cleanup:** Xóa unused volumes, tối ưu storage
 
-#### 📊 Cấu trúc bảng mới:
+#### 📊 Cấu trúc bảng mới: (Quan trọng)
 
 | Bảng     | Business Cols | System Cols | Total | Special Features                    |
 | -------- | ------------- | ----------- | ----- | ----------------------------------- |
@@ -584,7 +503,7 @@ Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
 
 #### 📊 Phân bố 257 chỉ tiêu hoàn chỉnh:
 
-**🧑‍💼 Cán bộ: 158 chỉ tiêu (22 bảng)**
+**🧑‍💼 Cán bộ: 158 chỉ tiêu (22 bảng)** (Quan trọng)
 ```
 1-4.   KHDN/KHCN: 4 bảng × 8 chỉ tiêu = 32
 5-6.   KH&QLRR: 2 bảng × 6 chỉ tiêu = 12
@@ -604,7 +523,7 @@ Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
 23.    PP KTNQ CNL2: 1 bảng × 5 chỉ tiêu = 5
 ```
 
-**🏢 Chi nhánh: 99 chỉ tiêu (9 bảng)**
+**🏢 Chi nhánh: 99 chỉ tiêu (9 bảng)** (Quan trọng)
 ```
 1. Hội Sở: 11 chỉ tiêu (giống GiamdocCnl2)
 2. Bình Lư: 11 chỉ tiêu (giống GiamdocCnl2)
@@ -739,20 +658,6 @@ const debugRecalculateStats = async () => {
 **🎯 Status:** Đã fix code, cần test lại import workflow để confirm.
 
 ### ✅ **HOÀN THÀNH REBUILD TABLE STRUCTURES - July 15, 2025:**
-
-**🎉 ĐÃ THỰC HIỆN THÀNH CÔNG TẤT CẢ YÊU CẦU:**
-
-| Bảng     | CSV Expected | DB Business Current | Total Cols | Real Column Names                              | Temporal Tables | Status         |
-| -------- | ------------ | ------------------- | ---------- | ---------------------------------------------- | --------------- | -------------- |
-| **DP01** | 63           | 63                  | 70         | ✅ **YES** (MA_CN, TAI_KHOAN_HACH_TOAN, etc.)  | ✅ **YES**      | 🎉 **PERFECT** |
-| **DPDA** | 13           | 13                  | 20         | ✅ **YES** (MA_CHI_NHANH, MA_KHACH_HANG, etc.) | ✅ **YES**      | 🎉 **PERFECT** |
-| **EI01** | 24           | 24                  | 31         | ✅ **YES** (MA_CN, MA_KH, TEN_KH, etc.)        | ✅ **YES**      | 🎉 **PERFECT** |
-| **GL01** | 27           | 27                  | 34         | ✅ **YES** (STS, NGAY_GD, NGUOI_TAO, etc.)     | ✅ **YES**      | 🎉 **PERFECT** |
-| **GL41** | 13           | 13                  | 20         | ✅ **YES** (MA_CN, LOAI_TIEN, MA_TK, etc.)     | ✅ **YES**      | 🎉 **PERFECT** |
-| **LN01** | 79           | 79                  | 86         | ✅ **YES** (BRCD, CUSTSEQ, CUSTNM, etc.)       | ✅ **YES**      | 🎉 **PERFECT** |
-| **LN03** | 17           | 17                  | 24         | ✅ **YES** (MACHINHANH, TENCHINHANH, etc.)     | ✅ **YES**      | 🎉 **PERFECT** |
-| **RR01** | 25           | 25                  | 32         | ✅ **YES** (CN_LOAI_I, BRCD, MA_KH, etc.)      | ✅ **YES**      | 🎉 **PERFECT** |
-
 ### ✅ **CRITICAL FIXES APPLIED - July 16, 2025:**
 
 **🔧 3 VẤN ĐỀ QUAN TRỌNG ĐÃ KHẮC PHỤC:**
@@ -852,20 +757,8 @@ const debugRecalculateStats = async () => {
 
 ### ✅ **TEMPORAL TABLES + ANALYTICS OPTIMIZATION - HOÀN THÀNH 100% - July 15, 2025:**
 
-**🎯 TẤT CẢ 8 BẢNG ĐÃ HOÀN THÀNH OPTIMIZATION:**
 
-| Bảng     | Temporal Tables | History Table   | Columnstore Indexes     | Real Column Names                  | Status                 |
-| -------- | --------------- | --------------- | ----------------------- | ---------------------------------- | ---------------------- |
-| **DP01** | ✅ **YES**      | ✅ DP01_History | ✅ **TRUE COLUMNSTORE** | ✅ **MA_CN, TAI_KHOAN_HACH_TOAN**  | 🎉 **HOÀN THÀNH 100%** |
-| **DPDA** | ✅ **YES**      | ✅ DPDA_History | ✅ **TRUE COLUMNSTORE** | ✅ **MA_CHI_NHANH, MA_KHACH_HANG** | 🎉 **HOÀN THÀNH 100%** |
-| **EI01** | ✅ **YES**      | ✅ EI01_History | ✅ **TRUE COLUMNSTORE** | ✅ **MA_CN, MA_KH, TEN_KH**        | 🎉 **HOÀN THÀNH 100%** |
-| **GL01** | ✅ **YES**      | ✅ GL01_History | ✅ **TRUE COLUMNSTORE** | ✅ **STS, NGAY_GD, NGUOI_TAO**     | 🎉 **HOÀN THÀNH 100%** |
-| **GL41** | ✅ **YES**      | ✅ GL41_History | ✅ **TRUE COLUMNSTORE** | ✅ **MA_CN, LOAI_TIEN, MA_TK**     | 🎉 **HOÀN THÀNH 100%** |
-| **LN01** | ✅ **YES**      | ✅ LN01_History | ✅ **TRUE COLUMNSTORE** | ✅ **BRCD, CUSTSEQ, CUSTNM**       | 🎉 **HOÀN THÀNH 100%** |
-| **LN03** | ✅ **YES**      | ✅ LN03_History | ✅ **TRUE COLUMNSTORE** | ✅ **MACHINHANH, TENCHINHANH**     | 🎉 **HOÀN THÀNH 100%** |
-| **RR01** | ✅ **YES**      | ✅ RR01_History | ✅ **TRUE COLUMNSTORE** | ✅ **CN_LOAI_I, BRCD, MA_KH**      | 🎉 **HOÀN THÀNH 100%** |
-
-**Bảng GL01 cấu hình đặc biệt: theo chuẩn Partitioned Table với Columnstore. 
+**Bảng GL01 cấu hình đặc biệt: theo chuẩn Partitioned Table với Columnstore. (Quan trọng)
 
 **📊 Kết quả cuối cùng - HOÀN THÀNH 100%:**
 
@@ -947,7 +840,7 @@ docker run -e "ACCEPT_EULA=Y" \
 2. **System Columns** (N+1 to N+5): Id, NGAY_DL, CreatedAt, UpdatedAt, IsDeleted  
 3. **Temporal Columns** (Last 2): SysStartTime, SysEndTime (7 tables only - GL01 excluded)
 
-**Model Statistics:**
+**Model Statistics:** (Quan trọng)
 - **DP01**: 63 business + 5 system + 2 temporal = 70 total columns
 - **EI01**: 24 business + 5 system + 2 temporal = 31 total columns
 - **GL01**: 27 business + 5 system + 0 temporal = 32 total columns (Partitioned Columnstore)
@@ -957,7 +850,7 @@ docker run -e "ACCEPT_EULA=Y" \
 - **RR01**: 25 business + 5 system + 2 temporal = 32 total columns
 - **DPDA**: 13 business + 5 system + 2 temporal = 20 total columns
 
-**🎉 SYSTEM STATUS:**
+**🎉 SYSTEM STATUS:** (Quan trọng)
 - **Database**: Azure SQL Edge 1.0.7 with optimized configuration ✅
 - **Backend**: .NET Core API với restructured DataTable models ✅
 - **Frontend**: Vue.js + Vite với updated import/preview capabilities ✅
@@ -1124,7 +1017,7 @@ cd Frontend/tinhkhoan-app-ui-vite && npm run dev
 - `rebuild_table_structures.sh` - Complete table rebuild với real column names ✅
 - `validate_rebuilt_tables.sh` - Validation cuối cùng ✅
 
-**QUY TẮC IMPORT & CẤU TRÚC CÁC CỘT BUSINESS**
+**QUY TẮC IMPORT & CẤU TRÚC CÁC CỘT BUSINESS** (Quan trọng)
 + Model, Database, EF, Preview cần TÔN TRỌNG file csv gốc: có cấu trúc số lượng cột, thứ tự các cột, tên các cột phải giống với file CSV gốc (bảng DP01 theo file csv dp01, bảng GL01 theo file csv gl01....v..v.)
 + Model, Database, EF, Preview có thứ tự các cột như sau:
 - bảng nào cũng phải có cột NGAY_DL (bảng GL01 thì cột NGAY_DL lấy từ cột TR_TIME của file csv gl01, các bảng dữ liệu còn lại lấy từ filename, cột NGAY_DL có format (yyyy-mm-dd). Cột NGAY_DL coi như system column
