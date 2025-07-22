@@ -5,13 +5,13 @@ namespace TinhKhoanApp.Api.Models.DataTables
 {
     /// <summary>
     /// Model cho bảng LN01 - Dữ liệu Tín dụng chi tiết
-    /// Business columns first (79 columns from CSV), then system columns, then temporal columns
+    /// CSV Business columns FIRST (79 columns), then System/Temporal columns
     /// Temporal table with history tracking and columnstore index
     /// </summary>
     [Table("LN01")]
     public class LN01
     {
-        // ======= BUSINESS COLUMNS (79 columns - exactly from CSV) =======
+        // ======= CSV BUSINESS COLUMNS (1-79) - EXACT ORDER FROM CSV =======
         [Column("BRCD")]
         [StringLength(50)]
         public string? BRCD { get; set; }
@@ -80,15 +80,15 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public DateTime? APPRMATDT { get; set; }
 
         [Column("LOAN_TYPE")]
-        [StringLength(200)]
+        [StringLength(100)]
         public string? LOAN_TYPE { get; set; }
 
         [Column("FUND_RESOURCE_CODE")]
-        [StringLength(200)]
+        [StringLength(50)]
         public string? FUND_RESOURCE_CODE { get; set; }
 
         [Column("FUND_PURPOSE_CODE")]
-        [StringLength(200)]
+        [StringLength(50)]
         public string? FUND_PURPOSE_CODE { get; set; }
 
         [Column("REPAYMENT_AMOUNT", TypeName = "decimal(18,2)")]
@@ -104,11 +104,11 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public DateTime? NEXT_INT_REPAY_DATE { get; set; }
 
         [Column("OFFICER_ID")]
-        [StringLength(100)]
+        [StringLength(50)]
         public string? OFFICER_ID { get; set; }
 
         [Column("OFFICER_NAME")]
-        [StringLength(500)]
+        [StringLength(255)]
         public string? OFFICER_NAME { get; set; }
 
         [Column("INTEREST_AMOUNT", TypeName = "decimal(18,2)")]
@@ -125,7 +125,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public string? CUSTOMER_TYPE_CODE { get; set; }
 
         [Column("CUSTOMER_TYPE_CODE_DETAIL")]
-        [StringLength(50)]
+        [StringLength(100)]
         public string? CUSTOMER_TYPE_CODE_DETAIL { get; set; }
 
         [Column("TRCTCD")]
@@ -133,27 +133,27 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public string? TRCTCD { get; set; }
 
         [Column("TRCTNM")]
-        [StringLength(500)]
+        [StringLength(255)]
         public string? TRCTNM { get; set; }
 
         [Column("ADDR1")]
-        [StringLength(1000)]
+        [StringLength(500)]
         public string? ADDR1 { get; set; }
 
         [Column("PROVINCE")]
-        [StringLength(50)]
+        [StringLength(100)]
         public string? PROVINCE { get; set; }
 
         [Column("LCLPROVINNM")]
-        [StringLength(200)]
+        [StringLength(100)]
         public string? LCLPROVINNM { get; set; }
 
         [Column("DISTRICT")]
-        [StringLength(50)]
+        [StringLength(100)]
         public string? DISTRICT { get; set; }
 
         [Column("LCLDISTNM")]
-        [StringLength(200)]
+        [StringLength(100)]
         public string? LCLDISTNM { get; set; }
 
         [Column("COMMCD")]
@@ -161,18 +161,17 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public string? COMMCD { get; set; }
 
         [Column("LCLWARDNM")]
-        [StringLength(200)]
+        [StringLength(100)]
         public string? LCLWARDNM { get; set; }
 
         [Column("LAST_REPAY_DATE")]
         public DateTime? LAST_REPAY_DATE { get; set; }
 
-        [Column("SECURED_PERCENT", TypeName = "decimal(5,2)")]
+        [Column("SECURED_PERCENT", TypeName = "decimal(10,4)")]
         public decimal? SECURED_PERCENT { get; set; }
 
         [Column("NHOM_NO")]
-        [StringLength(50)]
-        public string? NHOM_NO { get; set; }
+        public int? NHOM_NO { get; set; }
 
         [Column("LAST_INT_CHARGE_DATE")]
         public DateTime? LAST_INT_CHARGE_DATE { get; set; }
@@ -189,8 +188,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public decimal? EXEMPTINTAMT { get; set; }
 
         [Column("GRPNO")]
-        [StringLength(50)]
-        public string? GRPNO { get; set; }
+        public int? GRPNO { get; set; }
 
         [Column("BUSCD")]
         [StringLength(50)]
@@ -201,7 +199,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public string? BSNSSCLTPCD { get; set; }
 
         [Column("USRIDOP")]
-        [StringLength(100)]
+        [StringLength(50)]
         public string? USRIDOP { get; set; }
 
         [Column("ACCRUAL_AMOUNT", TypeName = "decimal(18,2)")]
@@ -211,53 +209,50 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public decimal? ACCRUAL_AMOUNT_END_OF_MONTH { get; set; }
 
         [Column("INTCMTH")]
-        [StringLength(10)]
-        public string? INTCMTH { get; set; }
+        public int? INTCMTH { get; set; }
 
         [Column("INTRPYMTH")]
-        [StringLength(10)]
-        public string? INTRPYMTH { get; set; }
+        public int? INTRPYMTH { get; set; }
 
         [Column("INTTRMMTH")]
-        [StringLength(10)]
-        public string? INTTRMMTH { get; set; }
+        public int? INTTRMMTH { get; set; }
 
         [Column("YRDAYS")]
         public int? YRDAYS { get; set; }
 
         [Column("REMARK")]
-        [StringLength(1000)]
+        [StringLength(500)]
         public string? REMARK { get; set; }
 
         [Column("CHITIEU")]
-        [StringLength(500)]
+        [StringLength(100)]
         public string? CHITIEU { get; set; }
 
         [Column("CTCV")]
-        [StringLength(500)]
+        [StringLength(100)]
         public string? CTCV { get; set; }
 
         [Column("CREDIT_LINE_YPE")]
-        [StringLength(100)]
+        [StringLength(50)]
         public string? CREDIT_LINE_YPE { get; set; }
 
         [Column("INT_LUMPSUM_PARTIAL_TYPE")]
-        [StringLength(100)]
+        [StringLength(50)]
         public string? INT_LUMPSUM_PARTIAL_TYPE { get; set; }
 
         [Column("INT_PARTIAL_PAYMENT_TYPE")]
-        [StringLength(100)]
+        [StringLength(50)]
         public string? INT_PARTIAL_PAYMENT_TYPE { get; set; }
 
         [Column("INT_PAYMENT_INTERVAL")]
-        [StringLength(50)]
-        public string? INT_PAYMENT_INTERVAL { get; set; }
+        public int? INT_PAYMENT_INTERVAL { get; set; }
 
         [Column("AN_HAN_LAI")]
-        public int? AN_HAN_LAI { get; set; }
+        [StringLength(50)]
+        public string? AN_HAN_LAI { get; set; }
 
         [Column("PHUONG_THUC_GIAI_NGAN_1")]
-        [StringLength(100)]
+        [StringLength(50)]
         public string? PHUONG_THUC_GIAI_NGAN_1 { get; set; }
 
         [Column("TAI_KHOAN_GIAI_NGAN_1")]
@@ -268,7 +263,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public decimal? SO_TIEN_GIAI_NGAN_1 { get; set; }
 
         [Column("PHUONG_THUC_GIAI_NGAN_2")]
-        [StringLength(100)]
+        [StringLength(50)]
         public string? PHUONG_THUC_GIAI_NGAN_2 { get; set; }
 
         [Column("TAI_KHOAN_GIAI_NGAN_2")]
@@ -279,14 +274,14 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public decimal? SO_TIEN_GIAI_NGAN_2 { get; set; }
 
         [Column("CMT_HC")]
-        [StringLength(100)]
+        [StringLength(50)]
         public string? CMT_HC { get; set; }
 
         [Column("NGAY_SINH")]
         public DateTime? NGAY_SINH { get; set; }
 
         [Column("MA_CB_AGRI")]
-        [StringLength(100)]
+        [StringLength(50)]
         public string? MA_CB_AGRI { get; set; }
 
         [Column("MA_NGANH_KT")]
@@ -297,10 +292,10 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public decimal? TY_GIA { get; set; }
 
         [Column("OFFICER_IPCAS")]
-        [StringLength(100)]
+        [StringLength(50)]
         public string? OFFICER_IPCAS { get; set; }
 
-        // ======= SYSTEM COLUMNS =======
+        // ======= SYSTEM/TEMPORAL COLUMNS (80+) =======
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Column("Id")]
@@ -310,23 +305,19 @@ namespace TinhKhoanApp.Api.Models.DataTables
         [Required]
         public DateTime NGAY_DL { get; set; }
 
-        [Column("CreatedAt")]
-        [Required]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        [Column("UpdatedAt")]
-        [Required]
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-
-        [Column("IsDeleted")]
-        [Required]
-        public bool IsDeleted { get; set; } = false;
+        [Column("FILE_NAME")]
+        [StringLength(255)]
+        public string? FILE_NAME { get; set; }
 
         // ======= TEMPORAL COLUMNS (managed by SQL Server) =======
-        [Column("SysStartTime")]
-        public DateTime SysStartTime { get; set; }
+        [Column("CREATED_DATE")]
+        public DateTime CREATED_DATE { get; set; }
 
-        [Column("SysEndTime")]
-        public DateTime SysEndTime { get; set; }
+        [Column("UPDATED_DATE")]
+        public DateTime UPDATED_DATE { get; set; }
+
+        // Aliases for compatibility with legacy code
+        public DateTime? CreatedAt => CREATED_DATE;
+        public DateTime? UpdatedAt => UPDATED_DATE;
     }
 }

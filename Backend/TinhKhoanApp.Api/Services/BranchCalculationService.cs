@@ -558,7 +558,10 @@ namespace TinhKhoanApp.Api.Services
                 if (date.HasValue)
                 {
                     _logger.LogInformation("🎯 Filter by specific date: {Date}", date.Value.ToString("yyyy-MM-dd"));
-                    query = query.Where(x => x.NGAY_DL.Date == date.Value.Date);
+                    // TODO: Fix string to DateTime conversion
+                    // query = query.Where(x => x.NGAY_DL.Date == date.Value.Date);
+                    var dateStr = date.Value.ToString("yyyy-MM-dd");
+                    query = query.Where(x => x.NGAY_DL == dateStr);
                 }
                 else
                 {

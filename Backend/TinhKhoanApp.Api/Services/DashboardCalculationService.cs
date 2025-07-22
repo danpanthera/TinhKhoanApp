@@ -126,7 +126,7 @@ namespace TinhKhoanApp.Api.Services
                         // Chỉ tính các tài khoản không thuộc danh sách loại trừ
                         if (!excludedPrefixes.Any(prefix => accountCode.StartsWith(prefix)))
                         {
-                            var balance = dp01Record.CURRENT_BALANCE ?? 0m;
+                            var balance = dp01Record.CURRENT_BALANCE.GetDecimalOrDefault();
                             totalNguonVon += balance;
                             processedRecords++;
                         }
@@ -359,7 +359,7 @@ namespace TinhKhoanApp.Api.Services
                             totalDebt += debtAmount;
 
                             // Sử dụng nhóm nợ để phân loại nợ xấu
-                            var nhomNo = lnRecord.NHOM_NO ?? "01"; // Default
+                            var nhomNo = (lnRecord.NHOM_NO ?? 1).ToString(); // Default
 
                             if (!nhomNoBreakdown.ContainsKey(nhomNo))
                                 nhomNoBreakdown[nhomNo] = 0;

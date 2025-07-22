@@ -3,126 +3,48 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TinhKhoanApp.Api.Models.DataTables
 {
-    /// <summary>
-    /// Model cho bảng RR01 - Dữ liệu Rủi ro tín dụng
-    /// Business columns first (25 columns from CSV), then system columns, then temporal columns
-    /// Temporal table with history tracking and columnstore index
-    /// </summary>
     [Table("RR01")]
     public class RR01
     {
-        // ======= BUSINESS COLUMNS (25 columns - exactly from CSV) =======
-        [Column("CN_LOAI_I")]
-        [StringLength(50)]
-        public string? CN_LOAI_I { get; set; }
-
-        [Column("BRCD")]
-        [StringLength(50)]
-        public string? BRCD { get; set; }
-
-        [Column("MA_KH")]
-        [StringLength(100)]
-        public string? MA_KH { get; set; }
-
-        [Column("TEN_KH")]
-        [StringLength(500)]
-        public string? TEN_KH { get; set; }
-
-        [Column("SO_LDS")]
-        [StringLength(100)]
-        public string? SO_LDS { get; set; }
-
-        [Column("CCY")]
-        [StringLength(10)]
-        public string? CCY { get; set; }
-
-        [Column("SO_LAV")]
-        [StringLength(100)]
-        public string? SO_LAV { get; set; }
-
-        [Column("LOAI_KH")]
-        [StringLength(50)]
-        public string? LOAI_KH { get; set; }
-
-        [Column("NGAY_GIAI_NGAN")]
-        public DateTime? NGAY_GIAI_NGAN { get; set; }
-
-        [Column("NGAY_DEN_HAN")]
-        public DateTime? NGAY_DEN_HAN { get; set; }
-
-        [Column("VAMC_FLG")]
-        [StringLength(10)]
-        public string? VAMC_FLG { get; set; }
-
-        [Column("NGAY_XLRR")]
-        public DateTime? NGAY_XLRR { get; set; }
-
-        [Column("DUNO_GOC_BAN_DAU", TypeName = "decimal(18,2)")]
-        public decimal? DUNO_GOC_BAN_DAU { get; set; }
-
-        [Column("DUNO_LAI_TICHLUY_BD", TypeName = "decimal(18,2)")]
-        public decimal? DUNO_LAI_TICHLUY_BD { get; set; }
-
-        [Column("DOC_DAUKY_DA_THU_HT", TypeName = "decimal(18,2)")]
-        public decimal? DOC_DAUKY_DA_THU_HT { get; set; }
-
-        [Column("DUNO_GOC_HIENTAI", TypeName = "decimal(18,2)")]
-        public decimal? DUNO_GOC_HIENTAI { get; set; }
-
-        [Column("DUNO_LAI_HIENTAI", TypeName = "decimal(18,2)")]
-        public decimal? DUNO_LAI_HIENTAI { get; set; }
-
-        [Column("DUNO_NGAN_HAN", TypeName = "decimal(18,2)")]
-        public decimal? DUNO_NGAN_HAN { get; set; }
-
-        [Column("DUNO_TRUNG_HAN", TypeName = "decimal(18,2)")]
-        public decimal? DUNO_TRUNG_HAN { get; set; }
-
-        [Column("DUNO_DAI_HAN", TypeName = "decimal(18,2)")]
-        public decimal? DUNO_DAI_HAN { get; set; }
-
-        [Column("THU_GOC", TypeName = "decimal(18,2)")]
-        public decimal? THU_GOC { get; set; }
-
-        [Column("THU_LAI", TypeName = "decimal(18,2)")]
-        public decimal? THU_LAI { get; set; }
-
-        [Column("BDS", TypeName = "decimal(18,2)")]
-        public decimal? BDS { get; set; }
-
-        [Column("DS", TypeName = "decimal(18,2)")]
-        public decimal? DS { get; set; }
-
-        [Column("TSK", TypeName = "decimal(18,2)")]
-        public decimal? TSK { get; set; }
-
-        // ======= SYSTEM COLUMNS =======
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        [Column("Id")]
         public long Id { get; set; }
 
-        [Column("NGAY_DL")]
-        [Required]
-        public DateTime NGAY_DL { get; set; }
+        public DateTime ImportedAt { get; set; }
 
-        [Column("CreatedAt")]
-        [Required]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public string? StatementDate { get; set; }
 
-        [Column("UpdatedAt")]
-        [Required]
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        // Business columns - all string type as required
+        public string? CN_LOAI_I { get; set; }
+        public string? BRCD { get; set; }
+        public string? MA_KH { get; set; }
+        public string? TEN_KH { get; set; }
+        public string? SO_LDS { get; set; }
+        public string? CCY { get; set; }
+        public string? SO_LAV { get; set; }
+        public string? LOAI_KH { get; set; }
+        public string? NGAY_GIAI_NGAN { get; set; }
+        public string? NGAY_DEN_HAN { get; set; }
+        public string? VAMC_FLG { get; set; }
+        public string? NGAY_XLRR { get; set; }
+        public string? DUNO_GOC_BAN_DAU { get; set; }
+        public string? DUNO_LAI_TICHLUY_BD { get; set; }
+        public string? DOC_DAUKY_DA_THU_HT { get; set; }
+        public string? DUNO_GOC_HIENTAI { get; set; }
+        public string? DUNO_LAI_HIENTAI { get; set; }
+        public string? DUNO_NGAN_HAN { get; set; }
+        public string? DUNO_TRUNG_HAN { get; set; }
+        public string? DUNO_DAI_HAN { get; set; }
+        public string? THU_GOC { get; set; }
+        public string? THU_LAI { get; set; }
+        public string? BDS { get; set; }
+        public string? DS { get; set; }
+        public string? TSK { get; set; }
 
-        [Column("IsDeleted")]
-        [Required]
-        public bool IsDeleted { get; set; } = false;
-
-        // ======= TEMPORAL COLUMNS (managed by SQL Server) =======
-        [Column("SysStartTime")]
-        public DateTime SysStartTime { get; set; }
-
-        [Column("SysEndTime")]
-        public DateTime SysEndTime { get; set; }
+        // Common fields
+        public string? MA_CN { get; set; }
+        public string? NGAY_DL { get; set; }
+        public string? FILE_NAME { get; set; }
+        public DateTime? CreatedAt { get; set; }
+        public DateTime? UpdatedAt { get; set; }
     }
 }

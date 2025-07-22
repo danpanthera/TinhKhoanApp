@@ -123,8 +123,9 @@ namespace TinhKhoanApp.Api.Services
             }
 
             // Query dữ liệu từ DP01 theo ngày và chi nhánh
+            var targetDateStr = targetDate.ToString("yyyy-MM-dd");
             var query = _context.DP01
-                .Where(d => d.NGAY_DL.Date == targetDate.Date && d.MA_CN == maCN);
+                .Where(d => d.NGAY_DL == targetDateStr && d.MA_CN == maCN);
 
             // Nếu là PGD thì lọc thêm theo MA_PGD
             if (!string.IsNullOrEmpty(maPGD))
@@ -143,7 +144,7 @@ namespace TinhKhoanApp.Api.Services
             // Tính tổng CURRENT_BALANCE - dùng decimal? type
             var records = await query.ToListAsync();
             var totalBalance = records
-                .Where(d => d.CURRENT_BALANCE.HasValue)
+                .Where(d => d.CURRENT_BALANCE.HasValue())
                 .Sum(d => d.CURRENT_BALANCE.Value);
             var recordCount = records.Count;
 
@@ -153,7 +154,7 @@ namespace TinhKhoanApp.Api.Services
             if (totalBalance == 0 && recordCount == 0)
             {
                 var hasAnyData = await _context.DP01
-                    .AnyAsync(d => d.NGAY_DL.Date == targetDate.Date && d.MA_CN == maCN);
+                    .AnyAsync(d => d.NGAY_DL == targetDateStr && d.MA_CN == maCN);
 
                 if (!hasAnyData)
                 {
@@ -185,12 +186,14 @@ namespace TinhKhoanApp.Api.Services
         {
             _logger.LogInformation("🌍 Tính toán nguồn vốn toàn tỉnh (mã 7800-7808)");
 
+            var targetDateStr = targetDate.ToString("yyyy-MM-dd");
+            
             // Lấy tất cả mã chi nhánh (7800-7808)
             var allBranchCodes = _branchMapping.Values.ToList();
 
             // Query tổng cho tất cả chi nhánh
             var query = _context.DP01
-                .Where(d => d.NGAY_DL.Date == targetDate.Date && allBranchCodes.Contains(d.MA_CN))
+                .Where(d => d.NGAY_DL == targetDateStr && allBranchCodes.Contains(d.MA_CN))
                 .Where(d =>
                     !d.TAI_KHOAN_HACH_TOAN.StartsWith("40") &&
                     !d.TAI_KHOAN_HACH_TOAN.StartsWith("41") &&
@@ -201,7 +204,7 @@ namespace TinhKhoanApp.Api.Services
             // Tính tổng CURRENT_BALANCE - dùng decimal? type
             var records = await query.ToListAsync();
             var totalBalance = records
-                .Where(d => d.CURRENT_BALANCE.HasValue)
+                .Where(d => d.CURRENT_BALANCE.HasValue())
                 .Sum(d => d.CURRENT_BALANCE.Value);
             var recordCount = records.Count;
 
@@ -211,7 +214,7 @@ namespace TinhKhoanApp.Api.Services
             if (totalBalance == 0 && recordCount == 0)
             {
                 var hasAnyData = await _context.DP01
-                    .AnyAsync(d => d.NGAY_DL.Date == targetDate.Date && allBranchCodes.Contains(d.MA_CN));
+                    .AnyAsync(d => d.NGAY_DL == targetDateStr && allBranchCodes.Contains(d.MA_CN));
 
                 if (!hasAnyData)
                 {
@@ -272,7 +275,7 @@ namespace TinhKhoanApp.Api.Services
                 // Xử lý tất cả đơn vị
                 var allBranchCodes = _branchMapping.Values.ToList();
                 var accountDetails = await _context.DP01
-                    .Where(d => d.NGAY_DL.Date == targetDate.Date && allBranchCodes.Contains(d.MA_CN))
+                    .Where(d => d.NGAY_DL == targetDateStr && allBranchCodes.Contains(d.MA_CN))
                     .Where(d =>
                         !d.TAI_KHOAN_HACH_TOAN.StartsWith("40") &&
                         !d.TAI_KHOAN_HACH_TOAN.StartsWith("41") &&
@@ -306,7 +309,7 @@ namespace TinhKhoanApp.Api.Services
             if (!string.IsNullOrEmpty(maCN))
             {
                 var query = _context.DP01
-                    .Where(d => d.NGAY_DL.Date == targetDate.Date && d.MA_CN == maCN)
+                    .Where(d => d.NGAY_DL == targetDateStr && d.MA_CN == maCN)
                     .Where(d =>
                         !d.TAI_KHOAN_HACH_TOAN.StartsWith("40") &&
                         !d.TAI_KHOAN_HACH_TOAN.StartsWith("41") &&

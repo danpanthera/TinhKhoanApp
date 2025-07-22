@@ -102,11 +102,144 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Import LN01 - Loan data
+        /// Import LN01 - Loan data (using streaming approach)
         /// </summary>
         public async Task<DirectImportResult> ImportLN01DirectAsync(IFormFile file, string? statementDate = null)
         {
-            return await ImportGenericCSVAsync<LN01>("LN01", "LN01", file, statementDate);
+            var result = new DirectImportResult
+            {
+                FileName = file.FileName,
+                DataType = "LN01",
+                TargetTable = "LN01",
+                FileSizeBytes = file.Length,
+                StartTime = DateTime.UtcNow
+            };
+
+            try
+            {
+                _logger.LogInformation("🚀 [LN01_DIRECT] Import vào bảng LN01 using streaming approach");
+
+                // Extract NgayDL từ filename
+                var ngayDL = ExtractNgayDLFromFileName(file.FileName);
+                result.NgayDL = ngayDL;
+
+                // Create ImportedDataRecord for tracking
+                var importRecord = await CreateImportedDataRecordAsync(file, "LN01", 0);
+                result.ImportedDataRecordId = importRecord.Id;
+
+                // Parse date
+                DateTime parsedDate;
+                if (!string.IsNullOrEmpty(statementDate) && DateTime.TryParse(statementDate, out parsedDate))
+                {
+                    // Use provided date
+                }
+                else if (!string.IsNullOrEmpty(ngayDL) && DateTime.TryParseExact(ngayDL, "dd/MM/yyyy", null, DateTimeStyles.None, out parsedDate))
+                {
+                    // Use date from filename
+                }
+                else
+                {
+                    parsedDate = DateTime.Now.Date;
+                }
+
+                // Stream import with specific LN01 logic
+                var processedRecords = await ImportLN01StreamingAsync(file, parsedDate);
+                result.ProcessedRecords = processedRecords;
+
+                // Update record count
+                importRecord.RecordsCount = processedRecords;
+                await _context.SaveChangesAsync();
+
+                result.Success = true;
+                result.BatchId = Guid.NewGuid().ToString();
+                result.EndTime = DateTime.UtcNow;
+
+                _logger.LogInformation("✅ [LN01_DIRECT] Import thành công: {Count} records trong {Duration}ms",
+                    result.ProcessedRecords, result.Duration.TotalMilliseconds);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.ErrorMessage = ex.Message;
+                result.EndTime = DateTime.UtcNow;
+                _logger.LogError(ex, "❌ [LN01_DIRECT] Import failed: {FileName}", file.FileName);
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// Import LN01 streaming with proper column mapping
+        /// </summary>
+        private async Task<int> ImportLN01StreamingAsync(IFormFile file, DateTime ngayDL)
+        {
+            // Create DataTable with LN01 structure
+            var dataTable = CreateDataTableForType("LN01", null);
+
+            using var streamReader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
+            using var csvReader = new CsvReader(streamReader, CultureInfo.InvariantCulture);
+
+            // Read header (skip it)
+            await csvReader.ReadAsync();
+            csvReader.ReadHeader();
+
+            var processedCount = 0;
+            var batchSize = 10000;
+            var batch = new List<string[]>();
+
+            // Read data rows
+            while (await csvReader.ReadAsync())
+            {
+                var record = new string[79]; // Exactly 79 columns from CSV
+                for (int i = 0; i < 79 && i < csvReader.ColumnCount; i++)
+                {
+                    record[i] = csvReader.GetField(i) ?? "";
+                }
+                batch.Add(record);
+
+                if (batch.Count >= batchSize)
+                {
+                    await ProcessBatchAsync(dataTable, batch, "LN01", ngayDL, file.FileName);
+
+                    // Perform SqlBulkCopy
+                    var tableName = GetTableNameForDataType("LN01");
+                    using var connection = new SqlConnection(_connectionString);
+                    await connection.OpenAsync();
+                    using var bulkCopy = new SqlBulkCopy(connection)
+                    {
+                        DestinationTableName = tableName,
+                        BatchSize = 10000,
+                        BulkCopyTimeout = 300
+                    };
+                    await bulkCopy.WriteToServerAsync(dataTable);
+
+                    processedCount += batch.Count;
+                    batch.Clear();
+                }
+            }
+
+            // Process remaining batch
+            if (batch.Count > 0)
+            {
+                await ProcessBatchAsync(dataTable, batch, "LN01", ngayDL, file.FileName);
+
+                // Perform SqlBulkCopy
+                var tableName = GetTableNameForDataType("LN01");
+                using var connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+                using var bulkCopy = new SqlBulkCopy(connection)
+                {
+                    DestinationTableName = tableName,
+                    BatchSize = 10000,
+                    BulkCopyTimeout = 300
+                };
+                await bulkCopy.WriteToServerAsync(dataTable);
+
+                processedCount += batch.Count;
+            }
+
+            return processedCount;
         }
 
         /// <summary>
@@ -1918,7 +2051,7 @@ namespace TinhKhoanApp.Api.Services
 
                     if (batch.Count >= batchSize)
                     {
-                        await ProcessBatchAsync(dataTable, batch, dataType);
+                        await ProcessBatchAsync(dataTable, batch, dataType, DateTime.Today, fileName);
                         totalRecords += batch.Count;
                         batch.Clear();
 
@@ -1929,7 +2062,7 @@ namespace TinhKhoanApp.Api.Services
                 // Process remaining records
                 if (batch.Any())
                 {
-                    await ProcessBatchAsync(dataTable, batch, dataType);
+                    await ProcessBatchAsync(dataTable, batch, dataType, DateTime.Today, fileName);
                     totalRecords += batch.Count;
                 }
 
@@ -2011,21 +2144,84 @@ namespace TinhKhoanApp.Api.Services
 
         /// <summary>
         /// Xử lý batch data với DataTable và SqlBulkCopy
+        /// NEW STRUCTURE: CSV business columns + system columns
         /// </summary>
-        private async Task ProcessBatchAsync(DataTable dataTable, List<string[]> batch, string dataType)
+        private async Task ProcessBatchAsync(DataTable dataTable, List<string[]> batch, string dataType, DateTime ngayDL, string fileName)
         {
             dataTable.Clear();
 
             foreach (var record in batch)
             {
                 var row = dataTable.NewRow();
-                for (int i = 0; i < Math.Min(record.Length, dataTable.Columns.Count); i++)
+
+                // Fill CSV business columns (first N columns)
+                int csvColumnCount = record.Length;
+                for (int i = 0; i < csvColumnCount && i < dataTable.Columns.Count; i++)
                 {
-                    row[i] = string.IsNullOrWhiteSpace(record[i]) ? DBNull.Value : record[i];
+                    var value = record[i];
+
+                    // Handle empty strings and null values based on column type
+                    if (string.IsNullOrWhiteSpace(value))
+                    {
+                        row[i] = DBNull.Value;
+                    }
+                    else
+                    {
+                        // Convert based on DataTable column type
+                        var columnType = dataTable.Columns[i].DataType;
+                        if (columnType == typeof(int))
+                        {
+                            if (int.TryParse(value, out int intValue))
+                                row[i] = intValue;
+                            else
+                                row[i] = DBNull.Value;
+                        }
+                        else if (columnType == typeof(decimal))
+                        {
+                            if (decimal.TryParse(value, out decimal decimalValue))
+                                row[i] = decimalValue;
+                            else
+                                row[i] = DBNull.Value;
+                        }
+                        else if (columnType == typeof(DateTime))
+                        {
+                            if (DateTime.TryParse(value, out DateTime dateValue))
+                                row[i] = dateValue;
+                            else
+                                row[i] = DBNull.Value;
+                        }
+                        else
+                        {
+                            row[i] = value; // Default to string
+                        }
+                    }
                 }
+
+                // Fill system columns (after CSV columns)
+                for (int i = csvColumnCount; i < dataTable.Columns.Count; i++)
+                {
+                    var columnName = dataTable.Columns[i].ColumnName;
+                    if (columnName == "Id")
+                    {
+                        // SqlBulkCopy will handle IDENTITY column
+                        row[i] = DBNull.Value;
+                    }
+                    else if (columnName == "NGAY_DL")
+                    {
+                        row[i] = ngayDL;
+                    }
+                    else if (columnName == "FILE_NAME")
+                    {
+                        row[i] = fileName;
+                    }
+                    else
+                    {
+                        row[i] = DBNull.Value;
+                    }
+                }
+
                 dataTable.Rows.Add(row);
             }
-
             var tableName = GetTableNameForDataType(dataType);
 
             using var connection = new SqlConnection(_connectionString);
@@ -2093,7 +2289,7 @@ namespace TinhKhoanApp.Api.Services
             try
             {
                 var dataTable = CreateDataTableForType(dataType, null);
-                await ProcessBatchAsync(dataTable, chunk, dataType);
+                await ProcessBatchAsync(dataTable, chunk, dataType, DateTime.Today, "unknown");
                 return chunk.Count;
             }
             finally
@@ -2109,7 +2305,170 @@ namespace TinhKhoanApp.Api.Services
         {
             var dataTable = new DataTable();
 
-            // If headers provided, use them
+            // Create specific columns for each data type with correct types
+            switch (dataType.ToUpper())
+            {
+                case "LN01":
+                    CreateLN01DataTable(dataTable, headers);
+                    break;
+                case "LN03":
+                    CreateLN03DataTable(dataTable, headers);
+                    break;
+                case "DP01":
+                    CreateDP01DataTable(dataTable, headers);
+                    break;
+                case "GL01":
+                    CreateGL01DataTable(dataTable, headers);
+                    break;
+                default:
+                    // Fallback to string columns
+                    if (headers != null && headers.Any())
+                    {
+                        foreach (var header in headers)
+                        {
+                            dataTable.Columns.Add(header, typeof(string));
+                        }
+                    }
+                    else
+                    {
+                        for (int i = 1; i <= 20; i++)
+                        {
+                            dataTable.Columns.Add($"Column{i}", typeof(string));
+                        }
+                    }
+                    break;
+            }
+
+            return dataTable;
+        }
+
+        /// <summary>
+        /// Tạo DataTable cho LN01 với đúng column types
+        /// NEW STRUCTURE: CSV business columns FIRST, then system columns
+        /// </summary>
+        private void CreateLN01DataTable(DataTable dataTable, string[]? headers)
+        {
+            // CSV Business columns 1-79 (exact order from CSV)
+            dataTable.Columns.Add("BRCD", typeof(string));
+            dataTable.Columns.Add("CUSTSEQ", typeof(string));
+            dataTable.Columns.Add("CUSTNM", typeof(string));
+            dataTable.Columns.Add("TAI_KHOAN", typeof(string));
+            dataTable.Columns.Add("CCY", typeof(string));
+            dataTable.Columns.Add("DU_NO", typeof(decimal));
+            dataTable.Columns.Add("DSBSSEQ", typeof(string));
+            dataTable.Columns.Add("TRANSACTION_DATE", typeof(DateTime));
+            dataTable.Columns.Add("DSBSDT", typeof(DateTime));
+            dataTable.Columns.Add("DISBUR_CCY", typeof(string));
+            dataTable.Columns.Add("DISBURSEMENT_AMOUNT", typeof(decimal));
+            dataTable.Columns.Add("DSBSMATDT", typeof(DateTime));
+            dataTable.Columns.Add("BSRTCD", typeof(string));
+            dataTable.Columns.Add("INTEREST_RATE", typeof(decimal));
+            dataTable.Columns.Add("APPRSEQ", typeof(string));
+            dataTable.Columns.Add("APPRDT", typeof(DateTime));
+            dataTable.Columns.Add("APPR_CCY", typeof(string));
+            dataTable.Columns.Add("APPRAMT", typeof(decimal));
+            dataTable.Columns.Add("APPRMATDT", typeof(DateTime));
+            dataTable.Columns.Add("LOAN_TYPE", typeof(string));
+            dataTable.Columns.Add("FUND_RESOURCE_CODE", typeof(string));
+            dataTable.Columns.Add("FUND_PURPOSE_CODE", typeof(string));
+            dataTable.Columns.Add("REPAYMENT_AMOUNT", typeof(decimal));
+            dataTable.Columns.Add("NEXT_REPAY_DATE", typeof(DateTime));
+            dataTable.Columns.Add("NEXT_REPAY_AMOUNT", typeof(decimal));
+            dataTable.Columns.Add("NEXT_INT_REPAY_DATE", typeof(DateTime));
+            dataTable.Columns.Add("OFFICER_ID", typeof(string));
+            dataTable.Columns.Add("OFFICER_NAME", typeof(string));
+            dataTable.Columns.Add("INTEREST_AMOUNT", typeof(decimal));
+            dataTable.Columns.Add("PASTDUE_INTEREST_AMOUNT", typeof(decimal));
+            dataTable.Columns.Add("TOTAL_INTEREST_REPAY_AMOUNT", typeof(decimal));
+            dataTable.Columns.Add("CUSTOMER_TYPE_CODE", typeof(string));
+            dataTable.Columns.Add("CUSTOMER_TYPE_CODE_DETAIL", typeof(string));
+            dataTable.Columns.Add("TRCTCD", typeof(string));
+            dataTable.Columns.Add("TRCTNM", typeof(string));
+            dataTable.Columns.Add("ADDR1", typeof(string));
+            dataTable.Columns.Add("PROVINCE", typeof(string));
+            dataTable.Columns.Add("LCLPROVINNM", typeof(string));
+            dataTable.Columns.Add("DISTRICT", typeof(string));
+            dataTable.Columns.Add("LCLDISTNM", typeof(string));
+            dataTable.Columns.Add("COMMCD", typeof(string));
+            dataTable.Columns.Add("LCLWARDNM", typeof(string));
+            dataTable.Columns.Add("LAST_REPAY_DATE", typeof(DateTime));
+            dataTable.Columns.Add("SECURED_PERCENT", typeof(decimal));
+            dataTable.Columns.Add("NHOM_NO", typeof(string));
+            dataTable.Columns.Add("LAST_INT_CHARGE_DATE", typeof(DateTime));
+            dataTable.Columns.Add("EXEMPTINT", typeof(string));
+            dataTable.Columns.Add("EXEMPTINTTYPE", typeof(string));
+            dataTable.Columns.Add("EXEMPTINTAMT", typeof(decimal));
+            dataTable.Columns.Add("GRPNO", typeof(string));
+            dataTable.Columns.Add("BUSCD", typeof(string));
+            dataTable.Columns.Add("BSNSSCLTPCD", typeof(string));
+            dataTable.Columns.Add("USRIDOP", typeof(string));
+            dataTable.Columns.Add("ACCRUAL_AMOUNT", typeof(decimal));
+            dataTable.Columns.Add("ACCRUAL_AMOUNT_END_OF_MONTH", typeof(decimal));
+            dataTable.Columns.Add("INTCMTH", typeof(string));
+            dataTable.Columns.Add("INTRPYMTH", typeof(string));
+            dataTable.Columns.Add("INTTRMMTH", typeof(string));
+            dataTable.Columns.Add("YRDAYS", typeof(string));
+            dataTable.Columns.Add("REMARK", typeof(string));
+            dataTable.Columns.Add("CHITIEU", typeof(string));
+            dataTable.Columns.Add("CTCV", typeof(string));
+            dataTable.Columns.Add("CREDIT_LINE_YPE", typeof(string));
+            dataTable.Columns.Add("INT_LUMPSUM_PARTIAL_TYPE", typeof(string));
+            dataTable.Columns.Add("INT_PARTIAL_PAYMENT_TYPE", typeof(string));
+            dataTable.Columns.Add("INT_PAYMENT_INTERVAL", typeof(string));
+            dataTable.Columns.Add("AN_HAN_LAI", typeof(string));
+            dataTable.Columns.Add("PHUONG_THUC_GIAI_NGAN_1", typeof(string));
+            dataTable.Columns.Add("TAI_KHOAN_GIAI_NGAN_1", typeof(string));
+            dataTable.Columns.Add("SO_TIEN_GIAI_NGAN_1", typeof(decimal));
+            dataTable.Columns.Add("PHUONG_THUC_GIAI_NGAN_2", typeof(string));
+            dataTable.Columns.Add("TAI_KHOAN_GIAI_NGAN_2", typeof(string));
+            dataTable.Columns.Add("SO_TIEN_GIAI_NGAN_2", typeof(decimal));
+            dataTable.Columns.Add("CMT_HC", typeof(string));
+            dataTable.Columns.Add("NGAY_SINH", typeof(DateTime));
+            dataTable.Columns.Add("MA_CB_AGRI", typeof(string));
+            dataTable.Columns.Add("MA_NGANH_KT", typeof(string));
+            dataTable.Columns.Add("TY_GIA", typeof(decimal));
+            dataTable.Columns.Add("OFFICER_IPCAS", typeof(string));
+
+            // System columns (80-83)
+            dataTable.Columns.Add("Id", typeof(long));
+            dataTable.Columns.Add("NGAY_DL", typeof(DateTime));
+            dataTable.Columns.Add("FILE_NAME", typeof(string));
+        }        /// <summary>
+                 /// Tạo DataTable cho LN03 với đúng column types
+                 /// NEW STRUCTURE: CSV business columns FIRST, then system columns
+                 /// </summary>
+        private void CreateLN03DataTable(DataTable dataTable, string[]? headers)
+        {
+            // CSV Business columns 1-17 (exact order from CSV)
+            dataTable.Columns.Add("MACHINHANH", typeof(string));
+            dataTable.Columns.Add("TENCHINHANH", typeof(string));
+            dataTable.Columns.Add("MAKH", typeof(string));
+            dataTable.Columns.Add("TENKH", typeof(string));
+            dataTable.Columns.Add("SOHOPDONG", typeof(string));
+            dataTable.Columns.Add("SOTIENXLRR", typeof(decimal));
+            dataTable.Columns.Add("NGAYPHATSINHXL", typeof(DateTime));
+            dataTable.Columns.Add("THUNOSAUXL", typeof(decimal));
+            dataTable.Columns.Add("CONLAINGOAIBANG", typeof(decimal));
+            dataTable.Columns.Add("DUNONOIBANG", typeof(decimal));
+            dataTable.Columns.Add("NHOMNO", typeof(int));
+            dataTable.Columns.Add("MACBTD", typeof(string));
+            dataTable.Columns.Add("TENCBTD", typeof(string));
+            dataTable.Columns.Add("MAPGD", typeof(string));
+            dataTable.Columns.Add("TAIKHOANHACHTOAN", typeof(string));
+            dataTable.Columns.Add("REFNO", typeof(string));
+            dataTable.Columns.Add("LOAINGUONVON", typeof(string));
+
+            // System columns (18-20)
+            dataTable.Columns.Add("Id", typeof(long));
+            dataTable.Columns.Add("NGAY_DL", typeof(DateTime));
+            dataTable.Columns.Add("FILE_NAME", typeof(string));
+        }
+
+        /// <summary>
+        /// Tạo DataTable cho DP01 (fallback)
+        /// </summary>
+        private void CreateDP01DataTable(DataTable dataTable, string[]? headers)
+        {
             if (headers != null && headers.Any())
             {
                 foreach (var header in headers)
@@ -2119,31 +2478,32 @@ namespace TinhKhoanApp.Api.Services
             }
             else
             {
-                // Create generic columns based on data type - simplified for streaming
-                switch (dataType.ToUpper())
+                for (int i = 1; i <= 50; i++)
                 {
-                    case "DP01":
-                        for (int i = 1; i <= 50; i++) // DP01 has many columns
-                        {
-                            dataTable.Columns.Add($"Column{i}", typeof(string));
-                        }
-                        break;
-                    case "GL01":
-                        for (int i = 1; i <= 30; i++) // GL01 columns
-                        {
-                            dataTable.Columns.Add($"Column{i}", typeof(string));
-                        }
-                        break;
-                    default:
-                        for (int i = 1; i <= 20; i++) // Default columns
-                        {
-                            dataTable.Columns.Add($"Column{i}", typeof(string));
-                        }
-                        break;
+                    dataTable.Columns.Add($"Column{i}", typeof(string));
                 }
             }
+        }
 
-            return dataTable;
+        /// <summary>
+        /// Tạo DataTable cho GL01 (fallback)
+        /// </summary>
+        private void CreateGL01DataTable(DataTable dataTable, string[]? headers)
+        {
+            if (headers != null && headers.Any())
+            {
+                foreach (var header in headers)
+                {
+                    dataTable.Columns.Add(header, typeof(string));
+                }
+            }
+            else
+            {
+                for (int i = 1; i <= 30; i++)
+                {
+                    dataTable.Columns.Add($"Column{i}", typeof(string));
+                }
+            }
         }
 
         /// <summary>
