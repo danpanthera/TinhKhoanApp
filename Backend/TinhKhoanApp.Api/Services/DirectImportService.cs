@@ -177,7 +177,7 @@ namespace TinhKhoanApp.Api.Services
             // Create DataTable with LN01 structure
             var dataTable = CreateDataTableForType("LN01", null);
 
-            using var streamReader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
+            using var streamReader = new StreamReader(file.OpenReadStream(), Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 1024 * 1024);
             using var csvReader = new CsvReader(streamReader, CultureInfo.InvariantCulture);
 
             // Read header (skip it)
@@ -185,7 +185,7 @@ namespace TinhKhoanApp.Api.Services
             csvReader.ReadHeader();
 
             var processedCount = 0;
-            var batchSize = 10000;
+            var batchSize = 50000;
             var batch = new List<string[]>();
 
             // Read data rows
@@ -209,8 +209,8 @@ namespace TinhKhoanApp.Api.Services
                     using var bulkCopy = new SqlBulkCopy(connection)
                     {
                         DestinationTableName = tableName,
-                        BatchSize = 10000,
-                        BulkCopyTimeout = 300
+                        BatchSize = 50000,
+                        BulkCopyTimeout = 600
                     };
                     await bulkCopy.WriteToServerAsync(dataTable);
 
@@ -231,8 +231,8 @@ namespace TinhKhoanApp.Api.Services
                 using var bulkCopy = new SqlBulkCopy(connection)
                 {
                     DestinationTableName = tableName,
-                    BatchSize = 10000,
-                    BulkCopyTimeout = 300
+                    BatchSize = 50000,
+                    BulkCopyTimeout = 600
                 };
                 await bulkCopy.WriteToServerAsync(dataTable);
 
@@ -507,7 +507,7 @@ namespace TinhKhoanApp.Api.Services
 
             _logger.LogInformation("🔍 [RR01_SPECIAL] Parsing RR01 special format: {FileName}", file.FileName);
 
-            using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
+            using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 1024 * 1024);
 
             // Read header line
             var headerLine = await reader.ReadLineAsync();
@@ -644,7 +644,7 @@ namespace TinhKhoanApp.Api.Services
 
             _logger.LogInformation("🔍 [CSV_PARSE] Bắt đầu parse CSV: {FileName}, Target Type: {TypeName}", file.FileName, typeof(T).Name);
 
-            using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
+            using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 1024 * 1024);
             using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
 
             // 🔧 ENHANCED CSV Configuration để handle complex formats như RR01
@@ -937,8 +937,8 @@ namespace TinhKhoanApp.Api.Services
             using var bulkCopy = new SqlBulkCopy(connection)
             {
                 DestinationTableName = tableName,
-                BatchSize = 10000,
-                BulkCopyTimeout = 300
+                BatchSize = 50000,
+                BulkCopyTimeout = 600
             };
 
             // Smart column mapping - chỉ map columns có trong cả source và destination
@@ -2033,7 +2033,7 @@ namespace TinhKhoanApp.Api.Services
                 var dataTable = CreateDataTableForType(dataType, headers);
 
                 // Stream read and batch insert
-                const int batchSize = 10000;
+                const int batchSize = 50000;
                 var batch = new List<string[]>();
                 var totalRecords = 0;
 
@@ -2230,8 +2230,8 @@ namespace TinhKhoanApp.Api.Services
             using var bulkCopy = new SqlBulkCopy(connection)
             {
                 DestinationTableName = tableName,
-                BatchSize = 10000,
-                BulkCopyTimeout = 300
+                BatchSize = 50000,
+                BulkCopyTimeout = 600
             };
 
             await bulkCopy.WriteToServerAsync(dataTable);
