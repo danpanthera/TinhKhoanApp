@@ -248,18 +248,53 @@ Luôn kiểm tra file test cho 08 bảng dữ liệu từ thư mục sau:
 
 ** Cấu trúc Đơn vị: (Quan trọng)
 
-đã thây tạo xong tuy nhiên sơ đồ cây không chụm về một mối, cần sửa lại dạng cây chuẩn
-+ CN Lai Châu là LV1 (Root)
-+ Hội Sở (LV2): Trong đó có các Phòng ban (LV3): Ban Giám đốc, P. KHDN, P. KHCN, P. Tổng Hợp, P. KTGS, P. KHQLRR, P. KTNQ
-+ CN Bình Lư (LV2): Trong đó có các phòng ban (LV3): Ban Giám đốc, P. KTNQ, P. KH
-+ CN Phong Thổ (LV2): Trong đó có các phòng ban (LV3): Ban Giám đốc, P. KTNQ, P. KH, PGD Số 5
-+ CN Sìn Hồ (LV2): Trong đó có các phòng ban (LV3): Ban Giám đốc, P. KTNQ, P. KH
-+ CN Bum Tở (LV2): Trong đó có các phòng ban (LV3): Ban Giám đốc, P. KTNQ, P. KH
-+ CN Than Uyên (LV2): Trong đó có các phòng ban (LV3): Ban Giám đốc, P. KTNQ, P. KH, PGD Số 6
-+ CN Đoàn Kết (LV2): Trong đó có các phòng ban (LV3): Ban Giám đốc, P. KTNQ, P. KH, PGD Số 1, PGD Số 2
-+ CN Tân Uyên (LV2): Trong đó có các phòng ban (LV3): Ban Giám đốc, P. KTNQ, P. KH, PGD Số 3
-+ CN Nậm Hàng (LV2): Trong đó có các phòng ban (LV3): Ban Giám đốc, P. KTNQ, P. KH
-Như vậy, sơ đồ hình cây có 3 cấp
+Tên CN (ID=x, Loại CN, Parent ID)
+Chi nhánh Lai Châu (ID=1, CNL1) [ROOT]
+├── Hội Sở (ID=2, CNL1, Parent ID=1)
+│ ├── Ban Giám đốc (ID=3, PNVL1, parent ID=2)
+│ ├── Phòng Khách hàng Doanh nghiệp (ID=4, PNVL1, parent ID=2)
+│ ├── Phòng Khách hàng Cá nhân (ID=5, PNVL1, parent ID=2)
+│ ├── Phòng Kế toán & Ngân quỹ (ID=6, PNVL1, parent ID=2)
+│ ├── Phòng Tổng hợp (ID=7, PNVL1, parent ID=2)
+│ ├── Phòng Kế hoạch & Quản lý rủi ro (ID=8, PNVL1, parent ID=2)
+│ └── Phòng Kiểm tra giám sát (ID=9, PNVL1)
+├── Chi nhánh Bình Lư (ID=10, CNL2, parent ID=1)
+│ ├── Ban Giám đốc (ID = 18, PNVL2, parent ID=10)
+│ ├── Phòng Kế toán & Ngân quỹ (ID = 19, PNVL2, parent ID=10)
+│ └── Phòng Khách hàng (ID = 20, PNVL2, parent ID=10)
+├── Chi nhánh Phong Thổ (ID=11, CNL2, parent ID=1)
+│ ├── Ban Giám đốc (ID = 21, PNVL2, parent ID=11)
+│ ├── Phòng Kế toán & Ngân quỹ (ID = 22, PNVL2, parent ID=11)
+│ └── Phòng Khách hàng (ID = 23, PNVL2, parent ID=11)
+│ └── Phòng giao dịch Số 5 (ID = 24, PGDL2, parent ID=11)
+├── Chi nhánh Sìn Hồ (ID=12, CNL2, parent ID=1)
+│ ├── Ban Giám đốc (ID = 25, PNVL2, parent ID=12)
+│ ├── Phòng Kế toán & Ngân quỹ (ID = 26, PNVL2, parent ID=12)
+│ └── Phòng Khách hàng (ID = 27, PNVL2, parent ID=12)
+├── Chi nhánh Bum Tở (ID=13, CNL2, parent ID=1)
+│ ├── Ban Giám đốc (ID = 28, PNVL2, parent ID=13)
+│ ├── Phòng Kế toán & Ngân quỹ (ID = 29, PNVL2, parent ID=13)
+│ └── Phòng Khách hàng (ID = 30, PNVL2, parent ID=13)
+├── Chi nhánh Than Uyên (ID=14, CNL2, parent ID=1)
+│ ├── Ban Giám đốc (ID = 31, PNVL2, parent ID=14)
+│ ├── Phòng Kế toán & Ngân quỹ (ID = 32, PNVL2, parent ID=14)
+│ └── Phòng Khách hàng (ID = 33, PNVL2, parent ID=14)
+│ └── Phòng giao dịch số 6 (ID = 34, PGDL2, parent ID=14)
+├── Chi nhánh Đoàn Kết (ID=15, CNL2, parent ID=1)
+│ ├── Ban Giám đốc (ID = 35, PNVL2, parent ID=15)
+│ ├── Phòng Kế toán & Ngân quỹ (ID = 36, PNVL2, parent ID=15)
+│ └── Phòng Khách hàng (ID = 37, PNVL2, parent ID=15)
+│ ├── Phòng giao dịch số 1 (ID = 38, PGDL2, parent ID=15)
+│ └── Phòng giao dịch số 2 (ID = 39, PGDL2, parent ID=15)
+├── Chi nhánh Tân Uyên (ID=16, CNL2, parent ID=1)
+│ ├── Ban Giám đốc (ID = 40, PNVL2, parent ID=16)
+│ ├── Phòng Kế toán & Ngân quỹ (ID = 41, PNVL2, parent ID=16)
+│ └── Phòng Khách hàng (ID = 42, PNVL2, parent ID=16)
+│ └── Phòng giao dịch số 3 (ID = 43, PGDL2, parent ID=16)
+└── Chi nhánh Nậm Hàng (ID=17, CNL2, parent ID=1)
+│ ├── Ban Giám đốc (ID = 44, PNVL2, parent ID=17)
+│ ├── Phòng Kế toán & Ngân quỹ (ID = 45, PNVL2, parent ID=17)
+│ └── Phòng Khách hàng (ID = 46, PNVL2, parent ID=17)
 
 #### Thống kê:
 
