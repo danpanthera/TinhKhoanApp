@@ -32,11 +32,20 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 // Truy vấn trực tiếp từ bảng LN01 mới
                 var targetDateStrings = new[] { "30-04-2025", "31-05-2025" };
+                // Convert target date strings to DateTime for comparison
+                var targetDates = targetDateStrings
+                    .Where(d => DateTime.TryParse(d, out _))
+                    .Select(d => DateTime.Parse(d).Date)
+                    .ToList();
+
                 var lnData = await _context.LN01s
-                    .Where(x => x.BRCD == "7808" &&
-                               targetDateStrings.Contains(x.NGAY_DL))
-                    .OrderByDescending(x => x.NGAY_DL)
+                    .Where(x => x.BRCD == "7808")
                     .ToListAsync();
+
+                // Filter by dates on client side
+                lnData = lnData.Where(x => targetDates.Contains(x.NGAY_DL.Date))
+                    .OrderByDescending(x => x.NGAY_DL)
+                    .ToList();
 
                 if (!lnData.Any())
                 {
@@ -59,8 +68,8 @@ namespace TinhKhoanApp.Api.Controllers
                 var may31 = new DateTime(2025, 5, 31);
 
                 // Group by NGAY_DL to calculate changes
-                var april30Data = lnData.Where(x => x.NGAY_DL == "30-04-2025").ToList();
-                var may31Data = lnData.Where(x => x.NGAY_DL == "31-05-2025").ToList();
+                var april30Data = lnData.Where(x => x.NGAY_DL.Date == new DateTime(2025, 4, 30)).ToList();
+                var may31Data = lnData.Where(x => x.NGAY_DL.Date == new DateTime(2025, 5, 31)).ToList();
 
                 return Ok(new
                 {
@@ -456,8 +465,11 @@ namespace TinhKhoanApp.Api.Controllers
                 // Nếu có cả hai file, lấy sample data để so sánh từ bảng LN01
                 if (april30Record != null && may31Record != null)
                 {
+                    var april30Date = new DateTime(2025, 4, 30);
+                    var may31Date = new DateTime(2025, 5, 31);
+
                     var april30Data = await _context.LN01s
-                        .Where(x => x.NGAY_DL == "30-04-2025" && x.BRCD == "7808")
+                        .Where(x => x.NGAY_DL.Date == april30Date && x.BRCD == "7808")
                         .Take(20)
                         .Select(x => new
                         {
@@ -468,7 +480,7 @@ namespace TinhKhoanApp.Api.Controllers
                         .ToListAsync();
 
                     var may31Data = await _context.LN01s
-                        .Where(x => x.NGAY_DL == "31-05-2025" && x.BRCD == "7808")
+                        .Where(x => x.NGAY_DL.Date == may31Date && x.BRCD == "7808")
                         .Take(20)
                         .Select(x => new
                         {
@@ -519,12 +531,13 @@ namespace TinhKhoanApp.Api.Controllers
                     .ToListAsync();
 
                 var changes = new List<object>();
+                var april30Date = new DateTime(2025, 4, 30);
 
                 foreach (var file in allFiles)
                 {
                     // Lấy một vài bản ghi mẫu từ bảng LN01 dựa vào ngày và chi nhánh
                     var sampleData = await _context.LN01s
-                        .Where(x => x.BRCD == "7808" && x.NGAY_DL == "30-04-2025")
+                        .Where(x => x.BRCD == "7808" && x.NGAY_DL.Date == april30Date)
                         .Take(5)
                         .Select(x => new
                         {
@@ -587,11 +600,13 @@ namespace TinhKhoanApp.Api.Controllers
                 csvData.AppendLine("STT,FileName,StatementDate,ImportDate,RecordsCount,Status,ImportedBy,CustomerSeq,CustomerName,AccountNumber,Currency,DebtAmount,LoanType,InterestRate,OfficerName,NextRepayDate,Province,District,LastRepayDate");
 
                 int stt = 1;
+                var april30Date = new DateTime(2025, 4, 30);
+
                 foreach (var file in allFiles)
                 {
                     // Lấy tất cả dữ liệu chi tiết từ bảng LN01 cho file này
                     var detailData = await _context.LN01s
-                        .Where(x => x.NGAY_DL == "30-04-2025" && x.BRCD == "7808")
+                        .Where(x => x.NGAY_DL.Date == april30Date && x.BRCD == "7808")
                         .ToListAsync();
 
                     foreach (var lnRecord in detailData)
@@ -714,14 +729,17 @@ namespace TinhKhoanApp.Api.Controllers
                 // Header cho CSV so sánh
                 csvData.AppendLine("Type,FileName,StatementDate,CustomerSeq,CustomerName,AccountNumber,Currency,DebtAmount,LoanType,InterestRate,OfficerName,Province,District,LastRepayDate");
 
+                var april30Date = new DateTime(2025, 4, 30);
+                var may31Date = new DateTime(2025, 5, 31);
+
                 // Lấy dữ liệu từ bảng LN01 tháng 4
                 var april30Data = await _context.LN01s
-                    .Where(x => x.NGAY_DL == "30-04-2025" && x.BRCD == "7808")
+                    .Where(x => x.NGAY_DL.Date == april30Date && x.BRCD == "7808")
                     .ToListAsync();
 
                 // Lấy dữ liệu từ bảng LN01 tháng 5
                 var may31Data = await _context.LN01s
-                    .Where(x => x.NGAY_DL == "31-05-2025" && x.BRCD == "7808")
+                    .Where(x => x.NGAY_DL.Date == may31Date && x.BRCD == "7808")
                     .ToListAsync();
 
                 // Xuất dữ liệu tháng 4

@@ -218,9 +218,8 @@ namespace TinhKhoanApp.Api.Services
                 }
 
                 // Lấy dữ liệu chi tiết từ bảng LN01 mới nhất
-                var dateString = date.ToString("dd-MM-yyyy");
                 var ln01Data = await _context.LN01s
-                    .Where(i => i.NGAY_DL == dateString)
+                    .Where(i => i.NGAY_DL.Date == date.Date)
                     .ToListAsync();
 
                 decimal totalDisbursement = 0;
@@ -335,9 +334,8 @@ namespace TinhKhoanApp.Api.Services
                 }
 
                 // Lấy dữ liệu chi tiết từ bảng LN01 mới nhất
-                var dateString2 = date.ToString("dd-MM-yyyy");
                 var ln01Data = await _context.LN01s
-                    .Where(i => i.NGAY_DL == dateString2)
+                    .Where(i => i.NGAY_DL.Date == date.Date)
                     .ToListAsync();
 
                 decimal totalDebt = 0;
@@ -570,9 +568,9 @@ namespace TinhKhoanApp.Api.Services
                 _logger.LogInformation("Tìm dữ liệu GL41 có NGAY_DL = {TargetDate}", targetStatementDate.Value.ToString("yyyy-MM-dd"));
 
                 // Lấy dữ liệu GL41 trực tiếp từ bảng với NGAY_DL = targetStatementDate và MA_CN
-                var targetDateString = targetStatementDate.Value.ToString("dd-MM-yyyy");
+                var targetDate = targetStatementDate.Value;
                 var gl41Records = await _context.GL41s
-                    .Where(g => g.NGAY_DL == targetDateString && g.MA_CN == branchCode)
+                    .Where(g => g.NGAY_DL.Date == targetDate.Date && g.MA_CN == branchCode)
                     .ToListAsync();
 
                 if (!gl41Records.Any())
@@ -662,9 +660,9 @@ namespace TinhKhoanApp.Api.Services
                 _logger.LogInformation("Tìm dữ liệu GL41 có NGAY_DL = {TargetDate}", targetStatementDate.Value.ToString("yyyy-MM-dd"));
 
                 // Lấy dữ liệu GL41 trực tiếp từ bảng với NGAY_DL = targetStatementDate và MA_CN (mã chi nhánh)
-                var targetDateString2 = targetStatementDate.Value.ToString("dd-MM-yyyy");
+                var targetDate2 = targetStatementDate.Value;
                 var gl41Records = await _context.GL41s
-                    .Where(g => g.NGAY_DL == targetDateString2 && g.MA_CN == branchCode)
+                    .Where(g => g.NGAY_DL.Date == targetDate2.Date && g.MA_CN == branchCode)
                     .ToListAsync();
 
                 if (!gl41Records.Any())

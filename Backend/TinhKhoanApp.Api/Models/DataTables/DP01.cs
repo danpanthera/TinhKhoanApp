@@ -10,10 +10,9 @@ namespace TinhKhoanApp.Api.Models.DataTables
     [Table("DP01")]
     public class DP01
     {
-        // System Column - NGAY_DL first (extracted from filename or date)
+        // NGAY_DL - DateTime from filename (Order 0)
         [Column("NGAY_DL", Order = 0)]
-        [StringLength(10)]
-        public string NGAY_DL { get; set; } = "";
+        public DateTime NGAY_DL { get; set; }
 
         // Business Columns - Exact CSV order, all NVARCHAR(50) format
         [Column("MA_CN", Order = 1)]
@@ -271,7 +270,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
         // Temporal/System Columns - Always last
         [Key]
         [Column("Id", Order = 64)]
-        public int Id { get; set; }
+        public long Id { get; set; }
 
         [Column("CREATED_DATE", Order = 65)]
         public DateTime CREATED_DATE { get; set; } = DateTime.Now;
@@ -280,7 +279,10 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public DateTime UPDATED_DATE { get; set; } = DateTime.Now;
 
         [Column("FILE_NAME", Order = 67)]
-        [StringLength(255)]
+        [StringLength(500)]
         public string FILE_NAME { get; set; } = "";
+
+        // Temporal columns are shadow properties managed by EF Core automatically
+        // ValidFrom/ValidTo removed - managed as shadow properties by ApplicationDbContext
     }
 }

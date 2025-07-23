@@ -516,8 +516,11 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
             // 📊 Cấu hình bảng EI01 - Thu nhập khác
             ConfigureDataTableWithTemporal<DataTables.EI01>(modelBuilder, "EI01");
 
-            // 📋 Cấu hình bảng GL01 - Sổ cái tổng hợp
-            ConfigureDataTableWithTemporal<DataTables.GL01>(modelBuilder, "GL01");
+            // 📋 Cấu hình bảng GL01 - Sổ cái tổng hợp (Partitioned Columnstore - NOT Temporal)
+            ConfigureDataTableBasic<DataTables.GL01>(modelBuilder, "GL01");
+
+            // 📊 Cấu hình bảng GL41 - Số dư sổ cái
+            ConfigureDataTableWithTemporal<DataTables.GL41>(modelBuilder, "GL41");
 
             // 🏷️ Cấu hình bảng LN01 - Cho vay
             ConfigureDataTableWithTemporal<DataTables.LN01>(modelBuilder, "LN01");
@@ -571,20 +574,13 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         {
             modelBuilder.Entity<T>(entity =>
             {
-                // Cấu hình bảng thành Temporal Table
-                // Comment temporal tables for now - database doesn't have these columns
-                // entity.ToTable(tableName, tb => tb.IsTemporal(ttb =>
-                // {
-                //     ttb.HasPeriodStart("SysStartTime").HasColumnName("SysStartTime");
-                //     ttb.HasPeriodEnd("SysEndTime").HasColumnName("SysEndTime");
-                //     ttb.UseHistoryTable($"{tableName}_History");
-                // }));
-
-                // Thêm shadow properties cho temporal columns - COMMENTED OUT
-                // entity.Property<DateTime>("SysStartTime")
-                //     .HasColumnName("SysStartTime");
-                // entity.Property<DateTime>("SysEndTime")
-                //     .HasColumnName("SysEndTime");
+                // Cấu hình bảng thành Temporal Table với explicit ValidFrom/ValidTo columns
+                entity.ToTable(tableName, tb => tb.IsTemporal(ttb =>
+                {
+                    ttb.HasPeriodStart("ValidFrom").HasColumnName("ValidFrom");
+                    ttb.HasPeriodEnd("ValidTo").HasColumnName("ValidTo");
+                    ttb.UseHistoryTable($"{tableName}_History");
+                }));
 
                 // Indexes tối ưu cho báo cáo và truy vấn
                 var entityType = typeof(T);
