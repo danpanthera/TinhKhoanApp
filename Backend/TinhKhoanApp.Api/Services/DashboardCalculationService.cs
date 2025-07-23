@@ -218,8 +218,9 @@ namespace TinhKhoanApp.Api.Services
                 }
 
                 // Lấy dữ liệu chi tiết từ bảng LN01 mới nhất
+                var dateString = date.ToString("dd-MM-yyyy");
                 var ln01Data = await _context.LN01s
-                    .Where(i => i.NGAY_DL.Date == date.Date)
+                    .Where(i => i.NGAY_DL == dateString)
                     .ToListAsync();
 
                 decimal totalDisbursement = 0;
@@ -236,7 +237,8 @@ namespace TinhKhoanApp.Api.Services
                         if (!belongsToBranch) continue;
 
                         // Lấy số tiền giải ngân từ LN01
-                        var disbursement = lnRecord.DISBURSEMENT_AMOUNT ?? 0m;
+                        var disbursementStr = lnRecord.DISBURSEMENT_AMOUNT ?? "0";
+                        decimal.TryParse(disbursementStr, out var disbursement);
                         if (disbursement > 0)
                         {
                             totalDisbursement += disbursement;
@@ -333,8 +335,9 @@ namespace TinhKhoanApp.Api.Services
                 }
 
                 // Lấy dữ liệu chi tiết từ bảng LN01 mới nhất
+                var dateString2 = date.ToString("dd-MM-yyyy");
                 var ln01Data = await _context.LN01s
-                    .Where(i => i.NGAY_DL.Date == date.Date)
+                    .Where(i => i.NGAY_DL == dateString2)
                     .ToListAsync();
 
                 decimal totalDebt = 0;
@@ -353,13 +356,14 @@ namespace TinhKhoanApp.Api.Services
                         if (!belongsToBranch) continue;
 
                         // Lấy số tiền dư nợ từ LN01
-                        var debtAmount = lnRecord.DU_NO ?? 0m;
+                        var debtAmountStr = lnRecord.DU_NO ?? "0";
+                        decimal.TryParse(debtAmountStr, out var debtAmount);
                         if (debtAmount > 0)
                         {
                             totalDebt += debtAmount;
 
                             // Sử dụng nhóm nợ để phân loại nợ xấu
-                            var nhomNo = (lnRecord.NHOM_NO ?? 1).ToString(); // Default
+                            var nhomNo = lnRecord.NHOM_NO ?? "1"; // Default
 
                             if (!nhomNoBreakdown.ContainsKey(nhomNo))
                                 nhomNoBreakdown[nhomNo] = 0;
@@ -566,8 +570,9 @@ namespace TinhKhoanApp.Api.Services
                 _logger.LogInformation("Tìm dữ liệu GL41 có NGAY_DL = {TargetDate}", targetStatementDate.Value.ToString("yyyy-MM-dd"));
 
                 // Lấy dữ liệu GL41 trực tiếp từ bảng với NGAY_DL = targetStatementDate và MA_CN
+                var targetDateString = targetStatementDate.Value.ToString("dd-MM-yyyy");
                 var gl41Records = await _context.GL41s
-                    .Where(g => g.NGAY_DL.Date == targetStatementDate.Value.Date && g.MA_CN == branchCode)
+                    .Where(g => g.NGAY_DL == targetDateString && g.MA_CN == branchCode)
                     .ToListAsync();
 
                 if (!gl41Records.Any())
@@ -592,7 +597,9 @@ namespace TinhKhoanApp.Api.Services
                     if (serviceRevenueAccounts.Any(acc => accountCode.StartsWith(acc)))
                     {
                         // Thu dịch vụ = Credit - Debit
-                        var serviceAmount = (record.ST_GHICO ?? 0) - (record.ST_GHINO ?? 0);
+                        decimal.TryParse(record.ST_GHICO ?? "0", out var credit);
+                        decimal.TryParse(record.ST_GHINO ?? "0", out var debit);
+                        var serviceAmount = credit - debit;
                         totalServiceRevenue += serviceAmount;
                         processedRecords++;
                     }
@@ -655,8 +662,9 @@ namespace TinhKhoanApp.Api.Services
                 _logger.LogInformation("Tìm dữ liệu GL41 có NGAY_DL = {TargetDate}", targetStatementDate.Value.ToString("yyyy-MM-dd"));
 
                 // Lấy dữ liệu GL41 trực tiếp từ bảng với NGAY_DL = targetStatementDate và MA_CN (mã chi nhánh)
+                var targetDateString2 = targetStatementDate.Value.ToString("dd-MM-yyyy");
                 var gl41Records = await _context.GL41s
-                    .Where(g => g.NGAY_DL.Date == targetStatementDate.Value.Date && g.MA_CN == branchCode)
+                    .Where(g => g.NGAY_DL == targetDateString2 && g.MA_CN == branchCode)
                     .ToListAsync();
 
                 if (!gl41Records.Any())
@@ -683,13 +691,17 @@ namespace TinhKhoanApp.Api.Services
                     // Tính thu nhập từ các tài khoản thu
                     if (revenueAccounts.Any(acc => accountCode.StartsWith(acc)))
                     {
-                        totalRevenue += (record.ST_GHICO ?? 0) - (record.ST_GHINO ?? 0); // Credit - Debit cho tài khoản thu
+                        decimal.TryParse(record.ST_GHICO ?? "0", out var revCredit);
+                        decimal.TryParse(record.ST_GHINO ?? "0", out var revDebit);
+                        totalRevenue += revCredit - revDebit; // Credit - Debit cho tài khoản thu
                     }
 
                     // Tính chi phí từ các tài khoản chi
                     if (expenseAccounts.Any(acc => accountCode.StartsWith(acc)))
                     {
-                        totalExpense += (record.ST_GHINO ?? 0) - (record.ST_GHICO ?? 0); // Debit - Credit cho tài khoản chi
+                        decimal.TryParse(record.ST_GHINO ?? "0", out var expDebit);
+                        decimal.TryParse(record.ST_GHICO ?? "0", out var expCredit);
+                        totalExpense += expDebit - expCredit; // Debit - Credit cho tài khoản chi
                     }
 
                     processedRecords++;
