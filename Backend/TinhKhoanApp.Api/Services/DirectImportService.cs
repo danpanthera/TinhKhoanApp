@@ -177,7 +177,7 @@ namespace TinhKhoanApp.Api.Services
             // Create DataTable with LN01 structure
             var dataTable = CreateDataTableForType("LN01", null);
 
-            using var streamReader = new StreamReader(file.OpenReadStream(), Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 1024 * 1024);
+            using var streamReader = new StreamReader(file.OpenReadStream(), Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 8 * 1024 * 1024);
             using var csvReader = new CsvReader(streamReader, CultureInfo.InvariantCulture);
 
             // Read header (skip it)
@@ -185,7 +185,7 @@ namespace TinhKhoanApp.Api.Services
             csvReader.ReadHeader();
 
             var processedCount = 0;
-            var batchSize = 50000;
+            var batchSize = 100000;
             var batch = new List<string[]>();
 
             // Read data rows
@@ -206,11 +206,13 @@ namespace TinhKhoanApp.Api.Services
                     var tableName = GetTableNameForDataType("LN01");
                     using var connection = new SqlConnection(_connectionString);
                     await connection.OpenAsync();
-                    using var bulkCopy = new SqlBulkCopy(connection)
+                    using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.TableLock | SqlBulkCopyOptions.UseInternalTransaction, null)
                     {
                         DestinationTableName = tableName,
-                        BatchSize = 50000,
-                        BulkCopyTimeout = 600
+                        BatchSize = 100000,
+                        BulkCopyTimeout = 600,
+                        EnableStreaming = true,
+                        NotifyAfter = 50000
                     };
                     await bulkCopy.WriteToServerAsync(dataTable);
 
@@ -228,11 +230,13 @@ namespace TinhKhoanApp.Api.Services
                 var tableName = GetTableNameForDataType("LN01");
                 using var connection = new SqlConnection(_connectionString);
                 await connection.OpenAsync();
-                using var bulkCopy = new SqlBulkCopy(connection)
+                using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.TableLock | SqlBulkCopyOptions.UseInternalTransaction, null)
                 {
                     DestinationTableName = tableName,
-                    BatchSize = 50000,
-                    BulkCopyTimeout = 600
+                    BatchSize = 100000,
+                    BulkCopyTimeout = 600,
+                        EnableStreaming = true,
+                        NotifyAfter = 50000
                 };
                 await bulkCopy.WriteToServerAsync(dataTable);
 
@@ -507,7 +511,7 @@ namespace TinhKhoanApp.Api.Services
 
             _logger.LogInformation("🔍 [RR01_SPECIAL] Parsing RR01 special format: {FileName}", file.FileName);
 
-            using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 1024 * 1024);
+            using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 8 * 1024 * 1024);
 
             // Read header line
             var headerLine = await reader.ReadLineAsync();
@@ -644,7 +648,7 @@ namespace TinhKhoanApp.Api.Services
 
             _logger.LogInformation("🔍 [CSV_PARSE] Bắt đầu parse CSV: {FileName}, Target Type: {TypeName}", file.FileName, typeof(T).Name);
 
-            using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 1024 * 1024);
+            using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 8 * 1024 * 1024);
             using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
 
             // 🔧 ENHANCED CSV Configuration để handle complex formats như RR01
@@ -934,11 +938,13 @@ namespace TinhKhoanApp.Api.Services
             _logger.LogInformation("🎯 [BULK_INSERT] Target table '{TableName}' has {Count} columns: {Columns}",
                 tableName, targetColumns.Count, string.Join(", ", targetColumns.Take(10)) + (targetColumns.Count > 10 ? "..." : ""));
 
-            using var bulkCopy = new SqlBulkCopy(connection)
+            using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.TableLock | SqlBulkCopyOptions.UseInternalTransaction, null)
             {
                 DestinationTableName = tableName,
-                BatchSize = 50000,
-                BulkCopyTimeout = 600
+                BatchSize = 100000,
+                BulkCopyTimeout = 600,
+                        EnableStreaming = true,
+                        NotifyAfter = 50000
             };
 
             // Smart column mapping - chỉ map columns có trong cả source và destination
@@ -2033,7 +2039,7 @@ namespace TinhKhoanApp.Api.Services
                 var dataTable = CreateDataTableForType(dataType, headers);
 
                 // Stream read and batch insert
-                const int batchSize = 50000;
+                const int batchSize = 100000;
                 var batch = new List<string[]>();
                 var totalRecords = 0;
 
@@ -2227,11 +2233,13 @@ namespace TinhKhoanApp.Api.Services
             using var connection = new SqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            using var bulkCopy = new SqlBulkCopy(connection)
+            using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.TableLock | SqlBulkCopyOptions.UseInternalTransaction, null)
             {
                 DestinationTableName = tableName,
-                BatchSize = 50000,
-                BulkCopyTimeout = 600
+                BatchSize = 100000,
+                BulkCopyTimeout = 600,
+                        EnableStreaming = true,
+                        NotifyAfter = 50000
             };
 
             await bulkCopy.WriteToServerAsync(dataTable);
