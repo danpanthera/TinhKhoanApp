@@ -198,9 +198,9 @@ internal partial class Program
                     return Task.CompletedTask;
                 }
             };
-        });        // Register services        // KPI services removed during cleanup        // 🗄️ Đăng ký Raw Data Import Service
-        builder.Services.AddScoped<IRawDataImportService, RawDataImportService>();
-        builder.Services.AddScoped<IExtendedRawDataImportService, ExtendedRawDataImportService>();
+        });        // Register services        // KPI services removed during cleanup        // 🗄️ Legacy Raw Data Import Services - commented out (using DirectImport instead)
+        // builder.Services.AddScoped<IRawDataImportService, RawDataImportService>();
+        // builder.Services.AddScoped<IExtendedRawDataImportService, ExtendedRawDataImportService>();
 
         // 🔄 Đăng ký Raw Data Processing Service - để xử lý dữ liệu CSV thành History models
         builder.Services.AddScoped<IRawDataProcessingService, RawDataProcessingService>();

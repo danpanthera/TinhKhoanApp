@@ -886,13 +886,14 @@ docker run -e "ACCEPT_EULA=Y" \
 
 **Model Statistics:** (Quan trọng)
 - **DP01**: 63 business + 5 system + 2 temporal = 70 total columns
+- **DPDA**: 13 business + 5 system + 2 temporal = 20 total columns
 - **EI01**: 24 business + 5 system + 2 temporal = 31 total columns
 - **GL01**: 27 business + 5 system + 0 temporal = 32 total columns (Partitioned Columnstore)
 - **GL41**: 13 business + 5 system + 2 temporal = 20 total columns
 - **LN01**: 79 business + 5 system + 2 temporal = 86 total columns
 - **LN03**: 17 business + 5 system + 2 temporal = 24 total columns
 - **RR01**: 25 business + 5 system + 2 temporal = 32 total columns
-- **DPDA**: 13 business + 5 system + 2 temporal = 20 total columns
+
 
 **🎉 SYSTEM STATUS:** (Quan trọng)
 - **Database**: Azure SQL Edge 1.0.7 with optimized configuration ✅
