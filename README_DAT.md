@@ -66,6 +66,7 @@ Luôn cập nhật file này với các thông tin mới nhất về dự án Ti
 - **Database**: ✅ ALL 8 TABLES CREATED + Performance Indexes + Migration issues RESOLVED
 - **Backend**: ✅ Zero compilation errors - GetTableNameForDataType mapping FIXED
 - **Frontend**: ✅ Running on http://localhost:3000 với Vite v6.3.5
+- **Import Issues**: ✅ GENERATED ALWAYS columns error FIXED - CREATED_DATE/UPDATED_DATE excluded from BulkCopy
 - **Completion**: **100% ALL 8 TABLES READY - IMPORT SYSTEM FULLY OPERATIONAL**
 
 ✅ **Direct Import & Preview System (July 23, 2025):** (Quan trọng)
