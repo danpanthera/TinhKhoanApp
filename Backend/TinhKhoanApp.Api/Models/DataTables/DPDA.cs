@@ -4,18 +4,18 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TinhKhoanApp.Api.Models.DataTables
 {
     /// <summary>
-    /// DPDA - Deposit Card Application Data Model with exact CSV column structure
-    /// Structure: NGAY_DL -> Business Columns (CSV order) -> Temporal Columns
+    /// DPDA - Deposit Card Application Data Model with exact CSV column structure (13 business columns)
+    /// Structure: NGAY_DL -> 13 Business Columns (CSV order) -> System + Temporal Columns
+    /// Import policy: Only files containing "dpda" in filename
     /// </summary>
     [Table("DPDA")]
     public class DPDA
     {
-        // System Column - NGAY_DL first (extracted from filename)
+        // System Column - NGAY_DL first (Order 0) - extracted from filename
         [Column("NGAY_DL", Order = 0)]
-
         public DateTime NGAY_DL { get; set; }
 
-        // Business Columns - Exact CSV order, all NVARCHAR(50) format
+        // 13 Business Columns - Exact CSV order with proper data types
         [Column("MA_CHI_NHANH", Order = 1)]
         [StringLength(200)]
         public string MA_CHI_NHANH { get; set; } = "";
@@ -41,12 +41,10 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public string SO_THE { get; set; } = "";
 
         [Column("NGAY_NOP_DON", Order = 7)]
-        [StringLength(200)]
-        public string NGAY_NOP_DON { get; set; } = "";
+        public DateTime? NGAY_NOP_DON { get; set; }
 
         [Column("NGAY_PHAT_HANH", Order = 8)]
-        [StringLength(200)]
-        public string NGAY_PHAT_HANH { get; set; } = "";
+        public DateTime? NGAY_PHAT_HANH { get; set; }
 
         [Column("USER_PHAT_HANH", Order = 9)]
         [StringLength(200)]
@@ -68,22 +66,11 @@ namespace TinhKhoanApp.Api.Models.DataTables
         [StringLength(200)]
         public string LOAI_PHAT_HANH { get; set; } = "";
 
-        // Temporal/System Columns - Always last
-        [Key]
-        [Column("Id", Order = 14)]
-        public long Id { get; set; }
-
-        // Temporal columns are shadow properties managed by EF Core automatically
-        // ValidFrom/ValidTo removed - managed as shadow properties by ApplicationDbContext
-
+        // System Columns for compatibility
         [Column("CREATED_DATE", Order = 15)]
         public DateTime CREATED_DATE { get; set; } = DateTime.Now;
 
         [Column("UPDATED_DATE", Order = 16)]
         public DateTime UPDATED_DATE { get; set; } = DateTime.Now;
-
-        [Column("FILE_NAME", Order = 17)]
-        [StringLength(500)]
-        public string FILE_NAME { get; set; } = "";
     }
 }

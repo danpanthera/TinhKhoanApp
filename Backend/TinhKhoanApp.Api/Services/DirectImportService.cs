@@ -56,6 +56,7 @@ namespace TinhKhoanApp.Api.Services
 
                 // Detect data type từ filename
                 var dataType = DetectDataTypeFromFileName(file.FileName);
+                Console.WriteLine($"🔍 [DETECTION] File: {file.FileName} -> DataType: {dataType}");
                 if (string.IsNullOrEmpty(dataType))
                 {
                     result.Success = false;
@@ -271,6 +272,25 @@ namespace TinhKhoanApp.Api.Services
         /// </summary>
         public async Task<DirectImportResult> ImportDPDADirectAsync(IFormFile file, string? statementDate = null)
         {
+            Console.WriteLine($"🎯 [DPDA_IMPORT] Starting DPDA import for file: {file.FileName}");
+
+            // ✅ FILENAME VALIDATION - Only files containing "dpda" are allowed
+            if (!file.FileName.ToLower().Contains("dpda"))
+            {
+                Console.WriteLine($"❌ [DPDA_IMPORT] Filename validation failed: {file.FileName}");
+                return new DirectImportResult
+                {
+                    Success = false,
+                    FileName = file.FileName,
+                    DataType = "DPDA",
+                    TargetTable = "DPDA",
+                    ErrorMessage = $"Invalid filename for DPDA import. Filename must contain 'dpda'. Current: {file.FileName}",
+                    StartTime = DateTime.UtcNow,
+                    EndTime = DateTime.UtcNow
+                };
+            }
+
+            Console.WriteLine($"✅ [DPDA_IMPORT] Filename validation passed, calling ImportGenericCSVAsync<DPDA>");
             return await ImportGenericCSVAsync<DPDA>("DPDA", "DPDA", file, statementDate);
         }
 
@@ -668,6 +688,7 @@ namespace TinhKhoanApp.Api.Services
 
             // Log headers để debug
             var headers = csv.HeaderRecord;
+            Console.WriteLine($"📊 [CSV_PARSE] Headers found for {typeof(T).Name}: {string.Join(", ", headers ?? new string[0])}");
             _logger.LogInformation("📊 [CSV_PARSE] Headers found: {Headers}", string.Join(", ", headers ?? new string[0]));
 
             // Log model properties để debug
@@ -683,6 +704,7 @@ namespace TinhKhoanApp.Api.Services
             while (csv.Read())
             {
                 totalRows++;
+                Console.WriteLine($"🔄 [CSV_PARSE] Processing row {totalRows} for {typeof(T).Name}");
                 try
                 {
                     var record = new T();
@@ -753,8 +775,39 @@ namespace TinhKhoanApp.Api.Services
                                         value = value.Replace("\"\"", "\"");
                                     }
 
+                                    // 🎯 DEBUG: Log DPDA datetime field conversions specifically
+                                    if (typeof(T).Name == "DPDA" && (prop.Name == "NGAY_NOP_DON" || prop.Name == "NGAY_PHAT_HANH"))
+                                    {
+                                        Console.WriteLine($"🎯 [DPDA_DEBUG] Converting {prop.Name}: '{value}' -> Type: {prop.PropertyType.Name}");
+                                        _logger.LogInformation("🎯 [DPDA_DEBUG] Converting {PropertyName}: '{Value}' -> Type: {PropertyType}",
+                                            prop.Name, value, prop.PropertyType.Name);
+                                    }
+
                                     // Convert value based on property type
                                     var convertedValue = ConvertCsvValue(value, prop.PropertyType);
+
+                                    // 🎯 EMERGENCY FIX: Direct conversion for DPDA datetime fields if ConvertCsvValue fails
+                                    if (typeof(T).Name == "DPDA" && (prop.Name == "NGAY_NOP_DON" || prop.Name == "NGAY_PHAT_HANH") &&
+                                        (convertedValue == null || convertedValue is string))
+                                    {
+                                        if (DateTime.TryParseExact(value, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var dpdaDate))
+                                        {
+                                            convertedValue = dpdaDate;
+                                            Console.WriteLine($"🔧 [DPDA_EMERGENCY] Fixed datetime conversion: {prop.Name} = '{value}' -> {dpdaDate}");
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine($"❌ [DPDA_EMERGENCY] Failed to convert datetime: {prop.Name} = '{value}'");
+                                            convertedValue = null;
+                                        }
+                                    }
+
+                                    // 🎯 DEBUG: Log conversion result for DPDA datetime fields
+                                    if (typeof(T).Name == "DPDA" && (prop.Name == "NGAY_NOP_DON" || prop.Name == "NGAY_PHAT_HANH"))
+                                    {
+                                        Console.WriteLine($"🎯 [DPDA_DEBUG] Conversion result for {prop.Name}: '{value}' -> {convertedValue?.GetType().Name ?? "NULL"} = {convertedValue}");
+                                    }
+
                                     if (convertedValue != null)
                                     {
                                         prop.SetValue(record, convertedValue);
@@ -1068,7 +1121,49 @@ namespace TinhKhoanApp.Api.Services
                     }
                     else
                     {
-                        row[columnName] = value ?? DBNull.Value;
+                        // 🔧 DEBUG: Log value type for datetime/decimal columns
+                        if (columnName.Contains("DATE") || columnName.Contains("AMOUNT") || columnName.Contains("RATE") || columnName.Contains("BALANCE"))
+                        {
+                            _logger.LogDebug("🔍 [DATATABLE] Column {Column}: Value={Value}, Type={Type}",
+                                columnName, value ?? "NULL", value?.GetType().Name ?? "NULL");
+                        }
+
+                        // 🔧 CRITICAL BUG FIX: Check if value is still string for DateTime columns
+                        if (value is string stringValue && property.PropertyType == typeof(DateTime?) && !string.IsNullOrEmpty(stringValue))
+                        {
+                            Console.WriteLine($"⚠️ [DATATABLE] CRITICAL: DateTime column {columnName} has string value: '{stringValue}' - CONVERSION FAILED!");
+                            _logger.LogError("⚠️ [DATATABLE] CRITICAL: DateTime column {Column} has string value: '{Value}' - CONVERSION FAILED!",
+                                columnName, stringValue);
+
+                            // 🎯 ENHANCED: Multiple datetime format support for DPDA
+                            string[] formats = { "yyyyMMdd", "dd/MM/yyyy", "yyyy-MM-dd", "MM/dd/yyyy" };
+                            DateTime emergencyDate;
+                            bool converted = false;
+
+                            foreach (var format in formats)
+                            {
+                                if (DateTime.TryParseExact(stringValue, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out emergencyDate))
+                                {
+                                    Console.WriteLine($"✅ [DATATABLE] Emergency conversion success: '{stringValue}' -> {emergencyDate} (format: {format})");
+                                    _logger.LogInformation("✅ [DATATABLE] Emergency conversion success: '{Original}' -> {Converted} (format: {Format})",
+                                        stringValue, emergencyDate, format);
+                                    row[columnName] = emergencyDate;
+                                    converted = true;
+                                    break;
+                                }
+                            }
+
+                            if (!converted)
+                            {
+                                Console.WriteLine($"❌ [DATATABLE] All emergency conversion attempts failed for: '{stringValue}'");
+                                _logger.LogError("❌ [DATATABLE] All emergency conversion attempts failed for: '{Value}'", stringValue);
+                                row[columnName] = DBNull.Value;
+                            }
+                        }
+                        else
+                        {
+                            row[columnName] = value ?? DBNull.Value;
+                        }
                     }
                 }
                 table.Rows.Add(row);
@@ -1161,6 +1256,14 @@ namespace TinhKhoanApp.Api.Services
 
             try
             {
+                // 🔧 DEBUG: Log ALL conversion attempts with specific focus on DPDA datetime fields
+                _logger.LogInformation("🎯 [CONVERT] Converting '{Value}' to {Type}", csvValue, targetType.Name);
+
+                if (targetType == typeof(DateTime) || targetType == typeof(DateTime?))
+                {
+                    _logger.LogInformation("🔍 [CONVERT] DATETIME CONVERSION: '{Value}' to {Type}", csvValue, targetType.Name);
+                }
+
                 // 🔧 ENHANCED: Advanced string cleaning for complex CSV formats
                 var cleanedValue = csvValue.Trim();
 
@@ -1198,8 +1301,16 @@ namespace TinhKhoanApp.Api.Services
                 }
                 else if (underlyingType == typeof(decimal))
                 {
-                    // 🔧 ENHANCED: Use cleaned value for number parsing
-                    var normalizedValue = cleanedValue.Replace(",", "").Replace(" ", "").Trim();
+                    // 🔧 ENHANCED: Use cleaned value for number parsing and handle quote prefix
+                    var normalizedValue = cleanedValue;
+
+                    // Remove leading single quote that's common in bank CSV exports
+                    if (normalizedValue.StartsWith("'"))
+                    {
+                        normalizedValue = normalizedValue.Substring(1);
+                    }
+
+                    normalizedValue = normalizedValue.Replace(",", "").Replace(" ", "").Trim();
                     return decimal.TryParse(normalizedValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var decimalResult)
                         ? decimalResult : (decimal?)null;
                 }
@@ -1223,6 +1334,15 @@ namespace TinhKhoanApp.Api.Services
                 }
                 else if (underlyingType == typeof(DateTime))
                 {
+                    // 🔧 ENHANCED: Clean datetime value for bank CSV format
+                    var dateValue = cleanedValue;
+
+                    // Remove leading single quote that's common in bank CSV exports
+                    if (dateValue.StartsWith("'"))
+                    {
+                        dateValue = dateValue.Substring(1);
+                    }
+
                     // Support multiple date formats: dd/MM/yyyy, yyyy-MM-dd, dd-MM-yyyy, etc.
                     string[] dateFormats = {
                         "dd/MM/yyyy", "MM/dd/yyyy", "yyyy-MM-dd", "dd-MM-yyyy",
@@ -1230,14 +1350,21 @@ namespace TinhKhoanApp.Api.Services
                         "yyyyMMdd", "ddMMyyyy"
                     };
 
-                    if (DateTime.TryParseExact(csvValue.Trim(), dateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateResult))
+                    if (DateTime.TryParseExact(dateValue.Trim(), dateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateResult))
                     {
+                        _logger.LogDebug("✅ [CONVERT] DateTime success: '{Original}' -> '{Cleaned}' -> {Result}", csvValue, dateValue, dateResult);
                         return dateResult;
                     }
 
                     // Fallback to standard parsing
-                    return DateTime.TryParse(csvValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out var fallbackDate)
-                        ? fallbackDate : (DateTime?)null;
+                    if (DateTime.TryParse(dateValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out var fallbackDate))
+                    {
+                        _logger.LogDebug("✅ [CONVERT] DateTime fallback success: '{Original}' -> '{Cleaned}' -> {Result}", csvValue, dateValue, fallbackDate);
+                        return fallbackDate;
+                    }
+
+                    _logger.LogWarning("⚠️ [CONVERT] DateTime conversion failed: '{Original}' -> '{Cleaned}'", csvValue, dateValue);
+                    return (DateTime?)null;
                 }
                 else if (underlyingType == typeof(bool))
                 {
