@@ -2150,7 +2150,7 @@ namespace TinhKhoanApp.Api.Services
 
         /// <summary>
         /// Xử lý batch data với DataTable và SqlBulkCopy
-        /// NEW STRUCTURE: CSV business columns FIRST + system columns (Id, NGAY_DL, FILE_NAME) LAST
+        /// STRUCTURE: NGAY_DL (index 0) + CSV business columns (index 1-N) + system columns (index N+1...)
         /// </summary>
         private async Task ProcessBatchAsync(DataTable dataTable, List<string[]> batch, string dataType, DateTime ngayDL, string fileName)
         {
@@ -2160,51 +2160,54 @@ namespace TinhKhoanApp.Api.Services
             {
                 var row = dataTable.NewRow();
 
-                // Fill CSV business columns FIRST (starting from column 0)
+                // NGAY_DL always at index 0 (matches model Order=0)
+                row[0] = ngayDL;
+
+                // Fill CSV business columns (starting from index 1)
                 int csvColumnCount = record.Length;
-                for (int i = 0; i < csvColumnCount && i < dataTable.Columns.Count; i++)
+                for (int i = 0; i < csvColumnCount && (i + 1) < dataTable.Columns.Count; i++)
                 {
                     var value = record[i];
 
                     // Handle empty strings and null values based on column type
                     if (string.IsNullOrWhiteSpace(value))
                     {
-                        row[i] = DBNull.Value;
+                        row[i + 1] = DBNull.Value; // +1 because NGAY_DL is at index 0
                     }
                     else
                     {
                         // Convert based on DataTable column type
-                        var columnType = dataTable.Columns[i].DataType;
+                        var columnType = dataTable.Columns[i + 1].DataType; // +1 for NGAY_DL offset
                         if (columnType == typeof(int))
                         {
                             if (int.TryParse(value, out int intValue))
-                                row[i] = intValue;
+                                row[i + 1] = intValue;
                             else
-                                row[i] = DBNull.Value;
+                                row[i + 1] = DBNull.Value;
                         }
                         else if (columnType == typeof(decimal))
                         {
                             if (decimal.TryParse(value, out decimal decimalValue))
-                                row[i] = decimalValue;
+                                row[i + 1] = decimalValue;
                             else
-                                row[i] = DBNull.Value;
+                                row[i + 1] = DBNull.Value;
                         }
                         else if (columnType == typeof(DateTime))
                         {
                             if (DateTime.TryParse(value, out DateTime dateValue))
-                                row[i] = dateValue;
+                                row[i + 1] = dateValue;
                             else
-                                row[i] = DBNull.Value;
+                                row[i + 1] = DBNull.Value;
                         }
                         else
                         {
-                            row[i] = value; // Default to string
+                            row[i + 1] = value; // Default to string
                         }
                     }
                 }
 
-                // Fill system columns (after all CSV business columns)
-                int systemColumnStartIndex = csvColumnCount;
+                // Fill system columns (after NGAY_DL + CSV business columns)
+                int systemColumnStartIndex = csvColumnCount + 1; // +1 for NGAY_DL
                 for (int i = systemColumnStartIndex; i < dataTable.Columns.Count; i++)
                 {
                     var columnName = dataTable.Columns[i].ColumnName;
@@ -2212,10 +2215,6 @@ namespace TinhKhoanApp.Api.Services
                     {
                         // SqlBulkCopy will handle IDENTITY column
                         row[i] = DBNull.Value;
-                    }
-                    else if (columnName == "NGAY_DL")
-                    {
-                        row[i] = ngayDL;
                     }
                     else if (columnName == "CREATED_DATE")
                     {
@@ -2361,10 +2360,13 @@ namespace TinhKhoanApp.Api.Services
 
         /// <summary>
         /// Tạo DataTable cho LN01 với đúng column types
-        /// NEW STRUCTURE: CSV business columns FIRST, then system columns
+        /// STRUCTURE: NGAY_DL FIRST + CSV business columns + system columns
         /// </summary>
         private void CreateLN01DataTable(DataTable dataTable, string[]? headers)
         {
+            // System column NGAY_DL first (Order=0) - matches model structure
+            dataTable.Columns.Add("NGAY_DL", typeof(DateTime));
+
             // CSV Business columns 1-79 (exact order from CSV)
             dataTable.Columns.Add("BRCD", typeof(string));
             dataTable.Columns.Add("CUSTSEQ", typeof(string));
@@ -2446,9 +2448,10 @@ namespace TinhKhoanApp.Api.Services
             dataTable.Columns.Add("TY_GIA", typeof(decimal));
             dataTable.Columns.Add("OFFICER_IPCAS", typeof(string));
 
-            // System columns (80-83)
+            // System columns (after business columns) - NGAY_DL already added at index 0
             dataTable.Columns.Add("Id", typeof(long));
-            dataTable.Columns.Add("NGAY_DL", typeof(DateTime));
+            dataTable.Columns.Add("CREATED_DATE", typeof(DateTime));
+            dataTable.Columns.Add("UPDATED_DATE", typeof(DateTime));
             dataTable.Columns.Add("FILE_NAME", typeof(string));
         }        /// <summary>
                  /// Tạo DataTable cho LN03 với đúng column types
