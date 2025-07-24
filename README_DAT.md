@@ -1013,12 +1013,12 @@ Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
 # 3. Bảng EI01
 + Thống nhất cấu trúc dữ liệu Bảng EI01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
 + Theo chuẩn Temporal Table + Columnstore Indexes
-+ Business Column tham chiếu theo file csv *ei01*
++ Business Column tham chiếu theo file csv *ei01* (thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/)
 + Số lượng Cột busiess column = 24
 + Cho phép các trường, cột có giá trị NULL
-thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
+
 + Cột NGAY_DL trong bảng EI01 lấy từ filename, có định dạng datetime2 (dd/mm/yyyy)
-+ Define (Model, Database, EF, BulkCopy) đảm bảo thống nhất: Các cột có chứa "DATE", "NGAY" đưa về format datetime2 (dd/mm/yyyy); các cột có chứa "AMT", "AMOUNT", "BALANCE" ở dạng number #,###.00 (vd: 250,000.89); (có thể phải tạo proper conversion)
++ Define (Model, Database, EF, BulkCopy) đảm bảo thống nhất: Các cột có chứa "DATE", "NGAY" đưa về format datetime2 (dd/mm/yyyy); các cột có chứa "AMT", "AMOUNT", "BALANCE" ở dạng number #,###.00 (vd: 250,000.89); (có thể phải tạo proper conversion; có thể phải kiểm tra ở ParseGenericCSVAsync; ImportGenericCSVAsync; BulkInsertGenericAsync)
 + Các cột còn lại dạng String/Nvachar: Tất cả có độ dài 200 ký tự
 + Cấu trúc bảng dữ liệu: NGAY_DL -> Business Column -> Temporal + System column
 + Chỉ cho phép import các file có filename chứa ký tự "ei01"

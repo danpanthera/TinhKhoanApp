@@ -115,10 +115,10 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public long Id { get; set; }
 
         [Column("CREATED_DATE", Order = 26)]
-        public DateTime CREATED_DATE { get; set; } = DateTime.Now;
+        public DateTime CREATED_DATE { get; set; } = DateTime.UtcNow;
 
         [Column("UPDATED_DATE", Order = 27)]
-        public DateTime UPDATED_DATE { get; set; } = DateTime.Now;
+        public DateTime UPDATED_DATE { get; set; } = DateTime.UtcNow;
 
         [Column("FILE_NAME", Order = 28)]
         [StringLength(500)]

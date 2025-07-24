@@ -950,15 +950,22 @@ namespace TinhKhoanApp.Api.Services
                 _logger.LogDebug("📁 [FILE_NAME] Set FILE_NAME property to: {FileName}", fileName);
             }
 
-            // ⚠️ TEMPORAL COLUMNS EXCLUSION: KHÔNG set explicit values cho CREATED_DATE/UPDATED_DATE
-            // Những columns này là GENERATED ALWAYS và sẽ được database tự động quản lý
-            // Set CREATED_DATE if property exists - DISABLED for temporal tables
-            // var createdDateProp = type.GetProperty("CREATED_DATE");
-            // if (createdDateProp != null && createdDateProp.CanWrite)
-            // {
-            //     createdDateProp.SetValue(record, DateTime.UtcNow);
-            //     _logger.LogDebug("🕒 [CREATED_DATE] Set CREATED_DATE property to: {CreatedDate}", DateTime.UtcNow);
-            // }
+            // ⚠️ TEMPORAL COLUMNS: Set CREATED_DATE/UPDATED_DATE cho non-temporal tables
+            // Set CREATED_DATE if property exists
+            var createdDateProp = type.GetProperty("CREATED_DATE");
+            if (createdDateProp != null && createdDateProp.CanWrite)
+            {
+                createdDateProp.SetValue(record, DateTime.UtcNow);
+                _logger.LogDebug("🕒 [CREATED_DATE] Set CREATED_DATE property to: {CreatedDate}", DateTime.UtcNow);
+            }
+
+            // Set UPDATED_DATE if property exists
+            var updatedDateProp = type.GetProperty("UPDATED_DATE");
+            if (updatedDateProp != null && updatedDateProp.CanWrite)
+            {
+                updatedDateProp.SetValue(record, DateTime.UtcNow);
+                _logger.LogDebug("🕒 [UPDATED_DATE] Set UPDATED_DATE property to: {UpdatedDate}", DateTime.UtcNow);
+            }
         }
 
         /// <summary>
@@ -1034,9 +1041,9 @@ namespace TinhKhoanApp.Api.Services
                 NotifyAfter = 50000
             };
 
-            // Smart column mapping - chỉ map business columns, exclude GENERATED ALWAYS columns
+            // Smart column mapping - include system columns for data tables
             var mappedColumns = 0;
-            var excludedColumns = new HashSet<string> { "CREATED_DATE", "UPDATED_DATE", "Id" };
+            var excludedColumns = new HashSet<string> { "Id", "ValidFrom", "ValidTo" }; // Exclude auto-increment + temporal GENERATED ALWAYS columns
 
             foreach (DataColumn column in dataTable.Columns)
             {
@@ -1072,7 +1079,7 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Convert generic list to DataTable - chỉ map business columns, bỏ qua system/temporal columns
+        /// Convert generic list to DataTable - include system columns như CREATED_DATE/UPDATED_DATE
         /// </summary>
         private DataTable ConvertToDataTable<T>(List<T> records)
         {
@@ -1089,8 +1096,7 @@ namespace TinhKhoanApp.Api.Services
                     p.Name != "IsDeleted" &&
                     p.Name != "SysStartTime" &&
                     p.Name != "SysEndTime" &&
-                    p.Name != "CREATED_DATE" && // ⚠️ EXCLUDE GENERATED ALWAYS temporal column
-                    p.Name != "UPDATED_DATE" && // ⚠️ EXCLUDE GENERATED ALWAYS temporal column
+                    // ✅ INCLUDE system columns như CREATED_DATE/UPDATED_DATE - đã set values trong SetCommonProperties
                     !p.Name.StartsWith("System") &&
                     p.GetCustomAttributes(typeof(ColumnAttribute), false).Length > 0) // Chỉ lấy properties có Column attribute
                 .ToArray();
