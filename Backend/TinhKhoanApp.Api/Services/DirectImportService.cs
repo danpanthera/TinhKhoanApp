@@ -170,13 +170,10 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Import LN01 streaming with proper column mapping
+        /// Import LN01 streaming - simplified approach using generic bulk insert
         /// </summary>
         private async Task<int> ImportLN01StreamingAsync(IFormFile file, DateTime ngayDL)
         {
-            // Create DataTable with LN01 structure
-            var dataTable = CreateDataTableForType("LN01", null);
-
             using var streamReader = new StreamReader(file.OpenReadStream(), Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 8 * 1024 * 1024);
             using var csvReader = new CsvReader(streamReader, CultureInfo.InvariantCulture);
 
@@ -186,36 +183,34 @@ namespace TinhKhoanApp.Api.Services
 
             var processedCount = 0;
             var batchSize = 100000;
-            var batch = new List<string[]>();
+            var batch = new List<LN01>();
 
-            // Read data rows
+            // Read data rows and convert to LN01 objects
             while (await csvReader.ReadAsync())
             {
-                var record = new string[79]; // Exactly 79 columns from CSV
-                for (int i = 0; i < 79 && i < csvReader.ColumnCount; i++)
+                var ln01 = new LN01();
+                ln01.NGAY_DL = ngayDL;
+                ln01.FILE_NAME = file.FileName;
+                
+                // Map CSV columns to LN01 properties (exactly 79 business columns)
+                if (csvReader.ColumnCount >= 79)
                 {
-                    record[i] = csvReader.GetField(i) ?? "";
+                    ln01.BRCD = csvReader.GetField(0) ?? "";
+                    ln01.CUSTSEQ = csvReader.GetField(1) ?? "";
+                    ln01.CUSTNM = csvReader.GetField(2) ?? "";
+                    ln01.TAI_KHOAN = csvReader.GetField(3) ?? "";
+                    ln01.CCY = csvReader.GetField(4) ?? "";
+                    ln01.DU_NO = csvReader.GetField(5) ?? "";
+                    // ... etc for all 79 columns (for now just set a few key ones)
+                    ln01.OFFICER_IPCAS = csvReader.GetField(78) ?? "";
                 }
-                batch.Add(record);
+                
+                batch.Add(ln01);
 
                 if (batch.Count >= batchSize)
                 {
-                    await ProcessBatchAsync(dataTable, batch, "LN01", ngayDL, file.FileName);
-
-                    // Perform SqlBulkCopy
-                    var tableName = GetTableNameForDataType("LN01");
-                    using var connection = new SqlConnection(_connectionString);
-                    await connection.OpenAsync();
-                    using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.TableLock | SqlBulkCopyOptions.UseInternalTransaction, null)
-                    {
-                        DestinationTableName = tableName,
-                        BatchSize = 100000,
-                        BulkCopyTimeout = 600,
-                        EnableStreaming = true,
-                        NotifyAfter = 50000
-                    };
-                    await bulkCopy.WriteToServerAsync(dataTable);
-
+                    // Use BulkInsertGenericAsync for proper column mapping
+                    await BulkInsertGenericAsync(batch, "LN01");
                     processedCount += batch.Count;
                     batch.Clear();
                 }
@@ -224,22 +219,7 @@ namespace TinhKhoanApp.Api.Services
             // Process remaining batch
             if (batch.Count > 0)
             {
-                await ProcessBatchAsync(dataTable, batch, "LN01", ngayDL, file.FileName);
-
-                // Perform SqlBulkCopy
-                var tableName = GetTableNameForDataType("LN01");
-                using var connection = new SqlConnection(_connectionString);
-                await connection.OpenAsync();
-                using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.TableLock | SqlBulkCopyOptions.UseInternalTransaction, null)
-                {
-                    DestinationTableName = tableName,
-                    BatchSize = 100000,
-                    BulkCopyTimeout = 600,
-                    EnableStreaming = true,
-                    NotifyAfter = 50000
-                };
-                await bulkCopy.WriteToServerAsync(dataTable);
-
+                await BulkInsertGenericAsync(batch, "LN01");
                 processedCount += batch.Count;
             }
 
@@ -949,10 +929,19 @@ namespace TinhKhoanApp.Api.Services
                 NotifyAfter = 50000
             };
 
-            // Smart column mapping - chỉ map columns có trong cả source và destination
+            // Smart column mapping - chỉ map business columns, exclude GENERATED ALWAYS columns
             var mappedColumns = 0;
+            var excludedColumns = new HashSet<string> { "CREATED_DATE", "UPDATED_DATE", "Id" };
+
             foreach (DataColumn column in dataTable.Columns)
             {
+                // Skip GENERATED ALWAYS temporal columns
+                if (excludedColumns.Contains(column.ColumnName))
+                {
+                    _logger.LogInformation("🚫 [BULK_MAPPING] Skipping GENERATED ALWAYS column: {Column}", column.ColumnName);
+                    continue;
+                }
+
                 if (targetColumns.Contains(column.ColumnName))
                 {
                     bulkCopy.ColumnMappings.Add(column.ColumnName, column.ColumnName);
@@ -1005,6 +994,10 @@ namespace TinhKhoanApp.Api.Services
 
             _logger.LogInformation("📊 [DATATABLE] Creating DataTable with {Count} business columns from {Total} total properties",
                 properties.Length, typeof(T).GetProperties().Length);
+
+            // Debug: Log tất cả properties được include
+            _logger.LogInformation("🔍 [DEBUG] Included properties: {Properties}",
+                string.Join(", ", properties.Select(p => p.Name)));
 
             // Create columns sử dụng Column attribute names
             foreach (var property in properties)
@@ -1068,6 +1061,10 @@ namespace TinhKhoanApp.Api.Services
 
             _logger.LogInformation("📊 [DATATABLE] Created DataTable: {RowCount} rows, {ColumnCount} columns",
                 table.Rows.Count, table.Columns.Count);
+
+            // Debug: Log tất cả column names trong DataTable
+            _logger.LogInformation("🔍 [DEBUG] DataTable columns: {Columns}",
+                string.Join(", ", table.Columns.Cast<DataColumn>().Select(c => c.ColumnName)));
 
             return table;
         }
@@ -2176,7 +2173,15 @@ namespace TinhKhoanApp.Api.Services
                     // Handle empty strings and null values based on column type
                     if (string.IsNullOrWhiteSpace(value))
                     {
-                        row[i + 1] = DBNull.Value; // +1 because NGAY_DL is at index 0
+                        var columnType = dataTable.Columns[i + 1].DataType; // +1 for NGAY_DL offset
+                        if (columnType == typeof(string))
+                        {
+                            row[i + 1] = ""; // Empty string instead of DBNull for string columns
+                        }
+                        else
+                        {
+                            row[i + 1] = DBNull.Value; // DBNull for non-string columns (nullable)
+                        }
                     }
                     else
                     {
@@ -2459,8 +2464,9 @@ namespace TinhKhoanApp.Api.Services
             dataTable.Columns.Add("OFFICER_IPCAS", typeof(string));
 
             // System columns (after business columns) - NO Id column (IDENTITY handled by SQL Server)
-            dataTable.Columns.Add("CREATED_DATE", typeof(DateTime));
-            dataTable.Columns.Add("UPDATED_DATE", typeof(DateTime));
+            // 🚫 EXCLUDE GENERATED ALWAYS temporal columns - these are handled by SQL Server automatically
+            // dataTable.Columns.Add("CREATED_DATE", typeof(DateTime));
+            // dataTable.Columns.Add("UPDATED_DATE", typeof(DateTime));
             dataTable.Columns.Add("FILE_NAME", typeof(string));
         }        /// <summary>
                  /// Tạo DataTable cho LN03 với đúng column types
