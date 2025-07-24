@@ -2532,21 +2532,24 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Lấy tên bảng database cho loại dữ liệu
+        /// Lấy tên bảng database cho loại dữ liệu - CẬP NHẬT TẤT CẢ 8 BẢNG DÀNH CHO DỮ LIỆU
         /// </summary>
         private string GetTableNameForDataType(string dataType)
         {
             return dataType.ToUpper() switch
             {
-                "DP01" => "DP01",
-                "LN01" => "LN01",
-                "LN03" => "LN03",
-                "GL01" => "GL01",
-                "GL41" => "GL41",
+                "DP01" => "DP01",      // Temporal Table - 63 business columns
+                "DPDA" => "DPDA",      // Temporal Table - 13 business columns
+                "EI01" => "EI01",      // Temporal Table - 24 business columns
+                "GL01" => "GL01",      // Basic Table - 27 business columns (NO temporal)
+                "GL41" => "GL41",      // Temporal Table - 13 business columns
+                "LN01" => "LN01",      // Temporal Table - 79 business columns
+                "LN03" => "LN03",      // Temporal Table - 17 business columns
+                "RR01" => "RR01",      // Temporal Table - 25 business columns
+                // Legacy tables
                 "CA01" => "CA01",
-                "RR01" => "RR01",
                 "TR01" => "TR01",
-                _ => "DP01"
+                _ => throw new ArgumentException($"Unsupported data type: {dataType}")
             };
         }
 
