@@ -94,10 +94,25 @@ namespace TinhKhoanApp.Api.Services
 
         /// <summary>
         /// Import DP01 - Account balances
+        /// Policy: Only accept files with "dp01" in filename
         /// </summary>
         public async Task<DirectImportResult> ImportDP01DirectAsync(IFormFile file, string? statementDate = null)
         {
-            _logger.LogInformation("🚀 [DP01_DIRECT] Import vào bảng DP01");
+            // Validate filename contains "dp01"
+            if (!file.FileName.ToLower().Contains("dp01"))
+            {
+                _logger.LogWarning("❌ [DP01_DIRECT] File rejected: {FileName} does not contain 'dp01'", file.FileName);
+                return new DirectImportResult
+                {
+                    Success = false,
+                    FileName = file.FileName,
+                    ErrorMessage = "File name must contain 'dp01' for DP01 import",
+                    DataType = "DP01",
+                    TargetTable = "DP01"
+                };
+            }
+
+            _logger.LogInformation("🚀 [DP01_DIRECT] Import vào bảng DP01: {FileName}", file.FileName);
             return await ImportGenericCSVAsync<TinhKhoanApp.Api.Models.DataTables.DP01>("DP01", "DP01", file, statementDate);
         }
 
@@ -191,7 +206,7 @@ namespace TinhKhoanApp.Api.Services
                 var ln01 = new LN01();
                 ln01.NGAY_DL = ngayDL;
                 ln01.FILE_NAME = file.FileName;
-                
+
                 // Map CSV columns to LN01 properties (exactly 79 business columns)
                 if (csvReader.ColumnCount >= 79)
                 {
@@ -204,7 +219,7 @@ namespace TinhKhoanApp.Api.Services
                     // ... etc for all 79 columns (for now just set a few key ones)
                     ln01.OFFICER_IPCAS = csvReader.GetField(78) ?? "";
                 }
-                
+
                 batch.Add(ln01);
 
                 if (batch.Count >= batchSize)
