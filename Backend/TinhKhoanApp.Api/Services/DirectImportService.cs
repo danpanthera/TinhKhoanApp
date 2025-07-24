@@ -2150,7 +2150,7 @@ namespace TinhKhoanApp.Api.Services
 
         /// <summary>
         /// Xử lý batch data với DataTable và SqlBulkCopy
-        /// NEW STRUCTURE: NGAY_DL + CSV business columns + system columns
+        /// NEW STRUCTURE: CSV business columns FIRST + system columns (Id, NGAY_DL, FILE_NAME) LAST
         /// </summary>
         private async Task ProcessBatchAsync(DataTable dataTable, List<string[]> batch, string dataType, DateTime ngayDL, string fileName)
         {
@@ -2160,54 +2160,51 @@ namespace TinhKhoanApp.Api.Services
             {
                 var row = dataTable.NewRow();
 
-                // First column is always NGAY_DL (system column)
-                row[0] = ngayDL;
-
-                // Fill CSV business columns (starting from column 1)
+                // Fill CSV business columns FIRST (starting from column 0)
                 int csvColumnCount = record.Length;
-                for (int i = 0; i < csvColumnCount && (i + 1) < dataTable.Columns.Count; i++)
+                for (int i = 0; i < csvColumnCount && i < dataTable.Columns.Count; i++)
                 {
                     var value = record[i];
 
                     // Handle empty strings and null values based on column type
                     if (string.IsNullOrWhiteSpace(value))
                     {
-                        row[i + 1] = DBNull.Value; // +1 because NGAY_DL is at index 0
+                        row[i] = DBNull.Value;
                     }
                     else
                     {
                         // Convert based on DataTable column type
-                        var columnType = dataTable.Columns[i + 1].DataType; // +1 for NGAY_DL offset
+                        var columnType = dataTable.Columns[i].DataType;
                         if (columnType == typeof(int))
                         {
                             if (int.TryParse(value, out int intValue))
-                                row[i + 1] = intValue;
+                                row[i] = intValue;
                             else
-                                row[i + 1] = DBNull.Value;
+                                row[i] = DBNull.Value;
                         }
                         else if (columnType == typeof(decimal))
                         {
                             if (decimal.TryParse(value, out decimal decimalValue))
-                                row[i + 1] = decimalValue;
+                                row[i] = decimalValue;
                             else
-                                row[i + 1] = DBNull.Value;
+                                row[i] = DBNull.Value;
                         }
                         else if (columnType == typeof(DateTime))
                         {
                             if (DateTime.TryParse(value, out DateTime dateValue))
-                                row[i + 1] = dateValue;
+                                row[i] = dateValue;
                             else
-                                row[i + 1] = DBNull.Value;
+                                row[i] = DBNull.Value;
                         }
                         else
                         {
-                            row[i + 1] = value; // Default to string
+                            row[i] = value; // Default to string
                         }
                     }
                 }
 
-                // Fill remaining system columns (after NGAY_DL + CSV columns)
-                int systemColumnStartIndex = csvColumnCount + 1; // +1 for NGAY_DL
+                // Fill system columns (after all CSV business columns)
+                int systemColumnStartIndex = csvColumnCount;
                 for (int i = systemColumnStartIndex; i < dataTable.Columns.Count; i++)
                 {
                     var columnName = dataTable.Columns[i].ColumnName;
@@ -2215,6 +2212,10 @@ namespace TinhKhoanApp.Api.Services
                     {
                         // SqlBulkCopy will handle IDENTITY column
                         row[i] = DBNull.Value;
+                    }
+                    else if (columnName == "NGAY_DL")
+                    {
+                        row[i] = ngayDL;
                     }
                     else if (columnName == "CREATED_DATE")
                     {
@@ -2230,7 +2231,7 @@ namespace TinhKhoanApp.Api.Services
                     }
                     else
                     {
-                        row[i] = DBNull.Value;
+                        row[i] = DBNull.Value; // Default for unknown system columns
                     }
                 }
 
