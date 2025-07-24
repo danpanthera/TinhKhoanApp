@@ -30,9 +30,9 @@ Luôn cập nhật file này với các thông tin mới nhất về dự án Ti
 - **Verification Passed**: 8/8 tables pass automated verification script
 
 ✅ **Database & Models Structure (July 24, 2025 - COMPLETED):** (Quan trọng)
-- **GL01**: Basic Table (27 business columns) + Partitioned Columnstore - NO temporal
 - **DP01**: Temporal Table với Shadow Properties (63 business columns) + History tracking ✅ COMPLETE
 - **DPDA**: Temporal Table với Shadow Properties (13 business columns) + History tracking ✅ COMPLETE
+- **GL01**: Basic Table (27 business columns) + Partitioned Columnstore - NO temporal
 - **EI01**: Temporal Table với Shadow Properties (24 business columns) + History tracking
 - **GL41**: Temporal Table với Shadow Properties (13 business columns) + History tracking
 - **LN01**: Temporal Table với Shadow Properties (79 business columns) + History tracking
@@ -351,31 +351,7 @@ Như vậy, sơ đồ hình cây có 3 cấp
 
 #### Danh sách 23 vai trò: (Quan trọng)
 
-| ID  | Mã vai trò          | Tên vai trò                              | Mô tả                                          |
-| --- | ------------------- | ---------------------------------------- | ---------------------------------------------- |
-| 1   | TruongphongKhdn     | Trưởng phòng KHDN                        | Trưởng phòng Khách hàng Doanh nghiệp           |
-| 2   | TruongphongKhcn     | Trưởng phòng KHCN                        | Trưởng phòng Khách hàng Cá nhân                |
-| 3   | PhophongKhdn        | Phó phòng KHDN                           | Phó phòng Khách hàng Doanh nghiệp              |
-| 4   | PhophongKhcn        | Phó phòng KHCN                           | Phó phòng Khách hàng Cá nhân                   |
-| 5   | TruongphongKhqlrr   | Trưởng phòng KH&QLRR                     | Trưởng phòng Kế hoạch & Quản lý rủi ro         |
-| 6   | PhophongKhqlrr      | Phó phòng KH&QLRR                        | Phó phòng Kế hoạch & Quản lý rủi ro            |
-| 7   | Cbtd                | Cán bộ tín dụng                          | Cán bộ tín dụng                                |
-| 8   | TruongphongKtnqCnl1 | Trưởng phòng KTNQ CNL1                   | Trưởng phòng Kế toán & Ngân quỹ CNL1           |
-| 9   | PhophongKtnqCnl1    | Phó phòng KTNQ CNL1                      | Phó phòng Kế toán & Ngân quỹ CNL1              |
-| 10  | Gdv                 | GDV                                      | Giao dịch viên                                 |
-| 11  | TqHkKtnb            | Thủ quỹ \| Hậu kiểm \| KTNB              | Thủ quỹ \| Hậu kiểm \| Kế toán nghiệp vụ       |
-| 12  | TruongphoItThKtgs   | Trưởng phó IT \| Tổng hợp \| KTGS        | Trưởng phó IT \| Tổng hợp \| Kiểm tra giám sát |
-| 13  | CBItThKtgsKhqlrr    | Cán bộ IT \| Tổng hợp \| KTGS \| KH&QLRR | Cán bộ IT \| Tổng hợp \| KTGS \| KH&QLRR       |
-| 14  | GiamdocPgd          | Giám đốc Phòng giao dịch                 | Giám đốc Phòng giao dịch                       |
-| 15  | PhogiamdocPgd       | Phó giám đốc Phòng giao dịch             | Phó giám đốc Phòng giao dịch                   |
-| 16  | PhogiamdocPgdCbtd   | Phó giám đốc PGD kiêm CBTD               | Phó giám đốc Phòng giao dịch kiêm CBTD         |
-| 17  | GiamdocCnl2         | Giám đốc CNL2                            | Giám đốc Chi nhánh cấp 2                       |
-| 18  | PhogiamdocCnl2Td    | Phó giám đốc CNL2 phụ trách TD           | Phó giám đốc CNL2 phụ trách Tín dụng           |
-| 19  | PhogiamdocCnl2Kt    | Phó giám đốc CNL2 phụ trách KT           | Phó giám đốc CNL2 phụ trách Kế toán            |
-| 20  | TruongphongKhCnl2   | Trưởng phòng KH CNL2                     | Trưởng phòng Khách hàng CNL2                   |
-| 21  | PhophongKhCnl2      | Phó phòng KH CNL2                        | Phó phòng Khách hàng CNL2                      |
-| 22  | TruongphongKtnqCnl2 | Trưởng phòng KTNQ CNL2                   | Trưởng phòng Kế toán & Ngân quỹ CNL2           |
-| 23  | PhophongKtnqCnl2    | Phó phòng KTNQ CNL2                      | Phó phòng Kế toán & Ngân quỹ CNL2              |
+
 
 #### Công cụ sử dụng:
 
@@ -1009,6 +985,7 @@ Sửa lại hết database, model, EF, BulkCopy, migration của các bảng d�
 + Theo chuẩn Temporal Table + Columnstore Indexes
 + Business Column tham chiếu theo file csv *dp01*
 + Số lượng Cột busiess column = 63
++ Cho phép các trường, cột có giá trị NULL
 thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Cột NGAY_DL trong bảng DP01 lấy từ filename, có định dạng datetime2 (dd/mm/yyyy)
 + Define (Model, Database, EF, BulkCopy) đảm bảo thống nhất: Các cột có chứa "DATE", "NGAY" đưa về format datetime2 (dd/mm/yyyy); các cột có chứa "AMT", "AMOUNT", "BALANCE" ở dạng number #,###.00 (vd: 250,000.89); (có thể phải tạo proper conversion)
@@ -1023,12 +1000,28 @@ Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
 + Theo chuẩn Temporal Table + Columnstore Indexes
 + Business Column tham chiếu theo file csv *dpda*
 + Số lượng Cột busiess column = 13
++ Cho phép các trường, cột có giá trị NULL
 thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Cột NGAY_DL trong bảng DPDA lấy từ filename, có định dạng datetime2 (dd/mm/yyyy)
 + Define (Model, Database, EF, BulkCopy) đảm bảo thống nhất: Các cột có chứa "DATE", "NGAY" đưa về format datetime2 (dd/mm/yyyy); các cột có chứa "AMT", "AMOUNT", "BALANCE" ở dạng number #,###.00 (vd: 250,000.89); (có thể phải tạo proper conversion)
 + Các cột còn lại dạng String/Nvachar: Tất cả có độ dài 200 ký tự
 + Cấu trúc bảng dữ liệu: NGAY_DL -> Business Column -> Temporal + System column
 + Chỉ cho phép import các file có filename chứa ký tự "dpda"
++ Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
++ Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
+Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
+# 3. Bảng EI01
++ Thống nhất cấu trúc dữ liệu Bảng EI01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
++ Theo chuẩn Temporal Table + Columnstore Indexes
++ Business Column tham chiếu theo file csv *ei01*
++ Số lượng Cột busiess column = 24
++ Cho phép các trường, cột có giá trị NULL
+thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
++ Cột NGAY_DL trong bảng EI01 lấy từ filename, có định dạng datetime2 (dd/mm/yyyy)
++ Define (Model, Database, EF, BulkCopy) đảm bảo thống nhất: Các cột có chứa "DATE", "NGAY" đưa về format datetime2 (dd/mm/yyyy); các cột có chứa "AMT", "AMOUNT", "BALANCE" ở dạng number #,###.00 (vd: 250,000.89); (có thể phải tạo proper conversion)
++ Các cột còn lại dạng String/Nvachar: Tất cả có độ dài 200 ký tự
++ Cấu trúc bảng dữ liệu: NGAY_DL -> Business Column -> Temporal + System column
++ Chỉ cho phép import các file có filename chứa ký tự "ei01"
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!

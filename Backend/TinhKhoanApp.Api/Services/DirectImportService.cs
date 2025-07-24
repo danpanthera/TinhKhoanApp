@@ -295,10 +295,29 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Import EI01 - Exchange rate data
+        /// Import EI01 - Electronic Banking Information data
         /// </summary>
         public async Task<DirectImportResult> ImportEI01DirectAsync(IFormFile file, string? statementDate = null)
         {
+            Console.WriteLine($"🎯 [EI01_IMPORT] Starting EI01 import for file: {file.FileName}");
+
+            // ✅ FILENAME VALIDATION - Only files containing "ei01" are allowed
+            if (!file.FileName.ToLower().Contains("ei01"))
+            {
+                Console.WriteLine($"❌ [EI01_IMPORT] Filename validation failed: {file.FileName}");
+                return new DirectImportResult
+                {
+                    Success = false,
+                    FileName = file.FileName,
+                    DataType = "EI01",
+                    TargetTable = "EI01",
+                    ErrorMessage = $"Invalid filename for EI01 import. Filename must contain 'ei01'. Current: {file.FileName}",
+                    StartTime = DateTime.UtcNow,
+                    EndTime = DateTime.UtcNow
+                };
+            }
+
+            Console.WriteLine($"✅ [EI01_IMPORT] Filename validation passed, calling ImportGenericCSVAsync<EI01>");
             return await ImportGenericCSVAsync<EI01>("EI01", "EI01", file, statementDate);
         }
 
@@ -798,6 +817,24 @@ namespace TinhKhoanApp.Api.Services
                                         else
                                         {
                                             Console.WriteLine($"❌ [DPDA_EMERGENCY] Failed to convert datetime: {prop.Name} = '{value}'");
+                                            convertedValue = null;
+                                        }
+                                    }
+
+                                    // 🎯 EMERGENCY FIX: Direct conversion for EI01 datetime fields if ConvertCsvValue fails
+                                    if (typeof(T).Name == "EI01" && (prop.Name == "NGAY_DK_EMB" || prop.Name == "NGAY_DK_OTT" ||
+                                        prop.Name == "NGAY_DK_SMS" || prop.Name == "NGAY_DK_SAV" || prop.Name == "NGAY_DK_LN") &&
+                                        (convertedValue == null || convertedValue is string))
+                                    {
+                                        if (!string.IsNullOrEmpty(value) && value.Trim() != "" &&
+                                            DateTime.TryParseExact(value, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var ei01Date))
+                                        {
+                                            convertedValue = ei01Date;
+                                            Console.WriteLine($"🔧 [EI01_EMERGENCY] Fixed datetime conversion: {prop.Name} = '{value}' -> {ei01Date}");
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine($"💡 [EI01_EMERGENCY] NULL/Empty datetime field: {prop.Name} = '{value}' -> NULL");
                                             convertedValue = null;
                                         }
                                     }
