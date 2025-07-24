@@ -2211,12 +2211,7 @@ namespace TinhKhoanApp.Api.Services
                 for (int i = systemColumnStartIndex; i < dataTable.Columns.Count; i++)
                 {
                     var columnName = dataTable.Columns[i].ColumnName;
-                    if (columnName == "Id")
-                    {
-                        // SqlBulkCopy will handle IDENTITY column
-                        row[i] = DBNull.Value;
-                    }
-                    else if (columnName == "CREATED_DATE")
+                    if (columnName == "CREATED_DATE")
                     {
                         row[i] = DateTime.UtcNow;
                     }
@@ -2249,6 +2244,17 @@ namespace TinhKhoanApp.Api.Services
                 EnableStreaming = true,
                 NotifyAfter = 50000
             };
+
+            // Map columns từ DataTable to Database table by name (skip IDENTITY columns)
+            for (int i = 0; i < dataTable.Columns.Count; i++)
+            {
+                var columnName = dataTable.Columns[i].ColumnName;
+                // Skip IDENTITY columns - let SQL Server handle them
+                if (columnName != "Id")
+                {
+                    bulkCopy.ColumnMappings.Add(columnName, columnName); // Map by column name
+                }
+            }
 
             await bulkCopy.WriteToServerAsync(dataTable);
         }
@@ -2360,7 +2366,7 @@ namespace TinhKhoanApp.Api.Services
 
         /// <summary>
         /// Tạo DataTable cho LN01 với đúng column types
-        /// STRUCTURE: NGAY_DL FIRST + CSV business columns + system columns
+        /// STRUCTURE: NGAY_DL FIRST + CSV business columns (NO Id column - handled by SQL Server IDENTITY)
         /// </summary>
         private void CreateLN01DataTable(DataTable dataTable, string[]? headers)
         {
@@ -2448,8 +2454,7 @@ namespace TinhKhoanApp.Api.Services
             dataTable.Columns.Add("TY_GIA", typeof(decimal));
             dataTable.Columns.Add("OFFICER_IPCAS", typeof(string));
 
-            // System columns (after business columns) - NGAY_DL already added at index 0
-            dataTable.Columns.Add("Id", typeof(long));
+            // System columns (after business columns) - NO Id column (IDENTITY handled by SQL Server)
             dataTable.Columns.Add("CREATED_DATE", typeof(DateTime));
             dataTable.Columns.Add("UPDATED_DATE", typeof(DateTime));
             dataTable.Columns.Add("FILE_NAME", typeof(string));
