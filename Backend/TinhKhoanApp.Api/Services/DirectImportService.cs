@@ -865,13 +865,15 @@ namespace TinhKhoanApp.Api.Services
                 _logger.LogDebug("📁 [FILE_NAME] Set FILE_NAME property to: {FileName}", fileName);
             }
 
-            // Set CREATED_DATE if property exists
-            var createdDateProp = type.GetProperty("CREATED_DATE");
-            if (createdDateProp != null && createdDateProp.CanWrite)
-            {
-                createdDateProp.SetValue(record, DateTime.UtcNow);
-                _logger.LogDebug("🕒 [CREATED_DATE] Set CREATED_DATE property to: {CreatedDate}", DateTime.UtcNow);
-            }
+            // ⚠️ TEMPORAL COLUMNS EXCLUSION: KHÔNG set explicit values cho CREATED_DATE/UPDATED_DATE
+            // Những columns này là GENERATED ALWAYS và sẽ được database tự động quản lý
+            // Set CREATED_DATE if property exists - DISABLED for temporal tables
+            // var createdDateProp = type.GetProperty("CREATED_DATE");
+            // if (createdDateProp != null && createdDateProp.CanWrite)
+            // {
+            //     createdDateProp.SetValue(record, DateTime.UtcNow);
+            //     _logger.LogDebug("🕒 [CREATED_DATE] Set CREATED_DATE property to: {CreatedDate}", DateTime.UtcNow);
+            // }
         }
 
         /// <summary>
@@ -993,6 +995,8 @@ namespace TinhKhoanApp.Api.Services
                     p.Name != "IsDeleted" &&
                     p.Name != "SysStartTime" &&
                     p.Name != "SysEndTime" &&
+                    p.Name != "CREATED_DATE" && // ⚠️ EXCLUDE GENERATED ALWAYS temporal column
+                    p.Name != "UPDATED_DATE" && // ⚠️ EXCLUDE GENERATED ALWAYS temporal column
                     !p.Name.StartsWith("System") &&
                     p.GetCustomAttributes(typeof(ColumnAttribute), false).Length > 0) // Chỉ lấy properties có Column attribute
                 .ToArray();
