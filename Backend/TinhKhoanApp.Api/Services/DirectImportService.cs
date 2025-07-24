@@ -235,8 +235,8 @@ namespace TinhKhoanApp.Api.Services
                     DestinationTableName = tableName,
                     BatchSize = 100000,
                     BulkCopyTimeout = 600,
-                        EnableStreaming = true,
-                        NotifyAfter = 50000
+                    EnableStreaming = true,
+                    NotifyAfter = 50000
                 };
                 await bulkCopy.WriteToServerAsync(dataTable);
 
@@ -943,8 +943,8 @@ namespace TinhKhoanApp.Api.Services
                 DestinationTableName = tableName,
                 BatchSize = 100000,
                 BulkCopyTimeout = 600,
-                        EnableStreaming = true,
-                        NotifyAfter = 50000
+                EnableStreaming = true,
+                NotifyAfter = 50000
             };
 
             // Smart column mapping - chỉ map columns có trong cả source và destination
@@ -2150,7 +2150,7 @@ namespace TinhKhoanApp.Api.Services
 
         /// <summary>
         /// Xử lý batch data với DataTable và SqlBulkCopy
-        /// NEW STRUCTURE: CSV business columns + system columns
+        /// NEW STRUCTURE: NGAY_DL + CSV business columns + system columns
         /// </summary>
         private async Task ProcessBatchAsync(DataTable dataTable, List<string[]> batch, string dataType, DateTime ngayDL, string fileName)
         {
@@ -2160,51 +2160,55 @@ namespace TinhKhoanApp.Api.Services
             {
                 var row = dataTable.NewRow();
 
-                // Fill CSV business columns (first N columns)
+                // First column is always NGAY_DL (system column)
+                row[0] = ngayDL;
+
+                // Fill CSV business columns (starting from column 1)
                 int csvColumnCount = record.Length;
-                for (int i = 0; i < csvColumnCount && i < dataTable.Columns.Count; i++)
+                for (int i = 0; i < csvColumnCount && (i + 1) < dataTable.Columns.Count; i++)
                 {
                     var value = record[i];
 
                     // Handle empty strings and null values based on column type
                     if (string.IsNullOrWhiteSpace(value))
                     {
-                        row[i] = DBNull.Value;
+                        row[i + 1] = DBNull.Value; // +1 because NGAY_DL is at index 0
                     }
                     else
                     {
                         // Convert based on DataTable column type
-                        var columnType = dataTable.Columns[i].DataType;
+                        var columnType = dataTable.Columns[i + 1].DataType; // +1 for NGAY_DL offset
                         if (columnType == typeof(int))
                         {
                             if (int.TryParse(value, out int intValue))
-                                row[i] = intValue;
+                                row[i + 1] = intValue;
                             else
-                                row[i] = DBNull.Value;
+                                row[i + 1] = DBNull.Value;
                         }
                         else if (columnType == typeof(decimal))
                         {
                             if (decimal.TryParse(value, out decimal decimalValue))
-                                row[i] = decimalValue;
+                                row[i + 1] = decimalValue;
                             else
-                                row[i] = DBNull.Value;
+                                row[i + 1] = DBNull.Value;
                         }
                         else if (columnType == typeof(DateTime))
                         {
                             if (DateTime.TryParse(value, out DateTime dateValue))
-                                row[i] = dateValue;
+                                row[i + 1] = dateValue;
                             else
-                                row[i] = DBNull.Value;
+                                row[i + 1] = DBNull.Value;
                         }
                         else
                         {
-                            row[i] = value; // Default to string
+                            row[i + 1] = value; // Default to string
                         }
                     }
                 }
 
-                // Fill system columns (after CSV columns)
-                for (int i = csvColumnCount; i < dataTable.Columns.Count; i++)
+                // Fill remaining system columns (after NGAY_DL + CSV columns)
+                int systemColumnStartIndex = csvColumnCount + 1; // +1 for NGAY_DL
+                for (int i = systemColumnStartIndex; i < dataTable.Columns.Count; i++)
                 {
                     var columnName = dataTable.Columns[i].ColumnName;
                     if (columnName == "Id")
@@ -2212,9 +2216,13 @@ namespace TinhKhoanApp.Api.Services
                         // SqlBulkCopy will handle IDENTITY column
                         row[i] = DBNull.Value;
                     }
-                    else if (columnName == "NGAY_DL")
+                    else if (columnName == "CREATED_DATE")
                     {
-                        row[i] = ngayDL;
+                        row[i] = DateTime.UtcNow;
+                    }
+                    else if (columnName == "UPDATED_DATE")
+                    {
+                        row[i] = DateTime.UtcNow;
                     }
                     else if (columnName == "FILE_NAME")
                     {
@@ -2238,8 +2246,8 @@ namespace TinhKhoanApp.Api.Services
                 DestinationTableName = tableName,
                 BatchSize = 100000,
                 BulkCopyTimeout = 600,
-                        EnableStreaming = true,
-                        NotifyAfter = 50000
+                EnableStreaming = true,
+                NotifyAfter = 50000
             };
 
             await bulkCopy.WriteToServerAsync(dataTable);
