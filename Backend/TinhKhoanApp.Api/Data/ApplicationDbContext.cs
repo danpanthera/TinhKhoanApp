@@ -52,6 +52,7 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<DataTables.LN01> LN01 { get; set; }
         public DbSet<DataTables.LN03> LN03 { get; set; }
         public DbSet<DataTables.GL01> GL01 { get; set; }
+        public DbSet<DataTables.GL02> GL02 { get; set; }
         public DbSet<DataTables.GL41> GL41 { get; set; }
         public DbSet<DataTables.DPDA> DPDA { get; set; }
         public DbSet<DataTables.EI01> EI01 { get; set; }
@@ -62,6 +63,7 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<DataTables.LN01> LN01s { get; set; }
         public DbSet<DataTables.LN03> LN03s { get; set; }
         public DbSet<DataTables.GL01> GL01s { get; set; }
+        public DbSet<DataTables.GL02> GL02s { get; set; }
         public DbSet<DataTables.GL41> GL41s { get; set; }
         public DbSet<DataTables.DPDA> DPDAs { get; set; }
         public DbSet<DataTables.EI01> EI01s { get; set; }
@@ -387,6 +389,13 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
                 entity.Property(e => e.TR_EX_RT).HasPrecision(18, 6);
             });
 
+            // GL02 decimal properties
+            modelBuilder.Entity<DataTables.GL02>(entity =>
+            {
+                entity.Property(e => e.DRAMOUNT).HasPrecision(18, 2);
+                entity.Property(e => e.CRAMOUNT).HasPrecision(18, 2);
+            });
+
             // GL41 decimal properties - Updated for new 13-column structure
             modelBuilder.Entity<DataTables.GL41>(entity =>
             {
@@ -519,7 +528,10 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
             // 📋 Cấu hình bảng GL01 - Sổ cái tổng hợp (Partitioned Columnstore - NOT Temporal)
             ConfigureDataTableBasic<DataTables.GL01>(modelBuilder, "GL01");
 
-            // 📊 Cấu hình bảng GL41 - Số dư sổ cái
+            // � Cấu hình bảng GL02 - Giao dịch sổ cái (Partitioned Columnstore - NOT Temporal)
+            ConfigureDataTableBasic<DataTables.GL02>(modelBuilder, "GL02");
+
+            // �📊 Cấu hình bảng GL41 - Số dư sổ cái
             ConfigureDataTableWithTemporal<DataTables.GL41>(modelBuilder, "GL41");
 
             // 🏷️ Cấu hình bảng LN01 - Cho vay

@@ -74,6 +74,7 @@ namespace TinhKhoanApp.Api.Services
                     "LN01" => await ImportLN01DirectAsync(file, statementDate),
                     "LN03" => await ImportLN03DirectAsync(file, statementDate),
                     "GL01" => await ImportGL01DirectAsync(file, statementDate),
+                    "GL02" => await ImportGL02DirectAsync(file, statementDate),
                     "GL41" => await ImportGL41DirectAsync(file, statementDate),
                     "DPDA" => await ImportDPDADirectAsync(file, statementDate),
                     "EI01" => await ImportEI01DirectAsync(file, statementDate),
@@ -257,6 +258,15 @@ namespace TinhKhoanApp.Api.Services
         {
             _logger.LogInformation("🚀 [GL01] Import vào bảng GL01");
             return await ImportGenericCSVAsync<GL01>("GL01", "GL01", file, statementDate);
+        }
+
+        /// <summary>
+        /// Import GL02 - General Ledger Transactions với TRDATE->NGAY_DL conversion
+        /// </summary>
+        public async Task<DirectImportResult> ImportGL02DirectAsync(IFormFile file, string? statementDate = null)
+        {
+            _logger.LogInformation("🚀 [GL02] Import vào bảng GL02");
+            return await ImportGenericCSVAsync<GL02>("GL02", "GL02", file, statementDate);
         }
 
         /// <summary>
@@ -500,6 +510,7 @@ namespace TinhKhoanApp.Api.Services
             if (upperFileName.Contains("LN01")) return "LN01";
             if (upperFileName.Contains("LN03")) return "LN03";
             if (upperFileName.Contains("GL01")) return "GL01";
+            if (upperFileName.Contains("GL02")) return "GL02";
             if (upperFileName.Contains("GL41")) return "GL41";
             if (upperFileName.Contains("CA01")) return "CA01";
             if (upperFileName.Contains("RR01")) return "RR01";
@@ -909,6 +920,23 @@ namespace TinhKhoanApp.Api.Services
                             ngayDLProp.SetValue(record, convertedDate.Value);
                             _logger.LogDebug("🗓️ [GL01_NGAY_DL] Converted TR_TIME '{TrTime}' to NGAY_DL: {NgayDL}", trTimeValue, convertedDate.Value);
                         }
+                    }
+                }
+            }
+            // Special handling for GL02 - get NGAY_DL from TRDATE column (YYYYMMDD format)
+            else if (type.Name == "GL02")
+            {
+                var ngayDLProp = type.GetProperty("NGAY_DL");
+                // Note: TRDATE is at position 0 in CSV but gets converted to NGAY_DL during mapping
+
+                if (ngayDLProp != null && ngayDLProp.CanWrite)
+                {
+                    // NGAY_DL should already be set from TRDATE during CSV parsing
+                    // Just log for debugging
+                    var currentValue = ngayDLProp.GetValue(record);
+                    if (currentValue != null)
+                    {
+                        _logger.LogDebug("🗓️ [GL02_NGAY_DL] NGAY_DL set from CSV TRDATE: {NgayDL}", currentValue);
                     }
                 }
             }
@@ -1474,6 +1502,11 @@ namespace TinhKhoanApp.Api.Services
                 "BUS_CODE", "UNIT_BUS_CODE", "TR_CODE", "TR_NAME", "REFERENCE", "VALUE_DATE", "DEPT_CODE",
                 "TR_TIME", "COMFIRM", "TRDT_TIME"
             },
+            ["GL02"] = new[]
+            {
+                "TRDATE", "TRBRCD", "USERID", "JOURSEQ", "DYTRSEQ", "LOCAC", "CCY", "BUSCD", "UNIT", "TRCD",
+                "CUSTOMER", "TRTP", "REFERENCE", "REMARK", "DRAMOUNT", "CRAMOUNT", "CRTDTM"
+            },
             ["GL41"] = new[]
             {
                 "MA_CN", "LOAI_TIEN", "MA_TK", "TEN_TK", "LOAI_BT", "DN_DAUKY", "DC_DAUKY", "SBT_NO", "ST_GHINO",
@@ -1852,7 +1885,7 @@ namespace TinhKhoanApp.Api.Services
         /// </summary>
         private bool IsValidDataType(string dataType)
         {
-            var validTypes = new[] { "DP01", "DPDA", "EI01", "GL01", "GL41", "LN01", "LN03", "RR01" };
+            var validTypes = new[] { "DP01", "DPDA", "EI01", "GL01", "GL02", "GL41", "LN01", "LN03", "RR01" };
             return validTypes.Contains(dataType?.ToUpper());
         }
 
@@ -1911,6 +1944,7 @@ namespace TinhKhoanApp.Api.Services
                 "LN01" => "LN01",
                 "LN03" => "LN03",
                 "GL01" => "GL01",
+                "GL02" => "GL02",
                 "GL41" => "GL41",
                 "DPDA" => "DPDA",
                 "EI01" => "EI01",
@@ -1948,7 +1982,7 @@ namespace TinhKhoanApp.Api.Services
                 // Danh sách các bảng cần xóa dữ liệu
                 var tablesToClear = new[]
                 {
-                    "DP01", "LN01", "LN03", "GL01", "GL41",
+                    "DP01", "LN01", "LN03", "GL01", "GL02", "GL41",
                     "DPDA", "EI01", "RR01"
                 };
 
@@ -2737,6 +2771,7 @@ namespace TinhKhoanApp.Api.Services
                 "DPDA" => "DPDA",      // Temporal Table - 13 business columns
                 "EI01" => "EI01",      // Temporal Table - 24 business columns
                 "GL01" => "GL01",      // Basic Table - 27 business columns (NO temporal)
+                "GL02" => "GL02",      // Basic Table - 17 business columns (NO temporal)
                 "GL41" => "GL41",      // Temporal Table - 13 business columns
                 "LN01" => "LN01",      // Temporal Table - 79 business columns
                 "LN03" => "LN03",      // Temporal Table - 17 business columns

@@ -1025,3 +1025,31 @@ Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
+# 4. Bảng GL01
++ Thống nhất cấu trúc dữ liệu Bảng GL01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
++ Theo chuẩn Partitioned Columnstore
++ Business Column tham chiếu theo file csv *gl01* (thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/)
++ Số lượng Cột busiess column = 27
++ Cho phép các trường, cột có giá trị NULL
++ Cột NGAY_DL trong bảng GL01 lấy từ cột TR_TIME của file csv *gl01* có định dạng datetime2 (dd/mm/yyyy)
++ Define (Model, Database, EF, BulkCopy) đảm bảo thống nhất: Các cột có chứa "DATE", "NGAY" đưa về format datetime2 (dd/mm/yyyy); các cột có chứa "AMT", "AMOUNT", "BALANCE", "SO_TIEN_GD" ở dạng number #,###.00 (vd: 250,000.89); (có thể phải tạo proper conversion; có thể phải kiểm tra ở ParseGenericCSVAsync; ImportGenericCSVAsync; BulkInsertGenericAsync)
++ Các cột còn lại dạng String/Nvachar: Tất cả có độ dài 200 ký tự, riêng cột "REMARK" dài 1000 ký tự
++ Cấu trúc bảng dữ liệu: NGAY_DL -> Business Column -> System column (nếu có)
++ Chỉ cho phép import các file có filename chứa ký tự "gl01"
++ Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
++ Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
+Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
+# 5. Bảng GL02
++ Thống nhất cấu trúc dữ liệu Bảng GL02 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
++ Theo chuẩn Partitioned Columnstore
++ Business Column tham chiếu theo file csv *gl02* (thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/)
++ Số lượng Cột busiess column = 17
++ Cho phép các trường, cột có giá trị NULL
++ Cột NGAY_DL trong bảng GL02 lấy từ cột TRDATE của file csv *gl02* có định dạng datetime2 (dd/mm/yyyy)
++ Define (Model, Database, EF, BulkCopy) đảm bảo thống nhất: Các cột có chứa "DATE", "NGAY" đưa về format datetime2 (dd/mm/yyyy); các cột có chứa "AMT", "AMOUNT", "BALANCE", "SO_TIEN_GD", "SO_DU" ở dạng number #,###.00 (vd: 250,000.89); cột CRTDTM về dạng dd/mm/yyyy hh:mm:ss (có thể phải tạo proper conversion; có thể phải kiểm tra ở ParseGenericCSVAsync; ImportGenericCSVAsync; BulkInsertGenericAsync)
++ Các cột còn lại dạng String/Nvachar: Tất cả có độ dài 200 ký tự, riêng cột "REMARK" dài 1000 ký tự
++ Cấu trúc bảng dữ liệu: NGAY_DL -> Business Column -> System column (nếu có)
++ Chỉ cho phép import các file có filename chứa ký tự "gl02"
++ Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
++ Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
+Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
