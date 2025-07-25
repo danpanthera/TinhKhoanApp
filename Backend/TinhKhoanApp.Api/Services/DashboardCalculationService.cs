@@ -595,8 +595,8 @@ namespace TinhKhoanApp.Api.Services
                     if (serviceRevenueAccounts.Any(acc => accountCode.StartsWith(acc)))
                     {
                         // Thu dịch vụ = Credit - Debit
-                        decimal.TryParse(record.ST_GHICO ?? "0", out var credit);
-                        decimal.TryParse(record.ST_GHINO ?? "0", out var debit);
+                        var credit = record.ST_GHICO ?? 0;
+                        var debit = record.ST_GHINO ?? 0;
                         var serviceAmount = credit - debit;
                         totalServiceRevenue += serviceAmount;
                         processedRecords++;
@@ -689,16 +689,16 @@ namespace TinhKhoanApp.Api.Services
                     // Tính thu nhập từ các tài khoản thu
                     if (revenueAccounts.Any(acc => accountCode.StartsWith(acc)))
                     {
-                        decimal.TryParse(record.ST_GHICO ?? "0", out var revCredit);
-                        decimal.TryParse(record.ST_GHINO ?? "0", out var revDebit);
+                        var revCredit = record.ST_GHICO ?? 0;
+                        var revDebit = record.ST_GHINO ?? 0;
                         totalRevenue += revCredit - revDebit; // Credit - Debit cho tài khoản thu
                     }
 
                     // Tính chi phí từ các tài khoản chi
                     if (expenseAccounts.Any(acc => accountCode.StartsWith(acc)))
                     {
-                        decimal.TryParse(record.ST_GHINO ?? "0", out var expDebit);
-                        decimal.TryParse(record.ST_GHICO ?? "0", out var expCredit);
+                        var expDebit = record.ST_GHINO ?? 0;
+                        var expCredit = record.ST_GHICO ?? 0;
                         totalExpense += expDebit - expCredit; // Debit - Credit cho tài khoản chi
                     }
 

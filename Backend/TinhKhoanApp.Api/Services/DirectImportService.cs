@@ -75,7 +75,6 @@ namespace TinhKhoanApp.Api.Services
                     "LN03" => await ImportLN03DirectAsync(file, statementDate),
                     "GL01" => await ImportGL01DirectAsync(file, statementDate),
                     "GL02" => await ImportGL02DirectAsync(file, statementDate),
-                    "GL41" => await ImportGL41DirectAsync(file, statementDate),
                     "DPDA" => await ImportDPDADirectAsync(file, statementDate),
                     "EI01" => await ImportEI01DirectAsync(file, statementDate),
                     "RR01" => await ImportRR01DirectAsync(file, statementDate),
@@ -270,13 +269,6 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Import GL41 - Trial balance
-        /// </summary>
-        public async Task<DirectImportResult> ImportGL41DirectAsync(IFormFile file, string? statementDate = null)
-        {
-            return await ImportGenericCSVAsync<GL41>("GL41", "GL41", file, statementDate);
-        }
-
         /// <summary>
         /// Import DPDA - Detailed account data
         /// </summary>
@@ -511,7 +503,6 @@ namespace TinhKhoanApp.Api.Services
             if (upperFileName.Contains("LN03")) return "LN03";
             if (upperFileName.Contains("GL01")) return "GL01";
             if (upperFileName.Contains("GL02")) return "GL02";
-            if (upperFileName.Contains("GL41")) return "GL41";
             if (upperFileName.Contains("CA01")) return "CA01";
             if (upperFileName.Contains("RR01")) return "RR01";
             if (upperFileName.Contains("TR01")) return "TR01";

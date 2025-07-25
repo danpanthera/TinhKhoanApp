@@ -53,7 +53,6 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<DataTables.LN03> LN03 { get; set; }
         public DbSet<DataTables.GL01> GL01 { get; set; }
         public DbSet<DataTables.GL02> GL02 { get; set; }
-        public DbSet<DataTables.GL41> GL41 { get; set; }
         public DbSet<DataTables.DPDA> DPDA { get; set; }
         public DbSet<DataTables.EI01> EI01 { get; set; }
         public DbSet<DataTables.RR01> RR01 { get; set; }
@@ -64,7 +63,6 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<DataTables.LN03> LN03s { get; set; }
         public DbSet<DataTables.GL01> GL01s { get; set; }
         public DbSet<DataTables.GL02> GL02s { get; set; }
-        public DbSet<DataTables.GL41> GL41s { get; set; }
         public DbSet<DataTables.DPDA> DPDAs { get; set; }
         public DbSet<DataTables.EI01> EI01s { get; set; }
         public DbSet<DataTables.RR01> RR01s { get; set; }
@@ -94,7 +92,6 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
 
         // 🚀 DbSets cho các bảng còn thiếu temporal tables
         public DbSet<GAHR26_History> GAHR26_History { get; set; }
-        public DbSet<GL41_History> GL41_History { get; set; }
 
         // 💰 DbSets cho 3 bảng dữ liệu thô mới với Temporal Tables
         public DbSet<ThuXLRR> ThuXLRR { get; set; }
