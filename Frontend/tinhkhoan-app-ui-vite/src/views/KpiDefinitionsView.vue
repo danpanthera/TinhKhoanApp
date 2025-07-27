@@ -71,10 +71,10 @@
                 <option value="">-- Chọn bảng KPI --</option>
                 <option
                   v-for="table in filteredKpiTables"
-                  :key="table.Id || table.Id"
-                  :value="table.Id || table.Id"
+                  :key="table.Id !== undefined ? table.Id : table.id"
+                  :value="table.Id !== undefined ? table.Id : table.id"
                 >
-                  {{ cleanTableDescription(table.Description || table.description || table.TableName || table.tableName) }} ({{ getIndicatorCount(table.Id || table.Id) }} chỉ tiêu)
+                  {{ cleanTableDescription(table.Description || table.description || table.TableName || table.tableName) }} ({{ table.IndicatorCount || table.indicatorCount || 0 }} chỉ tiêu)
                 </option>
               </select>
             </div>
@@ -99,7 +99,7 @@
                 </div>
                 <div class="detail-item">
                   <span class="label">Số chỉ tiêu:</span>
-                  <span class="value indicator-count">{{ getIndicatorCount(selectedTable.Id || selectedTable.Id) }}</span>
+                  <span class="value indicator-count">{{ selectedTable.IndicatorCount || selectedTable.indicatorCount || 0 }}</span>
                 </div>
                 <div class="detail-item">
                   <span class="label">Ngày tạo:</span>
@@ -858,10 +858,10 @@ const switchTab = (tab) => {
 };
 
 const getIndicatorCount = (tableId) => {
-  if (!tableId) return 0;
+  if (tableId === null || tableId === undefined) return 0;
 
   // Try to get count from cached data first
-  const cachedTable = kpiTables.value.find(t => (t.Id || t.id) === tableId);
+  const cachedTable = kpiTables.value.find(t => (t.Id !== undefined ? t.Id : t.id) === tableId);
   if (cachedTable && (cachedTable.IndicatorCount !== undefined || cachedTable.indicatorCount !== undefined)) {
     return cachedTable.IndicatorCount ?? cachedTable.indicatorCount;
   }
@@ -933,7 +933,7 @@ const fetchKpiTables = async () => {
     const tablesData = await kpiAssignmentService.getTables();
     kpiTables.value = tablesData;
 
-    console.log('KPI Tables loaded:', kpiTables.value.length);
+    console.log('✅ KPI Tables loaded:', kpiTables.value.length);
 
     if (kpiTables.value.length > 0) {
       showSuccess(`Đã tải ${kpiTables.value.length} bảng giao khoán KPI.`);
