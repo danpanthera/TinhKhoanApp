@@ -128,10 +128,29 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Import LN03 - Bad debt data
+        /// Import LN03 - Bad debt data với 20 business columns structure
         /// </summary>
         public async Task<DirectImportResult> ImportLN03DirectAsync(IFormFile file, string? statementDate = null)
         {
+            Console.WriteLine($"🎯 [LN03_IMPORT] Starting LN03 import for file: {file.FileName}");
+
+            // ✅ FILENAME VALIDATION - Only files containing "ln03" are allowed
+            if (!file.FileName.ToLower().Contains("ln03"))
+            {
+                Console.WriteLine($"❌ [LN03_IMPORT] Filename validation failed: {file.FileName}");
+                return new DirectImportResult
+                {
+                    Success = false,
+                    FileName = file.FileName,
+                    DataType = "LN03",
+                    TargetTable = "LN03",
+                    ErrorMessage = $"Invalid filename for LN03 import. Filename must contain 'ln03'. Current: {file.FileName}",
+                    StartTime = DateTime.UtcNow,
+                    EndTime = DateTime.UtcNow
+                };
+            }
+
+            Console.WriteLine($"✅ [LN03_IMPORT] Filename validation passed, processing 20 business columns");
             return await ImportGenericCSVAsync<LN03>("LN03", "LN03", file, statementDate);
         }
 
@@ -760,7 +779,27 @@ namespace TinhKhoanApp.Api.Services
                                             Console.WriteLine($"💡 [LN01_EMERGENCY] NULL/Empty datetime field: {prop.Name} = '{value}' -> NULL");
                                             convertedValue = null;
                                         }
-                                    }                                    // 🎯 DEBUG: Log conversion result for DPDA datetime fields
+                                    }
+
+                                    // 🎯 EMERGENCY FIX: Direct conversion for LN03 datetime fields if ConvertCsvValue fails
+                                    if ((typeof(T).Name == "LN03" || typeof(T).FullName?.Contains("LN03") == true) &&
+                                        prop.Name == "NGAYPHATSINHXL" && (convertedValue == null || convertedValue is string))
+                                    {
+                                        Console.WriteLine($"🚨 [LN03_EMERGENCY] TRIGGERED! Property: {prop.Name}, Value: '{value}'");
+                                        if (!string.IsNullOrEmpty(value) && value.Trim() != "" &&
+                                            DateTime.TryParseExact(value, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var ln03Date))
+                                        {
+                                            convertedValue = ln03Date;
+                                            Console.WriteLine($"🔧 [LN03_EMERGENCY] Fixed datetime conversion: {prop.Name} = '{value}' -> {ln03Date}");
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine($"💡 [LN03_EMERGENCY] NULL/Empty datetime field: {prop.Name} = '{value}' -> NULL");
+                                            convertedValue = null;
+                                        }
+                                    }
+
+                                    // 🎯 DEBUG: Log conversion result for DPDA datetime fields
                                     if (typeof(T).Name == "DPDA" && (prop.Name == "NGAY_NOP_DON" || prop.Name == "NGAY_PHAT_HANH"))
                                     {
                                         Console.WriteLine($"🎯 [DPDA_DEBUG] Conversion result for {prop.Name}: '{value}' -> {convertedValue?.GetType().Name ?? "NULL"} = {convertedValue}");
@@ -1102,44 +1141,11 @@ namespace TinhKhoanApp.Api.Services
                     }
                     else
                     {
-                        // 🔧 DEBUG: Log value type for datetime/decimal columns
-                        if (columnName.Contains("DATE") || columnName.Contains("AMOUNT") || columnName.Contains("RATE") || columnName.Contains("BALANCE"))
+                        // 🔧 RR01 FIX: Handle empty strings for nullable types
+                        if (value is string strValue && string.IsNullOrWhiteSpace(strValue))
                         {
-                            _logger.LogDebug("🔍 [DATATABLE] Column {Column}: Value={Value}, Type={Type}",
-                                columnName, value ?? "NULL", value?.GetType().Name ?? "NULL");
-                        }
-
-                        // 🔧 CRITICAL BUG FIX: Check if value is still string for DateTime columns
-                        if (value is string stringValue && property.PropertyType == typeof(DateTime?) && !string.IsNullOrEmpty(stringValue))
-                        {
-                            Console.WriteLine($"⚠️ [DATATABLE] CRITICAL: DateTime column {columnName} has string value: '{stringValue}' - CONVERSION FAILED!");
-                            _logger.LogError("⚠️ [DATATABLE] CRITICAL: DateTime column {Column} has string value: '{Value}' - CONVERSION FAILED!",
-                                columnName, stringValue);
-
-                            // 🎯 ENHANCED: Multiple datetime format support for DPDA
-                            string[] formats = { "yyyyMMdd", "dd/MM/yyyy", "yyyy-MM-dd", "MM/dd/yyyy" };
-                            DateTime emergencyDate;
-                            bool converted = false;
-
-                            foreach (var format in formats)
-                            {
-                                if (DateTime.TryParseExact(stringValue, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out emergencyDate))
-                                {
-                                    Console.WriteLine($"✅ [DATATABLE] Emergency conversion success: '{stringValue}' -> {emergencyDate} (format: {format})");
-                                    _logger.LogInformation("✅ [DATATABLE] Emergency conversion success: '{Original}' -> {Converted} (format: {Format})",
-                                        stringValue, emergencyDate, format);
-                                    row[columnName] = emergencyDate;
-                                    converted = true;
-                                    break;
-                                }
-                            }
-
-                            if (!converted)
-                            {
-                                Console.WriteLine($"❌ [DATATABLE] All emergency conversion attempts failed for: '{stringValue}'");
-                                _logger.LogError("❌ [DATATABLE] All emergency conversion attempts failed for: '{Value}'", stringValue);
-                                row[columnName] = DBNull.Value;
-                            }
+                            _logger.LogDebug("🔧 [DATATABLE] Converting empty string to DBNull for column: {Column}", columnName);
+                            row[columnName] = DBNull.Value;
                         }
                         else
                         {
@@ -1247,6 +1253,10 @@ namespace TinhKhoanApp.Api.Services
 
                 // 🔧 ENHANCED: Advanced string cleaning for complex CSV formats
                 var cleanedValue = csvValue.Trim();
+
+                // 🔧 RR01 FIX: Handle empty strings after cleaning (especially for dates)
+                if (string.IsNullOrWhiteSpace(cleanedValue))
+                    return null;
 
                 // Remove BOM if present
                 if (cleanedValue.Length > 0 && cleanedValue[0] == '\uFEFF')
@@ -2603,18 +2613,21 @@ namespace TinhKhoanApp.Api.Services
                  /// </summary>
         private void CreateLN03DataTable(DataTable dataTable, string[]? headers)
         {
-            // CSV Business columns 1-17 (exact order from CSV)
+            // System column NGAY_DL first (Order=0) - matches model structure
+            dataTable.Columns.Add("NGAY_DL", typeof(DateTime));
+
+            // 17 Business columns với headers từ CSV
             dataTable.Columns.Add("MACHINHANH", typeof(string));
             dataTable.Columns.Add("TENCHINHANH", typeof(string));
             dataTable.Columns.Add("MAKH", typeof(string));
             dataTable.Columns.Add("TENKH", typeof(string));
             dataTable.Columns.Add("SOHOPDONG", typeof(string));
             dataTable.Columns.Add("SOTIENXLRR", typeof(decimal));
-            dataTable.Columns.Add("NGAYPHATSINHXL", typeof(DateTime));
+            dataTable.Columns.Add("NGAYPHATSINHXL", typeof(string));     // Keep as string for processing
             dataTable.Columns.Add("THUNOSAUXL", typeof(decimal));
-            dataTable.Columns.Add("CONLAINGOAIBANG", typeof(decimal));
+            dataTable.Columns.Add("CONLAINGOAIBANG", typeof(string));
             dataTable.Columns.Add("DUNONOIBANG", typeof(decimal));
-            dataTable.Columns.Add("NHOMNO", typeof(int));
+            dataTable.Columns.Add("NHOMNO", typeof(string));
             dataTable.Columns.Add("MACBTD", typeof(string));
             dataTable.Columns.Add("TENCBTD", typeof(string));
             dataTable.Columns.Add("MAPGD", typeof(string));
@@ -2622,10 +2635,16 @@ namespace TinhKhoanApp.Api.Services
             dataTable.Columns.Add("REFNO", typeof(string));
             dataTable.Columns.Add("LOAINGUONVON", typeof(string));
 
-            // System columns (18-20)
-            dataTable.Columns.Add("Id", typeof(long));
-            dataTable.Columns.Add("NGAY_DL", typeof(DateTime));
+            // 3 Business columns không có headers (Columns 18-20)
+            dataTable.Columns.Add("COLUMN_18", typeof(string));
+            dataTable.Columns.Add("COLUMN_19", typeof(string));
+            dataTable.Columns.Add("COLUMN_20", typeof(decimal));
+
+            // System columns cho processing
             dataTable.Columns.Add("FILE_NAME", typeof(string));
+            dataTable.Columns.Add("CREATED_DATE", typeof(DateTime));
+            dataTable.Columns.Add("CREATED_BY", typeof(string));
+            dataTable.Columns.Add("IS_ACTIVE", typeof(bool));
         }
 
         /// <summary>

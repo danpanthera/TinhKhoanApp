@@ -430,6 +430,15 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
                 entity.Property(e => e.TY_GIA).HasPrecision(18, 2);
             });
 
+            // LN03 decimal properties - 20 business columns with proper decimal configuration
+            modelBuilder.Entity<DataTables.LN03>(entity =>
+            {
+                entity.Property(e => e.SOTIENXLRR).HasPrecision(18, 2);
+                entity.Property(e => e.THUNOSAUXL).HasPrecision(18, 2);
+                entity.Property(e => e.DUNONOIBANG).HasPrecision(18, 2);
+                entity.Property(e => e.COLUMN_20).HasPrecision(18, 2);
+            });
+
             // 🚀 === TEMPORAL TABLES + COLUMNSTORE INDEXES CONFIGURATION ===
 
             // 📊 Cấu hình Temporal Tables cho ImportedDataRecord với history tracking
