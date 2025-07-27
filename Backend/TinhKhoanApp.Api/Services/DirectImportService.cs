@@ -553,6 +553,12 @@ namespace TinhKhoanApp.Api.Services
         {
             var fields = new List<string>();
 
+            // 🔧 DEBUG: Log the original data line for the first few rows
+            if (fields.Count < 3)
+            {
+                _logger.LogInformation("🔍 [RR01_PARSE] Original data line: '{DataLine}'", dataLine.Length > 200 ? dataLine.Substring(0, 200) + "..." : dataLine);
+            }
+
             // Remove outer quotes if present
             var trimmed = dataLine.Trim();
             if (trimmed.StartsWith("\"") && trimmed.EndsWith("\""))
@@ -585,6 +591,13 @@ namespace TinhKhoanApp.Api.Services
                 // Unescape any remaining double quotes
                 part = part.Replace("\"\"", "\"").Trim();
                 fields.Add(part);
+            }
+
+            // 🔧 DEBUG: Log the parsed fields for the first few rows
+            if (fields.Count <= 3)
+            {
+                _logger.LogInformation("🔍 [RR01_PARSE] Parsed {Count} fields: {Fields}",
+                    fields.Count, string.Join(" | ", fields.Take(15).Select((f, i) => $"{i}:{f.Replace("\n", "\\n").Replace("\r", "\\r")}")));
             }
 
             return fields.ToArray();
