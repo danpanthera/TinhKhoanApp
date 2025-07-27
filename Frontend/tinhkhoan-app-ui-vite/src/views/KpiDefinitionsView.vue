@@ -634,7 +634,7 @@
 import { computed, nextTick, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { kpiAssignmentService } from '../services/kpiAssignmentService';
-import { apiCall } from '../utils/apiHelper';
+import api from '../services/api';
 import { getId, safeGet } from '../utils/casingSafeAccess.js';
 import { useNumberInput } from '../utils/numberFormat';
 
@@ -1418,8 +1418,8 @@ onMounted(async () => {
 const loadAllIndicators = async () => {
   try {
     console.log('🔄 Loading all indicators for counting...');
-    const response = await apiCall('/KpiIndicators');
-    if (response.success && response.data) {
+    const response = await api.get('/KpiIndicators');
+    if (response.data) {
       currentIndicators.value = response.data;
       console.log(`✅ Loaded ${currentIndicators.value.length} indicators for counting`);
     } else {
