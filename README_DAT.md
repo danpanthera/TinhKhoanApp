@@ -96,12 +96,8 @@ Luôn cập nhật file này với các thông tin mới nhất về dự án Ti
 - **CSV Upload**: Direct import với enhanced datetime conversion + Console debugging
 - **DPDA Specific**: Filename validation + specialized datetime handling
 
-## 🚨 QUY TẮC KHỞI ĐỘNG DỰ ÁN - NGHIÊM CẤM VI PHẠM (RẤT Quan trọng)
-- **Backend:** LUÔN dùng  `/Users/nguyendat/Documents/Projects/TinhKhoanApp/start_backend.sh`
-- **Frontend:** LUÔN dùng `cd /Users/nguyendat/Documents/Projects/TinhKhoanApp/Frontend/tinhkhoan-app-ui-vite && ./start_frontend.sh`
-- **Fast Commit:** LUÔN dùng `./fast_commit.sh` (/Users/nguyendat/Documents/Projects/TinhKhoanApp/fast_commit.sh ), nội dung ngắn gọn nhất có thể
-- **NGHIÊM CẤM** sử dụng VS Code tasks để chạy fullstack - CHỈ DÙNG SCRIPTS
-- **Database:** TinhKhoanDB, username=sa, password=Dientoan@303, password admin với các lệnh sudo là datMien@5887
+## 
+
 
 ✅ **TẤT CẢ SCRIPTS ĐÃ CÓ SẴN VÀ HOẠT ĐỘNG:** (Khá Quan trọng)
 - ✅ `/start_backend.sh` - Khởi động backend API từ root (http://localhost:5055)
@@ -552,14 +548,15 @@ Như vậy, sơ đồ hình cây có 3 cấp
 
 #### 📊 Phân bố 257 chỉ tiêu hoàn chỉnh:
 
-**🧑‍💼 Cán bộ: 158 chỉ tiêu (22 bảng)** (Quan trọng)
+**🧑‍💼 Cán bộ: 158 chỉ tiêu (22 bảng hoạt động + 1 bảng chờ)** (Quan trọng)
 ```
 1-4.   KHDN/KHCN: 4 bảng × 8 chỉ tiêu = 32
 5-6.   KH&QLRR: 2 bảng × 6 chỉ tiêu = 12
 7.     CBTD: 1 bảng × 8 chỉ tiêu = 8
 8-9.   KTNQ CNL1: 2 bảng × 6 chỉ tiêu = 12
 10.    GDV: 1 bảng × 6 chỉ tiêu = 6
-12.    IT/TH/KTGS: 1 bảng × 5 chỉ tiêu = 5
+11.    TQ/HK/KTNB: 1 bảng × 0 chỉ tiêu = 0 (chờ giao)
+12.    Truongphong IT/TH/KTGS: 1 bảng × 5 chỉ tiêu = 5
 13.    CB IT/TH/KTGS: 1 bảng × 4 chỉ tiêu = 4
 14-15. GĐ PGD: 2 bảng × 9 chỉ tiêu = 18
 16.    PGĐ CBTD: 1 bảng × 8 chỉ tiêu = 8

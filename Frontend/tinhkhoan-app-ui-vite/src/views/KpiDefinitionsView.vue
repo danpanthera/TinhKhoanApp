@@ -645,6 +645,45 @@ const { handleInput, handleBlur, formatNumber, parseFormattedNumber } = useNumbe
   allowNegative: false
 });
 
+// API Base URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://localhost:7297/api'
+
+// API Methods
+const apiCall = async (url, options = {}) => {
+  try {
+    console.log(`🌐 API Call: ${options.method || 'GET'} ${API_BASE_URL}${url}`)
+    const token = localStorage.getItem('authToken')
+
+    const requestConfig = {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : '',
+        ...options.headers
+      },
+      ...options
+    }
+
+    console.log('📤 Request config:', requestConfig)
+
+    const response = await fetch(`${API_BASE_URL}${url}`, requestConfig)
+
+    console.log(`📥 Response status: ${response.status} ${response.statusText}`)
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('❌ API Error Response:', errorText)
+      throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
+    }
+
+    const data = await response.json()
+    console.log('✅ API Success Response:', data)
+    return { success: true, data }
+  } catch (error) {
+    console.error('❌ API call error:', error)
+    return { success: false, error: error.message }
+  }
+}
+
 // Reactive data
 const loading = ref(false);
 const loadingDetails = ref(false);
@@ -1417,7 +1456,7 @@ onMounted(async () => {
 const loadAllIndicators = async () => {
   try {
     console.log('🔄 Loading all indicators for counting...');
-    const response = await apiCall('/KpiIndicators');
+    const response = await apiCall('/KpiDefinitions');
     if (response.success && response.data) {
       currentIndicators.value = response.data;
       console.log(`✅ Loaded ${currentIndicators.value.length} indicators for counting`);
