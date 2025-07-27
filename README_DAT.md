@@ -101,7 +101,7 @@ Luôn cập nhật file này với các thông tin mới nhất về dự án Ti
 - **Frontend:** LUÔN dùng `cd /Users/nguyendat/Documents/Projects/TinhKhoanApp/Frontend/tinhkhoan-app-ui-vite && ./start_frontend.sh`
 - **Fast Commit:** LUÔN dùng `./fast_commit.sh` (/Users/nguyendat/Documents/Projects/TinhKhoanApp/fast_commit.sh ), nội dung ngắn gọn nhất có thể
 - **NGHIÊM CẤM** sử dụng VS Code tasks để chạy fullstack - CHỈ DÙNG SCRIPTS
-- **Database:** TinhKhoanDB, username=sa, password=Dientoan@303
+- **Database:** TinhKhoanDB, username=sa, password=Dientoan@303, password admin với các lệnh sudo là datMien@5887
 
 ✅ **TẤT CẢ SCRIPTS ĐÃ CÓ SẴN VÀ HOẠT ĐỘNG:** (Khá Quan trọng)
 - ✅ `/start_backend.sh` - Khởi động backend API từ root (http://localhost:5055)
@@ -894,6 +894,7 @@ docker run -e "ACCEPT_EULA=Y" \
 - **DPDA**: 13 business + 5 system + 2 temporal = 20 total columns
 - **EI01**: 24 business + 5 system + 2 temporal = 31 total columns
 - **GL01**: 27 business + 5 system + 0 temporal = 32 total columns (Partitioned Columnstore)
+- **GL02**: 17 business + 5 system + 2 temporal = 34 total columns (partitioned columnstore)
 - **GL41**: 13 business + 5 system + 2 temporal = 20 total columns
 - **LN01**: 79 business + 5 system + 2 temporal = 86 total columns
 - **LN03**: 17 business + 5 system + 2 temporal = 24 total columns
@@ -1053,3 +1054,35 @@ Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
+
+# 6. Bảng GL41
++ Thống nhất cấu trúc dữ liệu Bảng GL41 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
++ Theo chuẩn Temporal Table + Columnstore Indexes
++ Business Column tham chiếu theo file csv *gl41* (thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/)
++ Chỉ cho phép import các file có filename chứa ký tự "gl41"
++ Số lượng Cột busiess column = 13
++ Cho phép các trường, cột có giá trị NULL
++ Cột NGAY_DL trong bảng GL41 lấy từ filename của file csv *gl41*, sau đó định dạng datetime2 (dd/mm/yyyy)
++ Define (Model, Database, EF, BulkCopy) đảm bảo thống nhất: Các cột có chứa "DATE", "NGAY" đưa về format datetime2 (dd/mm/yyyy); các cột có chứa "AMT", "AMOUNT", "BALANCE", "SO_TIEN_GD", "SO_DU, "DAUKY", "CUOIKY", "GHINO", "GHICO", "ST", "SBT" ở dạng number #,###.00 (vd: 250,000.89) (có thể phải tạo proper conversion; có thể phải kiểm tra ở ParseGenericCSVAsync; ImportGenericCSVAsync; BulkInsertGenericAsync)
++ Các cột còn lại dạng String/Nvachar: Tất cả có độ dài 200 ký tự, riêng cột "REMARK" (nếu có) dài 1000 ký tự
++ Cấu trúc bảng dữ liệu: NGAY_DL -> Business Column -> Temporal/system column (nếu có)
++ Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
++ Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
+Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
+
+# 7. Bảng LN01
++ Thống nhất cấu trúc dữ liệu Bảng LN01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
++ Theo chuẩn Temporal Table + Columnstore Indexes
++ Business Column tham chiếu theo file csv *ln01*
++ Số lượng Cột busiess column = 79
++ Cho phép các trường, cột có giá trị NULL
+thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
++ Cột NGAY_DL trong bảng LN01 lấy từ filename, có định dạng datetime2 (dd/mm/yyyy)
++ Define (Model, Database, EF, BulkCopy) đảm bảo thống nhất: Các cột có chứa "DATE", "NGAY", "DSBSDT", "DSBSMATDT", "APPRDT", "APPRMATDT" đưa về format datetime2 (dd/mm/yyyy); các cột có chứa "AMT", "AMOUNT", "BALANCE", "SOTIEN", "SO_TIEN", "DU_NO" format về dạng number #,###.00 (vd: 250,000.89); (có thể phải tạo proper conversion; có thể phải kiểm tra ở ParseGenericCSVAsync; ImportGenericCSVAsync; BulkInsertGenericAsync)
++ Các cột còn lại dạng String/Nvachar: Tất cả có độ dài 200 ký tự, riêng cột "ADDRESS", "REMARK" dài 1000 ký tự
++ Cấu trúc bảng dữ liệu: NGAY_DL -> Business Column -> Temporal + System column
++ Chỉ cho phép import các file có filename chứa ký tự "ln01"
++ Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
++ Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
+Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
+
