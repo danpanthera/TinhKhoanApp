@@ -1,5 +1,5 @@
 <template>
-  <div class="kpi-definitions">
+  <div class="kpi-definitions kpi-definitions-view b2-screen">
     <div class="header-section">
       <h1>⚙️ Cấu hình KPI</h1>
       <p class="subtitle">Quản lý các bảng giao khoán KPI và chỉ tiêu tương ứng</p>
@@ -149,7 +149,7 @@
           <!-- Có chỉ tiêu -->
           <div v-if="indicators.length > 0" class="indicators-content">
             <div class="indicators-table">
-              <table>
+              <table class="kpi-table">
                 <thead>
                   <tr>
                     <th>STT</th>
@@ -164,10 +164,10 @@
                 <tbody>
                   <tr v-for="(indicator, index) in indicators" :key="getId(indicator)">
                     <td>{{ index + 1 }}</td>
-                    <td class="indicator-name">{{ safeGet(indicator, 'IndicatorName') }}</td>
-                    <td class="max-score">{{ safeGet(indicator, 'MaxScore') }}</td>
-                    <td class="unit">{{ safeGet(indicator, 'Unit') }}</td>
-                    <td class="order">{{ safeGet(indicator, 'OrderIndex') }}</td>
+                    <td class="indicator-name kpi-name">{{ safeGet(indicator, 'IndicatorName') }}</td>
+                    <td class="max-score kpi-score">{{ safeGet(indicator, 'MaxScore') }}</td>
+                    <td class="unit kpi-unit">{{ safeGet(indicator, 'Unit') }}</td>
+                    <td class="order kpi-number">{{ safeGet(indicator, 'OrderIndex') }}</td>
                     <td class="status">
                       <span :class="{ active: safeGet(indicator, 'IsActive'), inactive: !safeGet(indicator, 'IsActive') }">
                         {{ safeGet(indicator, 'IsActive') ? 'Hoạt động' : 'Không hoạt động' }}
@@ -297,7 +297,7 @@
       <!-- Scoring Rules Table -->
       <div v-else-if="scoringRules.length > 0" class="scoring-rules-table-container">
         <div class="table-responsive">
-          <table class="scoring-rules-table">
+          <table class="scoring-rules-table kpi-table">
             <thead>
               <tr>
                 <th>STT</th>
@@ -314,16 +314,16 @@
             <tbody>
               <tr v-for="(rule, index) in scoringRules" :key="rule.Id">
                 <td>{{ index + 1 }}</td>
-                <td class="indicator-name">{{ rule.kpiIndicatorName }}</td>
+                <td class="indicator-name kpi-name">{{ rule.kpiIndicatorName }}</td>
                 <td>
                   <span class="scoring-method" :class="rule.scoringMethod.toLowerCase()">
                     {{ getScoringMethodLabel(rule.scoringMethod) }}
                   </span>
                 </td>
-                <td class="percentage-step">{{ rule.percentageStep }}%</td>
-                <td class="score-per-step">{{ rule.scorePerStep }}</td>
-                <td class="max-score">{{ rule.maxScore || 'Không giới hạn' }}</td>
-                <td class="min-score">{{ rule.minScore || 'Không giới hạn' }}</td>
+                <td class="percentage-step kpi-percentage">{{ rule.percentageStep }}%</td>
+                <td class="score-per-step kpi-score">{{ rule.scorePerStep }}</td>
+                <td class="max-score kpi-score">{{ rule.maxScore || 'Không giới hạn' }}</td>
+                <td class="min-score kpi-score">{{ rule.minScore || 'Không giới hạn' }}</td>
                 <td class="unit-type">{{ getUnitTypeLabel(rule.applicableUnitType) }}</td>
                 <td class="actions">
                   <button @click="editScoringRule(rule)" class="action-btn edit-btn">
@@ -634,6 +634,7 @@
 import { computed, nextTick, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { kpiAssignmentService } from '../services/kpiAssignmentService';
+import { apiCall } from '../utils/apiHelper';
 import { getId, safeGet } from '../utils/casingSafeAccess.js';
 import { useNumberInput } from '../utils/numberFormat';
 
@@ -711,17 +712,17 @@ const filteredKpiTables = computed(() => {
         return category !== 'CANBO' && category !== 'VAI TRÒ CÁN BỘ';
       })
       .sort((a, b) => {
-        // Custom ordering theo yêu cầu: Hội Sở → Bình Lư → Phong Thổ → Sìn Hồ → Bum Tở → Than Uyên → Đoàn Kết → Tân Uyên → Nậm Hàng
+        // Custom ordering theo yêu cầu: Hội Sở → Bình Lư → Phong Thỏ → Sìn Hồ → Bum Tở → Than Uyên → Đoàn Kết → Tân Uyên → Nậm Hàng
         const customOrder = [
-          'HoiSo',           // KPI Hội sở
-          'CnBinhLu',        // KPI Chi nhánh Bình Lư
-          'CnPhongTho',      // KPI Chi nhánh Phong Thổ
-          'CnSinHo',         // KPI Chi nhánh Sìn Hồ
-          'CnBumTo',         // KPI Chi nhánh Bum Tở
-          'CnThanUyen',      // KPI Chi nhánh Than Uyên
-          'CnDoanKet',       // KPI Chi nhánh Đoàn Kết
-          'CnTanUyen',       // KPI Chi nhánh Tân Uyên
-          'CnNamHang'        // KPI Chi nhánh Nậm Hàng
+          'HoiSo_KPI_Assignment',           // KPI Hội sở
+          'CnBinhLu_KPI_Assignment',        // KPI Chi nhánh Bình Lư
+          'CnPhongTho_KPI_Assignment',      // KPI Chi nhánh Phong Thổ
+          'CnSinHo_KPI_Assignment',         // KPI Chi nhánh Sìn Hồ
+          'CnBumTo_KPI_Assignment',         // KPI Chi nhánh Bum Tở
+          'CnThanUyen_KPI_Assignment',      // KPI Chi nhánh Than Uyên
+          'CnDoanKet_KPI_Assignment',       // KPI Chi nhánh Đoàn Kết
+          'CnTanUyen_KPI_Assignment',       // KPI Chi nhánh Tân Uyên
+          'CnNamHang_KPI_Assignment'        // KPI Chi nhánh Nậm Hàng
         ];
 
         const tableNameA = a.TableName || a.tableName || '';

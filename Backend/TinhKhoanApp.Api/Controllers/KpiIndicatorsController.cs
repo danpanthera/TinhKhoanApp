@@ -21,12 +21,24 @@ namespace TinhKhoanApp.Api.Controllers
 
         // GET: api/KpiIndicators
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<KpiIndicator>>> GetKpiIndicators()
+        public async Task<ActionResult<IEnumerable<object>>> GetKpiIndicators()
         {
             try
             {
+                // Trả về dữ liệu đơn giản không có navigation properties để tránh circular reference
                 var indicators = await _context.KpiIndicators
-                    .Include(k => k.Table)
+                    .Select(k => new
+                    {
+                        k.Id,
+                        k.IndicatorName,
+                        k.MaxScore,
+                        k.Unit,
+                        k.OrderIndex,
+                        k.IsActive,
+                        k.TableId,
+                        TableName = k.Table.TableName,
+                        TableDescription = k.Table.Description
+                    })
                     .OrderBy(k => k.TableId)
                     .ThenBy(k => k.OrderIndex)
                     .ToListAsync();

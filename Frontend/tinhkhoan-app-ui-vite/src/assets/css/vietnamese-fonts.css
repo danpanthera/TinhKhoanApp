@@ -1,25 +1,41 @@
 /* =============================================================
- * FONT TIẾNG VIỆT TỐI ƯU CHO TINHKHOAN APP
+ * FONT TIẾNG VIỆT TỐI ƯU CHO TINHKHOAN APP - ENHANCED VERSION
  * Hỗ trợ đầy đủ dấu tiếng Việt và emojis
+ * Cấu hình font stack tối ưu cho hiển thị tiếng Việt
  * =============================================================*/
 
-/* 🇻🇳 Font stack chính cho toàn bộ ứng dụng */
+/* 🇻🇳 Font stack chính tối ưu cho tiếng Việt */
 :root {
-  --font-primary: 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Arial', 'Noto Sans', 'Liberation Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji';
-  --font-heading: 'Montserrat', 'Roboto', 'Segoe UI', 'Arial', sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
-  --font-inter: 'Inter', 'Roboto', 'Segoe UI', 'Arial', sans-serif;
+  /* Font stack với Inter đầu tiên cho UI consistency */
+  --font-primary: 'Inter', 'SF Pro Display', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'Noto Sans', 'Liberation Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji';
+  --font-heading: 'Inter', 'SF Pro Display', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+  --font-mono: 'SF Mono', 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
+  --font-inter: 'Inter', 'SF Pro Display', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
+
+  /* Vietnamese specific optimization */
+  --font-vietnamese: 'Inter', 'SF Pro Display', 'Segoe UI', 'Roboto', 'Noto Sans', 'Helvetica Neue', 'Arial', sans-serif;
 }
 
-/* Base font cho toàn bộ ứng dụng */
+/* Base font cho toàn bộ ứng dụng với Vietnamese optimization */
 * {
-  font-family: var(--font-primary);
+  font-family: var(--font-vietnamese);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  font-variant-ligatures: contextual;
 }
 
-/* Heading fonts */
+/* Body với font size tối ưu cho tiếng Việt */
+body {
+  font-family: var(--font-vietnamese);
+  font-size: 14px;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  font-weight: 400;
+}
+
+/* Heading fonts với Inter đầu tiên */
 h1,
 h2,
 h3,
@@ -31,9 +47,11 @@ h6,
 .page-title {
   font-family: var(--font-heading);
   font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
 }
 
-/* Monospace fonts */
+/* Monospace fonts với SF Mono đầu tiên */
 code,
 pre,
 .code,
@@ -41,6 +59,7 @@ pre,
 .json-display,
 .sql-display {
   font-family: var(--font-mono);
+  font-feature-settings: "liga" 0;
 }
 
 /* Inter font cho UI elements */
@@ -48,8 +67,161 @@ pre,
 .form-element,
 .button-text,
 .table-content,
-.card-content {
+.card-content,
+.nav-text,
+.menu-item,
+.tooltip-text,
+.modal-content {
   font-family: var(--font-inter);
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+/* =============================================================
+ * KPI TABLE SPECIFIC VIETNAMESE FONT OPTIMIZATION
+ * Tối ưu đặc biệt cho bảng KPI với dữ liệu tiếng Việt
+ * =============================================================*/
+
+/* KPI Table headers với font rõ ràng */
+.kpi-table th,
+.kpi-table-header,
+.el-table__header-wrapper th,
+.el-table__header th,
+table.kpi-table thead th {
+  font-family: var(--font-inter) !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  letter-spacing: 0.01em !important;
+  color: #374151 !important;
+  text-align: center !important;
+}
+
+/* KPI Table data cells với font tối ưu cho số và tiếng Việt */
+.kpi-table td,
+.kpi-table-cell,
+.el-table__body-wrapper td,
+.el-table__body td,
+table.kpi-table tbody td {
+  font-family: var(--font-vietnamese) !important;
+  font-weight: 400 !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+  letter-spacing: 0.005em !important;
+  color: #1f2937 !important;
+  padding: 8px 12px !important;
+}
+
+/* Số liệu KPI với font mono để alignment tốt */
+.kpi-score,
+.kpi-number,
+.kpi-percentage,
+.numeric-value,
+.score-value {
+  font-family: var(--font-mono) !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+  letter-spacing: 0 !important;
+  text-align: right !important;
+}
+
+/* Tên KPI với font Vietnamese tối ưu */
+.kpi-name,
+.indicator-name,
+.kpi-description {
+  font-family: var(--font-vietnamese) !important;
+  font-weight: 400 !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+  letter-spacing: 0.01em !important;
+  text-align: left !important;
+  color: #1f2937 !important;
+}
+
+/* Đơn vị KPI */
+.kpi-unit,
+.unit-text {
+  font-family: var(--font-inter) !important;
+  font-weight: 400 !important;
+  font-size: 12px !important;
+  color: #6b7280 !important;
+  font-style: italic !important;
+}
+
+/* =============================================================
+ * ELEMENT PLUS TABLE OVERRIDES FOR VIETNAMESE
+ * Override Element Plus default fonts
+ * =============================================================*/
+
+/* Element Plus table global override */
+.el-table {
+  font-family: var(--font-vietnamese) !important;
+}
+
+.el-table th {
+  font-family: var(--font-inter) !important;
+  font-weight: 600 !important;
+  background-color: #f9fafb !important;
+  border-bottom: 2px solid #e5e7eb !important;
+}
+
+.el-table td {
+  font-family: var(--font-vietnamese) !important;
+  border-bottom: 1px solid #f3f4f6 !important;
+}
+
+/* Table row hover effects */
+.el-table__row:hover {
+  background-color: #f8fafc !important;
+}
+
+.el-table__row:hover td {
+  color: #111827 !important;
+}
+
+/* =============================================================
+ * B2 SCREEN SPECIFIC OPTIMIZATIONS
+ * Tối ưu đặc biệt cho màn hình B2 KPI
+ * =============================================================*/
+
+/* B2 Screen KPI container */
+.b2-screen .kpi-container,
+.kpi-definitions-view,
+.kpi-management-view {
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+}
+
+/* B2 Screen headers */
+.b2-screen h1,
+.b2-screen h2,
+.b2-screen h3,
+.kpi-definitions-view h1,
+.kpi-definitions-view h2,
+.kpi-definitions-view h3 {
+  font-family: var(--font-inter) !important;
+  font-weight: 700 !important;
+  color: #111827 !important;
+  margin-bottom: 16px !important;
+}
+
+/* B2 Screen form controls */
+.b2-screen .el-select,
+.b2-screen .el-input,
+.b2-screen .el-button,
+.kpi-definitions-view .el-select,
+.kpi-definitions-view .el-input,
+.kpi-definitions-view .el-button {
+  font-family: var(--font-inter) !important;
+  font-size: 13px !important;
+}
+
+/* Dropdown options với font Vietnamese */
+.el-select-dropdown__item {
+  font-family: var(--font-vietnamese) !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  padding: 8px 12px !important;
 }
 
 /* Đảm bảo UTF-8 encoding cho tiếng Việt */
@@ -97,6 +269,53 @@ body {
   body {
     font-size: 13px;
     line-height: 1.5;
+  }
+
+  /* KPI Table responsive sizing */
+  .kpi-table th,
+  .kpi-table td,
+  .el-table th,
+  .el-table td {
+    font-size: 12px !important;
+    padding: 6px 8px !important;
+  }
+
+  .kpi-name,
+  .indicator-name {
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  /* Mobile KPI Table sizing */
+  .kpi-table th,
+  .kpi-table td,
+  .el-table th,
+  .el-table td {
+    font-size: 11px !important;
+    padding: 4px 6px !important;
+  }
+}
+
+/* Desktop screens - larger KPI table fonts */
+@media (min-width: 1024px) {
+
+  .kpi-table th,
+  .kpi-table td,
+  .el-table th,
+  .el-table td {
+    font-size: 14px !important;
+  }
+
+  .kpi-name,
+  .indicator-name {
+    font-size: 14px !important;
   }
 }
 
