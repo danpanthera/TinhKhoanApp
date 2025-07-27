@@ -96,8 +96,12 @@ Luôn cập nhật file này với các thông tin mới nhất về dự án Ti
 - **CSV Upload**: Direct import với enhanced datetime conversion + Console debugging
 - **DPDA Specific**: Filename validation + specialized datetime handling
 
-## 
-
+## 🚨 QUY TẮC KHỞI ĐỘNG DỰ ÁN - NGHIÊM CẤM VI PHẠM (RẤT Quan trọng)
+- **Backend:** LUÔN dùng  `/Users/nguyendat/Documents/Projects/TinhKhoanApp/start_backend.sh`
+- **Frontend:** LUÔN dùng `cd /Users/nguyendat/Documents/Projects/TinhKhoanApp/Frontend/tinhkhoan-app-ui-vite && ./start_frontend.sh`
+- **Fast Commit:** LUÔN dùng `./fast_commit.sh` (/Users/nguyendat/Documents/Projects/TinhKhoanApp/fast_commit.sh ), nội dung ngắn gọn nhất có thể
+- **NGHIÊM CẤM** sử dụng VS Code tasks để chạy fullstack - CHỈ DÙNG SCRIPTS
+- **Database:** TinhKhoanDB, username=sa, password=Dientoan@303
 
 ✅ **TẤT CẢ SCRIPTS ĐÃ CÓ SẴN VÀ HOẠT ĐỘNG:** (Khá Quan trọng)
 - ✅ `/start_backend.sh` - Khởi động backend API từ root (http://localhost:5055)
@@ -548,15 +552,14 @@ Như vậy, sơ đồ hình cây có 3 cấp
 
 #### 📊 Phân bố 257 chỉ tiêu hoàn chỉnh:
 
-**🧑‍💼 Cán bộ: 158 chỉ tiêu (22 bảng hoạt động + 1 bảng chờ)** (Quan trọng)
+**🧑‍💼 Cán bộ: 158 chỉ tiêu (22 bảng)** (Quan trọng)
 ```
 1-4.   KHDN/KHCN: 4 bảng × 8 chỉ tiêu = 32
 5-6.   KH&QLRR: 2 bảng × 6 chỉ tiêu = 12
 7.     CBTD: 1 bảng × 8 chỉ tiêu = 8
 8-9.   KTNQ CNL1: 2 bảng × 6 chỉ tiêu = 12
 10.    GDV: 1 bảng × 6 chỉ tiêu = 6
-11.    TQ/HK/KTNB: 1 bảng × 0 chỉ tiêu = 0 (chờ giao)
-12.    Truongphong IT/TH/KTGS: 1 bảng × 5 chỉ tiêu = 5
+12.    IT/TH/KTGS: 1 bảng × 5 chỉ tiêu = 5
 13.    CB IT/TH/KTGS: 1 bảng × 4 chỉ tiêu = 4
 14-15. GĐ PGD: 2 bảng × 9 chỉ tiêu = 18
 16.    PGĐ CBTD: 1 bảng × 8 chỉ tiêu = 8
@@ -1051,83 +1054,17 @@ Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
-
-# 6. Bảng GL41
+# 5. Bảng GL41
 + Thống nhất cấu trúc dữ liệu Bảng GL41 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
 + Theo chuẩn Temporal Table + Columnstore Indexes
 + Business Column tham chiếu theo file csv *gl41* (thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/)
-+ Chỉ cho phép import các file có filename chứa ký tự "gl41"
 + Số lượng Cột busiess column = 13
 + Cho phép các trường, cột có giá trị NULL
 + Cột NGAY_DL trong bảng GL41 lấy từ filename của file csv *gl41*, sau đó định dạng datetime2 (dd/mm/yyyy)
 + Define (Model, Database, EF, BulkCopy) đảm bảo thống nhất: Các cột có chứa "DATE", "NGAY" đưa về format datetime2 (dd/mm/yyyy); các cột có chứa "AMT", "AMOUNT", "BALANCE", "SO_TIEN_GD", "SO_DU, "DAUKY", "CUOIKY", "GHINO", "GHICO", "ST", "SBT" ở dạng number #,###.00 (vd: 250,000.89) (có thể phải tạo proper conversion; có thể phải kiểm tra ở ParseGenericCSVAsync; ImportGenericCSVAsync; BulkInsertGenericAsync)
 + Các cột còn lại dạng String/Nvachar: Tất cả có độ dài 200 ký tự, riêng cột "REMARK" (nếu có) dài 1000 ký tự
 + Cấu trúc bảng dữ liệu: NGAY_DL -> Business Column -> Temporal/system column (nếu có)
-+ Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
-+ Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
-Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
-
-# 7. Bảng LN01
-+ Thống nhất cấu trúc dữ liệu Bảng LN01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
-+ Theo chuẩn Temporal Table + Columnstore Indexes
-+ Business Column tham chiếu theo file csv *ln01*
-+ Số lượng Cột busiess column = 79
-+ Cho phép các trường, cột có giá trị NULL
-thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
-+ Cột NGAY_DL trong bảng LN01 lấy từ filename, có định dạng datetime2 (dd/mm/yyyy)
-+ Define (Model, Database, EF, BulkCopy) đảm bảo thống nhất: Các cột có chứa "DATE", "NGAY", "DSBSDT", "DSBSMATDT", "APPRDT", "APPRMATDT" đưa về format datetime2 (dd/mm/yyyy); các cột có chứa "AMT", "AMOUNT", "BALANCE", "SOTIEN", "SO_TIEN", "DU_NO" format về dạng number #,###.00 (vd: 250,000.89); (có thể phải tạo proper conversion; có thể phải kiểm tra ở ParseGenericCSVAsync; ImportGenericCSVAsync; BulkInsertGenericAsync)
-+ Các cột còn lại dạng String/Nvachar: Tất cả có độ dài 200 ký tự, riêng cột "ADDRESS", "REMARK" dài 1000 ký tự
-+ Cấu trúc bảng dữ liệu: NGAY_DL -> Business Column -> Temporal + System column
-+ Chỉ cho phép import các file có filename chứa ký tự "ln01"
-+ Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
-+ Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
-Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
-
-# 8. Bảng LN03
-+ Thống nhất cấu trúc dữ liệu Bảng LN03 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
-+ Theo chuẩn Temporal Table + Columnstore Indexes
-+ Business Column tham chiếu theo file csv *ln03*
-+ Chỉ cho phép import các file có filename chứa ký tự "ln03"
-+ Số lượng Cột busiess column = 20, có 17 cột có header, 3 cột không có header (nhưng vẫn có dữ liệu)
-+ Cho phép các trường, cột có giá trị NULL
-thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
-+ Cột NGAY_DL trong bảng LN03 lấy từ filename, có định dạng datetime2 (dd/mm/yyyy)
-+ Define (Model, Database, EF, BulkCopy) đảm bảo thống nhất: Các cột có chứa "DATE", "NGAY", "DSBSDT", "DSBSMATDT", "APPRDT", "APPRMATDT" đưa về format datetime2 (dd/mm/yyyy); các cột có chứa "AMT", "AMOUNT", "BALANCE", "SOTIEN", "SO_TIEN", "DU_NO", "THUNO" và cột thứ 20 (cột T|cột này ko có header) format về dạng number #,###.00 (vd: 250,000.89); (có thể phải tạo proper conversion; có thể phải kiểm tra ở ParseGenericCSVAsync; ImportGenericCSVAsync; BulkInsertGenericAsync)
-+ Các cột còn lại dạng String/Nvachar: Tất cả có độ dài 200 ký tự, riêng cột "ADDRESS", "REMARK" (nếu có) dài 1000 ký tự
-+ Cấu trúc bảng dữ liệu: NGAY_DL -> Business Column -> Temporal + System column
-+ Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
-+ Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
-Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
-
-# 9. Bảng RR01
-+ Thống nhất cấu trúc dữ liệu Bảng RR01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
-+ Theo chuẩn Temporal Table + Columnstore Indexes
-+ Business Column tham chiếu theo file csv *rr01*
-+ Chỉ cho phép import các file có filename chứa ký tự "rr01"
-+ Số lượng Cột busiess column = 25
-+ Cho phép các trường, cột có giá trị NULL
-thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
-+ Cột NGAY_DL trong bảng LN03 lấy từ filename, có định dạng datetime2 (dd/mm/yyyy)
-+ Define (Model, Database, EF, BulkCopy) đảm bảo thống nhất: 
-- Các cột có chứa "DATE", "NGAY", "DSBSDT", "DSBSMATDT", "APPRDT", "APPRMATDT" đưa về format datetime2 (dd/mm/yyyy); - các cột có chứa "AMT", "AMOUNT", "BALANCE", "SOTIEN", "SO_TIEN", "DU_NO","DUNO", "THUNO", "DA_THU", "THU_GOC", "THU_LAI", "BDS", "DS", "TSK" format về dạng number #,###.00 (vd: 250,000.89); (có thể phải tạo proper conversion; có thể phải kiểm tra ở ParseGenericCSVAsync; ImportGenericCSVAsync; BulkInsertGenericAsync)
-+ Các cột còn lại dạng String/Nvachar: Tất cả có độ dài 200 ký tự, riêng cột "ADDRESS", "REMARK" (nếu có) dài 1000 ký tự
-+ Cấu trúc bảng dữ liệu: NGAY_DL -> Business Column -> Temporal + System column
-+ Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
-+ Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
-Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
-
-# 10. Bảng ThuXLRR (chưa tạo vội vì chưa có thông số các trường, cột rõ ràng, sẽ chỉ định cấu hình sau)
-+ Thống nhất cấu trúc dữ liệu Bảng ThuXLRR phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
-+ Theo chuẩn Temporal Table + Columnstore Indexes
-+ Business Column tham chiếu theo file csv *ThuXLRR*
-+ Số lượng Cột busiess column = 
-+ Cho phép các trường, cột có giá trị NULL
-thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
-+ Cột NGAY_DL trong bảng LN01 lấy từ filename, có định dạng datetime2 (dd/mm/yyyy)
-+ Define (Model, Database, EF, BulkCopy) đảm bảo thống nhất: Các cột có chứa "DATE", "NGAY", "DSBSDT", "DSBSMATDT", "APPRDT", "APPRMATDT" đưa về format datetime2 (dd/mm/yyyy); các cột có chứa "AMT", "AMOUNT", "BALANCE", "SOTIEN", "SO_TIEN", "DU_NO" format về dạng number #,###.00 (vd: 250,000.89); (có thể phải tạo proper conversion; có thể phải kiểm tra ở ParseGenericCSVAsync; ImportGenericCSVAsync; BulkInsertGenericAsync)
-+ Các cột còn lại dạng String/Nvachar: Tất cả có độ dài 200 ký tự, riêng cột "ADDRESS", "REMARK" dài 1000 ký tự
-+ Cấu trúc bảng dữ liệu: NGAY_DL -> Business Column -> Temporal + System column
-+ Chỉ cho phép import các file có filename chứa ký tự "ln01"
++ Chỉ cho phép import các file có filename chứa ký tự "gl41"
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!

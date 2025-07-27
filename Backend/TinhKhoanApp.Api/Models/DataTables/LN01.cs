@@ -45,10 +45,12 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public string DSBSSEQ { get; set; } = "";
 
         [Column("TRANSACTION_DATE", Order = 8)]
-        public DateTime? TRANSACTION_DATE { get; set; }
+        [StringLength(200)]
+        public string TRANSACTION_DATE { get; set; } = "";
 
         [Column("DSBSDT", Order = 9)]
-        public DateTime? DSBSDT { get; set; }
+        [StringLength(200)]
+        public string DSBSDT { get; set; } = "";
 
         [Column("DISBUR_CCY", Order = 10)]
         [StringLength(200)]
@@ -59,7 +61,8 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public string DISBURSEMENT_AMOUNT { get; set; } = "";
 
         [Column("DSBSMATDT", Order = 12)]
-        public DateTime? DSBSMATDT { get; set; }
+        [StringLength(200)]
+        public string DSBSMATDT { get; set; } = "";
 
         [Column("BSRTCD", Order = 13)]
         [StringLength(200)]
@@ -74,7 +77,8 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public string APPRSEQ { get; set; } = "";
 
         [Column("APPRDT", Order = 16)]
-        public DateTime? APPRDT { get; set; }
+        [StringLength(200)]
+        public string APPRDT { get; set; } = "";
 
         [Column("APPR_CCY", Order = 17)]
         [StringLength(200)]
@@ -85,7 +89,8 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public string APPRAMT { get; set; } = "";
 
         [Column("APPRMATDT", Order = 19)]
-        public DateTime? APPRMATDT { get; set; }
+        [StringLength(200)]
+        public string APPRMATDT { get; set; } = "";
 
         [Column("LOAN_TYPE", Order = 20)]
         [StringLength(200)]
@@ -104,14 +109,16 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public string REPAYMENT_AMOUNT { get; set; } = "";
 
         [Column("NEXT_REPAY_DATE", Order = 24)]
-        public DateTime? NEXT_REPAY_DATE { get; set; }
+        [StringLength(200)]
+        public string NEXT_REPAY_DATE { get; set; } = "";
 
         [Column("NEXT_REPAY_AMOUNT", Order = 25)]
         [StringLength(200)]
         public string NEXT_REPAY_AMOUNT { get; set; } = "";
 
         [Column("NEXT_INT_REPAY_DATE", Order = 26)]
-        public DateTime? NEXT_INT_REPAY_DATE { get; set; }
+        [StringLength(200)]
+        public string NEXT_INT_REPAY_DATE { get; set; } = "";
 
         [Column("OFFICER_ID", Order = 27)]
         [StringLength(200)]
@@ -178,7 +185,8 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public string LCLWARDNM { get; set; } = "";
 
         [Column("LAST_REPAY_DATE", Order = 43)]
-        public DateTime? LAST_REPAY_DATE { get; set; }
+        [StringLength(200)]
+        public string LAST_REPAY_DATE { get; set; } = "";
 
         [Column("SECURED_PERCENT", Order = 44)]
         [StringLength(200)]
@@ -189,7 +197,8 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public string NHOM_NO { get; set; } = "";
 
         [Column("LAST_INT_CHARGE_DATE", Order = 46)]
-        public DateTime? LAST_INT_CHARGE_DATE { get; set; }
+        [StringLength(200)]
+        public string LAST_INT_CHARGE_DATE { get; set; } = "";
 
         [Column("EXEMPTINT", Order = 47)]
         [StringLength(200)]
@@ -304,7 +313,8 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public string CMT_HC { get; set; } = "";
 
         [Column("NGAY_SINH", Order = 75)]
-        public DateTime? NGAY_SINH { get; set; }
+        [StringLength(200)]
+        public string NGAY_SINH { get; set; } = "";
 
         [Column("MA_CB_AGRI", Order = 76)]
         [StringLength(200)]
