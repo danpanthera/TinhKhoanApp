@@ -147,7 +147,7 @@
           </div>
 
           <!-- Có chỉ tiêu -->
-          <div v-if="indicators.length > 0" class="indicators-content">
+          <div v-if="indicators.value && indicators.value.length > 0" class="indicators-content">
             <div class="indicators-table">
               <table class="kpi-table">
                 <thead>
@@ -264,7 +264,7 @@
           </div>
 
           <!-- Loading state -->
-          <div v-if="loadingDetails" class="loading-indicators">
+          <div v-else class="loading-indicators">
             <div class="loading-spinner"></div>
             <p>Đang tải chỉ tiêu...</p>
           </div>
@@ -633,8 +633,8 @@
 <script setup>
 import { computed, nextTick, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { kpiAssignmentService } from '../services/kpiAssignmentService';
 import api from '../services/api';
+import { kpiAssignmentService } from '../services/kpiAssignmentService';
 import { getId, safeGet } from '../utils/casingSafeAccess.js';
 import { useNumberInput } from '../utils/numberFormat';
 
@@ -697,7 +697,7 @@ const filteredKpiTables = computed(() => {
     return kpiTables.value
       .filter(table => {
         const category = (table.Category || table.category || '').toUpperCase();
-        return category === 'CANBO' || category === 'VAI TRÒ CÁN BỘ';
+        return category === 'CANBO';
       })
       .sort((a, b) => {
         const nameA = (a.Description || a.description || a.TableName || a.tableName || '').toLowerCase();
@@ -709,7 +709,7 @@ const filteredKpiTables = computed(() => {
     return kpiTables.value
       .filter(table => {
         const category = (table.Category || table.category || '').toUpperCase();
-        return category !== 'CANBO' && category !== 'VAI TRÒ CÁN BỘ';
+        return category === 'CHINHANH';
       })
       .sort((a, b) => {
         // Custom ordering theo yêu cầu: Hội Sở → Bình Lư → Phong Thỏ → Sìn Hồ → Bum Tở → Than Uyên → Đoàn Kết → Tân Uyên → Nậm Hàng
@@ -747,6 +747,13 @@ const filteredKpiTables = computed(() => {
       });
   }
   return kpiTables.value;
+});
+
+// Debug computed to track reactivity
+const debugIndicators = computed(() => {
+  const count = indicators.value ? indicators.value.length : 0;
+  console.log('🔍 DEBUG COMPUTED: indicators.value.length =', count);
+  return count;
 });
 
 const activeIndicatorsCount = computed(() => {
@@ -945,23 +952,34 @@ const selectTable = (tableId) => {
 };
 
 const loadTableDetails = async () => {
-  if (!selectedTableId.value) return;
+  if (selectedTableId.value === null || selectedTableId.value === undefined || selectedTableId.value === '') {
+    console.log('❌ loadTableDetails: No valid selectedTableId, value =', selectedTableId.value);
+    return;
+  }
 
   try {
     loadingDetails.value = true;
     clearMessages();
 
+    console.log('🔄 loadTableDetails: selectedTableId =', selectedTableId.value);
     const tableData = await kpiAssignmentService.getTableDetails(selectedTableId.value);
+    console.log('📨 loadTableDetails: received tableData =', tableData);
 
     if (tableData.indicators) {
       indicators.value = tableData.indicators;
+      console.log('✅ loadTableDetails: set indicators.value =', indicators.value.length, 'items');
+
+      // Force Vue reactivity update
+      await nextTick();
+      console.log('🔄 loadTableDetails: after nextTick, indicators.value.length =', indicators.value.length);
     } else {
       indicators.value = [];
+      console.log('❌ loadTableDetails: no indicators found, setting empty array');
     }
 
-    console.log('Table details loaded:', indicators.value.length, 'indicators');
+    console.log('📊 loadTableDetails final: indicators.value =', indicators.value);
   } catch (error) {
-    console.error('Error loading table details:', error);
+    console.error('❌ Error loading table details:', error);
     showError('Không thể tải chi tiết bảng KPI. Vui lòng thử lại.');
     indicators.value = [];
   } finally {
@@ -994,17 +1012,21 @@ const loadScoringRules = async () => {
   }
 };
 
-const onTableChange = () => {
-  console.log('Table selection changed:', selectedTableId.value);
+const onTableChange = async () => {
+  console.log('🔄 onTableChange: selectedTableId =', selectedTableId.value);
 
   // Reset indicators và scoring rules khi thay đổi bảng
+  console.log('🧹 onTableChange: Resetting indicators and scoring rules');
   indicators.value = [];
   scoringRules.value = [];
 
   // Load chi tiết bảng được chọn
-  if (selectedTableId.value) {
-    loadTableDetails();
-    loadScoringRules();
+  if (selectedTableId.value !== null && selectedTableId.value !== undefined && selectedTableId.value !== '') {
+    console.log('✅ onTableChange: Loading details for table', selectedTableId.value);
+    await loadTableDetails();
+    await loadScoringRules();
+  } else {
+    console.log('❌ onTableChange: No table selected, value =', selectedTableId.value);
   }
 };
 

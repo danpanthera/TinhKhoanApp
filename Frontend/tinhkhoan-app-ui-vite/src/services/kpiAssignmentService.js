@@ -29,13 +29,9 @@ export const kpiAssignmentService = {
     // Enhanced categorization logic for better table classification
     const processedTables = tablesData.map(table => {
       // Use the category from backend if available, otherwise apply our logic
-      if (table.category) {
-        // Backend already provides the category, just ensure consistent naming
-        if (table.category === 'Dành cho Cán bộ') {
-          table.category = 'Vai trò cán bộ';
-        } else if (table.category === 'Dành cho Chi nhánh') {
-          table.category = 'Chi nhánh';
-        }
+      if (table.Category || table.category) {
+        // Backend provides 'CANBO' or 'CHINHANH' - keep these values unchanged
+        table.category = table.Category || table.category;
       } else {
         // Fallback logic if category is not provided by backend
         // Safely check tableType - ensure it's a string
@@ -62,7 +58,7 @@ export const kpiAssignmentService = {
           (typeof table.tableType === 'number' && table.tableType >= 0 && table.tableType <= 22) ||
           (typeof table.tableType === 'string' && /^\d+$/.test(table.tableType) && parseInt(table.tableType) >= 0 && parseInt(table.tableType) <= 22)
         ) {
-          table.category = 'Vai trò cán bộ';
+          table.category = 'CANBO';
         }
         // Branch tables - using a more comprehensive list of keywords
         else if (
@@ -80,7 +76,7 @@ export const kpiAssignmentService = {
           tableTypeLC.startsWith('hs_') || // Hội sở
           tableTypeLC.startsWith('cn_')    // Chi nhánh
         ) {
-          table.category = 'Chi nhánh';
+          table.category = 'CHINHANH';
         }
         // Fallback for other cases
         else {
@@ -93,7 +89,7 @@ export const kpiAssignmentService = {
             tableNameLC.includes('phòng giao dịch') ||
             tableNameLC.includes('hội sở')
           ) {
-            table.category = 'Chi nhánh';
+            table.category = 'CHINHANH';
           }
           else if (
             tableNameLC.includes('cán bộ') ||
@@ -101,7 +97,7 @@ export const kpiAssignmentService = {
             tableNameLC.includes('trưởng phòng') ||
             tableNameLC.includes('giám đốc')
           ) {
-            table.category = 'Vai trò cán bộ';
+            table.category = 'CANBO';
           }
           else {
             // Default category if we can't determine
@@ -149,23 +145,31 @@ export const kpiAssignmentService = {
 
   // Get table details with indicators
   async getTableDetails(tableId) {
+    console.log('🔄 getTableDetails called with tableId:', tableId);
     const response = await api.get(`/KpiAssignment/tables/${tableId}`);
     const tableData = response.data;
+    console.log('📨 getTableDetails API response:', tableData);
 
     // Handle both PascalCase (backend) and camelCase (frontend) indicators
     const indicators = tableData.Indicators || tableData.indicators;
+    console.log('📊 Found indicators:', indicators);
+
     if (indicators) {
       let indicatorsData = [];
 
       if (Array.isArray(indicators.$values)) {
+        console.log('✅ Using indicators.$values, length:', indicators.$values.length);
         indicatorsData = indicators.$values;
       } else if (Array.isArray(indicators)) {
+        console.log('✅ Using direct indicators array, length:', indicators.length);
         indicatorsData = indicators;
       }
 
       // Sort by OrderIndex (PascalCase) or orderIndex (camelCase)
       tableData.indicators = indicatorsData.sort((a, b) => (a.OrderIndex || a.orderIndex || 0) - (b.OrderIndex || b.orderIndex || 0));
+      console.log('📊 Final processed indicators:', tableData.indicators.length);
     } else {
+      console.log('❌ No indicators found in response');
       tableData.indicators = [];
     }
 
