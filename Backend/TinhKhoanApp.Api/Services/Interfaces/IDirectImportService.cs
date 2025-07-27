@@ -32,6 +32,10 @@ namespace TinhKhoanApp.Api.Services.Interfaces
         Task<DirectImportResult> ImportGL01DirectAsync(IFormFile file, string? statementDate = null);
 
         /// <summary>
+        /// Import trực tiếp file CSV vào bảng GL41 (Trial Balance) sử dụng SqlBulkCopy
+        /// </summary>
+        Task<DirectImportResult> ImportGL41DirectAsync(IFormFile file, string? statementDate = null);
+
         /// <summary>
         /// Import trực tiếp file CSV vào bảng DPDA sử dụng SqlBulkCopy
         /// </summary>

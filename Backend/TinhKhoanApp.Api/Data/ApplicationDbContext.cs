@@ -47,12 +47,13 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<ImportedDataRecord> ImportedDataRecords { get; set; }
         // 🗑️ REMOVED: ImportedDataItem - Replaced with DirectImportService workflow
 
-        // 🚀 DbSets cho 8 bảng dữ liệu thô chính (DirectImport với Temporal Tables + Columnstore)
+        // 🚀 DbSets cho 9 bảng dữ liệu thô chính (DirectImport với Temporal Tables + Columnstore)
         public DbSet<DataTables.DP01> DP01 { get; set; }
         public DbSet<DataTables.LN01> LN01 { get; set; }
         public DbSet<DataTables.LN03> LN03 { get; set; }
         public DbSet<DataTables.GL01> GL01 { get; set; }
         public DbSet<DataTables.GL02> GL02 { get; set; }
+        public DbSet<DataTables.GL41> GL41 { get; set; }
         public DbSet<DataTables.DPDA> DPDA { get; set; }
         public DbSet<DataTables.EI01> EI01 { get; set; }
         public DbSet<DataTables.RR01> RR01 { get; set; }
@@ -63,6 +64,7 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<DataTables.LN03> LN03s { get; set; }
         public DbSet<DataTables.GL01> GL01s { get; set; }
         public DbSet<DataTables.GL02> GL02s { get; set; }
+        public DbSet<DataTables.GL41> GL41s { get; set; }
         public DbSet<DataTables.DPDA> DPDAs { get; set; }
         public DbSet<DataTables.EI01> EI01s { get; set; }
         public DbSet<DataTables.RR01> RR01s { get; set; }
@@ -404,6 +406,28 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
                 entity.Property(e => e.ST_GHICO).HasPrecision(18, 2);
                 entity.Property(e => e.DN_CUOIKY).HasPrecision(18, 2);
                 entity.Property(e => e.DC_CUOIKY).HasPrecision(18, 2);
+            });
+
+            // LN01 decimal properties - 79 business columns with proper decimal configuration
+            modelBuilder.Entity<DataTables.LN01>(entity =>
+            {
+                entity.Property(e => e.DU_NO).HasPrecision(18, 2);
+                entity.Property(e => e.DISBURSEMENT_AMOUNT).HasPrecision(18, 2);
+                entity.Property(e => e.INTEREST_RATE).HasPrecision(18, 2);
+                entity.Property(e => e.APPRAMT).HasPrecision(18, 2);
+                entity.Property(e => e.REPAYMENT_AMOUNT).HasPrecision(18, 2);
+                entity.Property(e => e.NEXT_REPAY_AMOUNT).HasPrecision(18, 2);
+                entity.Property(e => e.INTEREST_AMOUNT).HasPrecision(18, 2);
+                entity.Property(e => e.PASTDUE_INTEREST_AMOUNT).HasPrecision(18, 2);
+                entity.Property(e => e.TOTAL_INTEREST_REPAY_AMOUNT).HasPrecision(18, 2);
+                entity.Property(e => e.SECURED_PERCENT).HasPrecision(18, 2);
+                entity.Property(e => e.EXEMPTINTAMT).HasPrecision(18, 2);
+                entity.Property(e => e.ACCRUAL_AMOUNT).HasPrecision(18, 2);
+                entity.Property(e => e.ACCRUAL_AMOUNT_END_OF_MONTH).HasPrecision(18, 2);
+                entity.Property(e => e.AN_HAN_LAI).HasPrecision(18, 2);
+                entity.Property(e => e.SO_TIEN_GIAI_NGAN_1).HasPrecision(18, 2);
+                entity.Property(e => e.SO_TIEN_GIAI_NGAN_2).HasPrecision(18, 2);
+                entity.Property(e => e.TY_GIA).HasPrecision(18, 2);
             });
 
             // 🚀 === TEMPORAL TABLES + COLUMNSTORE INDEXES CONFIGURATION ===

@@ -75,6 +75,7 @@ namespace TinhKhoanApp.Api.Services
                     "LN03" => await ImportLN03DirectAsync(file, statementDate),
                     "GL01" => await ImportGL01DirectAsync(file, statementDate),
                     "GL02" => await ImportGL02DirectAsync(file, statementDate),
+                    "GL41" => await ImportGL41DirectAsync(file, statementDate),
                     "DPDA" => await ImportDPDADirectAsync(file, statementDate),
                     "EI01" => await ImportEI01DirectAsync(file, statementDate),
                     "RR01" => await ImportRR01DirectAsync(file, statementDate),
@@ -118,128 +119,12 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Import LN01 - Loan data (using streaming approach)
+        /// Import LN01 - Loan data (using generic approach for consistency)
         /// </summary>
         public async Task<DirectImportResult> ImportLN01DirectAsync(IFormFile file, string? statementDate = null)
         {
-            var result = new DirectImportResult
-            {
-                FileName = file.FileName,
-                DataType = "LN01",
-                TargetTable = "LN01",
-                FileSizeBytes = file.Length,
-                StartTime = DateTime.UtcNow
-            };
-
-            try
-            {
-                _logger.LogInformation("🚀 [LN01_DIRECT] Import vào bảng LN01 using streaming approach");
-
-                // Extract NgayDL từ filename
-                var ngayDL = ExtractNgayDLFromFileName(file.FileName);
-                result.NgayDL = ngayDL;
-
-                // Create ImportedDataRecord for tracking
-                var importRecord = await CreateImportedDataRecordAsync(file, "LN01", 0);
-                result.ImportedDataRecordId = importRecord.Id;
-
-                // Parse date
-                DateTime parsedDate;
-                if (!string.IsNullOrEmpty(statementDate) && DateTime.TryParse(statementDate, out parsedDate))
-                {
-                    // Use provided date
-                }
-                else if (!string.IsNullOrEmpty(ngayDL) && DateTime.TryParseExact(ngayDL, "dd/MM/yyyy", null, DateTimeStyles.None, out parsedDate))
-                {
-                    // Use date from filename
-                }
-                else
-                {
-                    parsedDate = DateTime.Now.Date;
-                }
-
-                // Stream import with specific LN01 logic
-                var processedRecords = await ImportLN01StreamingAsync(file, parsedDate);
-                result.ProcessedRecords = processedRecords;
-
-                // Update record count
-                importRecord.RecordsCount = processedRecords;
-                await _context.SaveChangesAsync();
-
-                result.Success = true;
-                result.BatchId = Guid.NewGuid().ToString();
-                result.EndTime = DateTime.UtcNow;
-
-                _logger.LogInformation("✅ [LN01_DIRECT] Import thành công: {Count} records trong {Duration}ms",
-                    result.ProcessedRecords, result.Duration.TotalMilliseconds);
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                result.Success = false;
-                result.ErrorMessage = ex.Message;
-                result.EndTime = DateTime.UtcNow;
-                _logger.LogError(ex, "❌ [LN01_DIRECT] Import failed: {FileName}", file.FileName);
-                return result;
-            }
-        }
-
-        /// <summary>
-        /// Import LN01 streaming - simplified approach using generic bulk insert
-        /// </summary>
-        private async Task<int> ImportLN01StreamingAsync(IFormFile file, DateTime ngayDL)
-        {
-            using var streamReader = new StreamReader(file.OpenReadStream(), Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 8 * 1024 * 1024);
-            using var csvReader = new CsvReader(streamReader, CultureInfo.InvariantCulture);
-
-            // Read header (skip it)
-            await csvReader.ReadAsync();
-            csvReader.ReadHeader();
-
-            var processedCount = 0;
-            var batchSize = 100000;
-            var batch = new List<LN01>();
-
-            // Read data rows and convert to LN01 objects
-            while (await csvReader.ReadAsync())
-            {
-                var ln01 = new LN01();
-                ln01.NGAY_DL = ngayDL;
-                ln01.FILE_NAME = file.FileName;
-
-                // Map CSV columns to LN01 properties (exactly 79 business columns)
-                if (csvReader.ColumnCount >= 79)
-                {
-                    ln01.BRCD = csvReader.GetField(0) ?? "";
-                    ln01.CUSTSEQ = csvReader.GetField(1) ?? "";
-                    ln01.CUSTNM = csvReader.GetField(2) ?? "";
-                    ln01.TAI_KHOAN = csvReader.GetField(3) ?? "";
-                    ln01.CCY = csvReader.GetField(4) ?? "";
-                    ln01.DU_NO = csvReader.GetField(5) ?? "";
-                    // ... etc for all 79 columns (for now just set a few key ones)
-                    ln01.OFFICER_IPCAS = csvReader.GetField(78) ?? "";
-                }
-
-                batch.Add(ln01);
-
-                if (batch.Count >= batchSize)
-                {
-                    // Use BulkInsertGenericAsync for proper column mapping
-                    await BulkInsertGenericAsync(batch, "LN01");
-                    processedCount += batch.Count;
-                    batch.Clear();
-                }
-            }
-
-            // Process remaining batch
-            if (batch.Count > 0)
-            {
-                await BulkInsertGenericAsync(batch, "LN01");
-                processedCount += batch.Count;
-            }
-
-            return processedCount;
+            _logger.LogInformation("🚀 [LN01_DIRECT] Import vào bảng LN01 with 79 business columns");
+            return await ImportGenericCSVAsync<Models.DataTables.LN01>("LN01", "LN01", file, statementDate);
         }
 
         /// <summary>
@@ -269,6 +154,14 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
+        /// Import GL41 - Trial Balance với 13 cột business từ CSV
+        /// </summary>
+        public async Task<DirectImportResult> ImportGL41DirectAsync(IFormFile file, string? statementDate = null)
+        {
+            _logger.LogInformation("🚀 [GL41] Import vào bảng GL41 - Trial Balance với Temporal Table + Columnstore");
+            return await ImportGenericCSVAsync<GL41>("GL41", "GL41", file, statementDate);
+        }
+
         /// <summary>
         /// Import DPDA - Detailed account data
         /// </summary>
@@ -503,6 +396,7 @@ namespace TinhKhoanApp.Api.Services
             if (upperFileName.Contains("LN03")) return "LN03";
             if (upperFileName.Contains("GL01")) return "GL01";
             if (upperFileName.Contains("GL02")) return "GL02";
+            if (upperFileName.Contains("GL41")) return "GL41";
             if (upperFileName.Contains("CA01")) return "CA01";
             if (upperFileName.Contains("RR01")) return "RR01";
             if (upperFileName.Contains("TR01")) return "TR01";
@@ -841,7 +735,32 @@ namespace TinhKhoanApp.Api.Services
                                         }
                                     }
 
-                                    // 🎯 DEBUG: Log conversion result for DPDA datetime fields
+                                    // 🎯 DEBUG: Check type name và property - ALWAYS LOG
+                                    if (prop.Name == "TRANSACTION_DATE")
+                                    {
+                                        Console.WriteLine($"🔍 [DEBUG_LN01] Type: {typeof(T).Name}, FullName: {typeof(T).FullName}, Property: {prop.Name}, ConvertedValue: {convertedValue?.GetType().Name ?? "NULL"}, Value: '{value}'");
+                                    }
+
+                                    // 🎯 EMERGENCY FIX: Direct conversion for LN01 datetime fields if ConvertCsvValue fails
+                                    if ((typeof(T).Name == "LN01" || typeof(T).FullName?.Contains("LN01") == true) &&
+                                        (prop.Name == "TRANSACTION_DATE" || prop.Name == "DSBSDT" ||
+                                        prop.Name == "NGAY_TAO_HD" || prop.Name == "NGAY_BD_HD" || prop.Name == "NGAY_DEN_HAN" ||
+                                        prop.Name == "NGAY_TAO_KH" || prop.Name == "CUS_BIRTH_DATE" || prop.Name == "NGAY_CAP" ||
+                                        prop.Name == "LAST_PMT_DATE") && (convertedValue == null || convertedValue is string))
+                                    {
+                                        Console.WriteLine($"🚨 [LN01_EMERGENCY] TRIGGERED! Property: {prop.Name}, Value: '{value}'");
+                                        if (!string.IsNullOrEmpty(value) && value.Trim() != "" &&
+                                            DateTime.TryParseExact(value, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var ln01Date))
+                                        {
+                                            convertedValue = ln01Date;
+                                            Console.WriteLine($"🔧 [LN01_EMERGENCY] Fixed datetime conversion: {prop.Name} = '{value}' -> {ln01Date}");
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine($"💡 [LN01_EMERGENCY] NULL/Empty datetime field: {prop.Name} = '{value}' -> NULL");
+                                            convertedValue = null;
+                                        }
+                                    }                                    // 🎯 DEBUG: Log conversion result for DPDA datetime fields
                                     if (typeof(T).Name == "DPDA" && (prop.Name == "NGAY_NOP_DON" || prop.Name == "NGAY_PHAT_HANH"))
                                     {
                                         Console.WriteLine($"🎯 [DPDA_DEBUG] Conversion result for {prop.Name}: '{value}' -> {convertedValue?.GetType().Name ?? "NULL"} = {convertedValue}");
@@ -2973,6 +2892,74 @@ namespace TinhKhoanApp.Api.Services
             }
 
             await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Parse DateTime từ CSV field với support cho format YYYYMMDD và empty values
+        /// </summary>
+        private DateTime? ParseDateTime(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+
+            // Clean value - remove quotes and trim spaces
+            var cleanValue = value.Trim().Trim('"', '\'');
+
+            if (string.IsNullOrWhiteSpace(cleanValue))
+                return null;
+
+            // Try multiple date formats
+            string[] formats = {
+                "yyyyMMdd",        // 20171018
+                "yyyy-MM-dd",      // 2017-10-18
+                "dd/MM/yyyy",      // 18/10/2017
+                "MM/dd/yyyy",      // 10/18/2017
+                "dd-MM-yyyy",      // 18-10-2017
+                "yyyy/MM/dd",      // 2017/10/18
+                "yyyyMMdd HH:mm:ss", // With time
+                "yyyy-MM-dd HH:mm:ss"
+            };
+
+            foreach (var format in formats)
+            {
+                if (DateTime.TryParseExact(cleanValue, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out var result))
+                {
+                    return result;
+                }
+            }
+
+            // Fallback to standard parsing
+            if (DateTime.TryParse(cleanValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out var fallbackResult))
+            {
+                return fallbackResult;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Parse Decimal từ CSV field với support cho number formatting và empty values
+        /// </summary>
+        private decimal? ParseDecimal(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+
+            // Clean value - remove quotes, spaces, and formatting
+            var cleanValue = value.Trim().Trim('"', '\'');
+
+            if (string.IsNullOrWhiteSpace(cleanValue))
+                return null;
+
+            // Remove spaces and common formatting
+            cleanValue = cleanValue.Replace(" ", "").Replace(",", "");
+
+            if (decimal.TryParse(cleanValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var result))
+            {
+                return result;
+            }
+
+            return null;
         }
 
         #endregion
