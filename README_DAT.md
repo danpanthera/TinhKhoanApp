@@ -97,19 +97,20 @@ Luôn cập nhật file này với các thông tin mới nhất về dự án Ti
 - **DPDA Specific**: Filename validation + specialized datetime handling
 
 ## 🚨 QUY TẮC KHỞI ĐỘNG DỰ ÁN - NGHIÊM CẤM VI PHẠM (RẤT Quan trọng)
-- **Backend:** LUÔN dùng  `/Users/nguyendat/Documents/Projects/TinhKhoanApp/start_backend.sh`
-- **Frontend:** LUÔN dùng `cd /Users/nguyendat/Documents/Projects/TinhKhoanApp/Frontend/tinhkhoan-app-ui-vite && ./start_frontend.sh`
-- **Fast Commit:** LUÔN dùng `./fast_commit.sh` (/Users/nguyendat/Documents/Projects/TinhKhoanApp/fast_commit.sh ), nội dung ngắn gọn nhất có thể
-- **NGHIÊM CẤM** sử dụng VS Code tasks để chạy fullstack - CHỈ DÙNG SCRIPTS
+- **Backend:** `cd Backend/TinhKhoanApp.Api && dotnet run --urls=http://0.0.0.0:5055`
+- **Frontend:** `cd Frontend/tinhkhoan-app-ui-vite && npm run dev`
+- **Fullstack:** `./start_fullstack.sh` (Tự động khởi động Database -> Backend -> Frontend)
+- **Fast Commit:** `./fast_commit.sh` - nội dung ngắn gọn nhất có thể
+- **NGHIÊM CẤM** sử dụng VS Code tasks để chạy fullstack - CHỈ DÙNG MANUAL COMMANDS
 - **Database:** TinhKhoanDB, username=sa, password=Dientoan@303
 
-✅ **TẤT CẢ SCRIPTS ĐÃ CÓ SẴN VÀ HOẠT ĐỘNG:** (Khá Quan trọng)
-- ✅ `/start_backend.sh` - Khởi động backend API từ root (http://localhost:5055)
-- ✅ `/start_frontend.sh` - Khởi động frontend UI từ root (http://localhost:3000) 
-- ✅ `/fast_commit.sh` - Commit nhanh từ root project
-- ✅ `/Backend/TinhKhoanApp.Api/start_backend.sh` - Original backend script
-- ✅ `/Frontend/tinhkhoan-app-ui-vite/start_frontend.sh` - Original frontend script
-- ✅ `/Backend/TinhKhoanApp.Api/sqlserver2022_ultimate.sh` - Setup SQL Server 2022
+✅ **FULLSTACK STARTUP SCRIPT ĐÃ CÓ SẴN:** (Khá Quan trọng)
+- ✅ `./start_fullstack.sh` - Khởi động tự động Database -> Backend (5055) -> Frontend (3000)
+- ✅ Auto-check service health và API endpoints
+- ✅ Background processes với PID tracking để dễ dàng stop
+- ✅ Kiểm tra 32 KPI Tables và 257 KPI Indicators
+- ✅ CORS đã được cấu hình cho frontend port 3000
+- ✅ Logs: `Backend/TinhKhoanApp.Api/backend.log` và `Frontend/tinhkhoan-app-ui-vite/frontend.log`
 
 🎯 **DATABASE STATUS:** (Quan trọng)
 - ✅ GL01: KHÔNG Temporal + CÓ Columnstore (theo yêu cầu mới)
