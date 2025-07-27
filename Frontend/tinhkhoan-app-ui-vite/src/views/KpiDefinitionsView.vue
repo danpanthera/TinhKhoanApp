@@ -147,7 +147,7 @@
           </div>
 
           <!-- Có chỉ tiêu -->
-          <div v-if="indicators.value && indicators.value.length > 0" class="indicators-content">
+          <div v-if="indicators && indicators.length > 0" class="indicators-content">
             <div class="indicators-table">
               <table class="kpi-table">
                 <thead>
@@ -157,7 +157,7 @@
                     <th>Điểm tối đa</th>
                     <th>Đơn vị</th>
                     <th>Thứ tự</th>
-                    <th>Trạng thái</th>
+                    <th>Trạng thái</th>  
                     <th>Thao tác</th>
                   </tr>
                 </thead>

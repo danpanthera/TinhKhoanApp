@@ -146,34 +146,43 @@ export const kpiAssignmentService = {
   // Get table details with indicators
   async getTableDetails(tableId) {
     console.log('🔄 getTableDetails called with tableId:', tableId);
-    const response = await api.get(`/KpiAssignment/tables/${tableId}`);
-    const tableData = response.data;
-    console.log('📨 getTableDetails API response:', tableData);
+    try {
+      const response = await api.get(`/KpiAssignment/tables/${tableId}`);
+      const tableData = response.data;
+      console.log('📨 getTableDetails API response:', tableData);
 
-    // Handle both PascalCase (backend) and camelCase (frontend) indicators
-    const indicators = tableData.Indicators || tableData.indicators;
-    console.log('📊 Found indicators:', indicators);
+      // Handle both PascalCase (backend) and camelCase (frontend) indicators
+      const indicators = tableData.Indicators || tableData.indicators;
+      console.log('📊 Raw indicators from API:', indicators);
 
-    if (indicators) {
-      let indicatorsData = [];
+      if (indicators) {
+        let indicatorsData = [];
 
-      if (Array.isArray(indicators.$values)) {
-        console.log('✅ Using indicators.$values, length:', indicators.$values.length);
-        indicatorsData = indicators.$values;
-      } else if (Array.isArray(indicators)) {
-        console.log('✅ Using direct indicators array, length:', indicators.length);
-        indicatorsData = indicators;
+        if (Array.isArray(indicators.$values)) {
+          console.log('✅ Using indicators.$values, length:', indicators.$values.length);
+          indicatorsData = indicators.$values;
+        } else if (Array.isArray(indicators)) {
+          console.log('✅ Using direct indicators array, length:', indicators.length);
+          indicatorsData = indicators;
+        } else {
+          console.log('⚠️ indicators is not an array:', typeof indicators, indicators);
+          indicatorsData = [];
+        }
+
+        // Sort by OrderIndex (PascalCase) or orderIndex (camelCase)
+        tableData.indicators = indicatorsData.sort((a, b) => (a.OrderIndex || a.orderIndex || 0) - (b.OrderIndex || b.orderIndex || 0));
+        console.log('📊 Final processed indicators count:', tableData.indicators.length);
+        console.log('📊 First 2 indicators:', tableData.indicators.slice(0, 2));
+      } else {
+        console.log('❌ No indicators found in response');
+        tableData.indicators = [];
       }
 
-      // Sort by OrderIndex (PascalCase) or orderIndex (camelCase)
-      tableData.indicators = indicatorsData.sort((a, b) => (a.OrderIndex || a.orderIndex || 0) - (b.OrderIndex || b.orderIndex || 0));
-      console.log('📊 Final processed indicators:', tableData.indicators.length);
-    } else {
-      console.log('❌ No indicators found in response');
-      tableData.indicators = [];
+      return tableData;
+    } catch (error) {
+      console.error('❌ getTableDetails error:', error);
+      throw error;
     }
-
-    return tableData;
   },
 
   // Assign KPI to employee
