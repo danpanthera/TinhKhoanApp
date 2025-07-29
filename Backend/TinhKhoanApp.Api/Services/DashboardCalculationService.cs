@@ -99,7 +99,7 @@ namespace TinhKhoanApp.Api.Services
 
                 // Lấy dữ liệu chi tiết từ bảng DP01 mới nhất
                 var dp01Data = await _context.DP01
-                    .Where(i => i.FILE_NAME == latestImportRecord.FileName)
+                    .Where(i => i.DataSource == latestImportRecord.FileName)
                     .ToListAsync();
 
                 decimal totalNguonVon = 0;
@@ -126,7 +126,7 @@ namespace TinhKhoanApp.Api.Services
                         // Chỉ tính các tài khoản không thuộc danh sách loại trừ
                         if (!excludedPrefixes.Any(prefix => accountCode.StartsWith(prefix)))
                         {
-                            var balance = dp01Record.CURRENT_BALANCE;
+                            var balance = dp01Record.CURRENT_BALANCE ?? 0;
                             totalNguonVon += balance;
                             processedRecords++;
                         }

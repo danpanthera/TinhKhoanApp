@@ -473,7 +473,7 @@ const staffKpiTables = computed(() => {
     .filter(table => {
       const category = safeGet(table, 'Category')
       console.log(`Table ${safeGet(table, 'TableName')}: category = "${category}"`)
-      return category === 'VAI TRÒ CÁN BỘ'
+      return category === 'CANBO'
     })
     .sort((a, b) => {
       const descA = safeGet(a, 'Description') || safeGet(a, 'TableName') || ''

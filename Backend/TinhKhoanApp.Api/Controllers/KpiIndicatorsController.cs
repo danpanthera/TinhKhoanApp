@@ -79,7 +79,7 @@ namespace TinhKhoanApp.Api.Controllers
 
         // GET: api/KpiIndicators/table/5
         [HttpGet("table/{tableId}")]
-        public async Task<ActionResult<IEnumerable<KpiIndicator>>> GetIndicatorsByTable(int tableId)
+        public async Task<ActionResult<IEnumerable<object>>> GetIndicatorsByTable(int tableId)
         {
             try
             {
@@ -93,6 +93,17 @@ namespace TinhKhoanApp.Api.Controllers
                 var indicators = await _context.KpiIndicators
                     .Where(k => k.TableId == tableId)
                     .OrderBy(k => k.OrderIndex)
+                    .Select(k => new
+                    {
+                        k.Id,
+                        k.TableId,
+                        k.IndicatorName,
+                        k.MaxScore,
+                        k.Unit,
+                        k.OrderIndex,
+                        k.ValueType,
+                        k.IsActive
+                    })
                     .ToListAsync();
 
                 _logger.LogInformation($"✅ Returned {indicators.Count} indicators for table {tableId}");

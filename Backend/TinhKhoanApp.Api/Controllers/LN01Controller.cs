@@ -1,8 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models.RawData;
 using TinhKhoanApp.Api.Models.DataTables;
+using TinhKhoanApp.Api.Models.DTOs;
+using TinhKhoanApp.Api.Services;
 using System.Text;
 using System.Text.Json;
 
@@ -16,10 +19,337 @@ namespace TinhKhoanApp.Api.Controllers
     public class LN01Controller : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILN01Service _ln01Service;
+        private readonly ILogger<LN01Controller> _logger;
 
-        public LN01Controller(ApplicationDbContext context)
+        public LN01Controller(ApplicationDbContext context, ILN01Service ln01Service, ILogger<LN01Controller> logger)
         {
             _context = context;
+            _ln01Service = ln01Service;
+            _logger = logger;
+        }
+
+        /// <summary>
+        /// Lấy tất cả dữ liệu LN01 (Thông tin khoản vay) theo mô hình Repository
+        /// </summary>
+        [HttpGet("all-records")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<LN01DTO>>> GetAllRecordsNew()
+        {
+            try
+            {
+                var result = await _ln01Service.GetAllAsync();
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy tất cả dữ liệu LN01 từ service");
+                return StatusCode(500, "Đã xảy ra lỗi khi xử lý yêu cầu");
+            }
+        }
+
+        /// <summary>
+        /// Lấy dữ liệu LN01 theo ID
+        /// </summary>
+        [HttpGet("id/{id}")]
+        [Authorize]
+        public async Task<ActionResult<LN01DTO>> GetByIdNew(long id)
+        {
+            try
+            {
+                var result = await _ln01Service.GetByIdAsync(id);
+                if (result == null)
+                {
+                    return NotFound($"Không tìm thấy bản ghi LN01 với ID: {id}");
+                }
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy dữ liệu LN01 với ID: {ID}", id);
+                return StatusCode(500, "Đã xảy ra lỗi khi xử lý yêu cầu");
+            }
+        }
+
+        /// <summary>
+        /// Lấy dữ liệu LN01 gần đây
+        /// </summary>
+        [HttpGet("recent-records")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<LN01DTO>>> GetRecentRecords([FromQuery] int count = 10)
+        {
+            try
+            {
+                var result = await _ln01Service.GetRecentAsync(count);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy dữ liệu LN01 gần đây");
+                return StatusCode(500, "Đã xảy ra lỗi khi xử lý yêu cầu");
+            }
+        }
+
+        /// <summary>
+        /// Lấy dữ liệu LN01 theo ngày
+        /// </summary>
+        [HttpGet("by-date-new")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<LN01DTO>>> GetByDateNew([FromQuery] DateTime date, [FromQuery] int maxResults = 100)
+        {
+            try
+            {
+                var result = await _ln01Service.GetByDateAsync(date, maxResults);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy dữ liệu LN01 theo ngày: {Date}", date);
+                return StatusCode(500, "Đã xảy ra lỗi khi xử lý yêu cầu");
+            }
+        }
+
+        /// <summary>
+        /// Lấy dữ liệu LN01 theo khoảng thời gian
+        /// </summary>
+        [HttpGet("by-date-range-new")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<LN01DTO>>> GetByDateRangeNew(
+            [FromQuery] DateTime fromDate,
+            [FromQuery] DateTime toDate,
+            [FromQuery] int maxResults = 100)
+        {
+            try
+            {
+                if (fromDate > toDate)
+                {
+                    return BadRequest("Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc");
+                }
+
+                var result = await _ln01Service.GetByDateRangeAsync(fromDate, toDate, maxResults);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy dữ liệu LN01 theo khoảng thời gian: {FromDate} - {ToDate}",
+                    fromDate, toDate);
+                return StatusCode(500, "Đã xảy ra lỗi khi xử lý yêu cầu");
+            }
+        }
+
+        /// <summary>
+        /// Lấy dữ liệu LN01 theo mã chi nhánh
+        /// </summary>
+        [HttpGet("by-branch-new/{branchCode}")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<LN01DTO>>> GetByBranchCodeNew(
+            string branchCode,
+            [FromQuery] int maxResults = 100)
+        {
+            try
+            {
+                var result = await _ln01Service.GetByBranchCodeAsync(branchCode, maxResults);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy dữ liệu LN01 theo mã chi nhánh: {BranchCode}", branchCode);
+                return StatusCode(500, "Đã xảy ra lỗi khi xử lý yêu cầu");
+            }
+        }
+
+        /// <summary>
+        /// Lấy dữ liệu LN01 theo mã khách hàng
+        /// </summary>
+        [HttpGet("by-customer-new/{customerCode}")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<LN01DTO>>> GetByCustomerCodeNew(
+            string customerCode,
+            [FromQuery] int maxResults = 100)
+        {
+            try
+            {
+                var result = await _ln01Service.GetByCustomerCodeAsync(customerCode, maxResults);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy dữ liệu LN01 theo mã khách hàng: {CustomerCode}", customerCode);
+                return StatusCode(500, "Đã xảy ra lỗi khi xử lý yêu cầu");
+            }
+        }
+
+        /// <summary>
+        /// Lấy dữ liệu LN01 theo số tài khoản
+        /// </summary>
+        [HttpGet("by-account-new/{accountNumber}")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<LN01DTO>>> GetByAccountNumberNew(
+            string accountNumber,
+            [FromQuery] int maxResults = 100)
+        {
+            try
+            {
+                var result = await _ln01Service.GetByAccountNumberAsync(accountNumber, maxResults);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy dữ liệu LN01 theo số tài khoản: {AccountNumber}", accountNumber);
+                return StatusCode(500, "Đã xảy ra lỗi khi xử lý yêu cầu");
+            }
+        }
+
+        /// <summary>
+        /// Lấy dữ liệu LN01 theo nhóm nợ
+        /// </summary>
+        [HttpGet("by-debt-group-new/{debtGroup}")]
+        [Authorize]
+        public async Task<ActionResult<IEnumerable<LN01DTO>>> GetByDebtGroupNew(
+            string debtGroup,
+            [FromQuery] int maxResults = 100)
+        {
+            try
+            {
+                var result = await _ln01Service.GetByDebtGroupAsync(debtGroup, maxResults);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy dữ liệu LN01 theo nhóm nợ: {DebtGroup}", debtGroup);
+                return StatusCode(500, "Đã xảy ra lỗi khi xử lý yêu cầu");
+            }
+        }
+
+        /// <summary>
+        /// Lấy tổng dư nợ theo chi nhánh
+        /// </summary>
+        [HttpGet("total-loan-by-branch-new/{branchCode}")]
+        [Authorize]
+        public async Task<ActionResult<decimal>> GetTotalLoanAmountByBranchNew(
+            string branchCode,
+            [FromQuery] DateTime? date = null)
+        {
+            try
+            {
+                var result = await _ln01Service.GetTotalLoanAmountByBranchAsync(branchCode, date);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy tổng dư nợ theo chi nhánh: {BranchCode}", branchCode);
+                return StatusCode(500, "Đã xảy ra lỗi khi xử lý yêu cầu");
+            }
+        }
+
+        /// <summary>
+        /// Lấy tổng dư nợ theo loại tiền
+        /// </summary>
+        [HttpGet("total-loan-by-currency-new/{currency}")]
+        [Authorize]
+        public async Task<ActionResult<decimal>> GetTotalLoanAmountByCurrencyNew(
+            string currency,
+            [FromQuery] DateTime? date = null)
+        {
+            try
+            {
+                var result = await _ln01Service.GetTotalLoanAmountByCurrencyAsync(currency, date);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi lấy tổng dư nợ theo loại tiền: {Currency}", currency);
+                return StatusCode(500, "Đã xảy ra lỗi khi xử lý yêu cầu");
+            }
+        }
+
+        /// <summary>
+        /// Tạo mới dữ liệu LN01
+        /// </summary>
+        [HttpPost("create")]
+        [Authorize(Roles = "Admin,DataAdmin")]
+        public async Task<ActionResult<LN01DTO>> CreateNew([FromBody] CreateLN01DTO createDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var result = await _ln01Service.CreateAsync(createDto);
+                return CreatedAtAction(nameof(GetByIdNew), new { id = result.Id }, result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi tạo mới dữ liệu LN01");
+                return StatusCode(500, "Đã xảy ra lỗi khi xử lý yêu cầu");
+            }
+        }
+
+        /// <summary>
+        /// Cập nhật dữ liệu LN01
+        /// </summary>
+        [HttpPut("update/{id}")]
+        [Authorize(Roles = "Admin,DataAdmin")]
+        public async Task<ActionResult<LN01DTO>> UpdateNew(long id, [FromBody] UpdateLN01DTO updateDto)
+        {
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var exists = await _ln01Service.ExistsAsync(id);
+                if (!exists)
+                {
+                    return NotFound($"Không tìm thấy bản ghi LN01 với ID: {id}");
+                }
+
+                var result = await _ln01Service.UpdateAsync(id, updateDto);
+                if (result == null)
+                {
+                    return NotFound($"Không tìm thấy bản ghi LN01 với ID: {id}");
+                }
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi cập nhật dữ liệu LN01 với ID: {ID}", id);
+                return StatusCode(500, "Đã xảy ra lỗi khi xử lý yêu cầu");
+            }
+        }
+
+        /// <summary>
+        /// Xóa dữ liệu LN01
+        /// </summary>
+        [HttpDelete("delete/{id}")]
+        [Authorize(Roles = "Admin,DataAdmin")]
+        public async Task<ActionResult> DeleteNew(long id)
+        {
+            try
+            {
+                var exists = await _ln01Service.ExistsAsync(id);
+                if (!exists)
+                {
+                    return NotFound($"Không tìm thấy bản ghi LN01 với ID: {id}");
+                }
+
+                var result = await _ln01Service.DeleteAsync(id);
+                if (!result)
+                {
+                    return StatusCode(500, "Xóa dữ liệu không thành công");
+                }
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi xóa dữ liệu LN01 với ID: {ID}", id);
+                return StatusCode(500, "Đã xảy ra lỗi khi xử lý yêu cầu");
+            }
         }
 
         /// <summary>

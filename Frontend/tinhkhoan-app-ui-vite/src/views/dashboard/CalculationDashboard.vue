@@ -342,37 +342,37 @@ const sixMainIndicators = ref([
     code: 'RR01',
     name: 'Nguồn vốn',
     unit: 'Triệu VND',
-    icon: 'mdi-bank-transfer'
+    icon: 'mdi-bank-transfer-in'
   },
   {
     code: 'DP01',
     name: 'Dư nợ',
     unit: 'Triệu VND',
-    icon: 'mdi-account-cash'
+    icon: 'mdi-credit-card-outline'
   },
   {
     code: 'GL01',
     name: 'Nợ xấu',
     unit: '% (#.## %)',
-    icon: 'mdi-alert-circle'
+    icon: 'mdi-alert-circle-outline'
   },
   {
     code: 'EI01',
     name: 'Thu nợ XLRR',
     unit: 'Triệu VND',
-    icon: 'mdi-cash-multiple'
+    icon: 'mdi-cash-refund'
   },
   {
     code: 'GL41',
     name: 'Thu dịch vụ',
     unit: 'Triệu VND',
-    icon: 'mdi-receipt'
+    icon: 'mdi-receipt-text-outline'
   },
   {
     code: 'LN03',
     name: 'Tài chính',
     unit: 'Triệu VND',
-    icon: 'mdi-chart-line-variant'
+    icon: 'mdi-chart-line'
   }
 ]);
 
@@ -455,12 +455,16 @@ const formatIndicatorValue = (value, indicatorCode) => {
   if (value === null || value === undefined) return '-';
 
   switch (indicatorCode) {
-    case 'DP01': // Nguồn vốn
-    case 'LN01': // Dư nợ
-    case 'LN03': // Thu nợ XLRR
+    case 'RR01': // Nguồn vốn
+    case 'DP01': // Dư nợ
+    case 'EI01': // Thu nợ XLRR
     case 'GL41': // Thu dịch vụ
-    case 'GL41': // Tài chính
-      return new Intl.NumberFormat('vi-VN').format(value);
+    case 'LN03': // Tài chính
+      // Định dạng số với ngăn cách hàng nghìn kiểu Việt Nam
+      return new Intl.NumberFormat('vi-VN', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(value);
     case 'GL01': // Nợ xấu (%)
       return `${value}%`;
     default:

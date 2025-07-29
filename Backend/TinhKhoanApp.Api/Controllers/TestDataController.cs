@@ -30,7 +30,7 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 var dp01Records = await _context.DP01
-                    .OrderByDescending(x => x.CREATED_DATE)
+                    .OrderByDescending(x => x.CreatedAt)
                     .Take(5)
                     .Select(x => new
                     {
@@ -38,12 +38,12 @@ namespace TinhKhoanApp.Api.Controllers
                         x.MA_CN,
                         x.MA_KH,
                         x.TEN_KH,
-                        x.CCY,
+                        Currency = x.CCY, // CCY currency column
                         CurrentBalance = x.CURRENT_BALANCE,
                         Rate = x.RATE,
                         SoTaiKhoan = x.SO_TAI_KHOAN,
-                        CreatedDate = x.CREATED_DATE,
-                        UpdatedDate = x.UPDATED_DATE
+                        CreatedDate = x.CreatedAt,
+                        UpdatedDate = x.UpdatedAt
                     })
                     .ToListAsync();
 

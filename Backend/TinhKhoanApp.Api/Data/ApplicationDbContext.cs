@@ -48,7 +48,7 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         // 🗑️ REMOVED: ImportedDataItem - Replaced with DirectImportService workflow
 
         // 🚀 DbSets cho 8 bảng dữ liệu thô chính (DirectImport với Temporal Tables + Columnstore)
-        public DbSet<DataTables.DP01> DP01 { get; set; }
+        public DbSet<DataTables.DP01> DP01 { get; set; } // Re-enabled for basic access
         public DbSet<DataTables.LN01> LN01 { get; set; }
         public DbSet<DataTables.LN03> LN03 { get; set; }
         public DbSet<DataTables.GL01> GL01 { get; set; }
@@ -369,9 +369,10 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
             // === DECIMAL PRECISION CONFIGURATION FOR DATA TABLES ===
             // Fix specific decimal property precision warnings for the 12 data tables
 
-            // DP01 decimal properties
+            // DP01 decimal properties + Temporal Table - ENABLED
             modelBuilder.Entity<DataTables.DP01>(entity =>
             {
+                // Decimal precision for AMOUNT/BALANCE columns
                 entity.Property(e => e.CURRENT_BALANCE).HasPrecision(18, 2);
                 entity.Property(e => e.RATE).HasPrecision(18, 6);
                 entity.Property(e => e.ACRUAL_AMOUNT).HasPrecision(18, 2);
@@ -380,6 +381,19 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
                 entity.Property(e => e.CRAMT).HasPrecision(18, 2);
                 entity.Property(e => e.SPECIAL_RATE).HasPrecision(18, 6);
                 entity.Property(e => e.TYGIA).HasPrecision(18, 6);
+
+                // Temporal Table configuration
+                entity.ToTable(tb => tb.IsTemporal(ttb =>
+                {
+                    ttb.UseHistoryTable("DP01_History");
+                    ttb.HasPeriodStart("ValidFrom");
+                    ttb.HasPeriodEnd("ValidTo");
+                }));
+
+                // Create columnstore index for analytics
+                entity.HasIndex(e => new { e.NGAY_DL, e.MA_CN, e.CURRENT_BALANCE, e.MA_PGD })
+                    .HasDatabaseName("NCCI_DP01_Analytics")
+                    .IsUnique(false);
             });
 
             // GL01 decimal properties
@@ -509,7 +523,7 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         /// </summary>
         private void ConfigureMainTableWithOriginalColumns(ModelBuilder modelBuilder)
         {
-            // Cấu hình bảng DP01 mới với cấu trúc temporal table + columnstore
+            // Cấu hình bảng DP01 với cấu trúc temporal table + columnstore
             ConfigureDataTableWithTemporal<DataTables.DP01>(modelBuilder, "DP01");
         }
 

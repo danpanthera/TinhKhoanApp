@@ -84,6 +84,12 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Repository Pattern & Service Layer
+builder.Services.AddApplicationServices(builder.Configuration);
+
+// Cache Services
+builder.Services.AddCachingServices(builder.Configuration);
+
 // Essential Services
 builder.Services.AddScoped<IDirectImportService, DirectImportService>();
 // builder.Services.AddScoped<IEmployeeService, EmployeeService>();
@@ -119,7 +125,7 @@ if (!string.IsNullOrEmpty(jwtKey))
 
 // Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerConfiguration();
 
 // Health Checks
 builder.Services.AddScoped<DatabaseHealthCheck>();
@@ -131,10 +137,11 @@ var app = builder.Build();
 // Development Configuration
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
     app.UseDeveloperExceptionPage();
 }
+
+// Swagger configuration (available in all environments)
+app.UseSwaggerConfiguration();
 
 // Middleware Pipeline - CORS must be early in the pipeline
 app.UseCors("AllowFrontend");

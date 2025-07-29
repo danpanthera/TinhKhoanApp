@@ -138,6 +138,8 @@
         <div v-else class="indicators-panel">
           <div class="indicators-header">
             <h2>⚡ Chỉ tiêu KPI - {{ (selectedTable.Description || selectedTable.description || selectedTable.TableName || selectedTable.tableName) }}</h2>
+            <!-- DEBUG: Force computed trigger -->
+            <div style="font-size: 12px; color: #666;">Debug: {{ debugIndicators }} indicators loaded</div>
             <button
               @click="openAddIndicatorModal"
               class="action-button add-btn"
@@ -157,7 +159,7 @@
                     <th>Điểm tối đa</th>
                     <th>Đơn vị</th>
                     <th>Thứ tự</th>
-                    <th>Trạng thái</th>  
+                    <th>Trạng thái</th>
                     <th>Thao tác</th>
                   </tr>
                 </thead>

@@ -1,5 +1,4 @@
 ### 📝 **HƯỚNG DẪN LẬP TRÌNH VIÊN TINH KHOẢN APP** (Quan trọng)
-
 Hãy suy nghĩ và hành động như một SIÊU lập trình viên Fullstack, Web API, .NET Core, ASP.NET, HTML, CSS, C#, Vue.js, Node.js, Vite.
 Luôn xưng hô là em và gọi tôi là "anh".
 luôn chú thích các dòng code bằng tiếng việt!
@@ -8,8 +7,21 @@ databasse là "TinhKhoanDB" và mật khẩu user SA là "Dientoan@303"
 trên docker có container chứa SQL server với tên là "azure_sql_edge_tinhkhoan"
 Luôn để backend port là 5055, frontend port là 3000.
 Luôn cập nhật file này với các thông tin mới nhất về dự án TinhKhoanApp.doc
-## 🎯 AZURE SQL EDGE ARM64 M3 OPTIMIZED - DATACORES SETUP COMPLETED
+**Quy ước toàn dự án:**
++ Mã A1 là menu màn hình Đơn vị
++ Mã A2 là menu màn hình Nhân viên
++ Mã A3 là menu màn hình Chức vụ
++ Mã A4 là menu màn hình Vai trò
++ Mã B1 là menu màn hình Kỳ Khoán
++ Mã B2 là menu màn hình Cấu hình KPI
++ Mã B3 là menu màn hình Giao khoán KPI theo Cán bộ
++ Mã B4 là menu màn hình Giao khoán KPI theo Chi nhánh
++ Mã B9 là màn hình Kho Dữ liệu thô
++ Mã C1 là menu màn hình Dashboard\Giao chỉ tiêu
++ Mã C2 là menu màn hình Dashboard\Cập nhật
++ Mã C3 là menu màn hình Dashboard\DASHBOARD
 
+## 🎯 AZURE SQL EDGE ARM64 M3 OPTIMIZED - DATACORES SETUP COMPLETED
 ✅ **Performance Metrics (Latest):**
 - **RAM Usage**: 12.63% (517MB/4GB) - Extremely efficient
 - **CPU Usage**: 1.08% - Optimal M3 performance  
@@ -97,7 +109,7 @@ Luôn cập nhật file này với các thông tin mới nhất về dự án Ti
 - **DPDA Specific**: Filename validation + specialized datetime handling
 
 ## 🚨 QUY TẮC KHỞI ĐỘNG DỰ ÁN - NGHIÊM CẤM VI PHẠM (RẤT Quan trọng)
-- **Backend:** `cd Backend/TinhKhoanApp.Api && dotnet run --urls=http://0.0.0.0:5055`
+- **Backend:** `cd /Users/nguyendat/Documents/Projects/TinhKhoanApp/ && cd Backend/TinhKhoanApp.Api && dotnet run --urls=http://0.0.0.0:5055`
 - **Frontend:** `cd Frontend/tinhkhoan-app-ui-vite && npm run dev`
 - **Fullstack:** `./start_fullstack.sh` (Tự động khởi động Database -> Backend -> Frontend)
 - **Fast Commit:** `./fast_commit.sh` - nội dung ngắn gọn nhất có thể
@@ -233,33 +245,6 @@ Luôn kiểm tra file test cho 08 bảng dữ liệu từ thư mục sau:
 - ✅ Tất cả 47 tables đã được tạo thành công từ migration
 - ✅ **KHẮC PHỤC DOCKER STABILITY** - Container hoạt động ổn định với memory limits và auto-restart
 
-### 🔧 TROUBLESHOOTING TOOLS (Mới thêm):
-
-1. **Docker stability troubleshooting:**
-
-   ```bash
-   ./docker_troubleshoot_fix.sh
-   ```
-
-   - Phân tích memory/disk usage
-   - Tự động restart container với config tối ưu
-   - Kiểm tra SQL connectivity
-
-2. **Comprehensive system status:**
-
-   ```bash
-   ./system_status_report.sh
-   ```
-
-   - Monitoring toàn bộ stack (Docker + Backend + Frontend)
-   - Color-coded status report
-   - Database table verification
-   - API health checks
-
-3. **Quick health checks:**
-   - Database: `sqlcmd -S localhost,1433 -U SA -P 'Dientoan@303' -d TinhKhoanDB -C -Q "SELECT COUNT(*) as TableCount FROM INFORMATION_SCHEMA.TABLES"`
-   - Backend API: `curl http://localhost:5055/health`
-   - Frontend: `curl http://localhost:3000`
 
 ### 🎯 Kết quả đánh giá:
 
@@ -292,8 +277,6 @@ Luôn kiểm tra file test cho 08 bảng dữ liệu từ thư mục sau:
 - ✅ **Performance:** Tốc độ import từ 31-46 records/sec
 - ✅ **Error Handling:** 0 errors, 100% success rate
 - ✅ **Logging:** Chi tiết logs cho monitoring và debug
-
-```
 
 ### 🔄 **CONTAINER INFO:**
 
@@ -658,40 +641,6 @@ sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB
 
 ### **🛠️ GIẢI PHÁP ĐÃ THỰC HIỆN:**
 
-#### **1. Fix Field Mapping Priority:**
-
-```javascript
-// BEFORE: Sai thứ tự ưu tiên
-const dataType = imp.dataType || imp.Category || imp.FileType || "UNKNOWN";
-const recordCount = parseInt(imp.recordsCount || imp.RecordsCount) || 0;
-
-// AFTER: Ưu tiên field từ API response
-const dataType = imp.Category || imp.FileType || imp.dataType || "UNKNOWN";
-const recordCount = parseInt(imp.RecordsCount || imp.recordsCount) || 0;
-```
-
-#### **2. Enhanced Date Validation:**
-
-```javascript
-// BEFORE: Không check date validity
-const importDateTime = new Date(importDate)
-
-// AFTER: Validate date trước khi dùng
-const importDateTime = new Date(importDate)
-if (!isNaN(importDateTime.getTime()) && ...)
-```
-
-#### **3. Enhanced Debug Function:**
-
-```javascript
-// NEW: Force refresh với debug logging
-const debugRecalculateStats = async () => {
-  await refreshAllData(true); // Force refresh data first
-  calculateDataTypeStats(); // Then recalculate stats
-  console.log("📊 Current dataTypeStats:", dataTypeStats.value);
-};
-```
-
 ### **🎯 CÁCH SỬ DỤNG:**
 
 1. **Sau khi import:** Hệ thống sẽ tự động refresh (đã có trong code)
@@ -982,7 +931,7 @@ Sửa lại hết database, model, EF, BulkCopy, migration của các bảng d�
 + CẤM transformation Tên cột sang Vietnamese column. 
 + Tên cột trong file CSV là chuẩn, là tham chiếu.
 ## Chi tiết cấu trúc các bảng dữ liệu:## (RẤT QUAN TRỌNG)
-# 1. Bảng DP01
+# 1. Bảng DP01 (Quan trọng)
 + Thống nhất cấu trúc dữ liệu Bảng DP01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
 + Theo chuẩn Temporal Table + Columnstore Indexes
 + Business Column tham chiếu theo file csv *dp01*
@@ -997,7 +946,7 @@ thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
-# 2. Bảng DPDA
+# 2. Bảng DPDA (Quan trọng)
 + Thống nhất cấu trúc dữ liệu Bảng DPDA phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
 + Theo chuẩn Temporal Table + Columnstore Indexes
 + Business Column tham chiếu theo file csv *dpda*
@@ -1012,7 +961,7 @@ thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
-# 3. Bảng EI01
+# 3. Bảng EI01 (Quan trọng)
 + Thống nhất cấu trúc dữ liệu Bảng EI01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
 + Theo chuẩn Temporal Table + Columnstore Indexes
 + Business Column tham chiếu theo file csv *ei01* (thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/)
@@ -1041,7 +990,7 @@ Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
-# 5. Bảng GL02
+# 5. Bảng GL02 (Quan trọng)
 + Thống nhất cấu trúc dữ liệu Bảng GL02 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
 + Theo chuẩn Partitioned Columnstore
 + Business Column tham chiếu theo file csv *gl02* (thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/)
@@ -1055,7 +1004,7 @@ Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
-# 5. Bảng GL41
+# 6. Bảng GL41 (Quan trọng)
 + Thống nhất cấu trúc dữ liệu Bảng GL41 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
 + Theo chuẩn Temporal Table + Columnstore Indexes
 + Business Column tham chiếu theo file csv *gl41* (thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/)
@@ -1069,3 +1018,61 @@ Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
+
+# 7. Bảng LN01 (Quan trọng)
+ Thống nhất cấu trúc dữ liệu Bảng LN01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
++ Theo chuẩn Temporal Table + Columnstore Indexes
++ Business Column tham chiếu theo file csv *ln01* (thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/)
++ Số lượng Cột busiess column = 79
++ Cho phép các trường, cột có giá trị NULL
++ Cột NGAY_DL trong bảng LN01 lấy từ filename của file csv *ln01*, sau đó định dạng datetime2 (dd/mm/yyyy)
++ Define (Model, Database, EF, BulkCopy) đảm bảo thống nhất:
+- Các cột có chứa "DATE", "NGAY", "DSBSDT", "DSBSMATDT", "APPRDT", "APPRMATDT"  đưa về format datetime2 (dd/mm/yyyy); 
+- Các cột có chứa "AMT", "DU_NO" "AMOUNT", "BALANCE", "SO_TIEN_GD", "SO_DU, "DAUKY", "CUOIKY", "GHINO", "GHICO", "ST", "SBT" ở dạng number #,###.00 (vd: 250,000.89) (có thể phải tạo proper conversion; có thể phải kiểm tra ở ParseGenericCSVAsync; ImportGenericCSVAsync; BulkInsertGenericAsync)
++ Các cột còn lại dạng String/Nvachar: Tất cả có độ dài 200 ký tự, riêng cột "REMARK" (nếu có) dài 1000 ký tự
++ Cấu trúc bảng dữ liệu: NGAY_DL -> Business Column -> Temporal/system column (nếu có)
++ Chỉ cho phép import các file có filename chứa ký tự "ln01"
++ Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
++ Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
+
+# 8. Bảng LN03 (Quan trọng)
+ Thống nhất cấu trúc dữ liệu Bảng LN03 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
++ Theo chuẩn Temporal Table + Columnstore Indexes
++ Business Column tham chiếu theo file csv *ln03* (thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/)
++ Số lượng Cột busiess column = 20 (17 cột có header + 3 cột không có header nhưng có dữ liệu)
++ Cho phép các trường, cột có giá trị NULL
++ Cột NGAY_DL trong bảng LN01 lấy từ filename của file csv *ln03*, sau đó định dạng datetime2 (dd/mm/yyyy)
++ Define (Model, Database, EF, BulkCopy) đảm bảo thống nhất:
+- Các cột có chứa "DATE", "NGAY", "DSBSDT", "DSBSMATDT", "APPRDT", "APPRMATDT"  đưa về format datetime2 (dd/mm/yyyy); 
+- Các cột có chứa "AMT", "THUNO" "AMOUNT", "BALANCE", "CONLAINGOAIBANG", "SOTIEN", "DUNONOIBANG", "CUOIKY", "GHINO", "GHICO", "ST", và cột cuối cùng (cột T) ở dạng number #,###.00 (vd: 250,000.89) (có thể phải tạo proper conversion; có thể phải kiểm tra ở ParseGenericCSVAsync; ImportGenericCSVAsync; BulkInsertGenericAsync)
++ Các cột còn lại dạng String/Nvachar: Tất cả có độ dài 200 ký tự, riêng cột "REMARK" (nếu có) dài 1000 ký tự
++ Cấu trúc bảng dữ liệu: NGAY_DL -> Business Column -> Temporal/system column (nếu có)
++ Chỉ cho phép import các file có filename chứa ký tự "ln03"
++ Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
++ Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
+
+# 9. Bảng RR01 (Quan trọng)
+ Thống nhất cấu trúc dữ liệu Bảng RR01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
++ Theo chuẩn Temporal Table + Columnstore Indexes
++ Business Column tham chiếu theo file csv *rr01* (thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/)
++ Số lượng Cột busiess column = 25
++ Cho phép các trường, cột có giá trị NULL
++ Cột NGAY_DL trong bảng RR01 lấy từ filename của file csv *rr01*, sau đó định dạng datetime2 (dd/mm/yyyy)
++ Define (Model, Database, EF, BulkCopy) đảm bảo thống nhất:
+- Các cột có chứa "DATE", "NGAY",   đưa về format datetime2 (dd/mm/yyyy); 
+- Các cột có chứa "AMT", "DUNO", "DATHU", "THU_GOC", "THU_LAI", "BDS", "DS" ở dạng number #,###.00 (vd: 250,000.89) (có thể phải tạo proper conversion; có thể phải kiểm tra ở ParseGenericCSVAsync; ImportGenericCSVAsync; BulkInsertGenericAsync)
++ Các cột còn lại dạng String/Nvachar: Tất cả có độ dài 200 ký tự, riêng cột "REMARK" (nếu có) dài 1000 ký tự
++ Cấu trúc bảng dữ liệu: NGAY_DL -> Business Column -> Temporal/system column (nếu có)
++ Chỉ cho phép import các file có filename chứa ký tự "rr01"
++ Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
++ Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
+
+
+**CÁCH TỔ CHỨC LẠI CODE:**
+1. Tạo repository layer cho mỗi entity (DP01Repository, LN01Repository, etc.)
+2. Tạo service layer cho business logic (DataPreviewService, ImportService, etc.)
+3. Tạo DTO/View Models cho API responses
+4. Viết unit tests để verify structure và functionality
+5. Chuyển TestDataController thành ProductionDataController với các endpoints rõ ràng và sử dụng services
+6. Tách biệt concerns: Controller chỉ xử lý HTTP requests, services xử lý business logic, repositories xử lý data access
+Việc tổ chức lại code theo cách này sẽ giúp cấu trúc dự án rõ ràng, dễ bảo trì và theo đúng các best practices trong phát triển phần mềm.

@@ -6,6 +6,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <!-- Tạm thời tắt một số nullable warnings để tập trung vào logic -->
     <NoWarn>CS8618;CS8604;CS8601;CS8602;CS8629;CS0219;CS1998</NoWarn>
+    <!-- XML Documentation for Swagger -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
@@ -25,6 +27,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="NPOI" Version="2.7.3" />
+    <PackageReference Include="Scrutor" Version="6.1.0" />
     <PackageReference Include="StackExchange.Redis" Version="2.8.41" />    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageReference Include="EPPlus" Version="8.0.5" />
     <PackageReference Include="QuestPDF" Version="2024.3.0" />
