@@ -2189,21 +2189,53 @@ namespace TinhKhoanApp.Api.Services
                 using var connection = new SqlConnection(_connectionString);
                 await connection.OpenAsync();
 
-                var sql = @"
-                    WITH TableCounts AS (
-                        SELECT 'DP01' as TableName, COUNT(*) as RecordCount FROM DP01
-                        UNION ALL SELECT 'DPDA', COUNT(*) FROM DPDA
-                        UNION ALL SELECT 'EI01', COUNT(*) FROM EI01
-                        UNION ALL SELECT 'GL01', COUNT(*) FROM GL01
-                        UNION ALL SELECT 'GL41', COUNT(*) FROM GL41
-                        UNION ALL SELECT 'LN01', COUNT(*) FROM LN01
-                        UNION ALL SELECT 'LN03', COUNT(*) FROM LN03
-                        UNION ALL SELECT 'RR01', COUNT(*) FROM RR01
-                    )
-                    SELECT TableName, RecordCount FROM TableCounts
-                    ORDER BY TableName";
+                // Kiểm tra các bảng tồn tại trước khi truy vấn count
+                var existingTables = new List<string>();
+                string checkTablesSql = @"
+                    SELECT TABLE_NAME 
+                    FROM INFORMATION_SCHEMA.TABLES 
+                    WHERE TABLE_TYPE='BASE TABLE'
+                    AND TABLE_NAME IN ('DP01', 'DPDA', 'EI01', 'GL01', 'GL41', 'LN01', 'LN03', 'RR01')";
+                
+                using (var checkCmd = new SqlCommand(checkTablesSql, connection))
+                {
+                    using var checkReader = await checkCmd.ExecuteReaderAsync();
+                    while (await checkReader.ReadAsync())
+                    {
+                        existingTables.Add(checkReader.GetString(0));
+                    }
+                }
 
-                using var command = new SqlCommand(sql, connection);
+                _logger.LogInformation("📊 Existing tables: {Tables}", string.Join(", ", existingTables));
+
+                // Tạo SQL động dựa trên các bảng thực sự tồn tại
+                var sqlBuilder = new System.Text.StringBuilder("WITH TableCounts AS (");
+                bool isFirst = true;
+
+                foreach (var table in existingTables)
+                {
+                    if (!isFirst) sqlBuilder.Append(" UNION ALL ");
+                    sqlBuilder.AppendFormat("SELECT '{0}' as TableName, COUNT(*) as RecordCount FROM {0}", table);
+                    isFirst = false;
+                }
+
+                sqlBuilder.Append(") SELECT TableName, RecordCount FROM TableCounts ORDER BY TableName");
+
+                // Đặt giá trị mặc định 0 cho các bảng không tồn tại
+                foreach (var table in new[] { "DP01", "DPDA", "EI01", "GL01", "GL41", "LN01", "LN03", "RR01" })
+                {
+                    counts[table] = 0; // Giá trị mặc định
+                }
+
+                // Nếu không có bảng nào tồn tại, trả về counts với tất cả giá trị 0
+                if (existingTables.Count == 0)
+                {
+                    _logger.LogWarning("⚠️ No data tables exist in the database yet");
+                    return counts;
+                }
+
+                // Truy vấn số lượng bản ghi cho các bảng tồn tại
+                using var command = new SqlCommand(sqlBuilder.ToString(), connection);
                 using var reader = await command.ExecuteReaderAsync();
 
                 while (await reader.ReadAsync())
@@ -2215,7 +2247,7 @@ namespace TinhKhoanApp.Api.Services
                     _logger.LogDebug("📊 {TableName}: {RecordCount} records", tableName, recordCount);
                 }
 
-                _logger.LogInformation("✅ Successfully retrieved record counts for {TableCount} tables", counts.Count);
+                _logger.LogInformation("✅ Successfully retrieved record counts for {TableCount} tables", existingTables.Count);
                 return counts;
             }
             catch (Exception ex)
