@@ -1,0 +1,194 @@
+using Microsoft.EntityFrameworkCore;
+using TinhKhoanApp.Api.Models.DataTables;
+using TinhKhoanApp.Api.Models.DTOs;
+using TinhKhoanApp.Api.Repositories;
+
+namespace TinhKhoanApp.Api.Services
+{
+    /// <summary>
+    /// Service implementation for RR01 operations
+    /// </summary>
+    public class RR01Service : IRR01Service
+    {
+        private readonly IRR01Repository _repository;
+        private readonly ILogger<RR01Service> _logger;
+
+        public RR01Service(IRR01Repository repository, ILogger<RR01Service> logger)
+        {
+            _repository = repository;
+            _logger = logger;
+        }
+
+        /// <inheritdoc />
+        public async Task<IEnumerable<RR01DTO>> GetAllAsync()
+        {
+            var entities = await _repository.GetAllAsync();
+            return entities.Select(RR01DTO.FromEntity);
+        }
+
+        /// <inheritdoc />
+        public async Task<RR01DTO?> GetByIdAsync(long id)
+        {
+            var entity = await _repository.GetByIdAsync(id);
+            return entity != null ? RR01DTO.FromEntity(entity) : null;
+        }
+
+        /// <inheritdoc />
+        public async Task<IEnumerable<RR01DTO>> GetByDateAsync(DateTime statementDate)
+        {
+            var entities = await _repository.GetByDateAsync(statementDate);
+            return entities.Select(RR01DTO.FromEntity);
+        }
+
+        /// <inheritdoc />
+        public async Task<IEnumerable<RR01DTO>> GetByBranchAsync(string branchCode, DateTime? statementDate = null)
+        {
+            var entities = await _repository.GetByBranchAsync(branchCode, statementDate);
+            return entities.Select(RR01DTO.FromEntity);
+        }
+
+        /// <inheritdoc />
+        public async Task<IEnumerable<RR01DTO>> GetByCustomerAsync(string customerId, DateTime? statementDate = null)
+        {
+            var entities = await _repository.GetByCustomerAsync(customerId, statementDate);
+            return entities.Select(RR01DTO.FromEntity);
+        }
+
+        /// <inheritdoc />
+        public async Task<IEnumerable<RR01DTO>> GetByFileNameAsync(string fileName)
+        {
+            var entities = await _repository.GetByFileNameAsync(fileName);
+            return entities.Select(RR01DTO.FromEntity);
+        }
+
+        /// <inheritdoc />
+        public async Task<(IEnumerable<RR01DTO> Records, int TotalCount)> GetPagedAsync(
+            int pageNumber,
+            int pageSize,
+            DateTime? statementDate = null,
+            string? branchCode = null,
+            string? customerId = null)
+        {
+            var (entities, totalCount) = await _repository.GetPagedAsync(
+                pageNumber,
+                pageSize,
+                statementDate,
+                branchCode,
+                customerId);
+
+            return (entities.Select(RR01DTO.FromEntity), totalCount);
+        }
+
+        /// <inheritdoc />
+        public async Task<RR01DTO> CreateAsync(CreateRR01DTO createDto)
+        {
+            var entity = createDto.ToEntity();
+            var createdEntity = await _repository.AddAsync(entity);
+            return RR01DTO.FromEntity(createdEntity);
+        }
+
+        /// <inheritdoc />
+        public async Task<RR01DTO?> UpdateAsync(long id, UpdateRR01DTO updateDto)
+        {
+            var existingEntity = await _repository.GetByIdAsync(id);
+            if (existingEntity == null)
+            {
+                _logger.LogWarning("RR01 record with ID {Id} not found for update", id);
+                return null;
+            }
+
+            updateDto.UpdateEntity(existingEntity);
+            await _repository.UpdateAsync(existingEntity);
+            return RR01DTO.FromEntity(existingEntity);
+        }
+
+        /// <inheritdoc />
+        public async Task<bool> DeleteAsync(long id)
+        {
+            var existingEntity = await _repository.GetByIdAsync(id);
+            if (existingEntity == null)
+            {
+                _logger.LogWarning("RR01 record with ID {Id} not found for deletion", id);
+                return false;
+            }
+
+            await _repository.DeleteAsync(existingEntity);
+            return true;
+        }
+
+        /// <inheritdoc />
+        public async Task<IEnumerable<DateTime>> GetDistinctDatesAsync()
+        {
+            var allEntities = await _repository.GetAllAsync();
+            return allEntities
+                .Select(e => e.NGAY_DL.Date)
+                .Distinct()
+                .OrderByDescending(d => d);
+        }
+
+        /// <inheritdoc />
+        public async Task<IEnumerable<string>> GetDistinctBranchesAsync(DateTime? statementDate = null)
+        {
+            IEnumerable<RR01> entities;
+
+            if (statementDate.HasValue)
+            {
+                entities = await _repository.GetByDateAsync(statementDate.Value);
+            }
+            else
+            {
+                entities = await _repository.GetAllAsync();
+            }
+
+            return entities
+                .Select(e => e.BRCD.Trim())
+                .Where(b => !string.IsNullOrEmpty(b))
+                .Distinct()
+                .OrderBy(b => b);
+        }
+
+        /// <inheritdoc />
+        public async Task<object> GetSummaryStatisticsAsync(DateTime statementDate)
+        {
+            var entities = await _repository.GetByDateAsync(statementDate);
+
+            // Prepare summary statistics
+            var totalRecords = entities.Count();
+            var distinctBranches = entities.Select(e => e.BRCD.Trim()).Distinct().Count();
+            var distinctCustomers = entities.Select(e => e.MA_KH.Trim()).Distinct().Count();
+
+            // Try to parse numeric fields and calculate totals
+            decimal totalDunoGoc = 0;
+            decimal totalDunoLai = 0;
+            decimal totalThuGoc = 0;
+            decimal totalThuLai = 0;
+
+            foreach (var entity in entities)
+            {
+                if (decimal.TryParse(entity.DUNO_GOC_HIENTAI, out decimal dunoGoc))
+                    totalDunoGoc += dunoGoc;
+
+                if (decimal.TryParse(entity.DUNO_LAI_HIENTAI, out decimal dunoLai))
+                    totalDunoLai += dunoLai;
+
+                if (decimal.TryParse(entity.THU_GOC, out decimal thuGoc))
+                    totalThuGoc += thuGoc;
+
+                if (decimal.TryParse(entity.THU_LAI, out decimal thuLai))
+                    totalThuLai += thuLai;
+            }
+
+            return new
+            {
+                StatementDate = statementDate,
+                TotalRecords = totalRecords,
+                DistinctBranches = distinctBranches,
+                DistinctCustomers = distinctCustomers,
+                TotalDunoGoc = totalDunoGoc,
+                TotalDunoLai = totalDunoLai,
+                TotalThuGoc = totalThuGoc,
+                TotalThuLai = totalThuLai
+            };
+        }
+    }
+}
