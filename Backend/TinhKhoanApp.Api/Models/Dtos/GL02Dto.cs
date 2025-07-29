@@ -13,32 +13,32 @@ namespace TinhKhoanApp.Api.Models.DTOs
         /// <summary>
         /// Ngày dữ liệu
         /// </summary>
-        public DateTime NGAY_DL { get; set; }
+        public DateTime NgayDL { get; set; }
 
         /// <summary>
         /// Mã chi nhánh giao dịch
         /// </summary>
-        public string? TRBRCD { get; set; }
+        public string? MaChiNhanh { get; set; }
 
         /// <summary>
         /// Mã người dùng
         /// </summary>
-        public string? USERID { get; set; }
-
-        /// <summary>
-        /// Số thứ tự nhật ký
-        /// </summary>
-        public string? JOURSEQ { get; set; }
-
-        /// <summary>
-        /// Số thứ tự giao dịch trong ngày
-        /// </summary>
-        public string? DYTRSEQ { get; set; }
+        public string? MaNguoiDung { get; set; }
 
         /// <summary>
         /// Mã tài khoản
         /// </summary>
-        public string? LOCAC { get; set; }
+        public string? MaTaiKhoan { get; set; }
+
+        /// <summary>
+        /// Loại tiền tệ
+        /// </summary>
+        public string? LoaiTien { get; set; }
+
+        /// <summary>
+        /// Mã đơn vị
+        /// </summary>
+        public string? MaDonVi { get; set; }
 
         /// <summary>
         /// Mã khách hàng

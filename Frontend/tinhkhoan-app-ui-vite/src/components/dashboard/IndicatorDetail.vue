@@ -15,16 +15,18 @@
           <el-button size="small" :type="timeRange === 'month' ? 'primary' : 'default'" @click="timeRange = 'month'">
             Tháng
           </el-button>
-          <el-button size="small" :type="timeRange === 'quarter' ? 'primary' : 'default'" @click="timeRange = 'quarter'">
+          <el-button
+            size="small"
+            :type="timeRange === 'quarter' ? 'primary' : 'default'"
+            @click="timeRange = 'quarter'"
+          >
             Quý
           </el-button>
           <el-button size="small" :type="timeRange === 'year' ? 'primary' : 'default'" @click="timeRange = 'year'">
             Năm
           </el-button>
         </el-button-group>
-        <el-button size="small" @click="exportDetail">
-          <i class="mdi mdi-download"></i> Xuất báo cáo
-        </el-button>
+        <el-button size="small" @click="exportDetail"> <i class="mdi mdi-download"></i> Xuất báo cáo </el-button>
       </div>
     </div>
 
@@ -52,9 +54,7 @@
         <el-col :span="6">
           <div class="overview-card">
             <div class="card-title">Tỷ lệ hoàn thành</div>
-            <div class="card-value" :class="completionClass">
-              {{ completionRate.toFixed(1) }}%
-            </div>
+            <div class="card-value" :class="completionClass">{{ completionRate.toFixed(1) }}%</div>
           </div>
         </el-col>
         <el-col :span="6">
@@ -94,12 +94,7 @@
             <div class="chart-header">
               <h4>Phân tích theo đơn vị</h4>
             </div>
-            <comparison-chart
-              :data="unitDetailData"
-              :height="350"
-              type="bar"
-              :indicator="indicator.Code"
-            />
+            <comparison-chart :data="unitDetailData" :height="350" type="bar" :indicator="indicator.Code" />
           </div>
         </el-col>
       </el-row>
@@ -110,12 +105,7 @@
       <div class="table-header">
         <h4>Chi tiết theo đơn vị</h4>
         <div class="table-actions">
-          <el-input
-            v-model="searchText"
-            placeholder="Tìm kiếm đơn vị..."
-            size="small"
-            style="width: 200px"
-          >
+          <el-input v-model="searchText" placeholder="Tìm kiếm đơn vị..." size="small" style="width: 200px">
             <template #prefix>
               <i class="mdi mdi-magnify"></i>
             </template>
@@ -123,12 +113,7 @@
         </div>
       </div>
 
-      <el-table
-        :data="filteredTableData"
-        stripe
-        height="300"
-        @sort-change="handleSortChange"
-      >
+      <el-table :data="filteredTableData" stripe height="300" @sort-change="handleSortChange">
         <el-table-column prop="unitName" label="Đơn vị" width="180" />
         <el-table-column prop="actualValue" label="Thực hiện" align="right" sortable width="120">
           <template #default="{ row }">
@@ -142,24 +127,24 @@
         </el-table-column>
         <el-table-column prop="completionRate" label="Tỷ lệ (%)" align="right" sortable width="100">
           <template #default="{ row }">
-            <span :class="getCompletionClass(row.completionRate)">
-              {{ row.completionRate.toFixed(1) }}%
-            </span>
+            <span :class="getCompletionClass(row.completionRate)"> {{ row.completionRate.toFixed(1) }}% </span>
           </template>
         </el-table-column>
         <el-table-column prop="vsStartYear" label="So với đầu năm" align="right" sortable width="140">
           <template #default="{ row }">
             <span :class="getChangeClass(row.vsStartYear, indicator.Code)">
-              {{ row.vsStartYear >= 0 ? '+' : '' }}{{ formatValue(row.vsStartYear) }}
-              ({{ row.vsStartYearPercent >= 0 ? '+' : '' }}{{ row.vsStartYearPercent.toFixed(1) }}%)
+              {{ row.vsStartYear >= 0 ? '+' : '' }}{{ formatValue(row.vsStartYear) }} ({{
+                row.vsStartYearPercent >= 0 ? '+' : ''
+              }}{{ row.vsStartYearPercent.toFixed(1) }}%)
             </span>
           </template>
         </el-table-column>
         <el-table-column prop="vsStartMonth" label="So với đầu tháng" align="right" sortable width="140">
           <template #default="{ row }">
             <span :class="getChangeClass(row.vsStartMonth, indicator.Code)">
-              {{ row.vsStartMonth >= 0 ? '+' : '' }}{{ formatValue(row.vsStartMonth) }}
-              ({{ row.vsStartMonthPercent >= 0 ? '+' : '' }}{{ row.vsStartMonthPercent.toFixed(1) }}%)
+              {{ row.vsStartMonth >= 0 ? '+' : '' }}{{ formatValue(row.vsStartMonth) }} ({{
+                row.vsStartMonthPercent >= 0 ? '+' : ''
+              }}{{ row.vsStartMonthPercent.toFixed(1) }}%)
             </span>
           </template>
         </el-table-column>
@@ -172,9 +157,7 @@
         </el-table-column>
         <el-table-column label="Thao tác" width="100" align="center" fixed="right">
           <template #default="{ row }">
-            <el-button size="small" type="text" @click="drillDown(row)">
-              Chi tiết
-            </el-button>
+            <el-button size="small" type="text" @click="drillDown(row)"> Chi tiết </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -183,32 +166,32 @@
 </template>
 
 <script setup>
-import { ElMessage } from 'element-plus';
-import { computed, onMounted, ref, watch } from 'vue';
-import ComparisonChart from './ComparisonChart.vue';
-import TrendChart from './TrendChart.vue';
+import { ElMessage } from 'element-plus'
+import { computed, onMounted, ref, watch } from 'vue'
+import ComparisonChart from './ComparisonChart.vue'
+import TrendChart from './TrendChart.vue'
 
 const props = defineProps({
   indicator: {
     type: Object,
-    required: true
+    required: true,
   },
   unitId: {
     type: [String, Number],
-    default: null
+    default: null,
   },
   date: {
     type: String,
-    required: true
-  }
-});
+    required: true,
+  },
+})
 
-const emit = defineEmits(['filter-change']);
+const emit = defineEmits(['filter-change'])
 
 // State
-const timeRange = ref('month');
-const selectedMetrics = ref(['actual', 'plan']);
-const searchText = ref('');
+const timeRange = ref('month')
+const selectedMetrics = ref(['actual', 'plan'])
+const searchText = ref('')
 
 // Mock data - sẽ được thay thế bằng API calls thực tế
 const detailTrendData = ref([
@@ -217,8 +200,8 @@ const detailTrendData = ref([
   { period: 'T3', actual: 1050, plan: 1000, yoy: 980 },
   { period: 'T4', actual: 1180, plan: 1100, yoy: 1050 },
   { period: 'T5', actual: 1320, plan: 1200, yoy: 1180 },
-  { period: 'T6', actual: 1450, plan: 1350, yoy: 1280 }
-]);
+  { period: 'T6', actual: 1450, plan: 1350, yoy: 1280 },
+])
 
 const unitDetailData = ref([
   {
@@ -230,7 +213,7 @@ const unitDetailData = ref([
     vsStartYear: 150,
     vsStartYearPercent: 11.5,
     vsStartMonth: 30,
-    vsStartMonthPercent: 2.1
+    vsStartMonthPercent: 2.1,
   },
   {
     unitName: 'Chi nhánh Đoàn Kết',
@@ -241,7 +224,7 @@ const unitDetailData = ref([
     vsStartYear: 120,
     vsStartYearPercent: 13.9,
     vsStartMonth: 25,
-    vsStartMonthPercent: 2.6
+    vsStartMonthPercent: 2.6,
   },
   {
     unitName: 'Chi nhánh Bình Lư',
@@ -252,7 +235,7 @@ const unitDetailData = ref([
     vsStartYear: 180,
     vsStartYearPercent: 17.6,
     vsStartMonth: 40,
-    vsStartMonthPercent: 3.4
+    vsStartMonthPercent: 3.4,
   },
   {
     unitName: 'Chi nhánh Tân Uyên',
@@ -263,7 +246,7 @@ const unitDetailData = ref([
     vsStartYear: 100,
     vsStartYearPercent: 13.3,
     vsStartMonth: 20,
-    vsStartMonthPercent: 2.4
+    vsStartMonthPercent: 2.4,
   },
   {
     unitName: 'Chi nhánh Sìn Hồ',
@@ -274,7 +257,7 @@ const unitDetailData = ref([
     vsStartYear: 110,
     vsStartYearPercent: 16.4,
     vsStartMonth: 15,
-    vsStartMonthPercent: 2.0
+    vsStartMonthPercent: 2.0,
   },
   {
     unitName: 'Chi nhánh Phong Thổ',
@@ -285,7 +268,7 @@ const unitDetailData = ref([
     vsStartYear: 130,
     vsStartYearPercent: 16.5,
     vsStartMonth: 35,
-    vsStartMonthPercent: 4.0
+    vsStartMonthPercent: 4.0,
   },
   {
     unitName: 'Chi nhánh Than Uyên',
@@ -296,7 +279,7 @@ const unitDetailData = ref([
     vsStartYear: 90,
     vsStartYearPercent: 13.6,
     vsStartMonth: 18,
-    vsStartMonthPercent: 2.5
+    vsStartMonthPercent: 2.5,
   },
   {
     unitName: 'Chi nhánh Bum Tở',
@@ -307,7 +290,7 @@ const unitDetailData = ref([
     vsStartYear: 85,
     vsStartYearPercent: 14.3,
     vsStartMonth: 12,
-    vsStartMonthPercent: 1.8
+    vsStartMonthPercent: 1.8,
   },
   {
     unitName: 'Chi nhánh Nậm Hàng',
@@ -318,80 +301,78 @@ const unitDetailData = ref([
     vsStartYear: 80,
     vsStartYearPercent: 14.0,
     vsStartMonth: 15,
-    vsStartMonthPercent: 2.4
-  }
-]);
+    vsStartMonthPercent: 2.4,
+  },
+])
 
 // Computed
 const completionRate = computed(() => {
-  if (!props.indicator.planValue || props.indicator.planValue === 0) return 0;
-  return (props.indicator.actualValue / props.indicator.planValue) * 100;
-});
+  if (!props.indicator.planValue || props.indicator.planValue === 0) return 0
+  return (props.indicator.actualValue / props.indicator.planValue) * 100
+})
 
 const completionClass = computed(() => {
-  const rate = completionRate.value;
-  if (rate >= 100) return 'positive';
-  if (rate >= 80) return 'warning';
-  return 'negative';
-});
+  const rate = completionRate.value
+  if (rate >= 100) return 'positive'
+  if (rate >= 80) return 'warning'
+  return 'negative'
+})
 
 const filteredTableData = computed(() => {
-  if (!searchText.value) return unitDetailData.value;
+  if (!searchText.value) return unitDetailData.value
 
-  return unitDetailData.value.filter(item =>
-    item.unitName.toLowerCase().includes(searchText.value.toLowerCase())
-  );
-});
+  return unitDetailData.value.filter(item => item.unitName.toLowerCase().includes(searchText.value.toLowerCase()))
+})
 
 // Methods
-const formatValue = (value) => {
+const formatValue = value => {
   if (props.indicator.unit === '%') {
-    return value.toFixed(2);
+    return value.toFixed(2)
   }
-  return new Intl.NumberFormat('vi-VN').format(value);
-};
+  return new Intl.NumberFormat('vi-VN').format(value)
+}
 
-const getCompletionClass = (rate) => {
-  if (rate >= 100) return 'positive';
-  if (rate >= 80) return 'warning';
-  return 'negative';
-};
+const getCompletionClass = rate => {
+  if (rate >= 100) return 'positive'
+  if (rate >= 80) return 'warning'
+  return 'negative'
+}
 
 const getChangeClass = (value, indicatorCode) => {
   // Đối với Tỷ lệ nợ xấu, giảm là tốt
   if (indicatorCode === 'TyLeNoXau') {
-    return value < 0 ? 'positive' : value > 0 ? 'negative' : '';
+    return value < 0 ? 'positive' : value > 0 ? 'negative' : ''
   }
   // Đối với các chỉ tiêu khác, tăng là tốt
-  return value > 0 ? 'positive' : value < 0 ? 'negative' : '';
-};
+  return value > 0 ? 'positive' : value < 0 ? 'negative' : ''
+}
 
 const exportDetail = () => {
-  ElMessage.info('Tính năng xuất báo cáo chi tiết đang phát triển');
-};
+  ElMessage.info('Tính năng xuất báo cáo chi tiết đang phát triển')
+}
 
 const handleSortChange = ({ column, prop, order }) => {
   // TODO: Implement sorting
-  console.log('Sort change:', column, prop, order);
-};
+  console.log('Sort change:', column, prop, order)
+}
 
-const drillDown = (row) => {
-  ElMessage.info(`Xem chi tiết ${row.unitName}`);
+const drillDown = row => {
+  ElMessage.info(`Xem chi tiết ${row.unitName}`)
   // TODO: Navigate to unit-specific detail
-};
+}
 
 // Watchers
 watch([timeRange, selectedMetrics], () => {
   emit('filter-change', {
     timeRange: timeRange.value,
-    metrics: selectedMetrics.value
-  });
-});
+    metrics: selectedMetrics.value,
+  })
+})
 
 onMounted(() => {
   // Load initial data
-  console.log('IndicatorDetail mounted for:', props.indicator.Name);
-});
+  console.log('IndicatorDetail mounted for:', props.indicator.Name)
+})
 </script>
 
 <style scoped>
@@ -502,7 +483,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #EBEEF5;
+  border-bottom: 1px solid #ebeef5;
 }
 
 .table-header h4 {
@@ -512,15 +493,15 @@ onMounted(() => {
 }
 
 .positive {
-  color: #67C23A;
+  color: #67c23a;
 }
 
 .warning {
-  color: #E6A23C;
+  color: #e6a23c;
 }
 
 .negative {
-  color: #F56C6C;
+  color: #f56c6c;
 }
 
 :deep(.el-table) {

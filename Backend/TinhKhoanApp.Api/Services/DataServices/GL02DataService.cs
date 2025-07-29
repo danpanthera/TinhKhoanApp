@@ -1,10 +1,8 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models.DataTables;
 using TinhKhoanApp.Api.Models.DTOs;
 using TinhKhoanApp.Api.Repositories;
-using TinhKhoanApp.Api.Utilities;
 
 namespace TinhKhoanApp.Api.Services.DataServices
 {
@@ -15,13 +13,11 @@ namespace TinhKhoanApp.Api.Services.DataServices
     {
         private readonly IGL02Repository _repository;
         private readonly ILogger<GL02DataService> _logger;
-        private readonly ApplicationDbContext _context;
 
         public GL02DataService(IGL02Repository repository, ILogger<GL02DataService> logger)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _context = _repository.GetDbContext();
         }
 
         /// <inheritdoc/>
@@ -344,61 +340,60 @@ namespace TinhKhoanApp.Api.Services.DataServices
                         (e.REMARK != null && e.REMARK.Contains(keyword));
                 }
 
-                if (!string.IsNullOrEmpty(branchCode))
+                if (!string.IsNullOrWhiteSpace(branchCode))
                 {
-                    predicate = PredicateBuilder.And(predicate, e => e.TRBRCD == branchCode);
+                    predicate = predicate.And(e => e.TRBRCD == branchCode);
                 }
 
-                if (!string.IsNullOrEmpty(unit))
+                if (!string.IsNullOrWhiteSpace(unit))
                 {
-                    predicate = PredicateBuilder.And(predicate, e => e.UNIT == unit);
+                    predicate = predicate.And(e => e.UNIT == unit);
                 }
 
-                if (!string.IsNullOrEmpty(accountCode))
+                if (!string.IsNullOrWhiteSpace(accountCode))
                 {
-                    predicate = PredicateBuilder.And(predicate, e => e.LOCAC == accountCode);
+                    predicate = predicate.And(e => e.LOCAC == accountCode);
                 }
 
-                if (!string.IsNullOrEmpty(customer))
+                if (!string.IsNullOrWhiteSpace(customer))
                 {
-                    predicate = PredicateBuilder.And(predicate, e => e.CUSTOMER == customer);
+                    predicate = predicate.And(e => e.CUSTOMER == customer);
                 }
 
-                if (!string.IsNullOrEmpty(transactionType))
+                if (!string.IsNullOrWhiteSpace(transactionType))
                 {
-                    predicate = PredicateBuilder.And(predicate, e => e.TRTP == transactionType);
+                    predicate = predicate.And(e => e.TRTP == transactionType);
                 }
 
                 if (fromDate.HasValue)
                 {
-                    predicate = PredicateBuilder.And(predicate, e => e.NGAY_DL >= fromDate);
+                    var from = fromDate.Value.Date;
+                    predicate = predicate.And(e => e.NGAY_DL >= from);
                 }
 
                 if (toDate.HasValue)
                 {
-                    predicate = PredicateBuilder.And(predicate, e => e.NGAY_DL <= toDate);
+                    var to = toDate.Value.Date.AddDays(1).AddSeconds(-1);
+                    predicate = predicate.And(e => e.NGAY_DL <= to);
                 }
 
                 // Thực hiện tìm kiếm với phân trang
-                // Lấy dữ liệu phân trang
                 var (totalCount, items) = await _repository.GetPagedAsync(
                     predicate,
                     page,
                     pageSize,
-                    "NGAY_DL",
-                    false
+                    e => e.OrderByDescending(x => x.NGAY_DL).ThenByDescending(x => x.CRTDTM)
                 );
 
                 // Chuyển đổi kết quả sang DTO
-                var response = new PagedApiResponse<GL02PreviewDto>
+                return new PagedApiResponse<GL02PreviewDto>
                 {
                     TotalCount = totalCount,
                     PageSize = pageSize,
-                    Page = page,
-                    Data = items.Select(MapToPreviewDto).ToList()
+                    CurrentPage = page,
+                    TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
+                    Items = items.Select(MapToPreviewDto).ToList()
                 };
-
-                return response;
             }
             catch (Exception ex)
             {
@@ -459,7 +454,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
 
         #region Private methods and properties
 
-        // Not needed - we're already using the ApplicationDbContext from the constructor
+        private DbContext _context => (_repository as GL02Repository)?.GetDbContext();
 
         #endregion
     }

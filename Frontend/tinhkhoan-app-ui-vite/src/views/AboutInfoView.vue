@@ -3,15 +3,13 @@
     <div class="info-header">
       <h1>📋 Thông tin bản quyền</h1>
     </div>
-    
+
     <div class="info-content">
       <div class="copyright-card">
         <div class="card-icon">🏛️</div>
         <h2>Thông tin sản phẩm</h2>
-        <p class="copyright-text">
-          Đây là sản phẩm của <strong>Bộ phận IT - Phòng KTNQ Chi nhánh Lai Châu</strong>
-        </p>
-        
+        <p class="copyright-text">Đây là sản phẩm của <strong>Bộ phận IT - Phòng KTNQ Chi nhánh Lai Châu</strong></p>
+
         <div class="contact-info">
           <h3>📞 Thông tin liên hệ</h3>
           <div class="contact-details">
@@ -25,7 +23,7 @@
           </p>
         </div>
       </div>
-      
+
       <div class="agribank-info">
         <div class="bank-logo">🏦</div>
         <h3>Ngân hàng Nông nghiệp và Phát triển Nông thôn Việt Nam</h3>
@@ -36,17 +34,17 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { isAuthenticated } from '../services/auth';
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { isAuthenticated } from '../services/auth'
 
-const router = useRouter();
+const router = useRouter()
 
 onMounted(() => {
   if (!isAuthenticated()) {
-    router.push('/login');
+    router.push('/login')
   }
-});
+})
 </script>
 
 <style scoped>
@@ -62,7 +60,7 @@ onMounted(() => {
 }
 
 .info-header h1 {
-  color: #8B1538;
+  color: #8b1538;
   font-size: 2.5rem;
   font-weight: 700;
   text-shadow: 0 2px 4px rgba(139, 21, 56, 0.2);
@@ -90,7 +88,7 @@ onMounted(() => {
 }
 
 .copyright-card h2 {
-  color: #8B1538;
+  color: #8b1538;
   font-size: 1.8rem;
   font-weight: 600;
   margin-bottom: 20px;
@@ -111,7 +109,7 @@ onMounted(() => {
 }
 
 .contact-info h3 {
-  color: #8B1538;
+  color: #8b1538;
   font-size: 1.4rem;
   font-weight: 600;
   margin-bottom: 20px;
@@ -148,7 +146,7 @@ onMounted(() => {
 }
 
 .agribank-info {
-  background: linear-gradient(135deg, #8B1538, #A91B47);
+  background: linear-gradient(135deg, #8b1538, #a91b47);
   color: white;
   border-radius: 16px;
   padding: 25px;
@@ -177,23 +175,23 @@ onMounted(() => {
   .about-info {
     padding: 15px;
   }
-  
+
   .info-header h1 {
     font-size: 2rem;
   }
-  
+
   .copyright-card {
     padding: 20px;
   }
-  
+
   .copyright-text {
     font-size: 1.1rem;
   }
-  
+
   .contact-details {
     gap: 12px;
   }
-  
+
   .contact-item {
     font-size: 1rem;
   }
@@ -203,23 +201,23 @@ onMounted(() => {
   .info-header h1 {
     font-size: 1.6rem;
   }
-  
+
   .copyright-card h2 {
     font-size: 1.5rem;
   }
-  
+
   .copyright-text {
     font-size: 1rem;
   }
-  
+
   .contact-info h3 {
     font-size: 1.2rem;
   }
-  
+
   .card-icon {
     font-size: 3rem;
   }
-  
+
   .bank-logo {
     font-size: 2.5rem;
   }

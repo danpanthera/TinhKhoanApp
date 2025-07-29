@@ -6,9 +6,7 @@
         <i class="fas fa-chart-line"></i>
         Cấu hình KPI
       </h2>
-      <p class="page-subtitle">
-        Quản lý cấu hình KPI cho cán bộ và chi nhánh
-      </p>
+      <p class="page-subtitle">Quản lý cấu hình KPI cho cán bộ và chi nhánh</p>
     </div>
 
     <!-- Loading State -->
@@ -21,18 +19,12 @@
     <div v-else class="kpi-config-content">
       <!-- Tabs Navigation -->
       <div class="tabs-navigation">
-        <button
-          :class="['tab-btn', { active: activeTab === 'canbo' }]"
-          @click="switchTab('canbo')"
-        >
+        <button :class="['tab-btn', { active: activeTab === 'canbo' }]" @click="switchTab('canbo')">
           <i class="fas fa-users"></i>
           Dành cho Cán bộ
           <span class="tab-count">({{ canboTables.length }})</span>
         </button>
-        <button
-          :class="['tab-btn', { active: activeTab === 'chinhanh' }]"
-          @click="switchTab('chinhanh')"
-        >
+        <button :class="['tab-btn', { active: activeTab === 'chinhanh' }]" @click="switchTab('chinhanh')">
           <i class="fas fa-building"></i>
           Dành cho Chi nhánh
           <span class="tab-count">({{ chinhanhTables.length }})</span>
@@ -62,12 +54,7 @@
 
           <!-- Danh sách bảng KPI cán bộ -->
           <div class="kpi-tables-grid">
-            <div
-              v-for="table in canboTables"
-              :key="table.Id"
-              class="kpi-table-card"
-              @click="viewTableDetails(table)"
-            >
+            <div v-for="table in canboTables" :key="table.Id" class="kpi-table-card" @click="viewTableDetails(table)">
               <div class="card-header">
                 <h4 class="table-name">{{ table.Description }}</h4>
                 <span class="table-type">{{ table.TableName }}</span>
@@ -78,17 +65,11 @@
                   <span>{{ table.IndicatorCount || 0 }} chỉ tiêu</span>
                 </div>
                 <div class="card-actions">
-                  <button
-                    class="btn-view"
-                    @click.stop="viewIndicators(table)"
-                  >
+                  <button class="btn-view" @click.stop="viewIndicators(table)">
                     <i class="fas fa-eye"></i>
                     Xem chi tiết
                   </button>
-                  <button
-                    class="btn-edit"
-                    @click.stop="editTable(table)"
-                  >
+                  <button class="btn-edit" @click.stop="editTable(table)">
                     <i class="fas fa-edit"></i>
                     Chỉnh sửa
                   </button>
@@ -140,17 +121,11 @@
                   <span>{{ table.IndicatorCount || 0 }} chỉ tiêu</span>
                 </div>
                 <div class="card-actions">
-                  <button
-                    class="btn-view"
-                    @click.stop="viewIndicators(table)"
-                  >
+                  <button class="btn-view" @click.stop="viewIndicators(table)">
                     <i class="fas fa-eye"></i>
                     Xem chi tiết
                   </button>
-                  <button
-                    class="btn-edit"
-                    @click.stop="editTable(table)"
-                  >
+                  <button class="btn-edit" @click.stop="editTable(table)">
                     <i class="fas fa-edit"></i>
                     Chỉnh sửa
                   </button>
@@ -189,11 +164,7 @@
             <p>Chưa có chỉ tiêu KPI nào được cấu hình.</p>
           </div>
           <div v-else class="indicators-list">
-            <div
-              v-for="indicator in tableIndicators"
-              :key="indicator.Id"
-              class="indicator-item"
-            >
+            <div v-for="indicator in tableIndicators" :key="indicator.Id" class="indicator-item">
               <div class="indicator-info">
                 <div class="indicator-name">
                   <span class="order-index">{{ indicator.OrderIndex }}.</span>
@@ -243,13 +214,9 @@ export default {
     const loadingIndicators = ref(false)
 
     // Computed properties
-    const canboTables = computed(() =>
-      allTables.value.filter(table => table.Category === 'CANBO')
-    )
+    const canboTables = computed(() => allTables.value.filter(table => table.Category === 'CANBO'))
 
-    const chinhanhTables = computed(() =>
-      allTables.value.filter(table => table.Category === 'CHINHANH')
-    )
+    const chinhanhTables = computed(() => allTables.value.filter(table => table.Category === 'CHINHANH'))
 
     // Methods
     const loadKpiTables = async () => {
@@ -272,21 +239,21 @@ export default {
       }
     }
 
-    const switchTab = (tab) => {
+    const switchTab = tab => {
       activeTab.value = tab
     }
 
-    const getTotalIndicators = (category) => {
+    const getTotalIndicators = category => {
       const tables = allTables.value.filter(table => table.Category === category)
       return tables.reduce((total, table) => total + (table.IndicatorCount || 0), 0)
     }
 
-    const viewTableDetails = (table) => {
+    const viewTableDetails = table => {
       console.log('📋 View table details:', table.TableName)
       // TODO: Navigate to table detail page
     }
 
-    const viewIndicators = async (table) => {
+    const viewIndicators = async table => {
       try {
         selectedTable.value = table
         showIndicatorModal.value = true
@@ -312,7 +279,7 @@ export default {
       }
     }
 
-    const editTable = (table) => {
+    const editTable = table => {
       console.log('✏️ Edit table:', table.TableName)
       // TODO: Open edit modal
     }
@@ -323,12 +290,12 @@ export default {
       tableIndicators.value = []
     }
 
-    const getValueTypeLabel = (valueType) => {
+    const getValueTypeLabel = valueType => {
       const types = {
-        'NUMBER': 'Số',
-        'PERCENTAGE': 'Phần trăm',
-        'POINTS': 'Điểm',
-        'CURRENCY': 'Tiền tệ'
+        NUMBER: 'Số',
+        PERCENTAGE: 'Phần trăm',
+        POINTS: 'Điểm',
+        CURRENCY: 'Tiền tệ',
       }
       return types[valueType] || valueType
     }
@@ -359,9 +326,9 @@ export default {
       viewIndicators,
       editTable,
       closeIndicatorModal,
-      getValueTypeLabel
+      getValueTypeLabel,
     }
-  }
+  },
 }
 </script>
 
@@ -384,7 +351,7 @@ export default {
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 10px;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .page-title i {
@@ -411,7 +378,7 @@ export default {
 .spinner {
   width: 60px;
   height: 60px;
-  border: 4px solid rgba(255,255,255,0.3);
+  border: 4px solid rgba(255, 255, 255, 0.3);
   border-top: 4px solid #fff;
   border-radius: 50%;
   animation: spin 1s linear infinite;
@@ -419,8 +386,12 @@ export default {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Content */
@@ -430,7 +401,7 @@ export default {
   background: white;
   border-radius: 20px;
   padding: 30px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
 /* Tabs Navigation */
@@ -458,18 +429,18 @@ export default {
 }
 
 .tab-btn:hover {
-  color: #4CAF50;
+  color: #4caf50;
   background: rgba(76, 175, 80, 0.05);
 }
 
 .tab-btn.active {
-  color: #4CAF50;
-  border-bottom-color: #4CAF50;
+  color: #4caf50;
+  border-bottom-color: #4caf50;
   background: rgba(76, 175, 80, 0.1);
 }
 
 .tab-count {
-  background: #4CAF50;
+  background: #4caf50;
   color: white;
   padding: 4px 8px;
   border-radius: 12px;
@@ -514,7 +485,7 @@ export default {
 }
 
 .stat-item i {
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 /* KPI Tables Grid */
@@ -536,13 +507,13 @@ export default {
 }
 
 .kpi-table-card:hover {
-  border-color: #4CAF50;
+  border-color: #4caf50;
   box-shadow: 0 8px 25px rgba(76, 175, 80, 0.15);
   transform: translateY(-2px);
 }
 
 .kpi-table-card.branch-card:hover {
-  border-color: #2196F3;
+  border-color: #2196f3;
   box-shadow: 0 8px 25px rgba(33, 150, 243, 0.15);
 }
 
@@ -581,7 +552,7 @@ export default {
 }
 
 .indicator-count i {
-  color: #4CAF50;
+  color: #4caf50;
 }
 
 .card-actions {
@@ -589,7 +560,8 @@ export default {
   gap: 10px;
 }
 
-.btn-view, .btn-edit {
+.btn-view,
+.btn-edit {
   flex: 1;
   padding: 8px 12px;
   border: none;
@@ -605,21 +577,21 @@ export default {
 }
 
 .btn-view {
-  background: #2196F3;
+  background: #2196f3;
   color: white;
 }
 
 .btn-view:hover {
-  background: #1976D2;
+  background: #1976d2;
 }
 
 .btn-edit {
-  background: #FF9800;
+  background: #ff9800;
   color: white;
 }
 
 .btn-edit:hover {
-  background: #F57C00;
+  background: #f57c00;
 }
 
 .card-status {
@@ -636,7 +608,7 @@ export default {
 }
 
 .status-badge.active {
-  background: #4CAF50;
+  background: #4caf50;
   color: white;
 }
 
@@ -652,7 +624,7 @@ export default {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.7);
+  background: rgba(0, 0, 0, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -667,7 +639,7 @@ export default {
   width: 100%;
   max-height: 80vh;
   overflow: hidden;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
 .modal-header {
@@ -723,7 +695,7 @@ export default {
   width: 40px;
   height: 40px;
   border: 3px solid #f0f0f0;
-  border-top: 3px solid #4CAF50;
+  border-top: 3px solid #4caf50;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 15px;
@@ -758,7 +730,7 @@ export default {
 }
 
 .indicator-item:hover {
-  border-color: #4CAF50;
+  border-color: #4caf50;
   background: rgba(76, 175, 80, 0.05);
 }
 
@@ -777,7 +749,7 @@ export default {
 }
 
 .order-index {
-  background: #4CAF50;
+  background: #4caf50;
   color: white;
   padding: 2px 8px;
   border-radius: 50%;
@@ -802,15 +774,15 @@ export default {
 }
 
 .max-score i {
-  color: #FF9800;
+  color: #ff9800;
 }
 
 .unit i {
-  color: #2196F3;
+  color: #2196f3;
 }
 
 .value-type i {
-  color: #9C27B0;
+  color: #9c27b0;
 }
 
 .indicator-status {

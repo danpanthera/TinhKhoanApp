@@ -10,7 +10,7 @@ export const formatNumber = (value, decimals = 2) => {
   return new Intl.NumberFormat('en-US', {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
-    useGrouping: true
+    useGrouping: true,
   }).format(Number(value))
 }
 
@@ -18,26 +18,30 @@ export const formatNumber = (value, decimals = 2) => {
 export const formatCurrency = (value, decimals = 2) => {
   if (value === null || value === undefined || isNaN(value)) return '0.00 VND'
 
-  return new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-    useGrouping: true
-  }).format(Number(value)) + ' VND'
+  return (
+    new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+      useGrouping: true,
+    }).format(Number(value)) + ' VND'
+  )
 }
 
 // Percentage format
 export const formatPercentage = (value, decimals = 2) => {
   if (value === null || value === undefined || isNaN(value)) return '0.00%'
 
-  return new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-    useGrouping: true
-  }).format(Number(value)) + '%'
+  return (
+    new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+      useGrouping: true,
+    }).format(Number(value)) + '%'
+  )
 }
 
 // Parse US formatted number back to numeric
-export const parseFormattedNumber = (formattedValue) => {
+export const parseFormattedNumber = formattedValue => {
   if (!formattedValue) return 0
 
   // Remove commas and parse as float
@@ -46,8 +50,8 @@ export const parseFormattedNumber = (formattedValue) => {
 
 // Composable for number input formatting
 export const useNumberInput = () => {
-  const formatInput = (value) => formatNumber(value)
-  const parseInput = (value) => parseFormattedNumber(value)
+  const formatInput = value => formatNumber(value)
+  const parseInput = value => parseFormattedNumber(value)
 
   return {
     formatInput,
@@ -55,7 +59,7 @@ export const useNumberInput = () => {
     formatNumber,
     formatCurrency,
     formatPercentage,
-    parseFormattedNumber
+    parseFormattedNumber,
   }
 }
 
@@ -65,6 +69,6 @@ export const numberFormatMixin = {
     $formatNumber: formatNumber,
     $formatCurrency: formatCurrency,
     $formatPercentage: formatPercentage,
-    $parseNumber: parseFormattedNumber
-  }
+    $parseNumber: parseFormattedNumber,
+  },
 }

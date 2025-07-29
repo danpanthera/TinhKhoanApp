@@ -13,7 +13,6 @@ using TinhKhoanApp.Api.Models.DataTables;
 using TinhKhoanApp.Api.Services.Interfaces;
 using CsvHelper;
 using OfficeOpenXml;
-using TinhKhoanApp.Api.Services.Interfaces;
 
 namespace TinhKhoanApp.Api.Services
 {
@@ -21,7 +20,7 @@ namespace TinhKhoanApp.Api.Services
     /// Direct Import Service - Import trực tiếp vào bảng riêng biệt sử dụng SqlBulkCopy
     /// Loại bỏ hoàn toàn ImportedDataItems để tăng hiệu năng 2-5x
     /// </summary>
-    public class DirectImportService : Interfaces.IDirectImportService
+    public class DirectImportService
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<DirectImportService> _logger;

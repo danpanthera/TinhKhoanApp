@@ -4,7 +4,7 @@
       <h1>💻 Thông tin phần mềm</h1>
       <p class="info-subtitle">Chi tiết thông số kỹ thuật và phiên bản hệ thống</p>
     </div>
-    
+
     <div class="info-content">
       <div class="version-card">
         <div class="version-icon">🔖</div>
@@ -12,7 +12,7 @@
         <div class="version-number">v1.0.0</div>
         <div class="version-date">Phát hành: Tháng 12, 2024</div>
       </div>
-      
+
       <div class="details-grid">
         <div class="detail-card">
           <div class="detail-icon">🏗️</div>
@@ -32,7 +32,7 @@
             </div>
           </div>
         </div>
-        
+
         <div class="detail-card">
           <div class="detail-icon">⚙️</div>
           <h3>Thông số kỹ thuật</h3>
@@ -51,7 +51,7 @@
             </div>
           </div>
         </div>
-        
+
         <div class="detail-card">
           <div class="detail-icon">👨‍💻</div>
           <h3>Thông tin phát triển</h3>
@@ -70,7 +70,7 @@
             </div>
           </div>
         </div>
-        
+
         <div class="detail-card">
           <div class="detail-icon">🔧</div>
           <h3>Tính năng chính</h3>
@@ -82,7 +82,7 @@
           </div>
         </div>
       </div>
-      
+
       <div class="changelog-card">
         <h3>📋 Lịch sử cập nhật</h3>
         <div class="changelog-list">
@@ -90,9 +90,9 @@
             <div class="changelog-version">v1.0.0</div>
             <div class="changelog-date">Tháng 12, 2024</div>
             <div class="changelog-description">
-              • Phiên bản chính thức đầu tiên<br>
-              • Hoàn thiện tất cả chức năng cơ bản<br>
-              • Giao diện thương hiệu Agribank<br>
+              • Phiên bản chính thức đầu tiên<br />
+              • Hoàn thiện tất cả chức năng cơ bản<br />
+              • Giao diện thương hiệu Agribank<br />
               • Hệ thống báo cáo đầy đủ
             </div>
           </div>
@@ -103,26 +103,26 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { isAuthenticated } from '../services/auth';
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { isAuthenticated } from '../services/auth'
 
-const router = useRouter();
-const buildDate = ref('');
+const router = useRouter()
+const buildDate = ref('')
 
 onMounted(() => {
   if (!isAuthenticated()) {
-    router.push('/login');
+    router.push('/login')
   }
-  
+
   // Set current date as build date
-  const now = new Date();
+  const now = new Date()
   buildDate.value = now.toLocaleDateString('vi-VN', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric'
-  });
-});
+    day: 'numeric',
+  })
+})
 </script>
 
 <style scoped>
@@ -138,7 +138,7 @@ onMounted(() => {
 }
 
 .info-header h1 {
-  color: #8B1538;
+  color: #8b1538;
   font-size: 2.5rem;
   font-weight: 700;
   text-shadow: 0 2px 4px rgba(139, 21, 56, 0.2);
@@ -146,7 +146,7 @@ onMounted(() => {
 }
 
 .info-subtitle {
-  color: #A91B47;
+  color: #a91b47;
   font-size: 1.2rem;
   font-weight: 500;
 }
@@ -158,7 +158,7 @@ onMounted(() => {
 }
 
 .version-card {
-  background: linear-gradient(135deg, #8B1538, #A91B47);
+  background: linear-gradient(135deg, #8b1538, #a91b47);
   color: white;
   border-radius: 20px;
   padding: 40px;
@@ -210,7 +210,7 @@ onMounted(() => {
 }
 
 .detail-card h3 {
-  color: #8B1538;
+  color: #8b1538;
   font-size: 1.3rem;
   font-weight: 600;
   margin-bottom: 20px;
@@ -229,7 +229,7 @@ onMounted(() => {
 }
 
 .detail-item strong {
-  color: #8B1538;
+  color: #8b1538;
   font-size: 0.9rem;
   font-weight: 600;
 }
@@ -241,7 +241,7 @@ onMounted(() => {
 
 .feature-tag {
   display: inline-block;
-  background: linear-gradient(135deg, #8B1538, #A91B47);
+  background: linear-gradient(135deg, #8b1538, #a91b47);
   color: white;
   padding: 6px 12px;
   border-radius: 15px;
@@ -260,7 +260,7 @@ onMounted(() => {
 }
 
 .changelog-card h3 {
-  color: #8B1538;
+  color: #8b1538;
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 25px;
@@ -277,18 +277,18 @@ onMounted(() => {
   background: rgba(139, 21, 56, 0.05);
   border-radius: 12px;
   padding: 20px;
-  border-left: 4px solid #8B1538;
+  border-left: 4px solid #8b1538;
 }
 
 .changelog-version {
-  color: #8B1538;
+  color: #8b1538;
   font-size: 1.2rem;
   font-weight: 700;
   margin-bottom: 5px;
 }
 
 .changelog-date {
-  color: #A91B47;
+  color: #a91b47;
   font-size: 0.9rem;
   font-weight: 500;
   margin-bottom: 10px;
@@ -305,27 +305,27 @@ onMounted(() => {
   .software-info {
     padding: 15px;
   }
-  
+
   .info-header h1 {
     font-size: 2rem;
   }
-  
+
   .info-subtitle {
     font-size: 1.1rem;
   }
-  
+
   .version-card {
     padding: 30px 20px;
   }
-  
+
   .version-number {
     font-size: 2.5rem;
   }
-  
+
   .details-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .detail-card {
     padding: 20px;
   }
@@ -335,23 +335,23 @@ onMounted(() => {
   .info-header h1 {
     font-size: 1.6rem;
   }
-  
+
   .version-card h2 {
     font-size: 1.5rem;
   }
-  
+
   .version-number {
     font-size: 2rem;
   }
-  
+
   .version-icon {
     font-size: 3rem;
   }
-  
+
   .detail-icon {
     font-size: 2rem;
   }
-  
+
   .detail-card h3 {
     font-size: 1.1rem;
   }

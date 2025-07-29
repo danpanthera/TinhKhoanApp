@@ -21,7 +21,7 @@ class DirectPreviewService {
       return {
         success: true,
         data: response.data || [],
-        message: 'Lấy danh sách data types thành công'
+        message: 'Lấy danh sách data types thành công',
       }
     } catch (error) {
       console.error('❌ Error getting data types:', error)
@@ -29,7 +29,7 @@ class DirectPreviewService {
         success: false,
         data: [],
         error: error.message || 'Lỗi khi lấy danh sách data types',
-        errorDetails: error.response?.data
+        errorDetails: error.response?.data,
       }
     }
   }
@@ -49,8 +49,8 @@ class DirectPreviewService {
 
       console.log(`🔍 Previewing ${dataType} - page ${page}, size ${pageSize}`)
 
-            const response = await api.get(`/DataImport/direct-preview/${dataType}`, {
-        params: { page, pageSize }
+      const response = await api.get(`/DataImport/direct-preview/${dataType}`, {
+        params: { page, pageSize },
       })
 
       const result = response.data
@@ -64,7 +64,7 @@ class DirectPreviewService {
         pageSize: result.PageSize || pageSize,
         totalPages: result.TotalPages || 1,
         dataType: result.DataType || dataType,
-        message: result.Message || `Xem trước ${dataType} thành công`
+        message: result.Message || `Xem trước ${dataType} thành công`,
       }
     } catch (error) {
       console.error(`❌ Error previewing ${dataType}:`, error)
@@ -77,7 +77,7 @@ class DirectPreviewService {
         totalPages: 0,
         dataType: dataType,
         error: error.message || `Lỗi khi xem trước ${dataType}`,
-        errorDetails: error.response?.data
+        errorDetails: error.response?.data,
       }
     }
   }
@@ -98,7 +98,7 @@ class DirectPreviewService {
         success: true,
         tables: result.Tables || {},
         summary: result.Summary || {},
-        message: 'Lấy thống kê thành công'
+        message: 'Lấy thống kê thành công',
       }
     } catch (error) {
       console.error('❌ Error getting statistics:', error)
@@ -107,7 +107,7 @@ class DirectPreviewService {
         tables: {},
         summary: {},
         error: error.message || 'Lỗi khi lấy thống kê',
-        errorDetails: error.response?.data
+        errorDetails: error.response?.data,
       }
     }
   }
@@ -144,7 +144,7 @@ class DirectPreviewService {
         totalRecords: result.totalRecords,
         sampleSize: result.data?.length || 0,
         dataType: dataType,
-        message: result.message
+        message: result.message,
       }
     } catch (error) {
       console.error(`❌ Error getting sample data for ${dataType}:`, error)
@@ -154,7 +154,7 @@ class DirectPreviewService {
         totalRecords: 0,
         sampleSize: 0,
         dataType: dataType,
-        error: error.message || `Lỗi khi lấy sample data ${dataType}`
+        error: error.message || `Lỗi khi lấy sample data ${dataType}`,
       }
     }
   }
@@ -172,7 +172,7 @@ class DirectPreviewService {
           columns: [],
           rows: [],
           totalColumns: 0,
-          totalRows: 0
+          totalRows: 0,
         }
       }
 
@@ -182,13 +182,13 @@ class DirectPreviewService {
         key: key,
         label: key,
         type: this.detectColumnType(firstRecord[key]),
-        sortable: true
+        sortable: true,
       }))
 
       // Format rows
       const rows = data.map((record, index) => ({
         id: record.Id || record.id || index,
-        ...record
+        ...record,
       }))
 
       console.log(`🎨 Formatted ${dataType}:`, columns.length, 'columns,', rows.length, 'rows')
@@ -198,7 +198,7 @@ class DirectPreviewService {
         rows: rows,
         totalColumns: columns.length,
         totalRows: rows.length,
-        dataType: dataType
+        dataType: dataType,
       }
     } catch (error) {
       console.error('❌ Error formatting data for display:', error)
@@ -207,7 +207,7 @@ class DirectPreviewService {
         rows: [],
         totalColumns: 0,
         totalRows: 0,
-        error: error.message
+        error: error.message,
       }
     }
   }

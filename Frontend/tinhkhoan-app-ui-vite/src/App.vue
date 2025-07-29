@@ -39,7 +39,7 @@
           <a href="#" class="nav-dropdown-trigger" :class="{ active: isHRSectionActive }">
             <span>🏢 Chi nhánh/Nhân sự</span>
             <svg class="dropdown-arrow" :class="{ rotated: showHRMenu }" viewBox="0 0 24 24" width="16" height="16">
-              <path fill="currentColor" d="M7 10l5 5 5-5z"/>
+              <path fill="currentColor" d="M7 10l5 5 5-5z" />
             </svg>
           </a>
           <div class="nav-dropdown-menu" :class="{ show: showHRMenu }" @click="hideAllMenus">
@@ -67,7 +67,7 @@
           <a href="#" class="nav-dropdown-trigger" :class="{ active: isKPISectionActive }">
             <span>📊 Quản lý KPI</span>
             <svg class="dropdown-arrow" :class="{ rotated: showKPIMenu }" viewBox="0 0 24 24" width="16" height="16">
-              <path fill="currentColor" d="M7 10l5 5 5-5z"/>
+              <path fill="currentColor" d="M7 10l5 5 5-5z" />
             </svg>
           </a>
           <div class="nav-dropdown-menu" :class="{ show: showKPIMenu }" @click="hideAllMenus">
@@ -122,8 +122,14 @@
         <div class="nav-dropdown" @mouseenter="handleDashboardMouseEnter" @mouseleave="handleDashboardMouseLeave">
           <a href="#" class="nav-dropdown-trigger" :class="{ active: isDashboardSectionActive }">
             <span>📈 Dashboard</span>
-            <svg class="dropdown-arrow" :class="{ rotated: showDashboardMenu }" viewBox="0 0 24 24" width="16" height="16">
-              <path fill="currentColor" d="M7 10l5 5 5-5z"/>
+            <svg
+              class="dropdown-arrow"
+              :class="{ rotated: showDashboardMenu }"
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+            >
+              <path fill="currentColor" d="M7 10l5 5 5-5z" />
             </svg>
           </a>
           <div class="nav-dropdown-menu" :class="{ show: showDashboardMenu }" @click="hideAllMenus">
@@ -147,7 +153,7 @@
           <a href="#" class="nav-dropdown-trigger" :class="{ active: isAboutSectionActive }">
             <span>ℹ️ Giới thiệu</span>
             <svg class="dropdown-arrow" :class="{ rotated: showAboutMenu }" viewBox="0 0 24 24" width="16" height="16">
-              <path fill="currentColor" d="M7 10l5 5 5-5z"/>
+              <path fill="currentColor" d="M7 10l5 5 5-5z" />
             </svg>
           </a>
           <div class="nav-dropdown-menu" :class="{ show: showAboutMenu }" @click="hideAllMenus">
@@ -197,266 +203,323 @@
 </template>
 
 <script setup>
-import AppFooter from '@/components/AppFooter.vue';
-import DebugPanel from '@/components/DebugPanel.vue';
-import OfflineIndicator from '@/components/OfflineIndicator.vue';
-import PWAInstallPrompt from '@/components/PWAInstallPrompt.vue';
-import ThemeSwitcher from '@/components/ThemeSwitcher.vue';
-import { isAuthenticated, logout } from '@/services/auth';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import AppFooter from '@/components/AppFooter.vue'
+import DebugPanel from '@/components/DebugPanel.vue'
+import OfflineIndicator from '@/components/OfflineIndicator.vue'
+import PWAInstallPrompt from '@/components/PWAInstallPrompt.vue'
+import ThemeSwitcher from '@/components/ThemeSwitcher.vue'
+import { isAuthenticated, logout } from '@/services/auth'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-const router = useRouter();
-const route = useRoute();
+const router = useRouter()
+const route = useRoute()
 
 // Development flag for debug panel - DISABLED for production
-const isDevelopment = ref(false);
+const isDevelopment = ref(false)
 
 if (!isAuthenticated() && router.currentRoute.value.path !== '/login') {
-  router.push('/login');
+  router.push('/login')
 }
 
 const handleLogout = () => {
-  logout();
-  router.push('/login');
-};
+  logout()
+  router.push('/login')
+}
 
 // HR Dropdown menu state
-const showHRMenu = ref(false);
+const showHRMenu = ref(false)
 
 // KPI Dropdown menu state
-const showKPIMenu = ref(false);
+const showKPIMenu = ref(false)
 
 // Dashboard Dropdown menu state
-const showDashboardMenu = ref(false);
+const showDashboardMenu = ref(false)
 
 // About Dropdown menu state
-const showAboutMenu = ref(false);
+const showAboutMenu = ref(false)
 
 // Dropdown menu timeout references
-const hrMenuTimeout = ref(null);
-const kpiMenuTimeout = ref(null);
-const dashboardMenuTimeout = ref(null);
-const aboutMenuTimeout = ref(null);
+const hrMenuTimeout = ref(null)
+const kpiMenuTimeout = ref(null)
+const dashboardMenuTimeout = ref(null)
+const aboutMenuTimeout = ref(null)
 
 // Enhanced dropdown handlers with auto-hide functionality
 const handleHRMouseEnter = () => {
   if (hrMenuTimeout.value) {
-    clearTimeout(hrMenuTimeout.value);
-    hrMenuTimeout.value = null;
+    clearTimeout(hrMenuTimeout.value)
+    hrMenuTimeout.value = null
   }
-  showHRMenu.value = true;
-};
+  showHRMenu.value = true
+}
 
 const handleHRMouseLeave = () => {
   hrMenuTimeout.value = setTimeout(() => {
-    showHRMenu.value = false;
-  }, 300); // 300ms delay before hiding
-};
+    showHRMenu.value = false
+  }, 300) // 300ms delay before hiding
+}
 
 const handleKPIMouseEnter = () => {
   if (kpiMenuTimeout.value) {
-    clearTimeout(kpiMenuTimeout.value);
-    kpiMenuTimeout.value = null;
+    clearTimeout(kpiMenuTimeout.value)
+    kpiMenuTimeout.value = null
   }
-  showKPIMenu.value = true;
-};
+  showKPIMenu.value = true
+}
 
 const handleKPIMouseLeave = () => {
   kpiMenuTimeout.value = setTimeout(() => {
-    showKPIMenu.value = false;
-  }, 300); // 300ms delay before hiding
-};
+    showKPIMenu.value = false
+  }, 300) // 300ms delay before hiding
+}
 
 const handleDashboardMouseEnter = () => {
   if (dashboardMenuTimeout.value) {
-    clearTimeout(dashboardMenuTimeout.value);
-    dashboardMenuTimeout.value = null;
+    clearTimeout(dashboardMenuTimeout.value)
+    dashboardMenuTimeout.value = null
   }
-  showDashboardMenu.value = true;
-};
+  showDashboardMenu.value = true
+}
 
 const handleDashboardMouseLeave = () => {
   dashboardMenuTimeout.value = setTimeout(() => {
-    showDashboardMenu.value = false;
-  }, 300); // 300ms delay before hiding
-};
+    showDashboardMenu.value = false
+  }, 300) // 300ms delay before hiding
+}
 
 const handleAboutMouseEnter = () => {
   if (aboutMenuTimeout.value) {
-    clearTimeout(aboutMenuTimeout.value);
-    aboutMenuTimeout.value = null;
+    clearTimeout(aboutMenuTimeout.value)
+    aboutMenuTimeout.value = null
   }
-  showAboutMenu.value = true;
-};
+  showAboutMenu.value = true
+}
 
 const handleAboutMouseLeave = () => {
   aboutMenuTimeout.value = setTimeout(() => {
-    showAboutMenu.value = false;
-  }, 300); // 300ms delay before hiding
-};
+    showAboutMenu.value = false
+  }, 300) // 300ms delay before hiding
+}
 
 // Click-to-hide functionality
 const hideAllMenus = () => {
-  showHRMenu.value = false;
-  showKPIMenu.value = false;
-  showDashboardMenu.value = false;
-  showAboutMenu.value = false;
+  showHRMenu.value = false
+  showKPIMenu.value = false
+  showDashboardMenu.value = false
+  showAboutMenu.value = false
 
   // Clear any pending timeouts
   if (hrMenuTimeout.value) {
-    clearTimeout(hrMenuTimeout.value);
-    hrMenuTimeout.value = null;
+    clearTimeout(hrMenuTimeout.value)
+    hrMenuTimeout.value = null
   }
   if (kpiMenuTimeout.value) {
-    clearTimeout(kpiMenuTimeout.value);
-    kpiMenuTimeout.value = null;
+    clearTimeout(kpiMenuTimeout.value)
+    kpiMenuTimeout.value = null
   }
   if (dashboardMenuTimeout.value) {
-    clearTimeout(dashboardMenuTimeout.value);
-    dashboardMenuTimeout.value = null;
+    clearTimeout(dashboardMenuTimeout.value)
+    dashboardMenuTimeout.value = null
   }
   if (aboutMenuTimeout.value) {
-    clearTimeout(aboutMenuTimeout.value);
-    aboutMenuTimeout.value = null;
+    clearTimeout(aboutMenuTimeout.value)
+    aboutMenuTimeout.value = null
   }
-};
+}
 
 // Handle clicking outside menus
-const handleDocumentClick = (event) => {
-  const dropdownElements = document.querySelectorAll('.nav-dropdown');
-  let clickedInsideDropdown = false;
+const handleDocumentClick = event => {
+  const dropdownElements = document.querySelectorAll('.nav-dropdown')
+  let clickedInsideDropdown = false
 
   dropdownElements.forEach(dropdown => {
     if (dropdown.contains(event.target)) {
-      clickedInsideDropdown = true;
+      clickedInsideDropdown = true
     }
-  });
+  })
 
   if (!clickedInsideDropdown) {
-    hideAllMenus();
+    hideAllMenus()
   }
-};
+}
 
 // Handle route changes - hide menus when navigating
 const handleRouteChange = () => {
-  hideAllMenus();
-};
+  hideAllMenus()
+}
 
 // Check if current route is in HR section
 const isHRSectionActive = computed(() => {
-  const hrRoutes = ['/units', '/employees', '/positions', '/roles'];
-  return hrRoutes.includes(route.path);
-});
+  const hrRoutes = ['/units', '/employees', '/positions', '/roles']
+  return hrRoutes.includes(route.path)
+})
 
 // Check if current route is in KPI section
 const isKPISectionActive = computed(() => {
-  const kpiRoutes = ['/khoan-periods', '/kpi-definitions', '/kpi-config', '/employee-kpi-assignment', '/unit-kpi-assignment', '/kpi-actual-values', '/kpi-input', '/kpi-score', '/kpi-scoring', '/payroll-report'];
-  return kpiRoutes.includes(route.path);
-});
+  const kpiRoutes = [
+    '/khoan-periods',
+    '/kpi-definitions',
+    '/kpi-config',
+    '/employee-kpi-assignment',
+    '/unit-kpi-assignment',
+    '/kpi-actual-values',
+    '/kpi-input',
+    '/kpi-score',
+    '/kpi-scoring',
+    '/payroll-report',
+  ]
+  return kpiRoutes.includes(route.path)
+})
 
 // Check if current route is in Dashboard section
 const isDashboardSectionActive = computed(() => {
-  const dashboardRoutes = ['/dashboard', '/dashboard/target-assignment', '/dashboard/calculation', '/dashboard/business-plan'];
-  return dashboardRoutes.includes(route.path);
-});
+  const dashboardRoutes = [
+    '/dashboard',
+    '/dashboard/target-assignment',
+    '/dashboard/calculation',
+    '/dashboard/business-plan',
+  ]
+  return dashboardRoutes.includes(route.path)
+})
 
 // Check if current route is in About section
 const isAboutSectionActive = computed(() => {
-  const aboutRoutes = ['/about/info', '/about/user-guide', '/about/software-info'];
-  return aboutRoutes.includes(route.path);
-});
+  const aboutRoutes = ['/about/info', '/about/user-guide', '/about/software-info']
+  return aboutRoutes.includes(route.path)
+})
 
 // Dynamic background setup
-const currentImageIndex = ref(0);
-const backgroundImages = ref([]);
-const backgroundNames = ref([]);
+const currentImageIndex = ref(0)
+const backgroundImages = ref([])
+const backgroundNames = ref([])
 
-let backgroundInterval = null;
+let backgroundInterval = null
 
 // 🎨 Tự động load TẤT CẢ ảnh từ thư mục backgrounds (Cải tiến)
 const loadBackgroundImages = async () => {
   try {
-    const backgroundPath = '/images/backgrounds/';
-    const supportedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+    const backgroundPath = '/images/backgrounds/'
+    const supportedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif']
 
     // 📝 Danh sách tên file có thể có trong thư mục (bao gồm file hiện có + 2 ảnh mới từ Pexels)
     const potentialFileNames = [
       // ⭐ 2 Ảnh thiên nhiên siêu đẹp mới từ Pexels.com
-      'epic-mountain-canyon', 'crater-lake-mountains',
+      'epic-mountain-canyon',
+      'crater-lake-mountains',
       // Files hiện có trong thư mục
-      'AgribankLaiChau_chuan', 'anh-dep-lai-chau-29', 'background-2', 'background-3', 'File_000',
-      'nature-green-forest-path-hdr', 'nature-lake-forest-hdr', 'nature-mountain-sunset-hdr',
+      'AgribankLaiChau_chuan',
+      'anh-dep-lai-chau-29',
+      'background-2',
+      'background-3',
+      'File_000',
+      'nature-green-forest-path-hdr',
+      'nature-lake-forest-hdr',
+      'nature-mountain-sunset-hdr',
       // Tên thông thường
-      'background-1', 'background-4', 'background-5',
-      'bg-1', 'bg-2', 'bg-3', 'bg-4', 'bg-5',
-      'image-1', 'image-2', 'image-3', 'image-4', 'image-5',
+      'background-1',
+      'background-4',
+      'background-5',
+      'bg-1',
+      'bg-2',
+      'bg-3',
+      'bg-4',
+      'bg-5',
+      'image-1',
+      'image-2',
+      'image-3',
+      'image-4',
+      'image-5',
       // Các file lai châu khác (có thể tồn tại)
-      'anh-dep-lai-chau-8', 'anh-dep-lai-chau-16', 'anh-dep-lai-chau-19', 'anh-dep-lai-chau-33',
+      'anh-dep-lai-chau-8',
+      'anh-dep-lai-chau-16',
+      'anh-dep-lai-chau-19',
+      'anh-dep-lai-chau-33',
       // Số đơn giản
-      '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15',
+      '1',
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+      '7',
+      '8',
+      '9',
+      '10',
+      '11',
+      '12',
+      '13',
+      '14',
+      '15',
       // Các tên khác có thể
-      'wallpaper-1', 'wallpaper-2', 'wallpaper-3', 'nature-1', 'nature-2',
-      'scenery-1', 'scenery-2', 'landscape-1', 'landscape-2'
-    ];
+      'wallpaper-1',
+      'wallpaper-2',
+      'wallpaper-3',
+      'nature-1',
+      'nature-2',
+      'scenery-1',
+      'scenery-2',
+      'landscape-1',
+      'landscape-2',
+    ]
 
-    const loadedImages = [];
-    const loadedNames = [];
+    const loadedImages = []
+    const loadedNames = []
 
     // 🔍 Kiểm tra từng combination tên file + extension
     // console.log('🔍 Đang quét thư mục backgrounds...');
-    let totalChecked = 0;
+    let totalChecked = 0
 
     for (const fileName of potentialFileNames) {
       for (const ext of supportedExtensions) {
-        const fullPath = `${backgroundPath}${fileName}${ext}`;
-        totalChecked++;
+        const fullPath = `${backgroundPath}${fileName}${ext}`
+        totalChecked++
 
         try {
           // Test ảnh có load được không
-          const img = new Image();
+          const img = new Image()
           await new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => reject(new Error('Timeout')), 2000);
+            const timeout = setTimeout(() => reject(new Error('Timeout')), 2000)
             img.onload = () => {
-              clearTimeout(timeout);
-              resolve();
-            };
+              clearTimeout(timeout)
+              resolve()
+            }
             img.onerror = () => {
-              clearTimeout(timeout);
-              reject(new Error('Load failed'));
-            };
-            img.src = fullPath;
-          });
+              clearTimeout(timeout)
+              reject(new Error('Load failed'))
+            }
+            img.src = fullPath
+          })
 
           // ✅ Ảnh load thành công
-          loadedImages.push(fullPath);
+          loadedImages.push(fullPath)
 
           // 🏷️ Tạo tên hiển thị đẹp cho các ảnh
-          const displayName = fileName === 'epic-mountain-canyon'
-            ? '🏔️ Grand Canyon hùng vĩ (Pexels)'
-            : fileName === 'crater-lake-mountains'
-            ? '🌊 Crater Lake núi tuyết (Pexels)'
-            : fileName.includes('lai-chau') || fileName.includes('AgribankLaiChau')
-            ? `🏔️ Lai Châu ${fileName.includes('AgribankLaiChau') ? 'chính thức' : fileName.split('-').pop()}`
-            : fileName.includes('nature-green-forest')
-            ? '🌲 Rừng xanh HDR'
-            : fileName.includes('nature-lake-forest')
-            ? '🏞️ Hồ rừng HDR'
-            : fileName.includes('nature-mountain-sunset')
-            ? '🌅 Núi hoàng hôn HDR'
-            : fileName.includes('background')
-            ? `🖼️ Nền ${fileName.split('-').pop()}`
-            : fileName.includes('nature')
-            ? `🌿 Thiên nhiên ${fileName.split('-').pop()}`
-            : fileName.includes('landscape')
-            ? `🏞️ Phong cảnh ${fileName.split('-').pop()}`
-            : fileName.includes('File_')
-            ? `📄 Ảnh ${fileName.split('_').pop()}`
-            : `🎨 ${fileName}`;
+          const displayName =
+            fileName === 'epic-mountain-canyon'
+              ? '🏔️ Grand Canyon hùng vĩ (Pexels)'
+              : fileName === 'crater-lake-mountains'
+                ? '🌊 Crater Lake núi tuyết (Pexels)'
+                : fileName.includes('lai-chau') || fileName.includes('AgribankLaiChau')
+                  ? `🏔️ Lai Châu ${fileName.includes('AgribankLaiChau') ? 'chính thức' : fileName.split('-').pop()}`
+                  : fileName.includes('nature-green-forest')
+                    ? '🌲 Rừng xanh HDR'
+                    : fileName.includes('nature-lake-forest')
+                      ? '🏞️ Hồ rừng HDR'
+                      : fileName.includes('nature-mountain-sunset')
+                        ? '🌅 Núi hoàng hôn HDR'
+                        : fileName.includes('background')
+                          ? `🖼️ Nền ${fileName.split('-').pop()}`
+                          : fileName.includes('nature')
+                            ? `🌿 Thiên nhiên ${fileName.split('-').pop()}`
+                            : fileName.includes('landscape')
+                              ? `🏞️ Phong cảnh ${fileName.split('-').pop()}`
+                              : fileName.includes('File_')
+                                ? `📄 Ảnh ${fileName.split('_').pop()}`
+                                : `🎨 ${fileName}`
 
-          loadedNames.push(displayName);
+          loadedNames.push(displayName)
           // console.log(`✅ Tìm thấy: ${fullPath} -> ${displayName}`);
-
         } catch (error) {
           // Ảnh không tồn tại hoặc lỗi, bỏ qua im lặng
         }
@@ -478,19 +541,29 @@ const loadBackgroundImages = async () => {
         // 🌌 Backup ảnh vũ trụ online tuyệt đẹp HDR
         'https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2893&q=80', // Vũ trụ sao kim cương
         'https://images.unsplash.com/photo-1544197150-b99a580bb7a8?ixlib=rb-4.0.3&auto=format&fit=crop&w=2940&q=80', // Galaxy spiral tím xanh
-        'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80'
-      ];
-      backgroundNames.value = ['🏙️ Thành phố công nghệ', '💰 Tài chính hiện đại', '🌍 Trái Đất vũ trụ 1', '🌍 Trái Đất vũ trụ 2', '🌟 Vũ trụ kim cương', '🌀 Galaxy xoắn ốc', '🏔️ Núi tuyết'];
+        'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
+      ]
+      backgroundNames.value = [
+        '🏙️ Thành phố công nghệ',
+        '💰 Tài chính hiện đại',
+        '🌍 Trái Đất vũ trụ 1',
+        '🌍 Trái Đất vũ trụ 2',
+        '🌟 Vũ trụ kim cương',
+        '🌀 Galaxy xoắn ốc',
+        '🏔️ Núi tuyết',
+      ]
     } else {
       // 🔄 Sắp xếp ảnh theo thứ tự tên file
-      const sortedData = loadedImages.map((img, index) => ({
-        image: img,
-        name: loadedNames[index],
-        sortKey: img.toLowerCase()
-      })).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+      const sortedData = loadedImages
+        .map((img, index) => ({
+          image: img,
+          name: loadedNames[index],
+          sortKey: img.toLowerCase(),
+        }))
+        .sort((a, b) => a.sortKey.localeCompare(b.sortKey))
 
-      backgroundImages.value = sortedData.map(item => item.image);
-      backgroundNames.value = sortedData.map(item => item.name);
+      backgroundImages.value = sortedData.map(item => item.image)
+      backgroundNames.value = sortedData.map(item => item.name)
 
       // Nếu có ít hơn 7 ảnh local, thêm ảnh online để đủ
       if (backgroundImages.value.length < 7) {
@@ -506,82 +579,93 @@ const loadBackgroundImages = async () => {
           'https://images.unsplash.com/photo-1519904981063-b0cf448d479e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2940&q=80', // Tinh vân xanh
           'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
           'https://images.unsplash.com/photo-1518837695005-2083093ee35b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-          'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80'
-        ];
-        const additionalNames = ['🏙️ Thành phố công nghệ', '💰 Tài chính hiện đại', '🌍 Trái Đất vũ trụ 1', '🌍 Trái Đất vũ trụ 2', '🌌 Nebula hồng', '💙 Tinh vân xanh', '🏔️ Núi tuyết', '🌅 Bình minh', '🌾 Cánh đồng'];
+          'https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
+        ]
+        const additionalNames = [
+          '🏙️ Thành phố công nghệ',
+          '💰 Tài chính hiện đại',
+          '🌍 Trái Đất vũ trụ 1',
+          '🌍 Trái Đất vũ trụ 2',
+          '🌌 Nebula hồng',
+          '💙 Tinh vân xanh',
+          '🏔️ Núi tuyết',
+          '🌅 Bình minh',
+          '🌾 Cánh đồng',
+        ]
 
-        const needed = Math.min(7 - backgroundImages.value.length, additionalImages.length);
-        backgroundImages.value.push(...additionalImages.slice(0, needed));
-        backgroundNames.value.push(...additionalNames.slice(0, needed));
+        const needed = Math.min(7 - backgroundImages.value.length, additionalImages.length)
+        backgroundImages.value.push(...additionalImages.slice(0, needed))
+        backgroundNames.value.push(...additionalNames.slice(0, needed))
       }
 
-      console.log(`🎉 Đã load ${backgroundImages.value.length} ảnh nền (${loadedImages.length} local + ${backgroundImages.value.length - loadedImages.length} online)!`);
-      console.log('📋 Danh sách ảnh:', backgroundNames.value);
+      console.log(
+        `🎉 Đã load ${backgroundImages.value.length} ảnh nền (${loadedImages.length} local + ${backgroundImages.value.length - loadedImages.length} online)!`
+      )
+      console.log('📋 Danh sách ảnh:', backgroundNames.value)
     }
-
   } catch (error) {
-    console.error('❌ Lỗi nghiêm trọng khi load ảnh nền:', error);
+    console.error('❌ Lỗi nghiêm trọng khi load ảnh nền:', error)
     // Fallback cuối cùng
     backgroundImages.value = [
-      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80'
-    ];
-    backgroundNames.value = ['🏔️ Ảnh mặc định'];
+      'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
+    ]
+    backgroundNames.value = ['🏔️ Ảnh mặc định']
   }
-};
+}
 
 // Preload images for smooth transitions
 const preloadImages = () => {
   backgroundImages.value.forEach(src => {
-    const img = new Image();
-    img.src = src;
-  });
-};
+    const img = new Image()
+    img.src = src
+  })
+}
 
 // Smart background selection based on time of day
 const getTimeBasedImageIndex = () => {
-  const imageCount = backgroundImages.value.length;
-  if (imageCount === 0) return 0;
+  const imageCount = backgroundImages.value.length
+  if (imageCount === 0) return 0
 
-  const hour = new Date().getHours();
-  if (hour >= 6 && hour < 12) return 0;  // Sáng - Ảnh đầu tiên
-  if (hour >= 12 && hour < 17) return Math.min(1, imageCount - 1); // Trưa - Ảnh thứ 2
-  if (hour >= 17 && hour < 20) return Math.min(2, imageCount - 1); // Chiều - Ảnh thứ 3
-  return Math.min(3, imageCount - 1); // Tối - Ảnh thứ 4 hoặc cuối cùng
-};
+  const hour = new Date().getHours()
+  if (hour >= 6 && hour < 12) return 0 // Sáng - Ảnh đầu tiên
+  if (hour >= 12 && hour < 17) return Math.min(1, imageCount - 1) // Trưa - Ảnh thứ 2
+  if (hour >= 17 && hour < 20) return Math.min(2, imageCount - 1) // Chiều - Ảnh thứ 3
+  return Math.min(3, imageCount - 1) // Tối - Ảnh thứ 4 hoặc cuối cùng
+}
 
 const startBackgroundRotation = () => {
   // Set initial background based on time
-  currentImageIndex.value = getTimeBasedImageIndex();
+  currentImageIndex.value = getTimeBasedImageIndex()
 
   backgroundInterval = setInterval(() => {
-    currentImageIndex.value = (currentImageIndex.value + 1) % backgroundImages.value.length;
-  }, 12000); // Change image every 12 seconds
-};
+    currentImageIndex.value = (currentImageIndex.value + 1) % backgroundImages.value.length
+  }, 12000) // Change image every 12 seconds
+}
 
 onMounted(async () => {
   // Load ảnh nền trước tiên
-  await loadBackgroundImages();
-  preloadImages();
-  startBackgroundRotation();
+  await loadBackgroundImages()
+  preloadImages()
+  startBackgroundRotation()
 
   // Add document click listener for dropdown auto-hide
-  document.addEventListener('click', handleDocumentClick);
+  document.addEventListener('click', handleDocumentClick)
 
   // Watch for route changes to hide menus
-  router.afterEach(handleRouteChange);
-});
+  router.afterEach(handleRouteChange)
+})
 
 onUnmounted(() => {
   if (backgroundInterval) {
-    clearInterval(backgroundInterval);
+    clearInterval(backgroundInterval)
   }
 
   // Remove event listeners
-  document.removeEventListener('click', handleDocumentClick);
+  document.removeEventListener('click', handleDocumentClick)
 
   // Clear any pending timeouts
-  hideAllMenus();
-});
+  hideAllMenus()
+})
 </script>
 
 <style>
@@ -699,14 +783,17 @@ onUnmounted(() => {
   box-sizing: border-box;
 }
 
-body, html {
+body,
+html {
   height: 100%;
   overflow-x: hidden;
 }
 
 #app {
   /* 🇻🇳 Font stack tối ưu cho tiếng Việt */
-  font-family: 'Roboto', 'Segoe UI', 'Helvetica Neue', 'Arial', 'Noto Sans', 'Liberation Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji';
+  font-family:
+    'Roboto', 'Segoe UI', 'Helvetica Neue', 'Arial', 'Noto Sans', 'Liberation Sans', sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Noto Color Emoji';
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
@@ -757,12 +844,7 @@ body, html {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    135deg,
-    rgba(0, 0, 0, 0.4) 0%,
-    rgba(0, 0, 0, 0.2) 50%,
-    rgba(0, 0, 0, 0.3) 100%
-  );
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.2) 50%, rgba(0, 0, 0, 0.3) 100%);
   z-index: 1;
 }
 
@@ -827,7 +909,7 @@ body, html {
 .main-nav {
   display: flex;
   align-items: center;
-  background: linear-gradient(135deg, #8B1538, #A91B47);
+  background: linear-gradient(135deg, #8b1538, #a91b47);
   backdrop-filter: blur(10px);
   padding: 0 24px;
   height: 60px;
@@ -879,7 +961,7 @@ body, html {
 }
 
 .main-nav .router-link-exact-active {
-  color: #8B1538;
+  color: #8b1538;
   background: rgba(139, 21, 56, 0.15);
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(139, 21, 56, 0.4);
@@ -1028,14 +1110,14 @@ body, html {
 }
 
 .nav-dropdown-trigger.active {
-  color: #8B1538;
+  color: #8b1538;
   background: rgba(139, 21, 56, 0.15);
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(139, 21, 56, 0.4);
 }
 
 .nav-dropdown-trigger:hover {
-  color: #8B1538;
+  color: #8b1538;
   background: rgba(255, 255, 255, 0.1);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -1093,13 +1175,13 @@ body, html {
 }
 
 .dropdown-item:hover {
-  background: linear-gradient(135deg, #8B1538, #A91B47);
+  background: linear-gradient(135deg, #8b1538, #a91b47);
   color: white;
   transform: translateX(5px);
 }
 
 .dropdown-item.router-link-exact-active {
-  background: linear-gradient(135deg, #8B1538, #6B1028);
+  background: linear-gradient(135deg, #8b1538, #6b1028);
   color: white;
 }
 
@@ -1151,14 +1233,18 @@ body, html {
 }
 
 .content-container h2 {
-  color: #A91B47;
+  color: #a91b47;
   margin-bottom: 18px;
   font-size: 22px;
   font-weight: 600;
 }
 
 /* Enhance buttons and forms for the new design */
-.action-button, .edit-btn, .delete-btn, .save-btn, .cancel-btn {
+.action-button,
+.edit-btn,
+.delete-btn,
+.save-btn,
+.cancel-btn {
   padding: 10px 20px;
   border: none;
   border-radius: 8px;
@@ -1170,7 +1256,7 @@ body, html {
 }
 
 .action-button {
-  background: linear-gradient(135deg, #8B1538, #A91B47);
+  background: linear-gradient(135deg, #8b1538, #a91b47);
   color: white;
   margin-bottom: 20px;
 }
@@ -1181,18 +1267,18 @@ body, html {
 }
 
 .edit-btn {
-  background: linear-gradient(135deg, #8B1538, #A91B47);
+  background: linear-gradient(135deg, #8b1538, #a91b47);
   color: white;
   margin-right: 8px;
 }
 
 .delete-btn {
-  background: linear-gradient(135deg, #DC143C, #B22222);
+  background: linear-gradient(135deg, #dc143c, #b22222);
   color: white;
 }
 
 .save-btn {
-  background: linear-gradient(135deg, #8B1538, #A91B47);
+  background: linear-gradient(135deg, #8b1538, #a91b47);
   color: white;
   margin-right: 8px;
 }
@@ -1230,7 +1316,9 @@ body, html {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
-input, textarea, select {
+input,
+textarea,
+select {
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 6px;
@@ -1238,9 +1326,11 @@ input, textarea, select {
   transition: all 0.3s ease;
 }
 
-input:focus, textarea:focus, select:focus {
+input:focus,
+textarea:focus,
+select:focus {
   outline: none;
-  border-color: #8B1538;
+  border-color: #8b1538;
   box-shadow: 0 0 0 3px rgba(139, 21, 56, 0.1);
 }
 
@@ -1251,7 +1341,7 @@ input:focus, textarea:focus, select:focus {
   backdrop-filter: blur(5px);
   border-radius: 8px;
   padding: 12px;
-  color: #DC143C;
+  color: #dc143c;
   margin-bottom: 16px;
 }
 
@@ -1261,7 +1351,7 @@ input:focus, textarea:focus, select:focus {
   backdrop-filter: blur(5px);
   border-radius: 8px;
   padding: 12px;
-  color: #8B1538;
+  color: #8b1538;
   margin-bottom: 16px;
 }
 
@@ -1399,14 +1489,18 @@ input:focus, textarea:focus, select:focus {
 
 /* Loading spinner for initial load */
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-spinner {
   border: 3px solid rgba(255, 255, 255, 0.3);
   border-radius: 50%;
-  border-top: 3px solid #8B1538;
+  border-top: 3px solid #8b1538;
   width: 20px;
   height: 20px;
   animation: spin 1s linear infinite;

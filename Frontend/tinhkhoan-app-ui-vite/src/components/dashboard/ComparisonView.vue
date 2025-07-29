@@ -38,9 +38,7 @@
         <div class="chart-header">
           <h4>{{ getChartTitle() }}</h4>
           <div class="chart-actions">
-            <el-button size="small" @click="downloadChart">
-              <i class="mdi mdi-download"></i> Tải xuống
-            </el-button>
+            <el-button size="small" @click="downloadChart"> <i class="mdi mdi-download"></i> Tải xuống </el-button>
             <el-button size="small" @click="fullscreenChart">
               <i class="mdi mdi-fullscreen"></i> Toàn màn hình
             </el-button>
@@ -63,20 +61,10 @@
           <div class="ranking-table">
             <div class="table-header">
               <h4>Bảng xếp hạng theo {{ getRankingTitle() }}</h4>
-              <el-switch
-                v-model="showPercentage"
-                active-text="Hiển thị %"
-                inactive-text="Giá trị gốc"
-              />
+              <el-switch v-model="showPercentage" active-text="Hiển thị %" inactive-text="Giá trị gốc" />
             </div>
 
-            <el-table
-              :data="rankingData"
-              stripe
-              height="350"
-              @row-click="selectUnit"
-              highlight-current-row
-            >
+            <el-table :data="rankingData" stripe height="350" @row-click="selectUnit" highlight-current-row>
               <el-table-column type="index" label="Hạng" width="60" align="center" />
               <el-table-column prop="unitName" label="Đơn vị" width="200" />
 
@@ -101,9 +89,7 @@
 
               <el-table-column label="Tổng điểm" width="100" align="center">
                 <template #default="{ row }">
-                  <el-tag :type="getScoreType(row.totalScore)" size="small">
-                    {{ row.totalScore }}/100
-                  </el-tag>
+                  <el-tag :type="getScoreType(row.totalScore)" size="small"> {{ row.totalScore }}/100 </el-tag>
                 </template>
               </el-table-column>
             </el-table>
@@ -179,44 +165,39 @@
           </el-radio-group>
         </div>
 
-        <trend-chart
-          :data="trendComparisonData"
-          :height="300"
-          :indicators="selectedIndicators"
-          type="multi-unit"
-        />
+        <trend-chart :data="trendComparisonData" :height="300" :indicators="selectedIndicators" type="multi-unit" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ElMessage } from 'element-plus';
-import { computed, onMounted, ref, watch } from 'vue';
-import ComparisonChart from './ComparisonChart.vue';
-import TrendChart from './TrendChart.vue';
+import { ElMessage } from 'element-plus'
+import { computed, onMounted, ref, watch } from 'vue'
+import ComparisonChart from './ComparisonChart.vue'
+import TrendChart from './TrendChart.vue'
 
 const props = defineProps({
   indicators: {
     type: Array,
-    required: true
+    required: true,
   },
   units: {
     type: Array,
-    required: true
+    required: true,
   },
   date: {
     type: String,
-    required: true
-  }
-});
+    required: true,
+  },
+})
 
 // State
-const selectedIndicators = ref(['HuyDong', 'DuNo', 'LoiNhuan']);
-const comparisonType = ref('completion');
-const chartType = ref('bar');
-const showPercentage = ref(true);
-const trendPeriod = ref('6month');
+const selectedIndicators = ref(['HuyDong', 'DuNo', 'LoiNhuan'])
+const comparisonType = ref('completion')
+const chartType = ref('bar')
+const showPercentage = ref(true)
+const trendPeriod = ref('6month')
 
 // Mock data - thay thế bằng API calls thực tế
 const comparisonChartData = ref([
@@ -224,46 +205,61 @@ const comparisonChartData = ref([
   { unitName: 'CN Điện Biên', HuyDong: 980, DuNo: 850, LoiNhuan: 98 },
   { unitName: 'CN Sơn La', HuyDong: 1200, DuNo: 1050, LoiNhuan: 120 },
   { unitName: 'PGD Bum Tở', HuyDong: 250, DuNo: 220, LoiNhuan: 25 },
-  { unitName: 'PGD Bình Lư', HuyDong: 180, DuNo: 160, LoiNhuan: 18 }
-]);
+  { unitName: 'PGD Bình Lư', HuyDong: 180, DuNo: 160, LoiNhuan: 18 },
+])
 
 const rankingData = ref([
   {
     unitName: 'CN Lai Châu',
-    HuyDong: 107.4, HuyDong_rank: 1,
-    DuNo: 109.1, DuNo_rank: 1,
-    LoiNhuan: 112.5, LoiNhuan_rank: 1,
-    totalScore: 95
+    HuyDong: 107.4,
+    HuyDong_rank: 1,
+    DuNo: 109.1,
+    DuNo_rank: 1,
+    LoiNhuan: 112.5,
+    LoiNhuan_rank: 1,
+    totalScore: 95,
   },
   {
     unitName: 'CN Sơn La',
-    HuyDong: 104.2, HuyDong_rank: 2,
-    DuNo: 105.8, DuNo_rank: 2,
-    LoiNhuan: 108.3, LoiNhuan_rank: 2,
-    totalScore: 88
+    HuyDong: 104.2,
+    HuyDong_rank: 2,
+    DuNo: 105.8,
+    DuNo_rank: 2,
+    LoiNhuan: 108.3,
+    LoiNhuan_rank: 2,
+    totalScore: 88,
   },
   {
     unitName: 'CN Điện Biên',
-    HuyDong: 98.0, HuyDong_rank: 3,
-    DuNo: 95.5, DuNo_rank: 4,
-    LoiNhuan: 92.1, LoiNhuan_rank: 4,
-    totalScore: 75
+    HuyDong: 98.0,
+    HuyDong_rank: 3,
+    DuNo: 95.5,
+    DuNo_rank: 4,
+    LoiNhuan: 92.1,
+    LoiNhuan_rank: 4,
+    totalScore: 75,
   },
   {
     unitName: 'PGD Bum Tở',
-    HuyDong: 102.1, HuyDong_rank: 4,
-    DuNo: 98.2, DuNo_rank: 3,
-    LoiNhuan: 95.6, LoiNhuan_rank: 3,
-    totalScore: 82
+    HuyDong: 102.1,
+    HuyDong_rank: 4,
+    DuNo: 98.2,
+    DuNo_rank: 3,
+    LoiNhuan: 95.6,
+    LoiNhuan_rank: 3,
+    totalScore: 82,
   },
   {
     unitName: 'PGD Bình Lư',
-    HuyDong: 90.0, HuyDong_rank: 5,
-    DuNo: 88.5, DuNo_rank: 5,
-    LoiNhuan: 85.2, LoiNhuan_rank: 5,
-    totalScore: 68
-  }
-]);
+    HuyDong: 90.0,
+    HuyDong_rank: 5,
+    DuNo: 88.5,
+    DuNo_rank: 5,
+    LoiNhuan: 85.2,
+    LoiNhuan_rank: 5,
+    totalScore: 68,
+  },
+])
 
 const trendComparisonData = ref([
   { period: 'T1', 'CN Lai Châu': 85, 'CN Sơn La': 78, 'CN Điện Biên': 72 },
@@ -271,8 +267,8 @@ const trendComparisonData = ref([
   { period: 'T3', 'CN Lai Châu': 98, 'CN Sơn La': 90, 'CN Điện Biên': 82 },
   { period: 'T4', 'CN Lai Châu': 105, 'CN Sơn La': 95, 'CN Điện Biên': 88 },
   { period: 'T5', 'CN Lai Châu': 108, 'CN Sơn La': 98, 'CN Điện Biên': 90 },
-  { period: 'T6', 'CN Lai Châu': 112, 'CN Sơn La': 102, 'CN Điện Biên': 95 }
-]);
+  { period: 'T6', 'CN Lai Châu': 112, 'CN Sơn La': 102, 'CN Điện Biên': 95 },
+])
 
 // Computed
 const performanceInsights = computed(() => [
@@ -280,126 +276,126 @@ const performanceInsights = computed(() => [
     id: 1,
     icon: 'mdi-trending-up',
     color: '#67C23A',
-    text: 'CN Lai Châu dẫn đầu về tất cả các chỉ tiêu với tổng điểm 95/100'
+    text: 'CN Lai Châu dẫn đầu về tất cả các chỉ tiêu với tổng điểm 95/100',
   },
   {
     id: 2,
     icon: 'mdi-alert-circle',
     color: '#E6A23C',
-    text: 'PGD Bình Lư cần cải thiện, chỉ đạt 68/100 điểm'
+    text: 'PGD Bình Lư cần cải thiện, chỉ đạt 68/100 điểm',
   },
   {
     id: 3,
     icon: 'mdi-chart-line',
     color: '#409EFF',
-    text: 'Chỉ tiêu Lợi nhuận có sự chênh lệch lớn giữa các đơn vị'
+    text: 'Chỉ tiêu Lợi nhuận có sự chênh lệch lớn giữa các đơn vị',
   },
   {
     id: 4,
     icon: 'mdi-target',
     color: '#909399',
-    text: 'Điểm trung bình hệ thống: 81.6/100, cần nâng cao thêm'
-  }
-]);
+    text: 'Điểm trung bình hệ thống: 81.6/100, cần nâng cao thêm',
+  },
+])
 
 // Methods
 const getChartTitle = () => {
   const typeMap = {
     absolute: 'So sánh theo giá trị tuyệt đối',
     completion: 'So sánh theo tỷ lệ hoàn thành kế hoạch',
-    growth: 'So sánh theo tăng trưởng so với cùng kỳ'
-  };
-  return typeMap[comparisonType.value] || 'So sánh đa chiều';
-};
+    growth: 'So sánh theo tăng trưởng so với cùng kỳ',
+  }
+  return typeMap[comparisonType.value] || 'So sánh đa chiều'
+}
 
 const getRankingTitle = () => {
   const typeMap = {
     absolute: 'giá trị tuyệt đối',
     completion: 'tỷ lệ hoàn thành',
-    growth: 'tăng trưởng'
-  };
-  return typeMap[comparisonType.value] || 'hiệu quả tổng thể';
-};
+    growth: 'tăng trưởng',
+  }
+  return typeMap[comparisonType.value] || 'hiệu quả tổng thể'
+}
 
-const getIndicatorName = (code) => {
-  const indicator = props.indicators.find(i => i.Code === code);
-  return indicator ? indicator.Name : code;
-};
+const getIndicatorName = code => {
+  const indicator = props.indicators.find(i => i.Code === code)
+  return indicator ? indicator.Name : code
+}
 
 const formatCellValue = (value, indicator) => {
   if (showPercentage.value && comparisonType.value === 'completion') {
-    return value.toFixed(1) + '%';
+    return value.toFixed(1) + '%'
   }
 
-  const indicatorObj = props.indicators.find(i => i.Code === indicator);
+  const indicatorObj = props.indicators.find(i => i.Code === indicator)
   if (indicatorObj?.unit === '%') {
-    return value.toFixed(2) + '%';
+    return value.toFixed(2) + '%'
   }
 
-  return new Intl.NumberFormat('vi-VN').format(value);
-};
+  return new Intl.NumberFormat('vi-VN').format(value)
+}
 
 const getValueClass = (value, indicator) => {
   if (comparisonType.value === 'completion') {
-    if (value >= 100) return 'excellent';
-    if (value >= 90) return 'good';
-    if (value >= 80) return 'average';
-    return 'poor';
+    if (value >= 100) return 'excellent'
+    if (value >= 90) return 'good'
+    if (value >= 80) return 'average'
+    return 'poor'
   }
-  return '';
-};
+  return ''
+}
 
-const getRankClass = (rank) => {
-  if (rank === 1) return 'rank-1';
-  if (rank === 2) return 'rank-2';
-  if (rank === 3) return 'rank-3';
-  return 'rank-other';
-};
+const getRankClass = rank => {
+  if (rank === 1) return 'rank-1'
+  if (rank === 2) return 'rank-2'
+  if (rank === 3) return 'rank-3'
+  return 'rank-other'
+}
 
-const getScoreType = (score) => {
-  if (score >= 90) return 'success';
-  if (score >= 80) return 'warning';
-  return 'danger';
-};
+const getScoreType = score => {
+  if (score >= 90) return 'success'
+  if (score >= 80) return 'warning'
+  return 'danger'
+}
 
 const getBestUnit = () => {
-  const best = rankingData.value[0];
+  const best = rankingData.value[0]
   return {
     name: best.unitName,
-    score: best.totalScore
-  };
-};
+    score: best.totalScore,
+  }
+}
 
 const getAverageScore = () => {
-  const total = rankingData.value.reduce((sum, unit) => sum + unit.totalScore, 0);
-  return total / rankingData.value.length;
-};
+  const total = rankingData.value.reduce((sum, unit) => sum + unit.totalScore, 0)
+  return total / rankingData.value.length
+}
 
 const getImprovementCount = () => {
-  return rankingData.value.filter(unit => unit.totalScore < 70).length;
-};
+  return rankingData.value.filter(unit => unit.totalScore < 70).length
+}
 
-const selectUnit = (row) => {
-  ElMessage.info(`Xem chi tiết ${row.unitName}`);
-};
+const selectUnit = row => {
+  ElMessage.info(`Xem chi tiết ${row.unitName}`)
+}
 
 const downloadChart = () => {
-  ElMessage.info('Tính năng tải xuống biểu đồ đang phát triển');
-};
+  ElMessage.info('Tính năng tải xuống biểu đồ đang phát triển')
+}
 
 const fullscreenChart = () => {
-  ElMessage.info('Tính năng xem toàn màn hình đang phát triển');
-};
+  ElMessage.info('Tính năng xem toàn màn hình đang phát triển')
+}
 
 // Watchers
 watch([selectedIndicators, comparisonType], () => {
   // Reload comparison data when filters change
-  console.log('Comparison filters changed');
-});
+  console.log('Comparison filters changed')
+})
 
 onMounted(() => {
-  console.log('ComparisonView mounted');
-});
+  console.log('ComparisonView mounted')
+})
 </script>
 
 <style scoped>
@@ -476,7 +472,7 @@ onMounted(() => {
 
 .table-header {
   padding: 15px 20px;
-  border-bottom: 1px solid #EBEEF5;
+  border-bottom: 1px solid #ebeef5;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -494,10 +490,18 @@ onMounted(() => {
   align-items: center;
 }
 
-.value.excellent { color: #67C23A; }
-.value.good { color: #95D475; }
-.value.average { color: #E6A23C; }
-.value.poor { color: #F56C6C; }
+.value.excellent {
+  color: #67c23a;
+}
+.value.good {
+  color: #95d475;
+}
+.value.average {
+  color: #e6a23c;
+}
+.value.poor {
+  color: #f56c6c;
+}
 
 .rank-badge {
   font-size: 10px;
@@ -506,10 +510,22 @@ onMounted(() => {
   font-weight: bold;
 }
 
-.rank-1 { background: #FFD700; color: #8B4513; }
-.rank-2 { background: #C0C0C0; color: #696969; }
-.rank-3 { background: #CD7F32; color: white; }
-.rank-other { background: #E0E0E0; color: #666; }
+.rank-1 {
+  background: #ffd700;
+  color: #8b4513;
+}
+.rank-2 {
+  background: #c0c0c0;
+  color: #696969;
+}
+.rank-3 {
+  background: #cd7f32;
+  color: white;
+}
+.rank-other {
+  background: #e0e0e0;
+  color: #666;
+}
 
 .performance-summary {
   background: white;
@@ -520,7 +536,7 @@ onMounted(() => {
 
 .summary-header {
   padding: 15px 20px;
-  border-bottom: 1px solid #EBEEF5;
+  border-bottom: 1px solid #ebeef5;
 }
 
 .summary-header h4 {
@@ -542,9 +558,15 @@ onMounted(() => {
   margin-bottom: 15px;
 }
 
-.summary-card.best { background: linear-gradient(135deg, #67C23A, #85CE61); }
-.summary-card.average { background: linear-gradient(135deg, #409EFF, #66B1FF); }
-.summary-card.improvement { background: linear-gradient(135deg, #E6A23C, #EEBC6D); }
+.summary-card.best {
+  background: linear-gradient(135deg, #67c23a, #85ce61);
+}
+.summary-card.average {
+  background: linear-gradient(135deg, #409eff, #66b1ff);
+}
+.summary-card.improvement {
+  background: linear-gradient(135deg, #e6a23c, #eebc6d);
+}
 
 .card-icon {
   color: white;

@@ -1,8 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models.DataTables;
-using System.Threading.Tasks;
-using System.Linq.Expressions;
 
 namespace TinhKhoanApp.Api.Repositories
 {
@@ -213,65 +211,6 @@ namespace TinhKhoanApp.Api.Repositories
         public void UpdateRange(IEnumerable<EI01> entities)
         {
             _dbSet.UpdateRange(entities);
-        }
-
-        /// <summary>
-        /// Lấy danh sách dữ liệu EI01 với số lượng chỉ định
-        /// </summary>
-        public async Task<IEnumerable<EI01>> GetAsync(int take = 10, int skip = 0)
-        {
-            return await _dbSet
-                .OrderByDescending(ei01 => ei01.CREATED_DATE)
-                .Skip(skip)
-                .Take(take)
-                .ToListAsync();
-        }
-
-        /// <summary>
-        /// Lấy dữ liệu EI01 theo trạng thái dịch vụ
-        /// </summary>
-        public async Task<IEnumerable<EI01>> GetByServiceStatusAsync(string serviceStatus, int maxResults = 100)
-        {
-            return await _dbSet
-                .Where(ei01 => ei01.TRANG_THAI_EMB == serviceStatus ||
-                       ei01.TRANG_THAI_OTT == serviceStatus ||
-                       ei01.TRANG_THAI_SMS == serviceStatus)
-                .OrderByDescending(ei01 => ei01.CREATED_DATE)
-                .Take(maxResults)
-                .ToListAsync();
-        }
-
-        /// <summary>
-        /// Phân trang dữ liệu EI01 theo điều kiện lọc
-        /// </summary>
-        public async Task<(int totalCount, IEnumerable<EI01> items)> GetPagedAsync(
-            int pageNumber,
-            int pageSize,
-            Expression<Func<EI01, bool>> predicate)
-        {
-            var query = _dbSet.AsQueryable();
-
-            if (predicate != null)
-            {
-                query = query.Where(predicate);
-            }
-
-            var totalCount = await query.CountAsync();
-            var items = await query
-                .OrderByDescending(e => e.CREATED_DATE)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            return (totalCount, items);
-        }
-
-        /// <summary>
-        /// Lưu các thay đổi vào cơ sở dữ liệu
-        /// </summary>
-        public async Task<int> SaveChangesAsync()
-        {
-            return await _context.SaveChangesAsync();
         }
     }
 }

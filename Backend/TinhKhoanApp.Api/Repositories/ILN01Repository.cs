@@ -1,7 +1,6 @@
 using TinhKhoanApp.Api.Models.DataTables;
 using TinhKhoanApp.Api.Data;
 using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
 
 namespace TinhKhoanApp.Api.Repositories
 {
@@ -63,19 +62,7 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Trả về DbContext cho việc sử dụng trong service layer
         /// </summary>
-        /// <returns>ApplicationDbContext instance</returns>
-        new ApplicationDbContext GetDbContext();
-
-        /// <summary>
-        /// Lưu các thay đổi vào cơ sở dữ liệu
-        /// </summary>
-        /// <returns>Số lượng bản ghi bị ảnh hưởng</returns>
-        Task<int> SaveChangesAsync();
-
-        /// <summary>
-        /// Xóa một entity theo id
-        /// </summary>
-        /// <param name="entity">Entity cần xóa</param>
-        Task DeleteAsync(LN01 entity);
+        /// <returns>DbContext instance</returns>
+        new DbContext GetDbContext();
     }
 }

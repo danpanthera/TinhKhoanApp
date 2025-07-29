@@ -12,7 +12,7 @@
 
       <div class="header-controls">
         <!-- Chọn đơn vị/phòng ban - 15 chi nhánh chuẩn hóa -->
-        <select v-model="selectedUnitId" @change="loadTargets" class="form-select" style="min-width: 200px;">
+        <select v-model="selectedUnitId" @change="loadTargets" class="form-select" style="min-width: 200px">
           <option value="">Tất cả đơn vị (Toàn tỉnh)</option>
           <option value="HoiSo">Hội Sở</option>
           <option value="CnBinhLu">CN Bình Lư</option>
@@ -66,9 +66,7 @@
           {{ loading ? 'Đang tải...' : '🔄 Tải lại' }}
         </button>
 
-        <button @click="showCreateModal = true" class="btn btn-success">
-          ➕ Thêm chỉ tiêu
-        </button>
+        <button @click="showCreateModal = true" class="btn btn-success">➕ Thêm chỉ tiêu</button>
       </div>
     </div>
 
@@ -127,12 +125,8 @@
               </td>
               <td>
                 <div class="action-buttons">
-                  <button @click="editTarget(target)" class="btn btn-sm btn-warning">
-                    ✏️ Sửa
-                  </button>
-                  <button @click="deleteTarget(target.id)" class="btn btn-sm btn-danger">
-                    🗑️ Xóa
-                  </button>
+                  <button @click="editTarget(target)" class="btn btn-sm btn-warning">✏️ Sửa</button>
+                  <button @click="deleteTarget(target.id)" class="btn btn-sm btn-danger">🗑️ Xóa</button>
                 </div>
               </td>
             </tr>
@@ -143,9 +137,7 @@
           <div class="no-data-icon">📊</div>
           <h4>Chưa có dữ liệu</h4>
           <p>Chưa có chỉ tiêu nào được giao cho đơn vị này trong kỳ đã chọn.</p>
-          <button @click="showCreateModal = true" class="btn btn-primary">
-            ➕ Thêm chỉ tiêu đầu tiên
-          </button>
+          <button @click="showCreateModal = true" class="btn btn-primary">➕ Thêm chỉ tiêu đầu tiên</button>
         </div>
       </div>
     </div>
@@ -169,11 +161,7 @@
           <form @submit.prevent="saveTarget">
             <div class="form-group">
               <label>Tên chỉ tiêu *</label>
-              <select
-                v-model="targetForm.indicatorName"
-                class="form-select"
-                required
-              >
+              <select v-model="targetForm.indicatorName" class="form-select" required>
                 <option value="">Chọn chỉ tiêu</option>
                 <option v-for="indicator in businessIndicators" :key="indicator.value" :value="indicator.value">
                   {{ indicator.label }}
@@ -246,15 +234,17 @@
               <label>Giá trị mục tiêu *</label>
               <input
                 v-model="targetForm.targetValueFormatted"
-                @input="(e) => onTargetValueInput(e)"
-                @blur="(e) => onTargetValueBlur(e)"
+                @input="e => onTargetValueInput(e)"
+                @blur="e => onTargetValueBlur(e)"
                 type="text"
                 class="form-input number-input"
                 required
                 placeholder="Nhập giá trị mục tiêu (VD: 1,000,000,000)"
                 autocomplete="off"
               />
-              <small class="form-hint">Số sẽ được tự động định dạng khi nhập. Dấu "," ngăn cách hàng nghìn, dấu "." cho thập phân</small>
+              <small class="form-hint"
+                >Số sẽ được tự động định dạng khi nhập. Dấu "," ngăn cách hàng nghìn, dấu "." cho thập phân</small
+              >
             </div>
 
             <div class="form-group">
@@ -273,20 +263,15 @@
 
             <div class="form-group">
               <label class="checkbox-label">
-                <input
-                  v-model="targetForm.isActive"
-                  type="checkbox"
-                />
+                <input v-model="targetForm.isActive" type="checkbox" />
                 Kích hoạt chỉ tiêu
               </label>
             </div>
 
             <div class="form-actions">
-              <button type="button" @click="closeModals" class="btn btn-secondary">
-                Hủy
-              </button>
+              <button type="button" @click="closeModals" class="btn btn-secondary">Hủy</button>
               <button type="submit" :disabled="saving" class="btn btn-primary">
-                {{ saving ? 'Đang lưu...' : (showEditModal ? 'Cập nhật' : 'Tạo mới') }}
+                {{ saving ? 'Đang lưu...' : showEditModal ? 'Cập nhật' : 'Tạo mới' }}
               </button>
             </div>
           </form>
@@ -296,39 +281,35 @@
 
     <!-- Action buttons cuối trang -->
     <div v-if="!loading" class="action-buttons">
-      <button @click="exportData" class="btn btn-info">
-        📊 Xuất Excel
-      </button>
-      <button @click="showBulkImportModal = true" class="btn btn-warning">
-        📁 Import từ Excel
-      </button>
+      <button @click="exportData" class="btn btn-info">📊 Xuất Excel</button>
+      <button @click="showBulkImportModal = true" class="btn btn-warning">📁 Import từ Excel</button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
-import { isAuthenticated } from '../../services/auth';
-import { dashboardService } from '../../services/dashboardService';
-import { useNumberInput } from '../../utils/numberFormat';
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { isAuthenticated } from '../../services/auth'
+import { dashboardService } from '../../services/dashboardService'
+import { useNumberInput } from '../../utils/numberFormat'
 
-const router = useRouter();
+const router = useRouter()
 
 // 🔢 Initialize number input utility
 const { handleInput, handleBlur, formatNumber, parseFormattedNumber } = useNumberInput({
   maxDecimalPlaces: 2,
-  allowNegative: false
-});
+  allowNegative: false,
+})
 
 // Reactive data
-const loading = ref(false);
-const saving = ref(false);
-const errorMessage = ref('');
-const successMessage = ref('');
-const showCreateModal = ref(false);
-const showEditModal = ref(false);
-const showBulkImportModal = ref(false);
+const loading = ref(false)
+const saving = ref(false)
+const errorMessage = ref('')
+const successMessage = ref('')
+const showCreateModal = ref(false)
+const showEditModal = ref(false)
+const showBulkImportModal = ref(false)
 
 // Form data
 const targetForm = ref({
@@ -340,30 +321,30 @@ const targetForm = ref({
   targetValue: '',
   targetValueFormatted: '',
   unit: '', // Đơn vị tính sẽ được tự động cập nhật khi chọn chỉ tiêu
-  isActive: true
-});
+  isActive: true,
+})
 
 // Data
-const targets = ref([]);
+const targets = ref([])
 const units = ref([
   { id: 'HO', unitName: 'Hội sở', name: 'Hội sở' },
   { id: 'CN_HCM', unitName: 'Chi nhánh TP.HCM', name: 'Chi nhánh TP.HCM' },
   { id: 'CN_HN', unitName: 'Chi nhánh Hà Nội', name: 'Chi nhánh Hà Nội' },
   { id: 'CN_DN', unitName: 'Chi nhánh Đà Nẵng', name: 'Chi nhánh Đà Nẵng' },
   { id: 'CN_CT', unitName: 'Chi nhánh Cần Thơ', name: 'Chi nhánh Cần Thơ' },
-  { id: 'CN_HP', unitName: 'Chi nhánh Hải Phòng', name: 'Chi nhánh Hải Phòng' }
-]);
-const selectedUnitId = ref('');
-const selectedYear = ref(new Date().getFullYear());
-const periodType = ref('');
-const selectedPeriod = ref('');
-const editingTarget = ref(null);
+  { id: 'CN_HP', unitName: 'Chi nhánh Hải Phòng', name: 'Chi nhánh Hải Phòng' },
+])
+const selectedUnitId = ref('')
+const selectedYear = ref(new Date().getFullYear())
+const periodType = ref('')
+const selectedPeriod = ref('')
+const editingTarget = ref(null)
 
 // Options
-const yearOptions = ref(dashboardService.getYearOptions());
-const quarterOptions = ref(dashboardService.getQuarterOptions());
-const monthOptions = ref(dashboardService.getMonthOptions());
-const periodTypeOptions = ref(dashboardService.getPeriodTypeOptions());
+const yearOptions = ref(dashboardService.getYearOptions())
+const quarterOptions = ref(dashboardService.getQuarterOptions())
+const monthOptions = ref(dashboardService.getMonthOptions())
+const periodTypeOptions = ref(dashboardService.getPeriodTypeOptions())
 
 // Danh sách 6 chỉ tiêu kinh doanh cố định
 const businessIndicators = ref([
@@ -372,108 +353,108 @@ const businessIndicators = ref([
   { value: 'Tỷ lệ nợ xấu', label: '3. Tỷ lệ nợ xấu' },
   { value: 'Thu nợ đã XLRR', label: '4. Thu nợ đã XLRR' },
   { value: 'Thu dịch vụ', label: '5. Thu dịch vụ' },
-  { value: 'Lợi nhuận khoán tài chính', label: '6. Lợi nhuận khoán tài chính' }
-]);
+  { value: 'Lợi nhuận khoán tài chính', label: '6. Lợi nhuận khoán tài chính' },
+])
 
 // Computed
 const filteredTargets = computed(() => {
-  if (!selectedUnitId.value) return [];
+  if (!selectedUnitId.value) return []
 
   return targets.value.filter(target => {
-    let matches = target.unitId === selectedUnitId.value;
+    let matches = target.unitId === selectedUnitId.value
 
     if (selectedYear.value) {
-      matches = matches && target.year === selectedYear.value;
+      matches = matches && target.year === selectedYear.value
     }
 
     if (periodType.value) {
-      matches = matches && target.periodType === periodType.value;
+      matches = matches && target.periodType === periodType.value
     }
 
     if (selectedPeriod.value && periodType.value !== 'YEAR') {
-      matches = matches && target.period === selectedPeriod.value;
+      matches = matches && target.period === selectedPeriod.value
     }
 
-    return matches;
-  });
-});
+    return matches
+  })
+})
 
 // Methods
 const loadTargets = async () => {
-  if (!selectedYear.value) return;
+  if (!selectedYear.value) return
 
-  loading.value = true;
-  errorMessage.value = '';
+  loading.value = true
+  errorMessage.value = ''
 
   try {
     const params = {
-      year: selectedYear.value
-    };
+      year: selectedYear.value,
+    }
 
     if (periodType.value) {
-      params.periodType = periodType.value;
+      params.periodType = periodType.value
     }
 
     if (selectedPeriod.value && periodType.value !== 'YEAR') {
-      params.period = selectedPeriod.value;
+      params.period = selectedPeriod.value
     }
 
     if (selectedUnitId.value) {
-      params.unitId = selectedUnitId.value;
+      params.unitId = selectedUnitId.value
     }
 
-    const response = await dashboardService.getTargets(params);
-    targets.value = response || [];
+    const response = await dashboardService.getTargets(params)
+    targets.value = response || []
   } catch (error) {
-    console.error('Error loading targets:', error);
-    errorMessage.value = 'Không thể tải dữ liệu chỉ tiêu';
+    console.error('Error loading targets:', error)
+    errorMessage.value = 'Không thể tải dữ liệu chỉ tiêu'
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const getSelectedUnitName = () => {
   const unitMap = {
-    'HO': 'Hội sở',
-    'CN_HCM': 'Chi nhánh TP.HCM',
-    'CN_HN': 'Chi nhánh Hà Nội',
-    'CN_DN': 'Chi nhánh Đà Nẵng',
-    'CN_CT': 'Chi nhánh Cần Thơ',
-    'CN_HP': 'Chi nhánh Hải Phòng'
-  };
-  return unitMap[selectedUnitId.value] || '';
-};
+    HO: 'Hội sở',
+    CN_HCM: 'Chi nhánh TP.HCM',
+    CN_HN: 'Chi nhánh Hà Nội',
+    CN_DN: 'Chi nhánh Đà Nẵng',
+    CN_CT: 'Chi nhánh Cần Thơ',
+    CN_HP: 'Chi nhánh Hải Phòng',
+  }
+  return unitMap[selectedUnitId.value] || ''
+}
 
-const getPeriodTypeLabel = (type) => {
-  const option = periodTypeOptions.value.find(o => o.value === type);
-  return option ? option.label : type;
-};
+const getPeriodTypeLabel = type => {
+  const option = periodTypeOptions.value.find(o => o.value === type)
+  return option ? option.label : type
+}
 
 // Number input handlers using the new utility
-const onTargetValueInput = (event) => {
-  const formattedValue = handleInput(event);
-  targetForm.value.targetValueFormatted = formattedValue;
+const onTargetValueInput = event => {
+  const formattedValue = handleInput(event)
+  targetForm.value.targetValueFormatted = formattedValue
   // Store the numeric value for backend
-  targetForm.value.targetValue = parseFormattedNumber(formattedValue);
-};
+  targetForm.value.targetValue = parseFormattedNumber(formattedValue)
+}
 
-const onTargetValueBlur = (event) => {
-  const formattedValue = handleBlur(event);
-  targetForm.value.targetValueFormatted = formattedValue;
-  targetForm.value.targetValue = parseFormattedNumber(formattedValue);
-};
+const onTargetValueBlur = event => {
+  const formattedValue = handleBlur(event)
+  targetForm.value.targetValueFormatted = formattedValue
+  targetForm.value.targetValue = parseFormattedNumber(formattedValue)
+}
 
 const onPeriodTypeChange = () => {
-  selectedPeriod.value = '';
-  loadTargets();
-};
+  selectedPeriod.value = ''
+  loadTargets()
+}
 
 const onFormPeriodTypeChange = () => {
-  targetForm.value.period = '';
-};
+  targetForm.value.period = ''
+}
 
-const editTarget = (target) => {
-  editingTarget.value = target;
+const editTarget = target => {
+  editingTarget.value = target
   targetForm.value = {
     indicatorName: target.indicatorName,
     unitId: target.unitId,
@@ -483,55 +464,55 @@ const editTarget = (target) => {
     targetValue: target.targetValue,
     targetValueFormatted: formatNumber(target.targetValue),
     unit: target.unit,
-    isActive: target.isActive
-  };
-  showEditModal.value = true;
-};
+    isActive: target.isActive,
+  }
+  showEditModal.value = true
+}
 
 const saveTarget = async () => {
-  saving.value = true;
-  errorMessage.value = '';
-  successMessage.value = '';
+  saving.value = true
+  errorMessage.value = ''
+  successMessage.value = ''
 
   try {
     if (showEditModal.value && editingTarget.value) {
       // Update existing target
-      await dashboardService.updateTarget(editingTarget.value.id, targetForm.value);
-      successMessage.value = 'Cập nhật chỉ tiêu thành công';
+      await dashboardService.updateTarget(editingTarget.value.id, targetForm.value)
+      successMessage.value = 'Cập nhật chỉ tiêu thành công'
     } else {
       // Create new target
-      await dashboardService.createTarget(targetForm.value);
-      successMessage.value = 'Tạo chỉ tiêu mới thành công';
+      await dashboardService.createTarget(targetForm.value)
+      successMessage.value = 'Tạo chỉ tiêu mới thành công'
     }
 
-    closeModals();
-    await loadTargets();
+    closeModals()
+    await loadTargets()
   } catch (error) {
-    console.error('Error saving target:', error);
-    errorMessage.value = 'Có lỗi xảy ra khi lưu chỉ tiêu: ' + (error.response?.data?.message || error.message);
+    console.error('Error saving target:', error)
+    errorMessage.value = 'Có lỗi xảy ra khi lưu chỉ tiêu: ' + (error.response?.data?.message || error.message)
   } finally {
-    saving.value = false;
+    saving.value = false
   }
-};
+}
 
-const deleteTarget = async (targetId) => {
-  if (!confirm('Bạn có chắc chắn muốn xóa chỉ tiêu này?')) return;
+const deleteTarget = async targetId => {
+  if (!confirm('Bạn có chắc chắn muốn xóa chỉ tiêu này?')) return
 
   try {
-    await dashboardService.deleteTarget(targetId);
-    successMessage.value = 'Xóa chỉ tiêu thành công';
-    await loadTargets();
+    await dashboardService.deleteTarget(targetId)
+    successMessage.value = 'Xóa chỉ tiêu thành công'
+    await loadTargets()
   } catch (error) {
-    console.error('Error deleting target:', error);
-    errorMessage.value = 'Có lỗi xảy ra khi xóa chỉ tiêu';
+    console.error('Error deleting target:', error)
+    errorMessage.value = 'Có lỗi xảy ra khi xóa chỉ tiêu'
   }
-};
+}
 
 const closeModals = () => {
-  showCreateModal.value = false;
-  showEditModal.value = false;
-  showBulkImportModal.value = false;
-  editingTarget.value = null;
+  showCreateModal.value = false
+  showEditModal.value = false
+  showBulkImportModal.value = false
+  editingTarget.value = null
 
   // Reset form
   targetForm.value = {
@@ -543,18 +524,18 @@ const closeModals = () => {
     targetValue: '',
     targetValueFormatted: '',
     unit: '', // Đơn vị tính sẽ được tự động cập nhật khi chọn chỉ tiêu
-    isActive: true
-  };
-};
+    isActive: true,
+  }
+}
 
 const exportData = () => {
   // TODO: Implement export functionality
-  alert('Chức năng xuất Excel sẽ được phát triển trong phiên bản tiếp theo');
-};
+  alert('Chức năng xuất Excel sẽ được phát triển trong phiên bản tiếp theo')
+}
 
 // Hàm tự động cập nhật đơn vị tính theo chỉ tiêu được chọn
-const updateUnitByIndicator = (indicatorName) => {
-  if (!indicatorName) return;
+const updateUnitByIndicator = indicatorName => {
+  if (!indicatorName) return
 
   // Mapping chỉ tiêu KPI với đơn vị tính chuẩn theo yêu cầu
   const unitMapping = {
@@ -563,37 +544,40 @@ const updateUnitByIndicator = (indicatorName) => {
     'Tỷ lệ nợ xấu': '%',
     'Thu nợ đã XLRR': 'Triệu VND',
     'Thu dịch vụ': 'Triệu VND',
-    'Lợi nhuận khoán tài chính': 'Triệu VND'
-  };
+    'Lợi nhuận khoán tài chính': 'Triệu VND',
+  }
 
   // Tự động cập nhật đơn vị tính
   if (unitMapping[indicatorName]) {
-    targetForm.value.unit = unitMapping[indicatorName];
+    targetForm.value.unit = unitMapping[indicatorName]
   }
-};
+}
 
 // Watcher để theo dõi thay đổi chỉ tiêu và tự động cập nhật đơn vị tính
-watch(() => targetForm.value.indicatorName, (newIndicatorName) => {
-  updateUnitByIndicator(newIndicatorName);
-});
+watch(
+  () => targetForm.value.indicatorName,
+  newIndicatorName => {
+    updateUnitByIndicator(newIndicatorName)
+  }
+)
 
 // Clear messages after 5 seconds
 watch([errorMessage, successMessage], () => {
   setTimeout(() => {
-    errorMessage.value = '';
-    successMessage.value = '';
-  }, 5000);
-});
+    errorMessage.value = ''
+    successMessage.value = ''
+  }, 5000)
+})
 
 // Lifecycle
 onMounted(async () => {
   if (!isAuthenticated()) {
-    router.push('/login');
-    return;
+    router.push('/login')
+    return
   }
 
-  await loadTargets();
-});
+  await loadTargets()
+})
 </script>
 
 <style scoped>
@@ -604,7 +588,7 @@ onMounted(async () => {
 }
 
 .page-header {
-  background: linear-gradient(135deg, #8B1538 0%, #A6195C 50%, #B91D47 100%);
+  background: linear-gradient(135deg, #8b1538 0%, #a6195c 50%, #b91d47 100%);
   color: white;
   padding: 30px;
   box-shadow: 0 4px 20px rgba(139, 21, 56, 0.3);
@@ -619,7 +603,8 @@ onMounted(async () => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")
+    repeat;
   z-index: 1;
 }
 
@@ -677,7 +662,7 @@ onMounted(async () => {
 
 .section-header h3 {
   margin: 0;
-  color: #8B1538;
+  color: #8b1538;
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -704,7 +689,7 @@ onMounted(async () => {
 }
 
 .select-unit-message h3 {
-  color: #8B1538;
+  color: #8b1538;
   margin: 0 0 10px 0;
   font-weight: 600;
 }
@@ -825,7 +810,7 @@ onMounted(async () => {
 }
 
 .btn-primary {
-  background: #8B1538;
+  background: #8b1538;
   color: white;
 }
 
@@ -889,7 +874,7 @@ onMounted(async () => {
 .form-select:focus,
 .form-input:focus {
   outline: none;
-  border-color: #8B1538;
+  border-color: #8b1538;
   box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
 }
 
@@ -906,15 +891,19 @@ onMounted(async () => {
   width: 40px;
   height: 40px;
   border: 4px solid #f3f3f3;
-  border-top: 4px solid #8B1538;
+  border-top: 4px solid #8b1538;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 16px;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .error-message {

@@ -3,7 +3,7 @@
     <!-- Header với thương hiệu Agribank -->
     <div class="page-header agribank-header">
       <div class="agribank-brand">
-        <img src="/agribank-logo.svg" alt="Agribank Logo" class="agribank-logo">
+        <img src="/agribank-logo.svg" alt="Agribank Logo" class="agribank-logo" />
         <div class="brand-text">
           <h1 class="agribank-title">
             <i class="mdi mdi-database-sync"></i>
@@ -27,7 +27,8 @@
             @click="console.log('📅 Year dropdown clicked')"
             class="agribank-select"
             autocomplete="off"
-            aria-label="Chọn năm">
+            aria-label="Chọn năm"
+          >
             <option value="">Chọn năm</option>
             <option v-for="year in yearOptions" :key="year" :value="year">
               {{ year }}
@@ -44,7 +45,8 @@
             @click="console.log('📆 Period type dropdown clicked')"
             class="agribank-select"
             autocomplete="off"
-            aria-label="Chọn loại kỳ">
+            aria-label="Chọn loại kỳ"
+          >
             <option value="">Chọn loại kỳ</option>
             <option v-for="period in periodTypeOptions" :key="period.value" :value="period.value">
               {{ period.label }}
@@ -61,7 +63,8 @@
             @click="console.log('📊 Period dropdown clicked')"
             class="agribank-select"
             autocomplete="off"
-            aria-label="Chọn kỳ">
+            aria-label="Chọn kỳ"
+          >
             <option value="">Chọn kỳ</option>
             <option v-for="period in periodOptions" :key="period" :value="period">
               {{ period }}
@@ -80,9 +83,7 @@
           </div>
           <div class="section-title-area">
             <h2 class="agribank-section-title">Tổng quan 6 chỉ tiêu chính</h2>
-            <p class="agribank-section-subtitle">
-              Ma trận tình hình cập nhật các chỉ tiêu theo từng chi nhánh
-            </p>
+            <p class="agribank-section-subtitle">Ma trận tình hình cập nhật các chỉ tiêu theo từng chi nhánh</p>
             <div class="status-legend">
               <div class="legend-item legend-success">
                 <i class="mdi mdi-check-circle"></i>
@@ -108,11 +109,7 @@
                   <span>Chi nhánh / Đơn vị</span>
                 </div>
               </th>
-              <th
-                v-for="indicator in sixMainIndicators"
-                :key="indicator.code"
-                class="agribank-indicator-header"
-              >
+              <th v-for="indicator in sixMainIndicators" :key="indicator.code" class="agribank-indicator-header">
                 <div class="agribank-indicator-content">
                   <div class="indicator-icon-wrapper">
                     <i :class="indicator.icon" class="indicator-icon"></i>
@@ -132,11 +129,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="unit in branchUnits"
-              :key="unit.id"
-              class="agribank-unit-row"
-            >
+            <tr v-for="unit in branchUnits" :key="unit.id" class="agribank-unit-row">
               <td class="agribank-unit-name-cell">
                 <div class="unit-info">
                   <div class="unit-icon">
@@ -148,10 +141,7 @@
               <td
                 v-for="indicator in sixMainIndicators"
                 :key="`${unit.id}-${indicator.code}`"
-                :class="[
-                  'agribank-status-cell',
-                  getStatusClass(unit.id, indicator.code)
-                ]"
+                :class="['agribank-status-cell', getStatusClass(unit.id, indicator.code)]"
                 @click="navigateToDetail(unit.id, indicator.code)"
               >
                 <div class="agribank-status-indicator">
@@ -201,9 +191,7 @@
                     <span class="separator">/</span>
                     <span class="total-units">{{ branchUnits.length }}</span>
                   </div>
-                  <div class="summary-percentage">
-                    {{ getIndicatorCompletionPercentage(indicator.code) }}%
-                  </div>
+                  <div class="summary-percentage">{{ getIndicatorCompletionPercentage(indicator.code) }}%</div>
                 </div>
               </td>
               <td class="agribank-total-summary-cell">
@@ -230,28 +218,28 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
-import LoadingOverlay from '../../components/dashboard/LoadingOverlay.vue';
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import LoadingOverlay from '../../components/dashboard/LoadingOverlay.vue'
 
-const router = useRouter();
+const router = useRouter()
 
 // ===== REACTIVE DATA =====
-const isLoading = ref(false);
-const showDebug = ref(false);
+const isLoading = ref(false)
+const showDebug = ref(false)
 
 // Time-related filters
-const selectedYear = ref('');
-const periodType = ref('');
-const selectedPeriod = ref('');
+const selectedYear = ref('')
+const periodType = ref('')
+const selectedPeriod = ref('')
 
 // Options for dropdowns
-const yearOptions = ref(['2024', '2025']);
+const yearOptions = ref(['2024', '2025'])
 const periodTypeOptions = ref([
   { value: 'monthly', label: 'Tháng' },
   { value: 'quarterly', label: 'Quý' },
-  { value: 'yearly', label: 'Năm' }
-]);
+  { value: 'yearly', label: 'Năm' },
+])
 
 // Sample data for development
 const branchUnits = ref([
@@ -269,63 +257,63 @@ const branchUnits = ref([
   { id: 12, name: 'Chi nhánh Tiền Giang', code: 'TG001', type: 'branch' },
   { id: 13, name: 'Chi nhánh An Giang', code: 'AG001', type: 'branch' },
   { id: 14, name: 'Chi nhánh Kiên Giang', code: 'KG001', type: 'branch' },
-  { id: 15, name: 'Chi nhánh Bạc Liêu', code: 'BL001', type: 'branch' }
-]);
+  { id: 15, name: 'Chi nhánh Bạc Liêu', code: 'BL001', type: 'branch' },
+])
 
 const sixMainIndicators = ref([
   {
     code: 'DP01',
     name: 'Dư nợ tín dụng',
     unit: 'Tỷ VND',
-    icon: 'mdi-account-cash'
+    icon: 'mdi-account-cash',
   },
   {
     code: 'RR01',
     name: 'Huy động vốn',
     unit: 'Tỷ VND',
-    icon: 'mdi-bank-transfer'
+    icon: 'mdi-bank-transfer',
   },
   {
     code: 'LN03',
     name: 'Lợi nhuận',
     unit: 'Tỷ VND',
-    icon: 'mdi-trending-up'
+    icon: 'mdi-trending-up',
   },
   {
     code: 'GL01',
     name: 'Thu nhập lãi',
     unit: 'Tỷ VND',
-    icon: 'mdi-cash-multiple'
+    icon: 'mdi-cash-multiple',
   },
   {
     code: 'EI01',
     name: 'Chi phí hoạt động',
     unit: 'Tỷ VND',
-    icon: 'mdi-chart-line-variant'
+    icon: 'mdi-chart-line-variant',
   },
   {
     code: 'GL41',
     name: 'Phí dịch vụ',
     unit: 'Tỷ VND',
-    icon: 'mdi-receipt'
-  }
-]);
+    icon: 'mdi-receipt',
+  },
+])
 
 // Mock completion status for demo
-const completionMatrix = ref({});
+const completionMatrix = ref({})
 
 // ===== COMPUTED PROPERTIES =====
 const periodOptions = computed(() => {
-  const type = periodType.value;
+  const type = periodType.value
   if (type === 'monthly') {
-    return Array.from({length: 12}, (_, i) => `Tháng ${i + 1}`);
+    return Array.from({ length: 12 }, (_, i) => `Tháng ${i + 1}`)
   } else if (type === 'quarterly') {
-    return ['Quý 1', 'Quý 2', 'Quý 3', 'Quý 4'];
+    return ['Quý 1', 'Quý 2', 'Quý 3', 'Quý 4']
   } else if (type === 'yearly') {
-    return ['Cả năm'];
+    return ['Cả năm']
   }
-  return [];
-});
+  return []
+})
 
 const debugInfo = computed(() => ({
   selectedYear: selectedYear.value,
@@ -333,160 +321,158 @@ const debugInfo = computed(() => ({
   selectedPeriod: selectedPeriod.value,
   totalUnits: branchUnits.value.length,
   totalIndicators: sixMainIndicators.value.length,
-  completionRate: getTotalCompletionPercentage()
-}));
+  completionRate: getTotalCompletionPercentage(),
+}))
 
 // ===== METHODS =====
 
 // Initialize mock data
 const initializeMockData = () => {
-  const matrix = {};
+  const matrix = {}
   branchUnits.value.forEach(unit => {
-    matrix[unit.id] = {};
+    matrix[unit.id] = {}
     sixMainIndicators.value.forEach(indicator => {
       // Random completion status for demo
-      matrix[unit.id][indicator.code] = Math.random() > 0.3;
-    });
-  });
-  completionMatrix.value = matrix;
-  console.log('🎯 Mock completion matrix initialized:', matrix);
-};
+      matrix[unit.id][indicator.code] = Math.random() > 0.3
+    })
+  })
+  completionMatrix.value = matrix
+  console.log('🎯 Mock completion matrix initialized:', matrix)
+}
 
 // Status checking methods
 const isCompleted = (unitId, indicatorCode) => {
-  return completionMatrix.value[unitId]?.[indicatorCode] || false;
-};
+  return completionMatrix.value[unitId]?.[indicatorCode] || false
+}
 
 const getStatusClass = (unitId, indicatorCode) => {
-  return isCompleted(unitId, indicatorCode) ? 'agribank-status-completed' : 'agribank-status-pending';
-};
+  return isCompleted(unitId, indicatorCode) ? 'agribank-status-completed' : 'agribank-status-pending'
+}
 
-const getCompletedCount = (unitId) => {
-  if (!completionMatrix.value[unitId]) return 0;
-  return Object.values(completionMatrix.value[unitId]).filter(Boolean).length;
-};
+const getCompletedCount = unitId => {
+  if (!completionMatrix.value[unitId]) return 0
+  return Object.values(completionMatrix.value[unitId]).filter(Boolean).length
+}
 
-const getProgressStatus = (unitId) => {
-  const completed = getCompletedCount(unitId);
-  const total = sixMainIndicators.value.length;
-  const rate = (completed / total) * 100;
+const getProgressStatus = unitId => {
+  const completed = getCompletedCount(unitId)
+  const total = sixMainIndicators.value.length
+  const rate = (completed / total) * 100
 
-  if (rate === 100) return 'Hoàn thành';
-  if (rate >= 80) return 'Tốt';
-  if (rate >= 50) return 'Khá';
-  if (rate > 0) return 'Yếu';
-  return 'Chưa bắt đầu';
-};
+  if (rate === 100) return 'Hoàn thành'
+  if (rate >= 80) return 'Tốt'
+  if (rate >= 50) return 'Khá'
+  if (rate > 0) return 'Yếu'
+  return 'Chưa bắt đầu'
+}
 
-const getProgressStatusClass = (unitId) => {
-  const completed = getCompletedCount(unitId);
-  const total = sixMainIndicators.value.length;
-  const rate = (completed / total) * 100;
+const getProgressStatusClass = unitId => {
+  const completed = getCompletedCount(unitId)
+  const total = sixMainIndicators.value.length
+  const rate = (completed / total) * 100
 
-  if (rate === 100) return 'status-complete';
-  if (rate >= 80) return 'status-good';
-  if (rate >= 50) return 'status-fair';
-  if (rate > 0) return 'status-poor';
-  return 'status-none';
-};
+  if (rate === 100) return 'status-complete'
+  if (rate >= 80) return 'status-good'
+  if (rate >= 50) return 'status-fair'
+  if (rate > 0) return 'status-poor'
+  return 'status-none'
+}
 
-const getIndicatorCompletedCount = (indicatorCode) => {
-  return branchUnits.value.filter(unit =>
-    isCompleted(unit.id, indicatorCode)
-  ).length;
-};
+const getIndicatorCompletedCount = indicatorCode => {
+  return branchUnits.value.filter(unit => isCompleted(unit.id, indicatorCode)).length
+}
 
-const getIndicatorCompletionPercentage = (indicatorCode) => {
-  const completed = getIndicatorCompletedCount(indicatorCode);
-  const total = branchUnits.value.length;
-  return Math.round((completed / total) * 100);
-};
+const getIndicatorCompletionPercentage = indicatorCode => {
+  const completed = getIndicatorCompletedCount(indicatorCode)
+  const total = branchUnits.value.length
+  return Math.round((completed / total) * 100)
+}
 
 const getTotalCompletionPercentage = () => {
-  const totalPossible = branchUnits.value.length * sixMainIndicators.value.length;
-  let totalCompleted = 0;
+  const totalPossible = branchUnits.value.length * sixMainIndicators.value.length
+  let totalCompleted = 0
 
   branchUnits.value.forEach(unit => {
-    totalCompleted += getCompletedCount(unit.id);
-  });
+    totalCompleted += getCompletedCount(unit.id)
+  })
 
-  return Math.round((totalCompleted / totalPossible) * 100);
-};
+  return Math.round((totalCompleted / totalPossible) * 100)
+}
 
-const getUnitIcon = (unitType) => {
-  switch(unitType) {
+const getUnitIcon = unitType => {
+  switch (unitType) {
     case 'branch':
-      return 'mdi-bank';
+      return 'mdi-bank'
     case 'department':
-      return 'mdi-office-building';
+      return 'mdi-office-building'
     default:
-      return 'mdi-domain';
+      return 'mdi-domain'
   }
-};
+}
 
 // Navigation methods
 const navigateToDetail = (unitId, indicatorCode) => {
-  console.log(`📊 Navigating to detail: Unit ${unitId}, Indicator ${indicatorCode}`);
+  console.log(`📊 Navigating to detail: Unit ${unitId}, Indicator ${indicatorCode}`)
   // Implement navigation logic here
   // router.push({
   //   name: 'IndicatorDetail',
   //   params: { unitId, indicatorCode }
   // });
-};
+}
 
 // Event handlers
 const onPeriodTypeChange = () => {
-  selectedPeriod.value = '';
-  console.log('📆 Period type changed:', periodType.value);
-};
+  selectedPeriod.value = ''
+  console.log('📆 Period type changed:', periodType.value)
+}
 
 const loadData = async () => {
   if (!selectedYear.value || !selectedPeriod.value) {
-    console.log('⚠️ Missing required filters');
-    return;
+    console.log('⚠️ Missing required filters')
+    return
   }
 
-  isLoading.value = true;
+  isLoading.value = true
   console.log('🔄 Loading data with filters:', {
     year: selectedYear.value,
     periodType: periodType.value,
-    period: selectedPeriod.value
-  });
+    period: selectedPeriod.value,
+  })
 
   try {
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1000))
 
     // Refresh mock data
-    initializeMockData();
+    initializeMockData()
 
-    console.log('✅ Data loaded successfully');
+    console.log('✅ Data loaded successfully')
   } catch (error) {
-    console.error('❌ Error loading data:', error);
+    console.error('❌ Error loading data:', error)
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
-};
+}
 
 // ===== LIFECYCLE =====
 onMounted(() => {
-  console.log('🚀 CalculationDashboard mounted');
+  console.log('🚀 CalculationDashboard mounted')
 
   // Set default values
-  selectedYear.value = '2024';
-  periodType.value = 'monthly';
-  selectedPeriod.value = 'Tháng 12';
+  selectedYear.value = '2024'
+  periodType.value = 'monthly'
+  selectedPeriod.value = 'Tháng 12'
 
   // Initialize mock data
-  initializeMockData();
-});
+  initializeMockData()
+})
 
 // ===== WATCHERS =====
 watch([selectedYear, selectedPeriod], () => {
   if (selectedYear.value && selectedPeriod.value) {
-    loadData();
+    loadData()
   }
-});
+})
 </script>
 
 <style scoped>

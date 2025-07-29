@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models.DataTables;
-using System.Threading.Tasks;
 
 namespace TinhKhoanApp.Api.Repositories
 {
@@ -20,7 +19,7 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Trả về DbContext cho việc sử dụng trong service layer
         /// </summary>
-        public new ApplicationDbContext GetDbContext() => _context;
+        public DbContext GetDbContext() => _context;
 
         /// <inheritdoc/>
         public async Task<IEnumerable<LN01>> GetRecentAsync(int count = 10)
@@ -36,7 +35,7 @@ namespace TinhKhoanApp.Api.Repositories
         public async Task<IEnumerable<LN01>> GetByDateAsync(DateTime date, int maxResults = 100)
         {
             return await _context.LN01s
-                .Where(x => x.NGAY_DL.Date == date.Date)
+                .Where(x => x.NGAY_DL != null && x.NGAY_DL.Value.Date == date.Date)
                 .OrderByDescending(x => x.CREATED_DATE)
                 .Take(maxResults)
                 .ToListAsync();
@@ -82,37 +81,24 @@ namespace TinhKhoanApp.Api.Repositories
 
             if (date.HasValue)
             {
-                query = query.Where(x => x.NGAY_DL.Date == date.Value.Date);
+                query = query.Where(x => x.NGAY_DL != null && x.NGAY_DL.Value.Date == date.Value.Date);
             }
             else
             {
                 // Nếu không có ngày cụ thể, lấy dữ liệu ngày mới nhất
                 var latestDate = await _context.LN01s
-                    .Where(x => x.BRCD == branchCode)
+                    .Where(x => x.BRCD == branchCode && x.NGAY_DL != null)
                     .OrderByDescending(x => x.NGAY_DL)
                     .Select(x => x.NGAY_DL)
                     .FirstOrDefaultAsync();
 
-                if (latestDate != default)
+                if (latestDate.HasValue)
                 {
-                    query = query.Where(x => x.NGAY_DL.Date == latestDate.Date);
+                    query = query.Where(x => x.NGAY_DL != null && x.NGAY_DL.Value.Date == latestDate.Value.Date);
                 }
             }
 
-            // We can't use out parameters in expression trees, so we need to download the data first
-            var duNoStrings = await query.Select(x => x.DU_NO).ToListAsync();
-
-            // Then perform the conversion on the client side
-            decimal total = 0;
-            foreach (var duNoString in duNoStrings)
-            {
-                if (decimal.TryParse(duNoString, out decimal result))
-                {
-                    total += result;
-                }
-            }
-
-            return total;
+            return await query.SumAsync(x => x.DU_NO_THUC_TE ?? 0);
         }
 
         /// <inheritdoc/>
@@ -122,37 +108,24 @@ namespace TinhKhoanApp.Api.Repositories
 
             if (date.HasValue)
             {
-                query = query.Where(x => x.NGAY_DL.Date == date.Value.Date);
+                query = query.Where(x => x.NGAY_DL != null && x.NGAY_DL.Value.Date == date.Value.Date);
             }
             else
             {
                 // Nếu không có ngày cụ thể, lấy dữ liệu ngày mới nhất
                 var latestDate = await _context.LN01s
-                    .Where(x => x.CCY == currency)
+                    .Where(x => x.CCY == currency && x.NGAY_DL != null)
                     .OrderByDescending(x => x.NGAY_DL)
                     .Select(x => x.NGAY_DL)
                     .FirstOrDefaultAsync();
 
-                if (latestDate != default)
+                if (latestDate.HasValue)
                 {
-                    query = query.Where(x => x.NGAY_DL.Date == latestDate.Date);
+                    query = query.Where(x => x.NGAY_DL != null && x.NGAY_DL.Value.Date == latestDate.Value.Date);
                 }
             }
 
-            // We can't use out parameters in expression trees, so we need to download the data first
-            var duNoStrings = await query.Select(x => x.DU_NO).ToListAsync();
-
-            // Then perform the conversion on the client side
-            decimal total = 0;
-            foreach (var duNoString in duNoStrings)
-            {
-                if (decimal.TryParse(duNoString, out decimal result))
-                {
-                    total += result;
-                }
-            }
-
-            return total;
+            return await query.SumAsync(x => x.DU_NO_THUC_TE ?? 0);
         }
 
         /// <inheritdoc/>
@@ -170,7 +143,7 @@ namespace TinhKhoanApp.Api.Repositories
         public async Task<IEnumerable<LN01>> GetByDateRangeAsync(DateTime fromDate, DateTime toDate, int maxResults = 100)
         {
             return await _context.LN01s
-                .Where(x => x.NGAY_DL.Date >= fromDate.Date && x.NGAY_DL.Date <= toDate.Date)
+                .Where(x => x.NGAY_DL != null && x.NGAY_DL.Value.Date >= fromDate.Date && x.NGAY_DL.Value.Date <= toDate.Date)
                 .OrderByDescending(x => x.NGAY_DL)
                 .ThenByDescending(x => x.CREATED_DATE)
                 .Take(maxResults)
@@ -181,19 +154,6 @@ namespace TinhKhoanApp.Api.Repositories
         public async Task<LN01?> GetByIdAsync(long id)
         {
             return await _context.LN01s.FindAsync(id);
-        }
-
-        /// <inheritdoc/>
-        public async Task<int> SaveChangesAsync()
-        {
-            return await _context.SaveChangesAsync();
-        }
-
-        /// <inheritdoc/>
-        public async Task DeleteAsync(LN01 entity)
-        {
-            _context.LN01s.Remove(entity);
-            await Task.CompletedTask;
         }
     }
 }

@@ -30,9 +30,9 @@
     <div v-if="showFilters" class="filters-section">
       <div class="filters-grid">
         <div class="filter-item">
-          <input 
-            type="text" 
-            placeholder="🔍 Tìm kiếm..." 
+          <input
+            type="text"
+            placeholder="🔍 Tìm kiếm..."
             v-model="searchInput"
             @input="debouncedSearch"
             class="search-input"
@@ -65,9 +65,7 @@
             <span v-else>🔄</span>
             Làm mới
           </button>
-          <button @click="showPerformancePanel = true" class="performance-btn">
-            📊 Hiệu suất
-          </button>
+          <button @click="showPerformancePanel = true" class="performance-btn">📊 Hiệu suất</button>
         </div>
       </div>
     </div>
@@ -87,21 +85,21 @@
             <span v-if="isLoadingMore" class="loading-more">⏳ Đang tải thêm...</span>
           </div>
         </div>
-        
-        <div 
-          class="virtual-scroll-container" 
+
+        <div
+          class="virtual-scroll-container"
           :style="{ height: height + 'px' }"
           @scroll="handleScroll"
           ref="scrollContainer"
         >
-          <div class="virtual-list" :style="{ height: (virtualData.length * ROW_HEIGHT) + 'px' }">
-            <div 
-              v-for="(record, index) in visibleData" 
+          <div class="virtual-list" :style="{ height: virtualData.length * ROW_HEIGHT + 'px' }">
+            <div
+              v-for="(record, index) in visibleData"
               :key="record.id"
               class="virtual-row"
-              :style="{ 
+              :style="{
                 transform: `translateY(${(startIndex + index) * ROW_HEIGHT}px)`,
-                height: ROW_HEIGHT + 'px'
+                height: ROW_HEIGHT + 'px',
               }"
             >
               <div class="row-content">
@@ -183,8 +181,8 @@
           <div class="pagination-controls">
             <button @click="goToPage(page - 1)" :disabled="page <= 1" class="page-btn">Trước</button>
             <span class="page-numbers">
-              <button 
-                v-for="pageNum in visiblePages" 
+              <button
+                v-for="pageNum in visiblePages"
                 :key="pageNum"
                 @click="goToPage(pageNum)"
                 :class="{ active: pageNum === page }"
@@ -234,9 +232,7 @@
               <div class="perf-value">{{ formatPerformanceMetric(performanceData.slowestQuery) }}</div>
             </div>
           </div>
-          <div v-else class="loading-performance">
-            Đang tải dữ liệu hiệu suất...
-          </div>
+          <div v-else class="loading-performance">Đang tải dữ liệu hiệu suất...</div>
         </div>
       </div>
     </div>
@@ -244,323 +240,326 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
-import rawDataService from '../../services/rawDataService.js';
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import rawDataService from '../../services/rawDataService.js'
 
 // Props
 const props = defineProps({
   dataType: {
     type: String,
-    default: 'all'
+    default: 'all',
   },
   height: {
     type: Number,
-    default: 600
+    default: 600,
   },
   showFilters: {
     type: Boolean,
-    default: true
+    default: true,
   },
   showStats: {
     type: Boolean,
-    default: true
+    default: true,
   },
   enableVirtualScroll: {
     type: Boolean,
-    default: true
-  }
-});
+    default: true,
+  },
+})
 
 // Constants
-const ROW_HEIGHT = 50;
-const VISIBLE_ROWS_BUFFER = 5;
+const ROW_HEIGHT = 50
+const VISIBLE_ROWS_BUFFER = 5
 
 // Reactive data
-const data = ref([]);
-const virtualData = ref([]);
-const loading = ref(false);
-const isLoadingMore = ref(false);
-const searchInput = ref('');
-const searchTerm = ref('');
-const selectedDataType = ref('');
-const sortBy = ref('ImportDate');
-const sortOrder = ref('desc');
-const page = ref(1);
-const pageSize = ref(50);
-const total = ref(0);
-const responseTime = ref(0);
-const hasNextPage = ref(true);
-const showPerformancePanel = ref(false);
-const performanceData = ref(null);
+const data = ref([])
+const virtualData = ref([])
+const loading = ref(false)
+const isLoadingMore = ref(false)
+const searchInput = ref('')
+const searchTerm = ref('')
+const selectedDataType = ref('')
+const sortBy = ref('ImportDate')
+const sortOrder = ref('desc')
+const page = ref(1)
+const pageSize = ref(50)
+const total = ref(0)
+const responseTime = ref(0)
+const hasNextPage = ref(true)
+const showPerformancePanel = ref(false)
+const performanceData = ref(null)
 
 // Virtual scrolling
-const scrollContainer = ref(null);
-const startIndex = ref(0);
-const visibleRowCount = ref(0);
+const scrollContainer = ref(null)
+const startIndex = ref(0)
+const visibleRowCount = ref(0)
 
 // Stats
 const stats = ref({
   totalRecords: 0,
   loadedRecords: 0,
   avgResponseTime: 0,
-  cacheHitRate: 0
-});
+  cacheHitRate: 0,
+})
 
 // Data type definitions
-const dataTypeDefinitions = rawDataService.getDataTypeDefinitions();
+const dataTypeDefinitions = rawDataService.getDataTypeDefinitions()
 
 // Computed
-const totalPages = computed(() => Math.ceil(total.value / pageSize.value));
+const totalPages = computed(() => Math.ceil(total.value / pageSize.value))
 
 const visiblePages = computed(() => {
-  const pages = [];
-  const start = Math.max(1, page.value - 2);
-  const end = Math.min(totalPages.value, page.value + 2);
-  
+  const pages = []
+  const start = Math.max(1, page.value - 2)
+  const end = Math.min(totalPages.value, page.value + 2)
+
   for (let i = start; i <= end; i++) {
-    pages.push(i);
+    pages.push(i)
   }
-  return pages;
-});
+  return pages
+})
 
 const visibleData = computed(() => {
-  if (!props.enableVirtualScroll) return [];
-  
-  const start = Math.max(0, startIndex.value - VISIBLE_ROWS_BUFFER);
-  const end = Math.min(virtualData.value.length, startIndex.value + visibleRowCount.value + VISIBLE_ROWS_BUFFER);
-  
-  return virtualData.value.slice(start, end);
-});
+  if (!props.enableVirtualScroll) return []
+
+  const start = Math.max(0, startIndex.value - VISIBLE_ROWS_BUFFER)
+  const end = Math.min(virtualData.value.length, startIndex.value + visibleRowCount.value + VISIBLE_ROWS_BUFFER)
+
+  return virtualData.value.slice(start, end)
+})
 
 // Methods
 const loadData = async (pageNum = page.value, size = pageSize.value, search = searchTerm.value) => {
-  loading.value = true;
-  const startTime = performance.now();
+  loading.value = true
+  const startTime = performance.now()
 
   try {
-    const result = await rawDataService.getOptimizedImports(pageNum, size, search, sortBy.value, sortOrder.value);
-    
+    const result = await rawDataService.getOptimizedImports(pageNum, size, search, sortBy.value, sortOrder.value)
+
     if (result.success) {
-      data.value = result.data.items || [];
-      total.value = result.data.totalCount || 0;
-      
+      data.value = result.data.items || []
+      total.value = result.data.totalCount || 0
+
       // Update performance metrics
-      const endTime = performance.now();
-      responseTime.value = endTime - startTime;
-      
+      const endTime = performance.now()
+      responseTime.value = endTime - startTime
+
       stats.value = {
         totalRecords: result.data.totalCount || 0,
         loadedRecords: result.data.items?.length || 0,
         avgResponseTime: (stats.value.avgResponseTime + responseTime.value) / 2,
-        cacheHitRate: result.data.cacheHitRate || 0
-      };
+        cacheHitRate: result.data.cacheHitRate || 0,
+      }
     } else {
-      console.error('Error loading data:', result.error);
+      console.error('Error loading data:', result.error)
     }
   } catch (error) {
-    console.error('Error loading data:', error);
+    console.error('Error loading data:', error)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const loadVirtualData = async (offset = 0, limit = pageSize.value, search = searchTerm.value) => {
   if (offset === 0) {
-    virtualData.value = [];
-    isLoadingMore.value = false;
+    virtualData.value = []
+    isLoadingMore.value = false
   }
-  
-  if (isLoadingMore.value) return;
-  isLoadingMore.value = true;
-  
-  const startTime = performance.now();
+
+  if (isLoadingMore.value) return
+  isLoadingMore.value = true
+
+  const startTime = performance.now()
 
   try {
-    const result = await rawDataService.getOptimizedRecords('all', offset, limit, search);
-    
+    const result = await rawDataService.getOptimizedRecords('all', offset, limit, search)
+
     if (result.success) {
-      const newData = result.data.items || [];
-      
+      const newData = result.data.items || []
+
       if (offset === 0) {
-        virtualData.value = newData;
+        virtualData.value = newData
       } else {
-        virtualData.value = [...virtualData.value, ...newData];
+        virtualData.value = [...virtualData.value, ...newData]
       }
-      
-      hasNextPage.value = newData.length === limit;
-      
+
+      hasNextPage.value = newData.length === limit
+
       // Update performance metrics
-      const endTime = performance.now();
-      responseTime.value = endTime - startTime;
-      
+      const endTime = performance.now()
+      responseTime.value = endTime - startTime
+
       stats.value = {
         totalRecords: result.data.totalCount || 0,
         loadedRecords: virtualData.value.length,
         avgResponseTime: (stats.value.avgResponseTime + responseTime.value) / 2,
-        cacheHitRate: result.data.cacheHitRate || 0
-      };
+        cacheHitRate: result.data.cacheHitRate || 0,
+      }
     }
   } catch (error) {
-    console.error('Error loading virtual data:', error);
+    console.error('Error loading virtual data:', error)
   } finally {
-    isLoadingMore.value = false;
+    isLoadingMore.value = false
   }
-};
+}
 
 const loadPerformanceData = async () => {
   try {
-    const result = await rawDataService.getPerformanceStats('24h');
+    const result = await rawDataService.getPerformanceStats('24h')
     if (result.success) {
-      performanceData.value = result.data;
+      performanceData.value = result.data
     }
   } catch (error) {
-    console.error('Error loading performance data:', error);
+    console.error('Error loading performance data:', error)
   }
-};
+}
 
 const handleScroll = () => {
-  if (!scrollContainer.value) return;
-  
-  const scrollTop = scrollContainer.value.scrollTop;
-  const newStartIndex = Math.floor(scrollTop / ROW_HEIGHT);
-  startIndex.value = newStartIndex;
-  
+  if (!scrollContainer.value) return
+
+  const scrollTop = scrollContainer.value.scrollTop
+  const newStartIndex = Math.floor(scrollTop / ROW_HEIGHT)
+  startIndex.value = newStartIndex
+
   // Load more data when near the end
-  const remainingRows = virtualData.value.length - (newStartIndex + visibleRowCount.value);
+  const remainingRows = virtualData.value.length - (newStartIndex + visibleRowCount.value)
   if (remainingRows < 10 && hasNextPage.value && !isLoadingMore.value) {
-    loadVirtualData(virtualData.value.length, pageSize.value);
+    loadVirtualData(virtualData.value.length, pageSize.value)
   }
-};
+}
 
 const calculateVisibleRows = () => {
   if (scrollContainer.value) {
-    visibleRowCount.value = Math.ceil(scrollContainer.value.clientHeight / ROW_HEIGHT);
+    visibleRowCount.value = Math.ceil(scrollContainer.value.clientHeight / ROW_HEIGHT)
   }
-};
+}
 
 const debouncedSearch = debounce(() => {
-  searchTerm.value = searchInput.value;
+  searchTerm.value = searchInput.value
   if (props.enableVirtualScroll) {
-    loadVirtualData(0, pageSize.value);
+    loadVirtualData(0, pageSize.value)
   } else {
-    page.value = 1;
-    loadData();
+    page.value = 1
+    loadData()
   }
-}, 300);
+}, 300)
 
 const onFilterChange = () => {
   if (props.enableVirtualScroll) {
-    loadVirtualData(0, pageSize.value);
+    loadVirtualData(0, pageSize.value)
   } else {
-    page.value = 1;
-    loadData();
+    page.value = 1
+    loadData()
   }
-};
+}
 
 const refreshData = () => {
   if (props.enableVirtualScroll) {
-    loadVirtualData(0, pageSize.value);
+    loadVirtualData(0, pageSize.value)
   } else {
-    loadData();
+    loadData()
   }
-};
+}
 
-const goToPage = (pageNum) => {
+const goToPage = pageNum => {
   if (pageNum >= 1 && pageNum <= totalPages.value) {
-    page.value = pageNum;
-    loadData();
+    page.value = pageNum
+    loadData()
   }
-};
+}
 
 const onPageSizeChange = () => {
-  page.value = 1;
-  loadData();
-};
+  page.value = 1
+  loadData()
+}
 
-const viewDetails = (record) => {
-  console.log('View details:', record);
+const viewDetails = record => {
+  console.log('View details:', record)
   // Implement detail view
-};
+}
 
-const downloadData = (record) => {
-  console.log('Download data:', record);
+const downloadData = record => {
+  console.log('Download data:', record)
   // Implement download
-};
+}
 
 // Utility functions
-const formatRecordCount = (count) => {
-  return rawDataService.formatRecordCount(count);
-};
+const formatRecordCount = count => {
+  return rawDataService.formatRecordCount(count)
+}
 
-const formatPerformanceMetric = (value) => {
-  return rawDataService.formatPerformanceMetric(value);
-};
+const formatPerformanceMetric = value => {
+  return rawDataService.formatPerformanceMetric(value)
+}
 
-const getPerformanceColor = (time) => {
-  return rawDataService.getPerformanceColor(time);
-};
+const getPerformanceColor = time => {
+  return rawDataService.getPerformanceColor(time)
+}
 
-const getDataTypeColor = (dataType) => {
-  return rawDataService.getDataTypeColor(dataType);
-};
+const getDataTypeColor = dataType => {
+  return rawDataService.getDataTypeColor(dataType)
+}
 
-const getDataTypeIcon = (dataType) => {
-  return dataTypeDefinitions[dataType]?.icon || '📄';
-};
+const getDataTypeIcon = dataType => {
+  return dataTypeDefinitions[dataType]?.icon || '📄'
+}
 
-const formatDate = (date) => {
-  return rawDataService.formatDate(date);
-};
+const formatDate = date => {
+  return rawDataService.formatDate(date)
+}
 
-const getStatusClass = (status) => {
+const getStatusClass = status => {
   return {
     'status-success': status === 'Completed',
     'status-error': status === 'Failed',
-    'status-processing': status === 'Processing'
-  };
-};
+    'status-processing': status === 'Processing',
+  }
+}
 
 // Debounce utility
 function debounce(func, wait) {
-  let timeout;
+  let timeout
   return function executedFunction(...args) {
     const later = () => {
-      clearTimeout(timeout);
-      func(...args);
-    };
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-  };
+      clearTimeout(timeout)
+      func(...args)
+    }
+    clearTimeout(timeout)
+    timeout = setTimeout(later, wait)
+  }
 }
 
 // Lifecycle
 onMounted(() => {
   if (props.enableVirtualScroll) {
-    loadVirtualData();
+    loadVirtualData()
     nextTick(() => {
-      calculateVisibleRows();
-    });
+      calculateVisibleRows()
+    })
   } else {
-    loadData();
+    loadData()
   }
-  
+
   if (props.showStats) {
-    loadPerformanceData();
+    loadPerformanceData()
   }
-});
+})
 
 onUnmounted(() => {
   // Cleanup if needed
-});
+})
 
 // Watchers
-watch(() => props.enableVirtualScroll, (newVal) => {
-  if (newVal) {
-    loadVirtualData();
-  } else {
-    loadData();
+watch(
+  () => props.enableVirtualScroll,
+  newVal => {
+    if (newVal) {
+      loadVirtualData()
+    } else {
+      loadData()
+    }
   }
-});
+)
 </script>
 
 <style scoped>
@@ -587,7 +586,7 @@ watch(() => props.enableVirtualScroll, (newVal) => {
   border-radius: 8px;
   padding: 16px;
   text-align: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .stat-value {
@@ -940,16 +939,16 @@ watch(() => props.enableVirtualScroll, (newVal) => {
   .filters-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .row-content {
     grid-template-columns: 1fr;
     gap: 4px;
   }
-  
+
   .panel-content {
     width: 100%;
   }

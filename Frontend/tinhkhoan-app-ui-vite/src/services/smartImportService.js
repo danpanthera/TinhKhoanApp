@@ -7,7 +7,6 @@ import apiClient from './api.js'
  * Hỗ trợ chunked upload cho file lớn và progress tracking
  */
 class SmartImportService {
-
   constructor() {
     // Cấu hình chunked upload cho file siêu lớn 2GB
     this.CHUNK_SIZE = 1024 * 1024 * 10 // 10MB mỗi chunk (tăng từ 5MB để upload nhanh hơn)
@@ -26,7 +25,9 @@ class SmartImportService {
     try {
       // Validation file size
       if (file.size > this.MAX_FILE_SIZE) {
-        throw new Error(`File ${file.name} quá lớn (${formatFileSize(file.size)}). Giới hạn tối đa: ${formatFileSize(this.MAX_FILE_SIZE)}`)
+        throw new Error(
+          `File ${file.name} quá lớn (${formatFileSize(file.size)}). Giới hạn tối đa: ${formatFileSize(this.MAX_FILE_SIZE)}`
+        )
       }
 
       // Quyết định dùng chunked upload hay normal upload
@@ -57,21 +58,21 @@ class SmartImportService {
 
     const response = await apiClient.post('/DirectImport/smart', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
+        'Content-Type': 'multipart/form-data',
         // 🚀 Removed Accept-Encoding - Browser handles this automatically
       },
       timeout: 300000, // 🚀 Tăng lên 5 phút cho smart upload
-      onUploadProgress: (progressEvent) => {
+      onUploadProgress: progressEvent => {
         if (progressCallback && progressEvent.total) {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
           progressCallback({
             loaded: progressEvent.loaded,
             total: progressEvent.total,
             percentage: percentCompleted,
-            stage: 'uploading'
+            stage: 'uploading',
           })
         }
-      }
+      },
     })
 
     return response.data
@@ -92,21 +93,21 @@ class SmartImportService {
 
     const response = await apiClient.post('/DirectImport/smart', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
+        'Content-Type': 'multipart/form-data',
         // 🚀 Removed Accept-Encoding - Browser handles this automatically
       },
       timeout: 600000, // 🚀 Tăng lên 10 phút cho file lớn
-      onUploadProgress: (progressEvent) => {
+      onUploadProgress: progressEvent => {
         if (progressCallback && progressEvent.total) {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
           progressCallback({
             loaded: progressEvent.loaded,
             total: progressEvent.total,
             percentage: percentCompleted,
-            stage: 'uploading'
+            stage: 'uploading',
           })
         }
-      }
+      },
     })
 
     return response.data
@@ -127,7 +128,9 @@ class SmartImportService {
       const totalFiles = files.length
       const MAX_CONCURRENT_UPLOADS = 5 // 🚀 Tăng lên 5 file cùng lúc để tăng tốc
 
-      console.log(`🚀 Starting PARALLEL Smart Import with ${totalFiles} files (max ${MAX_CONCURRENT_UPLOADS} concurrent)`)
+      console.log(
+        `🚀 Starting PARALLEL Smart Import with ${totalFiles} files (max ${MAX_CONCURRENT_UPLOADS} concurrent)`
+      )
 
       // 📊 Tracking variables
       const results = []
@@ -140,8 +143,8 @@ class SmartImportService {
         const overallPercentage = Math.round(totalProgress / totalFiles)
 
         if (progressCallback) {
-          const currentFiles = Array.from(progressTracking.keys()).filter(fileName =>
-            progressTracking.get(fileName) < 100
+          const currentFiles = Array.from(progressTracking.keys()).filter(
+            fileName => progressTracking.get(fileName) < 100
           )
 
           progressCallback({
@@ -150,7 +153,7 @@ class SmartImportService {
             percentage: overallPercentage,
             currentFile: currentFiles.length > 0 ? `${currentFiles.length} file(s) đang upload...` : 'Hoàn thành',
             stage: completedCount === totalFiles ? 'completed' : 'uploading',
-            activeFiles: currentFiles.length
+            activeFiles: currentFiles.length,
           })
         }
       }
@@ -162,7 +165,7 @@ class SmartImportService {
           progressTracking.set(file.name, 0)
 
           // Progress callback cho từng file
-          const fileProgressCallback = (fileProgress) => {
+          const fileProgressCallback = fileProgress => {
             progressTracking.set(file.name, fileProgress.percentage)
             updateOverallProgress()
           }
@@ -180,7 +183,7 @@ class SmartImportService {
             success: true,
             result: result,
             index: index + 1,
-            fileSize: file.size
+            fileSize: file.size,
           }
         } catch (error) {
           completedCount++
@@ -191,7 +194,7 @@ class SmartImportService {
             success: false,
             error: error.message,
             index: index + 1,
-            fileSize: file.size
+            fileSize: file.size,
           }
         }
       }
@@ -215,7 +218,7 @@ class SmartImportService {
             success: false,
             error: settled.reason?.message || 'Unknown error',
             index: index + 1,
-            fileSize: files[index].size
+            fileSize: files[index].size,
           })
         }
       })
@@ -228,7 +231,7 @@ class SmartImportService {
           percentage: 100,
           currentFile: 'Hoàn thành tất cả',
           stage: 'completed',
-          activeFiles: 0
+          activeFiles: 0,
         })
       }
 
@@ -244,7 +247,7 @@ class SmartImportService {
         results: results,
         totalSize: Array.from(files).reduce((sum, file) => sum + file.size, 0),
         uploadMethod: 'true-parallel',
-        maxConcurrency: 'unlimited'
+        maxConcurrency: 'unlimited',
       }
     } catch (error) {
       console.error('🔥 Smart Import batch upload error:', error)
@@ -292,7 +295,7 @@ class SmartImportService {
     try {
       const payload = {
         importedDataRecordId: recordId,
-        category: category
+        category: category,
       }
 
       if (statementDate) {
@@ -331,14 +334,14 @@ class SmartImportService {
 
     // Pattern matching for different data types
     const patterns = {
-      'DP01': /DP01|DEPOSIT|TIENGUI/,
-      'LN01': /LN01|LOAN|CHOAVAY/,
-      'LN03': /LN03|LOAN.*CLASSIFY|PHANLOAINO/,
-      'GL01': /GL01|GENERAL.*LEDGER|SOTONGOHAP/,
-      'GL41': /GL41|BALANCE|BANGSODUE/,
-      'DPDA': /DPDA|DEPOSIT.*DETAIL|CHITIETTIENGUI/,
-      'EI01': /EI01|INCOME|THUNHAP/,
-      'RR01': /RR01|RATIO|TYLE/
+      DP01: /DP01|DEPOSIT|TIENGUI/,
+      LN01: /LN01|LOAN|CHOAVAY/,
+      LN03: /LN03|LOAN.*CLASSIFY|PHANLOAINO/,
+      GL01: /GL01|GENERAL.*LEDGER|SOTONGOHAP/,
+      GL41: /GL41|BALANCE|BANGSODUE/,
+      DPDA: /DPDA|DEPOSIT.*DETAIL|CHITIETTIENGUI/,
+      EI01: /EI01|INCOME|THUNHAP/,
+      RR01: /RR01|RATIO|TYLE/,
     }
 
     for (const [category, pattern] of Object.entries(patterns)) {
@@ -357,10 +360,10 @@ class SmartImportService {
    */
   extractDateFromFileName(fileName) {
     const patterns = [
-      /(\d{4})(\d{2})(\d{2})/,  // YYYYMMDD
-      /(\d{2})(\d{2})(\d{4})/,  // DDMMYYYY
+      /(\d{4})(\d{2})(\d{2})/, // YYYYMMDD
+      /(\d{2})(\d{2})(\d{4})/, // DDMMYYYY
       /(\d{4})-(\d{2})-(\d{2})/, // YYYY-MM-DD
-      /(\d{2})-(\d{2})-(\d{4})/  // DD-MM-YYYY
+      /(\d{2})-(\d{2})-(\d{4})/, // DD-MM-YYYY
     ]
 
     for (const pattern of patterns) {

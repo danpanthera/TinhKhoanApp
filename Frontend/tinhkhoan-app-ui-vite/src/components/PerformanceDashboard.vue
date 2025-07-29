@@ -6,16 +6,10 @@
         <button @click="refreshAll" :disabled="isLoading" class="btn btn-primary">
           {{ isLoading ? 'Refreshing...' : 'Refresh All' }}
         </button>
-        <button @click="resetCounters" class="btn btn-warning">
-          Reset Counters
-        </button>
+        <button @click="resetCounters" class="btn btn-warning">Reset Counters</button>
         <div class="auto-refresh">
           <label>
-            <input 
-              type="checkbox" 
-              v-model="autoRefresh"
-              @change="toggleAutoRefresh"
-            />
+            <input type="checkbox" v-model="autoRefresh" @change="toggleAutoRefresh" />
             Auto-refresh ({{ refreshInterval / 1000 }}s)
           </label>
         </div>
@@ -33,7 +27,7 @@
           </div>
           <div class="metric-subtitle">Working Set</div>
         </div>
-        
+
         <div class="metric-card">
           <h3>GC Memory</h3>
           <div class="metric-value">
@@ -41,18 +35,18 @@
           </div>
           <div class="metric-subtitle">Garbage Collector</div>
         </div>
-        
+
         <div class="metric-card">
           <h3>Threads</h3>
           <div class="metric-value">{{ systemMetrics?.threadCount || 0 }}</div>
           <div class="metric-subtitle">Active Threads</div>
         </div>
-        
+
         <div class="metric-card">
           <h3>GC Collections</h3>
           <div class="metric-value">
-            G0: {{ systemMetrics?.gen0Collections || 0 }}<br>
-            G1: {{ systemMetrics?.gen1Collections || 0 }}<br>
+            G0: {{ systemMetrics?.gen0Collections || 0 }}<br />
+            G1: {{ systemMetrics?.gen1Collections || 0 }}<br />
             G2: {{ systemMetrics?.gen2Collections || 0 }}
           </div>
           <div class="metric-subtitle">By Generation</div>
@@ -66,32 +60,27 @@
       <div class="metrics-grid">
         <div class="metric-card">
           <h3>Hit Rate</h3>
-          <div class="metric-value success">
-            {{ cacheMetrics?.hitRate || 0 }}%
-          </div>
+          <div class="metric-value success">{{ cacheMetrics?.hitRate || 0 }}%</div>
           <div class="metric-subtitle">Cache Efficiency</div>
         </div>
-        
+
         <div class="metric-card">
           <h3>Cache Hits</h3>
           <div class="metric-value">{{ cacheMetrics?.hits || 0 }}</div>
           <div class="metric-subtitle">Successful Hits</div>
         </div>
-        
+
         <div class="metric-card">
           <h3>Cache Misses</h3>
           <div class="metric-value">{{ cacheMetrics?.misses || 0 }}</div>
           <div class="metric-subtitle">Cache Misses</div>
         </div>
-        
+
         <div class="metric-card">
           <h3>Hit Ratio Chart</h3>
           <div class="progress-chart">
             <div class="progress-bar">
-              <div 
-                class="progress-fill success" 
-                :style="{ width: (cacheMetrics?.hitRate || 0) + '%' }"
-              ></div>
+              <div class="progress-fill success" :style="{ width: (cacheMetrics?.hitRate || 0) + '%' }"></div>
             </div>
           </div>
           <div class="metric-subtitle">Visual Representation</div>
@@ -108,19 +97,19 @@
           <div class="metric-value warning">{{ exportMetrics?.active || 0 }}</div>
           <div class="metric-subtitle">Currently Running</div>
         </div>
-        
+
         <div class="metric-card">
           <h3>Completed</h3>
           <div class="metric-value success">{{ exportMetrics?.completed || 0 }}</div>
           <div class="metric-subtitle">Successfully Finished</div>
         </div>
-        
+
         <div class="metric-card">
           <h3>Failed</h3>
           <div class="metric-value error">{{ exportMetrics?.failed || 0 }}</div>
           <div class="metric-subtitle">With Errors</div>
         </div>
-        
+
         <div class="metric-card">
           <h3>Success Rate</h3>
           <div class="metric-value" :class="getSuccessRateClass(exportMetrics?.successRate)">
@@ -140,19 +129,19 @@
           <div class="metric-value">{{ databaseMetrics.queryCount || 0 }}</div>
           <div class="metric-subtitle">Total Queries</div>
         </div>
-        
+
         <div class="metric-card">
           <h3>Avg Query Time</h3>
           <div class="metric-value">{{ databaseMetrics.avgQueryTime || 0 }}ms</div>
           <div class="metric-subtitle">Average Duration</div>
         </div>
-        
+
         <div class="metric-card">
           <h3>Slow Queries</h3>
           <div class="metric-value warning">{{ databaseMetrics.slowQueries || 0 }}</div>
           <div class="metric-subtitle">&gt; 1000ms</div>
         </div>
-        
+
         <div class="metric-card">
           <h3>Connection Pool</h3>
           <div class="metric-value">{{ databaseMetrics.activeConnections || 0 }}</div>
@@ -173,18 +162,11 @@
     <div class="metrics-section">
       <h2>📝 Recent Activity</h2>
       <div class="activity-log">
-        <div 
-          v-for="(activity, index) in recentActivity" 
-          :key="index"
-          class="activity-item"
-          :class="activity.Type"
-        >
+        <div v-for="(activity, index) in recentActivity" :key="index" class="activity-item" :class="activity.Type">
           <span class="activity-time">{{ formatTime(activity.timestamp) }}</span>
           <span class="activity-message">{{ activity.message }}</span>
         </div>
-        <div v-if="recentActivity.length === 0" class="no-activity">
-          No recent activity
-        </div>
+        <div v-if="recentActivity.length === 0" class="no-activity">No recent activity</div>
       </div>
     </div>
   </div>
@@ -200,19 +182,19 @@ export default {
     const autoRefresh = ref(true)
     const refreshInterval = ref(5000) // 5 seconds
     const refreshTimer = ref(null)
-    
+
     const systemMetrics = ref(null)
     const cacheMetrics = ref(null)
     const exportMetrics = ref(null)
     const databaseMetrics = ref(null)
     const recentActivity = ref([])
-    
+
     const performanceChart = ref(null)
     const chartData = reactive({
       labels: [],
       memoryData: [],
       cpuData: [],
-      requestsData: []
+      requestsData: [],
     })
 
     const baseUrl = 'http://localhost:5123/api/PerformanceDashboard'
@@ -222,7 +204,7 @@ export default {
         const response = await fetch(`${baseUrl}/system`)
         const data = await response.json()
         systemMetrics.value = data.system
-        
+
         addActivity('info', 'System metrics updated')
         return data.system
       } catch (error) {
@@ -237,7 +219,7 @@ export default {
         const response = await fetch(`${baseUrl}/cache`)
         const data = await response.json()
         cacheMetrics.value = data.cache
-        
+
         addActivity('info', `Cache hit rate: ${data.cache.hitRate}%`)
         return data.cache
       } catch (error) {
@@ -252,7 +234,7 @@ export default {
         const response = await fetch(`${baseUrl}/exports`)
         const data = await response.json()
         exportMetrics.value = data.exports
-        
+
         if (data.exports.active > 0) {
           addActivity('warning', `${data.exports.active} active exports`)
         }
@@ -279,13 +261,8 @@ export default {
     const refreshAll = async () => {
       isLoading.value = true
       try {
-        await Promise.all([
-          fetchSystemMetrics(),
-          fetchCacheMetrics(), 
-          fetchExportMetrics(),
-          fetchDatabaseMetrics()
-        ])
-        
+        await Promise.all([fetchSystemMetrics(), fetchCacheMetrics(), fetchExportMetrics(), fetchDatabaseMetrics()])
+
         updateChart()
         addActivity('success', 'All metrics refreshed')
       } catch (error) {
@@ -333,40 +310,40 @@ export default {
 
     const updateChart = () => {
       const now = new Date().toLocaleTimeString()
-      
+
       chartData.labels.push(now)
       chartData.memoryData.push(systemMetrics.value?.workingSetMB || 0)
       chartData.requestsData.push(cacheMetrics.value?.hits || 0)
-      
+
       // Keep only last 20 data points
       if (chartData.labels.length > 20) {
         chartData.labels.shift()
         chartData.memoryData.shift()
         chartData.requestsData.shift()
       }
-      
+
       drawChart()
     }
 
     const drawChart = () => {
       const canvas = performanceChart.value
       if (!canvas) return
-      
+
       const ctx = canvas.getContext('2d')
       const width = canvas.width
       const height = canvas.height
-      
+
       // Clear canvas
       ctx.clearRect(0, 0, width, height)
-      
+
       // Draw background
       ctx.fillStyle = '#f8f9fa'
       ctx.fillRect(0, 0, width, height)
-      
+
       // Draw grid
       ctx.strokeStyle = '#e9ecef'
       ctx.lineWidth = 1
-      
+
       for (let i = 0; i <= 10; i++) {
         const y = (height / 10) * i
         ctx.beginPath()
@@ -374,26 +351,26 @@ export default {
         ctx.lineTo(width, y)
         ctx.stroke()
       }
-      
+
       // Draw memory usage line
       if (chartData.memoryData.length > 1) {
         ctx.strokeStyle = '#007bff'
         ctx.lineWidth = 2
         ctx.beginPath()
-        
+
         const maxMemory = Math.max(...chartData.memoryData) || 1
-        
+
         chartData.memoryData.forEach((value, index) => {
           const x = (width / (chartData.memoryData.length - 1)) * index
           const y = height - (value / maxMemory) * height
-          
+
           if (index === 0) {
             ctx.moveTo(x, y)
           } else {
             ctx.lineTo(x, y)
           }
         })
-        
+
         ctx.stroke()
       }
     }
@@ -402,16 +379,16 @@ export default {
       recentActivity.value.unshift({
         type,
         message,
-        timestamp: new Date()
+        timestamp: new Date(),
       })
-      
+
       // Keep only last 50 activities
       if (recentActivity.value.length > 50) {
         recentActivity.value.pop()
       }
     }
 
-    const formatBytes = (bytes) => {
+    const formatBytes = bytes => {
       if (bytes === 0) return '0 B'
       const k = 1024
       const sizes = ['B', 'KB', 'MB', 'GB']
@@ -419,11 +396,11 @@ export default {
       return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
     }
 
-    const formatTime = (timestamp) => {
+    const formatTime = timestamp => {
       return timestamp.toLocaleTimeString()
     }
 
-    const getSuccessRateClass = (rate) => {
+    const getSuccessRateClass = rate => {
       rate = rate || 0
       if (rate >= 95) return 'success'
       if (rate >= 80) return 'warning'
@@ -456,9 +433,9 @@ export default {
       toggleAutoRefresh,
       formatBytes,
       formatTime,
-      getSuccessRateClass
+      getSuccessRateClass,
     }
-  }
+  },
 }
 </script>
 
@@ -516,14 +493,14 @@ export default {
   background: white;
   border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   border: 1px solid #e9ecef;
   transition: transform 0.2s ease;
 }
 
 .metric-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 }
 
 .metric-card h3 {
@@ -541,9 +518,15 @@ export default {
   color: #2c3e50;
 }
 
-.metric-value.success { color: #28a745; }
-.metric-value.warning { color: #ffc107; }
-.metric-value.error { color: #dc3545; }
+.metric-value.success {
+  color: #28a745;
+}
+.metric-value.warning {
+  color: #ffc107;
+}
+.metric-value.error {
+  color: #dc3545;
+}
 
 .metric-subtitle {
   font-size: 12px;
@@ -567,22 +550,28 @@ export default {
   transition: width 0.3s ease;
 }
 
-.progress-fill.success { background-color: #28a745; }
-.progress-fill.warning { background-color: #ffc107; }
-.progress-fill.error { background-color: #dc3545; }
+.progress-fill.success {
+  background-color: #28a745;
+}
+.progress-fill.warning {
+  background-color: #ffc107;
+}
+.progress-fill.error {
+  background-color: #dc3545;
+}
 
 .chart-container {
   background: white;
   border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .activity-log {
   background: white;
   border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   max-height: 300px;
   overflow-y: auto;
 }
@@ -609,10 +598,18 @@ export default {
   margin-left: 15px;
 }
 
-.activity-item.success .activity-message { color: #28a745; }
-.activity-item.warning .activity-message { color: #ffc107; }
-.activity-item.error .activity-message { color: #dc3545; }
-.activity-item.info .activity-message { color: #17a2b8; }
+.activity-item.success .activity-message {
+  color: #28a745;
+}
+.activity-item.warning .activity-message {
+  color: #ffc107;
+}
+.activity-item.error .activity-message {
+  color: #dc3545;
+}
+.activity-item.info .activity-message {
+  color: #17a2b8;
+}
 
 .no-activity {
   text-align: center;

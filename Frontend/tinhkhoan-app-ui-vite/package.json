@@ -13,7 +13,9 @@
     "format:check": "prettier --check \"src/**/*.{vue,js,ts,json,css,md}\"",
     "type-check": "vue-tsc --noEmit",
     "serve": "vite preview",
-    "analyze": "vite build --mode analyze"
+    "analyze": "vite build --mode analyze",
+    "lint": "eslint --ext .js,.ts,.vue --fix src/",
+    "lint:check": "eslint --ext .js,.ts,.vue src/"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
@@ -30,8 +32,15 @@
     "vue3-toastify": "^0.2.8"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/js": "^9.32.0",
     "@types/node": "^24.0.4",
+    "@typescript-eslint/eslint-plugin": "^8.38.0",
+    "@typescript-eslint/parser": "^8.38.0",
     "@vitejs/plugin-vue": "^5.2.3",
+    "eslint": "^8.57.0",
+    "eslint-plugin-vue": "^9.23.0",
+    "prettier": "^3.6.2",
     "typescript": "^5.8.3",
     "vite": "^6.3.5",
     "vite-plugin-pwa": "^1.0.0",

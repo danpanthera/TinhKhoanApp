@@ -3,12 +3,8 @@
   <div class="data-tables-view">
     <!-- Header -->
     <div class="view-header">
-      <h1 class="title">
-        🗄️ DataTables Management
-      </h1>
-      <p class="subtitle">
-        Direct Import & Preview cho 8 bảng dữ liệu chính
-      </p>
+      <h1 class="title">🗄️ DataTables Management</h1>
+      <p class="subtitle">Direct Import & Preview cho 8 bảng dữ liệu chính</p>
     </div>
 
     <!-- Summary Cards -->
@@ -33,12 +29,8 @@
           </div>
         </div>
         <div class="card-actions">
-          <button @click="previewTable(table.tableName)" class="btn btn-preview">
-            👁️ Preview
-          </button>
-          <button @click="openImportDialog(table.tableName)" class="btn btn-import">
-            📥 Import
-          </button>
+          <button @click="previewTable(table.tableName)" class="btn btn-preview">👁️ Preview</button>
+          <button @click="openImportDialog(table.tableName)" class="btn btn-import">📥 Import</button>
         </div>
       </div>
     </div>
@@ -48,12 +40,8 @@
       <div class="section-header">
         <h2>{{ activeTable.toUpperCase() }} - {{ getStorageType(activeTable) }}</h2>
         <div class="section-actions">
-          <button @click="refreshPreview" class="btn btn-refresh">
-            🔄 Refresh
-          </button>
-          <button @click="clearActiveTable" class="btn btn-close">
-            ❌ Close
-          </button>
+          <button @click="refreshPreview" class="btn btn-refresh">🔄 Refresh</button>
+          <button @click="clearActiveTable" class="btn btn-close">❌ Close</button>
         </div>
       </div>
 
@@ -79,17 +67,14 @@
           </table>
         </div>
         <p class="preview-note">
-          ✅ Dữ liệu lấy trực tiếp từ bảng {{ activeTable.toUpperCase() }}
-          ({{ getStorageType(activeTable) }})
+          ✅ Dữ liệu lấy trực tiếp từ bảng {{ activeTable.toUpperCase() }} ({{ getStorageType(activeTable) }})
         </p>
       </div>
 
       <!-- No Data -->
       <div v-else class="no-data">
         <p>📋 Chưa có dữ liệu trong bảng {{ activeTable.toUpperCase() }}</p>
-        <button @click="openImportDialog(activeTable)" class="btn btn-import">
-          📥 Import Data
-        </button>
+        <button @click="openImportDialog(activeTable)" class="btn btn-import">📥 Import Data</button>
       </div>
     </div>
 
@@ -108,16 +93,8 @@
               <p>Upload CSV file để import trực tiếp vào bảng {{ importTableName.toUpperCase() }}</p>
 
               <div class="file-upload">
-                <input
-                  type="file"
-                  ref="fileInput"
-                  @change="handleFileSelect"
-                  accept=".csv"
-                  class="file-input"
-                >
-                <button @click="$refs.fileInput.click()" class="btn btn-upload">
-                  📁 Choose CSV File
-                </button>
+                <input type="file" ref="fileInput" @change="handleFileSelect" accept=".csv" class="file-input" />
+                <button @click="$refs.fileInput.click()" class="btn btn-upload">📁 Choose CSV File</button>
                 <span v-if="selectedFile" class="file-name">
                   {{ selectedFile.name }}
                 </span>
@@ -141,23 +118,15 @@
                     </tbody>
                   </table>
                 </div>
-                <p class="preview-info">
-                  Showing 5 of {{ csvPreview.length }} rows
-                </p>
+                <p class="preview-info">Showing 5 of {{ csvPreview.length }} rows</p>
               </div>
             </div>
           </div>
         </div>
 
         <div class="modal-footer">
-          <button @click="closeImportDialog" class="btn btn-cancel">
-            Cancel
-          </button>
-          <button
-            @click="executeImport"
-            :disabled="!selectedFile || importing"
-            class="btn btn-primary"
-          >
+          <button @click="closeImportDialog" class="btn btn-cancel">Cancel</button>
+          <button @click="executeImport" :disabled="!selectedFile || importing" class="btn btn-primary">
             <span v-if="importing">⏳ Importing...</span>
             <span v-else>📥 Import Data</span>
           </button>
@@ -209,7 +178,7 @@ export default {
       GL41: { name: 'GL41', storageType: 'Temporal', description: 'GL Summary' },
       LN01: { name: 'LN01', storageType: 'Temporal', description: 'Loan Data' },
       LN03: { name: 'LN03', storageType: 'Temporal', description: 'Loan Collateral' },
-      RR01: { name: 'RR01', storageType: 'Temporal', description: 'Risk Rating' }
+      RR01: { name: 'RR01', storageType: 'Temporal', description: 'Risk Rating' },
     }
 
     // Methods
@@ -231,7 +200,7 @@ export default {
       }
     }
 
-    const previewTable = async (tableName) => {
+    const previewTable = async tableName => {
       loading.value = true
       loadingMessage.value = `Loading ${tableName} preview...`
       activeTable.value = tableName
@@ -267,7 +236,7 @@ export default {
       previewColumns.value = []
     }
 
-    const openImportDialog = (tableName) => {
+    const openImportDialog = tableName => {
       importTableName.value = tableName
       showImportDialog.value = true
       selectedFile.value = null
@@ -282,7 +251,7 @@ export default {
       csvHeaders.value = []
     }
 
-    const handleFileSelect = (event) => {
+    const handleFileSelect = event => {
       const file = event.target.files[0]
       if (file && file.type === 'text/csv') {
         selectedFile.value = file
@@ -290,9 +259,9 @@ export default {
       }
     }
 
-    const parseCSVPreview = (file) => {
+    const parseCSVPreview = file => {
       const reader = new FileReader()
-      reader.onload = (e) => {
+      reader.onload = e => {
         const csv = e.target.result
         const lines = csv.split('\n').filter(line => line.trim())
 
@@ -326,7 +295,7 @@ export default {
 
         const response = await fetch(`/api/datatables/${importTableName.value.toLowerCase()}/import`, {
           method: 'POST',
-          body: formData
+          body: formData,
         })
 
         const result = await response.json()
@@ -353,11 +322,11 @@ export default {
       }
     }
 
-    const getStorageType = (tableName) => {
+    const getStorageType = tableName => {
       return dataTablesConfig[tableName.toUpperCase()]?.storageType || 'Unknown'
     }
 
-    const getColumnClass = (column) => {
+    const getColumnClass = column => {
       const numericColumns = ['amount', 'balance', 'salary', 'bonus', 'rate']
       const isNumeric = numericColumns.some(col => column.toLowerCase().includes(col))
       return isNumeric ? 'numeric' : ''
@@ -411,9 +380,9 @@ export default {
       getColumnClass,
       formatCellValue,
       formatNumber,
-      formatCurrency
+      formatCurrency,
     }
-  }
+  },
 }
 </script>
 
@@ -760,8 +729,12 @@ export default {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Responsive */

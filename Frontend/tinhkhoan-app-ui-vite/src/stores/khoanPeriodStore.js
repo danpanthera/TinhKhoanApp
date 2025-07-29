@@ -1,8 +1,8 @@
-import { defineStore } from "pinia";
-import apiClient from "../services/api.js";
-import { getId, getName, getStatus, getType, normalizeArray } from "../utils/casingSafeAccess.js";
+import { defineStore } from 'pinia'
+import apiClient from '../services/api.js'
+import { getId, getName, getStatus, getType, normalizeArray } from '../utils/casingSafeAccess.js'
 
-export const useKhoanPeriodStore = defineStore("khoanPeriod", {
+export const useKhoanPeriodStore = defineStore('khoanPeriod', {
   // State
   state: () => ({
     khoanPeriods: [], // Danh sách các kỳ khoán
@@ -12,14 +12,14 @@ export const useKhoanPeriodStore = defineStore("khoanPeriod", {
 
   // Getters
   getters: {
-    allKhoanPeriods: (state) => state.khoanPeriods,
+    allKhoanPeriods: state => state.khoanPeriods,
     // Sắp xếp theo ngày bắt đầu giảm dần để kỳ mới nhất lên đầu
-    sortedKhoanPeriods: (state) => {
+    sortedKhoanPeriods: state => {
       return [...state.khoanPeriods].sort(
         (a, b) => new Date(b.StartDate || b.startDate) - new Date(a.StartDate || a.startDate)
-      );
+      )
     },
-    khoanPeriodCount: (state) => state.khoanPeriods.length,
+    khoanPeriodCount: state => state.khoanPeriods.length,
   },
 
   // Actions
@@ -27,184 +27,182 @@ export const useKhoanPeriodStore = defineStore("khoanPeriod", {
     // Helper methods for mapping between frontend and backend formats
     mapTypeToEnum(type) {
       const typeMap = {
-        'Tháng': 0,
-        'Quý': 1,
-        'Năm': 2,
-        'MONTHLY': 0,
-        'QUARTERLY': 1,
-        'ANNUAL': 2,
+        Tháng: 0,
+        Quý: 1,
+        Năm: 2,
+        MONTHLY: 0,
+        QUARTERLY: 1,
+        ANNUAL: 2,
         // Handle numeric values already integers
-        0: 0, 1: 1, 2: 2
-      };
-      return typeMap[type] ?? 0; // Default to MONTHLY (0)
+        0: 0,
+        1: 1,
+        2: 2,
+      }
+      return typeMap[type] ?? 0 // Default to MONTHLY (0)
     },
 
     mapStatusToEnum(status) {
       const statusMap = {
-        'Nháp': 0,
-        'Mở': 1,
+        Nháp: 0,
+        Mở: 1,
         'Tạm dừng': 2,
         'Chờ duyệt': 3,
-        'Đóng': 4,
+        Đóng: 4,
         'Lưu trữ': 5,
-        'DRAFT': 0,
-        'OPEN': 1,
-        'PROCESSING': 2,
-        'PENDINGAPPROVAL': 3,
-        'CLOSED': 4,
-        'ARCHIVED': 5,
+        DRAFT: 0,
+        OPEN: 1,
+        PROCESSING: 2,
+        PENDINGAPPROVAL: 3,
+        CLOSED: 4,
+        ARCHIVED: 5,
         // Handle numeric values already integers
-        0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5
-      };
-      return statusMap[status] ?? 0; // Default to DRAFT (0)
+        0: 0,
+        1: 1,
+        2: 2,
+        3: 3,
+        4: 4,
+        5: 5,
+      }
+      return statusMap[status] ?? 0 // Default to DRAFT (0)
     },
 
     // Helper methods for mapping from backend to frontend display
     mapTypeFromEnum(type) {
       const typeMap = {
         // Backend returns string enum values
-        'MONTHLY': 'Tháng',
-        'QUARTERLY': 'Quý',
-        'ANNUAL': 'Năm',
+        MONTHLY: 'Tháng',
+        QUARTERLY: 'Quý',
+        ANNUAL: 'Năm',
         // Handle numeric values if needed
-        0: 'Tháng',    // MONTHLY
-        1: 'Quý',      // QUARTERLY
-        2: 'Năm',      // ANNUAL
-      };
-      return typeMap[type] || type;
+        0: 'Tháng', // MONTHLY
+        1: 'Quý', // QUARTERLY
+        2: 'Năm', // ANNUAL
+      }
+      return typeMap[type] || type
     },
 
     mapStatusFromEnum(status) {
       const statusMap = {
         // Backend returns string enum values
-        'DRAFT': 'Nháp',
-        'OPEN': 'Mở',
-        'PROCESSING': 'Tạm dừng',
-        'PENDINGAPPROVAL': 'Chờ duyệt',
-        'CLOSED': 'Đóng',
-        'ARCHIVED': 'Lưu trữ',
+        DRAFT: 'Nháp',
+        OPEN: 'Mở',
+        PROCESSING: 'Tạm dừng',
+        PENDINGAPPROVAL: 'Chờ duyệt',
+        CLOSED: 'Đóng',
+        ARCHIVED: 'Lưu trữ',
         // Handle numeric values if needed
-        0: 'Nháp',          // DRAFT
-        1: 'Mở',            // OPEN
-        2: 'Tạm dừng',      // PROCESSING
-        3: 'Chờ duyệt',     // PENDINGAPPROVAL
-        4: 'Đóng',          // CLOSED
-        5: 'Lưu trữ',       // ARCHIVED
-      };
-      return statusMap[status] || status;
+        0: 'Nháp', // DRAFT
+        1: 'Mở', // OPEN
+        2: 'Tạm dừng', // PROCESSING
+        3: 'Chờ duyệt', // PENDINGAPPROVAL
+        4: 'Đóng', // CLOSED
+        5: 'Lưu trữ', // ARCHIVED
+      }
+      return statusMap[status] || status
     },
 
     async fetchKhoanPeriods() {
-      this.isLoading = true;
-      this.error = null;
+      this.isLoading = true
+      this.error = null
       try {
-        const response = await apiClient.get("/KhoanPeriods");
-        let rawData = [];
+        const response = await apiClient.get('/KhoanPeriods')
+        let rawData = []
         if (response.data && Array.isArray(response.data.$values)) {
-          rawData = response.data.$values;
+          rawData = response.data.$values
         } else if (Array.isArray(response.data)) {
-          rawData = response.data;
+          rawData = response.data
         } else {
-          this.khoanPeriods = [];
-          this.error = "Dữ liệu Kỳ Khoán nhận được không đúng định dạng.";
-          return;
+          this.khoanPeriods = []
+          this.error = 'Dữ liệu Kỳ Khoán nhận được không đúng định dạng.'
+          return
         }
 
         // Map backend enum data to frontend display format and normalize casing
         this.khoanPeriods = normalizeArray(rawData).map(period => ({
           ...period,
           typeDisplay: this.mapTypeFromEnum(getType(period)),
-          statusDisplay: this.mapStatusFromEnum(getStatus(period))
-        }));
+          statusDisplay: this.mapStatusFromEnum(getStatus(period)),
+        }))
 
-        console.log('🔄 fetchKhoanPeriods - raw data:', rawData);
-        console.log('🔄 fetchKhoanPeriods - mapped data:', this.khoanPeriods);
+        console.log('🔄 fetchKhoanPeriods - raw data:', rawData)
+        console.log('🔄 fetchKhoanPeriods - mapped data:', this.khoanPeriods)
       } catch (err) {
-        this.khoanPeriods = [];
-        this.error =
-          "Không thể tải danh sách Kỳ Khoán. Lỗi: " +
-          (err.response?.data?.message || err.message);
+        this.khoanPeriods = []
+        this.error = 'Không thể tải danh sách Kỳ Khoán. Lỗi: ' + (err.response?.data?.message || err.message)
       } finally {
-        this.isLoading = false;
+        this.isLoading = false
       }
     },
 
     async createKhoanPeriod(periodData) {
-      this.isLoading = true;
-      this.error = null;
+      this.isLoading = true
+      this.error = null
       try {
-        const response = await apiClient.post("/KhoanPeriods", periodData);
+        const response = await apiClient.post('/KhoanPeriods', periodData)
         // Thay vì push, mình fetch lại để đảm bảo thứ tự và dữ liệu đầy đủ từ server
-        await this.fetchKhoanPeriods();
-        return response.data;
+        await this.fetchKhoanPeriods()
+        return response.data
       } catch (err) {
         this.error =
-          "Không thể tạo Kỳ Khoán. Lỗi: " +
+          'Không thể tạo Kỳ Khoán. Lỗi: ' +
           (err.response?.data?.message ||
             err.response?.data?.title ||
-            (err.response?.data?.errors
-              ? JSON.stringify(err.response.data.errors)
-              : err.message));
-        throw err;
+            (err.response?.data?.errors ? JSON.stringify(err.response.data.errors) : err.message))
+        throw err
       } finally {
-        this.isLoading = false;
+        this.isLoading = false
       }
     },
 
     async updateKhoanPeriod(periodData) {
-      this.isLoading = true;
-      this.error = null;
+      this.isLoading = true
+      this.error = null
       try {
-        const periodId = getId(periodData);
+        const periodId = getId(periodData)
 
         // Map frontend data to backend format (PascalCase and proper enums)
         const updateData = {
-          Id: periodId,  // Ensure ID is integer
+          Id: periodId, // Ensure ID is integer
           Name: getName(periodData),
           Type: this.mapTypeToEnum(getType(periodData)),
           StartDate: periodData.StartDate || periodData.startDate,
           EndDate: periodData.EndDate || periodData.endDate,
           Status: this.mapStatusToEnum(getStatus(periodData)),
-        };
+        }
 
-        console.log('🔄 updateKhoanPeriod - original data:', periodData);
-        console.log('🔄 updateKhoanPeriod - mapped data:', updateData);
-        console.log('🔄 updateKhoanPeriod - periodId:', periodId, 'type:', typeof periodId);
+        console.log('🔄 updateKhoanPeriod - original data:', periodData)
+        console.log('🔄 updateKhoanPeriod - mapped data:', updateData)
+        console.log('🔄 updateKhoanPeriod - periodId:', periodId, 'type:', typeof periodId)
 
-        await apiClient.put(`/KhoanPeriods/${periodId}`, updateData);
-        await this.fetchKhoanPeriods(); // Fetch lại để cập nhật
+        await apiClient.put(`/KhoanPeriods/${periodId}`, updateData)
+        await this.fetchKhoanPeriods() // Fetch lại để cập nhật
       } catch (err) {
         this.error =
-          "Không thể cập nhật Kỳ Khoán. Lỗi: " +
+          'Không thể cập nhật Kỳ Khoán. Lỗi: ' +
           (err.response?.data?.message ||
             err.response?.data?.title ||
-            (err.response?.data?.errors
-              ? JSON.stringify(err.response.data.errors)
-              : err.message));
-        throw err;
+            (err.response?.data?.errors ? JSON.stringify(err.response.data.errors) : err.message))
+        throw err
       } finally {
-        this.isLoading = false;
+        this.isLoading = false
       }
     },
 
     async deleteKhoanPeriod(periodId) {
-      this.isLoading = true;
-      this.error = null;
+      this.isLoading = true
+      this.error = null
       try {
-        await apiClient.delete(`/KhoanPeriods/${periodId}`);
+        await apiClient.delete(`/KhoanPeriods/${periodId}`)
         // Xóa khỏi state hoặc fetch lại
-        this.khoanPeriods = this.khoanPeriods.filter((p) => getId(p) !== periodId);
+        this.khoanPeriods = this.khoanPeriods.filter(p => getId(p) !== periodId)
         // Hoặc await this.fetchKhoanPeriods();
       } catch (err) {
         this.error =
-          "Không thể xóa Kỳ Khoán. Lỗi: " +
-          (err.response?.data?.message ||
-            err.response?.data?.title ||
-            err.message);
-        throw err;
+          'Không thể xóa Kỳ Khoán. Lỗi: ' + (err.response?.data?.message || err.response?.data?.title || err.message)
+        throw err
       } finally {
-        this.isLoading = false;
+        this.isLoading = false
       }
     },
   },
-});
+})

@@ -50,12 +50,7 @@
                 autocomplete="organization"
                 aria-label="Chọn chi nhánh"
               >
-                <el-option
-                  v-for="branch in branches"
-                  :key="branch.id"
-                  :label="branch.name"
-                  :value="branch.id"
-                >
+                <el-option v-for="branch in branches" :key="branch.id" :label="branch.name" :value="branch.id">
                   <div class="option-item-enhanced">
                     <span class="option-icon">🏢</span>
                     <span class="option-text">{{ branch.name }}</span>
@@ -192,7 +187,9 @@
             <div class="changes-container">
               <!-- So với đầu năm -->
               <div class="change-indicator" :class="getChangeClass(indicator.changeFromYearStartPercent, indicator.id)">
-                <span class="change-arrow">{{ getChangeArrow(indicator.changeFromYearStartPercent, indicator.id) }}</span>
+                <span class="change-arrow">{{
+                  getChangeArrow(indicator.changeFromYearStartPercent, indicator.id)
+                }}</span>
                 <span class="change-text">
                   {{ formatChangePercent(indicator.changeFromYearStartPercent) }} so với đầu năm
                 </span>
@@ -200,7 +197,9 @@
 
               <!-- So với đầu tháng (mới thêm) -->
               <div class="change-indicator" :class="getChangeClass(indicator.changeFromMonthStart || 0, indicator.id)">
-                <span class="change-arrow">{{ getChangeArrow(indicator.changeFromMonthStart || 0, indicator.id) }}</span>
+                <span class="change-arrow">{{
+                  getChangeArrow(indicator.changeFromMonthStart || 0, indicator.id)
+                }}</span>
                 <span class="change-text">
                   {{ formatChangePercent(indicator.changeFromMonthStart || 0) }} so với đầu tháng
                 </span>
@@ -330,11 +329,15 @@
         <div class="detail-overview">
           <div class="overview-card-detail">
             <div class="overview-label">Thực hiện</div>
-            <div class="overview-value current">{{ formatNumber(selectedIndicator.currentValue) }} {{ selectedIndicator.unit }}</div>
+            <div class="overview-value current">
+              {{ formatNumber(selectedIndicator.currentValue) }} {{ selectedIndicator.unit }}
+            </div>
           </div>
           <div class="overview-card-detail">
             <div class="overview-label">Kế hoạch năm</div>
-            <div class="overview-value target">{{ formatNumber(selectedIndicator.targetValue) }} {{ selectedIndicator.unit }}</div>
+            <div class="overview-value target">
+              {{ formatNumber(selectedIndicator.targetValue) }} {{ selectedIndicator.unit }}
+            </div>
           </div>
           <div class="overview-card-detail">
             <div class="overview-label">Hoàn thành</div>
@@ -344,7 +347,10 @@
           </div>
           <div class="overview-card-detail">
             <div class="overview-label">Kế hoạch quý</div>
-            <div class="overview-value quarter" :class="getCompletionClass(selectedIndicator.quarterCompletionRate || 0)">
+            <div
+              class="overview-value quarter"
+              :class="getCompletionClass(selectedIndicator.quarterCompletionRate || 0)"
+            >
               {{ (selectedIndicator.quarterCompletionRate || 0).toFixed(1) }}%
             </div>
           </div>
@@ -357,19 +363,29 @@
             <div class="analysis-content">
               <div class="change-detail-card positive">
                 <div class="change-header">
-                  <span class="change-icon">{{ getChangeArrow(selectedIndicator.changeFromYearStartPercent, selectedIndicator.id) }}</span>
+                  <span class="change-icon">{{
+                    getChangeArrow(selectedIndicator.changeFromYearStartPercent, selectedIndicator.id)
+                  }}</span>
                   <span class="change-title">So với đầu năm</span>
                 </div>
                 <div class="change-stats">
-                  <div class="change-percentage">{{ formatChangePercent(selectedIndicator.changeFromYearStartPercent) }}</div>
-                  <div class="change-description">{{ getChangeDescription(selectedIndicator.changeFromYearStartPercent, 'năm') }}</div>
+                  <div class="change-percentage">
+                    {{ formatChangePercent(selectedIndicator.changeFromYearStartPercent) }}
+                  </div>
+                  <div class="change-description">
+                    {{ getChangeDescription(selectedIndicator.changeFromYearStartPercent, 'năm') }}
+                  </div>
                 </div>
 
                 <!-- Danh sách khách hàng/cán bộ góp phần -->
                 <div class="contributors-section">
                   <h4>🏆 Đóng góp tích cực:</h4>
                   <div class="contributors-list">
-                    <div v-for="contributor in getTopContributors(selectedIndicator.id, 'year')" :key="contributor.id" class="contributor-item positive">
+                    <div
+                      v-for="contributor in getTopContributors(selectedIndicator.id, 'year')"
+                      :key="contributor.id"
+                      class="contributor-item positive"
+                    >
                       <span class="contributor-name">{{ contributor.name }}</span>
                       <span class="contributor-value">+{{ formatNumber(contributor.contribution) }}</span>
                     </div>
@@ -379,21 +395,33 @@
 
               <div class="change-detail-card neutral">
                 <div class="change-header">
-                  <span class="change-icon">{{ getChangeArrow(selectedIndicator.changeFromMonthStart || 0, selectedIndicator.id) }}</span>
+                  <span class="change-icon">{{
+                    getChangeArrow(selectedIndicator.changeFromMonthStart || 0, selectedIndicator.id)
+                  }}</span>
                   <span class="change-title">So với đầu tháng</span>
                 </div>
                 <div class="change-stats">
-                  <div class="change-percentage">{{ formatChangePercent(selectedIndicator.changeFromMonthStart || 0) }}</div>
-                  <div class="change-description">{{ getChangeDescription(selectedIndicator.changeFromMonthStart || 0, 'tháng') }}</div>
+                  <div class="change-percentage">
+                    {{ formatChangePercent(selectedIndicator.changeFromMonthStart || 0) }}
+                  </div>
+                  <div class="change-description">
+                    {{ getChangeDescription(selectedIndicator.changeFromMonthStart || 0, 'tháng') }}
+                  </div>
                 </div>
 
                 <!-- Danh sách khách hàng/cán bộ góp phần -->
                 <div class="contributors-section">
                   <h4>📊 Đóng góp trong tháng:</h4>
                   <div class="contributors-list">
-                    <div v-for="contributor in getTopContributors(selectedIndicator.id, 'month')" :key="contributor.id" class="contributor-item neutral">
+                    <div
+                      v-for="contributor in getTopContributors(selectedIndicator.id, 'month')"
+                      :key="contributor.id"
+                      class="contributor-item neutral"
+                    >
                       <span class="contributor-name">{{ contributor.name }}</span>
-                      <span class="contributor-value">{{ contributor.contribution > 0 ? '+' : '' }}{{ formatNumber(contributor.contribution) }}</span>
+                      <span class="contributor-value"
+                        >{{ contributor.contribution > 0 ? '+' : '' }}{{ formatNumber(contributor.contribution) }}</span
+                      >
                     </div>
                   </div>
                 </div>
@@ -405,19 +433,15 @@
           <div class="detail-chart-section">
             <h3 class="chart-title">📈 Xu hướng 12 tháng gần nhất</h3>
             <div class="detail-chart-container">
-              <div id="detail-trend-chart" style="height: 300px;"></div>
+              <div id="detail-trend-chart" style="height: 300px"></div>
             </div>
           </div>
         </div>
 
         <!-- Action buttons -->
         <div class="detail-actions">
-          <el-button @click="exportIndicatorDetail" type="primary" size="large">
-            📊 Xuất báo cáo chi tiết
-          </el-button>
-          <el-button @click="showDetailModal = false" size="large">
-            Đóng
-          </el-button>
+          <el-button @click="exportIndicatorDetail" type="primary" size="large"> 📊 Xuất báo cáo chi tiết </el-button>
+          <el-button @click="showDetailModal = false" size="large"> Đóng </el-button>
         </div>
       </div>
     </el-dialog>
@@ -425,24 +449,24 @@
 </template>
 
 <script setup>
-import dayjs from 'dayjs';
-import * as echarts from 'echarts';
-import { ElDialog, ElMessage } from 'element-plus';
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import LoadingOverlay from '../../components/dashboard/LoadingOverlay.vue';
-import { dashboardService } from '../../services/dashboardService.js';
-import { formatNumber as formatVNNumber } from '../../utils/numberFormat.js';
+import dayjs from 'dayjs'
+import * as echarts from 'echarts'
+import { ElDialog, ElMessage } from 'element-plus'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import LoadingOverlay from '../../components/dashboard/LoadingOverlay.vue'
+import { dashboardService } from '../../services/dashboardService.js'
+import { formatNumber as formatVNNumber } from '../../utils/numberFormat.js'
 
 // State quản lý
-const loading = ref(false);
-const selectedBranch = ref('7800-00'); // Mặc định chọn Hội Sở (mã 7800, PGD 00)
-const selectedDate = ref(null); // Ngày sao kê cụ thể
-const dateRange = ref([dayjs().format('YYYY-MM'), dayjs().format('YYYY-MM')]); // Tháng hiện tại
-const currentTime = ref(new Date());
-const showDetailModal = ref(false);
-const selectedIndicator = ref(null);
-const activeChartTab = ref('comparison');
-const animatedValues = ref({}); // Giá trị animated cho counters
+const loading = ref(false)
+const selectedBranch = ref('7800-00') // Mặc định chọn Hội Sở (mã 7800, PGD 00)
+const selectedDate = ref(null) // Ngày sao kê cụ thể
+const dateRange = ref([dayjs().format('YYYY-MM'), dayjs().format('YYYY-MM')]) // Tháng hiện tại
+const currentTime = ref(new Date())
+const showDetailModal = ref(false)
+const selectedIndicator = ref(null)
+const activeChartTab = ref('comparison')
+const animatedValues = ref({}) // Giá trị animated cho counters
 
 // Danh sách chi nhánh và PGD theo quy ước mới (PGD "00" cho chi nhánh chính)
 const branches = ref([
@@ -459,138 +483,138 @@ const branches = ref([
   { id: '7806-02', name: 'CN Đoàn Kết - PGD Số 2' },
   { id: '7807-00', name: 'CN Tân Uyên' },
   { id: '7807-01', name: 'CN Tân Uyên - PGD Số 3' },
-  { id: '7808-00', name: 'CN Nậm Hàng' }
-]);
+  { id: '7808-00', name: 'CN Nậm Hàng' },
+])
 
 // 6 chỉ tiêu dashboard chính - sẽ được cập nhật từ API backend
-const indicators = ref([]);
+const indicators = ref([])
 
 // Tổng quan thống kê
 const overviewStats = computed(() => {
-  const total = indicators.value.length;
-  const completed = indicators.value.filter(i => i.completionRate >= 100).length;
-  const avgCompletion = indicators.value.reduce((sum, i) => sum + i.completionRate, 0) / total;
+  const total = indicators.value.length
+  const completed = indicators.value.filter(i => i.completionRate >= 100).length
+  const avgCompletion = indicators.value.reduce((sum, i) => sum + i.completionRate, 0) / total
 
   return {
     totalTargets: total,
     completedTargets: completed,
-    avgCompletion: Math.round(avgCompletion * 10) / 10
-  };
-});
+    avgCompletion: Math.round(avgCompletion * 10) / 10,
+  }
+})
 
 // Tabs cho biểu đồ
 const chartTabs = ref([
   { key: 'comparison', label: 'So sánh', icon: '📊' },
   { key: 'trend', label: 'Xu hướng', icon: '📈' },
-  { key: 'completion', label: 'Hoàn thành', icon: '🎯' }
-]);
+  { key: 'completion', label: 'Hoàn thành', icon: '🎯' },
+])
 
 // Cấu hình animated counters tự tạo
 const animateCounter = (indicatorId, targetValue, duration = 2000) => {
-  const startValue = animatedValues.value[indicatorId] || 0;
-  const startTime = Date.now();
+  const startValue = animatedValues.value[indicatorId] || 0
+  const startTime = Date.now()
 
   const animate = () => {
-    const currentTime = Date.now();
-    const elapsed = currentTime - startTime;
-    const progress = Math.min(elapsed / duration, 1);
+    const currentTime = Date.now()
+    const elapsed = currentTime - startTime
+    const progress = Math.min(elapsed / duration, 1)
 
     // Sử dụng easing function cho animation mượt
-    const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-    const currentValue = startValue + (targetValue - startValue) * easeOutQuart;
+    const easeOutQuart = 1 - Math.pow(1 - progress, 4)
+    const currentValue = startValue + (targetValue - startValue) * easeOutQuart
 
-    animatedValues.value[indicatorId] = Math.round(currentValue * 10) / 10;
+    animatedValues.value[indicatorId] = Math.round(currentValue * 10) / 10
 
     if (progress < 1) {
-      requestAnimationFrame(animate);
+      requestAnimationFrame(animate)
     } else {
-      animatedValues.value[indicatorId] = targetValue;
+      animatedValues.value[indicatorId] = targetValue
     }
-  };
+  }
 
-  animate();
-};
+  animate()
+}
 
 // Khởi động animation cho tất cả counters
 const startAllCounterAnimations = () => {
   indicators.value.forEach(indicator => {
-    animateCounter(indicator.id, indicator.currentValue);
-  });
-};
+    animateCounter(indicator.id, indicator.currentValue)
+  })
+}
 
 // Sound effects (tái sử dụng code cũ)
-const audioContext = ref(null);
+const audioContext = ref(null)
 const sounds = ref({
   hover: null,
   click: null,
   success: null,
-  notification: null
-});
+  notification: null,
+})
 
 // Phương thức âm thanh
 const initAudio = () => {
   try {
-    audioContext.value = new (window.AudioContext || window.webkitAudioContext)();
-    createSounds();
+    audioContext.value = new (window.AudioContext || window.webkitAudioContext)()
+    createSounds()
   } catch (error) {
-    console.warn('Audio not supported:', error);
+    console.warn('Audio not supported:', error)
   }
-};
+}
 
 const createSounds = () => {
-  if (!audioContext.value) return;
+  if (!audioContext.value) return
 
-  sounds.value.hover = createTone(800, 0.1, 0.05);
-  sounds.value.click = createTone(1200, 0.15, 0.1);
-  sounds.value.success = createTone(600, 0.3, 0.2);
-  sounds.value.notification = createTone(900, 0.2, 0.15);
-};
+  sounds.value.hover = createTone(800, 0.1, 0.05)
+  sounds.value.click = createTone(1200, 0.15, 0.1)
+  sounds.value.success = createTone(600, 0.3, 0.2)
+  sounds.value.notification = createTone(900, 0.2, 0.15)
+}
 
 const createTone = (frequency, duration, volume) => {
   return () => {
-    if (!audioContext.value) return;
+    if (!audioContext.value) return
 
-    const oscillator = audioContext.value.createOscillator();
-    const gainNode = audioContext.value.createGain();
+    const oscillator = audioContext.value.createOscillator()
+    const gainNode = audioContext.value.createGain()
 
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.value.destination);
+    oscillator.connect(gainNode)
+    gainNode.connect(audioContext.value.destination)
 
-    oscillator.frequency.setValueAtTime(frequency, audioContext.value.currentTime);
-    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(frequency, audioContext.value.currentTime)
+    oscillator.type = 'sine'
 
-    gainNode.gain.setValueAtTime(0, audioContext.value.currentTime);
-    gainNode.gain.linearRampToValueAtTime(volume, audioContext.value.currentTime + 0.01);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.value.currentTime + duration);
+    gainNode.gain.setValueAtTime(0, audioContext.value.currentTime)
+    gainNode.gain.linearRampToValueAtTime(volume, audioContext.value.currentTime + 0.01)
+    gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.value.currentTime + duration)
 
-    oscillator.start(audioContext.value.currentTime);
-    oscillator.stop(audioContext.value.currentTime + duration);
-  };
-};
+    oscillator.start(audioContext.value.currentTime)
+    oscillator.stop(audioContext.value.currentTime + duration)
+  }
+}
 
 const playHoverSound = () => {
   if (sounds.value.hover) {
-    sounds.value.hover();
+    sounds.value.hover()
   }
-};
+}
 
 const playClickSound = () => {
   if (sounds.value.click) {
-    sounds.value.click();
+    sounds.value.click()
   }
-};
+}
 
 const playSuccessSound = () => {
   if (sounds.value.success) {
-    sounds.value.success();
+    sounds.value.success()
   }
-};
+}
 
 // Phương thức tiện ích
 const getCurrentPeriodLabel = () => {
-  const now = new Date();
-  return `Tháng ${now.getMonth() + 1}/${now.getFullYear()}`;
-};
+  const now = new Date()
+  return `Tháng ${now.getMonth() + 1}/${now.getFullYear()}`
+}
 
 const formatCurrentTime = () => {
   return currentTime.value.toLocaleString('vi-VN', {
@@ -599,213 +623,211 @@ const formatCurrentTime = () => {
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit'
-  });
-};
+    second: '2-digit',
+  })
+}
 
-const formatNumber = (value) => {
-  if (!value && value !== 0) return '0';
+const formatNumber = value => {
+  if (!value && value !== 0) return '0'
   // Sử dụng formatVNNumber từ utils với định dạng chuẩn Việt Nam
-  return formatVNNumber(value);
-};
+  return formatVNNumber(value)
+}
 
-const formatChangePercent = (value) => {
-  if (value === null || value === undefined) return '0%';
-  const sign = value >= 0 ? '+' : '';
-  return `${sign}${value.toFixed(1)}%`;
-};
+const formatChangePercent = value => {
+  if (value === null || value === undefined) return '0%'
+  const sign = value >= 0 ? '+' : ''
+  return `${sign}${value.toFixed(1)}%`
+}
 
-const getStatusClass = (completionRate) => {
-  if (completionRate >= 100) return 'status-excellent';
-  if (completionRate >= 90) return 'status-good';
-  if (completionRate >= 70) return 'status-average';
-  return 'status-poor';
-};
+const getStatusClass = completionRate => {
+  if (completionRate >= 100) return 'status-excellent'
+  if (completionRate >= 90) return 'status-good'
+  if (completionRate >= 70) return 'status-average'
+  return 'status-poor'
+}
 
-const getStatusText = (completionRate) => {
-  if (completionRate >= 100) return 'Xuất sắc';
-  if (completionRate >= 90) return 'Tốt';
-  if (completionRate >= 70) return 'Khá';
-  return 'Cần cải thiện';
-};
+const getStatusText = completionRate => {
+  if (completionRate >= 100) return 'Xuất sắc'
+  if (completionRate >= 90) return 'Tốt'
+  if (completionRate >= 70) return 'Khá'
+  return 'Cần cải thiện'
+}
 
 const getChangeClass = (percent, indicatorId = null) => {
   // Xử lý đặc biệt cho chỉ tiêu Nợ xấu (ngược lại với các chỉ tiêu khác)
   if (indicatorId === 'no_xau') {
-    return percent >= 0 ? 'change-negative' : 'change-positive'; // Nợ xấu tăng = xấu (đỏ), giảm = tốt (xanh)
+    return percent >= 0 ? 'change-negative' : 'change-positive' // Nợ xấu tăng = xấu (đỏ), giảm = tốt (xanh)
   }
   // Các chỉ tiêu khác: tăng = tốt (xanh), giảm = xấu (đỏ)
-  return percent >= 0 ? 'change-positive' : 'change-negative';
-};
+  return percent >= 0 ? 'change-positive' : 'change-negative'
+}
 
 const getChangeArrow = (percent, indicatorId = null) => {
   // Arrow không thay đổi - vẫn hiển thị đúng hướng tăng/giảm
-  return percent >= 0 ? '↗️' : '↘️';
-};
+  return percent >= 0 ? '↗️' : '↘️'
+}
 
-const getProgressColor = (percentage) => {
+const getProgressColor = percentage => {
   // Thống nhất màu sắc theo yêu cầu:
   // < 25%: màu đỏ đậm (bordeaux)
   // 26-50%: màu cam nhạt
   // 51-75%: màu xanh dương nhạt
   // > 75%: màu xanh lá cây
-  if (percentage >= 75) return '#52c41a'; // Xanh lá cây
-  if (percentage >= 51) return '#1890ff'; // Xanh dương nhạt
-  if (percentage >= 26) return '#faad14'; // Cam nhạt
-  return '#8B1538'; // Đỏ đậm bordeaux (< 25%)
-};
+  if (percentage >= 75) return '#52c41a' // Xanh lá cây
+  if (percentage >= 51) return '#1890ff' // Xanh dương nhạt
+  if (percentage >= 26) return '#faad14' // Cam nhạt
+  return '#8B1538' // Đỏ đậm bordeaux (< 25%)
+}
 
 // Xử lý sự kiện
-const isUserInteraction = ref(false);
+const isUserInteraction = ref(false)
 
 const handleBranchChange = async () => {
   // Chỉ phát âm thanh khi user chủ động thay đổi qua UI
   if (isUserInteraction.value) {
-    playClickSound();
-    isUserInteraction.value = false; // Reset flag
+    playClickSound()
+    isUserInteraction.value = false // Reset flag
   }
-  await loadDashboardData();
-};
+  await loadDashboardData()
+}
 
 const handleDateRangeChange = async () => {
-  await loadDashboardData();
-};
+  await loadDashboardData()
+}
 
 const handleDateChange = async () => {
-  console.log('📅 Date changed to:', selectedDate.value);
-  await loadDashboardData();
-};
+  console.log('📅 Date changed to:', selectedDate.value)
+  await loadDashboardData()
+}
 
 const refreshData = async () => {
-  await loadDashboardData();
-};
+  await loadDashboardData()
+}
 
-const showIndicatorDetail = (indicator) => {
-  selectedIndicator.value = indicator;
-  showDetailModal.value = true;
-};
+const showIndicatorDetail = indicator => {
+  selectedIndicator.value = indicator
+  showDetailModal.value = true
+}
 
 const loadDashboardData = async () => {
-  loading.value = true;
+  loading.value = true
   try {
-    const dateStr = selectedDate.value ? selectedDate.value : 'ngày gần nhất';
-    console.log('🔄 Đang tải dữ liệu dashboard cho chi nhánh:', selectedBranch.value, 'ngày:', dateStr);
-    console.log('📅 selectedDate.value:', selectedDate.value);
+    const dateStr = selectedDate.value ? selectedDate.value : 'ngày gần nhất'
+    console.log('🔄 Đang tải dữ liệu dashboard cho chi nhánh:', selectedBranch.value, 'ngày:', dateStr)
+    console.log('📅 selectedDate.value:', selectedDate.value)
 
     // Gọi API để lấy dữ liệu thực tế từ backend với ngày cụ thể
-    const data = await dashboardService.getGeneralDashboardData(selectedBranch.value, selectedDate.value);
-    console.log('✅ Dữ liệu dashboard nhận được:', data);
+    const data = await dashboardService.getGeneralDashboardData(selectedBranch.value, selectedDate.value)
+    console.log('✅ Dữ liệu dashboard nhận được:', data)
 
     if (data && data.indicators) {
       // Xử lý dữ liệu từ API - chuyển đổi đơn vị và format
       indicators.value = data.indicators.map(indicator => {
-        const processedIndicator = { ...indicator };
+        const processedIndicator = { ...indicator }
 
         // Chuyển đổi từ triệu VND sang triệu VND cho các chỉ tiêu tiền tệ
         if (indicator.format === 'currency' && indicator.unit === 'tỷ') {
-          processedIndicator.currentValue = indicator.currentValue * 1000; // Chuyển tỷ -> triệu
-          processedIndicator.targetValue = indicator.targetValue * 1000;
-          processedIndicator.unit = 'triệu VND';
+          processedIndicator.currentValue = indicator.currentValue * 1000 // Chuyển tỷ -> triệu
+          processedIndicator.targetValue = indicator.targetValue * 1000
+          processedIndicator.unit = 'triệu VND'
         }
 
-        console.log(`📊 ${indicator.name}: ${processedIndicator.currentValue} ${processedIndicator.unit}`);
-        return processedIndicator;
-      });
+        console.log(`📊 ${indicator.name}: ${processedIndicator.currentValue} ${processedIndicator.unit}`)
+        return processedIndicator
+      })
 
-      console.log('🎯 Đã cập nhật indicators với đơn vị triệu VND:', indicators.value);
+      console.log('🎯 Đã cập nhật indicators với đơn vị triệu VND:', indicators.value)
     } else {
-      console.warn('⚠️ Không có dữ liệu indicators từ API');
+      console.warn('⚠️ Không có dữ liệu indicators từ API')
       // Fallback: khởi tạo mảng rỗng để tránh lỗi render
-      indicators.value = [];
+      indicators.value = []
     }
 
     // Khởi động animation cho counters
     setTimeout(() => {
-      startAllCounterAnimations();
-    }, 300);
+      startAllCounterAnimations()
+    }, 300)
 
     // Tạo biểu đồ sau khi có dữ liệu với delay để đảm bảo DOM
-    await nextTick();
+    await nextTick()
     setTimeout(() => {
-      createCharts();
-    }, 200);
+      createCharts()
+    }, 200)
 
-    playSuccessSound();
+    playSuccessSound()
     ElMessage.success({
       message: 'Dữ liệu đã được cập nhật thành công với số liệu thật từ backend',
       type: 'success',
       duration: 2000,
-      showClose: true
-    });
-
+      showClose: true,
+    })
   } catch (error) {
-    console.error('❌ Error loading dashboard data:', error);
+    console.error('❌ Error loading dashboard data:', error)
     ElMessage.error({
       message: 'Không thể tải dữ liệu dashboard. Vui lòng thử lại!',
       type: 'error',
       duration: 3000,
-      showClose: true
-    });
+      showClose: true,
+    })
 
     // Fallback: khởi tạo mảng rỗng để tránh lỗi render
-    indicators.value = [];
+    indicators.value = []
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 // Tạo biểu đồ với ECharts (có error handling và delay)
 const createCharts = async () => {
   try {
     // Đợi DOM render hoàn toàn
-    await nextTick();
+    await nextTick()
 
     // Thêm delay nhỏ để đảm bảo tất cả element đã sẵn sàng
     setTimeout(() => {
-      createComparisonChart();
-      createTrendChart();
-      createCompletionChart();
-      createMiniCharts();
-    }, 100);
-
+      createComparisonChart()
+      createTrendChart()
+      createCompletionChart()
+      createMiniCharts()
+    }, 100)
   } catch (error) {
-    console.warn('Error creating charts:', error);
+    console.warn('Error creating charts:', error)
   }
-};
+}
 
 const createComparisonChart = () => {
   try {
-    const chartDom = document.getElementById('comparison-chart');
+    const chartDom = document.getElementById('comparison-chart')
     if (!chartDom || !chartDom.parentNode) {
-      console.log('⚠️ Comparison chart container not ready, skipping...');
-      return;
+      console.log('⚠️ Comparison chart container not ready, skipping...')
+      return
     }
 
     // Dispose existing chart instance nếu có
-    const existingChart = echarts.getInstanceByDom(chartDom);
+    const existingChart = echarts.getInstanceByDom(chartDom)
     if (existingChart) {
-      existingChart.dispose();
+      existingChart.dispose()
     }
 
-    const myChart = echarts.init(chartDom);
+    const myChart = echarts.init(chartDom)
     const option = {
       title: {
         text: 'So sánh Thực hiện vs Kế hoạch',
         left: 'center',
-        textStyle: { color: '#333', fontSize: 16, fontWeight: 'bold' }
+        textStyle: { color: '#333', fontSize: 16, fontWeight: 'bold' },
       },
       tooltip: {
         trigger: 'axis',
-        axisPointer: { type: 'shadow' }
+        axisPointer: { type: 'shadow' },
       },
       legend: {
         data: ['Kế hoạch', 'Thực hiện'],
-        bottom: 10
+        bottom: 10,
       },
       xAxis: {
         type: 'category',
         data: indicators.value.map(i => i.name),
-        axisLabel: { rotate: 45, fontSize: 10 }
+        axisLabel: { rotate: 45, fontSize: 10 },
       },
       yAxis: { type: 'value' },
       series: [
@@ -813,56 +835,56 @@ const createComparisonChart = () => {
           name: 'Kế hoạch',
           type: 'bar',
           data: indicators.value.map(i => i.targetValue),
-          itemStyle: { color: '#91caff' }
+          itemStyle: { color: '#91caff' },
         },
         {
           name: 'Thực hiện',
           type: 'bar',
           data: indicators.value.map(i => i.currentValue),
-          itemStyle: { color: '#1890ff' }
-        }
-      ]
-    };
+          itemStyle: { color: '#1890ff' },
+        },
+      ],
+    }
 
-    myChart.setOption(option);
+    myChart.setOption(option)
   } catch (error) {
-    console.warn('Error creating comparison chart:', error);
+    console.warn('Error creating comparison chart:', error)
   }
-};
+}
 
 const createTrendChart = () => {
   try {
-    const chartDom = document.getElementById('trend-chart');
+    const chartDom = document.getElementById('trend-chart')
     if (!chartDom || !chartDom.parentNode) {
       // Bỏ log để tránh spam console
-      return;
+      return
     }
 
     // Dispose existing chart instance nếu có
-    const existingChart = echarts.getInstanceByDom(chartDom);
+    const existingChart = echarts.getInstanceByDom(chartDom)
     if (existingChart) {
-      existingChart.dispose();
+      existingChart.dispose()
     }
 
-    const myChart = echarts.init(chartDom);
+    const myChart = echarts.init(chartDom)
     // Mock dữ liệu xu hướng 6 tháng
-    const months = ['T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
+    const months = ['T7', 'T8', 'T9', 'T10', 'T11', 'T12']
 
     const option = {
       title: {
         text: 'Xu hướng 6 tháng gần nhất',
         left: 'center',
-        textStyle: { color: '#333', fontSize: 16, fontWeight: 'bold' }
+        textStyle: { color: '#333', fontSize: 16, fontWeight: 'bold' },
       },
       tooltip: { trigger: 'axis' },
       legend: {
         data: indicators.value.map(i => i.name),
         bottom: 10,
-        type: 'scroll'
+        type: 'scroll',
       },
       xAxis: {
         type: 'category',
-        data: months
+        data: months,
       },
       yAxis: { type: 'value' },
       series: indicators.value.map((indicator, index) => ({
@@ -870,46 +892,46 @@ const createTrendChart = () => {
         type: 'line',
         smooth: true,
         data: months.map(() => indicator.currentValue * (0.8 + Math.random() * 0.4)),
-        lineStyle: { width: 3 }
-      }))
-    };
+        lineStyle: { width: 3 },
+      })),
+    }
 
-    myChart.setOption(option);
+    myChart.setOption(option)
   } catch (error) {
     // Chỉ log lỗi thực sự, bỏ warning để tránh spam console
-    console.error('Error creating trend chart:', error);
+    console.error('Error creating trend chart:', error)
   }
-};
+}
 
 const createCompletionChart = () => {
   try {
-    const chartDom = document.getElementById('completion-chart');
+    const chartDom = document.getElementById('completion-chart')
     if (!chartDom || !chartDom.parentNode) {
-      console.log('⚠️ Completion chart container not ready, skipping...');
-      return;
+      console.log('⚠️ Completion chart container not ready, skipping...')
+      return
     }
 
     // Dispose existing chart instance nếu có
-    const existingChart = echarts.getInstanceByDom(chartDom);
+    const existingChart = echarts.getInstanceByDom(chartDom)
     if (existingChart) {
-      existingChart.dispose();
+      existingChart.dispose()
     }
 
-    const myChart = echarts.init(chartDom);
+    const myChart = echarts.init(chartDom)
     const option = {
       title: {
         text: 'Tỷ lệ hoàn thành các chỉ tiêu',
         left: 'center',
-        textStyle: { color: '#333', fontSize: 16, fontWeight: 'bold' }
+        textStyle: { color: '#333', fontSize: 16, fontWeight: 'bold' },
       },
       tooltip: {
         trigger: 'item',
-        formatter: '{a} <br/>{b}: {c}% ({d}%)'
+        formatter: '{a} <br/>{b}: {c}% ({d}%)',
       },
       legend: {
         orient: 'vertical',
         left: 'left',
-        data: indicators.value.map(i => i.name)
+        data: indicators.value.map(i => i.name),
       },
       series: [
         {
@@ -920,52 +942,52 @@ const createCompletionChart = () => {
           itemStyle: {
             borderRadius: 10,
             borderColor: '#fff',
-            borderWidth: 2
+            borderWidth: 2,
           },
           label: {
             show: false,
-            position: 'center'
+            position: 'center',
           },
           emphasis: {
             label: {
               show: true,
               fontSize: 20,
-              fontWeight: 'bold'
-            }
+              fontWeight: 'bold',
+            },
           },
           labelLine: { show: false },
           data: indicators.value.map(indicator => ({
             value: indicator.completionRate,
-            name: indicator.name
-          }))
-        }
-      ]
-    };
+            name: indicator.name,
+          })),
+        },
+      ],
+    }
 
-    myChart.setOption(option);
+    myChart.setOption(option)
   } catch (error) {
-    console.warn('Error creating completion chart:', error);
+    console.warn('Error creating completion chart:', error)
   }
-};
+}
 
 const createMiniCharts = () => {
   try {
     indicators.value.forEach(indicator => {
-      const chartDom = document.getElementById(`mini-chart-${indicator.id}`);
+      const chartDom = document.getElementById(`mini-chart-${indicator.id}`)
       if (!chartDom || !chartDom.parentNode) {
-        console.log(`⚠️ Mini chart container not ready for ${indicator.id}, skipping...`);
-        return;
+        console.log(`⚠️ Mini chart container not ready for ${indicator.id}, skipping...`)
+        return
       }
 
       // Dispose existing chart instance nếu có
-      const existingChart = echarts.getInstanceByDom(chartDom);
+      const existingChart = echarts.getInstanceByDom(chartDom)
       if (existingChart) {
-        existingChart.dispose();
+        existingChart.dispose()
       }
 
-      const myChart = echarts.init(chartDom);
+      const myChart = echarts.init(chartDom)
       // Mock dữ liệu mini chart
-      const data = Array.from({length: 7}, () => Math.random() * 100);
+      const data = Array.from({ length: 7 }, () => Math.random() * 100)
 
       const option = {
         grid: { top: 5, left: 5, right: 5, bottom: 5 },
@@ -976,24 +998,33 @@ const createMiniCharts = () => {
             type: 'line',
             smooth: true,
             symbol: 'none',
-            lineStyle: { color: indicator.id === 'nguon_von' ? '#52c41a' :
-                               indicator.id === 'du_no' ? '#1890ff' :
-                               indicator.id === 'no_xau' ? '#fa541c' :
-                               indicator.id === 'thu_no_xlrr' ? '#722ed1' :
-                               indicator.id === 'thu_dich_vu' ? '#13c2c2' : '#faad14',
-                        width: 2 },
+            lineStyle: {
+              color:
+                indicator.id === 'nguon_von'
+                  ? '#52c41a'
+                  : indicator.id === 'du_no'
+                    ? '#1890ff'
+                    : indicator.id === 'no_xau'
+                      ? '#fa541c'
+                      : indicator.id === 'thu_no_xlrr'
+                        ? '#722ed1'
+                        : indicator.id === 'thu_dich_vu'
+                          ? '#13c2c2'
+                          : '#faad14',
+              width: 2,
+            },
             areaStyle: { opacity: 0.3 },
-            data: data
-          }
-        ]
-      };
+            data: data,
+          },
+        ],
+      }
 
-      myChart.setOption(option);
-    });
+      myChart.setOption(option)
+    })
   } catch (error) {
-    console.warn('Error creating mini charts:', error);
+    console.warn('Error creating mini charts:', error)
   }
-};
+}
 
 // ==================== CÁC FUNCTION CHO POPUP CHI TIẾT ====================
 
@@ -1005,15 +1036,15 @@ const contributorsData = ref({
       { id: 2, name: 'Trần Thị B - CN Bình Lư', contribution: 67.5 },
       { id: 3, name: 'Lê Văn C - Hội Sở', contribution: 54.8 },
       { id: 4, name: 'Phạm Thị D - CN Phong Thổ', contribution: 43.2 },
-      { id: 5, name: 'Hoàng Văn E - CN Sin Hồ', contribution: 38.7 }
+      { id: 5, name: 'Hoàng Văn E - CN Sin Hồ', contribution: 38.7 },
     ],
     month: [
       { id: 1, name: 'Nguyễn Văn A - CN Lai Châu', contribution: 12.5 },
       { id: 2, name: 'Trần Thị B - CN Bình Lư', contribution: 8.7 },
       { id: 3, name: 'Lê Văn C - Hội Sở', contribution: 6.9 },
       { id: 4, name: 'Phạm Thị D - CN Phong Thổ', contribution: 5.2 },
-      { id: 5, name: 'Hoàng Văn E - CN Sin Hồ', contribution: 2.4 }
-    ]
+      { id: 5, name: 'Hoàng Văn E - CN Sin Hồ', contribution: 2.4 },
+    ],
   },
   du_no: {
     year: [
@@ -1021,15 +1052,15 @@ const contributorsData = ref({
       { id: 2, name: 'KH Doanh nghiệp XYZ', contribution: 18.7 },
       { id: 3, name: 'KH Cá nhân Nguyễn Văn M', contribution: 12.4 },
       { id: 4, name: 'KH HTX Nông nghiệp DEF', contribution: 9.8 },
-      { id: 5, name: 'KH Cửa hàng GHI', contribution: 7.2 }
+      { id: 5, name: 'KH Cửa hàng GHI', contribution: 7.2 },
     ],
     month: [
       { id: 1, name: 'KH Công ty TNHH ABC', contribution: 4.2 },
       { id: 2, name: 'KH Doanh nghiệp XYZ', contribution: 3.1 },
       { id: 3, name: 'KH Cá nhân Nguyễn Văn M', contribution: 2.8 },
       { id: 4, name: 'KH HTX Nông nghiệp DEF', contribution: 1.5 },
-      { id: 5, name: 'KH Cửa hàng GHI', contribution: 0.8 }
-    ]
+      { id: 5, name: 'KH Cửa hàng GHI', contribution: 0.8 },
+    ],
   },
   no_xau: {
     year: [
@@ -1037,15 +1068,15 @@ const contributorsData = ref({
       { id: 2, name: 'Thu hồi nợ quá hạn (KH XYZ)', contribution: -0.08 },
       { id: 3, name: 'Xử lý tài sản đảm bảo', contribution: -0.06 },
       { id: 4, name: 'Tái cơ cấu thành công', contribution: -0.04 },
-      { id: 5, name: 'Thanh toán trước hạn', contribution: -0.03 }
+      { id: 5, name: 'Thanh toán trước hạn', contribution: -0.03 },
     ],
     month: [
       { id: 1, name: 'Giảm nợ nhóm 3-4-5 (KH ABC)', contribution: -0.04 },
       { id: 2, name: 'Thu hồi nợ quá hạn (KH XYZ)', contribution: -0.03 },
       { id: 3, name: 'Xử lý tài sản đảm bảo', contribution: -0.02 },
       { id: 4, name: 'Tái cơ cấu thành công', contribution: -0.01 },
-      { id: 5, name: 'Thanh toán trước hạn', contribution: -0.01 }
-    ]
+      { id: 5, name: 'Thanh toán trước hạn', contribution: -0.01 },
+    ],
   },
   thu_no_xlrr: {
     year: [
@@ -1053,15 +1084,15 @@ const contributorsData = ref({
       { id: 2, name: 'Thu từ bảo lãnh KH XYZ', contribution: 2.8 },
       { id: 3, name: 'Thanh lý hợp đồng bảo hiểm', contribution: 1.5 },
       { id: 4, name: 'Thu từ người thứ ba', contribution: 0.7 },
-      { id: 5, name: 'Thu hồi từ tài khoản phong tỏa', contribution: 0.5 }
+      { id: 5, name: 'Thu hồi từ tài khoản phong tỏa', contribution: 0.5 },
     ],
     month: [
       { id: 1, name: 'Bán đấu giá TS bảo đảm KH ABC', contribution: 1.1 },
       { id: 2, name: 'Thu từ bảo lãnh KH XYZ', contribution: 0.9 },
       { id: 3, name: 'Thanh lý hợp đồng bảo hiểm', contribution: 0.5 },
       { id: 4, name: 'Thu từ người thứ ba', contribution: 0.2 },
-      { id: 5, name: 'Thu hồi từ tài khoản phong tỏa', contribution: 0.1 }
-    ]
+      { id: 5, name: 'Thu hồi từ tài khoản phong tỏa', contribution: 0.1 },
+    ],
   },
   thu_dich_vu: {
     year: [
@@ -1069,15 +1100,15 @@ const contributorsData = ref({
       { id: 2, name: 'Phí dịch vụ thẻ', contribution: 0.9 },
       { id: 3, name: 'Phí bảo hiểm ngân hàng', contribution: 0.6 },
       { id: 4, name: 'Phí tư vấn tài chính', contribution: 0.3 },
-      { id: 5, name: 'Phí dịch vụ khác', contribution: 0.1 }
+      { id: 5, name: 'Phí dịch vụ khác', contribution: 0.1 },
     ],
     month: [
       { id: 1, name: 'Phí giao dịch chuyển tiền', contribution: 0.4 },
       { id: 2, name: 'Phí dịch vụ thẻ', contribution: 0.3 },
       { id: 3, name: 'Phí bảo hiểm ngân hàng', contribution: 0.2 },
       { id: 4, name: 'Phí tư vấn tài chính', contribution: 0.2 },
-      { id: 5, name: 'Phí dịch vụ khác', contribution: 0.1 }
-    ]
+      { id: 5, name: 'Phí dịch vụ khác', contribution: 0.1 },
+    ],
   },
   tai_chinh: {
     year: [
@@ -1085,122 +1116,122 @@ const contributorsData = ref({
       { id: 2, name: 'Lãi từ đầu tư trái phiếu', contribution: 3.2 },
       { id: 3, name: 'Lãi tiền gửi ngân hàng khác', contribution: 1.8 },
       { id: 4, name: 'Thu nhập từ hoạt động khác', contribution: 0.8 },
-      { id: 5, name: 'Lãi từ đầu tư cổ phiếu', contribution: 0.6 }
+      { id: 5, name: 'Lãi từ đầu tư cổ phiếu', contribution: 0.6 },
     ],
     month: [
       { id: 1, name: 'Lãi từ cho vay khách hàng', contribution: 3.2 },
       { id: 2, name: 'Lãi từ đầu tư trái phiếu', contribution: 0.8 },
       { id: 3, name: 'Lãi tiền gửi ngân hàng khác', contribution: 0.5 },
       { id: 4, name: 'Thu nhập từ hoạt động khác', contribution: 0.3 },
-      { id: 5, name: 'Lãi từ đầu tư cổ phiếu', contribution: 0.1 }
-    ]
-  }
-});
+      { id: 5, name: 'Lãi từ đầu tư cổ phiếu', contribution: 0.1 },
+    ],
+  },
+})
 
 // Function lấy top contributors cho modal
 const getTopContributors = (indicatorId, period = 'year') => {
-  const data = contributorsData.value[indicatorId];
-  if (!data) return [];
+  const data = contributorsData.value[indicatorId]
+  if (!data) return []
 
-  return (data[period] || []).slice(0, 5); // Top 5 contributors
-};
+  return (data[period] || []).slice(0, 5) // Top 5 contributors
+}
 
 // Function mô tả thay đổi
 const getChangeDescription = (changePercent, period) => {
-  const absChange = Math.abs(changePercent);
-  let level = '';
+  const absChange = Math.abs(changePercent)
+  let level = ''
 
-  if (absChange >= 20) level = 'mạnh';
-  else if (absChange >= 10) level = 'vừa phải';
-  else if (absChange >= 5) level = 'nhẹ';
-  else level = 'ít';
+  if (absChange >= 20) level = 'mạnh'
+  else if (absChange >= 10) level = 'vừa phải'
+  else if (absChange >= 5) level = 'nhẹ'
+  else level = 'ít'
 
-  const direction = changePercent >= 0 ? 'tăng' : 'giảm';
-  return `${direction.toUpperCase()} ${level} so với đầu ${period}`;
-};
+  const direction = changePercent >= 0 ? 'tăng' : 'giảm'
+  return `${direction.toUpperCase()} ${level} so với đầu ${period}`
+}
 
 // Function lấy class completion
-const getCompletionClass = (rate) => {
-  if (rate >= 100) return 'excellent';
-  if (rate >= 90) return 'good';
-  if (rate >= 70) return 'average';
-  return 'poor';
-};
+const getCompletionClass = rate => {
+  if (rate >= 100) return 'excellent'
+  if (rate >= 90) return 'good'
+  if (rate >= 70) return 'average'
+  return 'poor'
+}
 
 // Function lấy status branch (mặc định)
-const getBranchStatus = (branchId) => {
+const getBranchStatus = branchId => {
   // Mock status cho demo
-  const statuses = ['Hoạt động', 'Tốt', 'Khá tốt', 'Cần cải thiện'];
-  return statuses[Math.floor(Math.random() * statuses.length)];
-};
+  const statuses = ['Hoạt động', 'Tốt', 'Khá tốt', 'Cần cải thiện']
+  return statuses[Math.floor(Math.random() * statuses.length)]
+}
 
 // Function export báo cáo chi tiết (có thể mở rộng sau)
 const exportIndicatorDetail = () => {
   ElMessage.success({
     message: `Đang xuất báo cáo chi tiết cho "${selectedIndicator.value?.name}"...`,
     type: 'success',
-    duration: 2000
-  });
+    duration: 2000,
+  })
 
   // TODO: Implement actual export logic
-  console.log('Exporting detail for:', selectedIndicator.value);
-};
+  console.log('Exporting detail for:', selectedIndicator.value)
+}
 
 // Function tạo biểu đồ xu hướng trong modal
 const createDetailTrendChart = () => {
   try {
-    const chartDom = document.getElementById('detail-trend-chart');
-    if (!chartDom || !selectedIndicator.value) return;
+    const chartDom = document.getElementById('detail-trend-chart')
+    if (!chartDom || !selectedIndicator.value) return
 
-    const existingChart = echarts.getInstanceByDom(chartDom);
+    const existingChart = echarts.getInstanceByDom(chartDom)
     if (existingChart) {
-      existingChart.dispose();
+      existingChart.dispose()
     }
 
-    const myChart = echarts.init(chartDom);
+    const myChart = echarts.init(chartDom)
 
     // Mock data xu hướng 12 tháng
-    const months = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12'];
-    const currentValue = selectedIndicator.value.currentValue;
+    const months = ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11', 'T12']
+    const currentValue = selectedIndicator.value.currentValue
     const trendData = months.map((_, index) => {
-      const variation = (Math.random() - 0.5) * 0.3; // ±15% variation
-      return currentValue * (0.85 + (index * 0.02) + variation);
-    });
+      const variation = (Math.random() - 0.5) * 0.3 // ±15% variation
+      return currentValue * (0.85 + index * 0.02 + variation)
+    })
 
     const option = {
       title: {
         text: `Xu hướng 12 tháng - ${selectedIndicator.value.name}`,
         left: 'center',
-        textStyle: { fontSize: 16, fontWeight: 'bold', color: '#722f37' }
+        textStyle: { fontSize: 16, fontWeight: 'bold', color: '#722f37' },
       },
       tooltip: {
         trigger: 'axis',
         axisPointer: { type: 'cross' },
         formatter: function (params) {
-          return `${params[0].name}: ${params[0].value.toFixed(2)} ${selectedIndicator.value.unit}`;
-        }
+          return `${params[0].name}: ${params[0].value.toFixed(2)} ${selectedIndicator.value.unit}`
+        },
       },
       grid: {
         left: '3%',
         right: '4%',
         bottom: '3%',
         top: '15%',
-        containLabel: true
+        containLabel: true,
       },
       xAxis: {
         type: 'category',
         boundaryGap: false,
         data: months,
-        axisLine: { lineStyle: { color: '#722f37' } }
+        axisLine: { lineStyle: { color: '#722f37' } },
       },
       yAxis: {
         type: 'value',
         axisLine: { lineStyle: { color: '#722f37' } },
         axisLabel: {
           formatter: function (value) {
-            return `${value.toFixed(1)}${selectedIndicator.value.unit}`;
-          }
-        }
+            return `${value.toFixed(1)}${selectedIndicator.value.unit}`
+          },
+        },
       },
       series: [
         {
@@ -1212,150 +1243,153 @@ const createDetailTrendChart = () => {
           data: trendData,
           lineStyle: {
             color: '#722f37',
-            width: 3
+            width: 3,
           },
           areaStyle: {
             color: {
               type: 'linear',
-              x: 0, y: 0, x2: 0, y2: 1,
+              x: 0,
+              y: 0,
+              x2: 0,
+              y2: 1,
               colorStops: [
                 { offset: 0, color: 'rgba(114, 47, 55, 0.3)' },
-                { offset: 1, color: 'rgba(114, 47, 55, 0.05)' }
-              ]
-            }
+                { offset: 1, color: 'rgba(114, 47, 55, 0.05)' },
+              ],
+            },
           },
           markLine: {
             data: [
               {
                 yAxis: selectedIndicator.value.targetValue,
                 name: 'Kế hoạch năm',
-                lineStyle: { color: '#ff4d4f', type: 'dashed', width: 2 }
-              }
+                lineStyle: { color: '#ff4d4f', type: 'dashed', width: 2 },
+              },
             ],
             label: {
-              formatter: 'Kế hoạch: {c}' + selectedIndicator.value.unit
-            }
-          }
-        }
-      ]
-    };
+              formatter: 'Kế hoạch: {c}' + selectedIndicator.value.unit,
+            },
+          },
+        },
+      ],
+    }
 
-    myChart.setOption(option);
+    myChart.setOption(option)
   } catch (error) {
-    console.error('Error creating detail trend chart:', error);
+    console.error('Error creating detail trend chart:', error)
   }
-};
+}
 
 // Watch cho modal để tạo biểu đồ khi mở
-watch(showDetailModal, (newValue) => {
+watch(showDetailModal, newValue => {
   if (newValue && selectedIndicator.value) {
     nextTick(() => {
       setTimeout(() => {
-        createDetailTrendChart();
-      }, 300); // Delay để đảm bảo modal đã render
-    });
+        createDetailTrendChart()
+      }, 300) // Delay để đảm bảo modal đã render
+    })
   }
-});
+})
 
 // ==================== KẾT THÚC POPUP CHI TIẾT ====================
 
 // Lifecycle
 onMounted(async () => {
   // Khởi tạo âm thanh
-  initAudio();
+  initAudio()
 
   // Cập nhật thời gian real-time
-  updateTime();
-  setInterval(updateTime, 1000);
+  updateTime()
+  setInterval(updateTime, 1000)
 
   // Tải dữ liệu ban đầu
-  await loadDashboardData();
+  await loadDashboardData()
 
   // Phát âm thanh chào mừng
   setTimeout(() => {
     if (sounds.value.notification) {
-      sounds.value.notification();
+      sounds.value.notification()
     }
-  }, 1000);
+  }, 1000)
 
   // Window resize handler cho charts
-  window.addEventListener('resize', handleWindowResize);
-});
+  window.addEventListener('resize', handleWindowResize)
+})
 
 onBeforeUnmount(() => {
   // Cleanup window resize listener
-  window.removeEventListener('resize', handleWindowResize);
+  window.removeEventListener('resize', handleWindowResize)
 
   // Dispose all chart instances
   try {
-    ['comparison-chart', 'trend-chart', 'completion-chart'].forEach(id => {
-      const chartDom = document.getElementById(id);
+    ;['comparison-chart', 'trend-chart', 'completion-chart'].forEach(id => {
+      const chartDom = document.getElementById(id)
       if (chartDom) {
-        const chartInstance = echarts.getInstanceByDom(chartDom);
+        const chartInstance = echarts.getInstanceByDom(chartDom)
         if (chartInstance) {
-          chartInstance.dispose();
+          chartInstance.dispose()
         }
       }
-    });
+    })
 
     indicators.value.forEach(indicator => {
-      const chartDom = document.getElementById(`mini-chart-${indicator.id}`);
+      const chartDom = document.getElementById(`mini-chart-${indicator.id}`)
       if (chartDom) {
-        const chartInstance = echarts.getInstanceByDom(chartDom);
+        const chartInstance = echarts.getInstanceByDom(chartDom)
         if (chartInstance) {
-          chartInstance.dispose();
+          chartInstance.dispose()
         }
       }
-    });
+    })
   } catch (error) {
-    console.warn('Error disposing charts:', error);
+    console.warn('Error disposing charts:', error)
   }
-});
+})
 
 // Window resize handler
 const handleWindowResize = () => {
   setTimeout(() => {
     try {
       // Resize all chart instances
-      ['comparison-chart', 'trend-chart', 'completion-chart'].forEach(id => {
-        const chartDom = document.getElementById(id);
+      ;['comparison-chart', 'trend-chart', 'completion-chart'].forEach(id => {
+        const chartDom = document.getElementById(id)
         if (chartDom) {
-          const chartInstance = echarts.getInstanceByDom(chartDom);
+          const chartInstance = echarts.getInstanceByDom(chartDom)
           if (chartInstance) {
-            chartInstance.resize();
+            chartInstance.resize()
           }
         }
-      });
+      })
 
       indicators.value.forEach(indicator => {
-        const chartDom = document.getElementById(`mini-chart-${indicator.id}`);
+        const chartDom = document.getElementById(`mini-chart-${indicator.id}`)
         if (chartDom) {
-          const chartInstance = echarts.getInstanceByDom(chartDom);
+          const chartInstance = echarts.getInstanceByDom(chartDom)
           if (chartInstance) {
-            chartInstance.resize();
+            chartInstance.resize()
           }
         }
-      });
+      })
     } catch (error) {
-      console.warn('Error resizing charts:', error);
+      console.warn('Error resizing charts:', error)
     }
-  }, 100);
-};
+  }, 100)
+}
 
 // Phương thức tiện ích
 const updateTime = () => {
-  currentTime.value = new Date();
-};
+  currentTime.value = new Date()
+}
 
 // Lấy tên chi nhánh đã chọn
 const getSelectedBranchName = () => {
-  if (!selectedBranch.value) return 'Toàn hệ thống';
-  const branch = branches.value.find(b => b.id === selectedBranch.value);
-  return branch ? branch.name : 'Toàn hệ thống';
-};
+  if (!selectedBranch.value) return 'Toàn hệ thống'
+  const branch = branches.value.find(b => b.id === selectedBranch.value)
+  return branch ? branch.name : 'Toàn hệ thống'
+}
 
 // Watch thay đổi branch
-watch(selectedBranch, handleBranchChange);
+watch(selectedBranch, handleBranchChange)
 
 // Watch thay đổi tab biểu đồ với delay và kiểm tra để tránh log spam
 watch(activeChartTab, (newTab, oldTab) => {
@@ -1363,11 +1397,11 @@ watch(activeChartTab, (newTab, oldTab) => {
   if (newTab !== oldTab && oldTab !== undefined) {
     nextTick(() => {
       setTimeout(() => {
-        createCharts();
-      }, 150);
-    });
+        createCharts()
+      }, 150)
+    })
   }
-});
+})
 
 // Bỏ auto refresh để tránh audio spam và log liên tục
 // Auto refresh đã được bỏ để tránh âm thanh và log không mong muốn
@@ -1405,8 +1439,13 @@ watch(activeChartTab, (newTab, oldTab) => {
 }
 
 @keyframes shimmer {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 0.8; }
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.8;
+  }
 }
 
 .header-content {
@@ -1503,8 +1542,15 @@ watch(activeChartTab, (newTab, oldTab) => {
 }
 
 @keyframes pulse-dot {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.2); opacity: 0.7; }
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
 }
 
 .current-time {
@@ -1566,14 +1612,16 @@ watch(activeChartTab, (newTab, oldTab) => {
   letter-spacing: 0.5px;
 }
 
-.time-white, .realtime-white {
+.time-white,
+.realtime-white {
   color: white !important;
   font-weight: 700 !important;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
   filter: brightness(1.1);
 }
 
-.subtitle-icon, .time-icon {
+.subtitle-icon,
+.time-icon {
   filter: brightness(1.3) contrast(1.2);
 }
 
@@ -1797,8 +1845,13 @@ watch(activeChartTab, (newTab, oldTab) => {
 }
 
 @keyframes loading-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 @keyframes slideInUp {
@@ -2227,13 +2280,27 @@ watch(activeChartTab, (newTab, oldTab) => {
   margin: 0;
 }
 
-.overview-value.current { color: #1e40af; }
-.overview-value.target { color: #7c3aed; }
-.overview-value.completion.excellent { color: #059669; }
-.overview-value.completion.good { color: #0891b2; }
-.overview-value.completion.average { color: #d97706; }
-.overview-value.completion.poor { color: #dc2626; }
-.overview-value.quarter { color: #8b5cf6; }
+.overview-value.current {
+  color: #1e40af;
+}
+.overview-value.target {
+  color: #7c3aed;
+}
+.overview-value.completion.excellent {
+  color: #059669;
+}
+.overview-value.completion.good {
+  color: #0891b2;
+}
+.overview-value.completion.average {
+  color: #d97706;
+}
+.overview-value.completion.poor {
+  color: #dc2626;
+}
+.overview-value.quarter {
+  color: #8b5cf6;
+}
 
 /* Analysis section */
 .detail-analysis {
@@ -2266,9 +2333,15 @@ watch(activeChartTab, (newTab, oldTab) => {
   transition: all 0.3s ease;
 }
 
-.change-detail-card.positive { border-left-color: #059669; }
-.change-detail-card.negative { border-left-color: #dc2626; }
-.change-detail-card.neutral { border-left-color: #0891b2; }
+.change-detail-card.positive {
+  border-left-color: #059669;
+}
+.change-detail-card.negative {
+  border-left-color: #dc2626;
+}
+.change-detail-card.neutral {
+  border-left-color: #0891b2;
+}
 
 .change-detail-card:hover {
   transform: translateY(-3px);
@@ -2302,9 +2375,15 @@ watch(activeChartTab, (newTab, oldTab) => {
   margin-bottom: 5px;
 }
 
-.change-detail-card.positive .change-percentage { color: #059669; }
-.change-detail-card.negative .change-percentage { color: #dc2626; }
-.change-detail-card.neutral .change-percentage { color: #0891b2; }
+.change-detail-card.positive .change-percentage {
+  color: #059669;
+}
+.change-detail-card.negative .change-percentage {
+  color: #dc2626;
+}
+.change-detail-card.neutral .change-percentage {
+  color: #0891b2;
+}
 
 .change-description {
   font-size: 14px;
@@ -2341,9 +2420,15 @@ watch(activeChartTab, (newTab, oldTab) => {
   transition: all 0.2s ease;
 }
 
-.contributor-item.positive { border-left-color: #059669; }
-.contributor-item.negative { border-left-color: #dc2626; }
-.contributor-item.neutral { border-left-color: #0891b2; }
+.contributor-item.positive {
+  border-left-color: #059669;
+}
+.contributor-item.negative {
+  border-left-color: #dc2626;
+}
+.contributor-item.neutral {
+  border-left-color: #0891b2;
+}
 
 .contributor-item:hover {
   background: #f1f5f9;
@@ -2361,9 +2446,15 @@ watch(activeChartTab, (newTab, oldTab) => {
   font-family: 'Courier New', monospace;
 }
 
-.contributor-item.positive .contributor-value { color: #059669; }
-.contributor-item.negative .contributor-value { color: #dc2626; }
-.contributor-item.neutral .contributor-value { color: #0891b2; }
+.contributor-item.positive .contributor-value {
+  color: #059669;
+}
+.contributor-item.negative .contributor-value {
+  color: #dc2626;
+}
+.contributor-item.neutral .contributor-value {
+  color: #0891b2;
+}
 
 /* Chart section trong modal */
 .detail-chart-section {
@@ -2434,13 +2525,22 @@ watch(activeChartTab, (newTab, oldTab) => {
 
 /* Animations */
 @keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Responsive */

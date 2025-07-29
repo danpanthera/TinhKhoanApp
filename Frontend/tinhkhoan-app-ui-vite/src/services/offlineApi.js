@@ -1,6 +1,6 @@
 // Offline-aware API wrapper
-import apiClient from './api.js';
-import { useOfflineStore } from '../stores/offlineStore.js';
+import apiClient from './api.js'
+import { useOfflineStore } from '../stores/offlineStore.js'
 
 /**
  * Offline-aware API service that handles network failures gracefully
@@ -8,14 +8,14 @@ import { useOfflineStore } from '../stores/offlineStore.js';
  */
 class OfflineApiService {
   constructor() {
-    this.offlineStore = null;
+    this.offlineStore = null
   }
 
   /**
    * Initialize the offline store reference
    */
   init() {
-    this.offlineStore = useOfflineStore();
+    this.offlineStore = useOfflineStore()
   }
 
   /**
@@ -27,18 +27,18 @@ class OfflineApiService {
    */
   async get(url, config = {}, options = {}) {
     try {
-      const response = await apiClient.get(url, config);
-      
+      const response = await apiClient.get(url, config)
+
       // Cache successful responses if caching is enabled
       if (options.cache && this.offlineStore) {
-        await this.offlineStore.cacheResponse(url, response.data);
+        await this.offlineStore.cacheResponse(url, response.data)
       }
-      
-      return response;
+
+      return response
     } catch (error) {
       if (this.offlineStore && !this.offlineStore.isOnline) {
         // Try to return cached data when offline
-        const cachedData = await this.offlineStore.getCachedResponse(url);
+        const cachedData = await this.offlineStore.getCachedResponse(url)
         if (cachedData) {
           return {
             data: cachedData,
@@ -46,11 +46,11 @@ class OfflineApiService {
             statusText: 'OK (from cache)',
             headers: {},
             config: config,
-            fromCache: true
-          };
+            fromCache: true,
+          }
         }
       }
-      throw error;
+      throw error
     }
   }
 
@@ -64,8 +64,8 @@ class OfflineApiService {
    */
   async post(url, data = {}, config = {}, options = {}) {
     try {
-      const response = await apiClient.post(url, data, config);
-      return response;
+      const response = await apiClient.post(url, data, config)
+      return response
     } catch (error) {
       if (this.offlineStore && !this.offlineStore.isOnline && options.queue !== false) {
         // Queue the action for later execution
@@ -75,9 +75,9 @@ class OfflineApiService {
           data,
           config,
           options,
-          timestamp: Date.now()
-        });
-        
+          timestamp: Date.now(),
+        })
+
         // Return a mock successful response
         return {
           data: { message: 'Action queued for sync when online', queued: true },
@@ -85,10 +85,10 @@ class OfflineApiService {
           statusText: 'Accepted (queued)',
           headers: {},
           config: config,
-          queued: true
-        };
+          queued: true,
+        }
       }
-      throw error;
+      throw error
     }
   }
 
@@ -102,8 +102,8 @@ class OfflineApiService {
    */
   async put(url, data = {}, config = {}, options = {}) {
     try {
-      const response = await apiClient.put(url, data, config);
-      return response;
+      const response = await apiClient.put(url, data, config)
+      return response
     } catch (error) {
       if (this.offlineStore && !this.offlineStore.isOnline && options.queue !== false) {
         // Queue the action for later execution
@@ -113,19 +113,19 @@ class OfflineApiService {
           data,
           config,
           options,
-          timestamp: Date.now()
-        });
-        
+          timestamp: Date.now(),
+        })
+
         return {
           data: { message: 'Action queued for sync when online', queued: true },
           status: 202,
           statusText: 'Accepted (queued)',
           headers: {},
           config: config,
-          queued: true
-        };
+          queued: true,
+        }
       }
-      throw error;
+      throw error
     }
   }
 
@@ -138,8 +138,8 @@ class OfflineApiService {
    */
   async delete(url, config = {}, options = {}) {
     try {
-      const response = await apiClient.delete(url, config);
-      return response;
+      const response = await apiClient.delete(url, config)
+      return response
     } catch (error) {
       if (this.offlineStore && !this.offlineStore.isOnline && options.queue !== false) {
         // Queue the action for later execution
@@ -148,19 +148,19 @@ class OfflineApiService {
           url,
           config,
           options,
-          timestamp: Date.now()
-        });
-        
+          timestamp: Date.now(),
+        })
+
         return {
           data: { message: 'Action queued for sync when online', queued: true },
           status: 202,
           statusText: 'Accepted (queued)',
           headers: {},
           config: config,
-          queued: true
-        };
+          queued: true,
+        }
       }
-      throw error;
+      throw error
     }
   }
 
@@ -174,8 +174,8 @@ class OfflineApiService {
    */
   async patch(url, data = {}, config = {}, options = {}) {
     try {
-      const response = await apiClient.patch(url, data, config);
-      return response;
+      const response = await apiClient.patch(url, data, config)
+      return response
     } catch (error) {
       if (this.offlineStore && !this.offlineStore.isOnline && options.queue !== false) {
         // Queue the action for later execution
@@ -185,19 +185,19 @@ class OfflineApiService {
           data,
           config,
           options,
-          timestamp: Date.now()
-        });
-        
+          timestamp: Date.now(),
+        })
+
         return {
           data: { message: 'Action queued for sync when online', queued: true },
           status: 202,
           statusText: 'Accepted (queued)',
           headers: {},
           config: config,
-          queued: true
-        };
+          queued: true,
+        }
       }
-      throw error;
+      throw error
     }
   }
 
@@ -205,12 +205,12 @@ class OfflineApiService {
    * Direct access to the original API client for cases where offline handling is not needed
    */
   get direct() {
-    return apiClient;
+    return apiClient
   }
 }
 
 // Create and export a singleton instance
-const offlineApi = new OfflineApiService();
+const offlineApi = new OfflineApiService()
 
-export default offlineApi;
-export { OfflineApiService };
+export default offlineApi
+export { OfflineApiService }

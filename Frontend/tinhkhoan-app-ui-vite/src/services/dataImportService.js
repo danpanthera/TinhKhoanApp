@@ -5,7 +5,6 @@ import ChunkedUploadService from './chunkedUploadService.js'
  * 🚀 Enhanced Data Import Service - Multiple upload strategies for optimal performance
  */
 class DataImportService {
-
   /**
    * Upload a file to the server using Direct Import (tăng tốc 2-5x)
    * @param {File} file - The file to upload
@@ -21,18 +20,18 @@ class DataImportService {
       // 🚀 Enhanced config for large files
       const config = {
         headers: {
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': 'multipart/form-data',
         },
         timeout: 900000, // 15 phút cho file rất lớn
         maxContentLength: Infinity,
         maxBodyLength: Infinity,
         // 📊 Progress tracking
-        onUploadProgress: (progressEvent) => {
+        onUploadProgress: progressEvent => {
           if (onProgress && progressEvent.total) {
             const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
             onProgress(percentCompleted, progressEvent.loaded, progressEvent.total)
           }
-        }
+        },
       }
 
       console.log(`🚀 Starting upload for ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`)
@@ -62,20 +61,20 @@ class DataImportService {
       const results = []
 
       // 🚀 Upload từng file bằng Direct Import API song song
-      const uploadPromises = Array.from(files).map(async (file) => {
+      const uploadPromises = Array.from(files).map(async file => {
         const formData = new FormData()
         formData.append('file', file)
 
         const response = await apiClient.post('/DirectImport/smart', formData, {
           headers: {
-            'Content-Type': 'multipart/form-data'
+            'Content-Type': 'multipart/form-data',
           },
-          timeout: 600000 // 10 phút cho file lớn
+          timeout: 600000, // 10 phút cho file lớn
         })
 
         return {
           fileName: file.name,
-          result: response.data
+          result: response.data,
         }
       })
 
@@ -85,7 +84,7 @@ class DataImportService {
         success: true,
         results: uploadResults,
         totalFiles: files.length,
-        message: `Successfully uploaded ${files.length} files using Direct Import`
+        message: `Successfully uploaded ${files.length} files using Direct Import`,
       }
     } catch (error) {
       console.error('Error uploading files:', error)
@@ -136,7 +135,7 @@ class DataImportService {
   async downloadOriginalFile(recordId) {
     try {
       const response = await apiClient.get(`/DataImport/${recordId}/download`, {
-        responseType: 'blob'
+        responseType: 'blob',
       })
 
       // Create download link
@@ -189,7 +188,7 @@ class DataImportService {
   async exportAllData() {
     try {
       const response = await apiClient.get('/DataImport/export', {
-        responseType: 'blob'
+        responseType: 'blob',
       })
 
       // Create download link
@@ -225,43 +224,43 @@ class DataImportService {
         name: 'Nguồn vốn & Dư nợ',
         icon: '💰',
         description: 'Tổng nguồn vốn, dư nợ, nguồn vốn bình quân, dư nợ bình quân',
-        indicators: ['Tổng nguồn vốn', 'Dư nợ', 'Nguồn vốn BQ', 'Dư nợ BQ']
+        indicators: ['Tổng nguồn vốn', 'Dư nợ', 'Nguồn vốn BQ', 'Dư nợ BQ'],
       },
       {
         id: 2,
         name: 'Lợi nhuận & Tài chính',
         icon: '📈',
         description: 'Lợi nhuận khoán tài chính, các chỉ tiêu hiệu quả kinh doanh',
-        indicators: ['Lợi nhuận khoán', 'ROA', 'ROE', 'NIM']
+        indicators: ['Lợi nhuận khoán', 'ROA', 'ROE', 'NIM'],
       },
       {
         id: 3,
         name: 'Doanh thu Dịch vụ',
         icon: '🏪',
         description: 'Tổng doanh thu phí dịch vụ, các loại phí ngân hàng',
-        indicators: ['Doanh thu phí DV', 'Phí chuyển khoản', 'Phí thẻ', 'Phí bảo hiểm']
+        indicators: ['Doanh thu phí DV', 'Phí chuyển khoản', 'Phí thẻ', 'Phí bảo hiểm'],
       },
       {
         id: 4,
         name: 'Thẻ & Sản phẩm',
         icon: '💳',
         description: 'Số thẻ phát hành, các sản phẩm ngân hàng điện tử',
-        indicators: ['Số thẻ phát hành', 'Giao dịch ATM', 'Internet Banking', 'Mobile Banking']
+        indicators: ['Số thẻ phát hành', 'Giao dịch ATM', 'Internet Banking', 'Mobile Banking'],
       },
       {
         id: 5,
         name: 'Thu nợ & Rủi ro',
         icon: '⚠️',
         description: 'Thu nợ đã XLRR, các chỉ tiêu quản lý rủi ro tín dụng',
-        indicators: ['Thu nợ XLRR', 'Nợ xấu', 'Tỷ lệ NPL', 'Dự phòng rủi ro']
+        indicators: ['Thu nợ XLRR', 'Nợ xấu', 'Tỷ lệ NPL', 'Dự phòng rủi ro'],
       },
       {
         id: 6,
         name: 'Khách hàng & Tiếp thị',
         icon: '👥',
         description: 'Số lượng khách hàng mới, chỉ tiêu marketing và bán hàng',
-        indicators: ['KH cá nhân mới', 'KH doanh nghiệp mới', 'Sản phẩm cross-sell']
-      }
+        indicators: ['KH cá nhân mới', 'KH doanh nghiệp mới', 'Sản phẩm cross-sell'],
+      },
     ]
   }
 
@@ -276,7 +275,7 @@ class DataImportService {
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
       'application/vnd.ms-excel', // .xls
       'text/csv', // .csv
-      'application/pdf' // .pdf
+      'application/pdf', // .pdf
     ]
 
     const allowedExtensions = /\.(xlsx|xls|csv|pdf)$/i
@@ -284,14 +283,14 @@ class DataImportService {
     if (!allowedTypes.includes(file.type) && !allowedExtensions.test(file.name)) {
       return {
         valid: false,
-        error: 'File type not supported. Only Excel, CSV, and PDF files are allowed.'
+        error: 'File type not supported. Only Excel, CSV, and PDF files are allowed.',
       }
     }
 
     if (file.size > maxSize) {
       return {
         valid: false,
-        error: 'File size exceeds 10MB limit.'
+        error: 'File size exceeds 10MB limit.',
       }
     }
 
@@ -338,18 +337,15 @@ class DataImportService {
         // Small files: regular upload
         console.log(`📤 [SMART_UPLOAD] Using regular upload for ${file.name} (${fileSizeMB.toFixed(2)} MB)`)
         return await this.uploadFile(file, category, onProgress)
-      }
-      else if (fileSizeMB < 200) {
+      } else if (fileSizeMB < 200) {
         // Medium files: streaming upload
         console.log(`🚀 [SMART_UPLOAD] Using streaming upload for ${file.name} (${fileSizeMB.toFixed(2)} MB)`)
         return await this.uploadFileStreaming(file, onProgress)
-      }
-      else if (fileSizeMB < 500) {
+      } else if (fileSizeMB < 500) {
         // Large files: chunked upload
         console.log(`🔄 [SMART_UPLOAD] Using chunked upload for ${file.name} (${fileSizeMB.toFixed(2)} MB)`)
         return await this.uploadFileChunked(file, { onProgress })
-      }
-      else {
+      } else {
         // Very large files: parallel chunked upload
         console.log(`⚡ [SMART_UPLOAD] Using parallel upload for ${file.name} (${fileSizeMB.toFixed(2)} MB)`)
         return await this.uploadFileParallel(file, { onProgress })
@@ -368,20 +364,22 @@ class DataImportService {
 
       const config = {
         headers: {
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': 'multipart/form-data',
         },
         timeout: 30 * 60 * 1000, // 30 minutes for streaming
         maxContentLength: Infinity,
         maxBodyLength: Infinity,
-        onUploadProgress: (progressEvent) => {
+        onUploadProgress: progressEvent => {
           if (onProgress && progressEvent.total) {
             const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
             onProgress(percentCompleted, progressEvent.loaded, progressEvent.total)
           }
-        }
+        },
       }
 
-      console.log(`🚀 [STREAMING_UPLOAD] Starting streaming upload: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`)
+      console.log(
+        `🚀 [STREAMING_UPLOAD] Starting streaming upload: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`
+      )
 
       const response = await apiClient.post('/DirectImport/stream', formData, config)
       return response.data
@@ -399,10 +397,12 @@ class DataImportService {
       const uploadOptions = {
         onProgress: options.onProgress || (() => {}),
         onChunkProgress: options.onChunkProgress || (() => {}),
-        chunkSize: options.chunkSize || (5 * 1024 * 1024) // 5MB chunks
+        chunkSize: options.chunkSize || 5 * 1024 * 1024, // 5MB chunks
       }
 
-      console.log(`🔄 [CHUNKED_UPLOAD] Starting chunked upload: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`)
+      console.log(
+        `🔄 [CHUNKED_UPLOAD] Starting chunked upload: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`
+      )
 
       const result = await chunkedService.uploadFileChunked(file, uploadOptions)
       return result
@@ -420,10 +420,12 @@ class DataImportService {
       const uploadOptions = {
         onProgress: options.onProgress || (() => {}),
         maxConcurrent: options.maxConcurrent || 3,
-        chunkSize: options.chunkSize || (10 * 1024 * 1024) // 10MB chunks for parallel
+        chunkSize: options.chunkSize || 10 * 1024 * 1024, // 10MB chunks for parallel
       }
 
-      console.log(`🔄 [PARALLEL_UPLOAD] Starting parallel upload: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`)
+      console.log(
+        `🔄 [PARALLEL_UPLOAD] Starting parallel upload: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`
+      )
 
       const result = await chunkedService.uploadFileParallel(file, uploadOptions)
       return result

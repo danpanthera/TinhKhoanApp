@@ -1,5 +1,4 @@
 using TinhKhoanApp.Api.Models.DataTables;
-using System.Threading.Tasks;
 
 namespace TinhKhoanApp.Api.Repositories
 {
@@ -37,20 +36,5 @@ namespace TinhKhoanApp.Api.Repositories
             DateTime? statementDate = null,
             string? branchCode = null,
             string? customerId = null);
-
-        /// <summary>
-        /// Updates the entity in the database
-        /// </summary>
-        Task UpdateAsync(RR01 entity);
-
-        /// <summary>
-        /// Deletes the entity from the database
-        /// </summary>
-        Task DeleteAsync(RR01 entity);
-
-        /// <summary>
-        /// Saves all pending changes to the database
-        /// </summary>
-        Task<int> SaveChangesAsync();
     }
 }

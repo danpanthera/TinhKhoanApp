@@ -8,7 +8,6 @@ import api from '../services/api.js'
  * @returns {Object} Object chứa các method get, post, put, delete
  */
 export function useApiService() {
-
   /**
    * Method GET - Lấy dữ liệu từ API
    * @param {string} url - Đường dẫn API endpoint
@@ -108,7 +107,7 @@ export function useApiService() {
     get,
     post,
     put,
-    delete: del // 'delete' là từ khóa reserved nên dùng 'del'
+    delete: del, // 'delete' là từ khóa reserved nên dùng 'del'
   }
 }
 

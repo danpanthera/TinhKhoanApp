@@ -9,9 +9,7 @@
           <span v-else>🔄</span>
           Làm mới tất cả
         </button>
-        <button @click="exportReport" class="export-btn">
-          📈 Xuất báo cáo
-        </button>
+        <button @click="exportReport" class="export-btn">📈 Xuất báo cáo</button>
       </div>
     </div>
 
@@ -276,19 +274,19 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from 'vue';
-import rawDataService from '../../services/rawDataService.js';
-import { formatNumber } from '../../utils/numberFormatter.js';
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import rawDataService from '../../services/rawDataService.js'
+import { formatNumber } from '../../utils/numberFormatter.js'
 
 // Reactive data
-const loading = ref(false);
-const dashboardStats = ref(null);
-const dataTypeStats = ref([]);
-const performanceData = ref(null);
-const recentActivities = ref([]);
-const selectedTimePeriod = ref('24h');
-const selectedActivityFilter = ref('all');
-const showPerformanceDetails = ref(false);
+const loading = ref(false)
+const dashboardStats = ref(null)
+const dataTypeStats = ref([])
+const performanceData = ref(null)
+const recentActivities = ref([])
+const selectedTimePeriod = ref('24h')
+const selectedActivityFilter = ref('all')
+const showPerformanceDetails = ref(false)
 
 // Activity filters
 const activityFilters = [
@@ -296,49 +294,48 @@ const activityFilters = [
   { key: 'import', label: 'Import', icon: '📤' },
   { key: 'query', label: 'Truy vấn', icon: '🔍' },
   { key: 'error', label: 'Lỗi', icon: '❌' },
-  { key: 'cache', label: 'Cache', icon: '💾' }
-];
+  { key: 'cache', label: 'Cache', icon: '💾' },
+]
 
 // Auto-refresh timer
-let refreshTimer = null;
+let refreshTimer = null
 
 // Computed
 const filteredActivities = computed(() => {
   if (selectedActivityFilter.value === 'all') {
-    return recentActivities.value;
+    return recentActivities.value
   }
-  return recentActivities.value.filter(activity => activity.type === selectedActivityFilter.value);
-});
+  return recentActivities.value.filter(activity => activity.type === selectedActivityFilter.value)
+})
 
 // Methods
 const loadAllData = async () => {
-  loading.value = true;
+  loading.value = true
 
   try {
     // Load dashboard stats
-    const statsResult = await rawDataService.getDashboardStats();
+    const statsResult = await rawDataService.getDashboardStats()
     if (statsResult.success) {
-      dashboardStats.value = statsResult.data;
+      dashboardStats.value = statsResult.data
     }
 
     // Load performance data
-    const perfResult = await rawDataService.getPerformanceStats(selectedTimePeriod.value);
+    const perfResult = await rawDataService.getPerformanceStats(selectedTimePeriod.value)
     if (perfResult.success) {
-      performanceData.value = perfResult.data;
+      performanceData.value = perfResult.data
     }
 
     // Load data type stats
-    await loadDataTypeStats();
+    await loadDataTypeStats()
 
     // Load recent activities (mock data for now)
-    loadRecentActivities();
-
+    loadRecentActivities()
   } catch (error) {
-    console.error('Error loading dashboard data:', error);
+    console.error('Error loading dashboard data:', error)
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 
 const loadDataTypeStats = async () => {
   try {
@@ -350,18 +347,18 @@ const loadDataTypeStats = async () => {
         { dataType: 'DP01', count: Math.floor(dashboardStats.value.totalImports * 0.25), percentage: 25 },
         { dataType: 'GL01', count: Math.floor(dashboardStats.value.totalImports * 0.2), percentage: 20 },
         { dataType: 'EI01', count: Math.floor(dashboardStats.value.totalImports * 0.15), percentage: 15 },
-        { dataType: 'BC57', count: Math.floor(dashboardStats.value.totalImports * 0.1), percentage: 10 }
-      ];
-      dataTypeStats.value = mockStats.sort((a, b) => b.percentage - a.percentage);
+        { dataType: 'BC57', count: Math.floor(dashboardStats.value.totalImports * 0.1), percentage: 10 },
+      ]
+      dataTypeStats.value = mockStats.sort((a, b) => b.percentage - a.percentage)
     }
   } catch (error) {
-    console.error('Error loading data type stats:', error);
+    console.error('Error loading data type stats:', error)
   }
-};
+}
 
 const loadRecentActivities = () => {
   // Mock recent activities - in production this would be from API
-  const now = new Date();
+  const now = new Date()
   const activities = [
     {
       id: '1',
@@ -370,7 +367,7 @@ const loadRecentActivities = () => {
       description: 'Đã import thành công 15,234 bản ghi từ file 7800_LN01_20250531.csv',
       timestamp: new Date(now - 5 * 60 * 1000), // 5 minutes ago
       status: 'success',
-      user: 'Admin'
+      user: 'Admin',
     },
     {
       id: '2',
@@ -378,7 +375,7 @@ const loadRecentActivities = () => {
       title: 'Cache refresh',
       description: 'Hệ thống đã tự động làm mới cache cho bảng optimized imports',
       timestamp: new Date(now - 15 * 60 * 1000), // 15 minutes ago
-      status: 'info'
+      status: 'info',
     },
     {
       id: '3',
@@ -386,7 +383,7 @@ const loadRecentActivities = () => {
       title: 'Truy vấn chậm',
       description: 'Phát hiện truy vấn SCD History với thời gian phản hồi 2.3s',
       timestamp: new Date(now - 30 * 60 * 1000), // 30 minutes ago
-      status: 'warning'
+      status: 'warning',
     },
     {
       id: '4',
@@ -394,150 +391,150 @@ const loadRecentActivities = () => {
       title: 'Lỗi import',
       description: 'Import file 7801_GL01_20250531.csv thất bại: định dạng không hợp lệ',
       timestamp: new Date(now - 45 * 60 * 1000), // 45 minutes ago
-      status: 'error'
-    }
-  ];
+      status: 'error',
+    },
+  ]
 
-  recentActivities.value = activities;
-};
+  recentActivities.value = activities
+}
 
 const refreshAllData = () => {
-  loadAllData();
-};
+  loadAllData()
+}
 
 const exportReport = () => {
   // Implement export functionality
-  console.log('Exporting dashboard report...');
-};
+  console.log('Exporting dashboard report...')
+}
 
 const togglePerformanceDetails = () => {
-  showPerformanceDetails.value = !showPerformanceDetails.value;
-};
+  showPerformanceDetails.value = !showPerformanceDetails.value
+}
 
 const openOptimizedTable = () => {
   // Navigate to optimized table
-  console.log('Opening optimized table...');
-};
+  console.log('Opening optimized table...')
+}
 
 const openImportTool = () => {
   // Navigate to import tool
-  console.log('Opening import tool...');
-};
+  console.log('Opening import tool...')
+}
 
 const openAdvancedSearch = () => {
   // Navigate to advanced search
-  console.log('Opening advanced search...');
-};
+  console.log('Opening advanced search...')
+}
 
 const clearCache = async () => {
   try {
-    const result = await rawDataService.refreshCache('all');
+    const result = await rawDataService.refreshCache('all')
     if (result.success) {
-      console.log('Cache cleared successfully');
-      loadAllData(); // Refresh data after cache clear
+      console.log('Cache cleared successfully')
+      loadAllData() // Refresh data after cache clear
     }
   } catch (error) {
-    console.error('Error clearing cache:', error);
+    console.error('Error clearing cache:', error)
   }
-};
+}
 
 // Loại bỏ custom formatNumber, sử dụng utility
 // const formatNumber = (num) => { ... } // Removed - using imported utility
 
-const formatTime = (ms) => {
+const formatTime = ms => {
   if (ms < 1000) {
-    return ms.toFixed(0) + 'ms';
+    return ms.toFixed(0) + 'ms'
   }
-  return (ms / 1000).toFixed(2) + 's';
-};
+  return (ms / 1000).toFixed(2) + 's'
+}
 
-const formatSize = (bytes) => {
-  const units = ['B', 'KB', 'MB', 'GB'];
-  let size = bytes;
-  let unitIndex = 0;
+const formatSize = bytes => {
+  const units = ['B', 'KB', 'MB', 'GB']
+  let size = bytes
+  let unitIndex = 0
 
   while (size >= 1024 && unitIndex < units.length - 1) {
-    size /= 1024;
-    unitIndex++;
+    size /= 1024
+    unitIndex++
   }
 
-  return size.toFixed(1) + units[unitIndex];
-};
+  return size.toFixed(1) + units[unitIndex]
+}
 
-const formatGrowth = (growth) => {
-  const sign = growth >= 0 ? '+' : '';
-  return `${sign}${growth.toFixed(1)}%`;
-};
+const formatGrowth = growth => {
+  const sign = growth >= 0 ? '+' : ''
+  return `${sign}${growth.toFixed(1)}%`
+}
 
-const formatRelativeTime = (date) => {
-  const now = new Date();
-  const diff = now - date;
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
+const formatRelativeTime = date => {
+  const now = new Date()
+  const diff = now - date
+  const minutes = Math.floor(diff / 60000)
+  const hours = Math.floor(minutes / 60)
+  const days = Math.floor(hours / 24)
 
-  if (days > 0) return `${days} ngày trước`;
-  if (hours > 0) return `${hours} giờ trước`;
-  if (minutes > 0) return `${minutes} phút trước`;
-  return 'Vừa xong';
-};
+  if (days > 0) return `${days} ngày trước`
+  if (hours > 0) return `${hours} giờ trước`
+  if (minutes > 0) return `${minutes} phút trước`
+  return 'Vừa xong'
+}
 
-const getChangeClass = (change) => {
+const getChangeClass = change => {
   return {
     'stat-positive': change > 0,
     'stat-negative': change < 0,
-    'stat-neutral': change === 0
-  };
-};
+    'stat-neutral': change === 0,
+  }
+}
 
-const getPerformanceColor = (time) => {
-  if (time < 100) return '#52c41a';
-  if (time < 500) return '#faad14';
-  if (time < 1000) return '#fa8c16';
-  return '#f5222d';
-};
+const getPerformanceColor = time => {
+  if (time < 100) return '#52c41a'
+  if (time < 500) return '#faad14'
+  if (time < 1000) return '#fa8c16'
+  return '#f5222d'
+}
 
-const getCacheColor = (rate) => {
-  if (rate >= 90) return '#52c41a';
-  if (rate >= 80) return '#faad14';
-  if (rate >= 70) return '#fa8c16';
-  return '#f5222d';
-};
+const getCacheColor = rate => {
+  if (rate >= 90) return '#52c41a'
+  if (rate >= 80) return '#faad14'
+  if (rate >= 70) return '#fa8c16'
+  return '#f5222d'
+}
 
-const getDataTypeColor = (dataType) => {
-  return rawDataService.getDataTypeColor(dataType);
-};
+const getDataTypeColor = dataType => {
+  return rawDataService.getDataTypeColor(dataType)
+}
 
-const getActivityClass = (type) => {
-  return `activity-${type}`;
-};
+const getActivityClass = type => {
+  return `activity-${type}`
+}
 
-const getActivityIcon = (type) => {
+const getActivityIcon = type => {
   const icons = {
     import: '📤',
     query: '🔍',
     error: '❌',
     cache: '💾',
-    system: '⚙️'
-  };
-  return icons[type] || '📋';
-};
+    system: '⚙️',
+  }
+  return icons[type] || '📋'
+}
 
 // Lifecycle
 onMounted(() => {
-  loadAllData();
+  loadAllData()
 
   // Set up auto-refresh every 30 seconds
   refreshTimer = setInterval(() => {
-    loadAllData();
-  }, 30000);
-});
+    loadAllData()
+  }, 30000)
+})
 
 onUnmounted(() => {
   if (refreshTimer) {
-    clearInterval(refreshTimer);
+    clearInterval(refreshTimer)
   }
-});
+})
 </script>
 
 <style scoped>
@@ -612,13 +609,13 @@ onUnmounted(() => {
   border: 1px solid #e8e8e8;
   border-radius: 8px;
   padding: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s;
 }
 
 .stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .stat-card.large {

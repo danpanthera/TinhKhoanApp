@@ -39,15 +39,9 @@
       <div class="row mt-3">
         <div class="col-md-12">
           <h5>Action Buttons</h5>
-          <button @click="refreshUnits" class="btn btn-sm btn-primary me-2">
-            Refresh Units
-          </button>
-          <button @click="refreshKpiTables" class="btn btn-sm btn-primary me-2">
-            Refresh KPI Tables
-          </button>
-          <button @click="testApiDirectly" class="btn btn-sm btn-info">
-            Test API Directly
-          </button>
+          <button @click="refreshUnits" class="btn btn-sm btn-primary me-2">Refresh Units</button>
+          <button @click="refreshKpiTables" class="btn btn-sm btn-primary me-2">Refresh KPI Tables</button>
+          <button @click="testApiDirectly" class="btn btn-sm btn-info">Test API Directly</button>
         </div>
       </div>
 
@@ -104,22 +98,28 @@ const testApiDirectly = async () => {
   try {
     const [unitsResponse, kpiResponse] = await Promise.all([
       apiClient.get('/Units'),
-      apiClient.get('/KpiAssignmentTables')
+      apiClient.get('/KpiAssignmentTables'),
     ])
 
     directApiResult.value = {
       units: {
         status: unitsResponse.status,
         dataType: Array.isArray(unitsResponse.data) ? 'array' : typeof unitsResponse.data,
-        count: Array.isArray(unitsResponse.data) ? unitsResponse.data.length :
-               (unitsResponse.data?.$values ? unitsResponse.data.$values.length : 'unknown')
+        count: Array.isArray(unitsResponse.data)
+          ? unitsResponse.data.length
+          : unitsResponse.data?.$values
+            ? unitsResponse.data.$values.length
+            : 'unknown',
       },
       kpiTables: {
         status: kpiResponse.status,
         dataType: Array.isArray(kpiResponse.data) ? 'array' : typeof kpiResponse.data,
-        count: Array.isArray(kpiResponse.data) ? kpiResponse.data.length :
-               (kpiResponse.data?.$values ? kpiResponse.data.$values.length : 'unknown')
-      }
+        count: Array.isArray(kpiResponse.data)
+          ? kpiResponse.data.length
+          : kpiResponse.data?.$values
+            ? kpiResponse.data.$values.length
+            : 'unknown',
+      },
     }
   } catch (error) {
     directApiResult.value = { error: error.message }

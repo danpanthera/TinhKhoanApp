@@ -1,7 +1,7 @@
 import { toast } from 'vue3-toastify'
 
 export const useToast = () => {
-  const success = (message) => {
+  const success = message => {
     toast.success(message, {
       position: 'top-right',
       timeout: 3000,
@@ -14,11 +14,11 @@ export const useToast = () => {
       hideProgressBar: false,
       closeButton: 'button',
       icon: true,
-      rtl: false
+      rtl: false,
     })
   }
 
-  const error = (message) => {
+  const error = message => {
     toast.error(message, {
       position: 'top-right',
       timeout: 5000,
@@ -31,11 +31,11 @@ export const useToast = () => {
       hideProgressBar: false,
       closeButton: 'button',
       icon: true,
-      rtl: false
+      rtl: false,
     })
   }
 
-  const info = (message) => {
+  const info = message => {
     toast.info(message, {
       position: 'top-right',
       timeout: 3000,
@@ -48,11 +48,11 @@ export const useToast = () => {
       hideProgressBar: false,
       closeButton: 'button',
       icon: true,
-      rtl: false
+      rtl: false,
     })
   }
 
-  const warning = (message) => {
+  const warning = message => {
     toast.warning(message, {
       position: 'top-right',
       timeout: 4000,
@@ -65,7 +65,7 @@ export const useToast = () => {
       hideProgressBar: false,
       closeButton: 'button',
       icon: true,
-      rtl: false
+      rtl: false,
     })
   }
 
@@ -73,6 +73,6 @@ export const useToast = () => {
     success,
     error,
     info,
-    warning
+    warning,
   }
 }

@@ -2,12 +2,8 @@
   <div class="roles-view">
     <h1>Quản lý Vai trò</h1>
     <div class="header-controls">
-      <button
-        @click="loadRoles"
-        :disabled="roleStore.isLoading"
-        class="action-button"
-      >
-        {{ roleStore.isLoading ? "Đang tải..." : "Tải lại Danh sách Vai trò" }}
+      <button @click="loadRoles" :disabled="roleStore.isLoading" class="action-button">
+        {{ roleStore.isLoading ? 'Đang tải...' : 'Tải lại Danh sách Vai trò' }}
       </button>
       <span v-if="roleStore.roles.length > 0" class="roles-count">
         (Tổng số: {{ roleStore.roles.length }} vai trò)
@@ -24,29 +20,21 @@
       <li v-for="role in roleStore.allRoles" :key="role.Id" class="list-item">
         <div class="item-info">
           <strong>{{ role.Name }}</strong>
-          <span class="item-details" v-if="role.Description"
-            >(Mô tả: {{ role.Description }})</span
-          >
+          <span class="item-details" v-if="role.Description">(Mô tả: {{ role.Description }})</span>
         </div>
         <div class="actions">
           <button @click="startEditRole(role)" class="edit-btn">Sửa</button>
-          <button @click="confirmDeleteRole(role.Id)" class="delete-btn">
-            Xóa
-          </button>
+          <button @click="confirmDeleteRole(role.Id)" class="delete-btn">Xóa</button>
         </div>
       </li>
     </ul>
-    <p v-else-if="!roleStore.isLoading && !roleStore.error && !formError">
-      Không có vai trò nào để hiển thị.
-    </p>
-    <p v-if="roleStore.isLoading && roleStore.roles.length === 0">
-      Đang tải danh sách vai trò...
-    </p>
+    <p v-else-if="!roleStore.isLoading && !roleStore.error && !formError">Không có vai trò nào để hiển thị.</p>
+    <p v-if="roleStore.isLoading && roleStore.roles.length === 0">Đang tải danh sách vai trò...</p>
 
     <hr class="separator" />
 
     <div class="form-container">
-      <h2>{{ isEditing ? "Cập nhật Vai trò" : "Thêm Vai trò Mới" }}</h2>
+      <h2>{{ isEditing ? 'Cập nhật Vai trò' : 'Thêm Vai trò Mới' }}</h2>
       <form @submit.prevent="handleSubmitRole">
         <div class="form-group">
           <label for="roleName">Tên Vai trò:</label>
@@ -69,29 +57,18 @@
           />
         </div>
         <div class="form-actions">
-          <button
-            type="submit"
-            :disabled="roleStore.isLoading"
-            class="action-button"
-          >
+          <button type="submit" :disabled="roleStore.isLoading" class="action-button">
             {{
               roleStore.isLoading
                 ? isEditing
-                  ? "Đang cập nhật..."
-                  : "Đang thêm..."
+                  ? 'Đang cập nhật...'
+                  : 'Đang thêm...'
                 : isEditing
-                ? "Lưu Thay Đổi"
-                : "Thêm Vai trò"
+                  ? 'Lưu Thay Đổi'
+                  : 'Thêm Vai trò'
             }}
           </button>
-          <button
-            type="button"
-            @click="cancelEdit"
-            v-if="isEditing"
-            class="cancel-btn action-button"
-          >
-            Hủy
-          </button>
+          <button type="button" @click="cancelEdit" v-if="isEditing" class="cancel-btn action-button">Hủy</button>
         </div>
       </form>
     </div>
@@ -99,135 +76,124 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
-import { useRoleStore } from "../stores/roleStore.js";
+import { onMounted, ref } from 'vue'
+import { useRoleStore } from '../stores/roleStore.js'
 
-const roleStore = useRoleStore();
+const roleStore = useRoleStore()
 
 const currentRole = ref({
   Id: null,
-  Name: "",
-  Description: "",
-});
+  Name: '',
+  Description: '',
+})
 
-const isEditing = ref(false);
-const formError = ref(null);
+const isEditing = ref(false)
+const formError = ref(null)
 
 onMounted(() => {
   console.log('🔍 RolesView mounted - Debug Info:', {
     rolesLength: roleStore.roles.length,
     isLoading: roleStore.isLoading,
-    error: roleStore.error
-  });
+    error: roleStore.error,
+  })
 
   if (roleStore.roles.length === 0 && !roleStore.isLoading) {
-    console.log('📞 Calling roleStore.fetchRoles()...');
-    roleStore.fetchRoles();
+    console.log('📞 Calling roleStore.fetchRoles()...')
+    roleStore.fetchRoles()
   } else {
     console.log('⏭️ Skipping fetchRoles because:', {
       hasRoles: roleStore.roles.length > 0,
-      isLoading: roleStore.isLoading
-    });
+      isLoading: roleStore.isLoading,
+    })
   }
-});
+})
 
 const loadRoles = () => {
-  formError.value = null;
-  roleStore.error = null;
-  roleStore.fetchRoles();
-};
+  formError.value = null
+  roleStore.error = null
+  roleStore.fetchRoles()
+}
 
 const handleSubmitRole = async () => {
-  formError.value = null;
-  roleStore.error = null;
+  formError.value = null
+  roleStore.error = null
 
-  const nameFromInput =
-    typeof currentRole.value.Name === "string"
-      ? currentRole.value.Name.trim()
-      : "";
+  const nameFromInput = typeof currentRole.value.Name === 'string' ? currentRole.value.Name.trim() : ''
   const descriptionFromInput =
-    typeof currentRole.value.Description === "string"
-      ? currentRole.value.Description.trim()
-      : "";
+    typeof currentRole.value.Description === 'string' ? currentRole.value.Description.trim() : ''
 
   const roleDataToValidateAndSubmit = {
     ...currentRole.value,
     Name: nameFromInput,
     Description: descriptionFromInput,
-  };
+  }
 
-  console.log("--- Bắt đầu handleSubmitRole (Vai trò) ---");
-  console.log(
-    "Dữ liệu gửi đi:",
-    JSON.parse(JSON.stringify(roleDataToValidateAndSubmit))
-  );
+  console.log('--- Bắt đầu handleSubmitRole (Vai trò) ---')
+  console.log('Dữ liệu gửi đi:', JSON.parse(JSON.stringify(roleDataToValidateAndSubmit)))
 
   if (!roleDataToValidateAndSubmit.Name) {
-    formError.value = "Tên vai trò không được để trống!";
-    console.log("VALIDATION FAIL (Client-side): Tên vai trò trống.");
-    return;
+    formError.value = 'Tên vai trò không được để trống!'
+    console.log('VALIDATION FAIL (Client-side): Tên vai trò trống.')
+    return
   }
-  console.log("VALIDATION PASS (Client-side): Tên vai trò hợp lệ.");
+  console.log('VALIDATION PASS (Client-side): Tên vai trò hợp lệ.')
 
   if (isEditing.value && roleDataToValidateAndSubmit.Id !== null) {
     try {
-      await roleStore.updateRole(roleDataToValidateAndSubmit);
-      alert("Cập nhật vai trò thành công!");
-      cancelEdit();
+      await roleStore.updateRole(roleDataToValidateAndSubmit)
+      alert('Cập nhật vai trò thành công!')
+      cancelEdit()
     } catch (error) {
-      console.error("Lỗi khi cập nhật vai trò:", error);
+      console.error('Lỗi khi cập nhật vai trò:', error)
     }
   } else {
     try {
       // eslint-disable-next-line no-unused-vars
-      const { Id, ...newRoleData } = roleDataToValidateAndSubmit;
-      await roleStore.createRole(newRoleData);
-      alert("Thêm vai trò thành công!");
-      resetForm();
+      const { Id, ...newRoleData } = roleDataToValidateAndSubmit
+      await roleStore.createRole(newRoleData)
+      alert('Thêm vai trò thành công!')
+      resetForm()
     } catch (error) {
-      console.error("Lỗi khi thêm vai trò:", error);
+      console.error('Lỗi khi thêm vai trò:', error)
     }
   }
-};
+}
 
-const startEditRole = (role) => {
-  formError.value = null;
-  roleStore.error = null;
-  isEditing.value = true;
-  currentRole.value = JSON.parse(JSON.stringify(role));
-  console.log(
-    "Dữ liệu nạp vào form sửa (startEditRole):",
-    JSON.parse(JSON.stringify(currentRole.value))
-  );
-};
+const startEditRole = role => {
+  formError.value = null
+  roleStore.error = null
+  isEditing.value = true
+  currentRole.value = JSON.parse(JSON.stringify(role))
+  console.log('Dữ liệu nạp vào form sửa (startEditRole):', JSON.parse(JSON.stringify(currentRole.value)))
+}
 
 const cancelEdit = () => {
-  isEditing.value = false;
-  resetForm();
-  formError.value = null;
-  roleStore.error = null;
-};
+  isEditing.value = false
+  resetForm()
+  formError.value = null
+  roleStore.error = null
+}
 
 const resetForm = () => {
   currentRole.value = {
     Id: null,
-    Name: "",
-    Description: "",
-  };
-};
+    Name: '',
+    Description: '',
+  }
+}
 
-const confirmDeleteRole = async (roleId) => {
-  formError.value = null;
-  roleStore.error = null;
+const confirmDeleteRole = async roleId => {
+  formError.value = null
+  roleStore.error = null
   if (confirm(`Bạn có chắc chắn muốn xóa vai trò có ID: ${roleId} không?`)) {
     try {
-      await roleStore.deleteRole(roleId);
-      alert("Xóa vai trò thành công!");
+      await roleStore.deleteRole(roleId)
+      alert('Xóa vai trò thành công!')
     } catch (error) {
-      console.error("Lỗi khi xóa vai trò:", error);
+      console.error('Lỗi khi xóa vai trò:', error)
     }
   }
-};
+}
 </script>
 
 <style scoped>
@@ -378,16 +344,18 @@ ul {
   font-weight: bold;
   color: #34495e;
 }
-.form-group input[type="text"] {
+.form-group input[type='text'] {
   flex-grow: 1;
   min-width: 200px;
   padding: 10px 12px;
   border: 1px solid #ced4da;
   border-radius: 4px;
   box-sizing: border-box;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
-.form-group input[type="text"]:focus {
+.form-group input[type='text']:focus {
   border-color: #80bdff;
   outline: 0;
   box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);

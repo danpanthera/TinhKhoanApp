@@ -96,9 +96,9 @@ namespace TinhKhoanApp.Api.Services
         public async Task<LN03DTO> CreateAsync(CreateLN03DTO createDto)
         {
             var entity = createDto.ToEntity();
-            await _repository.AddAsync(entity);
+            var result = await _repository.AddAsync(entity);
             await _repository.SaveChangesAsync();
-            return LN03DTO.FromEntity(entity);
+            return LN03DTO.FromEntity(result);
         }
 
         /// <inheritdoc/>

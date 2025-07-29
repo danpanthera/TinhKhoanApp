@@ -33,28 +33,18 @@
           <div class="date-range-group">
             <div class="date-input-group">
               <label>Từ ngày:</label>
-              <input
-                v-model="selectedFromDate"
-                type="date"
-                class="date-input agribank-date-input"
-              />
+              <input v-model="selectedFromDate" type="date" class="date-input agribank-date-input" />
             </div>
             <div class="date-input-group">
               <label>Đến ngày:</label>
-              <input
-                v-model="selectedToDate"
-                type="date"
-                class="date-input agribank-date-input"
-              />
+              <input v-model="selectedToDate" type="date" class="date-input agribank-date-input" />
             </div>
           </div>
           <div class="date-actions-group">
             <button @click="applyDateFilter" class="btn-filter agribank-btn-filter" :disabled="!selectedFromDate">
               🔍 Lọc theo ngày
             </button>
-            <button @click="clearDateFilter" class="btn-clear agribank-btn-clear">
-              🗑️ Xóa bộ lọc
-            </button>
+            <button @click="clearDateFilter" class="btn-clear agribank-btn-clear">🗑️ Xóa bộ lọc</button>
           </div>
         </div>
       </div>
@@ -62,19 +52,23 @@
       <div class="bulk-actions-section">
         <h3>⚡ Thao tác hàng loạt</h3>
         <div class="bulk-actions">
-          <button @click="openSmartImportModal" class="btn-smart-import" :disabled="loading">
-            🧠 Smart Import
-          </button>
-          <button @click="clearAllData" class="btn-clear-all" :disabled="loading">
-            🗑️ Xóa toàn bộ dữ liệu
-          </button>
-          <button @click="refreshAllData" class="btn-refresh" :disabled="loading">
-            🔄 Tải lại dữ liệu
-          </button>
-          <button @click="loadTableRecordCounts" class="btn-table-counts" :disabled="loading" title="Lấy số lượng records thực tế từ database">
+          <button @click="openSmartImportModal" class="btn-smart-import" :disabled="loading">🧠 Smart Import</button>
+          <button @click="clearAllData" class="btn-clear-all" :disabled="loading">🗑️ Xóa toàn bộ dữ liệu</button>
+          <button @click="refreshAllData" class="btn-refresh" :disabled="loading">🔄 Tải lại dữ liệu</button>
+          <button
+            @click="loadTableRecordCounts"
+            class="btn-table-counts"
+            :disabled="loading"
+            title="Lấy số lượng records thực tế từ database"
+          >
             📊 Real Counts
           </button>
-          <button @click="debugRecalculateStats" class="btn-debug" :disabled="loading" title="Debug: Force recalculate stats">
+          <button
+            @click="debugRecalculateStats"
+            class="btn-debug"
+            :disabled="loading"
+            title="Debug: Force recalculate stats"
+          >
             🔧 Debug Stats
           </button>
         </div>
@@ -121,7 +115,9 @@
               </td>
               <td class="col-records records-cell enhanced-records">
                 <div class="records-info">
-                  <span class="records-count agribank-number">{{ formatRecordCount(getDataTypeStats(key).totalRecords) }}</span>
+                  <span class="records-count agribank-number">{{
+                    formatRecordCount(getDataTypeStats(key).totalRecords)
+                  }}</span>
                   <span class="records-label">bản ghi</span>
                 </div>
               </td>
@@ -206,8 +202,9 @@
                   <span class="file-icon">📎</span>
                   <span>Chọn tệp</span>
                 </label>
-                <span class="file-selected-text">{{ selectedFiles.length > 0 ?
-                  `Đã chọn ${selectedFiles.length} tệp` : 'Chưa có tệp nào được chọn' }}</span>
+                <span class="file-selected-text">{{
+                  selectedFiles.length > 0 ? `Đã chọn ${selectedFiles.length} tệp` : 'Chưa có tệp nào được chọn'
+                }}</span>
               </div>
             </div>
 
@@ -239,7 +236,7 @@
                 <span class="progress-percentage">{{ uploadProgress }}%</span>
                 <span class="progress-file-info" v-if="currentUploadingFile && totalFiles > 0">
                   <strong>{{ currentUploadingFile }}</strong>
-                  <br>
+                  <br />
                   <small>Đang xử lý file {{ uploadedFiles }}/{{ totalFiles }}</small>
                 </span>
               </div>
@@ -262,11 +259,7 @@
             <span class="btn-icon">✖️</span>
             <span>Hủy</span>
           </button>
-          <button
-            @click="performImport"
-            class="btn-submit"
-            :disabled="selectedFiles.length === 0 || uploading"
-          >
+          <button @click="performImport" class="btn-submit" :disabled="selectedFiles.length === 0 || uploading">
             <span class="btn-icon">{{ uploading ? '⏳' : '📤' }}</span>
             <span>{{ uploading ? 'Đang xử lý...' : 'Import Dữ liệu' }}</span>
           </button>
@@ -284,9 +277,14 @@
         <div class="modal-body">
           <div v-if="filteredResults.length > 0" class="data-table-container">
             <!-- Show processed data if available -->
-            <div v-if="filteredResults[0]?.isProcessedView && filteredResults[0]?.processedData" class="processed-data-section">
+            <div
+              v-if="filteredResults[0]?.isProcessedView && filteredResults[0]?.processedData"
+              class="processed-data-section"
+            >
               <div class="table-summary">
-                <p><strong>📊 Dữ liệu đã xử lý từ {{ filteredResults[0].tableName }}</strong></p>
+                <p>
+                  <strong>📊 Dữ liệu đã xử lý từ {{ filteredResults[0].tableName }}</strong>
+                </p>
                 <p>Hiển thị {{ filteredResults[0].processedData.length }} bản ghi đã xử lý</p>
                 <p class="data-source-info">Nguồn: {{ filteredResults[0].dataSource }}</p>
               </div>
@@ -295,15 +293,21 @@
                 <table class="data-table enhanced-table">
                   <thead class="agribank-thead">
                     <tr>
-                      <th style="width: 50px; text-align: center;">#</th>
-                      <th v-for="(column, index) in Object.keys(filteredResults[0].processedData[0] || {}).slice(0, 10)" :key="index">
+                      <th style="width: 50px; text-align: center">#</th>
+                      <th
+                        v-for="(column, index) in Object.keys(filteredResults[0].processedData[0] || {}).slice(0, 10)"
+                        :key="index"
+                      >
                         {{ column }}
                       </th>
                     </tr>
                   </thead>
                   <tbody class="agribank-tbody">
-                    <tr v-for="(record, recordIndex) in filteredResults[0].processedData.slice(0, 50)" :key="recordIndex">
-                      <td style="text-align: center; font-weight: bold; color: #8B1538;">{{ recordIndex + 1 }}</td>
+                    <tr
+                      v-for="(record, recordIndex) in filteredResults[0].processedData.slice(0, 50)"
+                      :key="recordIndex"
+                    >
+                      <td style="text-align: center; font-weight: bold; color: #8b1538">{{ recordIndex + 1 }}</td>
                       <td v-for="(column, columnIndex) in Object.keys(record).slice(0, 10)" :key="columnIndex">
                         <span :title="record[column]">{{ formatCellValue(record[column]) }}</span>
                       </td>
@@ -313,15 +317,28 @@
               </div>
 
               <div class="table-note">
-                <p><i>💡 Hiển thị 10 cột đầu tiên và tối đa 50 bản ghi. Đây là dữ liệu đã xử lý và lưu trong bảng lịch sử.</i></p>
+                <p>
+                  <i
+                    >💡 Hiển thị 10 cột đầu tiên và tối đa 50 bản ghi. Đây là dữ liệu đã xử lý và lưu trong bảng lịch
+                    sử.</i
+                  >
+                </p>
               </div>
             </div>
 
             <!-- Show direct preview data -->
-            <div v-else-if="filteredResults[0]?.directPreview && filteredResults[0]?.previewData" class="direct-preview-section">
+            <div
+              v-else-if="filteredResults[0]?.directPreview && filteredResults[0]?.previewData"
+              class="direct-preview-section"
+            >
               <div class="table-summary">
-                <p><strong>🎯 Direct Preview từ {{ filteredResults[0].dataType }} Table</strong></p>
-                <p>Hiển thị {{ filteredResults[0].previewData.rows?.length || 0 }} / {{ filteredResults[0].recordCount }} bản ghi</p>
+                <p>
+                  <strong>🎯 Direct Preview từ {{ filteredResults[0].dataType }} Table</strong>
+                </p>
+                <p>
+                  Hiển thị {{ filteredResults[0].previewData.rows?.length || 0 }} /
+                  {{ filteredResults[0].recordCount }} bản ghi
+                </p>
                 <p class="data-source-info">Nguồn: Trực tiếp từ DataTable (không qua Import Records)</p>
               </div>
 
@@ -329,15 +346,24 @@
                 <table class="data-table enhanced-table">
                   <thead class="agribank-thead">
                     <tr>
-                      <th style="width: 50px; text-align: center;">#</th>
-                      <th v-for="(column, index) in Object.keys(filteredResults[0].previewData.rows?.[0] || {}).slice(0, 10)" :key="index">
+                      <th style="width: 50px; text-align: center">#</th>
+                      <th
+                        v-for="(column, index) in Object.keys(filteredResults[0].previewData.rows?.[0] || {}).slice(
+                          0,
+                          10
+                        )"
+                        :key="index"
+                      >
                         {{ column }}
                       </th>
                     </tr>
                   </thead>
                   <tbody class="agribank-tbody">
-                    <tr v-for="(record, recordIndex) in (filteredResults[0].previewData.rows || []).slice(0, 50)" :key="recordIndex">
-                      <td style="text-align: center; font-weight: bold; color: #8B1538;">{{ recordIndex + 1 }}</td>
+                    <tr
+                      v-for="(record, recordIndex) in (filteredResults[0].previewData.rows || []).slice(0, 50)"
+                      :key="recordIndex"
+                    >
+                      <td style="text-align: center; font-weight: bold; color: #8b1538">{{ recordIndex + 1 }}</td>
                       <td v-for="(column, columnIndex) in Object.keys(record).slice(0, 10)" :key="columnIndex">
                         <span :title="record[column]">{{ formatCellValue(record[column]) }}</span>
                       </td>
@@ -347,7 +373,12 @@
               </div>
 
               <div class="table-note">
-                <p><i>🎯 Hiển thị 10 cột đầu tiên và tối đa 50 bản ghi từ Direct Preview. Đây là dữ liệu trực tiếp từ DataTable.</i></p>
+                <p>
+                  <i
+                    >🎯 Hiển thị 10 cột đầu tiên và tối đa 50 bản ghi từ Direct Preview. Đây là dữ liệu trực tiếp từ
+                    DataTable.</i
+                  >
+                </p>
               </div>
             </div>
 
@@ -370,11 +401,7 @@
                     <td class="agribank-number">{{ formatRecordCount(item.RecordsCount) }}</td>
                     <td>{{ item.Status }}</td>
                     <td>
-                      <button
-                        @click="previewImportRecord(item.Id)"
-                        class="btn-action btn-view"
-                        title="Xem chi tiết"
-                      >
+                      <button @click="previewImportRecord(item.Id)" class="btn-action btn-view" title="Xem chi tiết">
                         👁️
                       </button>
                       <button
@@ -410,14 +437,16 @@
         <div class="modal-body">
           <div v-if="rawDataRecords.length > 0" class="raw-data-table-container">
             <div class="table-summary">
-              <p><strong>📋 Hiển thị {{ rawDataRecords.length }} bản ghi đầu tiên</strong>
-                (tối đa 20 bản ghi để đảm bảo hiệu năng)</p>
+              <p>
+                <strong>📋 Hiển thị {{ rawDataRecords.length }} bản ghi đầu tiên</strong> (tối đa 20 bản ghi để đảm bảo
+                hiệu năng)
+              </p>
             </div>
             <div class="responsive-table-wrapper">
               <table class="raw-data-table enhanced-table">
                 <thead class="agribank-thead">
                   <tr>
-                    <th style="width: 50px; text-align: center;">#</th>
+                    <th style="width: 50px; text-align: center">#</th>
                     <th v-for="(column, index) in Object.keys(rawDataRecords[0]).slice(0, 12)" :key="index">
                       {{ column }}
                     </th>
@@ -425,7 +454,7 @@
                 </thead>
                 <tbody class="agribank-tbody">
                   <tr v-for="(record, recordIndex) in rawDataRecords" :key="recordIndex">
-                    <td style="text-align: center; font-weight: bold; color: #8B1538;">{{ recordIndex + 1 }}</td>
+                    <td style="text-align: center; font-weight: bold; color: #8b1538">{{ recordIndex + 1 }}</td>
                     <td v-for="(column, columnIndex) in Object.keys(record).slice(0, 12)" :key="columnIndex">
                       <span :title="record[column]">{{ formatCellValue(record[column]) }}</span>
                     </td>
@@ -443,13 +472,7 @@
         </div>
         <div class="modal-footer">
           <button @click="closeRawDataModal" class="btn-cancel">Đóng</button>
-          <button
-            v-if="rawDataRecords.length > 0"
-            @click="exportRawData"
-            class="btn-export"
-          >
-            📥 Xuất dữ liệu
-          </button>
+          <button v-if="rawDataRecords.length > 0" @click="exportRawData" class="btn-export">📥 Xuất dữ liệu</button>
         </div>
       </div>
     </div>
@@ -493,24 +516,25 @@
               <small class="date-help">💡 Để trống để hệ thống tự động extract từ tên file</small>
             </div>
 
-            <div class="file-drop-area"
-                 :class="{
-                   'drag-over': isDragOver,
-                   'has-files': smartSelectedFiles.length > 0
-                 }"
-                 @dragover.prevent="handleDragOver"
-                 @dragenter.prevent="handleDragEnter"
-                 @dragleave.prevent="handleDragLeave"
-                 @drop.prevent="handleSmartFileDrop">
-
+            <div
+              class="file-drop-area"
+              :class="{
+                'drag-over': isDragOver,
+                'has-files': smartSelectedFiles.length > 0,
+              }"
+              @dragover.prevent="handleDragOver"
+              @dragenter.prevent="handleDragEnter"
+              @dragleave.prevent="handleDragLeave"
+              @drop.prevent="handleSmartFileDrop"
+            >
               <!-- Main Drop Zone -->
               <div class="drop-zone-main">
                 <div class="upload-icon-container">
                   <div class="upload-icon-wrapper">
                     <svg class="upload-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M7 16H17L12 11L7 16Z" fill="currentColor"/>
-                      <path d="M12 4V11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                      <path d="M4 20H20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                      <path d="M7 16H17L12 11L7 16Z" fill="currentColor" />
+                      <path d="M12 4V11" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                      <path d="M4 20H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
                     </svg>
                   </div>
                   <div class="upload-sparkles">
@@ -526,21 +550,26 @@
                     <span v-else class="drag-active">🎯 Thả file ngay bây giờ!</span>
                   </h3>
 
-                  <p class="drop-subtitle">
-                    Hỗ trợ file CSV, XLSX với kích thước tối đa <strong>2GB</strong>
-                  </p>
+                  <p class="drop-subtitle">Hỗ trợ file CSV, XLSX với kích thước tối đa <strong>2GB</strong></p>
 
                   <div class="upload-divider">
                     <span>hoặc</span>
                   </div>
 
-                  <button type="button"
-                          class="btn-select-files"
-                          @click="$refs.smartFileInput.click()">
+                  <button type="button" class="btn-select-files" @click="$refs.smartFileInput.click()">
                     <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 15L12 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                      <path d="M8 6L12 2L16 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                      <path d="M2 17H22V19C22 20.1046 21.1046 21 20 21H4C2.89543 21 2 20.1046 2 19V17Z" fill="currentColor"/>
+                      <path d="M12 15L12 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                      <path
+                        d="M8 6L12 2L16 6"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M2 17H22V19C22 20.1046 21.1046 21 20 21H4C2.89543 21 2 20.1046 2 19V17Z"
+                        fill="currentColor"
+                      />
                     </svg>
                     <span>Chọn file từ máy tính</span>
                   </button>
@@ -596,7 +625,9 @@
               <div class="progress-header">
                 <h4>🚀 Đang xử lý Smart Import (Parallel)...</h4>
                 <div class="progress-info">
-                  <span class="progress-text">{{ smartUploadProgress.current }}/{{ smartUploadProgress.total }} file</span>
+                  <span class="progress-text"
+                    >{{ smartUploadProgress.current }}/{{ smartUploadProgress.total }} file</span
+                  >
                   <span class="progress-percentage">{{ smartUploadProgress.percentage }}%</span>
                 </div>
               </div>
@@ -608,9 +639,14 @@
               <div class="current-file-info">
                 <p class="current-file">📤 {{ smartUploadProgress.currentFile }}</p>
                 <p v-if="smartUploadProgress.stage" class="upload-stage">
-                  Status: {{ smartUploadProgress.stage === 'uploading' ? '⬆️ Đang upload' :
-                             smartUploadProgress.stage === 'completed' ? '✅ Hoàn thành' :
-                             smartUploadProgress.stage }}
+                  Status:
+                  {{
+                    smartUploadProgress.stage === 'uploading'
+                      ? '⬆️ Đang upload'
+                      : smartUploadProgress.stage === 'completed'
+                        ? '✅ Hoàn thành'
+                        : smartUploadProgress.stage
+                  }}
                 </p>
                 <p v-if="smartUploadProgress.activeFiles > 0" class="parallel-info">
                   🔥 {{ smartUploadProgress.activeFiles }} file đang upload đồng thời
@@ -626,13 +662,22 @@
                   <span class="stat error">❌ Lỗi: {{ smartImportResults.failureCount }}</span>
                   <span class="stat total">📁 Tổng: {{ smartImportResults.totalFiles }}</span>
                   <span v-if="smartImportResults.uploadMethod" class="stat method">
-                    🚀 Method: {{ smartImportResults.uploadMethod === 'parallel' ? `Parallel (${smartImportResults.maxConcurrency} concurrent)` : 'Sequential' }}
+                    🚀 Method:
+                    {{
+                      smartImportResults.uploadMethod === 'parallel'
+                        ? `Parallel (${smartImportResults.maxConcurrency} concurrent)`
+                        : 'Sequential'
+                    }}
                   </span>
                 </div>
               </div>
               <div class="results-detail">
-                <div v-for="result in smartImportResults.results" :key="result.index"
-                     class="result-item" :class="{ success: result.success, error: !result.success }">
+                <div
+                  v-for="result in smartImportResults.results"
+                  :key="result.index"
+                  class="result-item"
+                  :class="{ success: result.success, error: !result.success }"
+                >
                   <div class="result-status">
                     {{ result.success ? '✅' : '❌' }}
                   </div>
@@ -640,7 +685,12 @@
                     <strong>{{ result.fileName }}</strong>
                     <div v-if="result.success" class="success-details">
                       <span>Category: {{ result.result?.DataType || result.result?.detectedCategory || 'N/A' }}</span>
-                      <span>Records: {{ formatNumber(result.result?.ProcessedRecords || result.result?.importedRecords || 0, 0) }}</span>
+                      <span
+                        >Records:
+                        {{
+                          formatNumber(result.result?.ProcessedRecords || result.result?.importedRecords || 0, 0)
+                        }}</span
+                      >
                       <span v-if="result.result?.Duration">Time: {{ result.result.Duration }}</span>
                     </div>
                     <div v-else class="error-details">
@@ -653,9 +703,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button @click="closeSmartImportModal" class="btn-cancel" :disabled="smartUploading">
-            Đóng
-          </button>
+          <button @click="closeSmartImportModal" class="btn-cancel" :disabled="smartUploading">Đóng</button>
           <button
             @click="startSmartImport"
             class="btn-smart-upload"
@@ -670,12 +718,12 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
-import api from '../services/api.js'; // ✅ Import api để sử dụng trong fallback strategy
-import audioService from '../services/audioService.js';
-import rawDataService from '../services/rawDataService.js';
-import smartImportService from '../services/smartImportService.js';
-import { formatFileSize, formatNumber } from '../utils/numberFormatter.js';
+import { computed, ref } from 'vue'
+import api from '../services/api.js' // ✅ Import api để sử dụng trong fallback strategy
+import audioService from '../services/audioService.js'
+import rawDataService from '../services/rawDataService.js'
+import smartImportService from '../services/smartImportService.js'
+import { formatFileSize, formatNumber } from '../utils/numberFormatter.js'
 
 // Reactive state
 const loading = ref(false)
@@ -712,7 +760,7 @@ const smartUploadProgress = ref({
   current: 0,
   total: 0,
   percentage: 0,
-  currentFile: ''
+  currentFile: '',
 })
 const isDragOver = ref(false)
 
@@ -747,7 +795,7 @@ const clearMessage = () => {
   successMessage.value = ''
 }
 
-const showError = (message) => {
+const showError = message => {
   errorMessage.value = message
   console.error('❌ Error message:', message)
   setTimeout(() => {
@@ -757,8 +805,8 @@ const showError = (message) => {
 
 const showDetailedError = (mainMessage, error) => {
   // Hiển thị thông báo lỗi chi tiết hơn để dễ dàng debug
-  console.error('❌ Detailed Error:', mainMessage);
-  console.error('❌ Error Object:', error);
+  console.error('❌ Detailed Error:', mainMessage)
+  console.error('❌ Error Object:', error)
   console.error('❌ Error Details:', {
     errorType: typeof error,
     errorMessage: error?.message,
@@ -767,8 +815,8 @@ const showDetailedError = (mainMessage, error) => {
     errorStatus: error?.response?.status,
     errorCode: error?.code,
     // Serialize object để xem chi tiết
-    fullError: JSON.stringify(error, null, 2)
-  });
+    fullError: JSON.stringify(error, null, 2),
+  })
 
   let detailedMessage = mainMessage
 
@@ -825,7 +873,7 @@ const getUploadStatusText = () => {
 }
 
 // Format date từ chuỗi ISO
-const formatDate = (dateString) => {
+const formatDate = dateString => {
   if (!dateString) return 'N/A'
 
   try {
@@ -848,26 +896,26 @@ const formatDate = (dateString) => {
 // 📊 Load actual table record counts from database
 const loadTableRecordCounts = async () => {
   try {
-    console.log('📊 Loading actual table record counts from database');
+    console.log('📊 Loading actual table record counts from database')
 
-    const result = await rawDataService.getTableRecordCounts();
+    const result = await rawDataService.getTableRecordCounts()
 
     if (result.success && result.data) {
-      console.log('✅ Real table counts loaded:', result.data);
+      console.log('✅ Real table counts loaded:', result.data)
 
       // Update dataTypeStats with real counts from database
-      const updatedStats = { ...dataTypeStats.value };
+      const updatedStats = { ...dataTypeStats.value }
 
       Object.keys(result.data).forEach(tableName => {
-        const realCount = result.data[tableName];
+        const realCount = result.data[tableName]
 
         if (updatedStats[tableName]) {
           updatedStats[tableName] = {
             ...updatedStats[tableName],
             totalRecords: realCount, // Override with real database count
-            realRecords: realCount,  // Store original real count
-            isFromDatabase: true     // Flag to indicate data source
-          };
+            realRecords: realCount, // Store original real count
+            isFromDatabase: true, // Flag to indicate data source
+          }
         } else {
           // Initialize if not exists
           updatedStats[tableName] = {
@@ -875,37 +923,37 @@ const loadTableRecordCounts = async () => {
             realRecords: realCount,
             lastUpdate: null,
             count: 0,
-            isFromDatabase: true
-          };
+            isFromDatabase: true,
+          }
         }
 
-        console.log(`📊 ${tableName}: ${realCount} records (from database)`);
-      });
+        console.log(`📊 ${tableName}: ${realCount} records (from database)`)
+      })
 
-      dataTypeStats.value = updatedStats;
+      dataTypeStats.value = updatedStats
 
-      showSuccess(`✅ Đã cập nhật số lượng records thực tế từ database`);
-      return true;
+      showSuccess(`✅ Đã cập nhật số lượng records thực tế từ database`)
+      return true
     } else {
-      console.error('❌ Failed to load table counts:', result.error);
-      showError(`Lỗi khi tải số lượng records: ${result.error}`);
-      return false;
+      console.error('❌ Failed to load table counts:', result.error)
+      showError(`Lỗi khi tải số lượng records: ${result.error}`)
+      return false
     }
   } catch (error) {
-    console.error('❌ Error loading table record counts:', error);
-    showError(`Lỗi khi tải số lượng records: ${error.message}`);
-    return false;
+    console.error('❌ Error loading table record counts:', error)
+    showError(`Lỗi khi tải số lượng records: ${error.message}`)
+    return false
   }
 }
 
 // Data type statistics
-const getDataTypeStats = (dataType) => {
+const getDataTypeStats = dataType => {
   const stats = dataTypeStats.value[dataType] || { totalRecords: 0, lastUpdate: null }
   // Fix NaN issue: ensure totalRecords is always a valid number
   const totalRecords = parseInt(stats.totalRecords) || 0
   return {
     ...stats,
-    totalRecords: totalRecords // Return raw number, formatting will be done in template
+    totalRecords: totalRecords, // Return raw number, formatting will be done in template
   }
 }
 
@@ -936,11 +984,13 @@ const calculateDataTypeStats = () => {
     console.log(`📊 Processing ${dataType}: ${recordCount} records from`, imp.fileName || imp.FileName)
     console.log(`📊 Full import item:`, imp)
 
-    const importDate = imp.ImportDate || imp.importDate;
-    if (importDate && importDate !== "0001-01-01T00:00:00") {
+    const importDate = imp.ImportDate || imp.importDate
+    if (importDate && importDate !== '0001-01-01T00:00:00') {
       const importDateTime = new Date(importDate)
-      if (!isNaN(importDateTime.getTime()) && (!stats[dataType].lastUpdate ||
-          importDateTime > new Date(stats[dataType].lastUpdate))) {
+      if (
+        !isNaN(importDateTime.getTime()) &&
+        (!stats[dataType].lastUpdate || importDateTime > new Date(stats[dataType].lastUpdate))
+      ) {
         stats[dataType].lastUpdate = importDate
       }
     }
@@ -962,9 +1012,10 @@ const debugRecalculateStats = async () => {
 
   if (allImports.value.length > 0) {
     console.log('📊 Sample import item:', allImports.value[0])
-    console.log('📊 DP01 items:', allImports.value.filter(imp =>
-      imp.Category === 'DP01' || imp.dataType === 'DP01' || imp.FileType === 'DP01'
-    ))
+    console.log(
+      '📊 DP01 items:',
+      allImports.value.filter(imp => imp.Category === 'DP01' || imp.dataType === 'DP01' || imp.FileType === 'DP01')
+    )
   }
 
   // Then recalculate stats
@@ -1049,7 +1100,7 @@ const refreshAllData = async (skipSuccessMessage = false) => {
       success: result.success,
       dataLength: result.data ? result.data.length : 0,
       error: result.error,
-      resultType: typeof result
+      resultType: typeof result,
     })
 
     if (result.success) {
@@ -1070,14 +1121,14 @@ const refreshAllData = async (skipSuccessMessage = false) => {
         showSuccess(`✅ Đã tải lại dữ liệu thành công (${allImports.value.length} imports)`)
       }
 
-      return { success: true, data: allImports.value };
+      return { success: true, data: allImports.value }
     } else {
       const errorMsg = result.error || 'Không thể tải dữ liệu'
       console.error('🔥 Chi tiết lỗi getAllImports:', {
         error: result.error,
         errorCode: result.errorCode,
         errorStatus: result.errorStatus,
-        fullResult: result
+        fullResult: result,
       })
 
       if (result.fallbackData && result.fallbackData.length > 0) {
@@ -1086,23 +1137,22 @@ const refreshAllData = async (skipSuccessMessage = false) => {
         if (!skipSuccessMessage) {
           showError(`⚠️ Chế độ Demo: ${errorMsg}`)
         }
-        return { success: false, error: errorMsg, fallback: true };
+        return { success: false, error: errorMsg, fallback: true }
       } else {
         allImports.value = []
         calculateDataTypeStats()
         if (!skipSuccessMessage) {
           console.error('❌ Error in refreshAllData, will not show error to user during import flow')
         }
-        return { success: false, error: errorMsg };
+        return { success: false, error: errorMsg }
       }
     }
-
   } catch (error) {
     console.error('❌ Exception in refreshAllData:', error)
     if (!skipSuccessMessage) {
       console.error('❌ Refresh error, will not show to user during import flow')
     }
-    return { success: false, error: error.message };
+    return { success: false, error: error.message }
   } finally {
     loading.value = false
     loadingMessage.value = ''
@@ -1111,45 +1161,45 @@ const refreshAllData = async (skipSuccessMessage = false) => {
 
 // ✅ Thêm hàm refresh dữ liệu với nhiều cách fallback khác nhau
 const refreshDataWithFallback = async () => {
-  console.log('🔄 Refresh data with multiple fallback strategies...');
+  console.log('🔄 Refresh data with multiple fallback strategies...')
 
   try {
     // Chiến thuật 1: Gọi getRecentImports (nhanh nhất)
-    console.log('📊 Strategy 1: getRecentImports');
-    const recentResult = await rawDataService.getRecentImports(50);
+    console.log('📊 Strategy 1: getRecentImports')
+    const recentResult = await rawDataService.getRecentImports(50)
 
     if (recentResult.success && recentResult.data && recentResult.data.length > 0) {
-      console.log('✅ Strategy 1 success:', recentResult.data.length, 'items');
-      allImports.value = recentResult.data;
-      calculateDataTypeStats();
-      return { success: true, data: recentResult.data, strategy: 'getRecentImports' };
+      console.log('✅ Strategy 1 success:', recentResult.data.length, 'items')
+      allImports.value = recentResult.data
+      calculateDataTypeStats()
+      return { success: true, data: recentResult.data, strategy: 'getRecentImports' }
     }
 
     // Chiến thuật 2: Gọi getAllImports
-    console.log('📊 Strategy 2: getAllImports');
-    const importResult = await rawDataService.getAllImports();
+    console.log('📊 Strategy 2: getAllImports')
+    const importResult = await rawDataService.getAllImports()
 
     if (importResult.success && importResult.data && importResult.data.length > 0) {
-      console.log('✅ Strategy 2 success:', importResult.data.length, 'items');
-      allImports.value = importResult.data;
-      calculateDataTypeStats();
-      return { success: true, data: importResult.data, strategy: 'getAllImports' };
+      console.log('✅ Strategy 2 success:', importResult.data.length, 'items')
+      allImports.value = importResult.data
+      calculateDataTypeStats()
+      return { success: true, data: importResult.data, strategy: 'getAllImports' }
     }
 
     // Chiến thuật 3: Gọi getAllData
-    console.log('📊 Strategy 3: getAllData');
-    const dataResult = await rawDataService.getAllData();
+    console.log('📊 Strategy 3: getAllData')
+    const dataResult = await rawDataService.getAllData()
 
     if (dataResult.success && dataResult.data && dataResult.data.length > 0) {
-      console.log('✅ Strategy 3 success:', dataResult.data.length, 'items');
-      allImports.value = dataResult.data;
-      calculateDataTypeStats();
-      return { success: true, data: dataResult.data, strategy: 'getAllData' };
+      console.log('✅ Strategy 3 success:', dataResult.data.length, 'items')
+      allImports.value = dataResult.data
+      calculateDataTypeStats()
+      return { success: true, data: dataResult.data, strategy: 'getAllData' }
     }
 
     // Chiến thuật 4: Gọi trực tiếp API endpoint recent
-    console.log('📊 Strategy 4: Direct API recent call');
-    const directRecentResult = await api.get('/RawData/recent?limit=50');
+    console.log('📊 Strategy 4: Direct API recent call')
+    const directRecentResult = await api.get('/RawData/recent?limit=50')
 
     if (directRecentResult.data && Array.isArray(directRecentResult.data)) {
       const mappedData = directRecentResult.data.map(item => ({
@@ -1157,18 +1207,18 @@ const refreshDataWithFallback = async () => {
         dataType: item.category || item.dataType || item.fileType || 'UNKNOWN',
         category: item.category || item.dataType || '',
         recordsCount: parseInt(item.RecordsCount || 0),
-        fileName: item.FileName || 'Unknown File'
-      }));
+        fileName: item.FileName || 'Unknown File',
+      }))
 
-      console.log('✅ Strategy 4 success:', mappedData.length, 'items');
-      allImports.value = mappedData;
-      calculateDataTypeStats();
-      return { success: true, data: mappedData, strategy: 'directRecentAPI' };
+      console.log('✅ Strategy 4 success:', mappedData.length, 'items')
+      allImports.value = mappedData
+      calculateDataTypeStats()
+      return { success: true, data: mappedData, strategy: 'directRecentAPI' }
     }
 
     // Chiến thuật 5: Gọi trực tiếp API endpoint chính
-    console.log('📊 Strategy 5: Direct API call');
-    const directResult = await api.get('/RawData');
+    console.log('📊 Strategy 5: Direct API call')
+    const directResult = await api.get('/RawData')
 
     if (directResult.data && Array.isArray(directResult.data)) {
       const mappedData = directResult.data.map(item => ({
@@ -1176,26 +1226,29 @@ const refreshDataWithFallback = async () => {
         dataType: item.category || item.dataType || item.fileType || 'UNKNOWN',
         category: item.category || item.dataType || '',
         recordsCount: parseInt(item.RecordsCount || 0),
-        fileName: item.FileName || 'Unknown File'
-      }));
+        fileName: item.FileName || 'Unknown File',
+      }))
 
-      console.log('✅ Strategy 5 success:', mappedData.length, 'items');
-      allImports.value = mappedData;
-      calculateDataTypeStats();
-      return { success: true, data: mappedData, strategy: 'directAPI' };
+      console.log('✅ Strategy 5 success:', mappedData.length, 'items')
+      allImports.value = mappedData
+      calculateDataTypeStats()
+      return { success: true, data: mappedData, strategy: 'directAPI' }
     }
 
-    console.log('❌ All strategies failed');
-    return { success: false, error: 'All refresh strategies failed' };
-
+    console.log('❌ All strategies failed')
+    return { success: false, error: 'All refresh strategies failed' }
   } catch (error) {
-    console.error('❌ Error in refreshDataWithFallback:', error);
-    return { success: false, error: error.message };
+    console.error('❌ Error in refreshDataWithFallback:', error)
+    return { success: false, error: error.message }
   }
 }
 
 const clearAllData = async () => {
-  if (!confirm('⚠️ BẠN CÓ CHẮC CHẮN MUỐN XÓA TOÀN BỘ DỮ LIỆU?\n\nThao tác này sẽ xóa tất cả dữ liệu đã import và KHÔNG THỂ KHÔI PHỤC!')) {
+  if (
+    !confirm(
+      '⚠️ BẠN CÓ CHẮC CHẮN MUỐN XÓA TOÀN BỘ DỮ LIỆU?\n\nThao tác này sẽ xóa tất cả dữ liệu đã import và KHÔNG THỂ KHÔI PHỤC!'
+    )
+  ) {
     return
   }
 
@@ -1216,11 +1269,9 @@ const clearAllData = async () => {
         await refreshAllData()
         calculateDataTypeStats()
       }, 1500)
-
     } else {
       showError(result.message || result.error || 'Không thể xóa dữ liệu')
     }
-
   } catch (error) {
     console.error('❌ Error clearing all data:', error)
     showError('Có lỗi xảy ra khi xóa dữ liệu: ' + error.message)
@@ -1233,7 +1284,7 @@ const clearAllData = async () => {
 }
 
 // Data type actions - stubs cho các chức năng sẽ phát triển
-const viewDataType = async (dataType) => {
+const viewDataType = async dataType => {
   try {
     loading.value = true
     loadingMessage.value = `Đang tải dữ liệu ${dataType}...`
@@ -1266,17 +1317,20 @@ const viewDataType = async (dataType) => {
       // Set data cho modal với additional date info if selected
       const dateInfo = selectedFromDate.value ? ` (Date: ${formatDate(selectedFromDate.value)})` : ''
 
-      filteredResults.value = [{
-        dataType: dataType,
-        recordCount: previewResult.totalRecords,
-        previewData: formattedData,
-        directPreview: true, // Flag để biết đây là direct preview
-        dateFilter: selectedFromDate.value || null
-      }]
+      filteredResults.value = [
+        {
+          dataType: dataType,
+          recordCount: previewResult.totalRecords,
+          previewData: formattedData,
+          directPreview: true, // Flag để biết đây là direct preview
+          dateFilter: selectedFromDate.value || null,
+        },
+      ]
 
-      showSuccess(`📊 Xem trước ${formattedData.rows?.length || 0}/${previewResult.totalRecords} records ${dataType}${dateInfo} (Direct Preview)`)
+      showSuccess(
+        `📊 Xem trước ${formattedData.rows?.length || 0}/${previewResult.totalRecords} records ${dataType}${dateInfo} (Direct Preview)`
+      )
       showDataViewModal.value = true
-
     } catch (error) {
       console.error('Error viewing data type:', error)
       showError(`Lỗi khi tải dữ liệu: ${error.message}`)
@@ -1284,7 +1338,6 @@ const viewDataType = async (dataType) => {
       loading.value = false
       loadingMessage.value = ''
     }
-
   } catch (error) {
     console.error('Error in viewDataType:', error)
     showError(`Lỗi khi xem dữ liệu: ${error.message}`)
@@ -1294,7 +1347,7 @@ const viewDataType = async (dataType) => {
   }
 }
 
-const deleteDataTypeByDate = async (dataType) => {
+const deleteDataTypeByDate = async dataType => {
   if (!selectedFromDate.value) {
     showError('Vui lòng chọn ngày để xóa dữ liệu')
     return
@@ -1311,7 +1364,9 @@ const deleteDataTypeByDate = async (dataType) => {
     }
 
     // Hiển thị xác nhận
-    if (confirm(`Bạn có chắc chắn muốn xóa tất cả dữ liệu ${dataType} cho ngày ${formatDate(selectedFromDate.value)}?`)) {
+    if (
+      confirm(`Bạn có chắc chắn muốn xóa tất cả dữ liệu ${dataType} cho ngày ${formatDate(selectedFromDate.value)}?`)
+    ) {
       performDeleteByDate(dataType, dateStr)
     }
   } catch (error) {
@@ -1331,10 +1386,13 @@ const performDeleteByDate = async (dataType, dateStr) => {
       await refreshAllData()
 
       // Remove from filtered results if they exist
-      filteredResults.value = filteredResults.value.filter(item =>
-        !(item.dataType === dataType &&
-          item.statementDate &&
-          new Date(item.statementDate).toISOString().slice(0, 10).replace(/-/g, '') === dateStr)
+      filteredResults.value = filteredResults.value.filter(
+        item =>
+          !(
+            item.dataType === dataType &&
+            item.statementDate &&
+            new Date(item.statementDate).toISOString().slice(0, 10).replace(/-/g, '') === dateStr
+          )
       )
     } else {
       showError(`Lỗi khi xóa dữ liệu: ${result.error}`)
@@ -1349,7 +1407,7 @@ const performDeleteByDate = async (dataType, dateStr) => {
 }
 
 // Xóa toàn bộ dữ liệu của một bảng
-const deleteAllDataType = async (dataType) => {
+const deleteAllDataType = async dataType => {
   const stats = getDataTypeStats(dataType)
   if (stats.totalRecords === 0) {
     showError(`Không có dữ liệu trong bảng ${dataType}`)
@@ -1395,7 +1453,7 @@ const closeDataViewModal = () => {
 }
 
 // Raw data modal methods
-const viewRawDataFromTable = async (dataType) => {
+const viewRawDataFromTable = async dataType => {
   try {
     loading.value = true
     loadingMessage.value = `Đang tải dữ liệu thô ${dataType}...`
@@ -1417,33 +1475,33 @@ const viewRawDataFromTable = async (dataType) => {
 
     if (result.success && result.data) {
       // Helper function để convert $values format nếu cần
-      const convertDotNetArray = (data) => {
+      const convertDotNetArray = data => {
         if (data && typeof data === 'object' && data.$values && Array.isArray(data.$values)) {
           console.log('🔧 Converting raw data $values format, length:', data.$values.length)
-          return data.$values;
+          return data.$values
         }
-        return data;
-      };
+        return data
+      }
 
       // Xử lý dữ liệu records từ backend
-      const records = result.data.records || [];
+      const records = result.data.records || []
 
       if (records && records.length > 0) {
-        rawDataRecords.value = records;
-        showSuccess(`Đã tải ${records.length} bản ghi dữ liệu thô ${dataType}`);
-        showRawDataModal.value = true;
+        rawDataRecords.value = records
+        showSuccess(`Đã tải ${records.length} bản ghi dữ liệu thô ${dataType}`)
+        showRawDataModal.value = true
       } else {
-        showError(`Không tìm thấy dữ liệu thô cho ${dataType} vào ngày ${formatDate(selectedFromDate.value)}`);
+        showError(`Không tìm thấy dữ liệu thô cho ${dataType} vào ngày ${formatDate(selectedFromDate.value)}`)
       }
     } else {
-      showError(`Lỗi khi tải dữ liệu thô: ${result.error || 'Không tìm thấy dữ liệu'}`);
+      showError(`Lỗi khi tải dữ liệu thô: ${result.error || 'Không tìm thấy dữ liệu'}`)
     }
   } catch (error) {
-    console.error('Error viewing raw data:', error);
-    showError(`Lỗi khi tải dữ liệu thô: ${error.message}`);
+    console.error('Error viewing raw data:', error)
+    showError(`Lỗi khi tải dữ liệu thô: ${error.message}`)
   } finally {
-    loading.value = false;
-    loadingMessage.value = '';
+    loading.value = false
+    loadingMessage.value = ''
   }
 }
 
@@ -1455,48 +1513,46 @@ const closeRawDataModal = () => {
 const exportRawData = () => {
   try {
     // Create CSV content
-    let csvContent = "";
+    let csvContent = ''
 
     // Get all unique headers
-    const headers = new Set();
+    const headers = new Set()
     rawDataRecords.value.forEach(record => {
-      Object.keys(record).forEach(key => headers.add(key));
-    });
+      Object.keys(record).forEach(key => headers.add(key))
+    })
 
     // Add headers
-    csvContent += Array.from(headers).join(',') + '\n';
+    csvContent += Array.from(headers).join(',') + '\n'
 
     // Add data rows
     rawDataRecords.value.forEach(record => {
       const row = Array.from(headers).map(header => {
-        const value = record[header] || '';
+        const value = record[header] || ''
         // Handle values with commas by wrapping in quotes
-        return typeof value === 'string' && value.includes(',')
-          ? `"${value}"`
-          : value;
-      });
-      csvContent += row.join(',') + '\n';
-    });
+        return typeof value === 'string' && value.includes(',') ? `"${value}"` : value
+      })
+      csvContent += row.join(',') + '\n'
+    })
 
     // Create download link
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `rawdata-${selectedDataType.value}-${selectedFromDate.value}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.setAttribute('href', url)
+    link.setAttribute('download', `rawdata-${selectedDataType.value}-${selectedFromDate.value}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
 
-    showSuccess('Đã xuất dữ liệu thành công');
+    showSuccess('Đã xuất dữ liệu thành công')
   } catch (error) {
-    console.error('Error exporting data:', error);
-    showError(`Lỗi khi xuất dữ liệu: ${error.message}`);
+    console.error('Error exporting data:', error)
+    showError(`Lỗi khi xuất dữ liệu: ${error.message}`)
   }
 }
 
 // Preview import record method - for actual import records with valid IDs
-const previewImportRecord = async (importId) => {
+const previewImportRecord = async importId => {
   try {
     if (!importId) {
       showError('Import ID không hợp lệ')
@@ -1536,7 +1592,7 @@ const previewImportRecord = async (importId) => {
 }
 
 // Preview data method
-const previewData = async (importId) => {
+const previewData = async importId => {
   try {
     loading.value = true
     loadingMessage.value = 'Đang tải dữ liệu chi tiết...'
@@ -1555,7 +1611,9 @@ const previewData = async (importId) => {
         rawDataRecords.value = recordsToShow
         selectedDataType.value = result.data.Category || result.data.category || 'Dữ liệu chi tiết'
 
-        showSuccess(`✅ Đã tải ${recordsToShow.length} bản ghi chi tiết từ ${result.data.TotalRecords || result.data.totalRecords} bản ghi`)
+        showSuccess(
+          `✅ Đã tải ${recordsToShow.length} bản ghi chi tiết từ ${result.data.TotalRecords || result.data.totalRecords} bản ghi`
+        )
         showRawDataModal.value = true
       } else {
         showError('Không tìm thấy dữ liệu chi tiết trong bản ghi này')
@@ -1573,12 +1631,12 @@ const previewData = async (importId) => {
 }
 
 // Các phương thức tiện ích cho view đã được nhắc đến trong template
-const getCategoryName = (dataType) => {
+const getCategoryName = dataType => {
   // Lấy tên category từ định nghĩa data type
   return dataTypeDefinitions[dataType]?.category || 'Chưa phân loại'
 }
 
-const formatDateTime = (dateTimeString) => {
+const formatDateTime = dateTimeString => {
   if (!dateTimeString) return 'N/A'
 
   try {
@@ -1602,7 +1660,11 @@ const formatDateTime = (dateTimeString) => {
 
 // Delete confirmation
 const confirmDelete = async (importId, fileName) => {
-  if (confirm(`⚠️ Bạn có chắc chắn muốn xóa bản ghi "${fileName}"?\n\nViệc xóa sẽ bao gồm:\n- Xóa bản ghi import khỏi lịch sử\n- Xóa tất cả dữ liệu liên quan trong bảng database\n\nHành động này không thể hoàn tác!`)) {
+  if (
+    confirm(
+      `⚠️ Bạn có chắc chắn muốn xóa bản ghi "${fileName}"?\n\nViệc xóa sẽ bao gồm:\n- Xóa bản ghi import khỏi lịch sử\n- Xóa tất cả dữ liệu liên quan trong bảng database\n\nHành động này không thể hoàn tác!`
+    )
+  ) {
     try {
       loading.value = true
       loadingMessage.value = 'Đang xóa dữ liệu...'
@@ -1632,23 +1694,23 @@ const confirmDelete = async (importId, fileName) => {
 
 // Các phương thức tiện ích cho view đã được nhắc đến trong template
 
-const getDataTypeColor = (dataType) => {
+const getDataTypeColor = dataType => {
   // Màu sắc tương ứng với loại dữ liệu
   const colors = {
-    'HDMB': '#2196F3',       // Xanh dương
-    'HDBH': '#4CAF50',       // Xanh lá
-    'HDTH': '#FF9800',       // Cam
-    'HDFX': '#9C27B0',       // Tím
-    'BAOHIEM': '#E91E63',    // Hồng
-    'DANCU': '#607D8B',      // Xám xanh
-    'PHICHUYENTIEN': '#795548', // Nâu
-    'LAMVIEC': '#00BCD4'     // Xanh ngọc
+    HDMB: '#2196F3', // Xanh dương
+    HDBH: '#4CAF50', // Xanh lá
+    HDTH: '#FF9800', // Cam
+    HDFX: '#9C27B0', // Tím
+    BAOHIEM: '#E91E63', // Hồng
+    DANCU: '#607D8B', // Xám xanh
+    PHICHUYENTIEN: '#795548', // Nâu
+    LAMVIEC: '#00BCD4', // Xanh ngọc
   }
 
   return colors[dataType] || '#8B1538' // Màu mặc định là màu Agribank
 }
 
-const openImportModal = (dataType) => {
+const openImportModal = dataType => {
   selectedDataType.value = dataType
   selectedFiles.value = []
   importNotes.value = ''
@@ -1665,7 +1727,7 @@ const closeImportModal = () => {
   if (uploading.value && uploadProgress.value < 100) {
     // Nếu đang upload, hiển thị xác nhận
     if (!confirm('Bạn có chắc muốn hủy quá trình import? Dữ liệu đang được tải lên sẽ bị mất.')) {
-      return; // Người dùng không muốn hủy
+      return // Người dùng không muốn hủy
     }
     // TODO: Hủy quá trình upload nếu cần
   }
@@ -1695,7 +1757,7 @@ const performImport = async () => {
       dataType: selectedDataType.value,
       files: selectedFiles.value.map(f => ({ name: f.name, size: f.size })),
       notes: importNotes.value,
-      statementDate: selectedFromDate.value
+      statementDate: selectedFromDate.value,
     })
 
     currentUploadingFile.value = selectedFiles.value[0].name
@@ -1716,7 +1778,7 @@ const performImport = async () => {
     const options = {
       notes: importNotes.value,
       statementDate: selectedFromDate.value,
-      onProgress: (progressInfo) => {
+      onProgress: progressInfo => {
         // Cập nhật thông tin progress chung từ backend
         uploadProgress.value = progressInfo.percentage
 
@@ -1739,7 +1801,7 @@ const performImport = async () => {
             uploadedFiles.value = 0
           } else if (progressInfo.percentage >= 95) {
             uploadedFiles.value = selectedFiles.value.length
-            currentUploadingFile.value = "Hoàn thành tất cả files"
+            currentUploadingFile.value = 'Hoàn thành tất cả files'
           } else {
             // Tính toán số file đã hoàn thành dựa trên progress
             const completedFiles = Math.floor((progressInfo.percentage / 100) * selectedFiles.value.length)
@@ -1747,8 +1809,10 @@ const performImport = async () => {
           }
         }
 
-        console.log(`📊 Upload Progress: ${progressInfo.percentage}%, File ${uploadedFiles.value}/${totalFiles.value}: ${currentUploadingFile.value}`)
-      }
+        console.log(
+          `📊 Upload Progress: ${progressInfo.percentage}%, File ${uploadedFiles.value}/${totalFiles.value}: ${currentUploadingFile.value}`
+        )
+      },
     }
 
     // Gọi API thực tế thay vì mô phỏng
@@ -1765,7 +1829,7 @@ const performImport = async () => {
 
         // ✅ FIX: Làm mới dữ liệu với độ trễ đủ để backend xử lý xong
         setTimeout(async () => {
-          console.log('� Refresh data sau khi import thành công...');
+          console.log('� Refresh data sau khi import thành công...')
 
           try {
             loading.value = true
@@ -1778,8 +1842,10 @@ const performImport = async () => {
               success: refreshResult.success,
               strategy: refreshResult.strategy,
               totalImports: allImports.value.length,
-              dataTypes: allImports.value.map(imp => imp.dataType || imp.category || imp.fileType).filter((v, i, a) => a.indexOf(v) === i)
-            });
+              dataTypes: allImports.value
+                .map(imp => imp.dataType || imp.category || imp.fileType)
+                .filter((v, i, a) => a.indexOf(v) === i),
+            })
 
             if (refreshResult.success && allImports.value.length > 0) {
               // ✅ Lọc và hiển thị dữ liệu theo loại đã import
@@ -1787,48 +1853,47 @@ const performImport = async () => {
                 const typeMatches =
                   (imp.dataType && imp.dataType.includes(selectedDataType.value)) ||
                   (imp.category && imp.category.includes(selectedDataType.value)) ||
-                  (imp.fileType && imp.fileType.includes(selectedDataType.value));
+                  (imp.fileType && imp.fileType.includes(selectedDataType.value))
 
-                return typeMatches;
-              });
+                return typeMatches
+              })
 
-              console.log(`🔍 Filtered results for ${selectedDataType.value}:`, dataTypeResults.length);
+              console.log(`🔍 Filtered results for ${selectedDataType.value}:`, dataTypeResults.length)
 
               if (dataTypeResults.length > 0) {
-                filteredResults.value = dataTypeResults;
-                showSuccess(`✅ Hiển thị ${dataTypeResults.length} import(s) cho loại ${selectedDataType.value}`);
-                showDataViewModal.value = true;
+                filteredResults.value = dataTypeResults
+                showSuccess(`✅ Hiển thị ${dataTypeResults.length} import(s) cho loại ${selectedDataType.value}`)
+                showDataViewModal.value = true
               } else {
                 // ✅ Hiển thị tất cả dữ liệu mới nhất nếu không tìm thấy theo loại cụ thể
-                filteredResults.value = allImports.value.slice(0, 10); // Hiển thị 10 import mới nhất
-                showSuccess(`✅ Hiển thị ${filteredResults.value.length} bản ghi import mới nhất`);
-                showDataViewModal.value = true;
+                filteredResults.value = allImports.value.slice(0, 10) // Hiển thị 10 import mới nhất
+                showSuccess(`✅ Hiển thị ${filteredResults.value.length} bản ghi import mới nhất`)
+                showDataViewModal.value = true
               }
             } else {
-              console.log('⚠️ Không có dữ liệu sau khi refresh, thử gọi API trực tiếp...');
+              console.log('⚠️ Không có dữ liệu sau khi refresh, thử gọi API trực tiếp...')
 
               // Thử gọi API trực tiếp để lấy dữ liệu
-              const directResult = await rawDataService.getAllData();
+              const directResult = await rawDataService.getAllData()
 
               if (directResult.success && directResult.data && directResult.data.length > 0) {
-                console.log(`✅ API trực tiếp trả về ${directResult.data.length} bản ghi`);
+                console.log(`✅ API trực tiếp trả về ${directResult.data.length} bản ghi`)
 
-                filteredResults.value = directResult.data.slice(0, 10); // Hiển thị 10 bản ghi mới nhất
-                showSuccess(`✅ Hiển thị ${filteredResults.value.length} bản ghi import mới nhất`);
-                showDataViewModal.value = true;
+                filteredResults.value = directResult.data.slice(0, 10) // Hiển thị 10 bản ghi mới nhất
+                showSuccess(`✅ Hiển thị ${filteredResults.value.length} bản ghi import mới nhất`)
+                showDataViewModal.value = true
               } else {
-                showSuccess(`✅ Import thành công! Vui lòng nhấn "🔄 Tải lại dữ liệu" để xem kết quả.`);
+                showSuccess(`✅ Import thành công! Vui lòng nhấn "🔄 Tải lại dữ liệu" để xem kết quả.`)
               }
             }
-
           } catch (error) {
-            console.error('❌ Error fetching data after import:', error);
-            showSuccess(`✅ Import thành công! Vui lòng nhấn "🔄 Tải lại dữ liệu" để xem kết quả.`);
+            console.error('❌ Error fetching data after import:', error)
+            showSuccess(`✅ Import thành công! Vui lòng nhấn "🔄 Tải lại dữ liệu" để xem kết quả.`)
           } finally {
-            loading.value = false;
-            loadingMessage.value = '';
+            loading.value = false
+            loadingMessage.value = ''
           }
-        }, 2500); // ✅ Tăng delay thành 2.5 giây để đảm bảo backend xử lý xong
+        }, 2500) // ✅ Tăng delay thành 2.5 giây để đảm bảo backend xử lý xong
       }, 1000)
     } else {
       showDetailedError(`Lỗi khi import dữ liệu`, response)
@@ -1842,29 +1907,29 @@ const performImport = async () => {
 }
 
 // Xóa file khỏi danh sách chọn
-const removeFile = (index) => {
+const removeFile = index => {
   selectedFiles.value.splice(index, 1)
 }
 
 // Lấy icon tương ứng với loại file
-const getFileIcon = (fileName) => {
+const getFileIcon = fileName => {
   const extension = fileName.split('.').pop()?.toLowerCase() || ''
 
   const icons = {
-    'pdf': '📄',
-    'doc': '📝',
-    'docx': '📝',
-    'xls': '📊',
-    'xlsx': '📊',
-    'csv': '📋',
-    'txt': '📄',
-    'zip': '📦',
-    'rar': '📦',
+    pdf: '📄',
+    doc: '📝',
+    docx: '📝',
+    xls: '📊',
+    xlsx: '📊',
+    csv: '📋',
+    txt: '📄',
+    zip: '📦',
+    rar: '📦',
     '7z': '📦',
-    'png': '🖼️',
-    'jpg': '🖼️',
-    'jpeg': '🖼️',
-    'gif': '🖼️'
+    png: '🖼️',
+    jpg: '🖼️',
+    jpeg: '🖼️',
+    gif: '🖼️',
   }
 
   return icons[extension] || '📄'
@@ -1885,7 +1950,7 @@ const getUploadStatusIcon = () => {
 // formatFileSize được import từ ../utils/numberFormatter.js
 
 // Xử lý chọn file
-const handleFileSelect = (event) => {
+const handleFileSelect = event => {
   const files = event.target.files
   if (files.length === 0) return
 
@@ -1893,7 +1958,7 @@ const handleFileSelect = (event) => {
 }
 
 // Hàm định dạng số lượng bản ghi
-const formatRecordCount = (count) => {
+const formatRecordCount = count => {
   // Fix NaN issue - ensure proper type checking and conversion
   if (count === null || count === undefined || count === '' || isNaN(Number(count))) {
     return '0'
@@ -1905,7 +1970,7 @@ const formatRecordCount = (count) => {
 }
 
 // ✅ THÊM MỚI: Hàm format giá trị trong cell để hiển thị đẹp hơn
-const formatCellValue = (value) => {
+const formatCellValue = value => {
   if (value === null || value === undefined) return '—'
   if (value === '') return '(trống)'
 
@@ -1956,7 +2021,7 @@ const closeSmartImportModal = () => {
 }
 
 // Xử lý chọn file Smart Import
-const handleSmartFileSelect = (event) => {
+const handleSmartFileSelect = event => {
   console.log('🔍 Smart Import: File selected')
   const files = event.target.files
   if (files.length === 0) return
@@ -1966,7 +2031,7 @@ const handleSmartFileSelect = (event) => {
 }
 
 // Xử lý kéo thả file với animation đẹp
-const handleSmartFileDrop = (event) => {
+const handleSmartFileDrop = event => {
   console.log('🔍 Smart Import: Files dropped')
   isDragOver.value = false
   const files = event.dataTransfer.files
@@ -1977,20 +2042,20 @@ const handleSmartFileDrop = (event) => {
 }
 
 // Xử lý drag over với hiệu ứng
-const handleDragOver = (event) => {
+const handleDragOver = event => {
   event.preventDefault()
   isDragOver.value = true
 }
 
 // Xử lý drag enter
-const handleDragEnter = (event) => {
+const handleDragEnter = event => {
   event.preventDefault()
   isDragOver.value = true
 }
 
 // Xử lý drag leave với delay để tránh flicker
 let dragLeaveTimeout = null
-const handleDragLeave = (event) => {
+const handleDragLeave = event => {
   event.preventDefault()
 
   // Clear timeout cũ nếu có
@@ -2005,17 +2070,17 @@ const handleDragLeave = (event) => {
 }
 
 // Xóa file khỏi danh sách
-const removeSmartFile = (index) => {
+const removeSmartFile = index => {
   smartSelectedFiles.value.splice(index, 1)
 }
 
 // Detect category từ filename
-const detectCategory = (fileName) => {
+const detectCategory = fileName => {
   return smartImportService.detectCategoryFromFileName(fileName)
 }
 
 // Extract date từ filename
-const extractDateFromFileName = (fileName) => {
+const extractDateFromFileName = fileName => {
   return smartImportService.extractDateFromFileName(fileName)
 }
 
@@ -2055,33 +2120,36 @@ const startSmartImport = async () => {
       current: 0,
       total: smartSelectedFiles.value.length,
       percentage: 0,
-      currentFile: 'Chuẩn bị upload...'
+      currentFile: 'Chuẩn bị upload...',
     }
 
-    console.log('🧠 Starting OPTIMIZED Smart Import with', smartSelectedFiles.value.length, 'files', `(Total size: ${formatFileSize(totalSize)})`)
+    console.log(
+      '🧠 Starting OPTIMIZED Smart Import with',
+      smartSelectedFiles.value.length,
+      'files',
+      `(Total size: ${formatFileSize(totalSize)})`
+    )
 
     // ✅ OPTIMIZATION: Sử dụng callback để update progress real-time
-    const progressCallback = (progressInfo) => {
+    const progressCallback = progressInfo => {
       smartUploadProgress.value = {
         current: progressInfo.current,
         total: progressInfo.total,
         percentage: progressInfo.percentage,
         currentFile: progressInfo.currentFile,
-        stage: progressInfo.stage || 'uploading'
+        stage: progressInfo.stage || 'uploading',
       }
 
       // 📊 Log detailed progress
       if (progressInfo.fileProgress) {
-        console.log(`📊 File Progress: ${progressInfo.currentFile} - ${progressInfo.fileProgress.percentage}% (${formatFileSize(progressInfo.fileProgress.loaded)}/${formatFileSize(progressInfo.fileProgress.total)})`)
+        console.log(
+          `📊 File Progress: ${progressInfo.currentFile} - ${progressInfo.fileProgress.percentage}% (${formatFileSize(progressInfo.fileProgress.loaded)}/${formatFileSize(progressInfo.fileProgress.total)})`
+        )
       }
     }
 
     // Call OPTIMIZED Smart Import Service với progress callback
-    const results = await smartImportService.uploadSmartFiles(
-      smartSelectedFiles.value,
-      statementDate,
-      progressCallback
-    )
+    const results = await smartImportService.uploadSmartFiles(smartSelectedFiles.value, statementDate, progressCallback)
 
     // Calculate total duration
     const endTime = Date.now()
@@ -2119,9 +2187,8 @@ const startSmartImport = async () => {
       totalSize: formatFileSize(totalSize),
       duration: `${duration.toFixed(1)}s`,
       avgTimePerFile: `${avgTimePerFile}s`,
-      avgSpeed: `${avgSpeedMBps} MB/s`
+      avgSpeed: `${avgSpeedMBps} MB/s`,
     })
-
   } catch (error) {
     console.error('🔥 Smart Import error:', error)
 
@@ -2140,7 +2207,7 @@ const startSmartImport = async () => {
 <style scoped>
 /* 🏦 AGRIBANK BRAND STYLING */
 .header-section {
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 50%, #8B1538 100%);
+  background: linear-gradient(135deg, #8b1538 0%, #c41e3a 50%, #8b1538 100%);
   color: white;
   padding: 40px 30px;
   text-align: center;
@@ -2153,7 +2220,7 @@ const startSmartImport = async () => {
   margin: 0 0 10px 0;
   font-size: 2.5rem;
   font-weight: bold;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
   color: #f5f5f1; /* Màu trắng ngọc trai */
 }
 
@@ -2207,15 +2274,19 @@ const startSmartImport = async () => {
   width: 40px;
   height: 40px;
   border: 4px solid #f3f3f3;
-  border-top: 4px solid #8B1538;
+  border-top: 4px solid #8b1538;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 15px;
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Control panel */
@@ -2232,7 +2303,7 @@ const startSmartImport = async () => {
 }
 
 .agribank-date-title {
-  color: #8B1538;
+  color: #8b1538;
   margin-bottom: 15px;
   font-size: 1.3rem;
 }
@@ -2268,7 +2339,7 @@ const startSmartImport = async () => {
 }
 
 .agribank-date-input:focus {
-  border-color: #8B1538;
+  border-color: #8b1538;
   outline: none;
 }
 
@@ -2277,7 +2348,8 @@ const startSmartImport = async () => {
   gap: 10px;
 }
 
-.agribank-btn-filter, .agribank-btn-clear {
+.agribank-btn-filter,
+.agribank-btn-clear {
   padding: 8px 16px;
   border: none;
   border-radius: 6px;
@@ -2287,7 +2359,7 @@ const startSmartImport = async () => {
 }
 
 .agribank-btn-filter {
-  background: #8B1538;
+  background: #8b1538;
   color: white;
 }
 
@@ -2311,7 +2383,7 @@ const startSmartImport = async () => {
 
 /* Bulk actions */
 .bulk-actions-section h3 {
-  color: #8B1538;
+  color: #8b1538;
   margin-bottom: 15px;
 }
 
@@ -2321,7 +2393,9 @@ const startSmartImport = async () => {
   flex-wrap: wrap;
 }
 
-.btn-clear-all, .btn-refresh, .btn-debug {
+.btn-clear-all,
+.btn-refresh,
+.btn-debug {
   padding: 10px 20px;
   border: none;
   border-radius: 6px;
@@ -2345,11 +2419,15 @@ const startSmartImport = async () => {
   color: white;
 }
 
-.btn-clear-all:hover:not(:disabled), .btn-refresh:hover:not(:disabled), .btn-debug:hover:not(:disabled) {
+.btn-clear-all:hover:not(:disabled),
+.btn-refresh:hover:not(:disabled),
+.btn-debug:hover:not(:disabled) {
   opacity: 0.9;
 }
 
-.btn-clear-all:disabled, .btn-refresh:disabled, .btn-debug:disabled {
+.btn-clear-all:disabled,
+.btn-refresh:disabled,
+.btn-debug:disabled {
   background: #ccc;
   cursor: not-allowed;
 }
@@ -2358,12 +2436,12 @@ const startSmartImport = async () => {
 .agribank-section {
   background: white;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
 .agribank-header {
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
+  background: linear-gradient(135deg, #8b1538 0%, #c41e3a 100%);
   color: white;
   padding: 25px;
 }
@@ -2388,7 +2466,7 @@ const startSmartImport = async () => {
 
 .agribank-brand-line {
   height: 4px;
-  background: linear-gradient(90deg, #fff 0%, rgba(255,255,255,0.5) 50%, #fff 100%);
+  background: linear-gradient(90deg, #fff 0%, rgba(255, 255, 255, 0.5) 50%, #fff 100%);
   margin-top: 15px;
 }
 
@@ -2446,7 +2524,7 @@ const startSmartImport = async () => {
 
 .datatype-name {
   font-size: 1.1rem;
-  color: #8B1538;
+  color: #8b1538;
 }
 
 .datatype-category {
@@ -2464,7 +2542,7 @@ const startSmartImport = async () => {
 .agribank-number {
   font-size: 1.2rem;
   font-weight: bold;
-  color: #8B1538;
+  color: #8b1538;
 }
 
 .records-label {
@@ -2508,7 +2586,7 @@ const startSmartImport = async () => {
 
 .btn-action:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .btn-action:disabled {
@@ -2524,7 +2602,7 @@ const startSmartImport = async () => {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -2534,8 +2612,12 @@ const startSmartImport = async () => {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .modal-content {
@@ -2545,9 +2627,9 @@ const startSmartImport = async () => {
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
   animation: slideDown 0.3s ease;
-  border: 1px solid rgba(0,0,0,0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .import-modal {
@@ -2555,12 +2637,18 @@ const startSmartImport = async () => {
 }
 
 @keyframes slideDown {
-  from { transform: translateY(-30px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 .modal-header {
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
+  background: linear-gradient(135deg, #8b1538 0%, #c41e3a 100%);
   color: white;
   padding: 20px;
   border-radius: 12px 12px 0 0;
@@ -2600,7 +2688,7 @@ const startSmartImport = async () => {
 }
 
 .modal-close:hover {
-  background: rgba(255,255,255,0.2);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .modal-body {
@@ -2650,7 +2738,7 @@ const startSmartImport = async () => {
   align-items: center;
   gap: 8px;
   padding: 8px 16px;
-  background: #8B1538;
+  background: #8b1538;
   color: white;
   border-radius: 6px;
   cursor: pointer;
@@ -2779,12 +2867,12 @@ const startSmartImport = async () => {
   border-radius: 6px;
   overflow: hidden;
   margin-bottom: 8px;
-  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #8B1538 0%, #C41E3A 100%);
+  background: linear-gradient(90deg, #8b1538 0%, #c41e3a 100%);
   border-radius: 6px;
   transition: width 0.3s ease;
   position: relative;
@@ -2813,8 +2901,12 @@ const startSmartImport = async () => {
 }
 
 @keyframes progressStripes {
-  0% { background-position: 0 0; }
-  100% { background-position: 30px 0; }
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 30px 0;
+  }
 }
 
 .progress-details {
@@ -2826,7 +2918,7 @@ const startSmartImport = async () => {
 
 .progress-percentage {
   font-weight: bold;
-  color: #8B1538;
+  color: #8b1538;
 }
 
 .progress-file-info {
@@ -2849,7 +2941,7 @@ const startSmartImport = async () => {
 
 .notes-input:focus {
   outline: none;
-  border-color: #8B1538;
+  border-color: #8b1538;
 }
 
 /* Button styles */
@@ -2876,15 +2968,14 @@ const startSmartImport = async () => {
 }
 
 .btn-submit {
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
+  background: linear-gradient(135deg, #8b1538 0%, #c41e3a 100%);
   color: white;
 }
 
 .btn-submit:hover:not(:disabled) {
-
   background: linear-gradient(135deg, #7a1230 0%, #b31a33 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .btn-submit:disabled {
@@ -2896,7 +2987,7 @@ const startSmartImport = async () => {
 
 /* Agribank import styling */
 .btn-submit {
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
+  background: linear-gradient(135deg, #8b1538 0%, #c41e3a 100%);
   color: white;
   padding: 10px 20px;
   border: none;
@@ -2909,7 +3000,7 @@ const startSmartImport = async () => {
 .btn-submit:hover:not(:disabled) {
   background: linear-gradient(135deg, #7a1230 0%, #b31a33 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .btn-submit:disabled {
@@ -2924,7 +3015,7 @@ const startSmartImport = async () => {
 .raw-data-modal {
   max-width: 90%;
   width: 1000px;
-  max-height:   80vh;
+  max-height: 80vh;
 }
 
 .data-table-container,
@@ -2948,7 +3039,7 @@ const startSmartImport = async () => {
 .table-summary {
   margin-bottom: 10px;
   font-weight: bold;
-  color: #8B1538;
+  color: #8b1538;
 }
 
 .table-note {
@@ -2985,7 +3076,7 @@ const startSmartImport = async () => {
 }
 
 .data-source-info {
-  color: #8B1538;
+  color: #8b1538;
   font-weight: 600;
   font-size: 0.9rem;
 }
@@ -2998,7 +3089,7 @@ const startSmartImport = async () => {
   background: #f8f9fa;
   padding: 5px 10px;
   border-radius: 4px;
-  border-left: 3px solid #8B1538;
+  border-left: 3px solid #8b1538;
 }
 
 /* ==================== SMART IMPORT STYLES ==================== */
@@ -3015,13 +3106,13 @@ const startSmartImport = async () => {
   align-items: center;
   gap: 8px;
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0,123,255,0.3);
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
 }
 
 .btn-smart-import:hover:not(:disabled) {
   background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,123,255,0.4);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.4);
 }
 
 .btn-smart-import:disabled {
@@ -3032,7 +3123,7 @@ const startSmartImport = async () => {
 
 /* ✨ Smart Import Optimization Badge */
 .optimization-badge {
-  background: linear-gradient(135deg, #00C851 0%, #00B04F 100%);
+  background: linear-gradient(135deg, #00c851 0%, #00b04f 100%);
   border-radius: 12px;
   padding: 8px 16px;
   margin-top: 15px;
@@ -3045,7 +3136,7 @@ const startSmartImport = async () => {
   font-weight: bold;
   font-size: 0.9rem;
   color: white;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .optimization-badge small {
@@ -3067,7 +3158,7 @@ const startSmartImport = async () => {
 /* 🚀 ENHANCED SMART UPLOAD PROGRESS STYLES */
 .smart-upload-progress {
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border: 2px solid #8B1538;
+  border: 2px solid #8b1538;
   border-radius: 15px;
   padding: 20px;
   margin: 20px 0;
@@ -3084,7 +3175,7 @@ const startSmartImport = async () => {
 
 .progress-header h4 {
   margin: 0;
-  color: #8B1538;
+  color: #8b1538;
   font-size: 1.2rem;
   font-weight: bold;
 }
@@ -3104,7 +3195,7 @@ const startSmartImport = async () => {
 
 .progress-percentage {
   font-weight: bold;
-  color: #8B1538;
+  color: #8b1538;
   font-size: 1.1rem;
 }
 
@@ -3115,12 +3206,12 @@ const startSmartImport = async () => {
   overflow: hidden;
   margin-bottom: 15px;
   position: relative;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .progress-bar {
   height: 100%;
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 50%, #8B1538 100%);
+  background: linear-gradient(135deg, #8b1538 0%, #c41e3a 50%, #8b1538 100%);
   transition: width 0.3s ease;
   display: flex;
   align-items: center;
@@ -3137,7 +3228,7 @@ const startSmartImport = async () => {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
   animation: shimmer 2s infinite;
 }
 
@@ -3145,7 +3236,7 @@ const startSmartImport = async () => {
   color: white;
   font-weight: bold;
   font-size: 0.8rem;
-  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .current-file-info {
@@ -3171,7 +3262,7 @@ const startSmartImport = async () => {
 .parallel-info {
   margin: 0;
   font-size: 0.9rem;
-  color: #8B1538;
+  color: #8b1538;
   font-weight: 600;
   background: rgba(139, 21, 56, 0.1);
   padding: 4px 8px;
@@ -3180,7 +3271,8 @@ const startSmartImport = async () => {
 }
 
 @keyframes uploadPulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1.02);
   }
   50% {
@@ -3215,7 +3307,7 @@ const startSmartImport = async () => {
 
 .stat.success {
   background: rgba(0, 200, 81, 0.1);
-  color: #00C851;
+  color: #00c851;
   border: 1px solid rgba(0, 200, 81, 0.3);
 }
 
@@ -3227,7 +3319,7 @@ const startSmartImport = async () => {
 
 .stat.total {
   background: rgba(139, 21, 56, 0.1);
-  color: #8B1538;
+  color: #8b1538;
   border: 1px solid rgba(139, 21, 56, 0.3);
 }
 
@@ -3249,14 +3341,16 @@ const startSmartImport = async () => {
 
 /* ✨ DRAG & DROP AREA - SIÊU ĐẸP LUNG LINH */
 .file-drop-area {
-  border: 3px dashed #8B1538;
+  border: 3px dashed #8b1538;
   border-radius: 20px;
   padding: 40px 20px;
   text-align: center;
-  background: linear-gradient(135deg,
+  background: linear-gradient(
+    135deg,
     rgba(139, 21, 56, 0.02) 0%,
     rgba(139, 21, 56, 0.05) 50%,
-    rgba(139, 21, 56, 0.02) 100%);
+    rgba(139, 21, 56, 0.02) 100%
+  );
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
@@ -3270,10 +3364,7 @@ const startSmartImport = async () => {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg,
-    transparent,
-    rgba(139, 21, 56, 0.1),
-    transparent);
+  background: linear-gradient(90deg, transparent, rgba(139, 21, 56, 0.1), transparent);
   transition: left 0.6s ease;
 }
 
@@ -3282,21 +3373,20 @@ const startSmartImport = async () => {
 }
 
 .file-drop-area:hover {
-  border-color: #C41E3A;
-  background: linear-gradient(135deg,
+  border-color: #c41e3a;
+  background: linear-gradient(
+    135deg,
     rgba(139, 21, 56, 0.05) 0%,
     rgba(139, 21, 56, 0.1) 50%,
-    rgba(139, 21, 56, 0.05) 100%);
+    rgba(139, 21, 56, 0.05) 100%
+  );
   transform: translateY(-3px);
   box-shadow: 0 12px 40px rgba(139, 21, 56, 0.15);
 }
 
 .file-drop-area.drag-over {
-  border-color: #00C851;
-  background: linear-gradient(135deg,
-    rgba(0, 200, 81, 0.1) 0%,
-    rgba(0, 200, 81, 0.2) 50%,
-    rgba(0, 200, 81, 0.1) 100%);
+  border-color: #00c851;
+  background: linear-gradient(135deg, rgba(0, 200, 81, 0.1) 0%, rgba(0, 200, 81, 0.2) 50%, rgba(0, 200, 81, 0.1) 100%);
   transform: scale(1.02);
   box-shadow: 0 20px 60px rgba(0, 200, 81, 0.3);
   animation: dragPulse 1s ease-in-out infinite;
@@ -3304,10 +3394,12 @@ const startSmartImport = async () => {
 
 .file-drop-area.has-files {
   border-color: #2196f3;
-  background: linear-gradient(135deg,
+  background: linear-gradient(
+    135deg,
     rgba(33, 150, 243, 0.05) 0%,
     rgba(33, 150, 243, 0.1) 50%,
-    rgba(33, 150, 243, 0.05) 100%);
+    rgba(33, 150, 243, 0.05) 100%
+  );
 }
 
 .drop-zone-main {
@@ -3324,7 +3416,7 @@ const startSmartImport = async () => {
 .upload-icon-wrapper {
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
+  background: linear-gradient(135deg, #8b1538 0%, #c41e3a 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -3335,7 +3427,7 @@ const startSmartImport = async () => {
 }
 
 .drag-over .upload-icon-wrapper {
-  background: linear-gradient(135deg, #00C851 0%, #00B04F 100%);
+  background: linear-gradient(135deg, #00c851 0%, #00b04f 100%);
   transform: rotate(360deg) scale(1.1);
   box-shadow: 0 12px 35px rgba(0, 200, 81, 0.4);
 }
@@ -3389,7 +3481,7 @@ const startSmartImport = async () => {
 }
 
 .drag-active {
-  color: #00C851 !important;
+  color: #00c851 !important;
   animation: textBounce 0.6s ease-in-out infinite alternate;
 }
 
@@ -3414,11 +3506,7 @@ const startSmartImport = async () => {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(to right,
-    transparent,
-    #ddd 20%,
-    #ddd 80%,
-    transparent);
+  background: linear-gradient(to right, transparent, #ddd 20%, #ddd 80%, transparent);
   z-index: 1;
 }
 
@@ -3430,7 +3518,7 @@ const startSmartImport = async () => {
 }
 
 .btn-select-files {
-  background: linear-gradient(135deg, #8B1538 0%, #C41E3A 100%);
+  background: linear-gradient(135deg, #8b1538 0%, #c41e3a 100%);
   color: white;
   border: none;
   padding: 16px 32px;
@@ -3454,10 +3542,7 @@ const startSmartImport = async () => {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg,
-    transparent,
-    rgba(255, 255, 255, 0.2),
-    transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
   transition: left 0.6s ease;
 }
 
@@ -3466,7 +3551,7 @@ const startSmartImport = async () => {
 }
 
 .btn-select-files:hover {
-  background: linear-gradient(135deg, #A02A4A 0%, #D63654 100%);
+  background: linear-gradient(135deg, #a02a4a 0%, #d63654 100%);
   transform: translateY(-3px);
   box-shadow: 0 12px 35px rgba(139, 21, 56, 0.4);
 }
@@ -3518,12 +3603,13 @@ const startSmartImport = async () => {
 .format-item span:last-child {
   font-size: 0.8rem;
   font-weight: 600;
-  color: #8B1538;
+  color: #8b1538;
 }
 
 /* ANIMATIONS */
 @keyframes dragPulse {
-  0%, 100% {
+  0%,
+  100% {
     transform: scale(1.02);
   }
   50% {
@@ -3532,7 +3618,8 @@ const startSmartImport = async () => {
 }
 
 @keyframes sparkleFloat {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0;
     transform: translateY(0) rotate(0deg);
   }

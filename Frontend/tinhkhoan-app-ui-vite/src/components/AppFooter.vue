@@ -15,7 +15,7 @@
         <div class="divider">|</div>
         <div class="ip-info">
           <span class="ip-icon">🌐</span>
-          <span class="ip-address" :class="{ 'loading': !userIP }">{{ userIP || 'Đang tải IP...' }}</span>
+          <span class="ip-address" :class="{ loading: !userIP }">{{ userIP || 'Đang tải IP...' }}</span>
         </div>
       </div>
     </div>
@@ -23,44 +23,44 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted } from 'vue'
 
 // Reactive data
-const currentUser = ref('');
-const loginTime = ref(new Date());
-const userIP = ref('');
+const currentUser = ref('')
+const loginTime = ref(new Date())
+const userIP = ref('')
 
 // Lấy thông tin user từ localStorage hoặc session
 const getCurrentUser = () => {
   try {
-    const userData = localStorage.getItem('user');
+    const userData = localStorage.getItem('user')
     if (userData) {
-      const user = JSON.parse(userData);
-      return user.username || user.fullName || 'Admin';
+      const user = JSON.parse(userData)
+      return user.username || user.fullName || 'Admin'
     }
-    return localStorage.getItem('username') || 'Admin';
+    return localStorage.getItem('username') || 'Admin'
   } catch (error) {
-    console.warn('Không thể lấy thông tin user:', error);
-    return 'Admin';
+    console.warn('Không thể lấy thông tin user:', error)
+    return 'Admin'
   }
-};
+}
 
 // Lấy thời gian login từ localStorage hoặc sử dụng thời gian hiện tại
 const getLoginTime = () => {
   try {
-    const storedLoginTime = localStorage.getItem('loginTime');
+    const storedLoginTime = localStorage.getItem('loginTime')
     if (storedLoginTime) {
-      return new Date(storedLoginTime);
+      return new Date(storedLoginTime)
     }
     // Nếu không có thì lưu thời gian hiện tại
-    const now = new Date();
-    localStorage.setItem('loginTime', now.toISOString());
-    return now;
+    const now = new Date()
+    localStorage.setItem('loginTime', now.toISOString())
+    return now
   } catch (error) {
-    console.warn('Không thể lấy thời gian login:', error);
-    return new Date();
+    console.warn('Không thể lấy thời gian login:', error)
+    return new Date()
   }
-};
+}
 
 // Format thời gian login hiển thị
 const formatLoginTime = () => {
@@ -71,55 +71,51 @@ const formatLoginTime = () => {
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
-    });
+      second: '2-digit',
+    })
   } catch (error) {
-    return 'N/A';
+    return 'N/A'
   }
-};
+}
 
 // Lấy địa chỉ IP của user
 const getUserIP = async () => {
   try {
     // Thử nhiều API khác nhau để lấy IP
-    const ipAPIs = [
-      'https://api.ipify.org?format=json',
-      'https://ipapi.co/json/',
-      'https://json.geoiplookup.io/'
-    ];
+    const ipAPIs = ['https://api.ipify.org?format=json', 'https://ipapi.co/json/', 'https://json.geoiplookup.io/']
 
     for (const api of ipAPIs) {
       try {
-        const response = await fetch(api);
+        const response = await fetch(api)
         if (response.ok) {
-          const data = await response.json();
+          const data = await response.json()
           // Xử lý response khác nhau cho từng API
           if (data.ip) {
-            return data.ip;
+            return data.ip
           } else if (data.IPv4) {
-            return data.IPv4;
+            return data.IPv4
           }
         }
       } catch (apiError) {
-        console.warn(`API ${api} failed:`, apiError);
-        continue;
+        console.warn(`API ${api} failed:`, apiError)
+        continue
       }
     }
-    
+
     // Fallback: sử dụng IP local nếu không thể lấy được IP public
-    return '127.0.0.1 (Local)';
+    return '127.0.0.1 (Local)'
   } catch (error) {
-    console.warn('Không thể lấy địa chỉ IP:', error);
-    return 'N/A';
+    console.warn('Không thể lấy địa chỉ IP:', error)
+    return 'N/A'
   }
-};
+}
 
 // Khởi tạo khi component được mount
 onMounted(async () => {
-  currentUser.value = getCurrentUser();
-  loginTime.value = getLoginTime();
-  userIP.value = await getUserIP();
-});
+  currentUser.value = getCurrentUser()
+  loginTime.value = getLoginTime()
+  userIP.value = await getUserIP()
+})
 </script>
 
 <style scoped>
@@ -199,14 +195,14 @@ onMounted(async () => {
   .app-footer {
     padding: 6px 15px;
   }
-  
+
   .user-session-info {
     font-size: 12px;
     gap: 8px;
     flex-wrap: wrap;
     justify-content: center;
   }
-  
+
   .user-icon,
   .login-icon,
   .ip-icon {
@@ -218,12 +214,12 @@ onMounted(async () => {
   .app-footer {
     padding: 5px 10px;
   }
-  
+
   .user-session-info {
     font-size: 11px;
     gap: 6px;
   }
-  
+
   .divider {
     margin: 0 2px;
   }
@@ -242,8 +238,13 @@ onMounted(async () => {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .app-footer {

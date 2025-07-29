@@ -1,5 +1,4 @@
 using TinhKhoanApp.Api.Models.DataTables;
-using System.Threading.Tasks;
 
 namespace TinhKhoanApp.Api.Repositories
 {
@@ -62,17 +61,5 @@ namespace TinhKhoanApp.Api.Repositories
         /// Lấy tổng thu nợ sau xử lý theo chi nhánh
         /// </summary>
         Task<decimal> GetTotalDebtRecoveryByBranchAsync(string branchCode, DateTime? date = null);
-
-        /// <summary>
-        /// Lưu các thay đổi vào cơ sở dữ liệu
-        /// </summary>
-        /// <returns>Số lượng bản ghi bị ảnh hưởng</returns>
-        Task<int> SaveChangesAsync();
-
-        /// <summary>
-        /// Xóa một entity theo id
-        /// </summary>
-        /// <param name="entity">Entity cần xóa</param>
-        Task DeleteAsync(LN03 entity);
     }
 }

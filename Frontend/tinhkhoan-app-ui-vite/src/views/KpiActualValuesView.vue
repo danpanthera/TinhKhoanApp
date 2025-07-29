@@ -7,18 +7,10 @@
 
     <!-- Tab Navigation -->
     <div class="tab-navigation">
-      <button
-        class="tab-button"
-        :class="{ active: activeTab === 'employee' }"
-        @click="switchTab('employee')"
-      >
+      <button class="tab-button" :class="{ active: activeTab === 'employee' }" @click="switchTab('employee')">
         👤 Cán bộ
       </button>
-      <button
-        class="tab-button"
-        :class="{ active: activeTab === 'unit' }"
-        @click="switchTab('unit')"
-      >
+      <button class="tab-button" :class="{ active: activeTab === 'unit' }" @click="switchTab('unit')">
         🏢 Chi nhánh
       </button>
     </div>
@@ -35,7 +27,6 @@
 
     <!-- Tab Content -->
     <div class="tab-content">
-
       <!-- Employee Tab -->
       <div v-show="activeTab === 'employee'" class="tab-pane">
         <!-- Filter Section -->
@@ -43,238 +34,234 @@
           <div class="form-container">
             <h2>🔍 Tìm kiếm giao khoán cán bộ</h2>
 
-        <div class="filter-form">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="branchFilter">🏢 Chi nhánh:</label>
-              <select id="branchFilter" v-model="selectedBranchId" @change="onBranchChange">
-                <option value="">-- Tất cả chi nhánh --</option>
-                <option
-                  v-for="branch in branchOptions"
-                  :key="branch.Id"
-                  :value="branch.Id"
-                >
-                  🏢 {{ branch.Name }} ({{ branch.Code }})
-                </option>
-              </select>
-            </div>
+            <div class="filter-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="branchFilter">🏢 Chi nhánh:</label>
+                  <select id="branchFilter" v-model="selectedBranchId" @change="onBranchChange">
+                    <option value="">-- Tất cả chi nhánh --</option>
+                    <option v-for="branch in branchOptions" :key="branch.Id" :value="branch.Id">
+                      🏢 {{ branch.Name }} ({{ branch.Code }})
+                    </option>
+                  </select>
+                </div>
 
-            <div class="form-group">
-              <label for="departmentFilter">🏬 Phòng ban:</label>
-              <select id="departmentFilter" v-model="selectedDepartmentId" @change="onDepartmentChange">
-                <option value="">-- Tất cả phòng ban --</option>
-                <option
-                  v-for="dept in departmentOptions"
-                  :key="dept.Id"
-                  :value="dept.Id"
-                >
-                  🏬 {{ dept.Name }} ({{ dept.Code }})
-                </option>
-              </select>
-            </div>
+                <div class="form-group">
+                  <label for="departmentFilter">🏬 Phòng ban:</label>
+                  <select id="departmentFilter" v-model="selectedDepartmentId" @change="onDepartmentChange">
+                    <option value="">-- Tất cả phòng ban --</option>
+                    <option v-for="dept in departmentOptions" :key="dept.Id" :value="dept.Id">
+                      🏬 {{ dept.Name }} ({{ dept.Code }})
+                    </option>
+                  </select>
+                </div>
 
-            <div class="form-group">
-              <label for="employeeFilter">Nhân viên:</label>
-              <select id="employeeFilter" v-model="selectedEmployeeId" @change="onFilterChange">
-                <option value="">-- Tất cả nhân viên --</option>
-                <option
-                  v-for="employee in filteredEmployees"
-                  :key="employee.Id"
-                  :value="employee.Id"
-                >
-                  {{ employee.fullName }} - {{ employee.unit?.Name }}
-                </option>
-              </select>
-            </div>
-          </div>
+                <div class="form-group">
+                  <label for="employeeFilter">Nhân viên:</label>
+                  <select id="employeeFilter" v-model="selectedEmployeeId" @change="onFilterChange">
+                    <option value="">-- Tất cả nhân viên --</option>
+                    <option v-for="employee in filteredEmployees" :key="employee.Id" :value="employee.Id">
+                      {{ employee.fullName }} - {{ employee.unit?.Name }}
+                    </option>
+                  </select>
+                </div>
+              </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="periodFilter">Kỳ khoán:</label>
-              <select id="periodFilter" v-model="selectedPeriodId" @change="onFilterChange">
-                <option value="">-- Tất cả kỳ khoán --</option>
-                <option
-                  v-for="period in khoanPeriods"
-                  :key="period.Id"
-                  :value="period.Id"
-                >                      {{ period.Name }} ({{ formatDate(period.startDate) }} - {{ formatDate(period.endDate) }})
-                </option>
-              </select>
-            </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="periodFilter">Kỳ khoán:</label>
+                  <select id="periodFilter" v-model="selectedPeriodId" @change="onFilterChange">
+                    <option value="">-- Tất cả kỳ khoán --</option>
+                    <option v-for="period in khoanPeriods" :key="period.Id" :value="period.Id">
+                      {{ period.Name }} ({{ formatDate(period.startDate) }} - {{ formatDate(period.endDate) }})
+                    </option>
+                  </select>
+                </div>
 
-            <div class="form-group">
-              <button
-                @click="searchAssignments"
-                :disabled="!canSearch || searching"
-                class="action-button search-btn"
-              >
-                {{ searching ? 'Đang tìm...' : '🔍 Tìm kiếm' }}
-              </button>
+                <div class="form-group">
+                  <button
+                    @click="searchAssignments"
+                    :disabled="!canSearch || searching"
+                    class="action-button search-btn"
+                  >
+                    {{ searching ? 'Đang tìm...' : '🔍 Tìm kiếm' }}
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="selectedBranchId || selectedDepartmentId" class="filter-summary">
+                <p>
+                  📊 <strong>Đang lọc:</strong>
+                  <span v-if="selectedBranchId">Chi nhánh "{{ getBranchName() }}"</span>
+                  <span v-if="selectedDepartmentId"> → Phòng ban "{{ getDepartmentName() }}"</span>
+                  → Tìm thấy <strong>{{ filteredEmployees.length }}</strong> nhân viên phù hợp
+                </p>
+              </div>
             </div>
           </div>
+        </div>
 
-          <div v-if="selectedBranchId || selectedDepartmentId" class="filter-summary">
-            <p>
-              📊 <strong>Đang lọc:</strong>
-              <span v-if="selectedBranchId">Chi nhánh "{{ getBranchName() }}"</span>
-              <span v-if="selectedDepartmentId"> → Phòng ban "{{ getDepartmentName() }}"</span>
-              → Tìm thấy <strong>{{ filteredEmployees.length }}</strong> nhân viên phù hợp
-            </p>
+        <!-- Loading State -->
+        <div v-if="searching" class="loading-section">
+          <div class="loading-spinner"></div>
+          <p>Đang tìm kiếm giao khoán...</p>
+        </div>
+
+        <!-- Assignments List -->
+        <div v-if="!searching && assignments.length > 0" class="assignments-section">
+          <div class="form-container">
+            <div class="assignments-header">
+              <h2>Giao khoán KPI</h2>
+              <div class="assignments-summary">
+                <span class="summary-item">
+                  <strong>{{ assignments.length }}</strong> giao khoán
+                </span>
+                <span class="summary-item">
+                  <strong>{{ pendingCount }}</strong> chưa hoàn thành
+                </span>
+                <span class="summary-item">
+                  <strong>{{ completedCount }}</strong> đã hoàn thành
+                </span>
+              </div>
+            </div>
+
+            <div class="assignments-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Nhân viên</th>
+                    <th>Kỳ khoán</th>
+                    <th>Chỉ tiêu KPI</th>
+                    <th>Mục tiêu</th>
+                    <th>Thực hiện</th>
+                    <th>Điểm</th>
+                    <th>Trạng thái</th>
+                    <th>Hành động</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="assignment in assignments" :key="assignment.Id" class="assignment-row">
+                    <td class="employee-info">
+                      <div class="employee-name">{{ assignment.employee?.fullName }}</div>
+                      <div class="employee-unit">{{ assignment.employee?.unit?.Name }}</div>
+                    </td>
+                    <td class="period-info">
+                      <div class="period-name">{{ assignment.khoanPeriod?.periodName }}</div>
+                      <div class="period-dates">
+                        {{ formatDate(assignment.khoanPeriod?.startDate) }} -
+                        {{ formatDate(assignment.khoanPeriod?.endDate) }}
+                      </div>
+                    </td>
+                    <td class="indicator-info">
+                      <div class="indicator-name">{{ assignment.indicator?.indicatorName }}</div>
+                      <div class="indicator-details">
+                        Tối đa: {{ assignment.indicator?.maxScore }} điểm ({{ assignment.indicator?.unit }})
+                      </div>
+                    </td>
+                    <td class="target-value">
+                      <span class="value">{{ assignment.targetValue }}</span>
+                      <span class="unit">{{ assignment.indicator?.unit }}</span>
+                    </td>
+                    <td class="actual-value">
+                      <div v-if="editingAssignment === assignment.Id" class="edit-mode">
+                        <input
+                          type="text"
+                          v-model="editingActualValueFormatted"
+                          @input="e => handleActualValueInput(e)"
+                          @blur="e => handleActualValueBlur(e)"
+                          :placeholder="`Nhập giá trị (${assignment.indicator?.unit})`"
+                          class="actual-input"
+                          @keyup.enter="saveActualValue(assignment)"
+                          @keyup.escape="cancelEdit"
+                        />
+                      </div>
+                      <div v-else class="view-mode">
+                        <span v-if="assignment.actualValue != null" class="value">
+                          {{ assignment.actualValue }}
+                        </span>
+                        <span v-else class="no-value">Chưa nhập</span>
+                        <span class="unit">{{ assignment.indicator?.unit }}</span>
+                      </div>
+                    </td>
+                    <td class="score-value">
+                      <span v-if="assignment.score != null" class="score">
+                        {{ assignment.score.toFixed(2) }}
+                      </span>
+                      <span v-else class="no-score">Chưa tính</span>
+                    </td>
+                    <td class="status">
+                      <span class="status-badge" :class="getStatusClass(assignment)">
+                        {{ getStatusText(assignment) }}
+                      </span>
+                    </td>
+                    <td class="actions">
+                      <div v-if="editingAssignment === assignment.Id" class="edit-actions">
+                        <button
+                          @click="saveActualValue(assignment)"
+                          :disabled="savingActual"
+                          class="action-btn save-btn"
+                        >
+                          ✓
+                        </button>
+                        <button @click="cancelEdit" :disabled="savingActual" class="action-btn cancel-btn">✕</button>
+                      </div>
+                      <div v-else class="view-actions">
+                        <button
+                          @click="startEdit(assignment)"
+                          class="action-btn edit-btn"
+                          title="Chỉnh sửa giá trị thực hiện"
+                        >
+                          ✏️
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div
+          v-if="
+            !searching &&
+            assignments.length === 0 &&
+            (selectedEmployeeId || selectedPeriodId || selectedBranchId || selectedDepartmentId)
+          "
+          class="empty-state"
+        >
+          <div class="form-container">
+            <div class="empty-content">
+              <div class="empty-icon">📋</div>
+              <h3>Không tìm thấy giao khoán</h3>
+              <p>Không có giao khoán KPI nào phù hợp với tiêu chí tìm kiếm.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Initial State -->
+        <div
+          v-if="
+            !searching &&
+            assignments.length === 0 &&
+            !selectedEmployeeId &&
+            !selectedPeriodId &&
+            !selectedBranchId &&
+            !selectedDepartmentId
+          "
+          class="initial-state"
+        >
+          <div class="form-container">
+            <div class="initial-content">
+              <div class="initial-icon">🎯</div>
+              <h3>Chọn tiêu chí tìm kiếm</h3>
+              <p>Vui lòng chọn nhân viên hoặc kỳ khoán để hiển thị các giao khoán KPI.</p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- Loading State -->
-    <div v-if="searching" class="loading-section">
-      <div class="loading-spinner"></div>
-      <p>Đang tìm kiếm giao khoán...</p>
-    </div>
-
-    <!-- Assignments List -->
-    <div v-if="!searching && assignments.length > 0" class="assignments-section">
-      <div class="form-container">
-        <div class="assignments-header">
-          <h2>Giao khoán KPI</h2>
-          <div class="assignments-summary">
-            <span class="summary-item">
-              <strong>{{ assignments.length }}</strong> giao khoán
-            </span>
-            <span class="summary-item">
-              <strong>{{ pendingCount }}</strong> chưa hoàn thành
-            </span>
-            <span class="summary-item">
-              <strong>{{ completedCount }}</strong> đã hoàn thành
-            </span>
-          </div>
-        </div>
-
-        <div class="assignments-table">
-          <table>
-            <thead>
-              <tr>
-                <th>Nhân viên</th>
-                <th>Kỳ khoán</th>
-                <th>Chỉ tiêu KPI</th>
-                <th>Mục tiêu</th>
-                <th>Thực hiện</th>
-                <th>Điểm</th>
-                <th>Trạng thái</th>
-                <th>Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="assignment in assignments" :key="assignment.Id" class="assignment-row">
-                <td class="employee-info">
-                  <div class="employee-name">{{ assignment.employee?.fullName }}</div>
-                  <div class="employee-unit">{{ assignment.employee?.unit?.Name }}</div>
-                </td>
-                <td class="period-info">
-                  <div class="period-name">{{ assignment.khoanPeriod?.periodName }}</div>
-                  <div class="period-dates">
-                    {{ formatDate(assignment.khoanPeriod?.startDate) }} -
-                    {{ formatDate(assignment.khoanPeriod?.endDate) }}
-                  </div>
-                </td>
-                <td class="indicator-info">
-                  <div class="indicator-name">{{ assignment.indicator?.indicatorName }}</div>
-                  <div class="indicator-details">
-                    Tối đa: {{ assignment.indicator?.maxScore }} điểm
-                    ({{ assignment.indicator?.unit }})
-                  </div>
-                </td>
-                <td class="target-value">
-                  <span class="value">{{ assignment.targetValue }}</span>
-                  <span class="unit">{{ assignment.indicator?.unit }}</span>
-                </td>
-                <td class="actual-value">
-                  <div v-if="editingAssignment === assignment.Id" class="edit-mode">
-                    <input
-                      type="text"
-                      v-model="editingActualValueFormatted"
-                      @input="(e) => handleActualValueInput(e)"
-                      @blur="(e) => handleActualValueBlur(e)"
-                      :placeholder="`Nhập giá trị (${assignment.indicator?.unit})`"
-                      class="actual-input"
-                      @keyup.enter="saveActualValue(assignment)"
-                      @keyup.escape="cancelEdit"
-                    />
-                  </div>
-                  <div v-else class="view-mode">
-                    <span v-if="assignment.actualValue != null" class="value">
-                      {{ assignment.actualValue }}
-                    </span>
-                    <span v-else class="no-value">Chưa nhập</span>
-                    <span class="unit">{{ assignment.indicator?.unit }}</span>
-                  </div>
-                </td>
-                <td class="score-value">
-                  <span v-if="assignment.score != null" class="score">
-                    {{ assignment.score.toFixed(2) }}
-                  </span>
-                  <span v-else class="no-score">Chưa tính</span>
-                </td>
-                <td class="status">
-                  <span class="status-badge" :class="getStatusClass(assignment)">
-                    {{ getStatusText(assignment) }}
-                  </span>
-                </td>
-                <td class="actions">
-                  <div v-if="editingAssignment === assignment.Id" class="edit-actions">
-                    <button
-                      @click="saveActualValue(assignment)"
-                      :disabled="savingActual"
-                      class="action-btn save-btn"
-                    >
-                      ✓
-                    </button>
-                    <button
-                      @click="cancelEdit"
-                      :disabled="savingActual"
-                      class="action-btn cancel-btn"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                  <div v-else class="view-actions">
-                    <button
-                      @click="startEdit(assignment)"
-                      class="action-btn edit-btn"
-                      title="Chỉnh sửa giá trị thực hiện"
-                    >
-                      ✏️
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Empty State -->
-    <div v-if="!searching && assignments.length === 0 && (selectedEmployeeId || selectedPeriodId || selectedBranchId || selectedDepartmentId)" class="empty-state">
-      <div class="form-container">
-        <div class="empty-content">
-          <div class="empty-icon">📋</div>
-          <h3>Không tìm thấy giao khoán</h3>
-          <p>Không có giao khoán KPI nào phù hợp với tiêu chí tìm kiếm.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Initial State -->
-    <div v-if="!searching && assignments.length === 0 && !selectedEmployeeId && !selectedPeriodId && !selectedBranchId && !selectedDepartmentId" class="initial-state">
-      <div class="form-container">
-        <div class="initial-content">
-          <div class="initial-icon">🎯</div>
-          <h3>Chọn tiêu chí tìm kiếm</h3>
-          <p>Vui lòng chọn nhân viên hoặc kỳ khoán để hiển thị các giao khoán KPI.</p>
-        </div>
-      </div>
-    </div>
-      </div> <!-- End Employee Tab -->
+      <!-- End Employee Tab -->
 
       <!-- Unit Tab -->
       <div v-show="activeTab === 'unit'" class="tab-pane">
@@ -289,11 +276,7 @@
                   <label for="unitBranchFilter">🏢 Chi nhánh:</label>
                   <select id="unitBranchFilter" v-model="selectedUnitBranchId" @change="onUnitBranchChange">
                     <option value="">-- Chọn chi nhánh --</option>
-                    <option
-                      v-for="branch in branchOptions"
-                      :key="branch.Id"
-                      :value="branch.Id"
-                    >
+                    <option v-for="branch in branchOptions" :key="branch.Id" :value="branch.Id">
                       🏢 {{ branch.Name }} ({{ branch.Code }})
                     </option>
                   </select>
@@ -303,11 +286,7 @@
                   <label for="unitPeriodFilter">📅 Kỳ khoán:</label>
                   <select id="unitPeriodFilter" v-model="selectedUnitPeriodId" @change="onUnitFilterChange">
                     <option value="">-- Chọn kỳ khoán --</option>
-                    <option
-                      v-for="period in khoanPeriods"
-                      :key="period.Id"
-                      :value="period.Id"
-                    >
+                    <option v-for="period in khoanPeriods" :key="period.Id" :value="period.Id">
                       {{ period.Name }} ({{ formatDate(period.startDate) }} - {{ formatDate(period.endDate) }})
                     </option>
                   </select>
@@ -326,8 +305,9 @@
 
               <div v-if="selectedUnitBranchId" class="filter-summary">
                 <p>
-                  📊 <strong>Chi nhánh được chọn:</strong>
-                  "{{ getUnitBranchName() }}" trong kỳ "{{ getUnitPeriodName() }}"
+                  📊 <strong>Chi nhánh được chọn:</strong> "{{ getUnitBranchName() }}" trong kỳ "{{
+                    getUnitPeriodName()
+                  }}"
                 </p>
               </div>
             </div>
@@ -391,8 +371,8 @@
                         <input
                           type="text"
                           v-model="editingUnitActualValueFormatted"
-                          @input="(e) => handleUnitActualValueInput(e)"
-                          @blur="(e) => handleUnitActualValueBlur(e)"
+                          @input="e => handleUnitActualValueInput(e)"
+                          @blur="e => handleUnitActualValueBlur(e)"
                           class="actual-input"
                           @keyup.enter="saveUnitActualValue(assignment)"
                           @keyup.escape="cancelUnitEdit"
@@ -421,11 +401,7 @@
                         >
                           ✓
                         </button>
-                        <button
-                          @click="cancelUnitEdit"
-                          :disabled="savingUnitActual"
-                          class="action-btn cancel-btn"
-                        >
+                        <button @click="cancelUnitEdit" :disabled="savingUnitActual" class="action-btn cancel-btn">
                           ✕
                         </button>
                       </div>
@@ -447,7 +423,10 @@
         </div>
 
         <!-- Unit Empty State -->
-        <div v-if="!searchingUnit && unitAssignments.length === 0 && (selectedUnitBranchId || selectedUnitPeriodId)" class="empty-state">
+        <div
+          v-if="!searchingUnit && unitAssignments.length === 0 && (selectedUnitBranchId || selectedUnitPeriodId)"
+          class="empty-state"
+        >
           <div class="form-container">
             <div class="empty-content">
               <div class="empty-icon">📋</div>
@@ -458,7 +437,10 @@
         </div>
 
         <!-- Unit Initial State -->
-        <div v-if="!searchingUnit && unitAssignments.length === 0 && !selectedUnitBranchId && !selectedUnitPeriodId" class="initial-state">
+        <div
+          v-if="!searchingUnit && unitAssignments.length === 0 && !selectedUnitBranchId && !selectedUnitPeriodId"
+          class="initial-state"
+        >
           <div class="form-container">
             <div class="initial-content">
               <div class="initial-icon">🏢</div>
@@ -467,633 +449,633 @@
             </div>
           </div>
         </div>
-      </div> <!-- End Unit Tab -->
-
-    </div> <!-- End Tab Content -->
+      </div>
+      <!-- End Unit Tab -->
+    </div>
+    <!-- End Tab Content -->
   </div>
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue';
-import { useRouter } from 'vue-router';
-import api from '../services/api';
-import { isAuthenticated } from '../services/auth';
-import { useNumberInput } from '../utils/numberFormat';
+import { computed, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import api from '../services/api'
+import { isAuthenticated } from '../services/auth'
+import { useNumberInput } from '../utils/numberFormat'
 
-const router = useRouter();
+const router = useRouter()
 
 // Reactive data
-const searching = ref(false);
-const savingActual = ref(false);
-const errorMessage = ref('');
-const successMessage = ref('');
+const searching = ref(false)
+const savingActual = ref(false)
+const errorMessage = ref('')
+const successMessage = ref('')
 
 // Tab management
-const activeTab = ref('employee');
+const activeTab = ref('employee')
 
-const employees = ref([]);
-const units = ref([]);
-const khoanPeriods = ref([]);
-const assignments = ref([]);
+const employees = ref([])
+const units = ref([])
+const khoanPeriods = ref([])
+const assignments = ref([])
 
-const selectedEmployeeId = ref('');
-const selectedPeriodId = ref('');
-const selectedBranchId = ref('');
-const selectedDepartmentId = ref('');
+const selectedEmployeeId = ref('')
+const selectedPeriodId = ref('')
+const selectedBranchId = ref('')
+const selectedDepartmentId = ref('')
 
-const editingAssignment = ref(null);
-const editingActualValue = ref('');
-const editingActualValueFormatted = ref('');
+const editingAssignment = ref(null)
+const editingActualValue = ref('')
+const editingActualValueFormatted = ref('')
 
 // Unit tab specific data
-const unitAssignments = ref([]);
-const selectedUnitBranchId = ref('');
-const selectedUnitPeriodId = ref('');
-const searchingUnit = ref(false);
-const editingUnitAssignment = ref(null);
-const editingUnitActualValue = ref('');
-const editingUnitActualValueFormatted = ref('');
-const savingUnitActual = ref(false);
+const unitAssignments = ref([])
+const selectedUnitBranchId = ref('')
+const selectedUnitPeriodId = ref('')
+const searchingUnit = ref(false)
+const editingUnitAssignment = ref(null)
+const editingUnitActualValue = ref('')
+const editingUnitActualValueFormatted = ref('')
+const savingUnitActual = ref(false)
 
 // 🔢 Initialize number input utility
 const { handleInput, handleBlur, formatNumber, parseFormattedNumber } = useNumberInput({
   maxDecimalPlaces: 2,
-  allowNegative: false
-});
+  allowNegative: false,
+})
 
 // Computed properties
 // Updated branchOptions: Custom ordering as requested
 const branchOptions = computed(() => {
-  if (!units.Value || units.Value.length === 0) return [];
+  if (!units.Value || units.Value.length === 0) return []
 
   // Định nghĩa thứ tự theo yêu cầu (cập nhật tên mới): CnLaiChau, CnBinhLu, CnPhongTho, CnSinHo, CnBumTo, CnThanUyen, CnDoanKet, CnTanUyen, CnNamHang
   const customOrder = [
-    'CnLaiChau',     // Chi nhánh tỉnh Lai Châu
-    'CnBinhLu',      // Chi nhánh Bình Lư
-    'CnPhongTho',    // Chi nhánh Phong Thổ
-    'CnSinHo',       // Chi nhánh Sìn Hồ
-    'CnBumTo',       // Chi nhánh Bum Tở
-    'CnThanUyen',    // Chi nhánh Than Uyên
-    'CnDoanKet',     // Chi nhánh Đoàn Kết
-    'CnTanUyen',     // Chi nhánh Tân Uyên
-    'CnNamHang'      // Chi nhánh Nậm Hàng
-  ];
+    'CnLaiChau', // Chi nhánh tỉnh Lai Châu
+    'CnBinhLu', // Chi nhánh Bình Lư
+    'CnPhongTho', // Chi nhánh Phong Thổ
+    'CnSinHo', // Chi nhánh Sìn Hồ
+    'CnBumTo', // Chi nhánh Bum Tở
+    'CnThanUyen', // Chi nhánh Than Uyên
+    'CnDoanKet', // Chi nhánh Đoàn Kết
+    'CnTanUyen', // Chi nhánh Tân Uyên
+    'CnNamHang', // Chi nhánh Nậm Hàng
+  ]
 
   return units.value
     .filter(unit => {
-      const type = (unit.Type || '').toUpperCase();
-      return type === 'CNL1' || type === 'CNL2';
+      const type = (unit.Type || '').toUpperCase()
+      return type === 'CNL1' || type === 'CNL2'
     })
     .sort((a, b) => {
-      const indexA = customOrder.indexOf(a.Code);
-      const indexB = customOrder.indexOf(b.Code);
+      const indexA = customOrder.indexOf(a.Code)
+      const indexB = customOrder.indexOf(b.Code)
 
       // Nếu cả hai đều có trong custom order, sắp xếp theo thứ tự đó
       if (indexA !== -1 && indexB !== -1) {
-        return indexA - indexB;
+        return indexA - indexB
       }
 
       // Nếu chỉ có một trong hai có trong custom order, ưu tiên cái đó
-      if (indexA !== -1) return -1;
-      if (indexB !== -1) return 1;
+      if (indexA !== -1) return -1
+      if (indexB !== -1) return 1
 
       // Nếu cả hai đều không có trong custom order, sắp xếp theo tên
-      return (a.Name || '').localeCompare(b.Name || '');
-    });
-});
+      return (a.Name || '').localeCompare(b.Name || '')
+    })
+})
 
 const departmentOptions = computed(() => {
-  if (!selectedBranchId.Value || !units.Value || units.Value.length === 0) return [];
+  if (!selectedBranchId.Value || !units.Value || units.Value.length === 0) return []
 
-  const branchId = parseInt(selectedBranchId.Value);
-  const branch = units.Value.find(u => u.Id === branchId);
-  if (!branch) return [];
+  const branchId = parseInt(selectedBranchId.Value)
+  const branch = units.Value.find(u => u.Id === branchId)
+  if (!branch) return []
 
-  const children = units.Value.filter(u => u.parentUnitId === branchId);
+  const children = units.Value.filter(u => u.parentUnitId === branchId)
 
   // Lọc chỉ lấy các phòng nghiệp vụ (PNVL1, PNVL2) và phòng giao dịch (PGD), loại bỏ các chi nhánh con (CNL2)
   const departments = children.filter(u => {
-    const unitType = (u.Type || '').toUpperCase();
-    return unitType.includes('PNVL') || unitType === 'PGD';
-  });
+    const unitType = (u.Type || '').toUpperCase()
+    return unitType.includes('PNVL') || unitType === 'PGD'
+  })
 
   // Sắp xếp theo thứ tự: Ban Giám đốc, Phòng Khách hàng, Phòng Kế toán & Ngân quỹ, Phòng giao dịch
-  const getDepartmentSortOrder = (name) => {
-    const lowerName = (name || '').toLowerCase();
-    if (lowerName.includes('ban giám đốc')) return 1;
-    if (lowerName.includes('phòng khách hàng')) return 2;
-    if (lowerName.includes('phòng kế toán')) return 3;
-    if (lowerName.includes('phòng giao dịch')) return 4;
-    return 999;
-  };
-
-  return departments.sort((a, b) => getDepartmentSortOrder(a.Name) - getDepartmentSortOrder(b.Name));
-});
-
-const filteredEmployees = computed(() => {
-  if (!employees.Value || employees.Value.length === 0) return [];
-
-  let filtered = [...employees.Value];
-
-  if (selectedDepartmentId.Value) {
-    const deptId = parseInt(selectedDepartmentId.Value);
-    filtered = filtered.filter(emp => emp.unitId === deptId);
-  } else if (selectedBranchId.Value) {
-    const branchDepartments = departmentOptions.Value.map(dept => dept.Id);
-    filtered = filtered.filter(emp => branchDepartments.includes(emp.unitId));
+  const getDepartmentSortOrder = name => {
+    const lowerName = (name || '').toLowerCase()
+    if (lowerName.includes('ban giám đốc')) return 1
+    if (lowerName.includes('phòng khách hàng')) return 2
+    if (lowerName.includes('phòng kế toán')) return 3
+    if (lowerName.includes('phòng giao dịch')) return 4
+    return 999
   }
 
-  return filtered;
-});
+  return departments.sort((a, b) => getDepartmentSortOrder(a.Name) - getDepartmentSortOrder(b.Name))
+})
+
+const filteredEmployees = computed(() => {
+  if (!employees.Value || employees.Value.length === 0) return []
+
+  let filtered = [...employees.Value]
+
+  if (selectedDepartmentId.Value) {
+    const deptId = parseInt(selectedDepartmentId.Value)
+    filtered = filtered.filter(emp => emp.unitId === deptId)
+  } else if (selectedBranchId.Value) {
+    const branchDepartments = departmentOptions.Value.map(dept => dept.Id)
+    filtered = filtered.filter(emp => branchDepartments.includes(emp.unitId))
+  }
+
+  return filtered
+})
 
 const canSearch = computed(() => {
-  return selectedEmployeeId.Value || selectedPeriodId.Value || selectedBranchId.Value || selectedDepartmentId.Value;
-});
+  return selectedEmployeeId.Value || selectedPeriodId.Value || selectedBranchId.Value || selectedDepartmentId.Value
+})
 
 const pendingCount = computed(() => {
-  return assignments.Value.filter(a => a.actualValue == null).length;
-});
+  return assignments.Value.filter(a => a.actualValue == null).length
+})
 
 const completedCount = computed(() => {
-  return assignments.Value.filter(a => a.actualValue != null).length;
-});
+  return assignments.Value.filter(a => a.actualValue != null).length
+})
 
 // Unit tab computed properties
 const unitPendingCount = computed(() => {
-  return unitAssignments.Value.filter(a => a.actualValue == null).length;
-});
+  return unitAssignments.Value.filter(a => a.actualValue == null).length
+})
 
 const unitCompletedCount = computed(() => {
-  return unitAssignments.Value.filter(a => a.actualValue != null).length;
-});
+  return unitAssignments.Value.filter(a => a.actualValue != null).length
+})
 
 const canSearchUnit = computed(() => {
-  return selectedUnitBranchId.Value && selectedUnitPeriodId.Value;
-});
+  return selectedUnitBranchId.Value && selectedUnitPeriodId.Value
+})
 
 // Methods
 
 const clearMessages = () => {
-  errorMessage.Value = '';
-  successMessage.Value = '';
-};
+  errorMessage.Value = ''
+  successMessage.Value = ''
+}
 
-const showError = (message) => {
-  errorMessage.Value = message;
-  successMessage.Value = '';
+const showError = message => {
+  errorMessage.Value = message
+  successMessage.Value = ''
   setTimeout(() => {
-    errorMessage.Value = '';
-  }, 5000);
-};
+    errorMessage.Value = ''
+  }, 5000)
+}
 
-const showSuccess = (message) => {
-  successMessage.Value = message;
-  errorMessage.Value = '';
+const showSuccess = message => {
+  successMessage.Value = message
+  errorMessage.Value = ''
   setTimeout(() => {
-    successMessage.Value = '';
-  }, 3000);
-};
+    successMessage.Value = ''
+  }, 3000)
+}
 
-const formatDate = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('vi-VN');
-};
+const formatDate = dateString => {
+  if (!dateString) return ''
+  const date = new Date(dateString)
+  return date.toLocaleDateString('vi-VN')
+}
 
 const getBranchName = () => {
-  if (!selectedBranchId.Value) return '';
-  const branch = units.Value.find(u => u.Id === parseInt(selectedBranchId.Value));
-  return branch ? branch.Name : '';
-};
+  if (!selectedBranchId.Value) return ''
+  const branch = units.Value.find(u => u.Id === parseInt(selectedBranchId.Value))
+  return branch ? branch.Name : ''
+}
 
 const getDepartmentName = () => {
-  if (!selectedDepartmentId.Value) return '';
-  const dept = units.Value.find(u => u.Id === parseInt(selectedDepartmentId.Value));
-  return dept ? dept.Name : '';
-};
+  if (!selectedDepartmentId.Value) return ''
+  const dept = units.Value.find(u => u.Id === parseInt(selectedDepartmentId.Value))
+  return dept ? dept.Name : ''
+}
 
 const onBranchChange = () => {
-  selectedDepartmentId.Value = '';
-  selectedEmployeeId.Value = '';
-  assignments.Value = [];
-  clearMessages();
-};
+  selectedDepartmentId.Value = ''
+  selectedEmployeeId.Value = ''
+  assignments.Value = []
+  clearMessages()
+}
 
 const onDepartmentChange = () => {
-  selectedEmployeeId.Value = '';
-  assignments.Value = [];
-  clearMessages();
-};
+  selectedEmployeeId.Value = ''
+  assignments.Value = []
+  clearMessages()
+}
 
-const getStatusClass = (assignment) => {
+const getStatusClass = assignment => {
   if (assignment.actualValue != null) {
     if (assignment.score != null && assignment.score > 0) {
-      return 'completed';
+      return 'completed'
     } else {
-      return 'entered';
+      return 'entered'
     }
   }
-  return 'pending';
-};
+  return 'pending'
+}
 
-const getStatusText = (assignment) => {
+const getStatusText = assignment => {
   if (assignment.actualValue != null) {
     if (assignment.score != null && assignment.score > 0) {
-      return 'Hoàn thành';
+      return 'Hoàn thành'
     } else {
-      return 'Đã nhập';
+      return 'Đã nhập'
     }
   }
-  return 'Chưa nhập';
-};
+  return 'Chưa nhập'
+}
 
 const fetchEmployees = async () => {
   try {
-    console.log('🔄 Fetching employees...');
-    const response = await api.get('/Employees');
-    let employeesData = [];
+    console.log('🔄 Fetching employees...')
+    const response = await api.get('/Employees')
+    let employeesData = []
 
     if (response.data && Array.isArray(response.data.$values)) {
-      employeesData = response.data.$values;
+      employeesData = response.data.$values
     } else if (Array.isArray(response.data)) {
-      employeesData = response.data;
+      employeesData = response.data
     }
 
-    employees.Value = employeesData.filter(emp => emp.isActive);
-    console.log('✅ Employees loaded:', employees.Value.length);
+    employees.Value = employeesData.filter(emp => emp.isActive)
+    console.log('✅ Employees loaded:', employees.Value.length)
   } catch (error) {
-    console.error('❌ Error loading employees:', error);
-    showError('Không thể tải danh sách nhân viên. Vui lòng thử lại.');
-    throw error; // Re-throw to be caught by Promise.all
+    console.error('❌ Error loading employees:', error)
+    showError('Không thể tải danh sách nhân viên. Vui lòng thử lại.')
+    throw error // Re-throw to be caught by Promise.all
   }
-};
+}
 
 const fetchKhoanPeriods = async () => {
   try {
-    console.log('🔄 Fetching khoan periods...');
-    const response = await api.get('/KhoanPeriods');
-    let periodsData = [];
+    console.log('🔄 Fetching khoan periods...')
+    const response = await api.get('/KhoanPeriods')
+    let periodsData = []
 
     if (response.data && Array.isArray(response.data.$values)) {
-      periodsData = response.data.$values;
+      periodsData = response.data.$values
     } else if (Array.isArray(response.data)) {
-      periodsData = response.data;
+      periodsData = response.data
     }
 
-    khoanPeriods.Value = periodsData.filter(period =>
-      period.Status === 'OPEN' || period.Status === 'PROCESSING' || period.Status === 'PENDINGAPPROVAL'
-    );
-    console.log('✅ Khoan Periods loaded:', khoanPeriods.Value.length);
+    khoanPeriods.Value = periodsData.filter(
+      period => period.Status === 'OPEN' || period.Status === 'PROCESSING' || period.Status === 'PENDINGAPPROVAL'
+    )
+    console.log('✅ Khoan Periods loaded:', khoanPeriods.Value.length)
   } catch (error) {
-    console.error('❌ Error loading khoan periods:', error);
-    showError('Không thể tải danh sách kỳ khoán. Vui lòng thử lại.');
-    throw error; // Re-throw to be caught by Promise.all
+    console.error('❌ Error loading khoan periods:', error)
+    showError('Không thể tải danh sách kỳ khoán. Vui lòng thử lại.')
+    throw error // Re-throw to be caught by Promise.all
   }
-};
+}
 
 const fetchUnits = async () => {
   try {
-    console.log('🔄 Fetching units...');
-    const response = await api.get('/Units');
-    let unitsData = [];
+    console.log('🔄 Fetching units...')
+    const response = await api.get('/Units')
+    let unitsData = []
 
     if (response.data && Array.isArray(response.data.$values)) {
-      unitsData = response.data.$values;
+      unitsData = response.data.$values
     } else if (Array.isArray(response.data)) {
-      unitsData = response.data;
+      unitsData = response.data
     }
 
-    units.Value = unitsData;
-    console.log('✅ Units loaded:', units.Value.length);
+    units.Value = unitsData
+    console.log('✅ Units loaded:', units.Value.length)
   } catch (error) {
-    console.error('❌ Error loading units:', error);
-    showError('Không thể tải danh sách đơn vị. Vui lòng thử lại.');
-    throw error; // Re-throw to be caught by Promise.all
+    console.error('❌ Error loading units:', error)
+    showError('Không thể tải danh sách đơn vị. Vui lòng thử lại.')
+    throw error // Re-throw to be caught by Promise.all
   }
-};
+}
 
 const onFilterChange = () => {
-  assignments.Value = [];
-  clearMessages();
-};
+  assignments.Value = []
+  clearMessages()
+}
 
 const searchAssignments = async () => {
   if (!canSearch.Value) {
-    showError('Vui lòng chọn ít nhất một tiêu chí tìm kiếm.');
-    return;
+    showError('Vui lòng chọn ít nhất một tiêu chí tìm kiếm.')
+    return
   }
 
   try {
-    searching.Value = true;
-    clearMessages();
+    searching.Value = true
+    clearMessages()
 
     // Build search URL based on filters
-    let url = '/KpiAssignment/search?';
-    const params = [];
+    let url = '/KpiAssignment/search?'
+    const params = []
 
     if (selectedEmployeeId.Value) {
-      params.push(`employeeId=${selectedEmployeeId.Value}`);
+      params.push(`employeeId=${selectedEmployeeId.Value}`)
     }
 
     if (selectedPeriodId.Value) {
-      params.push(`periodId=${selectedPeriodId.Value}`);
+      params.push(`periodId=${selectedPeriodId.Value}`)
     }
 
     // Add unit-based filtering
     if (selectedDepartmentId.Value) {
-      params.push(`unitId=${selectedDepartmentId.Value}`);
+      params.push(`unitId=${selectedDepartmentId.Value}`)
     } else if (selectedBranchId.Value && !selectedEmployeeId.Value) {
       // If branch selected but no specific department/employee, get all departments under the branch
-      const branchDepartments = departmentOptions.Value.map(dept => dept.Id);
+      const branchDepartments = departmentOptions.Value.map(dept => dept.Id)
       if (branchDepartments.length > 0) {
         // For simplicity, we'll use the first department or handle multiple department search differently
         // Note: This is a limitation of the current API that only accepts single unitId
         // A better approach would be to extend API to accept multiple unitIds
-        params.push(`unitId=${branchDepartments[0]}`);
+        params.push(`unitId=${branchDepartments[0]}`)
       }
     }
 
-    url += params.join('&');
+    url += params.join('&')
 
-    const response = await api.get(url);
-    let assignmentsData = [];
+    const response = await api.get(url)
+    let assignmentsData = []
 
     if (response.data && Array.isArray(response.data.$values)) {
-      assignmentsData = response.data.$values;
+      assignmentsData = response.data.$values
     } else if (Array.isArray(response.data)) {
-      assignmentsData = response.data;
+      assignmentsData = response.data
     }
 
-    assignments.Value = assignmentsData;
+    assignments.Value = assignmentsData
 
-    console.log('Assignments loaded:', assignments.Value.length);
+    console.log('Assignments loaded:', assignments.Value.length)
 
     if (assignments.Value.length > 0) {
-      showSuccess(`Tìm thấy ${assignments.Value.length} giao khoán KPI.`);
+      showSuccess(`Tìm thấy ${assignments.Value.length} giao khoán KPI.`)
     }
-
   } catch (error) {
-    console.error('Error searching assignments:', error);
+    console.error('Error searching assignments:', error)
     if (error.response && error.response.Status === 404) {
-      assignments.Value = [];
-      showError('Không tìm thấy giao khoán KPI nào phù hợp.');
+      assignments.Value = []
+      showError('Không tìm thấy giao khoán KPI nào phù hợp.')
     } else {
-      showError('Có lỗi xảy ra khi tìm kiếm. Vui lòng thử lại.');
+      showError('Có lỗi xảy ra khi tìm kiếm. Vui lòng thử lại.')
     }
   } finally {
-    searching.Value = false;
+    searching.Value = false
   }
-};
+}
 
-const startEdit = (assignment) => {
-  editingAssignment.Value = assignment.Id;
-  editingActualValue.Value = assignment.actualValue || '';
-  editingActualValueFormatted.Value = assignment.actualValue ? formatNumber(assignment.actualValue) : '';
-};
+const startEdit = assignment => {
+  editingAssignment.Value = assignment.Id
+  editingActualValue.Value = assignment.actualValue || ''
+  editingActualValueFormatted.Value = assignment.actualValue ? formatNumber(assignment.actualValue) : ''
+}
 
 const cancelEdit = () => {
-  editingAssignment.Value = null;
-  editingActualValue.Value = '';
-  editingActualValueFormatted.Value = '';
-};
+  editingAssignment.Value = null
+  editingActualValue.Value = ''
+  editingActualValueFormatted.Value = ''
+}
 
-const saveActualValue = async (assignment) => {
+const saveActualValue = async assignment => {
   try {
-    savingActual.Value = true;
-    clearMessages();
+    savingActual.Value = true
+    clearMessages()
 
     const updateData = {
       assignmentId: assignment.Id,
-      actualValue: editingActualValue.Value ? parseFloat(editingActualValue.Value) : null
-    };
+      actualValue: editingActualValue.Value ? parseFloat(editingActualValue.Value) : null,
+    }
 
-    const response = await api.put('/KpiAssignment/update-single-actual', updateData);
+    const response = await api.put('/KpiAssignment/update-single-actual', updateData)
 
     // Update local data
-    const index = assignments.Value.findIndex(a => a.Id === assignment.Id);
+    const index = assignments.Value.findIndex(a => a.Id === assignment.Id)
     if (index !== -1) {
-      assignments.Value[index].actualValue = updateData.actualValue;
+      assignments.Value[index].actualValue = updateData.actualValue
 
       // Update score if returned from API
       if (response.data && response.data.score != null) {
-        assignments.Value[index].score = response.data.score;
+        assignments.Value[index].score = response.data.score
       }
     }
 
-    showSuccess('Cập nhật giá trị thực hiện thành công!');
+    showSuccess('Cập nhật giá trị thực hiện thành công!')
 
     // Exit edit mode
-    cancelEdit();
-
+    cancelEdit()
   } catch (error) {
-    console.error('Error updating actual value:', error);
+    console.error('Error updating actual value:', error)
     if (error.response && error.response.data && error.response.data.message) {
-      showError(`Lỗi cập nhật: ${error.response.data.message}`);
+      showError(`Lỗi cập nhật: ${error.response.data.message}`)
     } else {
-      showError('Có lỗi xảy ra khi cập nhật giá trị. Vui lòng thử lại.');
+      showError('Có lỗi xảy ra khi cập nhật giá trị. Vui lòng thử lại.')
     }
   } finally {
-    savingActual.Value = false;
+    savingActual.Value = false
   }
-};
+}
 
 // Number input handlers for employee actual values
-const handleActualValueInput = (event) => {
-  const formattedValue = handleInput(event);
-  editingActualValueFormatted.Value = formattedValue;
-  editingActualValue.Value = parseFormattedNumber(formattedValue);
-};
+const handleActualValueInput = event => {
+  const formattedValue = handleInput(event)
+  editingActualValueFormatted.Value = formattedValue
+  editingActualValue.Value = parseFormattedNumber(formattedValue)
+}
 
-const handleActualValueBlur = (event) => {
-  const formattedValue = handleBlur(event);
-  editingActualValueFormatted.Value = formattedValue;
-  editingActualValue.Value = parseFormattedNumber(formattedValue);
-};
+const handleActualValueBlur = event => {
+  const formattedValue = handleBlur(event)
+  editingActualValueFormatted.Value = formattedValue
+  editingActualValue.Value = parseFormattedNumber(formattedValue)
+}
 
 // Unit tab methods
 const searchUnitAssignments = async () => {
   if (!canSearchUnit.Value) {
-    showError('Vui lòng chọn chi nhánh và kỳ khoán.');
-    return;
+    showError('Vui lòng chọn chi nhánh và kỳ khoán.')
+    return
   }
 
   try {
-    searchingUnit.Value = true;
-    clearMessages();
+    searchingUnit.Value = true
+    clearMessages()
 
     console.log('🔍 Searching unit assignments...', {
       unitId: selectedUnitBranchId.Value,
-      periodId: selectedUnitPeriodId.value
-    });
+      periodId: selectedUnitPeriodId.value,
+    })
 
-    const response = await api.get(`/UnitKhoanAssignments/search?unitId=${selectedUnitBranchId.Value}&periodId=${selectedUnitPeriodId.Value}`);
+    const response = await api.get(
+      `/UnitKhoanAssignments/search?unitId=${selectedUnitBranchId.Value}&periodId=${selectedUnitPeriodId.Value}`
+    )
 
-    let assignmentsData = [];
+    let assignmentsData = []
     if (response.data && Array.isArray(response.data.$values)) {
-      assignmentsData = response.data.$values;
+      assignmentsData = response.data.$values
     } else if (Array.isArray(response.data)) {
-      assignmentsData = response.data;
+      assignmentsData = response.data
     }
 
-    unitAssignments.Value = assignmentsData;
+    unitAssignments.Value = assignmentsData
 
-    console.log('✅ Unit assignments loaded:', unitAssignments.Value.length);
+    console.log('✅ Unit assignments loaded:', unitAssignments.Value.length)
 
     if (unitAssignments.Value.length > 0) {
-      showSuccess(`Tìm thấy ${unitAssignments.Value.length} giao khoán KPI cho chi nhánh.`);
+      showSuccess(`Tìm thấy ${unitAssignments.Value.length} giao khoán KPI cho chi nhánh.`)
     } else {
-      showError('Không tìm thấy giao khoán KPI nào cho chi nhánh này.');
+      showError('Không tìm thấy giao khoán KPI nào cho chi nhánh này.')
     }
-
   } catch (error) {
-    console.error('❌ Error searching unit assignments:', error);
+    console.error('❌ Error searching unit assignments:', error)
     if (error.response && error.response.Status === 404) {
-      unitAssignments.Value = [];
-      showError('Không tìm thấy giao khoán KPI nào cho chi nhánh này.');
+      unitAssignments.Value = []
+      showError('Không tìm thấy giao khoán KPI nào cho chi nhánh này.')
     } else {
-      showError('Có lỗi xảy ra khi tìm kiếm. Vui lòng thử lại.');
+      showError('Có lỗi xảy ra khi tìm kiếm. Vui lòng thử lại.')
     }
   } finally {
-    searchingUnit.Value = false;
+    searchingUnit.Value = false
   }
-};
+}
 
-const startUnitEdit = (assignment) => {
-  editingUnitAssignment.Value = assignment.Id;
-  editingUnitActualValue.Value = assignment.actualValue || '';
-  editingUnitActualValueFormatted.Value = assignment.actualValue ? formatNumber(assignment.actualValue) : '';
-};
+const startUnitEdit = assignment => {
+  editingUnitAssignment.Value = assignment.Id
+  editingUnitActualValue.Value = assignment.actualValue || ''
+  editingUnitActualValueFormatted.Value = assignment.actualValue ? formatNumber(assignment.actualValue) : ''
+}
 
 const cancelUnitEdit = () => {
-  editingUnitAssignment.Value = null;
-  editingUnitActualValue.Value = '';
-  editingUnitActualValueFormatted.Value = '';
-};
+  editingUnitAssignment.Value = null
+  editingUnitActualValue.Value = ''
+  editingUnitActualValueFormatted.Value = ''
+}
 
-const saveUnitActualValue = async (assignment) => {
+const saveUnitActualValue = async assignment => {
   try {
-    savingUnitActual.Value = true;
-    clearMessages();
+    savingUnitActual.Value = true
+    clearMessages()
 
     const updateData = {
       assignmentId: assignment.Id,
-      actualValue: editingUnitActualValue.Value ? parseFloat(editingUnitActualValue.Value) : null
-    };
+      actualValue: editingUnitActualValue.Value ? parseFloat(editingUnitActualValue.Value) : null,
+    }
 
-    console.log('💾 Saving unit actual value:', updateData);
+    console.log('💾 Saving unit actual value:', updateData)
 
-    const response = await api.put('/UnitKhoanAssignments/update-actual', updateData);
+    const response = await api.put('/UnitKhoanAssignments/update-actual', updateData)
 
     // Update local data
-    const index = unitAssignments.Value.findIndex(a => a.Id === assignment.Id);
+    const index = unitAssignments.Value.findIndex(a => a.Id === assignment.Id)
     if (index !== -1) {
-      unitAssignments.Value[index].actualValue = updateData.actualValue;
+      unitAssignments.Value[index].actualValue = updateData.actualValue
 
       // Update score if returned from API
       if (response.data && response.data.score != null) {
-        unitAssignments.Value[index].score = response.data.score;
+        unitAssignments.Value[index].score = response.data.score
       }
     }
 
-    showSuccess('Cập nhật giá trị thực hiện cho chi nhánh thành công!');
+    showSuccess('Cập nhật giá trị thực hiện cho chi nhánh thành công!')
 
     // Exit edit mode
-    cancelUnitEdit();
-
+    cancelUnitEdit()
   } catch (error) {
-    console.error('❌ Error updating unit actual value:', error);
+    console.error('❌ Error updating unit actual value:', error)
     if (error.response && error.response.data && error.response.data.message) {
-      showError(`Lỗi cập nhật: ${error.response.data.message}`);
+      showError(`Lỗi cập nhật: ${error.response.data.message}`)
     } else {
-      showError('Có lỗi xảy ra khi cập nhật giá trị cho chi nhánh. Vui lòng thử lại.');
+      showError('Có lỗi xảy ra khi cập nhật giá trị cho chi nhánh. Vui lòng thử lại.')
     }
   } finally {
-    savingUnitActual.Value = false;
+    savingUnitActual.Value = false
   }
-};
+}
 
 // Number input handlers for unit actual values
-const handleUnitActualValueInput = (event) => {
-  const formattedValue = handleInput(event);
-  editingUnitActualValueFormatted.Value = formattedValue;
-  editingUnitActualValue.Value = parseFormattedNumber(formattedValue);
-};
+const handleUnitActualValueInput = event => {
+  const formattedValue = handleInput(event)
+  editingUnitActualValueFormatted.Value = formattedValue
+  editingUnitActualValue.Value = parseFormattedNumber(formattedValue)
+}
 
-const handleUnitActualValueBlur = (event) => {
-  const formattedValue = handleBlur(event);
-  editingUnitActualValueFormatted.Value = formattedValue;
-  editingUnitActualValue.Value = parseFormattedNumber(formattedValue);
-};
+const handleUnitActualValueBlur = event => {
+  const formattedValue = handleBlur(event)
+  editingUnitActualValueFormatted.Value = formattedValue
+  editingUnitActualValue.Value = parseFormattedNumber(formattedValue)
+}
 
 const onUnitFilterChange = () => {
-  unitAssignments.Value = [];
-  clearMessages();
-};
+  unitAssignments.Value = []
+  clearMessages()
+}
 
 const onUnitBranchChange = () => {
-  unitAssignments.Value = [];
-  clearMessages();
-};
+  unitAssignments.Value = []
+  clearMessages()
+}
 
 const getUnitBranchName = () => {
-  if (!selectedUnitBranchId.Value) return '';
-  const branch = units.Value.find(u => u.Id === parseInt(selectedUnitBranchId.Value));
-  return branch ? branch.Name : '';
-};
+  if (!selectedUnitBranchId.Value) return ''
+  const branch = units.Value.find(u => u.Id === parseInt(selectedUnitBranchId.Value))
+  return branch ? branch.Name : ''
+}
 
 const getUnitPeriodName = () => {
-  if (!selectedUnitPeriodId.Value) return '';
-  const period = khoanPeriods.Value.find(p => p.Id === parseInt(selectedUnitPeriodId.Value));
-  return period ? period.Name : '';
-};
+  if (!selectedUnitPeriodId.Value) return ''
+  const period = khoanPeriods.Value.find(p => p.Id === parseInt(selectedUnitPeriodId.Value))
+  return period ? period.Name : ''
+}
 
 // Tab management methods
-const switchTab = (tabName) => {
-  activeTab.Value = tabName;
-  clearMessages();
+const switchTab = tabName => {
+  activeTab.Value = tabName
+  clearMessages()
 
   // Clear data when switching tabs
   if (tabName === 'employee') {
-    unitAssignments.Value = [];
-    selectedUnitBranchId.Value = '';
-    selectedUnitPeriodId.Value = '';
+    unitAssignments.Value = []
+    selectedUnitBranchId.Value = ''
+    selectedUnitPeriodId.Value = ''
   } else if (tabName === 'unit') {
-    assignments.Value = [];
-    selectedEmployeeId.Value = '';
-    selectedPeriodId.Value = '';
-    selectedBranchId.Value = '';
-    selectedDepartmentId.Value = '';
+    assignments.Value = []
+    selectedEmployeeId.Value = ''
+    selectedPeriodId.Value = ''
+    selectedBranchId.Value = ''
+    selectedDepartmentId.Value = ''
   }
-};
+}
 
 // Lifecycle
 onMounted(async () => {
   // Note: Authentication is temporarily bypassed via router meta.public for debugging
   if (!isAuthenticated()) {
-    console.warn('⚠️ User not authenticated, but route allows public access for debugging');
+    console.warn('⚠️ User not authenticated, but route allows public access for debugging')
   }
 
   try {
-    console.log('🔄 KpiActualValuesView: Starting initial data load...');
+    console.log('🔄 KpiActualValuesView: Starting initial data load...')
 
     // Load data sequentially to avoid race conditions
-    console.log('📊 Loading employees...');
-    await fetchEmployees();
+    console.log('📊 Loading employees...')
+    await fetchEmployees()
 
-    console.log('🏢 Loading units...');
-    await fetchUnits();
+    console.log('🏢 Loading units...')
+    await fetchUnits()
 
-    console.log('📅 Loading khoan periods...');
-    await fetchKhoanPeriods();
+    console.log('📅 Loading khoan periods...')
+    await fetchKhoanPeriods()
 
-    console.log('✅ KpiActualValuesView: All data loaded successfully');
-    console.log(`📊 Loaded: ${employees.Value.length} employees, ${units.Value.length} units, ${khoanPeriods.Value.length} periods`);
-
+    console.log('✅ KpiActualValuesView: All data loaded successfully')
+    console.log(
+      `📊 Loaded: ${employees.Value.length} employees, ${units.Value.length} units, ${khoanPeriods.Value.length} periods`
+    )
   } catch (error) {
-    console.error('❌ KpiActualValuesView: Error loading initial data:', error);
-    showError('Không thể tải dữ liệu ban đầu. Vui lòng tải lại trang.');
+    console.error('❌ KpiActualValuesView: Error loading initial data:', error)
+    showError('Không thể tải dữ liệu ban đầu. Vui lòng tải lại trang.')
   }
-});
+})
 </script>
 
 <style scoped>
@@ -1109,14 +1091,14 @@ onMounted(async () => {
 }
 
 .header-section h1 {
-  color: #8B1538;
+  color: #8b1538;
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 10px;
 }
 
 .subtitle {
-  color: #A91B47;
+  color: #a91b47;
   font-size: 1.2rem;
   font-weight: 500;
 }
@@ -1143,13 +1125,13 @@ onMounted(async () => {
 }
 
 .tab-button:hover {
-  color: #8B1538;
+  color: #8b1538;
   background-color: #f8f9fa;
 }
 
 .tab-button.active {
-  color: #8B1538;
-  border-bottom-color: #8B1538;
+  color: #8b1538;
+  border-bottom-color: #8b1538;
   background-color: #fff;
 }
 
@@ -1201,7 +1183,7 @@ onMounted(async () => {
 .loading-spinner {
   border: 3px solid rgba(139, 21, 56, 0.3);
   border-radius: 50%;
-  border-top: 3px solid #8B1538;
+  border-top: 3px solid #8b1538;
   width: 30px;
   height: 30px;
   animation: spin 1s linear infinite;
@@ -1210,8 +1192,12 @@ onMounted(async () => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .form-container {
@@ -1226,7 +1212,7 @@ onMounted(async () => {
 .form-container h2 {
   margin-top: 0;
   margin-bottom: 20px;
-  color: #8B1538;
+  color: #8b1538;
   font-size: 1.5rem;
   font-weight: 600;
 }
@@ -1265,7 +1251,7 @@ onMounted(async () => {
 
 .form-group select:focus {
   outline: none;
-  border-color: #8B1538;
+  border-color: #8b1538;
   box-shadow: 0 0 0 3px rgba(139, 21, 56, 0.1);
 }
 
@@ -1286,13 +1272,13 @@ onMounted(async () => {
 }
 
 .search-btn {
-  background: linear-gradient(135deg, #8B1538, #A91B47);
+  background: linear-gradient(135deg, #8b1538, #a91b47);
   color: white;
   min-width: 120px;
 }
 
 .search-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, #6B1028, #891B42);
+  background: linear-gradient(135deg, #6b1028, #891b42);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(139, 21, 56, 0.3);
 }
@@ -1318,7 +1304,7 @@ onMounted(async () => {
 }
 
 .summary-item strong {
-  color: #8B1538;
+  color: #8b1538;
   font-size: 1.1rem;
 }
 
@@ -1402,13 +1388,13 @@ onMounted(async () => {
 
 .score {
   font-weight: 600;
-  color: #8B1538;
+  color: #8b1538;
 }
 
 .actual-input {
   width: 100%;
   padding: 6px 8px;
-  border: 2px solid #8B1538;
+  border: 2px solid #8b1538;
   border-radius: 4px;
   font-size: 14px;
   text-align: center;
@@ -1518,7 +1504,7 @@ onMounted(async () => {
 
 .empty-content h3,
 .initial-content h3 {
-  color: #8B1538;
+  color: #8b1538;
   font-size: 1.5rem;
   font-weight: 600;
   margin-bottom: 10px;
@@ -1535,7 +1521,7 @@ onMounted(async () => {
   margin-top: 15px;
   padding: 12px 15px;
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-left: 4px solid #8B1538;
+  border-left: 4px solid #8b1538;
   border-radius: 6px;
   font-size: 0.9rem;
 }
@@ -1546,7 +1532,7 @@ onMounted(async () => {
 }
 
 .filter-summary strong {
-  color: #8B1538;
+  color: #8b1538;
 }
 
 /* Responsive Design */

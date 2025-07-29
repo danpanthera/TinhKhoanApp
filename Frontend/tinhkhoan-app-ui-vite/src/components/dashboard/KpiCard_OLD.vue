@@ -1,12 +1,8 @@
 <template>
-  <div 
-    class="kpi-card" 
-    :class="cardClass"
-    @click="$emit('click', indicator)"
-  >
+  <div class="kpi-card" :class="cardClass" @click="$emit('click', indicator)">
     <!-- Background gradient overlay -->
     <div class="card-background" :style="{ background: gradientBackground }"></div>
-    
+
     <!-- Card content -->
     <div class="card-content">
       <!-- Header với icon và title -->
@@ -22,7 +18,7 @@
           <i :class="statusIcon"></i>
         </div>
       </div>
-      
+
       <!-- Giá trị chính -->
       <div class="card-value">
         <div class="actual-value">
@@ -34,35 +30,29 @@
           <span class="target-value">{{ formatValue(indicator.planValue) }}</span>
         </div>
       </div>
-      
+
       <!-- Thanh tiến độ với animation -->
       <div class="card-progress">
         <div class="progress-info">
           <span class="progress-label">Hoàn thành</span>
-          <span class="progress-percentage" :style="{ color: progressColor }">
-            {{ completionRate.toFixed(1) }}%
-          </span>
+          <span class="progress-percentage" :style="{ color: progressColor }"> {{ completionRate.toFixed(1) }}% </span>
         </div>
         <div class="progress-bar-container">
-          <div 
-            class="progress-bar" 
-            :style="{ 
+          <div
+            class="progress-bar"
+            :style="{
               width: Math.min(completionRate, 100) + '%',
               backgroundColor: progressColor,
-              boxShadow: `0 2px 8px ${progressColor}40`
+              boxShadow: `0 2px 8px ${progressColor}40`,
             }"
           ></div>
           <!-- Overflow indicator for > 100% -->
-          <div 
-            v-if="completionRate > 100" 
-            class="overflow-indicator"
-            :style="{ backgroundColor: progressColor }"
-          >
+          <div v-if="completionRate > 100" class="overflow-indicator" :style="{ backgroundColor: progressColor }">
             +{{ (completionRate - 100).toFixed(1) }}%
           </div>
         </div>
       </div>
-      
+
       <!-- Mini trend chart -->
       <div v-if="showTrend && indicator.trend" class="card-trend">
         <div class="trend-header">
@@ -74,7 +64,7 @@
         </div>
         <mini-trend-chart :data="indicator.trend" :color="indicator.color" />
       </div>
-      
+
       <!-- Footer với thông tin bổ sung -->
       <div class="card-footer">
         <div class="footer-stat">
@@ -94,7 +84,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Click ripple effect -->
     <div class="ripple-container">
       <div class="ripple"></div>
@@ -103,131 +93,131 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import MiniTrendChart from './MiniTrendChart.vue';
+import { computed } from 'vue'
+import MiniTrendChart from './MiniTrendChart.vue'
 
 const props = defineProps({
   indicator: {
     type: Object,
-    required: true
+    required: true,
   },
   showTrend: {
     type: Boolean,
-    default: false
-  }
-});
+    default: false,
+  },
+})
 
-const emit = defineEmits(['click']);
+const emit = defineEmits(['click'])
 
 // Computed properties
 const completionRate = computed(() => {
-  if (!props.indicator.planValue || props.indicator.planValue === 0) return 0;
-  
+  if (!props.indicator.planValue || props.indicator.planValue === 0) return 0
+
   // Special logic for bad debt ratio (lower is better)
   if (props.indicator.Code === 'TyLeNoXau') {
     if (props.indicator.actualValue <= props.indicator.planValue) {
-      return 100; // Target achieved
+      return 100 // Target achieved
     }
-    return (props.indicator.planValue / props.indicator.actualValue) * 100;
+    return (props.indicator.planValue / props.indicator.actualValue) * 100
   }
-  
-  return (props.indicator.actualValue / props.indicator.planValue) * 100;
-});
+
+  return (props.indicator.actualValue / props.indicator.planValue) * 100
+})
 
 const progressColor = computed(() => {
-  const rate = completionRate.value;
-  if (rate >= 100) return '#67C23A'; // Green - achieved
-  if (rate >= 90) return '#95D475'; // Light green - close
-  if (rate >= 80) return '#E6A23C'; // Orange - warning
-  if (rate >= 60) return '#F89406'; // Dark orange
-  return '#F56C6C'; // Red - danger
-});
+  const rate = completionRate.value
+  if (rate >= 100) return '#67C23A' // Green - achieved
+  if (rate >= 90) return '#95D475' // Light green - close
+  if (rate >= 80) return '#E6A23C' // Orange - warning
+  if (rate >= 60) return '#F89406' // Dark orange
+  return '#F56C6C' // Red - danger
+})
 
 const statusClass = computed(() => {
-  const rate = completionRate.value;
-  if (rate >= 100) return 'success';
-  if (rate >= 80) return 'warning';
-  return 'danger';
-});
+  const rate = completionRate.value
+  if (rate >= 100) return 'success'
+  if (rate >= 80) return 'warning'
+  return 'danger'
+})
 
 const statusIcon = computed(() => {
-  const rate = completionRate.value;
-  if (rate >= 100) return 'mdi-check-circle';
-  if (rate >= 80) return 'mdi-alert-circle';
-  return 'mdi-close-circle';
-});
+  const rate = completionRate.value
+  if (rate >= 100) return 'mdi-check-circle'
+  if (rate >= 80) return 'mdi-alert-circle'
+  return 'mdi-close-circle'
+})
 
 const statusText = computed(() => {
-  const rate = completionRate.value;
-  if (rate >= 100) return 'Đạt KH';
-  if (rate >= 80) return 'Gần đạt';
-  return 'Chưa đạt';
-});
+  const rate = completionRate.value
+  if (rate >= 100) return 'Đạt KH'
+  if (rate >= 80) return 'Gần đạt'
+  return 'Chưa đạt'
+})
 
 const cardClass = computed(() => {
   return {
-    'clickable': true,
-    'completed': completionRate.value >= 100,
-    'warning': completionRate.value < 100 && completionRate.value >= 80,
-    'danger': completionRate.value < 80
-  };
-});
+    clickable: true,
+    completed: completionRate.value >= 100,
+    warning: completionRate.value < 100 && completionRate.value >= 80,
+    danger: completionRate.value < 80,
+  }
+})
 
 const gradientBackground = computed(() => {
-  const baseColor = props.indicator.color;
-  const opacity = completionRate.value >= 100 ? '08' : '04';
-  return `linear-gradient(135deg, ${baseColor}${opacity} 0%, ${baseColor}${opacity} 100%)`;
-});
+  const baseColor = props.indicator.color
+  const opacity = completionRate.value >= 100 ? '08' : '04'
+  return `linear-gradient(135deg, ${baseColor}${opacity} 0%, ${baseColor}${opacity} 100%)`
+})
 
 const trendChange = computed(() => {
-  if (!props.indicator.trend || props.indicator.trend.length < 2) return 0;
-  const first = props.indicator.trend[0];
-  const last = props.indicator.trend[props.indicator.trend.length - 1];
-  return ((last - first) / first) * 100;
-});
+  if (!props.indicator.trend || props.indicator.trend.length < 2) return 0
+  const first = props.indicator.trend[0]
+  const last = props.indicator.trend[props.indicator.trend.length - 1]
+  return ((last - first) / first) * 100
+})
 
 const trendClass = computed(() => {
-  return trendChange.value >= 0 ? 'positive' : 'negative';
-});
+  return trendChange.value >= 0 ? 'positive' : 'negative'
+})
 
 const trendIcon = computed(() => {
-  return trendChange.value >= 0 ? 'mdi-trending-up' : 'mdi-trending-down';
-});
+  return trendChange.value >= 0 ? 'mdi-trending-up' : 'mdi-trending-down'
+})
 
 const yoyClass = computed(() => {
-  return props.indicator.yoyGrowth >= 0 ? 'positive' : 'negative';
-});
+  return props.indicator.yoyGrowth >= 0 ? 'positive' : 'negative'
+})
 
 const yoyIcon = computed(() => {
-  return props.indicator.yoyGrowth >= 0 ? 'mdi-arrow-up' : 'mdi-arrow-down';
-});
+  return props.indicator.yoyGrowth >= 0 ? 'mdi-arrow-up' : 'mdi-arrow-down'
+})
 
 // Methods
-const formatValue = (value) => {
-  if (!value && value !== 0) return '0';
-  
+const formatValue = value => {
+  if (!value && value !== 0) return '0'
+
   if (props.indicator.unit === '%') {
-    return value.toFixed(2);
+    return value.toFixed(2)
   }
-  
+
   // Format large numbers
   if (value >= 1000) {
     return new Intl.NumberFormat('vi-VN', {
       minimumFractionDigits: 1,
-      maximumFractionDigits: 1
-    }).format(value);
+      maximumFractionDigits: 1,
+    }).format(value)
   }
-  
-  return new Intl.NumberFormat('vi-VN').format(value);
-};
 
-const formatDate = (date) => {
-  if (!date) return '-';
+  return new Intl.NumberFormat('vi-VN').format(value)
+}
+
+const formatDate = date => {
+  if (!date) return '-'
   return new Date(date).toLocaleDateString('vi-VN', {
     day: '2-digit',
-    month: '2-digit'
-  });
-};
+    month: '2-digit',
+  })
+}
 </script>
 
 <style scoped>
@@ -236,7 +226,7 @@ const formatDate = (date) => {
   background: white;
   border-radius: 16px;
   padding: 0;
-  box-shadow: 
+  box-shadow:
     0 4px 20px rgba(0, 0, 0, 0.08),
     0 2px 8px rgba(0, 0, 0, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -247,21 +237,21 @@ const formatDate = (date) => {
 
 .kpi-card:hover {
   transform: translateY(-8px) scale(1.02);
-  box-shadow: 
+  box-shadow:
     0 12px 40px rgba(0, 0, 0, 0.15),
     0 8px 16px rgba(0, 0, 0, 0.1);
 }
 
 .kpi-card.completed {
-  border-left: 4px solid #67C23A;
+  border-left: 4px solid #67c23a;
 }
 
 .kpi-card.warning {
-  border-left: 4px solid #E6A23C;
+  border-left: 4px solid #e6a23c;
 }
 
 .kpi-card.danger {
-  border-left: 4px solid #F56C6C;
+  border-left: 4px solid #f56c6c;
 }
 
 .card-background {
@@ -327,17 +317,17 @@ const formatDate = (date) => {
 
 .Status-badge.success {
   background-color: #f0f9ff;
-  color: #67C23A;
+  color: #67c23a;
 }
 
 .Status-badge.warning {
   background-color: #fdf6ec;
-  color: #E6A23C;
+  color: #e6a23c;
 }
 
 .Status-badge.danger {
   background-color: #fef0f0;
-  color: #F56C6C;
+  color: #f56c6c;
 }
 
 .card-value {
@@ -431,8 +421,12 @@ const formatDate = (date) => {
 }
 
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .overflow-indicator {
@@ -477,11 +471,11 @@ const formatDate = (date) => {
 }
 
 .trend-change.positive {
-  color: #67C23A;
+  color: #67c23a;
 }
 
 .trend-change.negative {
-  color: #F56C6C;
+  color: #f56c6c;
 }
 
 .card-footer {
@@ -516,23 +510,23 @@ const formatDate = (date) => {
 }
 
 .stat-value.positive {
-  color: #67C23A;
+  color: #67c23a;
 }
 
 .stat-value.negative {
-  color: #F56C6C;
+  color: #f56c6c;
 }
 
 .stat-value.success {
-  color: #67C23A;
+  color: #67c23a;
 }
 
 .stat-value.warning {
-  color: #E6A23C;
+  color: #e6a23c;
 }
 
 .stat-value.danger {
-  color: #F56C6C;
+  color: #f56c6c;
 }
 
 .ripple-container {
@@ -577,20 +571,20 @@ const formatDate = (date) => {
   .card-content {
     padding: 20px;
   }
-  
+
   .actual-value .number {
     font-size: 28px;
   }
-  
+
   .card-footer {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
-  
+
   .card-header {
     gap: 12px;
   }
-  
+
   .icon-container {
     width: 40px;
     height: 40px;
@@ -602,11 +596,11 @@ const formatDate = (date) => {
   .card-content {
     padding: 16px;
   }
-  
+
   .actual-value .number {
     font-size: 24px;
   }
-  
+
   .card-footer {
     grid-template-columns: 1fr;
     gap: 8px;

@@ -1,9 +1,5 @@
 <template>
-  <div
-    class="kpi-card"
-    :class="cardClass"
-    @click="$emit('click', indicator)"
-  >
+  <div class="kpi-card" :class="cardClass" @click="$emit('click', indicator)">
     <!-- Decorative elements -->
     <div class="card-decoration">
       <div class="decoration-circle circle-1"></div>
@@ -52,7 +48,7 @@
           class="progress-bar-fill"
           :style="{
             width: completionRate + '%',
-            background: progressGradient
+            background: progressGradient,
           }"
         >
           <span class="progress-glow"></span>
@@ -69,12 +65,7 @@
           {{ trendValue }}%
         </span>
       </div>
-      <mini-trend-chart
-        :data="indicator.trend"
-        :color="indicator.color"
-        :gradient="true"
-        :height="50"
-      />
+      <mini-trend-chart :data="indicator.trend" :color="indicator.color" :gradient="true" :height="50" />
     </div>
 
     <!-- Footer với thông tin bổ sung -->
@@ -97,135 +88,135 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
-import AnimatedNumber from './AnimatedNumber.vue';
-import MiniTrendChart from './MiniTrendChart.vue';
+import { computed } from 'vue'
+import AnimatedNumber from './AnimatedNumber.vue'
+import MiniTrendChart from './MiniTrendChart.vue'
 
 const props = defineProps({
   indicator: {
     type: Object,
-    required: true
+    required: true,
   },
   showTrend: {
     type: Boolean,
-    default: false
-  }
-});
+    default: false,
+  },
+})
 
-const emit = defineEmits(['click']);
+const emit = defineEmits(['click'])
 
 // Computed properties
 const completionRate = computed(() => {
-  if (!props.indicator.planValue || props.indicator.planValue === 0) return 0;
+  if (!props.indicator.planValue || props.indicator.planValue === 0) return 0
 
   // Đối với tỷ lệ nợ xấu, càng thấp càng tốt
   if (props.indicator.Code === 'TyLeNoXau') {
     if (props.indicator.actualValue <= props.indicator.planValue) {
-      return 100; // Đạt mục tiêu
+      return 100 // Đạt mục tiêu
     }
-    return Math.min((props.indicator.planValue / props.indicator.actualValue) * 100, 100);
+    return Math.min((props.indicator.planValue / props.indicator.actualValue) * 100, 100)
   }
 
-  return Math.min((props.indicator.actualValue / props.indicator.planValue) * 100, 120);
-});
+  return Math.min((props.indicator.actualValue / props.indicator.planValue) * 100, 120)
+})
 
 const progressGradient = computed(() => {
-  const rate = completionRate.value;
+  const rate = completionRate.value
   if (rate >= 100) {
-    return 'linear-gradient(90deg, #52C41A 0%, #73D13D 100%)';
+    return 'linear-gradient(90deg, #52C41A 0%, #73D13D 100%)'
   } else if (rate >= 80) {
-    return 'linear-gradient(90deg, #FAAD14 0%, #FFC53D 100%)';
+    return 'linear-gradient(90deg, #FAAD14 0%, #FFC53D 100%)'
   } else {
-    return 'linear-gradient(90deg, #FF4D4F 0%, #FF7875 100%)';
+    return 'linear-gradient(90deg, #FF4D4F 0%, #FF7875 100%)'
   }
-});
+})
 
 const statusClass = computed(() => {
-  const rate = completionRate.value;
-  if (rate >= 100) return 'status-success';
-  if (rate >= 80) return 'status-warning';
-  return 'status-danger';
-});
+  const rate = completionRate.value
+  if (rate >= 100) return 'status-success'
+  if (rate >= 80) return 'status-warning'
+  return 'status-danger'
+})
 
 const statusIcon = computed(() => {
-  const rate = completionRate.value;
-  if (rate >= 100) return 'mdi-check-circle';
-  if (rate >= 80) return 'mdi-alert';
-  return 'mdi-close-circle';
-});
+  const rate = completionRate.value
+  if (rate >= 100) return 'mdi-check-circle'
+  if (rate >= 80) return 'mdi-alert'
+  return 'mdi-close-circle'
+})
 
 const statusText = computed(() => {
-  const rate = completionRate.value;
-  if (rate >= 100) return 'Đạt';
-  if (rate >= 80) return 'Gần đạt';
-  return 'Chưa đạt';
-});
+  const rate = completionRate.value
+  if (rate >= 100) return 'Đạt'
+  if (rate >= 80) return 'Gần đạt'
+  return 'Chưa đạt'
+})
 
 const cardClass = computed(() => {
   return {
     'is-clickable': true,
     'is-achieved': completionRate.value >= 100,
     'is-warning': completionRate.value < 100 && completionRate.value >= 80,
-    'is-danger': completionRate.value < 80
-  };
-});
+    'is-danger': completionRate.value < 80,
+  }
+})
 
 const trendClass = computed(() => {
-  if (!props.indicator.yoyGrowth) return '';
-  return props.indicator.yoyGrowth >= 0 ? 'trend-up' : 'trend-down';
-});
+  if (!props.indicator.yoyGrowth) return ''
+  return props.indicator.yoyGrowth >= 0 ? 'trend-up' : 'trend-down'
+})
 
 const trendIcon = computed(() => {
-  if (!props.indicator.yoyGrowth) return '';
-  return props.indicator.yoyGrowth >= 0 ? 'mdi-trending-up' : 'mdi-trending-down';
-});
+  if (!props.indicator.yoyGrowth) return ''
+  return props.indicator.yoyGrowth >= 0 ? 'mdi-trending-up' : 'mdi-trending-down'
+})
 
 const trendValue = computed(() => {
-  if (!props.indicator.yoyGrowth) return '0';
-  return Math.abs(props.indicator.yoyGrowth);
-});
+  if (!props.indicator.yoyGrowth) return '0'
+  return Math.abs(props.indicator.yoyGrowth)
+})
 
 // Methods
-const formatValue = (value) => {
-  if (!value && value !== 0) return '-';
+const formatValue = value => {
+  if (!value && value !== 0) return '-'
 
   if (props.indicator.unit === '%') {
-    return value.toFixed(2) + '%';
+    return value.toFixed(2) + '%'
   }
 
   // Format với separator nghìn và triệu
   if (value >= 1000000) {
-    return (value / 1000000).toFixed(1) + ' triệu';
+    return (value / 1000000).toFixed(1) + ' triệu'
   } else if (value >= 1000) {
-    return new Intl.NumberFormat('vi-VN').format(value);
+    return new Intl.NumberFormat('vi-VN').format(value)
   }
 
-  return value.toString();
-};
+  return value.toString()
+}
 
-const formatDate = (date) => {
-  if (!date) return 'Chưa cập nhật';
+const formatDate = date => {
+  if (!date) return 'Chưa cập nhật'
   return new Date(date).toLocaleDateString('vi-VN', {
     day: '2-digit',
     month: '2-digit',
-    year: 'numeric'
-  });
-};
+    year: 'numeric',
+  })
+}
 
-const getTimeAgo = (date) => {
-  if (!date) return 'N/A';
+const getTimeAgo = date => {
+  if (!date) return 'N/A'
 
-  const now = new Date();
-  const past = new Date(date);
-  const diffInHours = Math.floor((now - past) / (1000 * 60 * 60));
+  const now = new Date()
+  const past = new Date(date)
+  const diffInHours = Math.floor((now - past) / (1000 * 60 * 60))
 
-  if (diffInHours < 1) return 'Vừa xong';
-  if (diffInHours < 24) return `${diffInHours}h trước`;
-  if (diffInHours < 48) return 'Hôm qua';
+  if (diffInHours < 1) return 'Vừa xong'
+  if (diffInHours < 24) return `${diffInHours}h trước`
+  if (diffInHours < 48) return 'Hôm qua'
 
-  const diffInDays = Math.floor(diffInHours / 24);
-  return `${diffInDays} ngày trước`;
-};
+  const diffInDays = Math.floor(diffInHours / 24)
+  return `${diffInDays} ngày trước`
+}
 </script>
 
 <style scoped>
@@ -247,7 +238,7 @@ const getTimeAgo = (date) => {
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(90deg, #8B1538 0%, #B91D47 100%);
+  background: linear-gradient(90deg, #8b1538 0%, #b91d47 100%);
   transform: translateX(-100%);
   transition: transform 0.6s ease;
 }
@@ -284,7 +275,7 @@ const getTimeAgo = (date) => {
 .circle-1 {
   width: 100px;
   height: 100px;
-  background: #8B1538;
+  background: #8b1538;
   top: 0;
   right: 0;
 }
@@ -292,7 +283,7 @@ const getTimeAgo = (date) => {
 .circle-2 {
   width: 60px;
   height: 60px;
-  background: #B91D47;
+  background: #b91d47;
   top: 20px;
   right: 20px;
 }
@@ -450,8 +441,8 @@ const getTimeAgo = (date) => {
     45deg,
     transparent,
     transparent 10px,
-    rgba(0,0,0,0.02) 10px,
-    rgba(0,0,0,0.02) 20px
+    rgba(0, 0, 0, 0.02) 10px,
+    rgba(0, 0, 0, 0.02) 20px
   );
 }
 
@@ -468,7 +459,7 @@ const getTimeAgo = (date) => {
   right: 0;
   bottom: 0;
   width: 50px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
   animation: shimmer 2s infinite;
 }
 

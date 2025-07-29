@@ -8,7 +8,7 @@ class AudioService {
     this.sounds = {
       success: null,
       error: null,
-      notification: null
+      notification: null,
     }
 
     this.isEnabled = true // Cho phép user tắt/bật âm thanh
@@ -77,11 +77,14 @@ class AudioService {
         sound.currentTime = 0
 
         // Play sound
-        sound.play().then(() => {
-          console.log(`🔊 Played ${soundType} sound`)
-        }).catch(error => {
-          console.warn(`⚠️ Failed to play ${soundType} sound:`, error)
-        })
+        sound
+          .play()
+          .then(() => {
+            console.log(`🔊 Played ${soundType} sound`)
+          })
+          .catch(error => {
+            console.warn(`⚠️ Failed to play ${soundType} sound:`, error)
+          })
       } else {
         console.warn(`⚠️ Sound ${soundType} not found`)
       }

@@ -17,28 +17,28 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import { login } from '../services/auth';
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { login } from '../services/auth'
 
-const username = ref('');
-const password = ref('');
-const error = ref('');
-const loading = ref(false);
-const router = useRouter();
+const username = ref('')
+const password = ref('')
+const error = ref('')
+const loading = ref(false)
+const router = useRouter()
 
 const handleLogin = async () => {
-  error.value = '';
-  loading.value = true;
+  error.value = ''
+  loading.value = true
   try {
-    await login(username.value, password.value);
-    router.push('/');
+    await login(username.value, password.value)
+    router.push('/')
   } catch (e) {
-    error.value = e.message || 'Đăng nhập thất bại';
+    error.value = e.message || 'Đăng nhập thất bại'
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 </script>
 
 <style scoped>
@@ -48,7 +48,7 @@ const handleLogin = async () => {
   padding: 32px 24px;
   background: #fff;
   border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 .login-form h2 {
   margin-bottom: 18px;

@@ -49,7 +49,7 @@ export function normalizeNetResponse(response) {
  * @param {string} dataKey - Key chứa data cần check (e.g., 'indicators')
  */
 export function logApiResponse(endpoint, response, dataKey = null) {
-  if (process.env.NODE_ENV !== 'development') return;
+  if (process.env.NODE_ENV !== 'development') return
 
   console.group(`📡 API Response: ${endpoint}`)
   console.log('Status:', response.status)
@@ -62,7 +62,7 @@ export function logApiResponse(endpoint, response, dataKey = null) {
       const data = response.data[dataKey]
       console.log(`${dataKey} type:`, typeof data)
       console.log(`${dataKey} is array:`, Array.isArray(data))
-      console.log(`${dataKey} has $values:`, !!(data.$values))
+      console.log(`${dataKey} has $values:`, !!data.$values)
 
       if (data.$values) {
         console.log(`${dataKey}.$values length:`, data.$values.length)

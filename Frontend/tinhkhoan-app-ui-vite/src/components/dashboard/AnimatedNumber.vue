@@ -1,88 +1,92 @@
 <template>
-  <span class="animated-number" :class="{ 'counting': isCounting }">
+  <span class="animated-number" :class="{ counting: isCounting }">
     {{ displayValue }}
   </span>
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from 'vue';
-import { formatNumber as utilFormatNumber } from '../../utils/numberFormatter.js';
+import { onMounted, ref, watch } from 'vue'
+import { formatNumber as utilFormatNumber } from '../../utils/numberFormatter.js'
 
 const props = defineProps({
   value: {
     type: Number,
-    required: true
+    required: true,
   },
   duration: {
     type: Number,
-    default: 2000
+    default: 2000,
   },
   decimals: {
     type: Number,
-    default: 0
+    default: 0,
   },
   prefix: {
     type: String,
-    default: ''
+    default: '',
   },
   suffix: {
     type: String,
-    default: ''
+    default: '',
   },
   separator: {
     type: String,
-    default: ','
-  }
-});
+    default: ',',
+  },
+})
 
-const displayValue = ref(0);
-const isCounting = ref(false);
+const displayValue = ref(0)
+const isCounting = ref(false)
 
 // Sử dụng utility formatter thay vì custom logic
-const formatNumber = (num) => {
-  const formatted = utilFormatNumber(num, props.decimals, false);
-  return props.prefix + formatted + props.suffix;
-};
+const formatNumber = num => {
+  const formatted = utilFormatNumber(num, props.decimals, false)
+  return props.prefix + formatted + props.suffix
+}
 
 const animateNumber = (start, end, duration) => {
   if (start === end) {
-    displayValue.value = formatNumber(end);
-    return;
+    displayValue.value = formatNumber(end)
+    return
   }
 
-  isCounting.value = true;
-  const startTime = performance.now();
-  const diff = end - start;
+  isCounting.value = true
+  const startTime = performance.now()
+  const diff = end - start
 
-  const updateNumber = (currentTime) => {
-    const elapsed = currentTime - startTime;
-    const progress = Math.min(elapsed / duration, 1);
+  const updateNumber = currentTime => {
+    const elapsed = currentTime - startTime
+    const progress = Math.min(elapsed / duration, 1)
 
     // Easing function for smooth animation
-    const easeOut = 1 - Math.pow(1 - progress, 3);
-    const current = start + (diff * easeOut);
+    const easeOut = 1 - Math.pow(1 - progress, 3)
+    const current = start + diff * easeOut
 
-    displayValue.value = formatNumber(current);
+    displayValue.value = formatNumber(current)
 
     if (progress < 1) {
-      requestAnimationFrame(updateNumber);
+      requestAnimationFrame(updateNumber)
     } else {
-      displayValue.value = formatNumber(end);
-      isCounting.value = false;
+      displayValue.value = formatNumber(end)
+      isCounting.value = false
     }
-  };
+  }
 
-  requestAnimationFrame(updateNumber);
-};
+  requestAnimationFrame(updateNumber)
+}
 
-watch(() => props.value, (newValue, oldValue) => {
-  const startValue = oldValue || 0;
-  animateNumber(startValue, newValue, props.duration);
-}, { immediate: false });
+watch(
+  () => props.value,
+  (newValue, oldValue) => {
+    const startValue = oldValue || 0
+    animateNumber(startValue, newValue, props.duration)
+  },
+  { immediate: false }
+)
 
 onMounted(() => {
-  animateNumber(0, props.value, props.duration);
-});
+  animateNumber(0, props.value, props.duration)
+})
 </script>
 
 <style scoped>
@@ -93,7 +97,7 @@ onMounted(() => {
 }
 
 .animated-number.counting {
-  color: #8B1538;
+  color: #8b1538;
   text-shadow: 0 0 10px rgba(139, 21, 56, 0.3);
   animation: pulse-glow 1s ease-in-out infinite alternate;
 }

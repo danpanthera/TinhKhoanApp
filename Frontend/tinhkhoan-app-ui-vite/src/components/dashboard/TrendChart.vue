@@ -3,36 +3,36 @@
 </template>
 
 <script setup>
-import * as echarts from 'echarts';
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import * as echarts from 'echarts'
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 const props = defineProps({
   data: {
     type: Object,
-    required: true
+    required: true,
   },
   height: {
     type: Number,
-    default: 300
+    default: 300,
   },
   indicators: {
     type: Array,
-    default: () => []
-  }
-});
+    default: () => [],
+  },
+})
 
-const chartContainer = ref(null);
-let chartInstance = null;
+const chartContainer = ref(null)
+let chartInstance = null
 
 const initChart = () => {
-  if (!chartContainer.value) return;
+  if (!chartContainer.value) return
 
-  chartInstance = echarts.init(chartContainer.value);
-  updateChart();
-};
+  chartInstance = echarts.init(chartContainer.value)
+  updateChart()
+}
 
 const updateChart = () => {
-  if (!chartInstance || !props.data) return;
+  if (!chartInstance || !props.data) return
 
   const option = {
     tooltip: {
@@ -41,15 +41,15 @@ const updateChart = () => {
       borderColor: 'rgba(255, 255, 255, 0.2)',
       textStyle: {
         color: '#fff',
-        fontSize: 13
+        fontSize: 13,
       },
-      formatter: function(params) {
-        let result = `<div style="font-weight: 600; margin-bottom: 8px;">${params[0].axisValue}</div>`;
+      formatter: function (params) {
+        let result = `<div style="font-weight: 600; margin-bottom: 8px;">${params[0].axisValue}</div>`
         params.forEach(param => {
-          const color = param.color;
-          const seriesName = param.seriesName;
-          const value = param.value;
-          const unit = getUnitBySeriesName(seriesName);
+          const color = param.color
+          const seriesName = param.seriesName
+          const value = param.value
+          const unit = getUnitBySeriesName(seriesName)
           result += `
             <div style="display: flex; align-items: center; justify-content: space-between; margin: 4px 0;">
               <span style="display: flex; align-items: center;">
@@ -58,46 +58,46 @@ const updateChart = () => {
               </span>
               <span style="font-weight: 600; margin-left: 20px;">${formatValue(value, unit)}</span>
             </div>
-          `;
-        });
-        return result;
-      }
+          `
+        })
+        return result
+      },
     },
     legend: {
       top: 0,
       right: 0,
       textStyle: {
         fontSize: 12,
-        color: '#606266'
+        color: '#606266',
       },
       itemWidth: 12,
       itemHeight: 8,
-      itemGap: 20
+      itemGap: 20,
     },
     grid: {
       left: '3%',
       right: '4%',
       bottom: '3%',
       top: '15%',
-      containLabel: true
+      containLabel: true,
     },
     xAxis: {
       type: 'category',
       data: props.data.labels || [],
       axisLine: {
         lineStyle: {
-          color: '#E4E7ED'
-        }
+          color: '#E4E7ED',
+        },
       },
       axisTick: {
         lineStyle: {
-          color: '#E4E7ED'
-        }
+          color: '#E4E7ED',
+        },
       },
       axisLabel: {
         color: '#909399',
-        fontSize: 12
-      }
+        fontSize: 12,
+      },
     },
     yAxis: [
       {
@@ -105,66 +105,66 @@ const updateChart = () => {
         name: 'Triệu đồng',
         nameTextStyle: {
           color: '#909399',
-          fontSize: 12
+          fontSize: 12,
         },
         axisLine: {
-          show: false
+          show: false,
         },
         axisTick: {
-          show: false
+          show: false,
         },
         axisLabel: {
           color: '#909399',
           fontSize: 12,
-          formatter: function(value) {
+          formatter: function (value) {
             if (value >= 1000) {
-              return (value / 1000).toFixed(1) + 'K';
+              return (value / 1000).toFixed(1) + 'K'
             }
-            return value;
-          }
+            return value
+          },
         },
         splitLine: {
           lineStyle: {
             color: '#F5F7FA',
-            type: 'dashed'
-          }
-        }
+            type: 'dashed',
+          },
+        },
       },
       {
         type: 'value',
         name: '%',
         nameTextStyle: {
           color: '#909399',
-          fontSize: 12
+          fontSize: 12,
         },
         position: 'right',
         axisLine: {
-          show: false
+          show: false,
         },
         axisTick: {
-          show: false
+          show: false,
         },
         axisLabel: {
           color: '#909399',
           fontSize: 12,
-          formatter: '{value}%'
+          formatter: '{value}%',
         },
         splitLine: {
-          show: false
-        }
-      }
+          show: false,
+        },
+      },
     ],
-    series: generateSeries()
-  };
+    series: generateSeries(),
+  }
 
-  chartInstance.setOption(option, true);
-};
+  chartInstance.setOption(option, true)
+}
 
 const generateSeries = () => {
-  if (!props.data.datasets) return [];
+  if (!props.data.datasets) return []
 
   return props.data.datasets.map(dataset => {
-    const isPercentage = dataset.Name.includes('Tỷ lệ') || dataset.Name.includes('%');
+    const isPercentage = dataset.Name.includes('Tỷ lệ') || dataset.Name.includes('%')
 
     return {
       name: dataset.Name,
@@ -176,77 +176,85 @@ const generateSeries = () => {
       symbolSize: 6,
       lineStyle: {
         width: 3,
-        color: dataset.color
+        color: dataset.color,
       },
       itemStyle: {
         color: dataset.color,
         borderColor: '#fff',
-        borderWidth: 2
+        borderWidth: 2,
       },
       areaStyle: {
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
           {
             offset: 0,
-            color: dataset.color + '40'
+            color: dataset.color + '40',
           },
           {
             offset: 1,
-            color: dataset.color + '10'
-          }
-        ])
+            color: dataset.color + '10',
+          },
+        ]),
       },
       emphasis: {
-        focus: 'series'
-      }
-    };
-  });
-};
+        focus: 'series',
+      },
+    }
+  })
+}
 
-const getUnitBySeriesName = (seriesName) => {
+const getUnitBySeriesName = seriesName => {
   if (seriesName.includes('Tỷ lệ') || seriesName.includes('%')) {
-    return '%';
+    return '%'
   }
-  return 'triệu đồng';
-};
+  return 'triệu đồng'
+}
 
 const formatValue = (value, unit) => {
   if (unit === '%') {
-    return value.toFixed(2) + '%';
+    return value.toFixed(2) + '%'
   }
-  return new Intl.NumberFormat('vi-VN', {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1
-  }).format(value) + ' ' + unit;
-};
+  return (
+    new Intl.NumberFormat('vi-VN', {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    }).format(value) +
+    ' ' +
+    unit
+  )
+}
 
 const resize = () => {
   if (chartInstance) {
-    chartInstance.resize();
+    chartInstance.resize()
   }
-};
+}
 
 // Watch for data changes
-watch(() => props.data, () => {
-  nextTick(() => {
-    updateChart();
-  });
-}, { deep: true });
+watch(
+  () => props.data,
+  () => {
+    nextTick(() => {
+      updateChart()
+    })
+  },
+  { deep: true }
+)
 
 onMounted(() => {
   nextTick(() => {
-    initChart();
-  });
+    initChart()
+  })
 
   // Add resize listener
-  window.addEventListener('resize', resize);
-});
+  window.addEventListener('resize', resize)
+})
 
 onUnmounted(() => {
   if (chartInstance) {
-    chartInstance.dispose();
+    chartInstance.dispose()
   }
-  window.removeEventListener('resize', resize);
-});
+  window.removeEventListener('resize', resize)
+})
 </script>
 
 <style scoped>

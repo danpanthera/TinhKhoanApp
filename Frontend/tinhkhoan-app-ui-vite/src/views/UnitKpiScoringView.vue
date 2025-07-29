@@ -52,9 +52,7 @@
         <button class="btn btn-primary" @click="createNewScoring" :disabled="!selectedPeriodId">
           ➕ Tạo chấm điểm mới
         </button>
-        <button class="btn btn-info" @click="loadScorings">
-          🔄 Làm mới
-        </button>
+        <button class="btn btn-info" @click="loadScorings">🔄 Làm mới</button>
       </div>
     </div>
 
@@ -77,15 +75,21 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(summary, index) in scoringSummary" :key="summary.unitId"
-                :class="{ 'low-score': summary.totalScore < 70 }">
+            <tr
+              v-for="(summary, index) in scoringSummary"
+              :key="summary.unitId"
+              :class="{ 'low-score': summary.totalScore < 70 }"
+            >
               <td>{{ index + 1 }}</td>
               <td>{{ summary.unitName }}</td>
               <td class="score-cell">{{ summary.baseScore.toFixed(1) }}</td>
-              <td class="score-cell" :class="{
-                'negative': summary.adjustmentScore < 0,
-                'positive': summary.adjustmentScore > 0
-              }">
+              <td
+                class="score-cell"
+                :class="{
+                  negative: summary.adjustmentScore < 0,
+                  positive: summary.adjustmentScore > 0,
+                }"
+              >
                 {{ summary.adjustmentScore > 0 ? '+' : '' }}{{ summary.adjustmentScore.toFixed(1) }}
               </td>
               <td class="total-score-cell">{{ summary.totalScore.toFixed(1) }}</td>
@@ -93,9 +97,7 @@
               <td class="violation-cell">{{ summary.cultureViolationCount }}</td>
               <td>{{ formatDateTime(summary.lastUpdated) }}</td>
               <td>
-                <button class="btn btn-sm btn-primary" @click="editUnitScoring(summary.unitId)">
-                  ✏️ Chi tiết
-                </button>
+                <button class="btn btn-sm btn-primary" @click="editUnitScoring(summary.unitId)">✏️ Chi tiết</button>
               </td>
             </tr>
           </tbody>
@@ -109,11 +111,15 @@
         <h3>📋 Chi tiết chấm điểm: {{ getCurrentUnitName() }}</h3>
         <div class="score-display">
           <span class="base-score">Điểm cơ sở: {{ currentScoring.baseScore.toFixed(1) }}</span>
-          <span class="adjustment-score" :class="{
-            'negative': currentScoring.adjustmentScore < 0,
-            'positive': currentScoring.adjustmentScore > 0
-          }">
-            Điều chỉnh: {{ currentScoring.adjustmentScore > 0 ? '+' : '' }}{{ currentScoring.adjustmentScore.toFixed(1) }}
+          <span
+            class="adjustment-score"
+            :class="{
+              negative: currentScoring.adjustmentScore < 0,
+              positive: currentScoring.adjustmentScore > 0,
+            }"
+          >
+            Điều chỉnh: {{ currentScoring.adjustmentScore > 0 ? '+' : ''
+            }}{{ currentScoring.adjustmentScore.toFixed(1) }}
           </span>
           <span class="total-score">Tổng: {{ currentScoring.totalScore.toFixed(1) }}</span>
         </div>
@@ -125,8 +131,17 @@
         <div class="kpi-grid">
           <div v-for="detail in currentScoring.scoringDetails" :key="detail.id" class="kpi-card">
             <div class="kpi-header">
-              <h5>{{ detail.indicatorName || detail.kpiIndicator?.indicatorName || detail.kpiDefinition?.name || 'Chỉ tiêu KPI' }}</h5>
-              <span class="kpi-rule">{{ detail.scoringFormula || detail.kpiDefinition?.scoringRule || 'Quy tắc tính điểm' }}</span>
+              <h5>
+                {{
+                  detail.indicatorName ||
+                  detail.kpiIndicator?.indicatorName ||
+                  detail.kpiDefinition?.name ||
+                  'Chỉ tiêu KPI'
+                }}
+              </h5>
+              <span class="kpi-rule">{{
+                detail.scoringFormula || detail.kpiDefinition?.scoringRule || 'Quy tắc tính điểm'
+              }}</span>
             </div>
             <div class="kpi-values">
               <div class="value-group">
@@ -138,19 +153,22 @@
                 <input
                   type="text"
                   :value="formatNumber(detail.actualValue || 0)"
-                  @input="(e) => handleActualValueInput(e, detail)"
-                  @blur="(e) => handleActualValueBlur(e, detail)"
+                  @input="e => handleActualValueInput(e, detail)"
+                  @blur="e => handleActualValueBlur(e, detail)"
                   class="actual-input"
                 />
               </div>
               <div class="value-group">
                 <label>Điểm:</label>
-                <span class="score-value" :class="{
-                  'excellent': detail.score >= 8,
-                  'good': detail.score >= 6 && detail.score < 8,
-                  'average': detail.score >= 4 && detail.score < 6,
-                  'poor': detail.score < 4
-                }">
+                <span
+                  class="score-value"
+                  :class="{
+                    excellent: detail.score >= 8,
+                    good: detail.score >= 6 && detail.score < 8,
+                    average: detail.score >= 4 && detail.score < 6,
+                    poor: detail.score < 4,
+                  }"
+                >
                   {{ detail.score.toFixed(1) }}
                 </span>
               </div>
@@ -185,26 +203,29 @@
             <div class="violation-types">
               <div class="violation-type">
                 <label>Nhắc nhở (-2 điểm/lần):</label>
-                <input type="text"
+                <input
+                  type="text"
                   :value="formatNumber(processViolations.minor || 0)"
-                  @input="(e) => handleViolationInput(e, 'processViolations', 'minor')"
-                  @blur="(e) => handleViolationBlur(e, 'processViolations', 'minor')"
+                  @input="e => handleViolationInput(e, 'processViolations', 'minor')"
+                  @blur="e => handleViolationBlur(e, 'processViolations', 'minor')"
                 />
               </div>
               <div class="violation-type">
                 <label>Khiển trách bằng văn bản (-4 điểm/lần):</label>
-                <input type="text"
+                <input
+                  type="text"
                   :value="formatNumber(processViolations.written || 0)"
-                  @input="(e) => handleViolationInput(e, 'processViolations', 'written')"
-                  @blur="(e) => handleViolationBlur(e, 'processViolations', 'written')"
+                  @input="e => handleViolationInput(e, 'processViolations', 'written')"
+                  @blur="e => handleViolationBlur(e, 'processViolations', 'written')"
                 />
               </div>
               <div class="violation-type">
                 <label>Kỷ luật (0 điểm):</label>
-                <input type="text"
+                <input
+                  type="text"
                   :value="formatNumber(processViolations.disciplinary || 0)"
-                  @input="(e) => handleViolationInput(e, 'processViolations', 'disciplinary')"
-                  @blur="(e) => handleViolationBlur(e, 'processViolations', 'disciplinary')"
+                  @input="e => handleViolationInput(e, 'processViolations', 'disciplinary')"
+                  @blur="e => handleViolationBlur(e, 'processViolations', 'disciplinary')"
                 />
               </div>
             </div>
@@ -215,26 +236,29 @@
             <div class="violation-types">
               <div class="violation-type">
                 <label>Nhắc nhở (-2 điểm/lần):</label>
-                <input type="text"
+                <input
+                  type="text"
                   :value="formatNumber(cultureViolations.minor || 0)"
-                  @input="(e) => handleViolationInput(e, 'cultureViolations', 'minor')"
-                  @blur="(e) => handleViolationBlur(e, 'cultureViolations', 'minor')"
+                  @input="e => handleViolationInput(e, 'cultureViolations', 'minor')"
+                  @blur="e => handleViolationBlur(e, 'cultureViolations', 'minor')"
                 />
               </div>
               <div class="violation-type">
                 <label>Khiển trách bằng văn bản (-4 điểm/lần):</label>
-                <input type="text"
+                <input
+                  type="text"
                   :value="formatNumber(cultureViolations.written || 0)"
-                  @input="(e) => handleViolationInput(e, 'cultureViolations', 'written')"
-                  @blur="(e) => handleViolationBlur(e, 'cultureViolations', 'written')"
+                  @input="e => handleViolationInput(e, 'cultureViolations', 'written')"
+                  @blur="e => handleViolationBlur(e, 'cultureViolations', 'written')"
                 />
               </div>
               <div class="violation-type">
                 <label>Kỷ luật (0 điểm):</label>
-                <input type="text"
+                <input
+                  type="text"
                   :value="formatNumber(cultureViolations.disciplinary || 0)"
-                  @input="(e) => handleViolationInput(e, 'cultureViolations', 'disciplinary')"
-                  @blur="(e) => handleViolationBlur(e, 'cultureViolations', 'disciplinary')"
+                  @input="e => handleViolationInput(e, 'cultureViolations', 'disciplinary')"
+                  @blur="e => handleViolationBlur(e, 'cultureViolations', 'disciplinary')"
                 />
               </div>
             </div>
@@ -245,11 +269,7 @@
       <!-- Notes Section -->
       <div class="notes-section">
         <h4>📝 Ghi chú</h4>
-        <textarea
-          v-model="currentScoring.note"
-          placeholder="Nhập ghi chú về việc chấm điểm..."
-          rows="3"
-        ></textarea>
+        <textarea v-model="currentScoring.note" placeholder="Nhập ghi chú về việc chấm điểm..." rows="3"></textarea>
       </div>
 
       <!-- Action Buttons -->
@@ -257,9 +277,7 @@
         <button class="btn btn-success" @click="saveScoring" :disabled="isSaving">
           {{ isSaving ? '💾 Đang lưu...' : '💾 Lưu chấm điểm' }}
         </button>
-        <button class="btn btn-secondary" @click="cancelEdit">
-          ❌ Hủy
-        </button>
+        <button class="btn btn-secondary" @click="cancelEdit">❌ Hủy</button>
       </div>
     </div>
 
@@ -277,12 +295,8 @@
           </select>
         </div>
         <div class="modal-actions">
-          <button class="btn btn-primary" @click="createScoring" :disabled="!newScoring.unitId">
-            ✅ Tạo
-          </button>
-          <button class="btn btn-secondary" @click="closeCreateModal">
-            ❌ Hủy
-          </button>
+          <button class="btn btn-primary" @click="createScoring" :disabled="!newScoring.unitId">✅ Tạo</button>
+          <button class="btn btn-secondary" @click="closeCreateModal">❌ Hủy</button>
         </div>
       </div>
     </div>
@@ -296,14 +310,20 @@
         </div>
         <div class="modal-body">
           <div v-if="unitsDetailList.length === 0" class="empty-state">
-            <p>{{ unitsDetailType === 'scored' ? 'Chưa có chi nhánh nào được chấm điểm.' : 'Tất cả chi nhánh đã được chấm điểm.' }}</p>
+            <p>
+              {{
+                unitsDetailType === 'scored'
+                  ? 'Chưa có chi nhánh nào được chấm điểm.'
+                  : 'Tất cả chi nhánh đã được chấm điểm.'
+              }}
+            </p>
           </div>
           <div v-else class="units-list">
             <div
               v-for="(unit, index) in unitsDetailList"
               :key="unit.id"
               class="unit-item"
-              :class="{ 'scored': unitsDetailType === 'scored', 'pending': unitsDetailType === 'pending' }"
+              :class="{ scored: unitsDetailType === 'scored', pending: unitsDetailType === 'pending' }"
             >
               <div class="unit-info">
                 <span class="unit-number">{{ index + 1 }}.</span>
@@ -332,9 +352,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="closeUnitsDetailModal">
-            Đóng
-          </button>
+          <button class="btn btn-secondary" @click="closeUnitsDetailModal">Đóng</button>
         </div>
       </div>
     </div>
@@ -360,8 +378,8 @@ export default {
     // 🔢 Initialize number input utility
     const { handleInput, handleBlur, formatNumber, parseFormattedNumber } = useNumberInput({
       maxDecimalPlaces: 2,
-      allowNegative: false
-    });
+      allowNegative: false,
+    })
 
     // Reactive data
     const isLoading = ref(false)
@@ -384,20 +402,20 @@ export default {
     // New scoring form
     const newScoring = ref({
       unitId: '',
-      khoanPeriodId: ''
+      khoanPeriodId: '',
     })
 
     // Violation tracking
     const processViolations = ref({
       minor: 0,
       written: 0,
-      disciplinary: 0
+      disciplinary: 0,
     })
 
     const cultureViolations = ref({
       minor: 0,
       written: 0,
-      disciplinary: 0
+      disciplinary: 0,
     })
 
     // Computed properties
@@ -416,15 +434,15 @@ export default {
 
       // Sắp xếp theo thứ tự: CnLaiChau (7800), CnBinhLu (7801), CnPhongTho (7802), CnSinHo (7803), CnBumTo (7804), CnThanUyen (7805), CnDoanKet (7806), CnTanUyen (7807), CnNamHang (7808)
       const customOrder = [
-        'CnLaiChau',    // Chi nhánh Lai Châu (7800)
-        'CnBinhLu',     // Chi nhánh Bình Lư (7801)
-        'CnPhongTho',   // Chi nhánh Phong Thổ (7802)
-        'CnSinHo',      // Chi nhánh Sìn Hồ (7803)
-        'CnBumTo',      // Chi nhánh Bum Tở (7804)
-        'CnThanUyen',   // Chi nhánh Than Uyên (7805)
-        'CnDoanKet',    // Chi nhánh Đoàn Kết (7806)
-        'CnTanUyen',    // Chi nhánh Tân Uyên (7807)
-        'CnNamHang'     // Chi nhánh Nậm Hàng (7808)
+        'CnLaiChau', // Chi nhánh Lai Châu (7800)
+        'CnBinhLu', // Chi nhánh Bình Lư (7801)
+        'CnPhongTho', // Chi nhánh Phong Thổ (7802)
+        'CnSinHo', // Chi nhánh Sìn Hồ (7803)
+        'CnBumTo', // Chi nhánh Bum Tở (7804)
+        'CnThanUyen', // Chi nhánh Than Uyên (7805)
+        'CnDoanKet', // Chi nhánh Đoàn Kết (7806)
+        'CnTanUyen', // Chi nhánh Tân Uyên (7807)
+        'CnNamHang', // Chi nhánh Nậm Hàng (7808)
       ]
 
       return units.value.sort((a, b) => {
@@ -461,10 +479,10 @@ export default {
         const requestConfig = {
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': token ? `Bearer ${token}` : '',
-            ...options.headers
+            Authorization: token ? `Bearer ${token}` : '',
+            ...options.headers,
           },
-          ...options
+          ...options,
         }
 
         console.log('📤 Request config:', requestConfig)
@@ -527,9 +545,7 @@ export default {
         }
 
         // Filter for CNL1 and CNL2 units (chi nhánh)
-        units.value = unitsData.filter(unit =>
-          unit.type === 'CNL1' || unit.type === 'CNL2'
-        )
+        units.value = unitsData.filter(unit => unit.type === 'CNL1' || unit.type === 'CNL2')
 
         console.log('✅ Units loaded for scoring:', units.value.length)
         console.log('🏢 CNL1 units:', units.value.filter(u => u.type === 'CNL1').length)
@@ -565,7 +581,6 @@ export default {
 
         scoringSummary.value = summaryData
         console.log(`✅ Loaded ${scoringSummary.value.length} scoring summaries`)
-
       } catch (error) {
         console.error('❌ Error loading scorings:', error)
         toast.error('Lỗi khi tải dữ liệu chấm điểm')
@@ -592,12 +607,12 @@ export default {
           processViolations.value = {
             minor: criteria.processMinorViolations || 0,
             written: criteria.processWrittenViolations || 0,
-            disciplinary: criteria.processDisciplinaryViolations || 0
+            disciplinary: criteria.processDisciplinaryViolations || 0,
           }
           cultureViolations.value = {
             minor: criteria.cultureMinorViolations || 0,
             written: criteria.cultureWrittenViolations || 0,
-            disciplinary: criteria.cultureDisciplinaryViolations || 0
+            disciplinary: criteria.cultureDisciplinaryViolations || 0,
           }
         }
       } catch (error) {
@@ -614,7 +629,7 @@ export default {
     }
 
     // Scoring calculation methods
-    const calculateScore = (detail) => {
+    const calculateScore = detail => {
       if (!detail.actualValue || !detail.targetValue) {
         detail.score = 0
         return
@@ -630,11 +645,11 @@ export default {
 
       // Parse scoring rule to get the scoring formula
       if (scoringRule.includes('±10% = ±1 điểm')) {
-        score = 5 + (variance / 10)
+        score = 5 + variance / 10
       } else if (scoringRule.includes('±5% = ±1.5 điểm')) {
         score = 5 + (variance / 5) * 1.5
       } else if (scoringRule.includes('±10% = ∓1 điểm')) {
-        score = 5 - (variance / 10) // Reverse scoring for bad indicators
+        score = 5 - variance / 10 // Reverse scoring for bad indicators
       } else if (scoringRule.includes('±10% = ±1.5 điểm')) {
         score = 5 + (variance / 10) * 1.5
       } else {
@@ -675,8 +690,10 @@ export default {
       if (!currentScoring.value) return
 
       if (currentScoring.value.scoringDetails) {
-        currentScoring.value.baseScore = currentScoring.value.scoringDetails
-          .reduce((sum, detail) => sum + (detail.score || 0), 0)
+        currentScoring.value.baseScore = currentScoring.value.scoringDetails.reduce(
+          (sum, detail) => sum + (detail.score || 0),
+          0
+        )
       }
 
       currentScoring.value.totalScore = currentScoring.value.baseScore + currentScoring.value.adjustmentScore
@@ -703,12 +720,12 @@ export default {
           unitId: parseInt(newScoring.value.unitId),
           khoanPeriodId: parseInt(selectedPeriodId.value),
           actualValues: {},
-          note: ''
+          note: '',
         }
 
         await apiCall('/UnitKpiScoring', {
           method: 'POST',
-          body: JSON.stringify(requestData)
+          body: JSON.stringify(requestData),
         })
 
         toast.success('Tạo chấm điểm thành công')
@@ -739,27 +756,57 @@ export default {
           method: 'PUT',
           body: JSON.stringify({
             actualValues,
-            note: currentScoring.value.note
-          })
+            note: currentScoring.value.note,
+          }),
         })
 
         // Update compliance violations
         const violationData = {
           processViolations: [
-            { level: 'Minor', count: processViolations.value.minor, description: 'Nhắc nhở', date: new Date().toISOString() },
-            { level: 'Written', count: processViolations.value.written, description: 'Khiển trách bằng văn bản', date: new Date().toISOString() },
-            { level: 'Disciplinary', count: processViolations.value.disciplinary, description: 'Kỷ luật', date: new Date().toISOString() }
+            {
+              level: 'Minor',
+              count: processViolations.value.minor,
+              description: 'Nhắc nhở',
+              date: new Date().toISOString(),
+            },
+            {
+              level: 'Written',
+              count: processViolations.value.written,
+              description: 'Khiển trách bằng văn bản',
+              date: new Date().toISOString(),
+            },
+            {
+              level: 'Disciplinary',
+              count: processViolations.value.disciplinary,
+              description: 'Kỷ luật',
+              date: new Date().toISOString(),
+            },
           ],
           cultureViolations: [
-            { level: 'Minor', count: cultureViolations.value.minor, description: 'Nhắc nhở', date: new Date().toISOString() },
-            { level: 'Written', count: cultureViolations.value.written, description: 'Khiển trách bằng văn bản', date: new Date().toISOString() },
-            { level: 'Disciplinary', count: cultureViolations.value.disciplinary, description: 'Kỷ luật', date: new Date().toISOString() }
-          ]
+            {
+              level: 'Minor',
+              count: cultureViolations.value.minor,
+              description: 'Nhắc nhở',
+              date: new Date().toISOString(),
+            },
+            {
+              level: 'Written',
+              count: cultureViolations.value.written,
+              description: 'Khiển trách bằng văn bản',
+              date: new Date().toISOString(),
+            },
+            {
+              level: 'Disciplinary',
+              count: cultureViolations.value.disciplinary,
+              description: 'Kỷ luật',
+              date: new Date().toISOString(),
+            },
+          ],
         }
 
         await apiCall(`/UnitKpiScoring/${currentScoring.value.id}/compliance`, {
           method: 'POST',
-          body: JSON.stringify(violationData)
+          body: JSON.stringify(violationData),
         })
 
         toast.success('Lưu chấm điểm thành công')
@@ -773,7 +820,7 @@ export default {
       }
     }
 
-    const editUnitScoring = (unitId) => {
+    const editUnitScoring = unitId => {
       selectedUnitId.value = unitId
     }
 
@@ -786,53 +833,53 @@ export default {
       showCreateModal.value = false
       newScoring.value = {
         unitId: '',
-        khoanPeriodId: ''
+        khoanPeriodId: '',
       }
     }
 
     // Number input handlers for actual values
     const handleActualValueInput = (event, detail) => {
-      const formattedValue = handleInput(event);
-      event.target.value = formattedValue;
-      detail.actualValue = parseFormattedNumber(formattedValue);
-      calculateScore(detail);
-    };
+      const formattedValue = handleInput(event)
+      event.target.value = formattedValue
+      detail.actualValue = parseFormattedNumber(formattedValue)
+      calculateScore(detail)
+    }
 
     const handleActualValueBlur = (event, detail) => {
-      const formattedValue = handleBlur(event);
-      event.target.value = formattedValue;
-      detail.actualValue = parseFormattedNumber(formattedValue);
-      calculateScore(detail);
-    };
+      const formattedValue = handleBlur(event)
+      event.target.value = formattedValue
+      detail.actualValue = parseFormattedNumber(formattedValue)
+      calculateScore(detail)
+    }
 
     // Number input handlers for violations
     const handleViolationInput = (event, violationType, field) => {
-      const formattedValue = handleInput(event);
-      event.target.value = formattedValue;
-      const numericValue = parseFormattedNumber(formattedValue);
+      const formattedValue = handleInput(event)
+      event.target.value = formattedValue
+      const numericValue = parseFormattedNumber(formattedValue)
 
       if (violationType === 'processViolations') {
-        processViolations.value[field] = numericValue;
+        processViolations.value[field] = numericValue
       } else if (violationType === 'cultureViolations') {
-        cultureViolations.value[field] = numericValue;
+        cultureViolations.value[field] = numericValue
       }
 
-      updateViolationScores();
-    };
+      updateViolationScores()
+    }
 
     const handleViolationBlur = (event, violationType, field) => {
-      const formattedValue = handleBlur(event);
-      event.target.value = formattedValue;
-      const numericValue = parseFormattedNumber(formattedValue);
+      const formattedValue = handleBlur(event)
+      event.target.value = formattedValue
+      const numericValue = parseFormattedNumber(formattedValue)
 
       if (violationType === 'processViolations') {
-        processViolations.value[field] = numericValue;
+        processViolations.value[field] = numericValue
       } else if (violationType === 'cultureViolations') {
-        cultureViolations.value[field] = numericValue;
+        cultureViolations.value[field] = numericValue
       }
 
-      updateViolationScores();
-    };
+      updateViolationScores()
+    }
 
     // Utility methods
     const getCurrentUnitName = () => {
@@ -841,12 +888,12 @@ export default {
       return unit ? unit.name : ''
     }
 
-    const formatDate = (dateString) => {
+    const formatDate = dateString => {
       if (!dateString) return ''
       return new Date(dateString).toLocaleDateString('vi-VN')
     }
 
-    const formatDateTime = (dateString) => {
+    const formatDateTime = dateString => {
       if (!dateString) return ''
       return new Date(dateString).toLocaleString('vi-VN')
     }
@@ -862,25 +909,27 @@ export default {
       unitsDetailTitle.value = `📊 Chi nhánh đã chấm điểm (${scoredUnits.value})`
 
       // Lấy danh sách các chi nhánh đã chấm từ scoringSummary
-      unitsDetailList.value = scoringSummary.value.map(summary => {
-        const unit = sortedUnits.value.find(u => u.id === summary.unitId)
-        return {
-          id: summary.unitId,
-          name: unit ? unit.name : `Chi nhánh ${summary.unitId}`,
-          totalScore: summary.totalScore,
-          baseScore: summary.baseScore,
-          adjustmentScore: summary.adjustmentScore
-        }
-      }).sort((a, b) => {
-        // Sắp xếp theo thứ tự của sortedUnits
-        const unitA = sortedUnits.value.find(u => u.id === a.id)
-        const unitB = sortedUnits.value.find(u => u.id === b.id)
-        if (!unitA || !unitB) return 0
+      unitsDetailList.value = scoringSummary.value
+        .map(summary => {
+          const unit = sortedUnits.value.find(u => u.id === summary.unitId)
+          return {
+            id: summary.unitId,
+            name: unit ? unit.name : `Chi nhánh ${summary.unitId}`,
+            totalScore: summary.totalScore,
+            baseScore: summary.baseScore,
+            adjustmentScore: summary.adjustmentScore,
+          }
+        })
+        .sort((a, b) => {
+          // Sắp xếp theo thứ tự của sortedUnits
+          const unitA = sortedUnits.value.find(u => u.id === a.id)
+          const unitB = sortedUnits.value.find(u => u.id === b.id)
+          if (!unitA || !unitB) return 0
 
-        const indexA = sortedUnits.value.indexOf(unitA)
-        const indexB = sortedUnits.value.indexOf(unitB)
-        return indexA - indexB
-      })
+          const indexA = sortedUnits.value.indexOf(unitA)
+          const indexB = sortedUnits.value.indexOf(unitB)
+          return indexA - indexB
+        })
 
       showUnitsDetailModal.value = true
     }
@@ -902,7 +951,7 @@ export default {
           id: unit.id,
           name: unit.name,
           code: unit.code,
-          type: unit.type
+          type: unit.type,
         }))
 
       showUnitsDetailModal.value = true
@@ -915,12 +964,12 @@ export default {
       unitsDetailList.value = []
     }
 
-    const editUnitFromDetail = (unitId) => {
+    const editUnitFromDetail = unitId => {
       closeUnitsDetailModal()
       selectedUnitId.value = unitId
     }
 
-    const createScoringForUnit = async (unitId) => {
+    const createScoringForUnit = async unitId => {
       if (!selectedPeriodId.value) {
         toast.error('Vui lòng chọn kỳ tính khoán trước')
         return
@@ -931,12 +980,12 @@ export default {
           unitId: parseInt(unitId),
           khoanPeriodId: parseInt(selectedPeriodId.value),
           actualValues: {},
-          note: 'Tạo tự động từ danh sách chờ chấm'
+          note: 'Tạo tự động từ danh sách chờ chấm',
         }
 
         await apiCall('/UnitKpiScoring', {
           method: 'POST',
-          body: JSON.stringify(requestData)
+          body: JSON.stringify(requestData),
         })
 
         toast.success('Tạo chấm điểm thành công')
@@ -945,7 +994,6 @@ export default {
 
         // Chuyển sang chế độ chỉnh sửa cho chi nhánh vừa tạo
         selectedUnitId.value = unitId
-
       } catch (error) {
         toast.error('Lỗi khi tạo chấm điểm')
         console.error('Error creating scoring:', error)
@@ -968,14 +1016,10 @@ export default {
       try {
         console.log('🔄 UnitKpiScoringView: Starting to load initial data...')
 
-        await Promise.all([
-          loadPeriods(),
-          loadUnits()
-        ])
+        await Promise.all([loadPeriods(), loadUnits()])
 
         console.log('✅ UnitKpiScoringView: All initial data loaded successfully')
         console.log(`📊 Loaded ${periods.value.length} periods and ${units.value.length} units`)
-
       } catch (error) {
         console.error('❌ UnitKpiScoringView: Error in onMounted:', error)
         toast.error('Lỗi khi tải dữ liệu ban đầu. Vui lòng tải lại trang.')
@@ -1038,9 +1082,9 @@ export default {
       handleActualValueInput,
       handleActualValueBlur,
       handleViolationInput,
-      handleViolationBlur
+      handleViolationBlur,
     }
-  }
+  },
 }
 </script>
 
@@ -1230,7 +1274,9 @@ export default {
   align-items: center;
 }
 
-.base-score, .adjustment-score, .total-score {
+.base-score,
+.adjustment-score,
+.total-score {
   padding: 8px 16px;
   border-radius: 6px;
   font-weight: 600;
@@ -1310,7 +1356,8 @@ export default {
   color: #6b7280;
 }
 
-.target-value, .score-value {
+.target-value,
+.score-value {
   font-weight: 600;
   padding: 5px;
   text-align: center;
@@ -1566,8 +1613,12 @@ export default {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Units Detail Modal Styles */

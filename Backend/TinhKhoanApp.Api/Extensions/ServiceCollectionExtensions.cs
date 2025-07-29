@@ -46,27 +46,29 @@ namespace TinhKhoanApp.Api.Extensions
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
             // Services
-            services.AddScoped<Services.DataServices.IDP01DataService, Services.DataServices.DP01DataService>();
-            services.AddScoped<Services.DataServices.IDPDADataService, Services.DataServices.DPDADataService>();
-            services.AddScoped<Services.DataServices.IEI01DataService, Services.DataServices.EI01DataService>();
-            services.AddScoped<Services.DataServices.IGL01DataService, Services.DataServices.GL01DataService>();
-            services.AddScoped<Services.DataServices.IGL02DataService, Services.DataServices.GL02DataService>();
-            services.AddScoped<Services.DataServices.IGL41DataService, Services.DataServices.GL41DataService>();
-            services.AddScoped<Services.ILN01Service, Services.LN01Service>();
-            services.AddScoped<Services.ILN03Service, Services.LN03Service>();
-            services.AddScoped<Services.IRR01Service, Services.RR01Service>();
+            services.AddScoped<IDP01Service, DP01Service>();
+            services.AddScoped<IDPDAService, DPDAService>();
+            services.AddScoped<IEI01Service, EI01Service>();
+            services.AddScoped<IGL01Service, GL01Service>();
+            services.AddScoped<IGL02Service, GL02Service>();
+            services.AddScoped<IGL41Service, GL41Service>();
+            services.AddScoped<ILN01Service, LN01Service>();
+            services.AddScoped<ILN03Service, LN03Service>();
+            services.AddScoped<IRR01Service, RR01Service>();
 
             // Import Service
             services.AddScoped<DirectImportService>();
 
             // Data Services
-            services.AddScoped<Services.DataServices.DP01DataService>();
-            services.AddScoped<Services.DataServices.DPDADataService>();
-            services.AddScoped<Services.DataServices.EI01DataService>();
-            services.AddScoped<Services.DataServices.GL01DataService>();
-            services.AddScoped<Services.DataServices.GL02DataService>();
-            services.AddScoped<Services.DataServices.GL41DataService>();
-            services.AddScoped<Services.DirectImportService>();
+            services.AddScoped<DP01DataService>();
+            services.AddScoped<DPDADataService>();
+            services.AddScoped<EI01DataService>();
+            services.AddScoped<GL01DataService>();
+            services.AddScoped<GL02DataService>();
+            services.AddScoped<GL41DataService>();
+            services.AddScoped<LN01DataService>();
+            services.AddScoped<LN03DataService>();
+            services.AddScoped<RR01DataService>();
 
             return services;
         }

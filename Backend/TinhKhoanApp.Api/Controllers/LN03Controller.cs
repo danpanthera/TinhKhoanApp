@@ -366,12 +366,12 @@ namespace TinhKhoanApp.Api.Controllers
                     return Ok(new
                     {
                         Success = true,
-                        Message = $"Import thành công {result.ProcessedRecords} bản ghi",
-                        ImportedFileName = result.FileName,
-                        RecordsCount = result.ProcessedRecords,
-                        StatementDate = result.NgayDL,
-                        ImportedBy = string.Empty, // Need to add this property or get from proper source
-                        ImportId = result.ImportedDataRecordId
+                        Message = $"Import thành công {result.RecordsCount} bản ghi",
+                        result.ImportedFileName,
+                        result.RecordsCount,
+                        result.StatementDate,
+                        result.ImportedBy,
+                        result.ImportId
                     });
                 }
                 else
@@ -380,7 +380,7 @@ namespace TinhKhoanApp.Api.Controllers
                     {
                         Success = false,
                         Message = result.ErrorMessage,
-                        ImportedFileName = result.FileName
+                        result.ImportedFileName
                     });
                 }
             }

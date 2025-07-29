@@ -1,47 +1,47 @@
 // src/services/auth.js
-import api from './api';
+import api from './api'
 
 export async function login(username, password) {
   try {
-    const res = await api.post('/auth/login', { username, password });
+    const res = await api.post('/auth/login', { username, password })
     if (res.data && res.data.token) {
       // Lưu token
-      localStorage.setItem('token', res.data.token);
+      localStorage.setItem('token', res.data.token)
 
       // Lưu thông tin user và thời gian login
-      localStorage.setItem('username', username);
-      localStorage.setItem('loginTime', new Date().toISOString());
+      localStorage.setItem('username', username)
+      localStorage.setItem('loginTime', new Date().toISOString())
 
       // Lưu thông tin user chi tiết nếu có
       if (res.data.user) {
-        localStorage.setItem('user', JSON.stringify(res.data.user));
+        localStorage.setItem('user', JSON.stringify(res.data.user))
       }
 
-      return res.data;
+      return res.data
     } else {
-      throw new Error('Sai thông tin đăng nhập');
+      throw new Error('Sai thông tin đăng nhập')
     }
   } catch (err) {
-    throw new Error(err.response?.data?.message || 'Đăng nhập thất bại');
+    throw new Error(err.response?.data?.message || 'Đăng nhập thất bại')
   }
 }
 
 export function logout() {
   // Xóa tất cả thông tin liên quan đến session
-  localStorage.removeItem('token');
-  localStorage.removeItem('username');
-  localStorage.removeItem('loginTime');
-  localStorage.removeItem('user');
+  localStorage.removeItem('token')
+  localStorage.removeItem('username')
+  localStorage.removeItem('loginTime')
+  localStorage.removeItem('user')
 }
 
 export function getToken() {
-  return localStorage.getItem('token');
+  return localStorage.getItem('token')
 }
 
 export function isAuthenticated() {
   // 🔍 TEMPORARY: Always return true for debugging
-  console.log('Auth check: Temporarily bypassed for debugging');
-  return true;
+  console.log('Auth check: Temporarily bypassed for debugging')
+  return true
 
   /*
   const token = getToken();
@@ -87,38 +87,38 @@ export function isAuthenticated() {
 
 // Validate token with backend
 export async function validateTokenWithBackend() {
-  const token = getToken();
-  if (!token) return false;
+  const token = getToken()
+  if (!token) return false
 
   try {
     const response = await api.get('/auth/validate', {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    return response.status === 200;
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    return response.status === 200
   } catch (error) {
-    console.log('Backend token validation failed:', error);
-    return false;
+    console.log('Backend token validation failed:', error)
+    return false
   }
 }
 
 // Get user info from token
 export function getUserInfo() {
-  const token = getToken();
-  if (!token) return null;
+  const token = getToken()
+  if (!token) return null
 
   try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
+    const parts = token.split('.')
+    if (parts.length !== 3) return null
 
-    const payload = JSON.parse(atob(parts[1]));
+    const payload = JSON.parse(atob(parts[1]))
     return {
       username: payload.username || payload.sub,
       role: payload.role,
       exp: payload.exp ? new Date(payload.exp * 1000) : null,
-      iat: payload.iat ? new Date(payload.iat * 1000) : null
-    };
+      iat: payload.iat ? new Date(payload.iat * 1000) : null,
+    }
   } catch (error) {
-    console.log('Error getting user info:', error);
-    return null;
+    console.log('Error getting user info:', error)
+    return null
   }
 }

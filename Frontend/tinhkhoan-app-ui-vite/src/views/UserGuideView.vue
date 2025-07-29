@@ -4,7 +4,7 @@
       <h1>📖 Hướng dẫn sử dụng phần mềm</h1>
       <p class="guide-subtitle">Tài liệu hướng dẫn chi tiết về cách sử dụng hệ thống KPI Agribank Lai Châu Center</p>
     </div>
-    
+
     <div class="guide-content">
       <div class="coming-soon-card">
         <div class="construction-icon">🚧</div>
@@ -12,7 +12,7 @@
         <p class="coming-soon-text">
           Tài liệu hướng dẫn sử dụng chi tiết đang được hoàn thiện và sẽ sớm được cập nhật.
         </p>
-        
+
         <div class="preview-features">
           <h3>📋 Nội dung sẽ có trong hướng dẫn:</h3>
           <ul class="feature-list">
@@ -38,7 +38,7 @@
             </li>
           </ul>
         </div>
-        
+
         <div class="contact-support">
           <h3>🤝 Cần hỗ trợ ngay?</h3>
           <p>Liên hệ Bộ phận IT - Phòng KTNQ:</p>
@@ -53,17 +53,17 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { isAuthenticated } from '../services/auth';
+import { onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { isAuthenticated } from '../services/auth'
 
-const router = useRouter();
+const router = useRouter()
 
 onMounted(() => {
   if (!isAuthenticated()) {
-    router.push('/login');
+    router.push('/login')
   }
-});
+})
 </script>
 
 <style scoped>
@@ -79,7 +79,7 @@ onMounted(() => {
 }
 
 .guide-header h1 {
-  color: #8B1538;
+  color: #8b1538;
   font-size: 2.5rem;
   font-weight: 700;
   text-shadow: 0 2px 4px rgba(139, 21, 56, 0.2);
@@ -87,7 +87,7 @@ onMounted(() => {
 }
 
 .guide-subtitle {
-  color: #A91B47;
+  color: #a91b47;
   font-size: 1.2rem;
   font-weight: 500;
 }
@@ -115,7 +115,7 @@ onMounted(() => {
 }
 
 .coming-soon-card h2 {
-  color: #8B1538;
+  color: #8b1538;
   font-size: 2rem;
   font-weight: 600;
   margin-bottom: 20px;
@@ -137,7 +137,7 @@ onMounted(() => {
 }
 
 .preview-features h3 {
-  color: #8B1538;
+  color: #8b1538;
   font-size: 1.4rem;
   font-weight: 600;
   margin-bottom: 20px;
@@ -171,7 +171,7 @@ onMounted(() => {
 }
 
 .contact-support {
-  background: linear-gradient(135deg, #8B1538, #A91B47);
+  background: linear-gradient(135deg, #8b1538, #a91b47);
   color: white;
   border-radius: 15px;
   padding: 25px;
@@ -209,31 +209,31 @@ onMounted(() => {
   .user-guide {
     padding: 15px;
   }
-  
+
   .guide-header h1 {
     font-size: 2rem;
   }
-  
+
   .guide-subtitle {
     font-size: 1.1rem;
   }
-  
+
   .coming-soon-card {
     padding: 30px 20px;
   }
-  
+
   .coming-soon-text {
     font-size: 1.1rem;
   }
-  
+
   .preview-features {
     padding: 20px;
   }
-  
+
   .feature-list li {
     font-size: 1rem;
   }
-  
+
   .support-contacts {
     flex-direction: column;
     gap: 10px;
@@ -244,23 +244,23 @@ onMounted(() => {
   .guide-header h1 {
     font-size: 1.6rem;
   }
-  
+
   .coming-soon-card h2 {
     font-size: 1.6rem;
   }
-  
+
   .coming-soon-text {
     font-size: 1rem;
   }
-  
+
   .construction-icon {
     font-size: 4rem;
   }
-  
+
   .preview-features h3 {
     font-size: 1.2rem;
   }
-  
+
   .contact-support h3 {
     font-size: 1.1rem;
   }

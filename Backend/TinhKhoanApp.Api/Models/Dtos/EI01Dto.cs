@@ -145,6 +145,11 @@ namespace TinhKhoanApp.Api.Models.DTOs
         /// Thời điểm tạo bản ghi
         /// </summary>
         public DateTime CREATED_DATE { get; set; }
+
+        /// <summary>
+        /// Thời điểm cập nhật
+        /// </summary>
+        public DateTime UPDATED_DATE { get; set; }
     }
 
     /// <summary>

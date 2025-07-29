@@ -24,26 +24,26 @@
 </template>
 
 <script setup>
-import { defineProps } from 'vue';
+import { defineProps } from 'vue'
 
 const props = defineProps({
   show: {
     type: Boolean,
-    default: false
+    default: false,
   },
   title: {
     type: String,
-    default: 'Đang xử lý'
+    default: 'Đang xử lý',
   },
   message: {
     type: String,
-    default: 'Vui lòng chờ trong giây lát...'
+    default: 'Vui lòng chờ trong giây lát...',
   },
   icon: {
     type: String,
-    default: '⚡'
-  }
-});
+    default: '⚡',
+  },
+})
 </script>
 
 <style scoped>
@@ -190,8 +190,12 @@ const props = defineProps({
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes slideInUp {
@@ -206,26 +210,42 @@ const props = defineProps({
 }
 
 @keyframes rotateClockwise {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes pulse {
-  0%, 100% { transform: translate(-50%, -50%) scale(1); }
-  50% { transform: translate(-50%, -50%) scale(1.1); }
+  0%,
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.1);
+  }
 }
 
 @keyframes glow {
-  0% { text-shadow: 0 0 5px #ffffff; }
-  100% { text-shadow: 0 0 20px #ffffff, 0 0 30px #ffffff; }
+  0% {
+    text-shadow: 0 0 5px #ffffff;
+  }
+  100% {
+    text-shadow:
+      0 0 20px #ffffff,
+      0 0 30px #ffffff;
+  }
 }
 
 @keyframes dotPulse {
-  0%, 100% { 
+  0%,
+  100% {
     transform: scale(1);
     opacity: 1;
   }
-  50% { 
+  50% {
     transform: scale(1.5);
     opacity: 0.7;
   }

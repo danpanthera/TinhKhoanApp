@@ -26,7 +26,8 @@
             @click="console.log('📅 Year dropdown clicked')"
             class="agribank-select"
             autocomplete="off"
-            aria-label="Chọn năm">
+            aria-label="Chọn năm"
+          >
             <option value="">Chọn năm</option>
             <option v-for="year in yearOptions" :key="year" :value="year">
               {{ year }}
@@ -43,7 +44,8 @@
             @click="console.log('📆 Period type dropdown clicked')"
             class="agribank-select"
             autocomplete="off"
-            aria-label="Chọn loại kỳ">
+            aria-label="Chọn loại kỳ"
+          >
             <option value="">Chọn loại kỳ</option>
             <option v-for="period in periodTypeOptions" :key="period.value" :value="period.value">
               {{ period.label }}
@@ -60,7 +62,8 @@
             @click="console.log('📊 Period dropdown clicked')"
             class="agribank-select"
             autocomplete="off"
-            aria-label="Chọn kỳ">
+            aria-label="Chọn kỳ"
+          >
             <option value="">Chọn kỳ</option>
             <option v-for="period in periodOptions" :key="period" :value="period">
               {{ period }}
@@ -72,58 +75,37 @@
       <!-- Action Buttons Section -->
       <div class="action-buttons-section">
         <div class="action-buttons-grid">
-          <button
-            class="action-btn btn-calculate"
-            @click="calculateSixIndicators"
-            title="Tính toán 6 chỉ tiêu chính">
+          <button class="action-btn btn-calculate" @click="calculateSixIndicators" title="Tính toán 6 chỉ tiêu chính">
             <i class="mdi mdi-calculator"></i>
             <span>Tính 6 chỉ tiêu</span>
           </button>
 
-          <button
-            class="action-btn btn-capital"
-            @click="navigateToCapital"
-            title="Nguồn vốn">
+          <button class="action-btn btn-capital" @click="navigateToCapital" title="Nguồn vốn">
             <i class="mdi mdi-bank-transfer"></i>
             <span>Nguồn vốn</span>
           </button>
 
-          <button
-            class="action-btn btn-debt"
-            @click="navigateToDebt"
-            title="Dư nợ">
+          <button class="action-btn btn-debt" @click="navigateToDebt" title="Dư nợ">
             <i class="mdi mdi-account-cash"></i>
             <span>Dư nợ</span>
           </button>
 
-          <button
-            class="action-btn btn-bad-debt"
-            @click="navigateToBadDebt"
-            title="Nợ xấu">
+          <button class="action-btn btn-bad-debt" @click="navigateToBadDebt" title="Nợ xấu">
             <i class="mdi mdi-alert-circle"></i>
             <span>Nợ xấu</span>
           </button>
 
-          <button
-            class="action-btn btn-service"
-            @click="navigateToService"
-            title="Thu dịch vụ">
+          <button class="action-btn btn-service" @click="navigateToService" title="Thu dịch vụ">
             <i class="mdi mdi-receipt"></i>
             <span>Thu dịch vụ</span>
           </button>
 
-          <button
-            class="action-btn btn-xlrr"
-            @click="navigateToXLRR"
-            title="Thu XLRR">
+          <button class="action-btn btn-xlrr" @click="navigateToXLRR" title="Thu XLRR">
             <i class="mdi mdi-cash-multiple"></i>
             <span>Thu XLRR</span>
           </button>
 
-          <button
-            class="action-btn btn-finance"
-            @click="navigateToFinance"
-            title="Tài chính">
+          <button class="action-btn btn-finance" @click="navigateToFinance" title="Tài chính">
             <i class="mdi mdi-chart-line"></i>
             <span>Tài Chính</span>
           </button>
@@ -140,9 +122,7 @@
           </div>
           <div class="section-title-area">
             <h2 class="agribank-section-title">Tổng quan 6 chỉ tiêu chính</h2>
-            <p class="agribank-section-subtitle">
-              Ma trận tình hình cập nhật các chỉ tiêu theo từng chi nhánh
-            </p>
+            <p class="agribank-section-subtitle">Ma trận tình hình cập nhật các chỉ tiêu theo từng chi nhánh</p>
             <div class="status-legend">
               <div class="legend-item legend-success">
                 <i class="mdi mdi-check-circle"></i>
@@ -168,11 +148,7 @@
                   <span>Chi nhánh / Đơn vị</span>
                 </div>
               </th>
-              <th
-                v-for="indicator in sixMainIndicators"
-                :key="indicator.code"
-                class="agribank-indicator-header"
-              >
+              <th v-for="indicator in sixMainIndicators" :key="indicator.code" class="agribank-indicator-header">
                 <div class="agribank-indicator-content">
                   <div class="indicator-icon-wrapper">
                     <i :class="indicator.icon" class="indicator-icon"></i>
@@ -192,11 +168,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr
-              v-for="unit in branchUnits"
-              :key="unit.id"
-              class="agribank-unit-row"
-            >
+            <tr v-for="unit in branchUnits" :key="unit.id" class="agribank-unit-row">
               <td class="agribank-unit-name-cell">
                 <div class="unit-info">
                   <div class="unit-icon">
@@ -208,15 +180,14 @@
               <td
                 v-for="indicator in sixMainIndicators"
                 :key="`${unit.id}-${indicator.code}`"
-                :class="[
-                  'agribank-status-cell',
-                  getStatusClass(unit.id, indicator.code)
-                ]"
+                :class="['agribank-status-cell', getStatusClass(unit.id, indicator.code)]"
                 @click="navigateToDetail(unit.id, indicator.code)"
               >
                 <div class="agribank-status-indicator">
                   <div v-if="getIndicatorValue(unit.id, indicator.code) !== null" class="status-success-wrapper">
-                    <div class="indicator-value">{{ formatIndicatorValue(getIndicatorValue(unit.id, indicator.code), indicator.code) }}</div>
+                    <div class="indicator-value">
+                      {{ formatIndicatorValue(getIndicatorValue(unit.id, indicator.code), indicator.code) }}
+                    </div>
                     <div class="value-unit">{{ getValueUnit(indicator.code) }}</div>
                   </div>
                   <div v-else class="status-pending-wrapper">
@@ -261,9 +232,7 @@
                     <span class="separator">/</span>
                     <span class="total-units">{{ branchUnits.length }}</span>
                   </div>
-                  <div class="summary-percentage">
-                    {{ getIndicatorCompletionPercentage(indicator.code) }}%
-                  </div>
+                  <div class="summary-percentage">{{ getIndicatorCompletionPercentage(indicator.code) }}%</div>
                 </div>
               </td>
               <td class="agribank-total-summary-cell">
@@ -290,28 +259,28 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
-import LoadingOverlay from '../../components/dashboard/LoadingOverlay.vue';
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import LoadingOverlay from '../../components/dashboard/LoadingOverlay.vue'
 
-const router = useRouter();
+const router = useRouter()
 
 // ===== REACTIVE DATA =====
-const isLoading = ref(false);
-const showDebug = ref(false);
+const isLoading = ref(false)
+const showDebug = ref(false)
 
 // Time-related filters
-const selectedYear = ref('');
-const periodType = ref('');
-const selectedPeriod = ref('');
+const selectedYear = ref('')
+const periodType = ref('')
+const selectedPeriod = ref('')
 
 // Options for dropdowns
-const yearOptions = ref(['2024', '2025']);
+const yearOptions = ref(['2024', '2025'])
 const periodTypeOptions = ref([
   { value: 'monthly', label: 'Tháng' },
   { value: 'quarterly', label: 'Quý' },
-  { value: 'yearly', label: 'Năm' }
-]);
+  { value: 'yearly', label: 'Năm' },
+])
 
 // Dữ liệu thực tế 15 đơn vị theo yêu cầu
 const branchUnits = ref([
@@ -334,63 +303,63 @@ const branchUnits = ref([
   { id: 12, name: 'PGD Số 2', code: 'PGD_02', type: 'pgd', unitCode: '7806' },
   { id: 13, name: 'PGD Số 3', code: 'PGD_03', type: 'pgd', unitCode: '7807' },
   { id: 14, name: 'PGD Số 5', code: 'PGD_05', type: 'pgd', unitCode: '7802' },
-  { id: 15, name: 'PGD Số 6', code: 'PGD_06', type: 'pgd', unitCode: '7805' }
-]);
+  { id: 15, name: 'PGD Số 6', code: 'PGD_06', type: 'pgd', unitCode: '7805' },
+])
 
 const sixMainIndicators = ref([
   {
     code: 'RR01',
     name: 'Nguồn vốn',
     unit: 'Triệu VND',
-    icon: 'mdi-bank-transfer-in'
+    icon: 'mdi-bank-transfer-in',
   },
   {
     code: 'DP01',
     name: 'Dư nợ',
     unit: 'Triệu VND',
-    icon: 'mdi-credit-card-outline'
+    icon: 'mdi-credit-card-outline',
   },
   {
     code: 'GL01',
     name: 'Nợ xấu',
     unit: '% (#.## %)',
-    icon: 'mdi-alert-circle-outline'
+    icon: 'mdi-alert-circle-outline',
   },
   {
     code: 'EI01',
     name: 'Thu nợ XLRR',
     unit: 'Triệu VND',
-    icon: 'mdi-cash-refund'
+    icon: 'mdi-cash-refund',
   },
   {
     code: 'GL41',
     name: 'Thu dịch vụ',
     unit: 'Triệu VND',
-    icon: 'mdi-receipt-text-outline'
+    icon: 'mdi-receipt-text-outline',
   },
   {
     code: 'LN03',
     name: 'Tài chính',
     unit: 'Triệu VND',
-    icon: 'mdi-chart-line'
-  }
-]);
+    icon: 'mdi-chart-line',
+  },
+])
 
 // Mock completion status for demo
-const completionMatrix = ref({});
+const completionMatrix = ref({})
 
 // ===== COMPUTED PROPERTIES =====
 const periodOptions = computed(() => {
-  const type = periodType.value;
+  const type = periodType.value
   if (type === 'monthly') {
-    return Array.from({length: 12}, (_, i) => `Tháng ${i + 1}`);
+    return Array.from({ length: 12 }, (_, i) => `Tháng ${i + 1}`)
   } else if (type === 'quarterly') {
-    return ['Quý 1', 'Quý 2', 'Quý 3', 'Quý 4'];
+    return ['Quý 1', 'Quý 2', 'Quý 3', 'Quý 4']
   } else if (type === 'yearly') {
-    return ['Cả năm'];
+    return ['Cả năm']
   }
-  return [];
-});
+  return []
+})
 
 const debugInfo = computed(() => ({
   selectedYear: selectedYear.value,
@@ -398,61 +367,63 @@ const debugInfo = computed(() => ({
   selectedPeriod: selectedPeriod.value,
   totalUnits: branchUnits.value.length,
   totalIndicators: sixMainIndicators.value.length,
-  completionRate: getTotalCompletionPercentage()
-}));
+  completionRate: getTotalCompletionPercentage(),
+}))
 
 // ===== METHODS =====
 
 // Load completion data từ backend API
 const loadCompletionData = async () => {
   try {
-    console.log('🔄 Đang tải dữ liệu completion từ backend...');
+    console.log('🔄 Đang tải dữ liệu completion từ backend...')
 
     // Gọi API để lấy dữ liệu completion cho 15 đơn vị
-    const response = await fetch(`http://localhost:5055/api/kpi/completion-status?year=${selectedYear.value}&period=${selectedPeriod.value}`);
+    const response = await fetch(
+      `http://localhost:5055/api/kpi/completion-status?year=${selectedYear.value}&period=${selectedPeriod.value}`
+    )
 
     if (response.ok) {
-      const data = await response.json();
-      completionMatrix.value = data;
-      console.log('✅ Đã load completion data từ backend:', data);
+      const data = await response.json()
+      completionMatrix.value = data
+      console.log('✅ Đã load completion data từ backend:', data)
     } else {
-      console.warn('⚠️ Backend API chưa sẵn sàng, sử dụng dữ liệu mặc định');
+      console.warn('⚠️ Backend API chưa sẵn sàng, sử dụng dữ liệu mặc định')
       // Khởi tạo completion matrix rỗng cho 15 đơn vị thật
-      initializeEmptyCompletionMatrix();
+      initializeEmptyCompletionMatrix()
     }
   } catch (error) {
-    console.error('❌ Lỗi khi gọi API completion:', error);
+    console.error('❌ Lỗi khi gọi API completion:', error)
     // Fallback: khởi tạo completion matrix rỗng
-    initializeEmptyCompletionMatrix();
+    initializeEmptyCompletionMatrix()
   }
-};
+}
 
 // Khởi tạo completion matrix rỗng cho 15 đơn vị thật
 const initializeEmptyCompletionMatrix = () => {
-  const matrix = {};
+  const matrix = {}
   branchUnits.value.forEach(unit => {
-    matrix[unit.id] = {};
+    matrix[unit.id] = {}
     sixMainIndicators.value.forEach(indicator => {
       // Tất cả đều null = chưa có số liệu, cần tính toán thực tế
-      matrix[unit.id][indicator.code] = null;
-    });
-  });
-  completionMatrix.value = matrix;
-  console.log('🔧 Khởi tạo completion matrix rỗng cho 15 đơn vị thực tế');
-};
+      matrix[unit.id][indicator.code] = null
+    })
+  })
+  completionMatrix.value = matrix
+  console.log('🔧 Khởi tạo completion matrix rỗng cho 15 đơn vị thực tế')
+}
 
 // Status checking methods - updated to handle numeric values
 const isCompleted = (unitId, indicatorCode) => {
-  const value = completionMatrix.value[unitId]?.[indicatorCode];
-  return value !== null && value !== undefined;
-};
+  const value = completionMatrix.value[unitId]?.[indicatorCode]
+  return value !== null && value !== undefined
+}
 
 const getIndicatorValue = (unitId, indicatorCode) => {
-  return completionMatrix.value[unitId]?.[indicatorCode] || null;
-};
+  return completionMatrix.value[unitId]?.[indicatorCode] || null
+}
 
 const formatIndicatorValue = (value, indicatorCode) => {
-  if (value === null || value === undefined) return '-';
+  if (value === null || value === undefined) return '-'
 
   switch (indicatorCode) {
     case 'RR01': // Nguồn vốn
@@ -463,152 +434,150 @@ const formatIndicatorValue = (value, indicatorCode) => {
       // Định dạng số với ngăn cách hàng nghìn kiểu Việt Nam
       return new Intl.NumberFormat('vi-VN', {
         minimumFractionDigits: 0,
-        maximumFractionDigits: 0
-      }).format(value);
+        maximumFractionDigits: 0,
+      }).format(value)
     case 'GL01': // Nợ xấu (%)
-      return `${value}%`;
+      return `${value}%`
     default:
-      return value.toString();
+      return value.toString()
   }
-};
+}
 
-const getValueUnit = (indicatorCode) => {
+const getValueUnit = indicatorCode => {
   switch (indicatorCode) {
     case 'DP01':
     case 'LN01':
     case 'LN03':
     case 'GL41':
     case 'GL41':
-      return 'Tr VND';
+      return 'Tr VND'
     case 'GL01':
-      return '';
+      return ''
     default:
-      return '';
+      return ''
   }
-};
+}
 
 const getStatusClass = (unitId, indicatorCode) => {
-  return isCompleted(unitId, indicatorCode) ? 'agribank-status-completed' : 'agribank-status-pending';
-};
+  return isCompleted(unitId, indicatorCode) ? 'agribank-status-completed' : 'agribank-status-pending'
+}
 
-const getCompletedCount = (unitId) => {
-  if (!completionMatrix.value[unitId]) return 0;
-  return Object.values(completionMatrix.value[unitId]).filter(value => value !== null && value !== undefined).length;
-};
+const getCompletedCount = unitId => {
+  if (!completionMatrix.value[unitId]) return 0
+  return Object.values(completionMatrix.value[unitId]).filter(value => value !== null && value !== undefined).length
+}
 
-const getProgressStatus = (unitId) => {
-  const completed = getCompletedCount(unitId);
-  const total = sixMainIndicators.value.length;
-  const rate = (completed / total) * 100;
+const getProgressStatus = unitId => {
+  const completed = getCompletedCount(unitId)
+  const total = sixMainIndicators.value.length
+  const rate = (completed / total) * 100
 
-  if (rate === 100) return 'Hoàn thành';
-  if (rate >= 80) return 'Tốt';
-  if (rate >= 50) return 'Khá';
-  if (rate > 0) return 'Yếu';
-  return 'Chưa bắt đầu';
-};
+  if (rate === 100) return 'Hoàn thành'
+  if (rate >= 80) return 'Tốt'
+  if (rate >= 50) return 'Khá'
+  if (rate > 0) return 'Yếu'
+  return 'Chưa bắt đầu'
+}
 
-const getProgressStatusClass = (unitId) => {
-  const completed = getCompletedCount(unitId);
-  const total = sixMainIndicators.value.length;
-  const rate = (completed / total) * 100;
+const getProgressStatusClass = unitId => {
+  const completed = getCompletedCount(unitId)
+  const total = sixMainIndicators.value.length
+  const rate = (completed / total) * 100
 
-  if (rate === 100) return 'status-complete';
-  if (rate >= 80) return 'status-good';
-  if (rate >= 50) return 'status-fair';
-  if (rate > 0) return 'status-poor';
-  return 'status-none';
-};
+  if (rate === 100) return 'status-complete'
+  if (rate >= 80) return 'status-good'
+  if (rate >= 50) return 'status-fair'
+  if (rate > 0) return 'status-poor'
+  return 'status-none'
+}
 
-const getIndicatorCompletedCount = (indicatorCode) => {
-  return branchUnits.value.filter(unit =>
-    isCompleted(unit.id, indicatorCode)
-  ).length;
-};
+const getIndicatorCompletedCount = indicatorCode => {
+  return branchUnits.value.filter(unit => isCompleted(unit.id, indicatorCode)).length
+}
 
-const getIndicatorCompletionPercentage = (indicatorCode) => {
-  const completed = getIndicatorCompletedCount(indicatorCode);
-  const total = branchUnits.value.length;
-  return Math.round((completed / total) * 100);
-};
+const getIndicatorCompletionPercentage = indicatorCode => {
+  const completed = getIndicatorCompletedCount(indicatorCode)
+  const total = branchUnits.value.length
+  return Math.round((completed / total) * 100)
+}
 
 const getTotalCompletionPercentage = () => {
-  const totalPossible = branchUnits.value.length * sixMainIndicators.value.length;
-  let totalCompleted = 0;
+  const totalPossible = branchUnits.value.length * sixMainIndicators.value.length
+  let totalCompleted = 0
 
   branchUnits.value.forEach(unit => {
-    totalCompleted += getCompletedCount(unit.id);
-  });
+    totalCompleted += getCompletedCount(unit.id)
+  })
 
-  return Math.round((totalCompleted / totalPossible) * 100);
-};
+  return Math.round((totalCompleted / totalPossible) * 100)
+}
 
-const getUnitIcon = (unitType) => {
-  switch(unitType) {
+const getUnitIcon = unitType => {
+  switch (unitType) {
     case 'cnl1':
-      return 'mdi-bank'; // CN Lai Châu - Chi nhánh cấp 1
+      return 'mdi-bank' // CN Lai Châu - Chi nhánh cấp 1
     case 'cnl2':
-      return 'mdi-office-building'; // CNL2 - Chi nhánh cấp 2
+      return 'mdi-office-building' // CNL2 - Chi nhánh cấp 2
     case 'pgd':
-      return 'mdi-domain'; // PGD - Phòng giao dịch
+      return 'mdi-domain' // PGD - Phòng giao dịch
     default:
-      return 'mdi-bank-outline';
+      return 'mdi-bank-outline'
   }
-};
+}
 
 // Navigation methods
 const navigateToDetail = (unitId, indicatorCode) => {
-  console.log(`📊 Navigating to detail: Unit ${unitId}, Indicator ${indicatorCode}`);
+  console.log(`📊 Navigating to detail: Unit ${unitId}, Indicator ${indicatorCode}`)
   // Implement navigation logic here
   // router.push({
   //   name: 'IndicatorDetail',
   //   params: { unitId, indicatorCode }
   // });
-};
+}
 
 // Event handlers
 const onPeriodTypeChange = () => {
-  selectedPeriod.value = '';
-  console.log('📆 Period type changed:', periodType.value);
-};
+  selectedPeriod.value = ''
+  console.log('📆 Period type changed:', periodType.value)
+}
 
 const loadData = async () => {
   if (!selectedYear.value || !selectedPeriod.value) {
-    console.log('⚠️ Thiếu thông tin bộ lọc bắt buộc');
-    return;
+    console.log('⚠️ Thiếu thông tin bộ lọc bắt buộc')
+    return
   }
 
-  isLoading.value = true;
+  isLoading.value = true
   console.log('🔄 Đang load dữ liệu thực tế với bộ lọc:', {
     year: selectedYear.value,
     periodType: periodType.value,
     period: selectedPeriod.value,
-    units: branchUnits.value.length
-  });
+    units: branchUnits.value.length,
+  })
 
   try {
     // Load completion data từ backend thực tế
-    await loadCompletionData();
+    await loadCompletionData()
 
-    console.log('✅ Đã load dữ liệu thành công từ backend');
+    console.log('✅ Đã load dữ liệu thành công từ backend')
   } catch (error) {
-    console.error('❌ Lỗi khi load dữ liệu:', error);
+    console.error('❌ Lỗi khi load dữ liệu:', error)
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
-};
+}
 
 // Action Button Handlers
 const calculateSixIndicators = async () => {
-  console.log('🧮 Bắt đầu tính toán 6 chỉ tiêu chính cho 15 đơn vị...');
-  isLoading.value = true;
+  console.log('🧮 Bắt đầu tính toán 6 chỉ tiêu chính cho 15 đơn vị...')
+  isLoading.value = true
 
   try {
     // Gọi API backend để tính toán thực tế
     const response = await fetch('http://localhost:5055/api/kpi/calculate-six-indicators', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         year: selectedYear.value,
@@ -617,81 +586,81 @@ const calculateSixIndicators = async () => {
         units: branchUnits.value.map(unit => ({
           id: unit.id,
           code: unit.code,
-          unitCode: unit.unitCode
-        }))
-      })
-    });
+          unitCode: unit.unitCode,
+        })),
+      }),
+    })
 
     if (response.ok) {
-      const result = await response.json();
-      console.log('✅ Kết quả tính toán từ backend:', result);
+      const result = await response.json()
+      console.log('✅ Kết quả tính toán từ backend:', result)
 
       // Reload data sau khi tính toán
-      await loadCompletionData();
+      await loadCompletionData()
     } else {
-      console.warn('⚠️ Backend API chưa sẵn sàng cho tính toán');
+      console.warn('⚠️ Backend API chưa sẵn sàng cho tính toán')
     }
 
-    console.log('✅ Hoàn thành tính toán 6 chỉ tiêu');
+    console.log('✅ Hoàn thành tính toán 6 chỉ tiêu')
   } catch (error) {
-    console.error('❌ Lỗi khi tính toán:', error);
+    console.error('❌ Lỗi khi tính toán:', error)
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
-};
+}
 
 const navigateToCapital = () => {
-  console.log('🏦 Chuyển đến màn hình Nguồn vốn (RR01)');
+  console.log('🏦 Chuyển đến màn hình Nguồn vốn (RR01)')
   // router.push({ name: 'CapitalManagement' });
-};
+}
 
 const navigateToDebt = () => {
-  console.log('💰 Chuyển đến màn hình Dư nợ (DP01)');
+  console.log('💰 Chuyển đến màn hình Dư nợ (DP01)')
   // router.push({ name: 'DebtManagement' });
-};
+}
 
 const navigateToBadDebt = () => {
-  console.log('⚠️ Chuyển đến màn hình Nợ xấu (GL01)');
+  console.log('⚠️ Chuyển đến màn hình Nợ xấu (GL01)')
   // router.push({ name: 'BadDebtManagement' });
-};
+}
 
 const navigateToService = () => {
-  console.log('🧾 Chuyển đến màn hình Thu dịch vụ (GL41)');
+  console.log('🧾 Chuyển đến màn hình Thu dịch vụ (GL41)')
   // router.push({ name: 'ServiceRevenue' });
-};
+}
 
 const navigateToXLRR = () => {
-  console.log('💸 Chuyển đến màn hình Thu nợ XLRR (EI01)');
+  console.log('💸 Chuyển đến màn hình Thu nợ XLRR (EI01)')
   // router.push({ name: 'XLRRRevenue' });
-};
+}
 
 const navigateToFinance = () => {
-  console.log('📊 Chuyển đến màn hình Tài chính (LN03)');
+  console.log('📊 Chuyển đến màn hình Tài chính (LN03)')
   // router.push({ name: 'FinancialReports' });
-};
+}
 
 // ===== LIFECYCLE =====
 onMounted(() => {
-  console.log('🚀 CalculationDashboard mounted với 15 đơn vị thực tế');
+  console.log('🚀 CalculationDashboard mounted với 15 đơn vị thực tế')
 
   // Set default values
-  selectedYear.value = '2024';
-  periodType.value = 'monthly';
-  selectedPeriod.value = 'Tháng 12';
+  selectedYear.value = '2024'
+  periodType.value = 'monthly'
+  selectedPeriod.value = 'Tháng 12'
 
   // Khởi tạo dữ liệu thực tế - không dùng mockdata
-  initializeEmptyCompletionMatrix();
+  initializeEmptyCompletionMatrix()
 
   // Load dữ liệu completion từ backend
-  loadCompletionData();
-});
+  loadCompletionData()
+})
 
 // ===== WATCHERS =====
 watch([selectedYear, selectedPeriod], () => {
   if (selectedYear.value && selectedPeriod.value) {
-    loadData();
+    loadData()
   }
-});
+})
 </script>
 
 <style scoped>

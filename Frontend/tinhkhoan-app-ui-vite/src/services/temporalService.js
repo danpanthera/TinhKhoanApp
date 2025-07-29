@@ -1,48 +1,48 @@
 // 🕒 temporalService.js - Dịch vụ xử lý SQL Server Temporal Tables thay thế SCD Type 2
-import api from './api';
+import api from './api'
 
 class TemporalService {
   constructor() {
-    this.baseURL = '/temporal';
+    this.baseURL = '/temporal'
   }
 
   // 🔍 Query temporal data với filters và pagination
   async queryTemporalData(queryRequest) {
     try {
-      const response = await api.post(`${this.baseURL}/query`, queryRequest);
+      const response = await api.post(`${this.baseURL}/query`, queryRequest)
       return {
         success: true,
         data: response.data.data,
-        message: response.data.message
-      };
+        message: response.data.message,
+      }
     } catch (error) {
-      console.error('❌ Lỗi query temporal data:', error);
+      console.error('❌ Lỗi query temporal data:', error)
       return {
         success: false,
-        error: error.response?.data?.message || 'Lỗi kết nối server'
-      };
+        error: error.response?.data?.message || 'Lỗi kết nối server',
+      }
     }
   }
 
   // 📚 Lấy lịch sử thay đổi của một entity
   async getEntityHistory(entityId, fromDate = null, toDate = null) {
     try {
-      const params = {};
-      if (fromDate) params.fromDate = fromDate;
-      if (toDate) params.toDate = toDate;
+      const params = {}
+      if (fromDate) params.fromDate = fromDate
+      if (toDate) params.toDate = toDate
 
-      const response = await api.get(`${this.baseURL}/history/${entityId}`, { params });
+      const response = await api.get(`${this.baseURL}/history/${entityId}`, { params })
       return {
         success: true,
         data: response.data.data,
-        message: response.data.message
-      };
+        message: response.data.message,
+      }
     } catch (error) {
-      console.error('❌ Lỗi lấy lịch sử entity:', error);
+      console.error('❌ Lỗi lấy lịch sử entity:', error)
       return {
         success: false,
-        error: error.response?.data?.message || 'Lỗi kết nối server'
-      };
+        error: error.response?.data?.message || 'Lỗi kết nối server',
+      }
     }
   }
 
@@ -50,36 +50,36 @@ class TemporalService {
   async getAsOfDate(entityId, asOfDate) {
     try {
       const response = await api.get(`${this.baseURL}/as-of/${entityId}`, {
-        params: { asOfDate }
-      });
+        params: { asOfDate },
+      })
       return {
         success: true,
         data: response.data.data,
-        message: response.data.message
-      };
+        message: response.data.message,
+      }
     } catch (error) {
-      console.error('❌ Lỗi lấy entity as-of-date:', error);
+      console.error('❌ Lỗi lấy entity as-of-date:', error)
       return {
         success: false,
-        error: error.response?.data?.message || 'Lỗi kết nối server'
-      };
+        error: error.response?.data?.message || 'Lỗi kết nối server',
+      }
     }
   }
 
   // 🛠️ Bật temporal table cho một bảng
   async enableTemporalTable(tableName) {
     try {
-      const response = await api.post(`${this.baseURL}/enable/${tableName}`);
+      const response = await api.post(`${this.baseURL}/enable/${tableName}`)
       return {
         success: true,
-        message: response.data.message
-      };
+        message: response.data.message,
+      }
     } catch (error) {
-      console.error('❌ Lỗi bật temporal table:', error);
+      console.error('❌ Lỗi bật temporal table:', error)
       return {
         success: false,
-        error: error.response?.data?.message || 'Lỗi kết nối server'
-      };
+        error: error.response?.data?.message || 'Lỗi kết nối server',
+      }
     }
   }
 
@@ -88,36 +88,36 @@ class TemporalService {
     try {
       const response = await api.post(`${this.baseURL}/index/${tableName}`, {
         indexName,
-        columns
-      });
+        columns,
+      })
       return {
         success: true,
-        message: response.data.message
-      };
+        message: response.data.message,
+      }
     } catch (error) {
-      console.error('❌ Lỗi tạo columnstore index:', error);
+      console.error('❌ Lỗi tạo columnstore index:', error)
       return {
         success: false,
-        error: error.response?.data?.message || 'Lỗi kết nối server'
-      };
+        error: error.response?.data?.message || 'Lỗi kết nối server',
+      }
     }
   }
 
   // 📊 Lấy thống kê temporal table
   async getTemporalStatistics(tableName) {
     try {
-      const response = await api.get(`${this.baseURL}/statistics/${tableName}`);
+      const response = await api.get(`${this.baseURL}/statistics/${tableName}`)
       return {
         success: true,
         data: response.data.data,
-        message: response.data.message
-      };
+        message: response.data.message,
+      }
     } catch (error) {
-      console.error('❌ Lỗi lấy thống kê temporal:', error);
+      console.error('❌ Lỗi lấy thống kê temporal:', error)
       return {
         success: false,
-        error: error.response?.data?.message || 'Lỗi kết nối server'
-      };
+        error: error.response?.data?.message || 'Lỗi kết nối server',
+      }
     }
   }
 
@@ -127,19 +127,19 @@ class TemporalService {
       const response = await api.post(`${this.baseURL}/compare`, {
         date1,
         date2,
-        filter
-      });
+        filter,
+      })
       return {
         success: true,
         data: response.data.data,
-        message: response.data.message
-      };
+        message: response.data.message,
+      }
     } catch (error) {
-      console.error('❌ Lỗi so sánh temporal data:', error);
+      console.error('❌ Lỗi so sánh temporal data:', error)
       return {
         success: false,
-        error: error.response?.data?.message || 'Lỗi kết nối server'
-      };
+        error: error.response?.data?.message || 'Lỗi kết nối server',
+      }
     }
   }
 
@@ -151,10 +151,10 @@ class TemporalService {
       filter: options.filter || null,
       orderBy: options.orderBy || 'ImportDate DESC',
       page: options.page || 1,
-      pageSize: options.pageSize || 50
-    };
+      pageSize: options.pageSize || 50,
+    }
 
-    return await this.queryTemporalData(queryRequest);
+    return await this.queryTemporalData(queryRequest)
   }
 
   // 📊 Lấy dữ liệu tại một thời điểm cụ thể
@@ -164,10 +164,10 @@ class TemporalService {
       filter: options.filter || null,
       orderBy: options.orderBy || 'ImportDate DESC',
       page: options.page || 1,
-      pageSize: options.pageSize || 50
-    };
+      pageSize: options.pageSize || 50,
+    }
 
-    return await this.queryTemporalData(queryRequest);
+    return await this.queryTemporalData(queryRequest)
   }
 
   // 🔄 Lấy tất cả lịch sử thay đổi (thay thế SCD Type 2 history)
@@ -177,70 +177,66 @@ class TemporalService {
       filter: options.filter || null,
       orderBy: options.orderBy || 'ValidFrom DESC',
       page: options.page || 1,
-      pageSize: options.pageSize || 100
-    };
+      pageSize: options.pageSize || 100,
+    }
 
-    return await this.queryTemporalData(queryRequest);
+    return await this.queryTemporalData(queryRequest)
   }
 
   // 📋 Utility methods cho frontend components
-  
+
   // Format temporal query request từ UI filters
   formatQueryRequest(uiFilters) {
-    const request = {};
-    
+    const request = {}
+
     if (uiFilters.asOfDate) {
-      request.asOfDate = uiFilters.asOfDate;
+      request.asOfDate = uiFilters.asOfDate
     } else if (uiFilters.fromDate || uiFilters.toDate) {
-      if (uiFilters.fromDate) request.fromDate = uiFilters.fromDate;
-      if (uiFilters.toDate) request.toDate = uiFilters.toDate;
+      if (uiFilters.fromDate) request.fromDate = uiFilters.fromDate
+      if (uiFilters.toDate) request.toDate = uiFilters.toDate
     }
 
     if (uiFilters.branchCode) {
-      request.filter = `BranchCode = '${uiFilters.branchCode}'`;
+      request.filter = `BranchCode = '${uiFilters.branchCode}'`
     }
 
     if (uiFilters.employeeCode) {
-      const filterCondition = `EmployeeCode = '${uiFilters.employeeCode}'`;
-      request.filter = request.filter ? 
-        `${request.filter} AND ${filterCondition}` : 
-        filterCondition;
+      const filterCondition = `EmployeeCode = '${uiFilters.employeeCode}'`
+      request.filter = request.filter ? `${request.filter} AND ${filterCondition}` : filterCondition
     }
 
     if (uiFilters.kpiCode) {
-      const filterCondition = `KpiCode = '${uiFilters.kpiCode}'`;
-      request.filter = request.filter ? 
-        `${request.filter} AND ${filterCondition}` : 
-        filterCondition;
+      const filterCondition = `KpiCode = '${uiFilters.kpiCode}'`
+      request.filter = request.filter ? `${request.filter} AND ${filterCondition}` : filterCondition
     }
 
-    request.page = uiFilters.page || 1;
-    request.pageSize = uiFilters.pageSize || 50;
-    request.orderBy = uiFilters.sortBy || 'ImportDate DESC';
+    request.page = uiFilters.page || 1
+    request.pageSize = uiFilters.pageSize || 50
+    request.orderBy = uiFilters.sortBy || 'ImportDate DESC'
 
-    return request;
+    return request
   }
 
   // Validate temporal query request
   validateQueryRequest(request) {
-    const errors = [];
+    const errors = []
 
     if (request.asOfDate && (request.fromDate || request.toDate)) {
-      errors.push('Không thể sử dụng cả asOfDate và fromDate/toDate cùng lúc');
+      errors.push('Không thể sử dụng cả asOfDate và fromDate/toDate cùng lúc')
     }
 
     if (request.page < 1) {
-      errors.push('Page phải lớn hơn 0');
+      errors.push('Page phải lớn hơn 0')
     }
 
     if (request.pageSize < 1 || request.pageSize > 1000) {
-      errors.push('PageSize phải trong khoảng 1-1000');
+      errors.push('PageSize phải trong khoảng 1-1000')
     }
 
     return {
       isValid: errors.length === 0,
-      errors
-    };
+      errors,
+    }
   }
 
   // Format temporal statistics cho UI display
@@ -250,16 +246,12 @@ class TemporalService {
       currentRecords: stats.currentRecords?.toLocaleString() || '0',
       historyRecords: stats.historyRecords?.toLocaleString() || '0',
       totalRecords: (stats.currentRecords + stats.historyRecords)?.toLocaleString() || '0',
-      earliestChange: stats.earliestChange ? 
-        new Date(stats.earliestChange).toLocaleDateString('vi-VN') : 
-        'N/A',
-      latestChange: stats.latestChange ? 
-        new Date(stats.latestChange).toLocaleDateString('vi-VN') : 
-        'N/A',
+      earliestChange: stats.earliestChange ? new Date(stats.earliestChange).toLocaleDateString('vi-VN') : 'N/A',
+      latestChange: stats.latestChange ? new Date(stats.latestChange).toLocaleDateString('vi-VN') : 'N/A',
       uniqueEntities: stats.uniqueEntities?.toLocaleString() || '0',
-      generatedAt: new Date(stats.generatedAt).toLocaleString('vi-VN')
-    };
+      generatedAt: new Date(stats.generatedAt).toLocaleString('vi-VN'),
+    }
   }
 }
 
-export default new TemporalService();
+export default new TemporalService()

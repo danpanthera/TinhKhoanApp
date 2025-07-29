@@ -50,175 +50,175 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
-import { toast } from 'vue3-toastify';
+import { ref, onMounted, onUnmounted } from 'vue'
+import { toast } from 'vue3-toastify'
 
 // Reactive states
-const showInstallPrompt = ref(false);
-const updateAvailable = ref(false);
-const isStandalone = ref(false);
-const isPWAInstalled = ref(false);
-const deferredPrompt = ref(null);
-let registration = null;
+const showInstallPrompt = ref(false)
+const updateAvailable = ref(false)
+const isStandalone = ref(false)
+const isPWAInstalled = ref(false)
+const deferredPrompt = ref(null)
+let registration = null
 
 // Phát hiện standalone mode
 const checkStandaloneMode = () => {
-  isStandalone.value = window.matchMedia('(display-mode: standalone)').matches ||
-                      window.navigator.standalone ||
-                      document.referrer.includes('android-app://');
-};
+  isStandalone.value =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone ||
+    document.referrer.includes('android-app://')
+}
 
 // Phát hiện PWA đã được cài đặt
 const checkPWAInstalled = () => {
-  isPWAInstalled.value = isStandalone.value || 
-                        localStorage.getItem('pwa-installed') === 'true';
-};
+  isPWAInstalled.value = isStandalone.value || localStorage.getItem('pwa-installed') === 'true'
+}
 
 // Xử lý sự kiện beforeinstallprompt
-const handleBeforeInstallPrompt = (e) => {
-  console.log('🔧 PWA: Before install prompt triggered');
-  e.preventDefault();
-  deferredPrompt.value = e;
-  
+const handleBeforeInstallPrompt = e => {
+  console.log('🔧 PWA: Before install prompt triggered')
+  e.preventDefault()
+  deferredPrompt.value = e
+
   // Chỉ hiển thị prompt nếu chưa cài đặt PWA
   if (!isPWAInstalled.value && !isStandalone.value) {
-    showInstallPrompt.value = true;
+    showInstallPrompt.value = true
   }
-};
+}
 
 // Cài đặt ứng dụng
 const installApp = async () => {
   if (!deferredPrompt.value) {
-    toast.warning('Trình duyệt không hỗ trợ cài đặt PWA');
-    return;
+    toast.warning('Trình duyệt không hỗ trợ cài đặt PWA')
+    return
   }
 
   try {
     // Hiển thị prompt cài đặt
-    deferredPrompt.value.prompt();
-    
+    deferredPrompt.value.prompt()
+
     // Chờ người dùng phản hồi
-    const { outcome } = await deferredPrompt.value.userChoice;
-    
+    const { outcome } = await deferredPrompt.value.userChoice
+
     if (outcome === 'accepted') {
-      console.log('🔧 PWA: User accepted the install prompt');
-      toast.success('Đang cài đặt ứng dụng...');
-      localStorage.setItem('pwa-installed', 'true');
-      isPWAInstalled.value = true;
+      console.log('🔧 PWA: User accepted the install prompt')
+      toast.success('Đang cài đặt ứng dụng...')
+      localStorage.setItem('pwa-installed', 'true')
+      isPWAInstalled.value = true
     } else {
-      console.log('🔧 PWA: User dismissed the install prompt');
-      toast.info('Đã hủy cài đặt ứng dụng');
+      console.log('🔧 PWA: User dismissed the install prompt')
+      toast.info('Đã hủy cài đặt ứng dụng')
     }
-    
+
     // Reset prompt
-    deferredPrompt.value = null;
-    showInstallPrompt.value = false;
+    deferredPrompt.value = null
+    showInstallPrompt.value = false
   } catch (error) {
-    console.error('🔧 PWA: Error during installation:', error);
-    toast.error('Lỗi khi cài đặt ứng dụng');
+    console.error('🔧 PWA: Error during installation:', error)
+    toast.error('Lỗi khi cài đặt ứng dụng')
   }
-};
+}
 
 // Từ chối prompt cài đặt
 const dismissPrompt = () => {
-  showInstallPrompt.value = false;
+  showInstallPrompt.value = false
   // Ghi nhớ người dùng đã từ chối (có thể hiển thị lại sau 30 ngày)
-  localStorage.setItem('pwa-prompt-dismissed', Date.now().toString());
-};
+  localStorage.setItem('pwa-prompt-dismissed', Date.now().toString())
+}
 
 // Cập nhật ứng dụng
 const updateApp = async () => {
   if (registration && registration.waiting) {
     // Gửi message để skip waiting
-    registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-    toast.success('Đang cập nhật ứng dụng...');
-    
+    registration.waiting.postMessage({ type: 'SKIP_WAITING' })
+    toast.success('Đang cập nhật ứng dụng...')
+
     // Reload trang sau khi cập nhật
     setTimeout(() => {
-      window.location.reload();
-    }, 1000);
+      window.location.reload()
+    }, 1000)
   }
-  updateAvailable.value = false;
-};
+  updateAvailable.value = false
+}
 
 // Từ chối cập nhật
 const dismissUpdate = () => {
-  updateAvailable.value = false;
-};
+  updateAvailable.value = false
+}
 
 // Xử lý Service Worker updates
 const handleSWUpdate = () => {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      console.log('🔧 PWA: Service Worker updated');
-      toast.success('Ứng dụng đã được cập nhật thành công!');
-    });
+      console.log('🔧 PWA: Service Worker updated')
+      toast.success('Ứng dụng đã được cập nhật thành công!')
+    })
 
-    navigator.serviceWorker.ready.then((reg) => {
-      registration = reg;
-      
+    navigator.serviceWorker.ready.then(reg => {
+      registration = reg
+
       // Kiểm tra cập nhật định kỳ
       setInterval(() => {
-        reg.update();
-      }, 60000); // Kiểm tra mỗi phút
+        reg.update()
+      }, 60000) // Kiểm tra mỗi phút
 
       // Lắng nghe sự kiện cập nhật
       reg.addEventListener('updatefound', () => {
-        const newWorker = reg.installing;
+        const newWorker = reg.installing
         if (newWorker) {
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('🔧 PWA: New content available');
-              updateAvailable.value = true;
+              console.log('🔧 PWA: New content available')
+              updateAvailable.value = true
             }
-          });
+          })
         }
-      });
-    });
+      })
+    })
   }
-};
+}
 
 // Kiểm tra nếu nên hiển thị install prompt
 const shouldShowInstallPrompt = () => {
-  const dismissed = localStorage.getItem('pwa-prompt-dismissed');
+  const dismissed = localStorage.getItem('pwa-prompt-dismissed')
   if (dismissed) {
-    const dismissedTime = parseInt(dismissed);
-    const thirtyDays = 30 * 24 * 60 * 60 * 1000; // 30 ngày
+    const dismissedTime = parseInt(dismissed)
+    const thirtyDays = 30 * 24 * 60 * 60 * 1000 // 30 ngày
     if (Date.now() - dismissedTime < thirtyDays) {
-      return false;
+      return false
     }
   }
-  return !isPWAInstalled.value && !isStandalone.value;
-};
+  return !isPWAInstalled.value && !isStandalone.value
+}
 
 onMounted(() => {
-  checkStandaloneMode();
-  checkPWAInstalled();
-  handleSWUpdate();
+  checkStandaloneMode()
+  checkPWAInstalled()
+  handleSWUpdate()
 
   // Lắng nghe sự kiện beforeinstallprompt
-  window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
 
   // Lắng nghe sự kiện appinstalled
   window.addEventListener('appinstalled', () => {
-    console.log('🔧 PWA: App was installed');
-    toast.success('Ứng dụng đã được cài đặt thành công!');
-    localStorage.setItem('pwa-installed', 'true');
-    isPWAInstalled.value = true;
-    showInstallPrompt.value = false;
-  });
+    console.log('🔧 PWA: App was installed')
+    toast.success('Ứng dụng đã được cài đặt thành công!')
+    localStorage.setItem('pwa-installed', 'true')
+    isPWAInstalled.value = true
+    showInstallPrompt.value = false
+  })
 
   // Delay một chút trước khi hiển thị prompt
   setTimeout(() => {
     if (shouldShowInstallPrompt() && deferredPrompt.value) {
-      showInstallPrompt.value = true;
+      showInstallPrompt.value = true
     }
-  }, 3000); // Hiển thị sau 3 giây
-});
+  }, 3000) // Hiển thị sau 3 giây
+})
 
 onUnmounted(() => {
-  window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-});
+  window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+})
 </script>
 
 <style scoped>
@@ -228,7 +228,7 @@ onUnmounted(() => {
   bottom: 20px;
   left: 20px;
   right: 20px;
-  background: linear-gradient(135deg, #8B1538, #A91B47);
+  background: linear-gradient(135deg, #8b1538, #a91b47);
   color: white;
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
@@ -431,28 +431,28 @@ onUnmounted(() => {
     left: 10px;
     right: 10px;
   }
-  
+
   .install-content,
   .update-content {
     padding: 12px 16px;
     gap: 12px;
   }
-  
+
   .install-text h4,
   .update-text h4 {
     font-size: 1rem;
   }
-  
+
   .install-text p,
   .update-text p {
     font-size: 0.85rem;
   }
-  
+
   .app-logo {
     width: 40px;
     height: 40px;
   }
-  
+
   .pwa-status {
     top: 70px;
     right: 10px;
@@ -468,7 +468,7 @@ onUnmounted(() => {
     text-align: center;
     gap: 12px;
   }
-  
+
   .install-actions,
   .update-actions {
     justify-content: center;

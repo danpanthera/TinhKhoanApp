@@ -2,9 +2,7 @@
   <div class="employee-kpi-assignment">
     <h1 class="text-primary">🎯 Giao khoán KPI cho Cán bộ</h1>
 
-    <div v-if="errorMessage" class="alert-agribank alert-danger">
-      <strong>❌ Lỗi:</strong> {{ errorMessage }}
-    </div>
+    <div v-if="errorMessage" class="alert-agribank alert-danger"><strong>❌ Lỗi:</strong> {{ errorMessage }}</div>
 
     <div v-if="loading" class="loading-agribank">
       <div class="spinner-agribank"></div>
@@ -23,7 +21,8 @@
             <select v-model="selectedPeriodId" class="form-control">
               <option value="">-- Chọn kỳ khoán --</option>
               <option v-for="period in khoanPeriods" :key="getId(period)" :value="getId(period)">
-                {{ getName(period) }} ({{ formatDate(safeGet(period, 'StartDate')) }} - {{ formatDate(safeGet(period, 'EndDate')) }})
+                {{ getName(period) }} ({{ formatDate(safeGet(period, 'StartDate')) }} -
+                {{ formatDate(safeGet(period, 'EndDate')) }})
               </option>
             </select>
           </div>
@@ -77,7 +76,9 @@
           <h3 class="card-title">👥 Danh sách Cán bộ ({{ filteredEmployeesCount }} người)</h3>
           <div>
             <span class="badge-agribank badge-primary">🏢 {{ getBranchName() || 'Tất cả chi nhánh' }}</span>
-            <span class="badge-agribank badge-secondary" v-if="selectedDepartmentId" style="margin-left: 8px;">🏬 {{ getDepartmentName() }}</span>
+            <span class="badge-agribank badge-secondary" v-if="selectedDepartmentId" style="margin-left: 8px"
+              >🏬 {{ getDepartmentName() }}</span
+            >
           </div>
         </div>
 
@@ -85,7 +86,7 @@
           <table class="table-agribank">
             <thead>
               <tr>
-                <th style="width: 50px; text-align: center;">
+                <th style="width: 50px; text-align: center">
                   <input
                     type="checkbox"
                     @change="toggleAllEmployees"
@@ -93,15 +94,15 @@
                     :indeterminate="areSomeEmployeesSelected"
                   />
                 </th>
-                <th style="width: 30%;">👤 Họ và tên</th>
-                <th style="width: 20%;">🏷️ Vai trò</th>
-                <th style="width: 25%;">🏢 Đơn vị</th>
-                <th style="width: 20%;">💼 Chức vụ</th>
+                <th style="width: 30%">👤 Họ và tên</th>
+                <th style="width: 20%">🏷️ Vai trò</th>
+                <th style="width: 25%">🏢 Đơn vị</th>
+                <th style="width: 20%">💼 Chức vụ</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="employee in filteredEmployees" :key="employee.Id">
-                <td style="text-align: center;">
+                <td style="text-align: center">
                   <input
                     type="checkbox"
                     :value="employee.Id"
@@ -129,18 +130,32 @@
           </table>
         </div>
 
-        <div class="card-body" v-if="selectedEmployeeIds.length > 0" style="padding-top: 0;">
+        <div class="card-body" v-if="selectedEmployeeIds.length > 0" style="padding-top: 0">
           <div class="alert-agribank alert-success">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px">
               <strong>✅ Đã chọn {{ selectedEmployeeIds.length }} cán bộ</strong>
-              <button @click="clearSelectedEmployees" class="btn-agribank btn-outline" style="padding: 4px 8px; font-size: 0.75rem;">
+              <button
+                @click="clearSelectedEmployees"
+                class="btn-agribank btn-outline"
+                style="padding: 4px 8px; font-size: 0.75rem"
+              >
                 🗑️ Xóa tất cả
               </button>
             </div>
-            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-              <span v-for="empId in selectedEmployeeIds" :key="empId" class="badge-agribank badge-accent" style="display: inline-flex; align-items: center; gap: 4px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 8px">
+              <span
+                v-for="empId in selectedEmployeeIds"
+                :key="empId"
+                class="badge-agribank badge-accent"
+                style="display: inline-flex; align-items: center; gap: 4px"
+              >
                 {{ getEmployeeShortName(empId) }}
-                <button @click="removeEmployee(empId)" style="background: none; border: none; color: inherit; cursor: pointer; font-weight: bold;">×</button>
+                <button
+                  @click="removeEmployee(empId)"
+                  style="background: none; border: none; color: inherit; cursor: pointer; font-weight: bold"
+                >
+                  ×
+                </button>
               </span>
             </div>
           </div>
@@ -158,14 +173,19 @@
             <select v-model="selectedTableId" @change="onTableChange" class="form-control">
               <option value="">-- Chọn bảng KPI --</option>
               <option v-for="table in staffKpiTables" :key="getId(table)" :value="getId(table)">
-                📊 {{ cleanTableDescription(safeGet(table, 'Description') || safeGet(table, 'TableName')) }} ({{ safeGet(table, 'IndicatorCount') }} chỉ tiêu)
+                📊 {{ cleanTableDescription(safeGet(table, 'Description') || safeGet(table, 'TableName')) }} ({{
+                  safeGet(table, 'IndicatorCount')
+                }}
+                chỉ tiêu)
               </option>
             </select>
           </div>
 
           <div class="alert-agribank alert-info" v-if="selectedTableId && selectedKpiTable">
             <strong>📊 Đã chọn:</strong>
-            "{{ cleanTableDescription(safeGet(selectedKpiTable, 'Description') || safeGet(selectedKpiTable, 'TableName')) }}" → <strong>{{ safeGet(selectedKpiTable, 'IndicatorCount') }}</strong> chỉ tiêu KPI
+            "{{
+              cleanTableDescription(safeGet(selectedKpiTable, 'Description') || safeGet(selectedKpiTable, 'TableName'))
+            }}" → <strong>{{ safeGet(selectedKpiTable, 'IndicatorCount') }}</strong> chỉ tiêu KPI
           </div>
         </div>
       </div>
@@ -175,7 +195,7 @@
         <div class="card-header">
           <h3 class="card-title">📊 {{ getKpiTableTitle() }}</h3>
           <div>
-            <span class="badge-agribank badge-info" style="margin-right: 8px;">{{ indicators.length }} chỉ tiêu</span>
+            <span class="badge-agribank badge-info" style="margin-right: 8px">{{ indicators.length }} chỉ tiêu</span>
             <span class="badge-agribank badge-success">{{ selectedEmployeeIds.length }} cán bộ được chọn</span>
           </div>
         </div>
@@ -184,49 +204,53 @@
           <table class="table-agribank">
             <thead>
               <tr>
-                <th style="width: 40%;">📊 Chỉ tiêu KPI</th>
-                <th style="width: 10%;">⭐ Điểm</th>
-                <th style="width: 20%;">🎯 Mục tiêu</th>
-                <th style="width: 15%;">📏 Đơn vị</th>
-                <th style="width: 15%;">⚡ Thao tác</th>
+                <th style="width: 40%">📊 Chỉ tiêu KPI</th>
+                <th style="width: 10%">⭐ Điểm</th>
+                <th style="width: 20%">🎯 Mục tiêu</th>
+                <th style="width: 15%">📏 Đơn vị</th>
+                <th style="width: 15%">⚡ Thao tác</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="(indicator, index) in indicators" :key="indicator.Id">
                 <td>
-                  <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="display: flex; align-items: center; gap: 8px">
                     <span class="badge-agribank badge-primary">{{ index + 1 }}</span>
                     <span class="font-weight-semibold">{{ safeGet(indicator, 'IndicatorName') }}</span>
                   </div>
                 </td>
-                <td style="text-align: center;">
+                <td style="text-align: center">
                   <span class="badge-agribank badge-accent">{{ safeGet(indicator, 'MaxScore') }}</span>
                 </td>
                 <td>
                   <input
                     type="text"
                     :value="formatTargetValue(indicator, targetValues[indicator.Id])"
-                    @input="(e) => handleTargetInput(e, indicator.Id)"
-                    @blur="(e) => handleTargetBlur(e, indicator.Id)"
+                    @input="e => handleTargetInput(e, indicator.Id)"
+                    @blur="e => handleTargetBlur(e, indicator.Id)"
                     placeholder="Nhập mục tiêu"
                     class="form-control"
-                    style="font-size: 0.85rem; padding: 8px 12px;"
-                    :class="{ 'error': targetErrors[indicator.Id] }"
+                    style="font-size: 0.85rem; padding: 8px 12px"
+                    :class="{ error: targetErrors[indicator.Id] }"
                   />
-                  <div v-if="targetErrors[indicator.Id]" class="text-danger" style="font-size: 0.75rem; margin-top: 4px;">
+                  <div
+                    v-if="targetErrors[indicator.Id]"
+                    class="text-danger"
+                    style="font-size: 0.75rem; margin-top: 4px"
+                  >
                     {{ targetErrors[indicator.Id] }}
                   </div>
                 </td>
-                <td style="text-align: center;">
+                <td style="text-align: center">
                   <span class="badge-agribank badge-secondary">{{ getIndicatorUnit(indicator) }}</span>
                 </td>
                 <td>
-                  <div style="display: flex; gap: 4px; justify-content: center;">
+                  <div style="display: flex; gap: 4px; justify-content: center">
                     <button
                       @click="moveIndicatorUp(index)"
                       :disabled="index === 0"
                       class="btn-agribank btn-outline"
-                      style="padding: 4px 8px; font-size: 0.75rem;"
+                      style="padding: 4px 8px; font-size: 0.75rem"
                       title="Di chuyển lên"
                     >
                       ↑
@@ -235,7 +259,7 @@
                       @click="moveIndicatorDown(index)"
                       :disabled="index === indicators.length - 1"
                       class="btn-agribank btn-outline"
-                      style="padding: 4px 8px; font-size: 0.75rem;"
+                      style="padding: 4px 8px; font-size: 0.75rem"
                       title="Di chuyển xuống"
                     >
                       ↓
@@ -243,7 +267,7 @@
                     <button
                       @click="editIndicator(indicator)"
                       class="btn-agribank btn-outline"
-                      style="padding: 4px 8px; font-size: 0.75rem;"
+                      style="padding: 4px 8px; font-size: 0.75rem"
                       title="Chỉnh sửa"
                     >
                       ✏️
@@ -251,7 +275,12 @@
                     <button
                       @click="clearIndicatorTarget(indicator.Id)"
                       class="btn-agribank btn-outline"
-                      style="padding: 4px 8px; font-size: 0.75rem; color: var(--danger-color); border-color: var(--danger-color);"
+                      style="
+                        padding: 4px 8px;
+                        font-size: 0.75rem;
+                        color: var(--danger-color);
+                        border-color: var(--danger-color);
+                      "
                       title="Xóa mục tiêu"
                     >
                       🗑️
@@ -260,21 +289,37 @@
                 </td>
               </tr>
               <!-- Total Row -->
-              <tr style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-top: 2px solid var(--agribank-primary);">
+              <tr
+                style="
+                  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                  border-top: 2px solid var(--agribank-primary);
+                "
+              >
                 <td><strong class="text-primary">🎯 TỔNG CỘNG</strong></td>
-                <td style="text-align: center;"><strong class="badge-agribank badge-primary">{{ getTotalMaxScore() }}</strong></td>
-                <td><strong class="text-secondary">{{ getTotalTargets() }} mục tiêu</strong></td>
-                <td style="text-align: center;"><strong class="badge-agribank badge-success">{{ getTotalScore() }}</strong></td>
+                <td style="text-align: center">
+                  <strong class="badge-agribank badge-primary">{{ getTotalMaxScore() }}</strong>
+                </td>
+                <td>
+                  <strong class="text-secondary">{{ getTotalTargets() }} mục tiêu</strong>
+                </td>
+                <td style="text-align: center">
+                  <strong class="badge-agribank badge-success">{{ getTotalScore() }}</strong>
+                </td>
                 <td></td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <div class="card-body" style="text-align: center; padding-top: 0;">
-          <button @click="assignKPI" :disabled="saving" class="btn-agribank btn-primary" style="font-size: 1rem; padding: 16px 32px;">
+        <div class="card-body" style="text-align: center; padding-top: 0">
+          <button
+            @click="assignKPI"
+            :disabled="saving"
+            class="btn-agribank btn-primary"
+            style="font-size: 1rem; padding: 16px 32px"
+          >
             <span>{{ saving ? '⏳' : '📋' }}</span>
-            <span style="margin-left: 8px;">{{ saving ? 'Đang giao khoán...' : 'Giao khoán KPI' }}</span>
+            <span style="margin-left: 8px">{{ saving ? 'Đang giao khoán...' : 'Giao khoán KPI' }}</span>
           </button>
         </div>
       </div>
@@ -283,20 +328,20 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
-import api from '../services/api.js';
-import { logApiResponse } from '../utils/apiHelpers.js';
-import { getId, getName, safeGet } from '../utils/casingSafeAccess.js';
-import { useNumberInput } from '../utils/numberFormat';
+import { computed, onMounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import api from '../services/api.js'
+import { logApiResponse } from '../utils/apiHelpers.js'
+import { getId, getName, safeGet } from '../utils/casingSafeAccess.js'
+import { useNumberInput } from '../utils/numberFormat'
 
-const router = useRouter();
+const router = useRouter()
 
 // 🔢 Initialize number input utility
 const { handleInput, handleBlur, formatNumber, parseFormattedNumber } = useNumberInput({
   maxDecimalPlaces: 2,
-  allowNegative: false
-});
+  allowNegative: false,
+})
 
 const loading = ref(false)
 const saving = ref(false)
@@ -316,152 +361,152 @@ const targetErrors = ref({})
 
 // Enhanced number input handlers for employee targets with unit-specific validation
 const handleTargetInput = (event, indicatorId) => {
-  const indicator = indicators.value.find(ind => ind.Id === indicatorId);
-  const unit = getIndicatorUnit(indicator);
+  const indicator = indicators.value.find(ind => ind.Id === indicatorId)
+  const unit = getIndicatorUnit(indicator)
 
-  let inputValue = event.target.value;
+  let inputValue = event.target.value
 
   // Remove all non-numeric characters except decimal point for initial processing
-  let numericValue = inputValue.replace(/[^\d.,]/g, '');
+  let numericValue = inputValue.replace(/[^\d.,]/g, '')
 
   // Handle comma as decimal separator (Vietnamese style)
-  numericValue = numericValue.replace(',', '.');
+  numericValue = numericValue.replace(',', '.')
 
   // For percentage, limit to 100
   if (unit === '%') {
-    const numValue = parseFloat(numericValue);
+    const numValue = parseFloat(numericValue)
     if (!isNaN(numValue) && numValue > 100) {
-      numericValue = '100';
-      targetErrors.value[indicatorId] = 'Giá trị tối đa là 100%';
+      numericValue = '100'
+      targetErrors.value[indicatorId] = 'Giá trị tối đa là 100%'
     } else {
-      delete targetErrors.value[indicatorId];
+      delete targetErrors.value[indicatorId]
     }
   }
 
   // For "Triệu VND", format with thousand separators and limit to 8 digits
   if (unit === 'Triệu VND') {
     // Remove formatting first to get clean number
-    let cleanNumber = numericValue.replace(/[,.\s]/g, '');
+    let cleanNumber = numericValue.replace(/[,.\s]/g, '')
 
     // Limit to 8 digits maximum
     if (cleanNumber.length > 8) {
-      cleanNumber = cleanNumber.substring(0, 8);
-      targetErrors.value[indicatorId] = 'Giá trị tối đa là 8 chữ số (99,999,999 triệu VND)';
+      cleanNumber = cleanNumber.substring(0, 8)
+      targetErrors.value[indicatorId] = 'Giá trị tối đa là 8 chữ số (99,999,999 triệu VND)'
     } else {
-      delete targetErrors.value[indicatorId];
+      delete targetErrors.value[indicatorId]
     }
 
-    const numValue = parseFloat(cleanNumber);
+    const numValue = parseFloat(cleanNumber)
     if (!isNaN(numValue) && cleanNumber !== '') {
       // Format with thousand separators using US format (#,###.00)
-      const formatted = new Intl.NumberFormat('en-US').format(numValue);
-      event.target.value = formatted;
-      targetValues.value[indicatorId] = numValue;
-      return;
+      const formatted = new Intl.NumberFormat('en-US').format(numValue)
+      event.target.value = formatted
+      targetValues.value[indicatorId] = numValue
+      return
     } else if (cleanNumber === '') {
-      event.target.value = '';
-      targetValues.value[indicatorId] = null;
-      delete targetErrors.value[indicatorId];
-      return;
+      event.target.value = ''
+      targetValues.value[indicatorId] = null
+      delete targetErrors.value[indicatorId]
+      return
     }
   }
 
   // For percentage, keep as decimal
   if (unit === '%') {
-    const numValue = parseFloat(numericValue);
+    const numValue = parseFloat(numericValue)
     if (!isNaN(numValue)) {
-      event.target.value = numValue.toString();
-      targetValues.value[indicatorId] = numValue;
+      event.target.value = numValue.toString()
+      targetValues.value[indicatorId] = numValue
     }
-    return;
+    return
   }
 
   // Default handling for other units
-  const numValue = parseFloat(numericValue);
+  const numValue = parseFloat(numericValue)
   if (!isNaN(numValue)) {
-    event.target.value = numValue.toString();
-    targetValues.value[indicatorId] = numValue;
-    delete targetErrors.value[indicatorId];
+    event.target.value = numValue.toString()
+    targetValues.value[indicatorId] = numValue
+    delete targetErrors.value[indicatorId]
   } else if (inputValue.trim() === '') {
-    targetValues.value[indicatorId] = null;
-    delete targetErrors.value[indicatorId];
+    targetValues.value[indicatorId] = null
+    delete targetErrors.value[indicatorId]
   } else {
-    targetErrors.value[indicatorId] = 'Vui lòng chỉ nhập số';
+    targetErrors.value[indicatorId] = 'Vui lòng chỉ nhập số'
   }
-};
+}
 
 const handleTargetBlur = (event, indicatorId) => {
-  const indicator = indicators.value.find(ind => ind.Id === indicatorId);
-  const unit = getIndicatorUnit(indicator);
-  const inputValue = event.target.value;
+  const indicator = indicators.value.find(ind => ind.Id === indicatorId)
+  const unit = getIndicatorUnit(indicator)
+  const inputValue = event.target.value
 
   if (inputValue.trim() === '') {
-    targetValues.value[indicatorId] = null;
-    delete targetErrors.value[indicatorId];
-    return;
+    targetValues.value[indicatorId] = null
+    delete targetErrors.value[indicatorId]
+    return
   }
 
   // Parse the final value
-  let numericValue = inputValue.replace(/[^\d.,]/g, '').replace(',', '.');
-  const numValue = parseFloat(numericValue);
+  let numericValue = inputValue.replace(/[^\d.,]/g, '').replace(',', '.')
+  const numValue = parseFloat(numericValue)
 
   if (isNaN(numValue)) {
-    targetErrors.value[indicatorId] = 'Giá trị không hợp lệ';
-    return;
+    targetErrors.value[indicatorId] = 'Giá trị không hợp lệ'
+    return
   }
 
   // Final validation and formatting
   if (unit === '%') {
     if (numValue > 100) {
-      targetErrors.value[indicatorId] = 'Giá trị tối đa là 100%';
-      event.target.value = '100';
-      targetValues.value[indicatorId] = 100;
+      targetErrors.value[indicatorId] = 'Giá trị tối đa là 100%'
+      event.target.value = '100'
+      targetValues.value[indicatorId] = 100
     } else {
-      event.target.value = numValue.toString();
-      targetValues.value[indicatorId] = numValue;
-      delete targetErrors.value[indicatorId];
+      event.target.value = numValue.toString()
+      targetValues.value[indicatorId] = numValue
+      delete targetErrors.value[indicatorId]
     }
   } else if (unit === 'Triệu VND') {
     // Remove formatting and limit to 8 digits
-    let cleanNumber = inputValue.replace(/[,.\s]/g, '');
+    let cleanNumber = inputValue.replace(/[,.\s]/g, '')
     if (cleanNumber.length > 8) {
-      cleanNumber = cleanNumber.substring(0, 8);
-      targetErrors.value[indicatorId] = 'Giá trị tối đa là 8 chữ số (99,999,999 triệu VND)';
+      cleanNumber = cleanNumber.substring(0, 8)
+      targetErrors.value[indicatorId] = 'Giá trị tối đa là 8 chữ số (99,999,999 triệu VND)'
     }
 
-    const finalValue = parseFloat(cleanNumber);
+    const finalValue = parseFloat(cleanNumber)
     if (!isNaN(finalValue)) {
-      const formatted = new Intl.NumberFormat('en-US').format(finalValue);
-      event.target.value = formatted;
-      targetValues.value[indicatorId] = finalValue;
+      const formatted = new Intl.NumberFormat('en-US').format(finalValue)
+      event.target.value = formatted
+      targetValues.value[indicatorId] = finalValue
       if (cleanNumber.length <= 8) {
-        delete targetErrors.value[indicatorId];
+        delete targetErrors.value[indicatorId]
       }
     }
   } else {
-    event.target.value = numValue.toString();
-    targetValues.value[indicatorId] = numValue;
-    delete targetErrors.value[indicatorId];
+    event.target.value = numValue.toString()
+    targetValues.value[indicatorId] = numValue
+    delete targetErrors.value[indicatorId]
   }
-};
+}
 
 // Format target value based on unit type
 function formatTargetValue(indicator, value) {
-  if (value === null || value === undefined || value === '') return '';
+  if (value === null || value === undefined || value === '') return ''
 
-  const unit = getIndicatorUnit(indicator);
-  const numValue = parseFloat(value);
+  const unit = getIndicatorUnit(indicator)
+  const numValue = parseFloat(value)
 
-  if (isNaN(numValue)) return '';
+  if (isNaN(numValue)) return ''
 
   // Format based on unit type
   if (unit === 'Triệu VND') {
     // ✅ Sử dụng formatNumber chuẩn US: 1,000,000 thay vì vi-VN: 1.000.000
-    return formatNumber(numValue);
+    return formatNumber(numValue)
   } else if (unit === '%') {
-    return numValue.toString();
+    return numValue.toString()
   } else {
-    return numValue.toString();
+    return numValue.toString()
   }
 }
 
@@ -495,16 +540,16 @@ const selectedKpiTable = computed(() => {
 const branchOptions = computed(() => {
   // Định nghĩa thứ tự theo yêu cầu: Hội Sở → Bình Lư → Phong Thổ → Sìn Hồ → Bum Tở → Than Uyên → Đoàn Kết → Tân Uyên → Nậm Hàng
   const customOrder = [
-    'HoiSo',         // Hội Sở (ID=2)
-    'BinhLu',        // Chi nhánh Bình Lư (ID=10)
-    'PhongTho',      // Chi nhánh Phong Thổ (ID=11)
-    'SinHo',         // Chi nhánh Sìn Hồ (ID=12)
-    'BumTo',         // Chi nhánh Bum Tở (ID=13)
-    'ThanUyen',      // Chi nhánh Than Uyên (ID=14)
-    'DoanKet',       // Chi nhánh Đoàn Kết (ID=15)
-    'TanUyen',       // Chi nhánh Tân Uyên (ID=16)
-    'NamHang'        // Chi nhánh Nậm Hàng (ID=17)
-  ];
+    'HoiSo', // Hội Sở (ID=2)
+    'BinhLu', // Chi nhánh Bình Lư (ID=10)
+    'PhongTho', // Chi nhánh Phong Thổ (ID=11)
+    'SinHo', // Chi nhánh Sìn Hồ (ID=12)
+    'BumTo', // Chi nhánh Bum Tở (ID=13)
+    'ThanUyen', // Chi nhánh Than Uyên (ID=14)
+    'DoanKet', // Chi nhánh Đoàn Kết (ID=15)
+    'TanUyen', // Chi nhánh Tân Uyên (ID=16)
+    'NamHang', // Chi nhánh Nậm Hàng (ID=17)
+  ]
 
   return units.value
     .filter(unit => {
@@ -513,24 +558,24 @@ const branchOptions = computed(() => {
     })
     .sort((a, b) => {
       // Function để map Name thành customOrder index
-      const getOrderIndex = (unitName) => {
-        const name = (unitName || '').toLowerCase();
-        if (name.includes('hội sở')) return 0;
-        if (name.includes('bình lư')) return 1;
-        if (name.includes('phong thổ')) return 2;
-        if (name.includes('sìn hồ')) return 3;
-        if (name.includes('bum tở')) return 4;
-        if (name.includes('than uyên')) return 5;
-        if (name.includes('đoàn kết')) return 6;
-        if (name.includes('tân uyên')) return 7;
-        if (name.includes('nậm hàng')) return 8;
-        return 999; // Unknown units go to the end
-      };
+      const getOrderIndex = unitName => {
+        const name = (unitName || '').toLowerCase()
+        if (name.includes('hội sở')) return 0
+        if (name.includes('bình lư')) return 1
+        if (name.includes('phong thổ')) return 2
+        if (name.includes('sìn hồ')) return 3
+        if (name.includes('bum tở')) return 4
+        if (name.includes('than uyên')) return 5
+        if (name.includes('đoàn kết')) return 6
+        if (name.includes('tân uyên')) return 7
+        if (name.includes('nậm hàng')) return 8
+        return 999 // Unknown units go to the end
+      }
 
-      const indexA = getOrderIndex(a.Name || a.Name);
-      const indexB = getOrderIndex(b.Name || b.Name);
+      const indexA = getOrderIndex(a.Name || a.Name)
+      const indexB = getOrderIndex(b.Name || b.Name)
 
-      return indexA - indexB;
+      return indexA - indexB
     })
 })
 
@@ -541,12 +586,10 @@ const departmentOptions = computed(() => {
   if (!branch) return []
 
   // Support both ParentUnitId and parentUnitId casing
-  const children = units.value.filter(u =>
-    (u.ParentUnitId === branch.Id) || (u.parentUnitId === branch.Id)
-  )
+  const children = units.value.filter(u => u.ParentUnitId === branch.Id || u.parentUnitId === branch.Id)
   const branchType = (branch.Type || '').toUpperCase()
 
-  const getDepartmentSortOrder = (name) => {
+  const getDepartmentSortOrder = name => {
     const lowerName = (name || '').toLowerCase()
     if (lowerName.includes('ban giám đốc')) return 1
     if (lowerName.includes('phòng khách hàng')) return 2
@@ -556,15 +599,19 @@ const departmentOptions = computed(() => {
   }
 
   if (branchType === 'CNL1') {
-    return children.filter(u => {
-      const unitType = (u.Type || '').toUpperCase()
-      return unitType === 'PNVL1'
-    }).sort((a, b) => getDepartmentSortOrder(a.Name) - getDepartmentSortOrder(b.Name))
+    return children
+      .filter(u => {
+        const unitType = (u.Type || '').toUpperCase()
+        return unitType === 'PNVL1'
+      })
+      .sort((a, b) => getDepartmentSortOrder(a.Name) - getDepartmentSortOrder(b.Name))
   } else if (branchType === 'CNL2') {
-    return children.filter(u => {
-      const unitType = (u.Type || '').toUpperCase()
-      return unitType === 'PNVL2' || unitType === 'PGDL2'
-    }).sort((a, b) => getDepartmentSortOrder(a.Name) - getDepartmentSortOrder(b.Name))
+    return children
+      .filter(u => {
+        const unitType = (u.Type || '').toUpperCase()
+        return unitType === 'PNVL2' || unitType === 'PGDL2'
+      })
+      .sort((a, b) => getDepartmentSortOrder(a.Name) - getDepartmentSortOrder(b.Name))
   }
 
   return []
@@ -640,13 +687,14 @@ const filteredEmployees = computed(() => {
 const filteredEmployeesCount = computed(() => filteredEmployees.value.length)
 
 const areAllEmployeesSelected = computed(() => {
-  return filteredEmployees.value.length > 0 &&
-         filteredEmployees.value.every(emp => selectedEmployeeIds.value.includes(emp.Id))
+  return (
+    filteredEmployees.value.length > 0 &&
+    filteredEmployees.value.every(emp => selectedEmployeeIds.value.includes(emp.Id))
+  )
 })
 
 const areSomeEmployeesSelected = computed(() => {
-  return selectedEmployeeIds.value.length > 0 &&
-         !areAllEmployeesSelected.value
+  return selectedEmployeeIds.value.length > 0 && !areAllEmployeesSelected.value
 })
 
 async function loadInitialData() {
@@ -658,7 +706,7 @@ async function loadInitialData() {
       api.get('/KpiAssignmentTables'),
       api.get('/employees'),
       api.get('/units'),
-      api.get('/KhoanPeriods')
+      api.get('/KhoanPeriods'),
     ])
 
     kpiTables.value = tablesResponse.data || []
@@ -670,7 +718,6 @@ async function loadInitialData() {
     console.log('Employees loaded:', employees.value.length)
     console.log('Units loaded:', units.value.length)
     console.log('Periods loaded:', khoanPeriods.value.length)
-
   } catch (error) {
     console.error('Error loading initial data:', error)
     errorMessage.value = 'Không thể tải dữ liệu: ' + (error.response?.data?.message || error.message)
@@ -709,7 +756,9 @@ async function loadTableDetails() {
       if (indicators.value.length > 0) {
         console.log('📋 Sample indicators:')
         indicators.value.slice(0, 3).forEach((ind, idx) => {
-          console.log(`   ${idx + 1}. ${ind.IndicatorName || ind.indicatorName} (${ind.MaxScore || ind.maxScore} points, ${ind.Unit || ind.unit || 'N/A'})`)
+          console.log(
+            `   ${idx + 1}. ${ind.IndicatorName || ind.indicatorName} (${ind.MaxScore || ind.maxScore} points, ${ind.Unit || ind.unit || 'N/A'})`
+          )
         })
       } else {
         console.log('⚠️ Indicators array is empty')
@@ -728,13 +777,12 @@ async function loadTableDetails() {
     if (errorMessage.value.includes('KPI')) {
       errorMessage.value = ''
     }
-
   } catch (error) {
     console.error('❌ Error loading table details:', error)
     console.error('Error details:', {
       status: error.response?.Status,
       message: error.response?.data?.message || error.message,
-      url: error.config?.url
+      url: error.config?.url,
     })
 
     indicators.value = []
@@ -819,7 +867,10 @@ function autoSelectKpiTable() {
   }
 
   console.log('🎯 Auto-selecting KPI table...')
-  console.log('Available KPI tables:', kpiTables.value.map(t => ({ id: t.Id, name: t.tableName, category: t.category, type: t.tableType })))
+  console.log(
+    'Available KPI tables:',
+    kpiTables.value.map(t => ({ id: t.Id, name: t.tableName, category: t.category, type: t.tableType }))
+  )
 
   // Get first selected employee to determine role
   const firstEmployeeId = selectedEmployeeIds.value[0]
@@ -835,14 +886,15 @@ function autoSelectKpiTable() {
     name: employee.fullName,
     position: employee.positionName,
     role: employee.roleName,
-    unitId: employee.unitId
+    unitId: employee.unitId,
   })
 
   // Find employee KPI tables
-  const employeeTables = kpiTables.value.filter(t =>
-    t.category === 'Dành cho Cán bộ' ||
-    t.category?.toLowerCase().includes('cán bộ') ||
-    t.category?.toLowerCase().includes('employee')
+  const employeeTables = kpiTables.value.filter(
+    t =>
+      t.category === 'Dành cho Cán bộ' ||
+      t.category?.toLowerCase().includes('cán bộ') ||
+      t.category?.toLowerCase().includes('employee')
   )
 
   console.log('� Employee KPI tables found:', employeeTables.length)
@@ -863,8 +915,10 @@ function autoSelectKpiTable() {
     // Specific role matching
     if (role.includes('trưởng phòng')) {
       if (tableName.includes('trưởng phòng')) {
-        if ((role.includes('khdn') && tableName.includes('khdn')) ||
-            (role.includes('khcn') && tableName.includes('khcn'))) {
+        if (
+          (role.includes('khdn') && tableName.includes('khdn')) ||
+          (role.includes('khcn') && tableName.includes('khcn'))
+        ) {
           suitableTable = table
           console.log('✅ Match found: Trưởng phòng with specific department')
           break
@@ -876,8 +930,10 @@ function autoSelectKpiTable() {
       }
     } else if (role.includes('phó phòng')) {
       if (tableName.includes('phó phòng')) {
-        if ((role.includes('khdn') && tableName.includes('khdn')) ||
-            (role.includes('khcn') && tableName.includes('khcn'))) {
+        if (
+          (role.includes('khdn') && tableName.includes('khdn')) ||
+          (role.includes('khcn') && tableName.includes('khcn'))
+        ) {
           suitableTable = table
           console.log('✅ Match found: Phó phòng with specific department')
           break
@@ -912,7 +968,7 @@ function autoSelectKpiTable() {
     console.log('✅ Auto-selected KPI table:', {
       id: suitableTable.Id,
       name: suitableTable.tableName,
-      category: suitableTable.category
+      category: suitableTable.category,
     })
     selectedTableId.value = suitableTable.Id.toString()
     // Force load table details with a slight delay to ensure state is updated
@@ -921,7 +977,10 @@ function autoSelectKpiTable() {
     }, 100)
   } else {
     console.log('❌ No suitable KPI table found')
-    console.log('Available tables:', kpiTables.value.map(t => ({ id: t.Id, name: t.tableName, category: t.category })))
+    console.log(
+      'Available tables:',
+      kpiTables.value.map(t => ({ id: t.Id, name: t.tableName, category: t.category }))
+    )
 
     // Show user message
     errorMessage.value = 'Không tìm thấy bảng KPI phù hợp. Vui lòng chọn bảng KPI thủ công.'
@@ -990,7 +1049,7 @@ function getEmployeeShortName(empId) {
 
 function getKpiTableTitle() {
   const table = kpiTables.value.find(t => t.Id === parseInt(selectedTableId.value))
-  return table ? (table.description || table.tableName) : 'Bảng KPI'
+  return table ? table.description || table.tableName : 'Bảng KPI'
 }
 
 function getIndicatorUnit(indicator) {
@@ -1108,7 +1167,7 @@ async function assignKPI() {
     .map(([indicatorId, value]) => ({
       indicatorId: parseInt(indicatorId),
       targetValue: value,
-      notes: ''
+      notes: '',
     }))
 
   if (targets.length === 0) {
@@ -1124,7 +1183,7 @@ async function assignKPI() {
       const request = {
         employeeId: employeeId,
         khoanPeriodId: parseInt(selectedPeriodId.value),
-        targets: targets
+        targets: targets,
       }
 
       await api.post('/KpiAssignment/assign', request)
@@ -1137,7 +1196,6 @@ async function assignKPI() {
     selectedEmployeeIds.value = []
     targetValues.value = {}
     targetErrors.value = {}
-
   } catch (error) {
     console.error('Error assigning KPI:', error)
     errorMessage.value = 'Lỗi khi giao khoán KPI: ' + (error.response?.data?.message || error.message)
@@ -1151,21 +1209,25 @@ onMounted(() => {
 })
 
 // Watcher để tự động load KPI table khi chọn cán bộ và table
-watch([selectedEmployeeIds, selectedTableId], ([newEmployeeIds, newTableId]) => {
-  console.log('👀 Watcher triggered:', { employeeIds: newEmployeeIds, tableId: newTableId })
+watch(
+  [selectedEmployeeIds, selectedTableId],
+  ([newEmployeeIds, newTableId]) => {
+    console.log('👀 Watcher triggered:', { employeeIds: newEmployeeIds, tableId: newTableId })
 
-  if (newEmployeeIds.length > 0 && newTableId) {
-    console.log('✅ Both employees and table selected, loading KPI details...')
-    loadTableDetails()
-  } else if (newEmployeeIds.length > 0 && !newTableId) {
-    console.log('ℹ️ Employees selected but no table. User should manually select KPI table from dropdown.')
-    // Note: We no longer auto-select to let users choose their own KPI table
-    // autoSelectKpiTable()
-  }
-}, { immediate: false })
+    if (newEmployeeIds.length > 0 && newTableId) {
+      console.log('✅ Both employees and table selected, loading KPI details...')
+      loadTableDetails()
+    } else if (newEmployeeIds.length > 0 && !newTableId) {
+      console.log('ℹ️ Employees selected but no table. User should manually select KPI table from dropdown.')
+      // Note: We no longer auto-select to let users choose their own KPI table
+      // autoSelectKpiTable()
+    }
+  },
+  { immediate: false }
+)
 
 // Watcher để auto-load KPI khi chọn period
-watch(selectedPeriodId, (newPeriodId) => {
+watch(selectedPeriodId, newPeriodId => {
   console.log('📅 Period changed:', newPeriodId)
   if (newPeriodId) {
     // Clear previous selections when period changes
@@ -1178,11 +1240,11 @@ watch(selectedPeriodId, (newPeriodId) => {
 })
 
 // Clean table description function
-const cleanTableDescription = (description) => {
-  if (!description) return '';
+const cleanTableDescription = description => {
+  if (!description) return ''
   // Bỏ chữ "Bảng KPI cho " ở đầu
-  return description.replace(/^Bảng KPI cho\s*/i, '');
-};
+  return description.replace(/^Bảng KPI cho\s*/i, '')
+}
 </script>
 
 <style scoped>

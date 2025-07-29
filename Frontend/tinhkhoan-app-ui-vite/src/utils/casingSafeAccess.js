@@ -11,20 +11,20 @@
  * @returns {any} Property value or null
  */
 export function safeGet(obj, propName) {
-  if (!obj || typeof obj !== 'object') return null;
+  if (!obj || typeof obj !== 'object') return null
 
   // Try PascalCase first (backend format)
   if (obj[propName] !== undefined) {
-    return obj[propName];
+    return obj[propName]
   }
 
   // Fallback to camelCase
-  const camelCase = propName.charAt(0).toLowerCase() + propName.slice(1);
+  const camelCase = propName.charAt(0).toLowerCase() + propName.slice(1)
   if (obj[camelCase] !== undefined) {
-    return obj[camelCase];
+    return obj[camelCase]
   }
 
-  return null;
+  return null
 }
 
 /**
@@ -33,7 +33,7 @@ export function safeGet(obj, propName) {
  * @returns {number|string|null} Id value
  */
 export function getId(obj) {
-  return safeGet(obj, 'Id');
+  return safeGet(obj, 'Id')
 }
 
 /**
@@ -42,7 +42,7 @@ export function getId(obj) {
  * @returns {string|null} Name value
  */
 export function getName(obj) {
-  return safeGet(obj, 'Name');
+  return safeGet(obj, 'Name')
 }
 
 /**
@@ -51,7 +51,7 @@ export function getName(obj) {
  * @returns {string|null} Type value
  */
 export function getType(obj) {
-  return safeGet(obj, 'Type');
+  return safeGet(obj, 'Type')
 }
 
 /**
@@ -60,7 +60,7 @@ export function getType(obj) {
  * @returns {string|null} Status value
  */
 export function getStatus(obj) {
-  return safeGet(obj, 'Status');
+  return safeGet(obj, 'Status')
 }
 
 /**
@@ -69,17 +69,17 @@ export function getStatus(obj) {
  * @returns {Object} Object with PascalCase properties
  */
 export function toPascalCase(obj) {
-  if (!obj || typeof obj !== 'object') return obj;
+  if (!obj || typeof obj !== 'object') return obj
 
-  const result = {};
+  const result = {}
 
   for (const [key, value] of Object.entries(obj)) {
     // Convert camelCase to PascalCase
-    const pascalKey = key.charAt(0).toUpperCase() + key.slice(1);
-    result[pascalKey] = value;
+    const pascalKey = key.charAt(0).toUpperCase() + key.slice(1)
+    result[pascalKey] = value
   }
 
-  return result;
+  return result
 }
 
 /**
@@ -88,10 +88,10 @@ export function toPascalCase(obj) {
  * @returns {Array} Array with normalized objects
  */
 export function normalizeArray(items) {
-  if (!Array.isArray(items)) return [];
+  if (!Array.isArray(items)) return []
 
   return items.map(item => {
-    if (!item || typeof item !== 'object') return item;
+    if (!item || typeof item !== 'object') return item
 
     return {
       ...item,
@@ -100,8 +100,8 @@ export function normalizeArray(items) {
       Name: getName(item),
       Type: getType(item),
       Status: getStatus(item),
-    };
-  });
+    }
+  })
 }
 
 /**
@@ -112,16 +112,16 @@ export function normalizeArray(items) {
  * @returns {Array} Normalized dropdown options
  */
 export function mapDropdownOptions(items, valueField = 'Id', textField = 'Name') {
-  if (!Array.isArray(items)) return [];
+  if (!Array.isArray(items)) return []
 
   return items
     .filter(item => item && typeof item === 'object')
     .map(item => ({
       value: safeGet(item, valueField),
       text: safeGet(item, textField),
-      original: item // Keep reference to original object
+      original: item, // Keep reference to original object
     }))
-    .filter(option => option.value !== null && option.text !== null);
+    .filter(option => option.value !== null && option.text !== null)
 }
 
 /**
@@ -131,20 +131,20 @@ export function mapDropdownOptions(items, valueField = 'Id', textField = 'Name')
  */
 export function debugProperties(obj, context = 'Object') {
   if (!obj || typeof obj !== 'object') {
-    console.log(`🔍 ${context}: null or not an object`);
-    return;
+    console.log(`🔍 ${context}: null or not an object`)
+    return
   }
 
-  const props = Object.keys(obj);
-  console.log(`🔍 ${context} properties:`, props);
+  const props = Object.keys(obj)
+  console.log(`🔍 ${context} properties:`, props)
 
   // Show critical properties
-  const critical = ['Id', 'id', 'Name', 'name', 'Type', 'type', 'Status', 'status'];
+  const critical = ['Id', 'id', 'Name', 'name', 'Type', 'type', 'Status', 'status']
   critical.forEach(prop => {
     if (obj[prop] !== undefined) {
-      console.log(`  ✅ ${prop}: ${obj[prop]}`);
+      console.log(`  ✅ ${prop}: ${obj[prop]}`)
     }
-  });
+  })
 }
 
 // Export all utilities
@@ -157,5 +157,5 @@ export default {
   toPascalCase,
   normalizeArray,
   mapDropdownOptions,
-  debugProperties
-};
+  debugProperties,
+}

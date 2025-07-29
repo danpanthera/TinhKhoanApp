@@ -8,64 +8,63 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 const DIRECT_API_URL = 'http://localhost:5055/api' // Fallback trực tiếp cho dev
 
 export const branchIndicatorsService = {
-
   /**
    * Tính toán Nguồn vốn theo chi nhánh từ dữ liệu thô DP01
    */
   async calculateNguonVon(branchId, date = null) {
     try {
       // Chuyển đổi date thành định dạng phù hợp cho API mới
-      let targetDate = new Date();
+      let targetDate = new Date()
       if (date && date.trim() !== '') {
-        const parsedDate = new Date(date);
+        const parsedDate = new Date(date)
         if (!isNaN(parsedDate.getTime())) {
-          targetDate = parsedDate;
+          targetDate = parsedDate
         }
       }
 
-      console.log('🌐 API Call - branchId:', branchId, 'date:', targetDate.toISOString());
+      console.log('🌐 API Call - branchId:', branchId, 'date:', targetDate.toISOString())
 
       const requestBody = {
         unitCode: branchId,
         targetDate: targetDate.toISOString(),
-        dateType: "month" // Mặc định tính theo tháng
-      };
+        dateType: 'month', // Mặc định tính theo tháng
+      }
 
-      console.log('📋 Request body:', requestBody);
+      console.log('📋 Request body:', requestBody)
 
       // Thử proxy trước, nếu lỗi thì thử direct URL
-      let apiUrl = `${API_BASE_URL}/NguonVon/calculate`;
-      console.log('🔗 Trying proxy API URL:', apiUrl);
+      let apiUrl = `${API_BASE_URL}/NguonVon/calculate`
+      console.log('🔗 Trying proxy API URL:', apiUrl)
 
       let response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody)
-      }).catch(async (proxyError) => {
-        console.warn('⚠️ Proxy failed, trying direct URL:', proxyError.message);
-        apiUrl = `${DIRECT_API_URL}/NguonVon/calculate`;
-        console.log('🔗 Trying direct API URL:', apiUrl);
+        body: JSON.stringify(requestBody),
+      }).catch(async proxyError => {
+        console.warn('⚠️ Proxy failed, trying direct URL:', proxyError.message)
+        apiUrl = `${DIRECT_API_URL}/NguonVon/calculate`
+        console.log('🔗 Trying direct API URL:', apiUrl)
 
         return fetch(apiUrl, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
           },
-          body: JSON.stringify(requestBody)
-        });
-      });
+          body: JSON.stringify(requestBody),
+        })
+      })
 
-      console.log('📡 Response status:', response.status, response.statusText);
+      console.log('📡 Response status:', response.status, response.statusText)
 
       if (!response.ok) {
-        console.error('❌ API Error:', response.status, response.statusText);
+        console.error('❌ API Error:', response.status, response.statusText)
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
       const result = await response.json()
-      console.log('📥 API Response:', result);
+      console.log('📥 API Response:', result)
 
       // Chuyển đổi định dạng response để tương thích với frontend hiện tại
       if (result.success && result.data) {
@@ -74,7 +73,7 @@ export const branchIndicatorsService = {
           unitName: result.data.unitName,
           recordCount: result.data.recordCount,
           topAccounts: result.data.topAccounts,
-          message: result.message
+          message: result.message,
         }
       } else {
         throw new Error(result.message || 'Không thể tính toán nguồn vốn')
@@ -91,27 +90,27 @@ export const branchIndicatorsService = {
   async calculateDuNo(branchId, date = null) {
     try {
       // Validate và xử lý tham số date
-      let validDate = null;
+      let validDate = null
       if (date && date.trim() !== '') {
-        validDate = date;
+        validDate = date
       }
 
-      console.log('🌐 API Call - branchId:', branchId, 'date:', validDate);
+      console.log('🌐 API Call - branchId:', branchId, 'date:', validDate)
 
       // Chỉ gửi thuộc tính date khi có giá trị hợp lệ
-      const requestBody = { branchId };
+      const requestBody = { branchId }
       if (validDate) {
-        requestBody.date = validDate;
+        requestBody.date = validDate
       }
 
-      console.log('📋 Request body:', requestBody);
+      console.log('📋 Request body:', requestBody)
 
       const response = await fetch(`${API_BASE_URL}/BranchIndicators/du-no`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
       })
 
       if (!response.ok) {
@@ -132,27 +131,27 @@ export const branchIndicatorsService = {
   async calculateNoXau(branchId, date = null) {
     try {
       // Validate và xử lý tham số date
-      let validDate = null;
+      let validDate = null
       if (date && date.trim() !== '') {
-        validDate = date;
+        validDate = date
       }
 
-      console.log('🌐 API Call - branchId:', branchId, 'date:', validDate);
+      console.log('🌐 API Call - branchId:', branchId, 'date:', validDate)
 
       // Chỉ gửi thuộc tính date khi có giá trị hợp lệ
-      const requestBody = { branchId };
+      const requestBody = { branchId }
       if (validDate) {
-        requestBody.date = validDate;
+        requestBody.date = validDate
       }
 
-      console.log('📋 Request body:', requestBody);
+      console.log('📋 Request body:', requestBody)
 
       const response = await fetch(`${API_BASE_URL}/BranchIndicators/no-xau`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
       })
 
       if (!response.ok) {
@@ -173,27 +172,27 @@ export const branchIndicatorsService = {
   async calculateThuHoiXLRR(branchId, date = null) {
     try {
       // Validate và xử lý tham số date
-      let validDate = null;
+      let validDate = null
       if (date && date.trim() !== '') {
-        validDate = date;
+        validDate = date
       }
 
-      console.log('🌐 API Call - branchId:', branchId, 'date:', validDate);
+      console.log('🌐 API Call - branchId:', branchId, 'date:', validDate)
 
       // Chỉ gửi thuộc tính date khi có giá trị hợp lệ
-      const requestBody = { branchId };
+      const requestBody = { branchId }
       if (validDate) {
-        requestBody.date = validDate;
+        requestBody.date = validDate
       }
 
-      console.log('📋 Request body:', requestBody);
+      console.log('📋 Request body:', requestBody)
 
       const response = await fetch(`${API_BASE_URL}/BranchIndicators/thu-hoi-xlrr`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
       })
 
       if (!response.ok) {
@@ -214,27 +213,27 @@ export const branchIndicatorsService = {
   async calculateThuDichVu(branchId, date = null) {
     try {
       // Validate và xử lý tham số date
-      let validDate = null;
+      let validDate = null
       if (date && date.trim() !== '') {
-        validDate = date;
+        validDate = date
       }
 
-      console.log('🌐 API Call - branchId:', branchId, 'date:', validDate);
+      console.log('🌐 API Call - branchId:', branchId, 'date:', validDate)
 
       // Chỉ gửi thuộc tính date khi có giá trị hợp lệ
-      const requestBody = { branchId };
+      const requestBody = { branchId }
       if (validDate) {
-        requestBody.date = validDate;
+        requestBody.date = validDate
       }
 
-      console.log('📋 Request body:', requestBody);
+      console.log('📋 Request body:', requestBody)
 
       const response = await fetch(`${API_BASE_URL}/BranchIndicators/thu-dich-vu`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
       })
 
       if (!response.ok) {
@@ -255,27 +254,27 @@ export const branchIndicatorsService = {
   async calculateLoiNhuan(branchId, date = null) {
     try {
       // Validate và xử lý tham số date
-      let validDate = null;
+      let validDate = null
       if (date && date.trim() !== '') {
-        validDate = date;
+        validDate = date
       }
 
-      console.log('🌐 API Call - branchId:', branchId, 'date:', validDate);
+      console.log('🌐 API Call - branchId:', branchId, 'date:', validDate)
 
       // Chỉ gửi thuộc tính date khi có giá trị hợp lệ
-      const requestBody = { branchId };
+      const requestBody = { branchId }
       if (validDate) {
-        requestBody.date = validDate;
+        requestBody.date = validDate
       }
 
-      console.log('📋 Request body:', requestBody);
+      console.log('📋 Request body:', requestBody)
 
       const response = await fetch(`${API_BASE_URL}/BranchIndicators/loi-nhuan`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
       })
 
       if (!response.ok) {
@@ -296,27 +295,27 @@ export const branchIndicatorsService = {
   async calculateAllIndicators(branchId, date = null) {
     try {
       // Validate và xử lý tham số date
-      let validDate = null;
+      let validDate = null
       if (date && date.trim() !== '') {
-        validDate = date;
+        validDate = date
       }
 
-      console.log(`🧮 Tính toán tất cả chỉ tiêu cho chi nhánh: ${branchId}, date: ${validDate}`);
+      console.log(`🧮 Tính toán tất cả chỉ tiêu cho chi nhánh: ${branchId}, date: ${validDate}`)
 
       // Chỉ gửi thuộc tính date khi có giá trị hợp lệ
-      const requestBody = { branchId };
+      const requestBody = { branchId }
       if (validDate) {
-        requestBody.date = validDate;
+        requestBody.date = validDate
       }
 
-      console.log('📋 Request body:', requestBody);
+      console.log('📋 Request body:', requestBody)
 
       const response = await fetch(`${API_BASE_URL}/BranchIndicators/all-indicators`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
       })
 
       if (!response.ok) {
@@ -346,7 +345,7 @@ export const branchIndicatorsService = {
   formatPercentage(value) {
     if (value === null || value === undefined) return '0%'
     return `${value.toFixed(2)}%`
-  }
+  },
 }
 
 export default branchIndicatorsService

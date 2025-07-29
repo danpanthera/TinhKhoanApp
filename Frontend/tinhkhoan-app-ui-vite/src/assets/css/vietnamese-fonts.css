@@ -7,13 +7,16 @@
 /* 🇻🇳 Font stack chính tối ưu cho tiếng Việt */
 :root {
   /* Font stack với Inter đầu tiên cho UI consistency */
-  --font-primary: 'Inter', 'SF Pro Display', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'Noto Sans', 'Liberation Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji';
+  --font-primary:
+    'Inter', 'SF Pro Display', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'Noto Sans', 'Liberation Sans',
+    sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji';
   --font-heading: 'Inter', 'SF Pro Display', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
   --font-mono: 'SF Mono', 'JetBrains Mono', 'Fira Code', 'Consolas', 'Monaco', 'Courier New', monospace;
   --font-inter: 'Inter', 'SF Pro Display', 'Segoe UI', 'Roboto', 'Arial', sans-serif;
 
   /* Vietnamese specific optimization */
-  --font-vietnamese: 'Inter', 'SF Pro Display', 'Segoe UI', 'Roboto', 'Noto Sans', 'Helvetica Neue', 'Arial', sans-serif;
+  --font-vietnamese:
+    'Inter', 'SF Pro Display', 'Segoe UI', 'Roboto', 'Noto Sans', 'Helvetica Neue', 'Arial', sans-serif;
 }
 
 /* Base font cho toàn bộ ứng dụng với Vietnamese optimization */
@@ -22,7 +25,10 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  font-feature-settings:
+    'kern' 1,
+    'liga' 1,
+    'calt' 1;
   font-variant-ligatures: contextual;
 }
 
@@ -59,7 +65,7 @@ pre,
 .json-display,
 .sql-display {
   font-family: var(--font-mono);
-  font-feature-settings: "liga" 0;
+  font-feature-settings: 'liga' 0;
 }
 
 /* Inter font cho UI elements */
@@ -236,9 +242,15 @@ body {
 *::before,
 *::after {
   unicode-bidi: normal;
-  -webkit-font-feature-settings: "liga" on, "calt" on;
-  -moz-font-feature-settings: "liga" on, "calt" on;
-  font-feature-settings: "liga" on, "calt" on;
+  -webkit-font-feature-settings:
+    'liga' on,
+    'calt' on;
+  -moz-font-feature-settings:
+    'liga' on,
+    'calt' on;
+  font-feature-settings:
+    'liga' on,
+    'calt' on;
 }
 
 /* Đặc biệt cho form inputs */
@@ -305,7 +317,6 @@ body {
 
 /* Desktop screens - larger KPI table fonts */
 @media (min-width: 1024px) {
-
   .kpi-table th,
   .kpi-table td,
   .el-table th,
@@ -327,8 +338,7 @@ body {
 }
 
 /* High DPI displays */
-@media (-webkit-min-device-pixel-ratio: 2),
-(min-resolution: 192dpi) {
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
   * {
     -webkit-font-smoothing: subpixel-antialiased;
   }

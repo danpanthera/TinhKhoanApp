@@ -21,11 +21,7 @@
         <div class="sync-text">
           <strong v-if="offlineStore.syncInProgress">Đang đồng bộ...</strong>
           <strong v-else>{{ offlineStore.pendingActions.length }} hành động chờ</strong>
-          <button
-            v-if="!offlineStore.syncInProgress && offlineStore.isOnline"
-            @click="manualSync"
-            class="sync-btn"
-          >
+          <button v-if="!offlineStore.syncInProgress && offlineStore.isOnline" @click="manualSync" class="sync-btn">
             <i class="fas fa-sync-alt"></i>
             Đồng bộ ngay
           </button>
@@ -87,10 +83,7 @@
             Xóa hành động chờ
           </button>
 
-          <button
-            @click="clearCache"
-            class="action-btn secondary"
-          >
+          <button @click="clearCache" class="action-btn secondary">
             <i class="fas fa-broom"></i>
             Xóa cache
           </button>
@@ -109,85 +102,85 @@
 </template>
 
 <script setup>
-import { computed, ref } from 'vue';
-import { useOfflineStore } from '../stores/offlineStore.js';
+import { computed, ref } from 'vue'
+import { useOfflineStore } from '../stores/offlineStore.js'
 
-const offlineStore = useOfflineStore();
-const showDetails = ref(false);
+const offlineStore = useOfflineStore()
+const showDetails = ref(false)
 
 // Computed properties
 const networkIcon = computed(() => {
-  if (offlineStore.syncInProgress) return 'fas fa-sync-alt spinning';
-  if (offlineStore.isOffline) return 'fas fa-wifi-slash';
-  if (offlineStore.hasPendingActions) return 'fas fa-exclamation-triangle';
-  return 'fas fa-wifi';
-});
+  if (offlineStore.syncInProgress) return 'fas fa-sync-alt spinning'
+  if (offlineStore.isOffline) return 'fas fa-wifi-slash'
+  if (offlineStore.hasPendingActions) return 'fas fa-exclamation-triangle'
+  return 'fas fa-wifi'
+})
 
 const networkStatus = computed(() => {
-  if (offlineStore.syncInProgress) return 'Đang đồng bộ';
-  if (offlineStore.isOffline) return 'Offline';
-  if (offlineStore.hasPendingActions) return `${offlineStore.pendingActions.length} chờ`;
-  return 'Online';
-});
+  if (offlineStore.syncInProgress) return 'Đang đồng bộ'
+  if (offlineStore.isOffline) return 'Offline'
+  if (offlineStore.hasPendingActions) return `${offlineStore.pendingActions.length} chờ`
+  return 'Online'
+})
 
 const detailedStatus = computed(() => {
-  if (offlineStore.isOffline) return 'Không có kết nối mạng';
-  if (offlineStore.syncInProgress) return 'Đang đồng bộ dữ liệu';
-  if (offlineStore.hasPendingActions) return 'Có dữ liệu chờ đồng bộ';
-  return 'Kết nối ổn định';
-});
+  if (offlineStore.isOffline) return 'Không có kết nối mạng'
+  if (offlineStore.syncInProgress) return 'Đang đồng bộ dữ liệu'
+  if (offlineStore.hasPendingActions) return 'Có dữ liệu chờ đồng bộ'
+  return 'Kết nối ổn định'
+})
 
 const formattedLastSync = computed(() => {
-  if (!offlineStore.lastSyncTime) return 'Chưa bao giờ';
+  if (!offlineStore.lastSyncTime) return 'Chưa bao giờ'
 
-  const date = new Date(offlineStore.lastSyncTime);
-  const now = new Date();
-  const diffMs = now - date;
-  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const date = new Date(offlineStore.lastSyncTime)
+  const now = new Date()
+  const diffMs = now - date
+  const diffMinutes = Math.floor(diffMs / (1000 * 60))
 
-  if (diffMinutes < 1) return 'Vừa xong';
-  if (diffMinutes < 60) return `${diffMinutes} phút trước`;
+  if (diffMinutes < 1) return 'Vừa xong'
+  if (diffMinutes < 60) return `${diffMinutes} phút trước`
 
-  const diffHours = Math.floor(diffMinutes / 60);
-  if (diffHours < 24) return `${diffHours} giờ trước`;
+  const diffHours = Math.floor(diffMinutes / 60)
+  if (diffHours < 24) return `${diffHours} giờ trước`
 
-  const diffDays = Math.floor(diffHours / 24);
-  return `${diffDays} ngày trước`;
-});
+  const diffDays = Math.floor(diffHours / 24)
+  return `${diffDays} ngày trước`
+})
 
 // Methods
 const toggleDetails = () => {
-  showDetails.value = !showDetails.value;
-};
+  showDetails.value = !showDetails.value
+}
 
 const manualSync = async () => {
   try {
-    const success = await offlineStore.manualSync();
+    const success = await offlineStore.manualSync()
     if (success) {
-      showDetails.value = false;
+      showDetails.value = false
     }
   } catch (error) {
-    console.error('Manual sync error:', error);
+    console.error('Manual sync error:', error)
   }
-};
+}
 
 const clearPending = () => {
   if (confirm('Bạn có chắc muốn xóa tất cả hành động chờ đồng bộ?')) {
-    offlineStore.clearPendingActions();
-    showDetails.value = false;
+    offlineStore.clearPendingActions()
+    showDetails.value = false
   }
-};
+}
 
 const clearCache = async () => {
   if (confirm('Bạn có chắc muốn xóa tất cả cache ứng dụng? Ứng dụng sẽ tải lại.')) {
-    await offlineStore.clearAppCache();
-    showDetails.value = false;
+    await offlineStore.clearAppCache()
+    showDetails.value = false
     // Reload trang để tải lại cache
     setTimeout(() => {
-      window.location.reload();
-    }, 1000);
+      window.location.reload()
+    }, 1000)
   }
-};
+}
 </script>
 
 <style scoped>
@@ -205,8 +198,12 @@ const clearCache = async () => {
 }
 
 @keyframes slideDown {
-  from { transform: translateY(-100%); }
-  to { transform: translateY(0); }
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
 .offline-content {
@@ -428,12 +425,12 @@ const clearCache = async () => {
 }
 
 .action-btn.primary {
-  background: #8B1538;
+  background: #8b1538;
   color: white;
 }
 
 .action-btn.primary:hover:not(:disabled) {
-  background: #A91B47;
+  background: #a91b47;
 }
 
 .action-btn.danger {
@@ -481,8 +478,12 @@ const clearCache = async () => {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Responsive Design */

@@ -1,198 +1,177 @@
-import { createRouter, createWebHistory } from "vue-router";
-import { isAuthenticated } from "../services/auth";
+import { createRouter, createWebHistory } from 'vue-router'
+import { isAuthenticated } from '../services/auth'
 
 // ⚡ ENHANCED LAZY LOADING - Preload critical routes and group by feature
-import HomeView from "../views/HomeView.vue";
-import LoginView from "../views/LoginView.vue";
+import HomeView from '../views/HomeView.vue'
+import LoginView from '../views/LoginView.vue'
 // ✅ Sử dụng file mới với bảng nghiệp vụ đầy đủ và template hợp lệ
-import DataImportView from "../views/DataImportViewFull.vue";
+import DataImportView from '../views/DataImportViewFull.vue'
 
 // Preload critical components (optional for faster navigation)
 const preloadCriticalComponents = () => {
   // Preload commonly accessed views
-  import(/* webpackChunkName: "critical" */ "../views/EmployeesView.vue");
-  import(/* webpackChunkName: "critical" */ "../views/KpiScoringView.vue");
-  import(/* webpackChunkName: "critical" */ "../views/UnitsView.vue");
-};
+  import(/* webpackChunkName: "critical" */ '../views/EmployeesView.vue')
+  import(/* webpackChunkName: "critical" */ '../views/KpiScoringView.vue')
+  import(/* webpackChunkName: "critical" */ '../views/UnitsView.vue')
+}
 
 // Call preload after initial load
-setTimeout(preloadCriticalComponents, 2000);
+setTimeout(preloadCriticalComponents, 2000)
 
 const routes = [
   {
-    path: "/",
-    name: "home",
+    path: '/',
+    name: 'home',
     component: HomeView,
   },
   {
-    path: "/login",
-    name: "login",
+    path: '/login',
+    name: 'login',
     component: LoginView,
   },
   {
-    path: "/about",
-    name: "about",
-    component: () =>
-      import(/* webpackChunkName: "about" */ "../views/AboutView.vue"),
+    path: '/about',
+    name: 'about',
+    component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue'),
   },
   {
-    path: "/about/info",
-    name: "about-info",
-    component: () =>
-      import(/* webpackChunkName: "about" */ "../views/AboutInfoView.vue"),
+    path: '/about/info',
+    name: 'about-info',
+    component: () => import(/* webpackChunkName: "about" */ '../views/AboutInfoView.vue'),
   },
   {
-    path: "/about/user-guide",
-    name: "user-guide",
-    component: () =>
-      import(/* webpackChunkName: "about" */ "../views/UserGuideView.vue"),
+    path: '/about/user-guide',
+    name: 'user-guide',
+    component: () => import(/* webpackChunkName: "about" */ '../views/UserGuideView.vue'),
   },
   {
-    path: "/about/software-info",
-    name: "software-info",
-    component: () =>
-      import(/* webpackChunkName: "about" */ "../views/SoftwareInfoView.vue"),
+    path: '/about/software-info',
+    name: 'software-info',
+    component: () => import(/* webpackChunkName: "about" */ '../views/SoftwareInfoView.vue'),
   },
   {
-    path: "/units",
-    name: "units",
-    component: () =>
-      import(/* webpackChunkName: "admin" */ "../views/UnitsView.vue"),
+    path: '/units',
+    name: 'units',
+    component: () => import(/* webpackChunkName: "admin" */ '../views/UnitsView.vue'),
   },
   {
-    path: "/positions",
-    name: "positions",
-    component: () =>
-      import(/* webpackChunkName: "admin" */ "../views/PositionsView.vue"),
+    path: '/positions',
+    name: 'positions',
+    component: () => import(/* webpackChunkName: "admin" */ '../views/PositionsView.vue'),
   },
   {
-    path: "/roles",
-    name: "roles",
-    component: () =>
-      import(/* webpackChunkName: "admin" */ "../views/RolesView.vue"),
+    path: '/roles',
+    name: 'roles',
+    component: () => import(/* webpackChunkName: "admin" */ '../views/RolesView.vue'),
   },
   {
-    path: "/employees",
-    name: "employees",
-    component: () =>
-      import(/* webpackChunkName: "employees" */ "../views/EmployeesView.vue"),
+    path: '/employees',
+    name: 'employees',
+    component: () => import(/* webpackChunkName: "employees" */ '../views/EmployeesView.vue'),
   },
   {
-    path: "/khoan-periods",
-    name: "khoan-periods",
-    component: () =>
-      import(/* webpackChunkName: "periods" */ "../views/KhoanPeriodsView.vue"),
+    path: '/khoan-periods',
+    name: 'khoan-periods',
+    component: () => import(/* webpackChunkName: "periods" */ '../views/KhoanPeriodsView.vue'),
   },
   {
-    path: "/kpi-definitions",
-    name: "kpi-definitions",
-    component: () =>
-      import(/* webpackChunkName: "kpi" */ "../views/KpiDefinitionsView.vue"),
+    path: '/kpi-definitions',
+    name: 'kpi-definitions',
+    component: () => import(/* webpackChunkName: "kpi" */ '../views/KpiDefinitionsView.vue'),
   },
   {
-    path: "/employee-kpi-assignment",
-    name: "employee-kpi-assignment",
-    component: () =>
-      import(/* webpackChunkName: "kpi" */ "../views/EmployeeKpiAssignmentView.vue"),
+    path: '/employee-kpi-assignment',
+    name: 'employee-kpi-assignment',
+    component: () => import(/* webpackChunkName: "kpi" */ '../views/EmployeeKpiAssignmentView.vue'),
   },
   {
-    path: "/unit-kpi-assignment",
-    name: "unit-kpi-assignment",
-    component: () =>
-      import(/* webpackChunkName: "kpi" */ "../views/UnitKpiAssignmentView.vue"),
+    path: '/unit-kpi-assignment',
+    name: 'unit-kpi-assignment',
+    component: () => import(/* webpackChunkName: "kpi" */ '../views/UnitKpiAssignmentView.vue'),
   },
   {
-    path: "/kpi-actual-values",
-    name: "kpi-actual-values",
-    component: () =>
-      import(/* webpackChunkName: "kpi" */ "../views/KpiActualValuesView.vue"),
+    path: '/kpi-actual-values',
+    name: 'kpi-actual-values',
+    component: () => import(/* webpackChunkName: "kpi" */ '../views/KpiActualValuesView.vue'),
     meta: { public: true },
   },
   {
-    path: "/kpi-scoring",
-    name: "kpi-scoring",
-    component: () =>
-      import(/* webpackChunkName: "kpi" */ "../views/KpiScoringView.vue"),
+    path: '/kpi-scoring',
+    name: 'kpi-scoring',
+    component: () => import(/* webpackChunkName: "kpi" */ '../views/KpiScoringView.vue'),
   },
   {
-    path: "/unit-kpi-scoring",
-    name: "unit-kpi-scoring",
-    component: () =>
-      import(/* webpackChunkName: "kpi" */ "../views/UnitKpiScoringView.vue"),
+    path: '/unit-kpi-scoring',
+    name: 'unit-kpi-scoring',
+    component: () => import(/* webpackChunkName: "kpi" */ '../views/UnitKpiScoringView.vue'),
     meta: { public: true },
   },
   {
-    path: "/data-import",
-    name: "data-import",
+    path: '/data-import',
+    name: 'data-import',
     component: DataImportView,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
   {
-    path: "/datatables",
-    name: "datatables",
-    component: () =>
-      import(/* webpackChunkName: "datatables" */ "../views/DataTablesView.vue"),
-    meta: { requiresAuth: true }
+    path: '/datatables',
+    name: 'datatables',
+    component: () => import(/* webpackChunkName: "datatables" */ '../views/DataTablesView.vue'),
+    meta: { requiresAuth: true },
   },
   {
-    path: "/payroll-report",
-    name: "PayrollReport",
-    component: () =>
-      import(/* webpackChunkName: "reports" */ '../views/PayrollReportView.vue'),
-    meta: { requiresAuth: true }
+    path: '/payroll-report',
+    name: 'PayrollReport',
+    component: () => import(/* webpackChunkName: "reports" */ '../views/PayrollReportView.vue'),
+    meta: { requiresAuth: true },
   },
   {
-    path: "/performance-dashboard",
-    name: "performance-dashboard",
-    component: () =>
-      import(/* webpackChunkName: "admin" */ "../components/PerformanceDashboard.vue"),
-    meta: { requiresAuth: true }
+    path: '/performance-dashboard',
+    name: 'performance-dashboard',
+    component: () => import(/* webpackChunkName: "admin" */ '../components/PerformanceDashboard.vue'),
+    meta: { requiresAuth: true },
   },
   // === DASHBOARD ROUTES ===
   {
-    path: "/dashboard",
-    name: "dashboard",
-    redirect: "/dashboard/business-plan",
-    meta: { requiresAuth: true }
+    path: '/dashboard',
+    name: 'dashboard',
+    redirect: '/dashboard/business-plan',
+    meta: { requiresAuth: true },
   },
   {
-    path: "/dashboard/target-assignment",
-    name: "target-assignment",
-    component: () =>
-      import(/* webpackChunkName: "dashboard" */ "../views/dashboard/TargetAssignment.vue"),
-    meta: { requiresAuth: true }
+    path: '/dashboard/target-assignment',
+    name: 'target-assignment',
+    component: () => import(/* webpackChunkName: "dashboard" */ '../views/dashboard/TargetAssignment.vue'),
+    meta: { requiresAuth: true },
   },
   {
-    path: "/dashboard/calculation",
-    name: "calculation-dashboard",
-    component: () =>
-      import(/* webpackChunkName: "dashboard" */ "../views/dashboard/CalculationDashboard.vue"),
-    meta: { requiresAuth: true }
+    path: '/dashboard/calculation',
+    name: 'calculation-dashboard',
+    component: () => import(/* webpackChunkName: "dashboard" */ '../views/dashboard/CalculationDashboard.vue'),
+    meta: { requiresAuth: true },
   },
   {
-    path: "/dashboard/business-plan",
-    name: "business-plan-dashboard",
-    component: () =>
-      import(/* webpackChunkName: "dashboard" */ "../views/dashboard/BusinessPlanDashboard.vue"),
-    meta: { requiresAuth: true }
+    path: '/dashboard/business-plan',
+    name: 'business-plan-dashboard',
+    component: () => import(/* webpackChunkName: "dashboard" */ '../views/dashboard/BusinessPlanDashboard.vue'),
+    meta: { requiresAuth: true },
   },
-];
+]
 
 const router = createRouter({
   history: createWebHistory(), // Bỏ process.env.BASE_URL vì Vite không hỗ trợ biến này
   routes,
-});
+})
 
 // Route guard: bảo vệ các route cần đăng nhập
 router.beforeEach((to, from, next) => {
   // Bypass authentication trong development mode
-  const bypassAuth = process.env.NODE_ENV === 'development';
+  const bypassAuth = process.env.NODE_ENV === 'development'
 
   if (!to.meta.public && !bypassAuth && !isAuthenticated()) {
-    next({ name: "login" });
+    next({ name: 'login' })
   } else {
-    next();
+    next()
   }
-});
+})
 
-export default router;
+export default router

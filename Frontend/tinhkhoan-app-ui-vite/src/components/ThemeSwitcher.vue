@@ -1,7 +1,7 @@
 <template>
   <div class="theme-switcher">
-    <button 
-      @click="toggleTheme" 
+    <button
+      @click="toggleTheme"
       class="theme-btn"
       :title="themeStore.themeLabel()"
       aria-label="Chuyển đổi chế độ giao diện"
@@ -13,15 +13,15 @@
 </template>
 
 <script setup>
-import { useThemeStore } from '@/stores/themeStore';
+import { useThemeStore } from '@/stores/themeStore'
 
 // Store
-const themeStore = useThemeStore();
+const themeStore = useThemeStore()
 
 // Methods
 const toggleTheme = () => {
-  themeStore.toggleTheme();
-};
+  themeStore.toggleTheme()
+}
 </script>
 
 <style scoped>
@@ -75,7 +75,7 @@ const toggleTheme = () => {
   .theme-text {
     display: none;
   }
-  
+
   .theme-btn {
     padding: 10px;
     border-radius: 50%;

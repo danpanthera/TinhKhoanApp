@@ -31,21 +31,11 @@
         <div class="method-selection">
           <div class="radio-group">
             <label class="radio-option">
-              <input
-                type="radio"
-                v-model="scoringMethod"
-                value="employee"
-                @change="onScoringMethodChange"
-              />
+              <input type="radio" v-model="scoringMethod" value="employee" @change="onScoringMethodChange" />
               <span class="radio-label">👤 Chấm theo Cán bộ</span>
             </label>
             <label class="radio-option">
-              <input
-                type="radio"
-                v-model="scoringMethod"
-                value="unit"
-                @change="onScoringMethodChange"
-              />
+              <input type="radio" v-model="scoringMethod" value="unit" @change="onScoringMethodChange" />
               <span class="radio-label">🏢 Chấm theo Chi nhánh</span>
             </label>
           </div>
@@ -67,30 +57,13 @@
         </select>
 
         <!-- Unit Selection (when unit method selected) -->
-        <select
-          v-if="scoringMethod === 'unit'"
-          v-model="selectedUnit"
-          @change="loadUnitKPIs"
-          class="filter-select"
-        >
+        <select v-if="scoringMethod === 'unit'" v-model="selectedUnit" @change="loadUnitKPIs" class="filter-select">
           <option value="">-- Chọn chi nhánh --</option>
           <optgroup label="Chi nhánh CNL1">
-            <option
-              v-for="unit in cnl1Units"
-              :key="unit.id"
-              :value="unit.id"
-            >
-              {{ unit.name }} ({{ unit.code }})
-            </option>
+            <option v-for="unit in cnl1Units" :key="unit.id" :value="unit.id">{{ unit.name }} ({{ unit.code }})</option>
           </optgroup>
           <optgroup label="Chi nhánh CNL2" v-if="cnl2Units.length > 0">
-            <option
-              v-for="unit in cnl2Units"
-              :key="unit.id"
-              :value="unit.id"
-            >
-              {{ unit.name }} ({{ unit.code }})
-            </option>
+            <option v-for="unit in cnl2Units" :key="unit.id" :value="unit.id">{{ unit.name }} ({{ unit.code }})</option>
           </optgroup>
         </select>
 
@@ -113,7 +86,6 @@
 
     <!-- 📋 Danh sách KPI theo loại -->
     <div class="scoring-sections" v-if="(selectedEmployee || selectedUnit) && selectedPeriod">
-
       <!-- 📝 PHẦN 1: KPI Định Tính - Chấm Tay -->
       <div class="scoring-section" v-if="qualitativeKPIs.length > 0">
         <h3>📝 Chỉ Tiêu Định Tính - Chấm Điểm Thủ Công</h3>
@@ -130,9 +102,9 @@
                 <input
                   type="text"
                   :value="formatNumber(kpi.actualValue || 0)"
-                  @input="(e) => handleActualValueInput(e, kpi)"
-                  @blur="(e) => handleActualValueBlur(e, kpi)"
-                  :class="{ 'error': kpi.error }"
+                  @input="e => handleActualValueInput(e, kpi)"
+                  @blur="e => handleActualValueBlur(e, kpi)"
+                  :class="{ error: kpi.error }"
                 />
                 <span class="unit">%</span>
               </div>
@@ -148,9 +120,7 @@
                 <span>Điểm đạt:</span>
                 <strong class="score-value">{{ kpi.score || 0 }}/{{ kpi.maxScore }}</strong>
               </div>
-              <div v-if="kpi.updatedDate" class="update-time">
-                Cập nhật: {{ formatDate(kpi.updatedDate) }}
-              </div>
+              <div v-if="kpi.updatedDate" class="update-time">Cập nhật: {{ formatDate(kpi.updatedDate) }}</div>
             </div>
           </div>
         </div>
@@ -172,8 +142,8 @@
                 <input
                   type="text"
                   :value="formatNumber(kpi.numerator || 0)"
-                  @input="(e) => handleNumeratorInput(e, kpi)"
-                  @blur="(e) => handleNumeratorBlur(e, kpi)"
+                  @input="e => handleNumeratorInput(e, kpi)"
+                  @blur="e => handleNumeratorBlur(e, kpi)"
                 />
               </div>
               <div class="input-row">
@@ -181,8 +151,8 @@
                 <input
                   type="text"
                   :value="formatNumber(kpi.denominator || 0)"
-                  @input="(e) => handleDenominatorInput(e, kpi)"
-                  @blur="(e) => handleDenominatorBlur(e, kpi)"
+                  @input="e => handleDenominatorInput(e, kpi)"
+                  @blur="e => handleDenominatorBlur(e, kpi)"
                 />
               </div>
               <div class="calculation-result">
@@ -226,16 +196,8 @@
         <!-- File Upload Section -->
         <div class="import-section">
           <div class="upload-area">
-            <input
-              type="file"
-              ref="fileInput"
-              @change="handleFileUpload"
-              accept=".xlsx,.csv"
-              style="display: none"
-            />
-            <button @click="$refs.fileInput.click()" class="btn-upload">
-              📂 Chọn File Excel/CSV
-            </button>
+            <input type="file" ref="fileInput" @change="handleFileUpload" accept=".xlsx,.csv" style="display: none" />
+            <button @click="$refs.fileInput.click()" class="btn-upload">📂 Chọn File Excel/CSV</button>
             <span class="upload-info">Hỗ trợ: .xlsx, .csv</span>
           </div>
 
@@ -300,7 +262,6 @@
           </div>
         </div>
       </div>
-
     </div>
 
     <!-- 📈 Tóm tắt điểm -->
@@ -333,8 +294,8 @@
 </template>
 
 <script setup>
-import { useApiService } from '@/composables/useApiService';
-import { computed, onMounted, ref } from 'vue';
+import { useApiService } from '@/composables/useApiService'
+import { computed, onMounted, ref } from 'vue'
 
 // 🎛️ Reactive Data
 const loading = ref(false)
@@ -354,50 +315,28 @@ const cnl1Units = ref([])
 const cnl2Units = ref([])
 
 // 📊 Computed Properties cho các loại KPI
-const qualitativeKPIs = computed(() =>
-  allKPIs.value.filter(kpi => kpi.inputType === 'QUALITATIVE')
-)
+const qualitativeKPIs = computed(() => allKPIs.value.filter(kpi => kpi.inputType === 'QUALITATIVE'))
 
-const ratioKPIs = computed(() =>
-  allKPIs.value.filter(kpi => kpi.inputType === 'QUANTITATIVE_RATIO')
-)
+const ratioKPIs = computed(() => allKPIs.value.filter(kpi => kpi.inputType === 'QUANTITATIVE_RATIO'))
 
-const absoluteKPIs = computed(() =>
-  allKPIs.value.filter(kpi => kpi.inputType === 'QUANTITATIVE_ABSOLUTE')
-)
+const absoluteKPIs = computed(() => allKPIs.value.filter(kpi => kpi.inputType === 'QUANTITATIVE_ABSOLUTE'))
 
 // 📈 Computed Properties cho điểm số
-const qualitativeScore = computed(() =>
-  qualitativeKPIs.value.reduce((sum, kpi) => sum + (kpi.score || 0), 0)
-)
+const qualitativeScore = computed(() => qualitativeKPIs.value.reduce((sum, kpi) => sum + (kpi.score || 0), 0))
 
-const qualitativeMaxScore = computed(() =>
-  qualitativeKPIs.value.reduce((sum, kpi) => sum + kpi.maxScore, 0)
-)
+const qualitativeMaxScore = computed(() => qualitativeKPIs.value.reduce((sum, kpi) => sum + kpi.maxScore, 0))
 
-const ratioScore = computed(() =>
-  ratioKPIs.value.reduce((sum, kpi) => sum + (kpi.score || 0), 0)
-)
+const ratioScore = computed(() => ratioKPIs.value.reduce((sum, kpi) => sum + (kpi.score || 0), 0))
 
-const ratioMaxScore = computed(() =>
-  ratioKPIs.value.reduce((sum, kpi) => sum + kpi.maxScore, 0)
-)
+const ratioMaxScore = computed(() => ratioKPIs.value.reduce((sum, kpi) => sum + kpi.maxScore, 0))
 
-const absoluteScore = computed(() =>
-  absoluteKPIs.value.reduce((sum, kpi) => sum + (kpi.score || 0), 0)
-)
+const absoluteScore = computed(() => absoluteKPIs.value.reduce((sum, kpi) => sum + (kpi.score || 0), 0))
 
-const absoluteMaxScore = computed(() =>
-  absoluteKPIs.value.reduce((sum, kpi) => sum + kpi.maxScore, 0)
-)
+const absoluteMaxScore = computed(() => absoluteKPIs.value.reduce((sum, kpi) => sum + kpi.maxScore, 0))
 
-const totalScore = computed(() =>
-  qualitativeScore.value + ratioScore.value + absoluteScore.value
-)
+const totalScore = computed(() => qualitativeScore.value + ratioScore.value + absoluteScore.value)
 
-const totalMaxScore = computed(() =>
-  qualitativeMaxScore.value + ratioMaxScore.value + absoluteMaxScore.value
-)
+const totalMaxScore = computed(() => qualitativeMaxScore.value + ratioMaxScore.value + absoluteMaxScore.value)
 
 // 📊 Stats
 const totalKPIs = computed(() => allKPIs.value.length)
@@ -420,10 +359,7 @@ onMounted(async () => {
 const loadInitialData = async () => {
   try {
     loading.value = true
-    const [employeesData, periodsData] = await Promise.all([
-      get('/Employees'),
-      get('/KhoanPeriods')
-    ])
+    const [employeesData, periodsData] = await Promise.all([get('/Employees'), get('/KhoanPeriods')])
     employees.value = employeesData
     periods.value = periodsData
 
@@ -449,7 +385,7 @@ const loadEmployeeKPIs = async () => {
     const filteredData = data.filter(kpi => kpi.khoanPeriodId == selectedPeriod.value)
 
     // Phân loại KPI và thêm thông tin input type
-    allKPIs.value = filteredData.map((kpi) => {
+    allKPIs.value = filteredData.map(kpi => {
       // Tạm thời phân loại dựa trên tên KPI
       let inputType = 'QUALITATIVE' // Mặc định là định tính
 
@@ -465,7 +401,7 @@ const loadEmployeeKPIs = async () => {
         numerator: null,
         denominator: null,
         calculatedRatio: null,
-        error: null
+        error: null,
       }
     }) // Đóng function map()
   } catch (err) {
@@ -486,9 +422,8 @@ const loadUnitKPIs = async () => {
     const data = await get(`/UnitKhoanAssignments`)
 
     // Filter by unit and period
-    const filteredData = data.filter(assignment =>
-      assignment.unitId == selectedUnit.value &&
-      assignment.khoanPeriodId == selectedPeriod.value
+    const filteredData = data.filter(
+      assignment => assignment.unitId == selectedUnit.value && assignment.khoanPeriodId == selectedPeriod.value
     )
 
     // Transform unit assignments to KPI format
@@ -509,7 +444,7 @@ const loadUnitKPIs = async () => {
             numerator: null,
             denominator: null,
             calculatedRatio: null,
-            error: null
+            error: null,
           })
         })
       }
@@ -558,7 +493,7 @@ const loadKPIData = () => {
 }
 
 // 📝 Chấm điểm thủ công
-const updateManualScore = async (kpi) => {
+const updateManualScore = async kpi => {
   if (!kpi.actualValue || kpi.actualValue < 0 || kpi.actualValue > 100) {
     kpi.error = 'Giá trị phải từ 0-100%'
     return
@@ -570,7 +505,7 @@ const updateManualScore = async (kpi) => {
     const result = await put(`/EmployeeKpiAssignment/${kpi.id}`, {
       targetValue: kpi.targetValue,
       actualValue: kpi.actualValue,
-      notes: kpi.notes || 'Chấm điểm thủ công'
+      notes: kpi.notes || 'Chấm điểm thủ công',
     })
 
     if (result) {
@@ -586,7 +521,7 @@ const updateManualScore = async (kpi) => {
 }
 
 // 🧮 Tính toán tỷ lệ
-const calculateRatio = (kpi) => {
+const calculateRatio = kpi => {
   if (kpi.numerator && kpi.denominator && kpi.denominator !== 0) {
     kpi.calculatedRatio = Math.round((kpi.numerator / kpi.denominator) * 100 * 100) / 100
   } else {
@@ -594,7 +529,7 @@ const calculateRatio = (kpi) => {
   }
 }
 
-const saveRatioCalculation = async (kpi) => {
+const saveRatioCalculation = async kpi => {
   try {
     // Tính toán tỷ lệ trước khi lưu
     calculateRatio(kpi)
@@ -603,7 +538,7 @@ const saveRatioCalculation = async (kpi) => {
     const result = await put(`/EmployeeKpiAssignment/${kpi.id}`, {
       targetValue: kpi.targetValue,
       actualValue: kpi.calculatedRatio,
-      notes: `Tính từ công thức: ${kpi.numerator}/${kpi.denominator} = ${kpi.calculatedRatio}%`
+      notes: `Tính từ công thức: ${kpi.numerator}/${kpi.denominator} = ${kpi.calculatedRatio}%`,
     })
 
     if (result) {
@@ -619,7 +554,7 @@ const saveRatioCalculation = async (kpi) => {
 }
 
 // 📊 Import file
-const handleFileUpload = (event) => {
+const handleFileUpload = event => {
   const file = event.target.files[0]
   if (!file) return
 
@@ -632,8 +567,8 @@ const confirmImport = async () => {
     const result = await post('/kpi-scoring/bulk-import', {
       scores: importPreview.value.map(row => ({
         targetId: row.id,
-        actualValue: row.actualValue
-      }))
+        actualValue: row.actualValue,
+      })),
     })
 
     if (result.success) {
@@ -652,67 +587,67 @@ const cancelImport = () => {
 
 // Number input handlers for KPI scoring
 const handleActualValueInput = (event, kpi) => {
-  const formattedValue = handleInput(event);
-  event.target.value = formattedValue;
-  kpi.actualValue = parseFormattedNumber(formattedValue);
-  updateManualScore(kpi);
-};
+  const formattedValue = handleInput(event)
+  event.target.value = formattedValue
+  kpi.actualValue = parseFormattedNumber(formattedValue)
+  updateManualScore(kpi)
+}
 
 const handleActualValueBlur = (event, kpi) => {
-  const formattedValue = handleBlur(event);
-  event.target.value = formattedValue;
-  kpi.actualValue = parseFormattedNumber(formattedValue);
-  updateManualScore(kpi);
-};
+  const formattedValue = handleBlur(event)
+  event.target.value = formattedValue
+  kpi.actualValue = parseFormattedNumber(formattedValue)
+  updateManualScore(kpi)
+}
 
 const handleNumeratorInput = (event, kpi) => {
-  const formattedValue = handleInput(event);
-  event.target.value = formattedValue;
-  kpi.numerator = parseFormattedNumber(formattedValue);
-  calculateRatio(kpi);
-};
+  const formattedValue = handleInput(event)
+  event.target.value = formattedValue
+  kpi.numerator = parseFormattedNumber(formattedValue)
+  calculateRatio(kpi)
+}
 
 const handleNumeratorBlur = (event, kpi) => {
-  const formattedValue = handleBlur(event);
-  event.target.value = formattedValue;
-  kpi.numerator = parseFormattedNumber(formattedValue);
-  calculateRatio(kpi);
-};
+  const formattedValue = handleBlur(event)
+  event.target.value = formattedValue
+  kpi.numerator = parseFormattedNumber(formattedValue)
+  calculateRatio(kpi)
+}
 
 const handleDenominatorInput = (event, kpi) => {
-  const formattedValue = handleInput(event);
-  event.target.value = formattedValue;
-  kpi.denominator = parseFormattedNumber(formattedValue);
-  calculateRatio(kpi);
-};
+  const formattedValue = handleInput(event)
+  event.target.value = formattedValue
+  kpi.denominator = parseFormattedNumber(formattedValue)
+  calculateRatio(kpi)
+}
 
 const handleDenominatorBlur = (event, kpi) => {
-  const formattedValue = handleBlur(event);
-  event.target.value = formattedValue;
-  kpi.denominator = parseFormattedNumber(formattedValue);
-  calculateRatio(kpi);
-};
+  const formattedValue = handleBlur(event)
+  event.target.value = formattedValue
+  kpi.denominator = parseFormattedNumber(formattedValue)
+  calculateRatio(kpi)
+}
 
 // 🔧 Helper functions
-const formatNumber = (value) => {
+const formatNumber = value => {
   if (!value && value !== 0) return ''
   return value.toLocaleString('vi-VN')
 }
 
-const formatDate = (dateString) => {
+const formatDate = dateString => {
   return new Date(dateString).toLocaleString('vi-VN')
 }
 
-const getCompletionRate = (kpi) => {
+const getCompletionRate = kpi => {
   if (!kpi.actualValue || !kpi.targetValue) return 0
   return Math.round((kpi.actualValue / kpi.targetValue) * 100)
 }
 
-const getStatusText = (status) => {
+const getStatusText = status => {
   const statusMap = {
-    'valid': 'Hợp lệ',
-    'invalid': 'Không hợp lệ',
-    'warning': 'Cảnh báo'
+    valid: 'Hợp lệ',
+    invalid: 'Không hợp lệ',
+    warning: 'Cảnh báo',
   }
   return statusMap[status] || status
 }
@@ -760,7 +695,7 @@ const getStatusText = (status) => {
   background: white;
   padding: 20px;
   border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   margin-bottom: 30px;
 }
 
@@ -770,11 +705,11 @@ const getStatusText = (status) => {
   padding: 20px;
   background: #f8f9fa;
   border-radius: 8px;
-  border-left: 4px solid #8B0000;
+  border-left: 4px solid #8b0000;
 }
 
 .scoring-method-section h3 {
-  color: #8B0000;
+  color: #8b0000;
   margin-bottom: 15px;
   font-size: 1.2rem;
 }
@@ -802,24 +737,24 @@ const getStatusText = (status) => {
 }
 
 .radio-option:hover {
-  border-color: #8B0000;
+  border-color: #8b0000;
   background: #f8f9fa;
 }
 
-.radio-option input[type="radio"] {
+.radio-option input[type='radio'] {
   margin-right: 10px;
   width: 18px;
   height: 18px;
-  accent-color: #8B0000;
+  accent-color: #8b0000;
 }
 
-.radio-option input[type="radio"]:checked + .radio-label {
-  color: #8B0000;
+.radio-option input[type='radio']:checked + .radio-label {
+  color: #8b0000;
   font-weight: 600;
 }
 
-.radio-option:has(input[type="radio"]:checked) {
-  border-color: #8B0000;
+.radio-option:has(input[type='radio']:checked) {
+  border-color: #8b0000;
   background: #fff5f5;
 }
 
@@ -840,7 +775,7 @@ const getStatusText = (status) => {
 }
 
 .filter-select:focus {
-  border-color: #8B0000;
+  border-color: #8b0000;
   outline: none;
   box-shadow: 0 0 0 2px rgba(139, 0, 0, 0.1);
 }
@@ -862,7 +797,7 @@ const getStatusText = (status) => {
   background: white;
   margin-bottom: 30px;
   border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
 
@@ -1128,7 +1063,7 @@ const getStatusText = (status) => {
   background: white;
   padding: 30px;
   border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   margin-top: 30px;
 }
 

@@ -1,16 +1,20 @@
-ß<template>
+ß
+<template>
   <div class="positions-view">
     <h1>Quản lý Chức vụ</h1>
 
     <!-- Selection Management -->
-    <div class="selection-management" style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e9ecef;">
-      <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 16px;">
+    <div
+      class="selection-management"
+      style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #e9ecef"
+    >
+      <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 16px">
         <button
           @click="toggleSelectionMode"
           class="action-button"
           :style="{
             backgroundColor: isSelectionMode ? '#e74c3c' : '#2ecc71',
-            borderColor: isSelectionMode ? '#c0392b' : '#27ae60'
+            borderColor: isSelectionMode ? '#c0392b' : '#27ae60',
           }"
         >
           {{ isSelectionMode ? '✕ Thoát chế độ chọn' : '☑ Chọn Chức vụ' }}
@@ -20,7 +24,7 @@
           v-if="isSelectionMode && selectedPositions.size > 0"
           @click="selectAllVisible"
           class="action-button"
-          style="background-color: #3498db; border-color: #2980b9;"
+          style="background-color: #3498db; border-color: #2980b9"
         >
           Chọn tất cả hiển thị
         </button>
@@ -29,7 +33,7 @@
           v-if="isSelectionMode && selectedPositions.size > 0"
           @click="clearSelection"
           class="action-button"
-          style="background-color: #95a5a6; border-color: #7f8c8d;"
+          style="background-color: #95a5a6; border-color: #7f8c8d"
         >
           Bỏ chọn tất cả
         </button>
@@ -38,31 +42,28 @@
           v-if="selectedPositions.size > 0"
           @click="deleteSelectedPositions"
           class="action-button"
-          style="background-color: #e74c3c; border-color: #c0392b;"
+          style="background-color: #e74c3c; border-color: #c0392b"
         >
           🗑 Xóa đã chọn ({{ selectedPositions.size }})
         </button>
       </div>
 
       <div v-if="selectedPositions.size > 0" class="selected-positions-display">
-        <h4 style="margin: 0 0 12px 0; color: #2c3e50;">Chức vụ đã chọn ({{ selectedPositions.size }}):</h4>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-          <span v-for="positionId in Array.from(selectedPositions)" :key="positionId"
-                style="background: #3498db; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">
+        <h4 style="margin: 0 0 12px 0; color: #2c3e50">Chức vụ đã chọn ({{ selectedPositions.size }}):</h4>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px">
+          <span
+            v-for="positionId in Array.from(selectedPositions)"
+            :key="positionId"
+            style="background: #3498db; color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px"
+          >
             {{ getPositionName(positionId) }}
           </span>
         </div>
       </div>
     </div>
 
-    <button
-      @click="loadPositions"
-      :disabled="positionStore.isLoading"
-      class="action-button"
-    >
-      {{
-        positionStore.isLoading ? "Đang tải..." : "Tải lại Danh sách Chức vụ"
-      }}
+    <button @click="loadPositions" :disabled="positionStore.isLoading" class="action-button">
+      {{ positionStore.isLoading ? 'Đang tải...' : 'Tải lại Danh sách Chức vụ' }}
     </button>
 
     <div v-if="formError || positionStore.error" class="error-message">
@@ -78,50 +79,35 @@
         class="list-item"
         :style="{ backgroundColor: selectedPositions.has(position.Id) ? '#e3f2fd' : '' }"
       >
-        <div style="display: flex; align-items: center; gap: 15px;">
+        <div style="display: flex; align-items: center; gap: 15px">
           <input
             v-if="isSelectionMode"
             type="checkbox"
             :checked="selectedPositions.has(position.Id)"
             @change="togglePositionSelection(position.Id)"
-            style="transform: scale(1.2);"
+            style="transform: scale(1.2)"
           />
-          <div class="item-info" style="flex-grow: 1;">
+          <div class="item-info" style="flex-grow: 1">
             <div class="position-header">
               <strong>{{ position.Name }}</strong>
               <span class="position-id">ID: {{ position.Id }}</span>
             </div>
-            <span class="item-details" v-if="position.Description"
-              >(Mô tả: {{ position.Description }})</span
-            >
+            <span class="item-details" v-if="position.Description">(Mô tả: {{ position.Description }})</span>
           </div>
           <div class="actions" v-if="!isSelectionMode">
-            <button @click="startEditPosition(position)" class="edit-btn">
-              Sửa
-            </button>
-            <button
-              @click="deletePosition(position.Id)"
-              class="delete-btn"
-            >
-              Xóa
-            </button>
+            <button @click="startEditPosition(position)" class="edit-btn">Sửa</button>
+            <button @click="deletePosition(position.Id)" class="delete-btn">Xóa</button>
           </div>
         </div>
       </li>
     </ul>
-    <p
-      v-else-if="!positionStore.isLoading && !positionStore.error && !formError"
-    >
-      Không có chức vụ nào để hiển thị.
-    </p>
-    <p v-if="positionStore.isLoading && positionStore.positions.length === 0">
-      Đang tải danh sách chức vụ...
-    </p>
+    <p v-else-if="!positionStore.isLoading && !positionStore.error && !formError">Không có chức vụ nào để hiển thị.</p>
+    <p v-if="positionStore.isLoading && positionStore.positions.length === 0">Đang tải danh sách chức vụ...</p>
 
     <hr class="separator" />
 
     <div class="form-container">
-      <h2>{{ isEditing ? "Cập nhật Chức vụ" : "Thêm Chức vụ Mới" }}</h2>
+      <h2>{{ isEditing ? 'Cập nhật Chức vụ' : 'Thêm Chức vụ Mới' }}</h2>
       <form @submit.prevent="handleSubmitPosition">
         <div class="form-group">
           <label for="positionName">Tên Chức vụ:</label>
@@ -144,29 +130,18 @@
           />
         </div>
         <div class="form-actions">
-          <button
-            type="submit"
-            :disabled="positionStore.isLoading"
-            class="action-button"
-          >
+          <button type="submit" :disabled="positionStore.isLoading" class="action-button">
             {{
               positionStore.isLoading
                 ? isEditing
-                  ? "Đang cập nhật..."
-                  : "Đang thêm..."
+                  ? 'Đang cập nhật...'
+                  : 'Đang thêm...'
                 : isEditing
-                ? "Lưu Thay Đổi"
-                : "Thêm Chức vụ"
+                  ? 'Lưu Thay Đổi'
+                  : 'Thêm Chức vụ'
             }}
           </button>
-          <button
-            type="button"
-            @click="cancelEdit"
-            v-if="isEditing"
-            class="cancel-btn action-button"
-          >
-            Hủy
-          </button>
+          <button type="button" @click="cancelEdit" v-if="isEditing" class="cancel-btn action-button">Hủy</button>
         </div>
       </form>
     </div>
@@ -174,215 +149,199 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
-import { usePositionStore } from "../stores/positionStore.js";
+import { computed, onMounted, ref } from 'vue'
+import { usePositionStore } from '../stores/positionStore.js'
 
-const positionStore = usePositionStore();
+const positionStore = usePositionStore()
 
 // Multiselection functionality
-const isSelectionMode = ref(false);
-const selectedPositions = ref(new Set());
+const isSelectionMode = ref(false)
+const selectedPositions = ref(new Set())
 
 // Computed property để sort positions theo ID
 const sortedPositions = computed(() => {
-  return [...positionStore.allPositions].sort((a, b) => (a.Id || 0) - (b.Id || 0));
-});
+  return [...positionStore.allPositions].sort((a, b) => (a.Id || 0) - (b.Id || 0))
+})
 
 const currentPosition = ref({
   Id: null,
-  Name: "",
-  Description: "",
-});
+  Name: '',
+  Description: '',
+})
 
-const isEditing = ref(false);
-const formError = ref(null);
+const isEditing = ref(false)
+const formError = ref(null)
 
 onMounted(() => {
   if (positionStore.positions.length === 0 && !positionStore.isLoading) {
-    positionStore.fetchPositions();
+    positionStore.fetchPositions()
   }
-});
+})
 
 const loadPositions = () => {
-  formError.value = null;
-  positionStore.error = null;
-  positionStore.fetchPositions();
-};
+  formError.value = null
+  positionStore.error = null
+  positionStore.fetchPositions()
+}
 
 const handleSubmitPosition = async () => {
-  formError.value = null;
-  positionStore.error = null;
+  formError.value = null
+  positionStore.error = null
 
-  const nameFromInput =
-    typeof currentPosition.value.Name === "string"
-      ? currentPosition.value.Name.trim()
-      : "";
+  const nameFromInput = typeof currentPosition.value.Name === 'string' ? currentPosition.value.Name.trim() : ''
   const descriptionFromInput =
-    typeof currentPosition.value.Description === "string"
-      ? currentPosition.value.Description.trim()
-      : "";
+    typeof currentPosition.value.Description === 'string' ? currentPosition.value.Description.trim() : ''
 
   const positionDataToValidateAndSubmit = {
     ...currentPosition.value,
     Name: nameFromInput,
     Description: descriptionFromInput,
-  };
-
-  console.log("--- Bắt đầu handleSubmitPosition (Chức vụ) ---");
-  console.log(
-    "Giá trị currentPosition.value (gốc từ form):",
-    JSON.parse(JSON.stringify(currentPosition.value))
-  );
-  console.log(
-    "Dữ liệu sẽ được kiểm tra và gửi đi:",
-    JSON.parse(JSON.stringify(positionDataToValidateAndSubmit))
-  );
-
-  if (!positionDataToValidateAndSubmit.Name) {
-    formError.value = "Tên chức vụ không được để trống!";
-    console.log("VALIDATION FAIL (Client-side): Tên chức vụ trống.");
-    return;
   }
 
-  console.log("VALIDATION PASS (Client-side): Tên chức vụ hợp lệ.");
+  console.log('--- Bắt đầu handleSubmitPosition (Chức vụ) ---')
+  console.log('Giá trị currentPosition.value (gốc từ form):', JSON.parse(JSON.stringify(currentPosition.value)))
+  console.log('Dữ liệu sẽ được kiểm tra và gửi đi:', JSON.parse(JSON.stringify(positionDataToValidateAndSubmit)))
+
+  if (!positionDataToValidateAndSubmit.Name) {
+    formError.value = 'Tên chức vụ không được để trống!'
+    console.log('VALIDATION FAIL (Client-side): Tên chức vụ trống.')
+    return
+  }
+
+  console.log('VALIDATION PASS (Client-side): Tên chức vụ hợp lệ.')
 
   if (isEditing.value && positionDataToValidateAndSubmit.Id !== null) {
     try {
-      await positionStore.updatePosition(positionDataToValidateAndSubmit);
-      alert("Cập nhật chức vụ thành công!");
-      cancelEdit();
+      await positionStore.updatePosition(positionDataToValidateAndSubmit)
+      alert('Cập nhật chức vụ thành công!')
+      cancelEdit()
     } catch (error) {
-      console.error("Lỗi khi cập nhật chức vụ:", error);
+      console.error('Lỗi khi cập nhật chức vụ:', error)
     }
   } else {
     try {
       // eslint-disable-next-line no-unused-vars
-      const { Id, ...newPositionData } = positionDataToValidateAndSubmit;
-      await positionStore.createPosition(newPositionData);
-      alert("Thêm chức vụ thành công!");
-      resetForm();
+      const { Id, ...newPositionData } = positionDataToValidateAndSubmit
+      await positionStore.createPosition(newPositionData)
+      alert('Thêm chức vụ thành công!')
+      resetForm()
     } catch (error) {
-      console.error("Lỗi khi thêm chức vụ:", error);
+      console.error('Lỗi khi thêm chức vụ:', error)
     }
   }
-};
+}
 
-const startEditPosition = (position) => {
-  formError.value = null;
-  positionStore.error = null;
-  isEditing.value = true;
-  currentPosition.value = JSON.parse(JSON.stringify(position));
-  console.log(
-    "Dữ liệu nạp vào form sửa (startEditPosition):",
-    JSON.parse(JSON.stringify(currentPosition.value))
-  );
-};
+const startEditPosition = position => {
+  formError.value = null
+  positionStore.error = null
+  isEditing.value = true
+  currentPosition.value = JSON.parse(JSON.stringify(position))
+  console.log('Dữ liệu nạp vào form sửa (startEditPosition):', JSON.parse(JSON.stringify(currentPosition.value)))
+}
 
 const cancelEdit = () => {
-  isEditing.value = false;
-  resetForm();
-  formError.value = null;
-  positionStore.error = null;
-};
+  isEditing.value = false
+  resetForm()
+  formError.value = null
+  positionStore.error = null
+}
 
 const resetForm = () => {
   currentPosition.value = {
     Id: null,
-    Name: "",
-    Description: "",
-  };
-};
+    Name: '',
+    Description: '',
+  }
+}
 
-const deletePosition = async (positionId) => {
-  formError.value = null;
-  positionStore.error = null;
+const deletePosition = async positionId => {
+  formError.value = null
+  positionStore.error = null
   try {
-    await positionStore.deletePosition(positionId);
+    await positionStore.deletePosition(positionId)
     // Xóa thành công - không hiển thị thông báo
   } catch (error) {
-    console.error("Lỗi khi xóa chức vụ:", error);
+    console.error('Lỗi khi xóa chức vụ:', error)
     // Hiển thị lỗi từ server
     if (error.response?.data?.message) {
-      formError.value = error.response.data.message;
+      formError.value = error.response.data.message
     } else if (positionStore.error) {
-      formError.value = positionStore.error;
+      formError.value = positionStore.error
     } else {
-      formError.value = "Không thể xóa chức vụ. Vui lòng thử lại.";
+      formError.value = 'Không thể xóa chức vụ. Vui lòng thử lại.'
     }
   }
-};
+}
 
 // Multiselection methods
 const toggleSelectionMode = () => {
-  isSelectionMode.value = !isSelectionMode.value;
+  isSelectionMode.value = !isSelectionMode.value
   if (!isSelectionMode.value) {
-    selectedPositions.value.clear();
+    selectedPositions.value.clear()
   }
-};
+}
 
-const togglePositionSelection = (positionId) => {
+const togglePositionSelection = positionId => {
   if (selectedPositions.value.has(positionId)) {
-    selectedPositions.value.delete(positionId);
+    selectedPositions.value.delete(positionId)
   } else {
-    selectedPositions.value.add(positionId);
+    selectedPositions.value.add(positionId)
   }
-};
+}
 
 const selectAllVisible = () => {
   sortedPositions.value.forEach(position => {
-    selectedPositions.value.add(position.Id);
-  });
-};
+    selectedPositions.value.add(position.Id)
+  })
+}
 
 const clearSelection = () => {
-  selectedPositions.value.clear();
-};
+  selectedPositions.value.clear()
+}
 
-const getPositionName = (positionId) => {
-  const position = positionStore.allPositions.find(p => p.Id === positionId);
-  return position ? position.Name : `ID: ${positionId}`;
-};
+const getPositionName = positionId => {
+  const position = positionStore.allPositions.find(p => p.Id === positionId)
+  return position ? position.Name : `ID: ${positionId}`
+}
 
 const deleteSelectedPositions = async () => {
-  if (selectedPositions.value.size === 0) return;
+  if (selectedPositions.value.size === 0) return
 
-  const selectedPositionsArray = positionStore.allPositions.filter(position =>
-    selectedPositions.value.has(position.Id)
-  );
-  const positionNames = selectedPositionsArray.map(position => position.Name).join(', ');
+  const selectedPositionsArray = positionStore.allPositions.filter(position => selectedPositions.value.has(position.Id))
+  const positionNames = selectedPositionsArray.map(position => position.Name).join(', ')
 
   if (confirm(`Bạn có chắc muốn xóa ${selectedPositions.value.size} chức vụ: ${positionNames}?`)) {
-    let successCount = 0;
-    let failCount = 0;
-    const errors = [];
+    let successCount = 0
+    let failCount = 0
+    const errors = []
 
     for (const positionId of selectedPositions.value) {
       try {
-        await positionStore.deletePosition(positionId);
-        successCount++;
+        await positionStore.deletePosition(positionId)
+        successCount++
       } catch (error) {
-        failCount++;
-        const positionName = selectedPositionsArray.find(p => p.Id === positionId)?.Name || `ID: ${positionId}`;
-        const errorMessage = error.message || 'Lỗi không xác định';
-        errors.push(`${positionName}: ${errorMessage}`);
-        console.error(`Error deleting position ${positionId}:`, error);
+        failCount++
+        const positionName = selectedPositionsArray.find(p => p.Id === positionId)?.Name || `ID: ${positionId}`
+        const errorMessage = error.message || 'Lỗi không xác định'
+        errors.push(`${positionName}: ${errorMessage}`)
+        console.error(`Error deleting position ${positionId}:`, error)
       }
     }
 
     // Clear selection after deletion attempt
-    selectedPositions.value.clear();
-    isSelectionMode.value = false;
+    selectedPositions.value.clear()
+    isSelectionMode.value = false
 
     // Show results
     if (successCount > 0 && failCount === 0) {
-      alert(`Xóa thành công ${successCount} chức vụ!`);
+      alert(`Xóa thành công ${successCount} chức vụ!`)
     } else if (successCount > 0 && failCount > 0) {
-      alert(`Xóa thành công ${successCount} chức vụ, thất bại ${failCount} chức vụ.\n\nLỗi:\n${errors.join('\n')}`);
+      alert(`Xóa thành công ${successCount} chức vụ, thất bại ${failCount} chức vụ.\n\nLỗi:\n${errors.join('\n')}`)
     } else {
-      alert(`Xóa thất bại tất cả ${failCount} chức vụ.\n\nLỗi:\n${errors.join('\n')}`);
+      alert(`Xóa thất bại tất cả ${failCount} chức vụ.\n\nLỗi:\n${errors.join('\n')}`)
     }
   }
-};
+}
 </script>
 
 <style scoped>
@@ -448,7 +407,7 @@ ul {
   margin-bottom: 4px;
 }
 .position-id {
-  background-color: #8B1538;
+  background-color: #8b1538;
   color: white;
   font-size: 0.75em;
   font-weight: 600;
@@ -535,16 +494,18 @@ ul {
   font-weight: bold;
   color: #34495e;
 }
-.form-group input[type="text"] {
+.form-group input[type='text'] {
   flex-grow: 1;
   min-width: 200px;
   padding: 10px 12px;
   border: 1px solid #ced4da;
   border-radius: 4px;
   box-sizing: border-box;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
-.form-group input[type="text"]:focus {
+.form-group input[type='text']:focus {
   border-color: #80bdff;
   outline: 0;
   box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);

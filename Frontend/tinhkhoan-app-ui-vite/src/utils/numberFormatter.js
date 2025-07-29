@@ -27,7 +27,7 @@ export function formatNumber(value, decimals = 2, showZeroDecimals = false) {
   const formatter = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: showZeroDecimals ? decimals : 0,
     maximumFractionDigits: decimals,
-    useGrouping: true // Sử dụng dấu phẩy ngăn cách hàng nghìn
+    useGrouping: true, // Sử dụng dấu phẩy ngăn cách hàng nghìn
   })
 
   return formatter.format(numValue)
@@ -209,5 +209,5 @@ export default {
   formatFileSize,
   formatProcessingTime,
   formatMillionVND,
-  formatMillionVNDInput
+  formatMillionVNDInput,
 }
