@@ -2192,11 +2192,11 @@ namespace TinhKhoanApp.Api.Services
                 // Kiểm tra các bảng tồn tại trước khi truy vấn count
                 var existingTables = new List<string>();
                 string checkTablesSql = @"
-                    SELECT TABLE_NAME 
-                    FROM INFORMATION_SCHEMA.TABLES 
+                    SELECT TABLE_NAME
+                    FROM INFORMATION_SCHEMA.TABLES
                     WHERE TABLE_TYPE='BASE TABLE'
                     AND TABLE_NAME IN ('DP01', 'DPDA', 'EI01', 'GL01', 'GL41', 'LN01', 'LN03', 'RR01')";
-                
+
                 using (var checkCmd = new SqlCommand(checkTablesSql, connection))
                 {
                     using var checkReader = await checkCmd.ExecuteReaderAsync();
