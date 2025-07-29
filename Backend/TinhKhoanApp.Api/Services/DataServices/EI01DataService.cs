@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Models.DataTables;
 using TinhKhoanApp.Api.Models.DTOs;
 using TinhKhoanApp.Api.Repositories;
+using TinhKhoanApp.Api.Utilities;
 
 namespace TinhKhoanApp.Api.Services.DataServices
 {
@@ -40,7 +41,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
         {
             try
             {
-                var entity = await _repository.GetByIdAsync(id);
+                var entity = await _repository.GetByIdAsync((int)id);
                 return entity != null ? MapToDetailDto(entity) : null;
             }
             catch (Exception ex)
@@ -55,8 +56,8 @@ namespace TinhKhoanApp.Api.Services.DataServices
         {
             try
             {
-                var entities = await _repository.GetByDateAsync(date, maxResults);
-                return entities.Select(MapToPreviewDto);
+                var entities = await _repository.GetByDateAsync(date);
+                return entities.Take(maxResults).Select(MapToPreviewDto);
             }
             catch (Exception ex)
             {
@@ -130,7 +131,9 @@ namespace TinhKhoanApp.Api.Services.DataServices
         {
             try
             {
-                var entities = await _repository.GetByServiceStatusAsync(serviceType, status, maxResults);
+                // Combine service type and status into a single status string, for example: "EMB-ACTIVE"
+                string combinedStatus = $"{serviceType}-{status}";
+                var entities = await _repository.GetByServiceStatusAsync(combinedStatus, maxResults);
                 return entities.Select(MapToPreviewDto);
             }
             catch (Exception ex)
@@ -173,26 +176,19 @@ namespace TinhKhoanApp.Api.Services.DataServices
                     predicate = e => e.MA_CN == branchCode && e.NGAY_DL.Date == dateValue.Date;
                 }
 
-                var allRecords = await _repository.GetAsync(predicate);
+                var allRecords = await _repository.FindAsync(predicate);
 
                 // Tính toán các số liệu tổng hợp
                 return new EI01SummaryDto
                 {
                     BranchCode = branchCode,
                     Date = date,
-                    TotalRecords = allRecords.Count(),
-                    TotalActiveServices = allRecords.Count(e => e.TRANG_THAI == "1"),
-                    TotalInactiveServices = allRecords.Count(e => e.TRANG_THAI == "0"),
-                    InternetBankingCount = allRecords.Count(e => e.LOAI_DV == "IB" || e.LOAI_DV?.Contains("Internet", StringComparison.OrdinalIgnoreCase) == true),
-                    MobileBankingCount = allRecords.Count(e => e.LOAI_DV == "MB" || e.LOAI_DV?.Contains("Mobile", StringComparison.OrdinalIgnoreCase) == true),
-                    SMSBankingCount = allRecords.Count(e => e.LOAI_DV == "SMS" || e.LOAI_DV?.Contains("SMS", StringComparison.OrdinalIgnoreCase) == true),
-                    CorporateCustomersCount = allRecords.Count(e => e.LOAI_KH == "1"),
-                    IndividualCustomersCount = allRecords.Count(e => e.LOAI_KH == "2"),
-                    GroupedByRegistrationDate = allRecords
-                        .GroupBy(e => e.NGAY_DK.Date)
-                        .OrderByDescending(g => g.Key)
-                        .Take(10)
-                        .ToDictionary(g => g.Key, g => g.Count())
+                    TotalCustomers = allRecords.Count(),
+                    EMBRegistrations = allRecords.Count(e => !string.IsNullOrEmpty(e.SDT_EMB)),
+                    OTTRegistrations = allRecords.Count(e => !string.IsNullOrEmpty(e.SDT_OTT)),
+                    SMSRegistrations = allRecords.Count(e => !string.IsNullOrEmpty(e.SDT_SMS)),
+                    SAVRegistrations = allRecords.Count(e => !string.IsNullOrEmpty(e.SDT_SAV)),
+                    LNRegistrations = allRecords.Count(e => !string.IsNullOrEmpty(e.SDT_LN))
                 };
             }
             catch (Exception ex)
@@ -213,24 +209,12 @@ namespace TinhKhoanApp.Api.Services.DataServices
                 return new EI01SummaryDto
                 {
                     Date = date,
-                    TotalRecords = allRecords.Count(),
-                    TotalActiveServices = allRecords.Count(e => e.TRANG_THAI == "1"),
-                    TotalInactiveServices = allRecords.Count(e => e.TRANG_THAI == "0"),
-                    InternetBankingCount = allRecords.Count(e => e.LOAI_DV == "IB" || e.LOAI_DV?.Contains("Internet", StringComparison.OrdinalIgnoreCase) == true),
-                    MobileBankingCount = allRecords.Count(e => e.LOAI_DV == "MB" || e.LOAI_DV?.Contains("Mobile", StringComparison.OrdinalIgnoreCase) == true),
-                    SMSBankingCount = allRecords.Count(e => e.LOAI_DV == "SMS" || e.LOAI_DV?.Contains("SMS", StringComparison.OrdinalIgnoreCase) == true),
-                    CorporateCustomersCount = allRecords.Count(e => e.LOAI_KH == "1"),
-                    IndividualCustomersCount = allRecords.Count(e => e.LOAI_KH == "2"),
-                    GroupedByBranch = allRecords
-                        .GroupBy(e => e.MA_CN)
-                        .OrderByDescending(g => g.Count())
-                        .Take(10)
-                        .ToDictionary(g => g.Key, g => g.Count()),
-                    GroupedByServiceType = allRecords
-                        .GroupBy(e => e.LOAI_DV)
-                        .OrderByDescending(g => g.Count())
-                        .Take(5)
-                        .ToDictionary(g => g.Key ?? "Unknown", g => g.Count())
+                    TotalCustomers = allRecords.Count(),
+                    EMBRegistrations = allRecords.Count(e => !string.IsNullOrEmpty(e.SDT_EMB)),
+                    OTTRegistrations = allRecords.Count(e => !string.IsNullOrEmpty(e.SDT_OTT)),
+                    SMSRegistrations = allRecords.Count(e => !string.IsNullOrEmpty(e.SDT_SMS)),
+                    SAVRegistrations = allRecords.Count(e => !string.IsNullOrEmpty(e.SDT_SAV)),
+                    LNRegistrations = allRecords.Count(e => !string.IsNullOrEmpty(e.SDT_LN))
                 };
             }
             catch (Exception ex)
@@ -262,57 +246,72 @@ namespace TinhKhoanApp.Api.Services.DataServices
                 if (!string.IsNullOrWhiteSpace(keyword))
                 {
                     predicate = e =>
-                        e.MA_KH.Contains(keyword) ||
-                        e.TEN_KH.Contains(keyword) ||
-                        e.SO_DT.Contains(keyword);
+                        (e.MA_KH != null && e.MA_KH.Contains(keyword)) ||
+                        (e.TEN_KH != null && e.TEN_KH.Contains(keyword)) ||
+                        (e.SDT_EMB != null && e.SDT_EMB.Contains(keyword)) ||
+                        (e.SDT_OTT != null && e.SDT_OTT.Contains(keyword)) ||
+                        (e.SDT_SMS != null && e.SDT_SMS.Contains(keyword));
                 }
 
                 if (!string.IsNullOrWhiteSpace(branchCode))
                 {
-                    predicate = predicate.And(e => e.MA_CN == branchCode);
+                    predicate = PredicateBuilder.And(predicate, e => e.MA_CN == branchCode);
                 }
 
                 if (!string.IsNullOrWhiteSpace(customerCode))
                 {
-                    predicate = predicate.And(e => e.MA_KH == customerCode);
+                    predicate = PredicateBuilder.And(predicate, e => e.MA_KH == customerCode);
                 }
 
                 if (!string.IsNullOrWhiteSpace(customerType))
                 {
-                    predicate = predicate.And(e => e.LOAI_KH == customerType);
+                    predicate = PredicateBuilder.And(predicate, e => e.LOAI_KH == customerType);
                 }
 
                 if (!string.IsNullOrWhiteSpace(phoneNumber))
                 {
-                    predicate = predicate.And(e => e.SO_DT == phoneNumber);
+                    predicate = PredicateBuilder.And(predicate, e =>
+                        (e.SDT_EMB != null && e.SDT_EMB == phoneNumber) ||
+                        (e.SDT_OTT != null && e.SDT_OTT == phoneNumber) ||
+                        (e.SDT_SMS != null && e.SDT_SMS == phoneNumber));
                 }
 
                 if (!string.IsNullOrWhiteSpace(serviceType))
                 {
-                    predicate = predicate.And(e => e.LOAI_DV == serviceType);
+                    if (serviceType == "EMB")
+                        predicate = PredicateBuilder.And(predicate, e => e.SDT_EMB != null && !string.IsNullOrEmpty(e.SDT_EMB));
+                    else if (serviceType == "OTT")
+                        predicate = PredicateBuilder.And(predicate, e => e.SDT_OTT != null && !string.IsNullOrEmpty(e.SDT_OTT));
+                    else if (serviceType == "SMS")
+                        predicate = PredicateBuilder.And(predicate, e => e.SDT_SMS != null && !string.IsNullOrEmpty(e.SDT_SMS));
                 }
 
                 if (!string.IsNullOrWhiteSpace(serviceStatus))
                 {
-                    predicate = predicate.And(e => e.TRANG_THAI == serviceStatus);
+                    predicate = PredicateBuilder.And(predicate, e =>
+                        (e.TRANG_THAI_EMB != null && e.TRANG_THAI_EMB == serviceStatus) ||
+                        (e.TRANG_THAI_OTT != null && e.TRANG_THAI_OTT == serviceStatus) ||
+                        (e.TRANG_THAI_SMS != null && e.TRANG_THAI_SMS == serviceStatus));
                 }
 
                 if (fromDate.HasValue)
                 {
                     var from = fromDate.Value.Date;
-                    predicate = predicate.And(e => e.NGAY_DL >= from);
+                    predicate = PredicateBuilder.And(predicate, e => e.NGAY_DL >= from);
                 }
 
                 if (toDate.HasValue)
                 {
                     var to = toDate.Value.Date.AddDays(1).AddSeconds(-1);
-                    predicate = predicate.And(e => e.NGAY_DL <= to);
+                    predicate = PredicateBuilder.And(predicate, e => e.NGAY_DL <= to);
                 }
 
                 // Thực hiện tìm kiếm với phân trang
-                var (totalCount, items) = await _repository.GetPagedAsync(
+                int totalCount = await _repository.CountAsync(predicate);
+                var skip = (page - 1) * pageSize;
+                var items = await _repository.GetPagedAsync(
                     predicate,
-                    page,
+                    skip,
                     pageSize,
                     e => e.OrderByDescending(x => x.NGAY_DL).ThenBy(x => x.MA_KH)
                 );
@@ -322,9 +321,10 @@ namespace TinhKhoanApp.Api.Services.DataServices
                 {
                     TotalCount = totalCount,
                     PageSize = pageSize,
-                    CurrentPage = page,
-                    TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
-                    Items = items.Select(MapToPreviewDto).ToList()
+                    Page = page,
+                    Data = items.Select(MapToPreviewDto).ToList(),
+                    Success = true,
+                    Message = "Success"
                 };
             }
             catch (Exception ex)
@@ -341,15 +341,17 @@ namespace TinhKhoanApp.Api.Services.DataServices
             return new EI01PreviewDto
             {
                 Id = entity.Id,
-                NgayDL = entity.NGAY_DL,
-                MaCN = entity.MA_CN,
-                MaKH = entity.MA_KH,
-                TenKH = entity.TEN_KH,
-                LoaiKH = entity.LOAI_KH,
-                SoDT = entity.SO_DT,
-                LoaiDV = entity.LOAI_DV,
-                NgayDK = entity.NGAY_DK,
-                TrangThai = entity.TRANG_THAI
+                NGAY_DL = entity.NGAY_DL,
+                MA_CN = entity.MA_CN,
+                MA_KH = entity.MA_KH,
+                TEN_KH = entity.TEN_KH,
+                LOAI_KH = entity.LOAI_KH,
+                SDT_EMB = entity.SDT_EMB,
+                TRANG_THAI_EMB = entity.TRANG_THAI_EMB,
+                SDT_OTT = entity.SDT_OTT,
+                TRANG_THAI_OTT = entity.TRANG_THAI_OTT,
+                SDT_SMS = entity.SDT_SMS,
+                TRANG_THAI_SMS = entity.TRANG_THAI_SMS
             };
         }
 
@@ -358,68 +360,35 @@ namespace TinhKhoanApp.Api.Services.DataServices
             return new EI01DetailDto
             {
                 Id = entity.Id,
-                NgayDL = entity.NGAY_DL,
-                MaCN = entity.MA_CN,
-                MaKH = entity.MA_KH,
-                TenKH = entity.TEN_KH,
-                LoaiKH = entity.LOAI_KH,
-                SoDT = entity.SO_DT,
-                Email = entity.EMAIL,
-                LoaiDV = entity.LOAI_DV,
-                NgayDK = entity.NGAY_DK,
-                NgayHH = entity.NGAY_HH,
-                MaQlDv = entity.MA_QL_DV,
-                TenQlDv = entity.TEN_QL_DV,
-                HanMucGd = entity.HAN_MUC_GD,
-                HanMucNgay = entity.HAN_MUC_NGAY,
-                TrangThai = entity.TRANG_THAI,
-                MoTaTt = entity.MO_TA_TT,
-                NgayCapNhat = entity.NGAY_CAP_NHAT,
-                NguoiCapNhat = entity.NGUOI_CAP_NHAT,
-                GhiChu = entity.GHI_CHU,
-                SoLanDn = entity.SO_LAN_DN,
-                LanDnCuoi = entity.LAN_DN_CUOI,
-                TgDungDv = entity.TG_DUNG_DV,
-                LyDoKhoa = entity.LY_DO_KHOA
+                NGAY_DL = entity.NGAY_DL,
+                MA_CN = entity.MA_CN,
+                MA_KH = entity.MA_KH,
+                TEN_KH = entity.TEN_KH,
+                LOAI_KH = entity.LOAI_KH,
+                SDT_EMB = entity.SDT_EMB,
+                TRANG_THAI_EMB = entity.TRANG_THAI_EMB,
+                NGAY_DK_EMB = entity.NGAY_DK_EMB,
+                SDT_OTT = entity.SDT_OTT,
+                TRANG_THAI_OTT = entity.TRANG_THAI_OTT,
+                NGAY_DK_OTT = entity.NGAY_DK_OTT,
+                SDT_SMS = entity.SDT_SMS,
+                TRANG_THAI_SMS = entity.TRANG_THAI_SMS,
+                NGAY_DK_SMS = entity.NGAY_DK_SMS,
+                SDT_SAV = entity.SDT_SAV,
+                TRANG_THAI_SAV = entity.TRANG_THAI_SAV,
+                NGAY_DK_SAV = entity.NGAY_DK_SAV,
+                SDT_LN = entity.SDT_LN,
+                TRANG_THAI_LN = entity.TRANG_THAI_LN,
+                NGAY_DK_LN = entity.NGAY_DK_LN,
+                USER_EMB = entity.USER_EMB,
+                USER_OTT = entity.USER_OTT,
+                USER_SMS = entity.USER_SMS,
+                USER_SAV = entity.USER_SAV,
+                USER_LN = entity.USER_LN,
+                CREATED_DATE = entity.CREATED_DATE
             };
         }
 
         #endregion
-    }
-
-    // Extension method để kết hợp các điều kiện predicate
-    public static class PredicateBuilder
-    {
-        public static Expression<Func<T, bool>> And<T>(this Expression<Func<T, bool>> a, Expression<Func<T, bool>> b)
-        {
-            var parameter = Expression.Parameter(typeof(T));
-
-            var visitor = new ReplaceParameterVisitor(b.Parameters[0], parameter);
-            var bBody = visitor.Visit(b.Body);
-
-            visitor = new ReplaceParameterVisitor(a.Parameters[0], parameter);
-            var aBody = visitor.Visit(a.Body);
-
-            var body = Expression.AndAlso(aBody, bBody);
-
-            return Expression.Lambda<Func<T, bool>>(body, parameter);
-        }
-
-        private class ReplaceParameterVisitor : ExpressionVisitor
-        {
-            private readonly ParameterExpression _old;
-            private readonly ParameterExpression _new;
-
-            public ReplaceParameterVisitor(ParameterExpression old, ParameterExpression @new)
-            {
-                _old = old;
-                _new = @new;
-            }
-
-            protected override Expression VisitParameter(ParameterExpression node)
-            {
-                return node == _old ? _new : base.VisitParameter(node);
-            }
-        }
     }
 }

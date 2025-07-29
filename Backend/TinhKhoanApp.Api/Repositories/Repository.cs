@@ -69,9 +69,30 @@ namespace TinhKhoanApp.Api.Repositories
             _dbSet.RemoveRange(entities);
         }
 
+        public virtual async Task<IEnumerable<T>> GetPagedAsync(
+            Expression<Func<T, bool>> predicate,
+            int skip,
+            int take,
+            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null)
+        {
+            IQueryable<T> query = _dbSet.Where(predicate);
+
+            if (orderBy != null)
+            {
+                query = orderBy(query);
+            }
+
+            return await query.Skip(skip).Take(take).ToListAsync();
+        }
+
         public virtual async Task<int> CountAsync()
         {
             return await _dbSet.CountAsync();
+        }
+
+        public virtual async Task<int> CountAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _dbSet.CountAsync(predicate);
         }
 
         public virtual async Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate)

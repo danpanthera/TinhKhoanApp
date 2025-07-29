@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models.DataTables;
+using System.Threading.Tasks;
 
 namespace TinhKhoanApp.Api.Repositories
 {
@@ -178,6 +179,19 @@ namespace TinhKhoanApp.Api.Repositories
             }
 
             return total;
+        }
+
+        /// <inheritdoc/>
+        public async Task<int> SaveChangesAsync()
+        {
+            return await _context.SaveChangesAsync();
+        }
+
+        /// <inheritdoc/>
+        public async Task DeleteAsync(LN03 entity)
+        {
+            _context.LN03s.Remove(entity);
+            await Task.CompletedTask;
         }
     }
 }

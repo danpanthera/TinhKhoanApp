@@ -97,14 +97,14 @@ namespace TinhKhoanApp.Api.Models.DTOs
                 CustomerCode = entity.CUSTSEQ,
                 TaiKhoan = entity.TAI_KHOAN,
                 Currency = entity.CCY,
-                DuNoThucTe = entity.DU_NO_THUC_TE,
-                HanMuc = entity.HAN_MUC,
-                NgayGiaiNgan = entity.NGAY_GIAI_NGAN,
-                NgayDenHan = entity.NGAY_DEN_HAN,
-                LaiSuat = entity.LAI_SUAT,
+                DuNoThucTe = decimal.TryParse(entity.DU_NO, out decimal duNo) ? duNo : 0,
+                HanMuc = 0, // Mapping to default value since HAN_MUC doesn't exist
+                NgayGiaiNgan = DateTime.TryParse(entity.DSBSDT, out DateTime giaiNgan) ? giaiNgan : null,
+                NgayDenHan = DateTime.TryParse(entity.DSBSMATDT, out DateTime denHan) ? denHan : null,
+                LaiSuat = decimal.TryParse(entity.INTEREST_RATE, out decimal laiSuat) ? laiSuat : 0,
                 NhomNo = entity.NHOM_NO,
-                LoaiHinhChoVay = entity.LOAI_HINH_CHO_VAY,
-                CanBoQL = entity.CAN_BO_QL,
+                LoaiHinhChoVay = entity.LOAN_TYPE,
+                CanBoQL = entity.OFFICER_IPCAS,
                 CreatedDate = entity.CREATED_DATE
             };
         }
@@ -117,20 +117,19 @@ namespace TinhKhoanApp.Api.Models.DTOs
             return new LN01
             {
                 Id = this.Id,
-                NGAY_DL = this.NgayDL,
+                NGAY_DL = this.NgayDL.HasValue ? this.NgayDL.Value : DateTime.Now,
                 BRCD = this.BranchCode,
                 CUSTSEQ = this.CustomerCode,
                 TAI_KHOAN = this.TaiKhoan,
                 CCY = this.Currency,
-                DU_NO_THUC_TE = this.DuNoThucTe,
-                HAN_MUC = this.HanMuc,
-                NGAY_GIAI_NGAN = this.NgayGiaiNgan,
-                NGAY_DEN_HAN = this.NgayDenHan,
-                LAI_SUAT = this.LaiSuat,
+                DU_NO = this.DuNoThucTe?.ToString() ?? "0",
+                DSBSDT = this.NgayGiaiNgan?.ToString("yyyy-MM-dd") ?? "",
+                DSBSMATDT = this.NgayDenHan?.ToString("yyyy-MM-dd") ?? "",
+                INTEREST_RATE = this.LaiSuat?.ToString() ?? "0",
                 NHOM_NO = this.NhomNo,
-                LOAI_HINH_CHO_VAY = this.LoaiHinhChoVay,
-                CAN_BO_QL = this.CanBoQL,
-                CREATED_DATE = this.CreatedDate ?? DateTime.Now
+                LOAN_TYPE = this.LoaiHinhChoVay,
+                OFFICER_IPCAS = this.CanBoQL,
+                CREATED_DATE = this.CreatedDate.HasValue ? this.CreatedDate.Value : DateTime.Now
             };
         }
     }
@@ -220,19 +219,18 @@ namespace TinhKhoanApp.Api.Models.DTOs
         {
             return new LN01
             {
-                NGAY_DL = this.NgayDL,
-                BRCD = this.BranchCode,
-                CUSTSEQ = this.CustomerCode,
-                TAI_KHOAN = this.TaiKhoan,
-                CCY = this.Currency,
-                DU_NO_THUC_TE = this.DuNoThucTe,
-                HAN_MUC = this.HanMuc,
-                NGAY_GIAI_NGAN = this.NgayGiaiNgan,
-                NGAY_DEN_HAN = this.NgayDenHan,
-                LAI_SUAT = this.LaiSuat,
-                NHOM_NO = this.NhomNo,
-                LOAI_HINH_CHO_VAY = this.LoaiHinhChoVay,
-                CAN_BO_QL = this.CanBoQL,
+                NGAY_DL = this.NgayDL != null ? this.NgayDL : DateTime.Now,
+                BRCD = this.BranchCode ?? "",
+                CUSTSEQ = this.CustomerCode ?? "",
+                TAI_KHOAN = this.TaiKhoan ?? "",
+                CCY = this.Currency ?? "",
+                DU_NO = this.DuNoThucTe?.ToString() ?? "0",
+                DSBSDT = this.NgayGiaiNgan?.ToString("yyyy-MM-dd") ?? "",
+                DSBSMATDT = this.NgayDenHan?.ToString("yyyy-MM-dd") ?? "",
+                INTEREST_RATE = this.LaiSuat?.ToString() ?? "0",
+                NHOM_NO = this.NhomNo ?? "",
+                LOAN_TYPE = this.LoaiHinhChoVay ?? "",
+                OFFICER_IPCAS = this.CanBoQL ?? "",
                 CREATED_DATE = DateTime.Now
             };
         }
@@ -320,19 +318,18 @@ namespace TinhKhoanApp.Api.Models.DTOs
         /// </summary>
         public void UpdateEntity(LN01 entity)
         {
-            if (NgayDL.HasValue) entity.NGAY_DL = NgayDL;
+            if (NgayDL.HasValue) entity.NGAY_DL = NgayDL.Value;
             if (!string.IsNullOrEmpty(BranchCode)) entity.BRCD = BranchCode;
             if (!string.IsNullOrEmpty(CustomerCode)) entity.CUSTSEQ = CustomerCode;
             if (!string.IsNullOrEmpty(TaiKhoan)) entity.TAI_KHOAN = TaiKhoan;
             if (!string.IsNullOrEmpty(Currency)) entity.CCY = Currency;
-            if (DuNoThucTe.HasValue) entity.DU_NO_THUC_TE = DuNoThucTe;
-            if (HanMuc.HasValue) entity.HAN_MUC = HanMuc;
-            if (NgayGiaiNgan.HasValue) entity.NGAY_GIAI_NGAN = NgayGiaiNgan;
-            if (NgayDenHan.HasValue) entity.NGAY_DEN_HAN = NgayDenHan;
-            if (LaiSuat.HasValue) entity.LAI_SUAT = LaiSuat;
+            if (DuNoThucTe.HasValue) entity.DU_NO = DuNoThucTe.ToString();
+            if (NgayGiaiNgan.HasValue) entity.DSBSDT = NgayGiaiNgan.Value.ToString("yyyy-MM-dd");
+            if (NgayDenHan.HasValue) entity.DSBSMATDT = NgayDenHan.Value.ToString("yyyy-MM-dd");
+            if (LaiSuat.HasValue) entity.INTEREST_RATE = LaiSuat.ToString();
             if (!string.IsNullOrEmpty(NhomNo)) entity.NHOM_NO = NhomNo;
-            if (!string.IsNullOrEmpty(LoaiHinhChoVay)) entity.LOAI_HINH_CHO_VAY = LoaiHinhChoVay;
-            if (!string.IsNullOrEmpty(CanBoQL)) entity.CAN_BO_QL = CanBoQL;
+            if (!string.IsNullOrEmpty(LoaiHinhChoVay)) entity.LOAN_TYPE = LoaiHinhChoVay;
+            if (!string.IsNullOrEmpty(CanBoQL)) entity.OFFICER_IPCAS = CanBoQL;
         }
     }
 }

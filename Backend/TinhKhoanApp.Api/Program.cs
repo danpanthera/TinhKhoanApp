@@ -91,7 +91,7 @@ builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddCachingServices(builder.Configuration);
 
 // Essential Services
-builder.Services.AddScoped<IDirectImportService, DirectImportService>();
+builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IDirectImportService, DirectImportService>();
 // builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 // builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 

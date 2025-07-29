@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models.DataTables;
 
@@ -9,7 +10,7 @@ namespace TinhKhoanApp.Api.Repositories
     /// </summary>
     public class GL02Repository : Repository<GL02>, IGL02Repository
     {
-        private readonly ApplicationDbContext _context;
+        private new readonly ApplicationDbContext _context;
 
         public GL02Repository(ApplicationDbContext context) : base(context)
         {
@@ -22,7 +23,7 @@ namespace TinhKhoanApp.Api.Repositories
         public ApplicationDbContext GetDbContext() => _context;
 
         /// <inheritdoc/>
-        public async Task<IEnumerable<GL02>> GetRecentAsync(int count = 10)
+        public new async Task<IEnumerable<GL02>> GetRecentAsync(int count = 10)
         {
             return await _context.GL02
                 .OrderByDescending(x => x.NGAY_DL)
@@ -173,6 +174,55 @@ namespace TinhKhoanApp.Api.Repositories
                 .ThenByDescending(x => x.CRTDTM)
                 .Take(maxResults)
                 .ToListAsync();
+        }
+
+        /// <inheritdoc/>
+        public async Task<(int totalCount, IEnumerable<GL02> items)> GetPagedAsync(
+            Expression<Func<GL02, bool>> predicate,
+            int pageNumber,
+            int pageSize,
+            string sortField = "NGAY_DL",
+            bool ascending = false)
+        {
+            // Đếm tổng số bản ghi theo điều kiện
+            var totalCount = await _context.GL02.CountAsync(predicate);
+
+            // Tạo query ban đầu
+            var query = _context.GL02.Where(predicate);
+
+            // Sắp xếp theo trường được chỉ định
+            query = sortField.ToUpper() switch
+            {
+                "NGAY_DL" => ascending
+                    ? query.OrderBy(e => e.NGAY_DL)
+                    : query.OrderByDescending(e => e.NGAY_DL),
+                "UNIT" => ascending
+                    ? query.OrderBy(e => e.UNIT)
+                    : query.OrderByDescending(e => e.UNIT),
+                "LOCAC" => ascending
+                    ? query.OrderBy(e => e.LOCAC)
+                    : query.OrderByDescending(e => e.LOCAC),
+                "CUSTOMER" => ascending
+                    ? query.OrderBy(e => e.CUSTOMER)
+                    : query.OrderByDescending(e => e.CUSTOMER),
+                "TRTP" => ascending
+                    ? query.OrderBy(e => e.TRTP)
+                    : query.OrderByDescending(e => e.TRTP),
+                "TRBRCD" => ascending
+                    ? query.OrderBy(e => e.TRBRCD)
+                    : query.OrderByDescending(e => e.TRBRCD),
+                _ => ascending
+                    ? query.OrderBy(e => e.NGAY_DL)
+                    : query.OrderByDescending(e => e.NGAY_DL)
+            };
+
+            // Phân trang
+            var items = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (totalCount, items);
         }
     }
 }

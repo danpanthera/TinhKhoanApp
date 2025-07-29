@@ -22,12 +22,12 @@ namespace TinhKhoanApp.Api.Services
     public class SmartDataImportService : ISmartDataImportService
     {
         private readonly ApplicationDbContext _context;
-        private readonly IDirectImportService _directImportService;
+        private readonly Interfaces.IDirectImportService _directImportService;
         private readonly ILogger<SmartDataImportService> _logger;
 
         public SmartDataImportService(
             ApplicationDbContext context,
-            IDirectImportService directImportService,
+            Interfaces.IDirectImportService directImportService,
             ILogger<SmartDataImportService> logger)
         {
             _context = context;

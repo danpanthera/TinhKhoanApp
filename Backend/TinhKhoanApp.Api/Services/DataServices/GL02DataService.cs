@@ -1,8 +1,10 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models.DataTables;
 using TinhKhoanApp.Api.Models.DTOs;
 using TinhKhoanApp.Api.Repositories;
+using TinhKhoanApp.Api.Utilities;
 
 namespace TinhKhoanApp.Api.Services.DataServices
 {
@@ -13,11 +15,13 @@ namespace TinhKhoanApp.Api.Services.DataServices
     {
         private readonly IGL02Repository _repository;
         private readonly ILogger<GL02DataService> _logger;
+        private readonly ApplicationDbContext _context;
 
         public GL02DataService(IGL02Repository repository, ILogger<GL02DataService> logger)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _context = _repository.GetDbContext();
         }
 
         /// <inheritdoc/>
@@ -340,60 +344,61 @@ namespace TinhKhoanApp.Api.Services.DataServices
                         (e.REMARK != null && e.REMARK.Contains(keyword));
                 }
 
-                if (!string.IsNullOrWhiteSpace(branchCode))
+                if (!string.IsNullOrEmpty(branchCode))
                 {
-                    predicate = predicate.And(e => e.TRBRCD == branchCode);
+                    predicate = PredicateBuilder.And(predicate, e => e.TRBRCD == branchCode);
                 }
 
-                if (!string.IsNullOrWhiteSpace(unit))
+                if (!string.IsNullOrEmpty(unit))
                 {
-                    predicate = predicate.And(e => e.UNIT == unit);
+                    predicate = PredicateBuilder.And(predicate, e => e.UNIT == unit);
                 }
 
-                if (!string.IsNullOrWhiteSpace(accountCode))
+                if (!string.IsNullOrEmpty(accountCode))
                 {
-                    predicate = predicate.And(e => e.LOCAC == accountCode);
+                    predicate = PredicateBuilder.And(predicate, e => e.LOCAC == accountCode);
                 }
 
-                if (!string.IsNullOrWhiteSpace(customer))
+                if (!string.IsNullOrEmpty(customer))
                 {
-                    predicate = predicate.And(e => e.CUSTOMER == customer);
+                    predicate = PredicateBuilder.And(predicate, e => e.CUSTOMER == customer);
                 }
 
-                if (!string.IsNullOrWhiteSpace(transactionType))
+                if (!string.IsNullOrEmpty(transactionType))
                 {
-                    predicate = predicate.And(e => e.TRTP == transactionType);
+                    predicate = PredicateBuilder.And(predicate, e => e.TRTP == transactionType);
                 }
 
                 if (fromDate.HasValue)
                 {
-                    var from = fromDate.Value.Date;
-                    predicate = predicate.And(e => e.NGAY_DL >= from);
+                    predicate = PredicateBuilder.And(predicate, e => e.NGAY_DL >= fromDate);
                 }
 
                 if (toDate.HasValue)
                 {
-                    var to = toDate.Value.Date.AddDays(1).AddSeconds(-1);
-                    predicate = predicate.And(e => e.NGAY_DL <= to);
+                    predicate = PredicateBuilder.And(predicate, e => e.NGAY_DL <= toDate);
                 }
 
                 // Thực hiện tìm kiếm với phân trang
+                // Lấy dữ liệu phân trang
                 var (totalCount, items) = await _repository.GetPagedAsync(
                     predicate,
                     page,
                     pageSize,
-                    e => e.OrderByDescending(x => x.NGAY_DL).ThenByDescending(x => x.CRTDTM)
+                    "NGAY_DL",
+                    false
                 );
 
                 // Chuyển đổi kết quả sang DTO
-                return new PagedApiResponse<GL02PreviewDto>
+                var response = new PagedApiResponse<GL02PreviewDto>
                 {
                     TotalCount = totalCount,
                     PageSize = pageSize,
-                    CurrentPage = page,
-                    TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize),
-                    Items = items.Select(MapToPreviewDto).ToList()
+                    Page = page,
+                    Data = items.Select(MapToPreviewDto).ToList()
                 };
+
+                return response;
             }
             catch (Exception ex)
             {
@@ -454,44 +459,8 @@ namespace TinhKhoanApp.Api.Services.DataServices
 
         #region Private methods and properties
 
-        private ApplicationDbContext _context => (_repository as GL02Repository)?.GetDbContext();
+        // Not needed - we're already using the ApplicationDbContext from the constructor
 
         #endregion
-    }
-
-    // Extension method để kết hợp các điều kiện predicate nếu chưa tồn tại ở nơi khác
-    public static class PredicateBuilder
-    {
-        public static Expression<Func<T, bool>> And<T>(this Expression<Func<T, bool>> a, Expression<Func<T, bool>> b)
-        {
-            var parameter = Expression.Parameter(typeof(T));
-
-            var visitor = new ReplaceParameterVisitor(b.Parameters[0], parameter);
-            var bBody = visitor.Visit(b.Body);
-
-            visitor = new ReplaceParameterVisitor(a.Parameters[0], parameter);
-            var aBody = visitor.Visit(a.Body);
-
-            var body = Expression.AndAlso(aBody, bBody);
-
-            return Expression.Lambda<Func<T, bool>>(body, parameter);
-        }
-
-        private class ReplaceParameterVisitor : ExpressionVisitor
-        {
-            private readonly ParameterExpression _old;
-            private readonly ParameterExpression _new;
-
-            public ReplaceParameterVisitor(ParameterExpression old, ParameterExpression @new)
-            {
-                _old = old;
-                _new = @new;
-            }
-
-            protected override Expression VisitParameter(ParameterExpression node)
-            {
-                return node == _old ? _new : base.VisitParameter(node);
-            }
-        }
     }
 }

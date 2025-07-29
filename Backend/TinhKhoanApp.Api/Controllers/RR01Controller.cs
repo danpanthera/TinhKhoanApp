@@ -9,12 +9,12 @@ namespace TinhKhoanApp.Api.Controllers
     public class RR01Controller : ControllerBase
     {
         private readonly IRR01Service _rr01Service;
-        private readonly IDirectImportService _importService;
+        private readonly DirectImportService _importService;
         private readonly ILogger<RR01Controller> _logger;
 
         public RR01Controller(
             IRR01Service rr01Service,
-            IDirectImportService importService,
+            DirectImportService importService,
             ILogger<RR01Controller> logger)
         {
             _rr01Service = rr01Service;

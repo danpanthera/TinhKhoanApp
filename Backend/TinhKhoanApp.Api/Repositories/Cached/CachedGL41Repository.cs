@@ -262,6 +262,41 @@ namespace TinhKhoanApp.Api.Repositories.Cached
             _cache.RemoveByPrefix(_cachePrefix);
         }
 
+        /// <summary>
+        /// Get paged entities with cache
+        /// </summary>
+        public async Task<IEnumerable<GL41>> GetPagedAsync(
+            Expression<Func<GL41, bool>> predicate,
+            int skip,
+            int take,
+            Func<IQueryable<GL41>, IOrderedQueryable<GL41>>? orderBy = null)
+        {
+            // For paged data, cache isn't as useful since pages can change frequently
+            // Still using cache but with shorter expiration time
+            string predicateHash = predicate.ToString().GetHashCode().ToString();
+            string orderByHash = orderBy?.ToString()?.GetHashCode().ToString() ?? "default";
+            string cacheKey = $"{_cachePrefix}paged_{predicateHash}_{skip}_{take}_{orderByHash}";
+
+            return await _cache.GetOrCreateAsync(
+                cacheKey,
+                async () => await _repository.GetPagedAsync(predicate, skip, take, orderBy),
+                TimeSpan.FromMinutes(5)); // Shorter expiration time for paged data
+        }
+
+        /// <summary>
+        /// Count entities with cache
+        /// </summary>
+        public async Task<int> CountAsync(Expression<Func<GL41, bool>> predicate)
+        {
+            string predicateHash = predicate.ToString().GetHashCode().ToString();
+            string cacheKey = $"{_cachePrefix}count_{predicateHash}";
+
+            return await _cache.GetOrCreateAsync(
+                cacheKey,
+                async () => await _repository.CountAsync(predicate),
+                TimeSpan.FromMinutes(10));
+        }
+
         #endregion
     }
 }

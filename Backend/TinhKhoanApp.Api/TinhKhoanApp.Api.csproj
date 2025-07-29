@@ -37,6 +37,10 @@
     <!-- Exclude backup directories and files from build -->
     <Compile Remove="backup_importeddataitems_20250709_201445/**" />
     <None Include="backup_importeddataitems_20250709_201445/**" />
+
+    <!-- Exclude test files from build -->
+    <Compile Remove="Tests/**" />
+    <None Include="Tests/**" />
   </ItemGroup>
 
 </Project>

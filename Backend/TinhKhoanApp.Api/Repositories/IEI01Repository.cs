@@ -1,4 +1,5 @@
 using TinhKhoanApp.Api.Models.DataTables;
+using System.Threading.Tasks;
 
 namespace TinhKhoanApp.Api.Repositories
 {
@@ -7,6 +8,11 @@ namespace TinhKhoanApp.Api.Repositories
     /// </summary>
     public interface IEI01Repository : IRepository<EI01>
     {
+        /// <summary>
+        /// Lấy danh sách dữ liệu EI01 với số lượng chỉ định
+        /// </summary>
+        Task<IEnumerable<EI01>> GetAsync(int take = 10, int skip = 0);
+
         /// <summary>
         /// Lấy dữ liệu EI01 mới nhất
         /// </summary>
@@ -66,5 +72,23 @@ namespace TinhKhoanApp.Api.Repositories
         /// Cập nhật nhiều EI01
         /// </summary>
         void UpdateRange(IEnumerable<EI01> entities);
+
+        /// <summary>
+        /// Lấy dữ liệu EI01 theo trạng thái dịch vụ
+        /// </summary>
+        Task<IEnumerable<EI01>> GetByServiceStatusAsync(string serviceStatus, int maxResults = 100);
+
+        /// <summary>
+        /// Phân trang dữ liệu EI01 theo điều kiện lọc
+        /// </summary>
+        Task<(int totalCount, IEnumerable<EI01> items)> GetPagedAsync(
+            int pageNumber,
+            int pageSize,
+            System.Linq.Expressions.Expression<Func<EI01, bool>> predicate);
+
+        /// <summary>
+        /// Lưu các thay đổi vào cơ sở dữ liệu
+        /// </summary>
+        Task<int> SaveChangesAsync();
     }
 }

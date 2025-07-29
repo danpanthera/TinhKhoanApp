@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Models.DataTables;
 using TinhKhoanApp.Api.Models.DTOs;
 using TinhKhoanApp.Api.Repositories;
+using TinhKhoanApp.Api.Utilities;
 
 namespace TinhKhoanApp.Api.Services.DataServices
 {
@@ -43,14 +44,11 @@ namespace TinhKhoanApp.Api.Services.DataServices
             try
             {
                 var record = await _gl01Repository.GetByIdAsync((int)id);
-                if (record == null)
-                    return null;
-
-                return MapToGL01DetailDto(record);
+                return record != null ? MapToGL01DetailDto(record) : null;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving GL01 detail for ID {Id}", id);
+                _logger.LogError(ex, "Error retrieving GL01 detail with ID {Id}", id);
                 return null;
             }
         }
@@ -61,11 +59,11 @@ namespace TinhKhoanApp.Api.Services.DataServices
             try
             {
                 var records = await _gl01Repository.GetByDateAsync(date);
-                return MapToGL01PreviewDtos(records.Take(maxResults));
+                return records.Take(maxResults).Select(MapToGL01PreviewDto);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving GL01 data for date {Date}", date);
+                _logger.LogError(ex, "Error retrieving GL01 data by date {Date}", date);
                 return Enumerable.Empty<GL01PreviewDto>();
             }
         }
@@ -76,11 +74,11 @@ namespace TinhKhoanApp.Api.Services.DataServices
             try
             {
                 var records = await _gl01Repository.GetByUnitCodeAsync(unitCode, maxResults);
-                return MapToGL01PreviewDtos(records);
+                return records.Select(MapToGL01PreviewDto);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving GL01 data for unit code {UnitCode}", unitCode);
+                _logger.LogError(ex, "Error retrieving GL01 data by unit code {UnitCode}", unitCode);
                 return Enumerable.Empty<GL01PreviewDto>();
             }
         }
@@ -91,11 +89,11 @@ namespace TinhKhoanApp.Api.Services.DataServices
             try
             {
                 var records = await _gl01Repository.GetByAccountCodeAsync(accountCode, maxResults);
-                return MapToGL01PreviewDtos(records);
+                return records.Select(MapToGL01PreviewDto);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving GL01 data for account code {AccountCode}", accountCode);
+                _logger.LogError(ex, "Error retrieving GL01 data by account code {AccountCode}", accountCode);
                 return Enumerable.Empty<GL01PreviewDto>();
             }
         }
@@ -108,31 +106,40 @@ namespace TinhKhoanApp.Api.Services.DataServices
                 decimal totalDebit = await _gl01Repository.GetTotalTransactionsByUnitAsync(unitCode, "DR", date);
                 decimal totalCredit = await _gl01Repository.GetTotalTransactionsByUnitAsync(unitCode, "CR", date);
 
-                Expression<Func<GL01, bool>> predicate = gl01 => gl01.BRCD == unitCode;
+                Expression<Func<GL01, bool>> predicate = gl01 => gl01.POST_BR == unitCode;
                 if (date.HasValue)
                 {
-                    predicate = gl01 => gl01.BRCD == unitCode && gl01.NGAY_DL.Date == date.Value.Date;
+                    predicate = gl01 => gl01.POST_BR == unitCode && gl01.NGAY_DL.Date == date.Value.Date;
                 }
 
                 int totalRecords = await _gl01Repository.CountAsync(predicate);
-                int debitCount = await _gl01Repository.CountAsync(predicate.And(gl01 => gl01.DR_CR_FLG == "DR"));
-                int creditCount = await _gl01Repository.CountAsync(predicate.And(gl01 => gl01.DR_CR_FLG == "CR"));
+                int debitCount = await _gl01Repository.CountAsync(predicate.And(gl01 => gl01.DR_CR == "DR"));
+                int creditCount = await _gl01Repository.CountAsync(predicate.And(gl01 => gl01.DR_CR == "CR"));
 
                 return new GL01SummaryDto
                 {
+                    UnitCode = unitCode,
+                    Date = date,
                     TotalTransactions = totalRecords,
                     TotalDebitTransactions = debitCount,
                     TotalCreditTransactions = creditCount,
                     TotalDebitAmount = totalDebit,
-                    TotalCreditAmount = totalCredit,
-                    Date = date,
-                    UnitCode = unitCode
+                    TotalCreditAmount = totalCredit
                 };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving GL01 summary for unit {UnitCode}", unitCode);
-                return new GL01SummaryDto();
+                _logger.LogError(ex, "Error retrieving GL01 summary by unit {UnitCode}", unitCode);
+                return new GL01SummaryDto
+                {
+                    UnitCode = unitCode,
+                    Date = date,
+                    TotalTransactions = 0,
+                    TotalDebitTransactions = 0,
+                    TotalCreditTransactions = 0,
+                    TotalDebitAmount = 0,
+                    TotalCreditAmount = 0
+                };
             }
         }
 
@@ -146,24 +153,31 @@ namespace TinhKhoanApp.Api.Services.DataServices
 
                 Expression<Func<GL01, bool>> predicate = gl01 => gl01.NGAY_DL.Date == date.Date;
                 int totalRecords = await _gl01Repository.CountAsync(predicate);
-                int debitCount = await _gl01Repository.CountAsync(predicate.And(gl01 => gl01.DR_CR_FLG == "DR"));
-                int creditCount = await _gl01Repository.CountAsync(predicate.And(gl01 => gl01.DR_CR_FLG == "CR"));
+                int debitCount = await _gl01Repository.CountAsync(predicate.And(gl01 => gl01.DR_CR == "DR"));
+                int creditCount = await _gl01Repository.CountAsync(predicate.And(gl01 => gl01.DR_CR == "CR"));
 
                 return new GL01SummaryDto
                 {
+                    Date = date,
                     TotalTransactions = totalRecords,
                     TotalDebitTransactions = debitCount,
                     TotalCreditTransactions = creditCount,
                     TotalDebitAmount = totalDebit,
-                    TotalCreditAmount = totalCredit,
-                    Date = date,
-                    UnitCode = null
+                    TotalCreditAmount = totalCredit
                 };
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving GL01 summary for date {Date}", date);
-                return new GL01SummaryDto();
+                _logger.LogError(ex, "Error retrieving GL01 summary by date {Date}", date);
+                return new GL01SummaryDto
+                {
+                    Date = date,
+                    TotalTransactions = 0,
+                    TotalDebitTransactions = 0,
+                    TotalCreditTransactions = 0,
+                    TotalDebitAmount = 0,
+                    TotalCreditAmount = 0
+                };
             }
         }
 
@@ -185,35 +199,36 @@ namespace TinhKhoanApp.Api.Services.DataServices
                 var totalCount = await _gl01Repository.CountAsync(predicate);
                 var records = await _gl01Repository.GetPagedAsync(
                     predicate,
-                    page,
+                    (page - 1) * pageSize,
                     pageSize,
-                    gl01 => gl01.CREATED_DATE ?? DateTime.MinValue,
-                    false);
+                    q => q.OrderByDescending(gl01 => gl01.CREATED_DATE));
 
-                return new PagedApiResponse<GL01PreviewDto>
+                var response = new PagedApiResponse<GL01PreviewDto>
                 {
-                    Results = MapToGL01PreviewDtos(records),
-                    CurrentPage = page,
+                    Success = true,
+                    Message = "Success",
+                    Data = MapToGL01PreviewDtos(records),
+                    Page = page,
                     PageSize = pageSize,
-                    TotalCount = totalCount,
-                    TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+                    TotalCount = totalCount
                 };
+
+                return response;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error searching GL01 data");
                 return new PagedApiResponse<GL01PreviewDto>
                 {
-                    Results = Enumerable.Empty<GL01PreviewDto>(),
-                    CurrentPage = page,
+                    Success = false,
+                    Message = "Error searching GL01 data",
+                    Data = Enumerable.Empty<GL01PreviewDto>(),
+                    Page = page,
                     PageSize = pageSize,
-                    TotalCount = 0,
-                    TotalPages = 0
+                    TotalCount = 0
                 };
             }
         }
-
-        #region Private Methods
 
         private static Expression<Func<GL01, bool>> PreparePredicate(
             string? keyword,
@@ -228,35 +243,35 @@ namespace TinhKhoanApp.Api.Services.DataServices
             if (!string.IsNullOrWhiteSpace(keyword))
             {
                 predicate = predicate.And(gl01 =>
-                    gl01.TR_DESC!.Contains(keyword) ||
-                    gl01.REF_NO!.Contains(keyword) ||
-                    gl01.VOUCHER_NO!.Contains(keyword) ||
-                    gl01.TR_CD!.Contains(keyword));
+                    gl01.TR_NAME!.Contains(keyword) ||
+                    gl01.REFERENCE!.Contains(keyword) ||
+                    gl01.STS!.Contains(keyword) ||
+                    gl01.TR_CODE!.Contains(keyword));
             }
 
             if (!string.IsNullOrWhiteSpace(unitCode))
             {
-                predicate = predicate.And(gl01 => gl01.BRCD == unitCode);
+                predicate = predicate.And(gl01 => gl01.POST_BR == unitCode);
             }
 
             if (!string.IsNullOrWhiteSpace(accountCode))
             {
-                predicate = predicate.And(gl01 => gl01.TRAD_ACCT == accountCode);
+                predicate = predicate.And(gl01 => gl01.TAI_KHOAN == accountCode);
             }
 
             if (!string.IsNullOrWhiteSpace(transactionType))
             {
-                predicate = predicate.And(gl01 => gl01.DR_CR_FLG == transactionType);
+                predicate = predicate.And(gl01 => gl01.DR_CR == transactionType);
             }
 
             if (fromDate.HasValue)
             {
-                predicate = predicate.And(gl01 => gl01.NGAY_DL.Date >= fromDate.Value.Date);
+                predicate = PredicateBuilder.And(predicate, gl01 => gl01.NGAY_DL.Date >= fromDate.Value.Date);
             }
 
             if (toDate.HasValue)
             {
-                predicate = predicate.And(gl01 => gl01.NGAY_DL.Date <= toDate.Value.Date);
+                predicate = PredicateBuilder.And(predicate, gl01 => gl01.NGAY_DL.Date <= toDate.Value.Date);
             }
 
             return predicate;
@@ -264,68 +279,61 @@ namespace TinhKhoanApp.Api.Services.DataServices
 
         private static IEnumerable<GL01PreviewDto> MapToGL01PreviewDtos(IEnumerable<GL01> records)
         {
-            return records.Select(record => new GL01PreviewDto
+            return records.Select(MapToGL01PreviewDto);
+        }
+
+        private static GL01PreviewDto MapToGL01PreviewDto(GL01 record)
+        {
+            return new GL01PreviewDto
             {
-                ID = record.ID,
+                Id = record.Id,
                 NGAY_DL = record.NGAY_DL,
-                BRCD = record.BRCD,
-                DEPCD = record.DEPCD,
-                TRAD_ACCT = record.TRAD_ACCT,
-                TR_AMOUNT = record.TR_AMOUNT,
-                DR_CR_FLG = record.DR_CR_FLG,
-                CCY = record.CCY,
-                TR_DESC = record.TR_DESC,
-                TR_CD = record.TR_CD,
+                POST_BR = record.POST_BR,
+                DEPT_CODE = record.DEPT_CODE,
+                TAI_KHOAN = record.TAI_KHOAN,
+                SO_TIEN_GD = record.SO_TIEN_GD,
+                DR_CR = record.DR_CR,
+                LOAI_TIEN = record.LOAI_TIEN,
+                TR_NAME = record.TR_NAME,
+                TR_CODE = record.TR_CODE,
                 CREATED_DATE = record.CREATED_DATE
-            });
+            };
         }
 
         private static GL01DetailDto MapToGL01DetailDto(GL01 record)
         {
             return new GL01DetailDto
             {
-                ID = record.ID,
+                Id = record.Id,
                 NGAY_DL = record.NGAY_DL,
-                BRCD = record.BRCD,
-                DEPCD = record.DEPCD,
-                TRAD_ACCT = record.TRAD_ACCT,
-                TR_AMOUNT = record.TR_AMOUNT,
-                DR_CR_FLG = record.DR_CR_FLG,
-                CCY = record.CCY,
-                TR_DESC = record.TR_DESC,
-                TR_CD = record.TR_CD,
-                CREATED_DATE = record.CREATED_DATE,
+                NGAY_GD = record.NGAY_GD,
+                POST_BR = record.POST_BR,
+                DEPT_CODE = record.DEPT_CODE,
+                TAI_KHOAN = record.TAI_KHOAN,
+                TEN_TK = record.TEN_TK,
+                SO_TIEN_GD = record.SO_TIEN_GD,
+                DR_CR = record.DR_CR,
+                LOAI_TIEN = record.LOAI_TIEN,
+                TR_NAME = record.TR_NAME,
+                TR_CODE = record.TR_CODE,
+                STS = record.STS,
+                NGUOI_TAO = record.NGUOI_TAO,
+                TR_TYPE = record.TR_TYPE,
+                MA_KH = record.MA_KH,
+                TEN_KH = record.TEN_KH,
+                TR_EX_RT = record.TR_EX_RT,
+                REMARK = record.REMARK,
+                BUS_CODE = record.BUS_CODE,
+                UNIT_BUS_CODE = record.UNIT_BUS_CODE,
+                REFERENCE = record.REFERENCE,
                 VALUE_DATE = record.VALUE_DATE,
-                CIF = record.CIF,
-                REF_NO = record.REF_NO,
-                VOUCHER_NO = record.VOUCHER_NO,
-                ACCTNO1 = record.ACCTNO1,
-                ACCTNO2 = record.ACCTNO2,
-                EXCH_RATE = record.EXCH_RATE,
-                CONV_AMT = record.CONV_AMT,
-                VND_AMT = record.VND_AMT,
-                APPR_ID = record.APPR_ID,
-                STATUS = record.STATUS,
-                UPDATED_DATE = record.UPDATED_DATE
+                TR_TIME = record.TR_TIME,
+                COMFIRM = record.COMFIRM,
+                TRDT_TIME = record.TRDT_TIME,
+                CREATED_DATE = record.CREATED_DATE,
+                UPDATED_DATE = record.UPDATED_DATE,
+                FILE_NAME = record.FILE_NAME
             };
-        }
-
-        #endregion
-    }
-
-    // Extension method để kết hợp các điều kiện trong LINQ Expression
-    public static class ExpressionExtensions
-    {
-        public static Expression<Func<T, bool>> And<T>(
-            this Expression<Func<T, bool>> first,
-            Expression<Func<T, bool>> second)
-        {
-            var parameter = Expression.Parameter(typeof(T));
-            var body = Expression.AndAlso(
-                Expression.Invoke(first, parameter),
-                Expression.Invoke(second, parameter)
-            );
-            return Expression.Lambda<Func<T, bool>>(body, parameter);
         }
     }
 }

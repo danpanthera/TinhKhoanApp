@@ -1,71 +1,72 @@
-            // Đăng ký các Repository
-            services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-            services.AddScoped<IEI01Repository, EI01Repository>();
-            services.AddScoped<IGL02Repository, GL02Repository>();
-            services.AddScoped<ILN01Repository, LN01Repository>();
-            services.AddScoped<ILN03Repository, LN03Repository>();
-            services.AddScoped<IRR01Repository, RR01Repository>();
-
-            // Đăng ký các Service
-            services.AddScoped<IEI01Service, EI01Service>();
-            services.AddScoped<IGL02Service, GL02Service>();
-            services.AddScoped<ILN01Service, LN01Service>();
-            services.AddScoped<ILN03Service, LN03Service>();
-            services.AddScoped<IRR01Service, RR01Service>();oft.E            // Đăng ký các Repository
-            services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-            services.AddScoped<IEI01Repository, EI01Repository>();
-            services.AddScoped<IGL02Repository, GL02Repository>();
-            services.AddScoped<ILN01Repository, LN01Repository>();
-            services.AddScoped<ILN03Repository, LN03Repository>();
-
-            // Đăng ký các Service
-            services.AddScoped<IEI01Service, EI01Service>();
-            services.AddScoped<IGL02Service, GL02Service>();
-            services.AddScoped<ILN01Service, LN01Service>();
-            services.AddScoped<ILN03Service, LN03Service>();DependencyInjection;
-using Microsoft.Extensions.Configuration;
+using Microsoft.EntityFrameworkCore;
+using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Repositories;
 using TinhKhoanApp.Api.Services;
+using TinhKhoanApp.Api.Services.DataServices;
 
 namespace TinhKhoanApp.Api.Extensions
 {
-    /// <summary>
-    /// Các phương thức mở rộng để đăng ký dịch vụ vào DI Container
-    /// </summary>
     public static class ServiceCollectionExtensions
     {
         /// <summary>
-        /// Đăng ký tất cả các dịch vụ cho ứng dụng
+        /// Đăng ký database context
         /// </summary>
-        public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddApplicationDbContext(this IServiceCollection services, IConfiguration configuration)
         {
-            // Đăng ký các Repository
-            services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-            services.AddScoped<IEI01Repository, EI01Repository>();
-            services.AddScoped<IGL02Repository, GL02Repository>();
-            services.AddScoped<ILN01Repository, LN01Repository>();
-
-            // Đăng ký các Service
-            services.AddScoped<IEI01Service, EI01Service>();
-            services.AddScoped<IGL02Service, GL02Service>();
-            services.AddScoped<ILN01Service, LN01Service>();
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(
+                    configuration.GetConnectionString("DefaultConnection"),
+                    sqlOptions =>
+                    {
+                        sqlOptions.EnableRetryOnFailure(
+                            maxRetryCount: 5,
+                            maxRetryDelay: TimeSpan.FromSeconds(30),
+                            errorNumbersToAdd: null);
+                        sqlOptions.CommandTimeout(60);
+                    }));
 
             return services;
         }
 
         /// <summary>
-        /// Đăng ký các dịch vụ caching
+        /// Đăng ký các services của application
         /// </summary>
-        public static IServiceCollection AddCachingServices(this IServiceCollection services, IConfiguration configuration)
+        public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
-            // Đăng ký Memory Cache
-            services.AddMemoryCache();
+            // Repositories
+            services.AddScoped<IDP01Repository, DP01Repository>();
+            services.AddScoped<IDPDARepository, DPDARepository>();
+            services.AddScoped<IEI01Repository, EI01Repository>();
+            services.AddScoped<IGL01Repository, GL01Repository>();
+            services.AddScoped<IGL02Repository, GL02Repository>();
+            services.AddScoped<IGL41Repository, GL41Repository>();
+            services.AddScoped<ILN01Repository, LN01Repository>();
+            services.AddScoped<ILN03Repository, LN03Repository>();
+            services.AddScoped<IRR01Repository, RR01Repository>();
+            services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
-            // Đăng ký Distributed Cache nếu cần
-            if (configuration.GetValue<bool>("UseDistributedCache"))
-            {
-                services.AddDistributedMemoryCache();
-            }
+            // Services
+            services.AddScoped<Services.DataServices.IDP01DataService, Services.DataServices.DP01DataService>();
+            services.AddScoped<Services.DataServices.IDPDADataService, Services.DataServices.DPDADataService>();
+            services.AddScoped<Services.DataServices.IEI01DataService, Services.DataServices.EI01DataService>();
+            services.AddScoped<Services.DataServices.IGL01DataService, Services.DataServices.GL01DataService>();
+            services.AddScoped<Services.DataServices.IGL02DataService, Services.DataServices.GL02DataService>();
+            services.AddScoped<Services.DataServices.IGL41DataService, Services.DataServices.GL41DataService>();
+            services.AddScoped<Services.ILN01Service, Services.LN01Service>();
+            services.AddScoped<Services.ILN03Service, Services.LN03Service>();
+            services.AddScoped<Services.IRR01Service, Services.RR01Service>();
+
+            // Import Service
+            services.AddScoped<DirectImportService>();
+
+            // Data Services
+            services.AddScoped<Services.DataServices.DP01DataService>();
+            services.AddScoped<Services.DataServices.DPDADataService>();
+            services.AddScoped<Services.DataServices.EI01DataService>();
+            services.AddScoped<Services.DataServices.GL01DataService>();
+            services.AddScoped<Services.DataServices.GL02DataService>();
+            services.AddScoped<Services.DataServices.GL41DataService>();
+            services.AddScoped<Services.DirectImportService>();
 
             return services;
         }

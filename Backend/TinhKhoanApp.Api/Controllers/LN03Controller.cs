@@ -11,12 +11,12 @@ namespace TinhKhoanApp.Api.Controllers
     public class LN03Controller : ControllerBase
     {
         private readonly ILN03Service _ln03Service;
-        private readonly IDirectImportService _directImportService;
+        private readonly DirectImportService _directImportService;
         private readonly ILogger<LN03Controller> _logger;
 
         public LN03Controller(
             ILN03Service ln03Service,
-            IDirectImportService directImportService,
+            DirectImportService directImportService,
             ILogger<LN03Controller> logger)
         {
             _ln03Service = ln03Service;
@@ -366,12 +366,12 @@ namespace TinhKhoanApp.Api.Controllers
                     return Ok(new
                     {
                         Success = true,
-                        Message = $"Import thành công {result.RecordsCount} bản ghi",
-                        result.ImportedFileName,
-                        result.RecordsCount,
-                        result.StatementDate,
-                        result.ImportedBy,
-                        result.ImportId
+                        Message = $"Import thành công {result.ProcessedRecords} bản ghi",
+                        ImportedFileName = result.FileName,
+                        RecordsCount = result.ProcessedRecords,
+                        StatementDate = result.NgayDL,
+                        ImportedBy = string.Empty, // Need to add this property or get from proper source
+                        ImportId = result.ImportedDataRecordId
                     });
                 }
                 else
@@ -380,7 +380,7 @@ namespace TinhKhoanApp.Api.Controllers
                     {
                         Success = false,
                         Message = result.ErrorMessage,
-                        result.ImportedFileName
+                        ImportedFileName = result.FileName
                     });
                 }
             }

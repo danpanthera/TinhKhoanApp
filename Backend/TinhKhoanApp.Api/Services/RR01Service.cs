@@ -29,7 +29,7 @@ namespace TinhKhoanApp.Api.Services
         /// <inheritdoc />
         public async Task<RR01DTO?> GetByIdAsync(long id)
         {
-            var entity = await _repository.GetByIdAsync(id);
+            var entity = await _repository.GetByIdAsync((int)id);
             return entity != null ? RR01DTO.FromEntity(entity) : null;
         }
 
@@ -83,14 +83,15 @@ namespace TinhKhoanApp.Api.Services
         public async Task<RR01DTO> CreateAsync(CreateRR01DTO createDto)
         {
             var entity = createDto.ToEntity();
-            var createdEntity = await _repository.AddAsync(entity);
-            return RR01DTO.FromEntity(createdEntity);
+            await _repository.AddAsync(entity);
+            await _repository.SaveChangesAsync();
+            return RR01DTO.FromEntity(entity);
         }
 
         /// <inheritdoc />
         public async Task<RR01DTO?> UpdateAsync(long id, UpdateRR01DTO updateDto)
         {
-            var existingEntity = await _repository.GetByIdAsync(id);
+            var existingEntity = await _repository.GetByIdAsync((int)id);
             if (existingEntity == null)
             {
                 _logger.LogWarning("RR01 record with ID {Id} not found for update", id);
@@ -99,13 +100,14 @@ namespace TinhKhoanApp.Api.Services
 
             updateDto.UpdateEntity(existingEntity);
             await _repository.UpdateAsync(existingEntity);
+            await _repository.SaveChangesAsync();
             return RR01DTO.FromEntity(existingEntity);
         }
 
         /// <inheritdoc />
         public async Task<bool> DeleteAsync(long id)
         {
-            var existingEntity = await _repository.GetByIdAsync(id);
+            var existingEntity = await _repository.GetByIdAsync((int)id);
             if (existingEntity == null)
             {
                 _logger.LogWarning("RR01 record with ID {Id} not found for deletion", id);
@@ -113,6 +115,7 @@ namespace TinhKhoanApp.Api.Services
             }
 
             await _repository.DeleteAsync(existingEntity);
+            await _repository.SaveChangesAsync();
             return true;
         }
 

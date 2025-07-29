@@ -1,3 +1,6 @@
+using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
+using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models.DataTables;
 
 namespace TinhKhoanApp.Api.Repositories
@@ -10,7 +13,7 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Lấy dữ liệu GL02 gần đây theo số lượng chỉ định
         /// </summary>
-        Task<IEnumerable<GL02>> GetRecentAsync(int count = 10);
+        new Task<IEnumerable<GL02>> GetRecentAsync(int count = 10);
 
         /// <summary>
         /// Lấy dữ liệu GL02 theo ngày
@@ -26,6 +29,21 @@ namespace TinhKhoanApp.Api.Repositories
         /// Lấy dữ liệu GL02 theo mã chi nhánh
         /// </summary>
         Task<IEnumerable<GL02>> GetByBranchCodeAsync(string branchCode, int maxResults = 100);
+
+        /// <summary>
+        /// Lấy dữ liệu GL02 phân trang theo điều kiện
+        /// </summary>
+        Task<(int totalCount, IEnumerable<GL02> items)> GetPagedAsync(
+            Expression<Func<GL02, bool>> predicate,
+            int pageNumber,
+            int pageSize,
+            string sortField = "NGAY_DL",
+            bool ascending = false);
+
+        /// <summary>
+        /// Trả về DbContext cho việc sử dụng trong service layer
+        /// </summary>
+        ApplicationDbContext GetDbContext();
 
         /// <summary>
         /// Lấy dữ liệu GL02 theo tài khoản

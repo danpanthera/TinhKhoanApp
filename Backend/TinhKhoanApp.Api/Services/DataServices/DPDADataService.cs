@@ -3,20 +3,19 @@ using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Models.DataTables;
 using TinhKhoanApp.Api.Models.DTOs;
 using TinhKhoanApp.Api.Repositories;
+using TinhKhoanApp.Api.Utilities;
 
 namespace TinhKhoanApp.Api.Services.DataServices
 {
     /// <summary>
-    /// DPDA Data Service - triển khai IDPDADataService
+    /// DPDA Service - triển khai IDPDADataService
     /// </summary>
     public class DPDADataService : IDPDADataService
     {
         private readonly IDPDARepository _dpdaRepository;
         private readonly ILogger<DPDADataService> _logger;
 
-        public DPDADataService(
-            IDPDARepository dpdaRepository,
-            ILogger<DPDADataService> logger)
+        public DPDADataService(IDPDARepository dpdaRepository, ILogger<DPDADataService> logger)
         {
             _dpdaRepository = dpdaRepository;
             _logger = logger;
@@ -268,16 +267,14 @@ namespace TinhKhoanApp.Api.Services.DataServices
                     predicate,
                     page,
                     pageSize,
-                    dpda => dpda.CREATED_DATE,
-                    false);
+                    q => q.OrderByDescending(dpda => dpda.NGAY_DL));
 
                 return new PagedApiResponse<DPDAPreviewDto>
                 {
-                    Results = MapToDPDAPreviewDtos(records),
-                    CurrentPage = page,
+                    Data = MapToDPDAPreviewDtos(records),
+                    Page = page,
                     PageSize = pageSize,
-                    TotalCount = totalCount,
-                    TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+                    TotalCount = totalCount
                 };
             }
             catch (Exception ex)
@@ -285,11 +282,10 @@ namespace TinhKhoanApp.Api.Services.DataServices
                 _logger.LogError(ex, "Error searching DPDA data");
                 return new PagedApiResponse<DPDAPreviewDto>
                 {
-                    Results = Enumerable.Empty<DPDAPreviewDto>(),
-                    CurrentPage = page,
+                    Data = Enumerable.Empty<DPDAPreviewDto>(),
+                    Page = page,
                     PageSize = pageSize,
-                    TotalCount = 0,
-                    TotalPages = 0
+                    TotalCount = 0
                 };
             }
         }

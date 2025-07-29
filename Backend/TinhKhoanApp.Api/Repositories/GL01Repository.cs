@@ -40,7 +40,7 @@ namespace TinhKhoanApp.Api.Repositories
         public async Task<IEnumerable<GL01>> GetByUnitCodeAsync(string unitCode, int maxResults = 100)
         {
             return await _dbSet
-                .Where(gl01 => gl01.BRCD == unitCode)
+                .Where(gl01 => gl01.POST_BR == unitCode)
                 .OrderByDescending(gl01 => gl01.CREATED_DATE)
                 .Take(maxResults)
                 .ToListAsync();
@@ -52,7 +52,7 @@ namespace TinhKhoanApp.Api.Repositories
         public async Task<IEnumerable<GL01>> GetByAccountCodeAsync(string accountCode, int maxResults = 100)
         {
             return await _dbSet
-                .Where(gl01 => gl01.TRAD_ACCT == accountCode)
+                .Where(gl01 => gl01.TAI_KHOAN == accountCode)
                 .OrderByDescending(gl01 => gl01.CREATED_DATE)
                 .Take(maxResults)
                 .ToListAsync();
@@ -63,14 +63,14 @@ namespace TinhKhoanApp.Api.Repositories
         /// </summary>
         public async Task<decimal> GetTotalTransactionsByUnitAsync(string unitCode, string drCrFlag, DateTime? date = null)
         {
-            var query = _dbSet.Where(gl01 => gl01.BRCD == unitCode && gl01.DR_CR_FLG == drCrFlag);
+            var query = _dbSet.Where(gl01 => gl01.POST_BR == unitCode && gl01.DR_CR == drCrFlag);
 
             if (date.HasValue)
             {
                 query = query.Where(gl01 => gl01.NGAY_DL.Date == date.Value.Date);
             }
 
-            return await query.SumAsync(gl01 => gl01.TR_AMOUNT ?? 0);
+            return await query.SumAsync(gl01 => gl01.SO_TIEN_GD ?? 0);
         }
 
         /// <summary>
@@ -79,8 +79,8 @@ namespace TinhKhoanApp.Api.Repositories
         public async Task<decimal> GetTotalTransactionsByDateAsync(DateTime date, string drCrFlag)
         {
             return await _dbSet
-                .Where(gl01 => gl01.NGAY_DL.Date == date.Date && gl01.DR_CR_FLG == drCrFlag)
-                .SumAsync(gl01 => gl01.TR_AMOUNT ?? 0);
+                .Where(gl01 => gl01.NGAY_DL.Date == date.Date && gl01.DR_CR == drCrFlag)
+                .SumAsync(gl01 => gl01.SO_TIEN_GD ?? 0);
         }
 
         /// <summary>

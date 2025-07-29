@@ -54,9 +54,19 @@ namespace TinhKhoanApp.Api.Repositories
         void RemoveRange(IEnumerable<T> entities);
 
         /// <summary>
+        /// Lấy entities theo trang
+        /// </summary>
+        Task<IEnumerable<T>> GetPagedAsync(Expression<Func<T, bool>> predicate, int skip, int take, Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null);
+
+        /// <summary>
         /// Đếm số lượng entities
         /// </summary>
         Task<int> CountAsync();
+
+        /// <summary>
+        /// Đếm số lượng entities theo điều kiện
+        /// </summary>
+        Task<int> CountAsync(Expression<Func<T, bool>> predicate);
 
         /// <summary>
         /// Kiểm tra entity tồn tại
