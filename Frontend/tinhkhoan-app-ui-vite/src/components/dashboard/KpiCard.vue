@@ -103,6 +103,7 @@ const props = defineProps({
   },
 })
 
+// defineEmits là một macro của compiler, không cần import
 const emit = defineEmits(['click'])
 
 // Computed properties

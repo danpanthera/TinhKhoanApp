@@ -24,7 +24,7 @@
 </template>
 
 <script setup>
-import { defineProps } from 'vue'
+// defineProps là một macro của compiler, không cần import
 
 const props = defineProps({
   show: {
