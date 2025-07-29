@@ -1,0 +1,27 @@
+{
+  "cSpell.language": "en,vi",
+  "cSpell.words": [
+    "anh",
+    "bản", "bảo", "báo",
+    "cảo", "các", "cái", "chính", "chạy", "cho", "chọn", "chỉ", "chúng", "công", "của", "được",
+    "đã", "đang", "đầu", "để", "đếm", "đúng", "đọc",
+    "ghi", "gốc", "ghi",
+    "hệ", "hiển", "hàng", "hỗ", "hợp",
+    "không", "khi", "khoa", "khoan", "khoản", "kiểm",
+    "lại", "lỗi", "logic", "loại", "lưu",
+    "mới", "màn", "mã", "một",
+    "này", "nguyên", "nhân", "nhập", "như", "những",
+    "preview", "phần", "phép",
+    "quá", "qua",
+    "rồi", "record",
+    "sử", "số", "sao", "sau", "sẽ", "sửa",
+    "tại", "thì", "thay", "thể", "thông", "thành", "tiếng", "tính", "tìm", "trước", "trong", "trả", "từ",
+    "và", "vào", "vấn", "việt", "với", "vẫn", "về",
+    "xem", "xuất",
+    "Agribank", "Nậm", "Nhùn", "Lò", "Văn", "Hớn", "Bùi", "Tình", "Vấn", "Bạch", "Công", "Minh", "Phạm", "Hoàng", "Đức", "Thiện", "Tuyển", "Giàng", "Ký", "Trần", "Thị", "Thúy", "Nguyễn", "Tiến", "Lường", "Diệp", "Vũ", "Nghĩa", "Lan", "Anh",
+    "LN01", "DP01", "GL01", "TR01", "KH01", "BRCD", "CUSTSEQ", "CUSTNM", "CCY", "APPRSEQ", "DSBSSEQ", "APPRAMT", "DSBSMATDT", "INTCMTH", "INTRPYMTH", "INTTRMMTH", "EXEMPTINT", "EXEMPTINTTYPE", "EXEMPTINTAMT", "GRPNO", "BUSCD", "BSNSSCLTPCD", "USRIDOP", "ACCRUAL", "LCLDISTNM", "LCLPROVINNM", "LCLWARDNM", "NHOM", "CHITIEU", "CTCV", "PHUONG", "THUC", "GIAI", "NGAN", "TAI", "KHOAN", "TIEN", "CMT", "HC", "NGAY", "SINH", "CB", "AGRI", "NGANH", "KT", "TGIA", "OFFICER", "IPCAS"
+  ],
+  "cSpell.ignoreWords": [
+    "tiếng", "việt", "bản", "ghi", "số", "lượng", "thông", "tin", "dữ", "liệu", "import", "file", "preview", "debug", "backend", "frontend", "API", "endpoint", "processing", "CSV", "Excel", "JSON", "database", "records", "headers", "columns", "rows", "parsing", "UTF8", "BOM", "RFC4180"
+  ],
+}

@@ -1,0 +1,317 @@
+Building...
+✅ Timezone set to: (UTC+07:00) Indochina Time (Bangkok)
+🚀 Starting TinhKhoan Backend API (Clean Version)...
+🌐 Backend will be available at: http://localhost:5055
+✅ All seeding code removed for stability
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:5055
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Development
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: /Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api
+info: TinhKhoanApp.Api.Controllers.DirectImportController[0]
+      🚀 [DIRECT_IMPORT_API] Smart import start: 7808_ei01_20241231.csv, Size: 0.00039958953857421875MB
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      🚀 [DIRECT_IMPORT] Bắt đầu Smart Direct Import: 7808_ei01_20241231.csv
+🔍 [DETECTION] File: 7808_ei01_20241231.csv -> DataType: EI01
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [DIRECT_IMPORT] Detected data type: EI01
+🎯 [EI01_IMPORT] Starting EI01 import for file: 7808_ei01_20241231.csv
+✅ [EI01_IMPORT] Filename validation passed, calling ImportGenericCSVAsync<EI01>
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      🚀 [EI01_DIRECT] Bắt đầu Direct Import: 7808_ei01_20241231.csv
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (22ms) [Parameters=[@p0='?' (Size = 100), @p1='?' (Size = 255), @p2='?' (Size = 100), @p3='?' (DbType = DateTime2), @p4='?' (Size = 100), @p5='?' (Size = 1000), @p6='?' (Size = 8000) (DbType = Binary), @p7='?' (DbType = Int32), @p8='?' (DbType = DateTime2), @p9='?' (Size = 50)], CommandType='Text', CommandTimeout='120']
+      SET IMPLICIT_TRANSACTIONS OFF;
+      SET NOCOUNT ON;
+      INSERT INTO [ImportedDataRecords] ([Category], [FileName], [FileType], [ImportDate], [ImportedBy], [Notes], [OriginalFileData], [RecordsCount], [StatementDate], [Status])
+      OUTPUT INSERTED.[Id], INSERTED.[SysEndTime], INSERTED.[SysStartTime]
+      VALUES (@p0, @p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9);
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      🔍 [CSV_PARSE] Bắt đầu parse CSV: 7808_ei01_20241231.csv, Target Type: EI01
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      🔧 [CSV_PARSE] Enhanced CSV configuration applied for complex format handling
+📊 [CSV_PARSE] Headers found for EI01: MA_CN, MA_KH, TEN_KH, LOAI_KH, SDT_EMB, TRANG_THAI_EMB, NGAY_DK_EMB, SDT_OTT, TRANG_THAI_OTT, NGAY_DK_OTT, SDT_SMS, TRANG_THAI_SMS, NGAY_DK_SMS, SDT_SAV, TRANG_THAI_SAV, NGAY_DK_SAV, SDT_LN, TRANG_THAI_LN, NGAY_DK_LN, USER_EMB, USER_OTT, USER_SMS, USER_SAV, USER_LN
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [CSV_PARSE] Headers found: MA_CN, MA_KH, TEN_KH, LOAI_KH, SDT_EMB, TRANG_THAI_EMB, NGAY_DK_EMB, SDT_OTT, TRANG_THAI_OTT, NGAY_DK_OTT, SDT_SMS, TRANG_THAI_SMS, NGAY_DK_SMS, SDT_SAV, TRANG_THAI_SAV, NGAY_DK_SAV, SDT_LN, TRANG_THAI_LN, NGAY_DK_LN, USER_EMB, USER_OTT, USER_SMS, USER_SAV, USER_LN
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      🔧 [CSV_PARSE] Model properties: NGAY_DL, MA_CN, MA_KH, TEN_KH, LOAI_KH, SDT_EMB, TRANG_THAI_EMB, NGAY_DK_EMB, SDT_OTT, TRANG_THAI_OTT, NGAY_DK_OTT, SDT_SMS, TRANG_THAI_SMS, NGAY_DK_SMS, SDT_SAV, TRANG_THAI_SAV, NGAY_DK_SAV, SDT_LN, TRANG_THAI_LN, NGAY_DK_LN, USER_EMB, USER_OTT, USER_SMS, USER_SAV, USER_LN, Id, CREATED_DATE, UPDATED_DATE, FILE_NAME
+🔄 [CSV_PARSE] Processing row 1 for EI01
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      🎯 [CONVERT] Converting '7808' to String
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      🎯 [CONVERT] Converting '001821920' to String
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      🎯 [CONVERT] Converting 'Nguyễn Văn Dĩnh' to String
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      🎯 [CONVERT] Converting '100' to String
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      🎯 [CONVERT] Converting '0936477260' to String
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      🎯 [CONVERT] Converting 'Active' to String
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      🎯 [CONVERT] Converting '20190502' to Nullable`1
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      🔍 [CONVERT] DATETIME CONVERSION: '20190502' to Nullable`1
+💡 [EI01_EMERGENCY] NULL/Empty datetime field: NGAY_DK_OTT = '' -> NULL
+💡 [EI01_EMERGENCY] NULL/Empty datetime field: NGAY_DK_SMS = '' -> NULL
+💡 [EI01_EMERGENCY] NULL/Empty datetime field: NGAY_DK_SAV = '' -> NULL
+💡 [EI01_EMERGENCY] NULL/Empty datetime field: NGAY_DK_LN = '' -> NULL
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      🎯 [CONVERT] Converting 'HNNTHANG' to String
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ✅ [CSV_PARSE] Hoàn thành: 1/1 rows parsed successfully
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [IMPORT_DEBUG] Parsed 1 records from CSV
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [IMPORT_DEBUG] Starting bulk insert for 1 records
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [DATATABLE] Creating DataTable with 28 business columns from 29 total properties
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      🔍 [DEBUG] Included properties: NGAY_DL, MA_CN, MA_KH, TEN_KH, LOAI_KH, SDT_EMB, TRANG_THAI_EMB, NGAY_DK_EMB, SDT_OTT, TRANG_THAI_OTT, NGAY_DK_OTT, SDT_SMS, TRANG_THAI_SMS, NGAY_DK_SMS, SDT_SAV, TRANG_THAI_SAV, NGAY_DK_SAV, SDT_LN, TRANG_THAI_LN, NGAY_DK_LN, USER_EMB, USER_OTT, USER_SMS, USER_SAV, USER_LN, CREATED_DATE, UPDATED_DATE, FILE_NAME
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [DATATABLE] Column mappings: NGAY_DL->NGAY_DL, MA_CN->MA_CN, MA_KH->MA_KH, TEN_KH->TEN_KH, LOAI_KH->LOAI_KH, SDT_EMB->SDT_EMB, TRANG_THAI_EMB->TRANG_THAI_EMB, NGAY_DK_EMB->NGAY_DK_EMB, SDT_OTT->SDT_OTT, TRANG_THAI_OTT->TRANG_THAI_OTT, NGAY_DK_OTT->NGAY_DK_OTT, SDT_SMS->SDT_SMS, TRANG_THAI_SMS->TRANG_THAI_SMS, NGAY_DK_SMS->NGAY_DK_SMS, SDT_SAV->SDT_SAV, TRANG_THAI_SAV->TRANG_THAI_SAV, NGAY_DK_SAV->NGAY_DK_SAV, SDT_LN->SDT_LN, TRANG_THAI_LN->TRANG_THAI_LN, NGAY_DK_LN->NGAY_DK_LN, USER_EMB->USER_EMB, USER_OTT->USER_OTT, USER_SMS->USER_SMS, USER_SAV->USER_SAV, USER_LN->USER_LN, CREATED_DATE->CREATED_DATE, UPDATED_DATE->UPDATED_DATE, FILE_NAME->FILE_NAME
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [DATATABLE] Created DataTable: 1 rows, 28 columns
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      🔍 [DEBUG] DataTable columns: NGAY_DL, MA_CN, MA_KH, TEN_KH, LOAI_KH, SDT_EMB, TRANG_THAI_EMB, NGAY_DK_EMB, SDT_OTT, TRANG_THAI_OTT, NGAY_DK_OTT, SDT_SMS, TRANG_THAI_SMS, NGAY_DK_SMS, SDT_SAV, TRANG_THAI_SAV, NGAY_DK_SAV, SDT_LN, TRANG_THAI_LN, NGAY_DK_LN, USER_EMB, USER_OTT, USER_SMS, USER_SAV, USER_LN, CREATED_DATE, UPDATED_DATE, FILE_NAME
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      💾 [BULK_INSERT] Table: EI01, DataTable columns: 28 - NGAY_DL, MA_CN, MA_KH, TEN_KH, LOAI_KH, SDT_EMB, TRANG_THAI_EMB, NGAY_DK_EMB, SDT_OTT, TRANG_THAI_OTT, NGAY_DK_OTT, SDT_SMS, TRANG_THAI_SMS, NGAY_DK_SMS, SDT_SAV, TRANG_THAI_SAV, NGAY_DK_SAV, SDT_LN, TRANG_THAI_LN, NGAY_DK_LN, USER_EMB, USER_OTT, USER_SMS, USER_SAV, USER_LN, CREATED_DATE, UPDATED_DATE, FILE_NAME
+🔍 [BULK_DEBUG] Debugging table mapping for 'EI01'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      🔍 [BULK_DEBUG] Debugging table mapping for 'EI01'
+📊 [BULK_DEBUG] Target column found: 'Id'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'Id'
+📊 [BULK_DEBUG] Target column found: 'BusinessKey'
+📊 [BULK_DEBUG] Target column found: 'EffectiveDate'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'BusinessKey'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'EffectiveDate'
+📊 [BULK_DEBUG] Target column found: 'ExpiryDate'
+📊 [BULK_DEBUG] Target column found: 'IsCurrent'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'ExpiryDate'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'IsCurrent'
+📊 [BULK_DEBUG] Target column found: 'RowVersion'
+📊 [BULK_DEBUG] Target column found: 'ImportId'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'RowVersion'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'ImportId'
+📊 [BULK_DEBUG] Target column found: 'StatementDate'
+📊 [BULK_DEBUG] Target column found: 'ProcessedDate'
+📊 [BULK_DEBUG] Target column found: 'DataHash'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'StatementDate'
+📊 [BULK_DEBUG] Target column found: 'MaKhachHang'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'ProcessedDate'
+📊 [BULK_DEBUG] Target column found: 'TenKhachHang'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'DataHash'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'MaKhachHang'
+📊 [BULK_DEBUG] Target column found: 'SoTaiKhoan'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'TenKhachHang'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'SoTaiKhoan'
+📊 [BULK_DEBUG] Target column found: 'LoaiGiaoDich'
+📊 [BULK_DEBUG] Target column found: 'MaGiaoDich'
+📊 [BULK_DEBUG] Target column found: 'SoTien'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'LoaiGiaoDich'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'MaGiaoDich'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'SoTien'
+📊 [BULK_DEBUG] Target column found: 'NgayGiaoDich'
+📊 [BULK_DEBUG] Target column found: 'ThoiGianGiaoDich'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'NgayGiaoDich'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'ThoiGianGiaoDich'
+📊 [BULK_DEBUG] Target column found: 'TrangThaiGiaoDich'
+📊 [BULK_DEBUG] Target column found: 'NoiDungGiaoDich'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'TrangThaiGiaoDich'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'NoiDungGiaoDich'
+📊 [BULK_DEBUG] Target column found: 'MaChiNhanh'
+📊 [BULK_DEBUG] Target column found: 'TenChiNhanh'
+📊 [BULK_DEBUG] Target column found: 'Channel'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'MaChiNhanh'
+📊 [BULK_DEBUG] Target column found: 'DeviceInfo'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'TenChiNhanh'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'Channel'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'DeviceInfo'
+📊 [BULK_DEBUG] Target column found: 'AdditionalData'
+📊 [BULK_DEBUG] Target column found: 'SysEndTime'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'AdditionalData'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'SysEndTime'
+📊 [BULK_DEBUG] Target column found: 'SysStartTime'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Target column found: 'SysStartTime'
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      🎯 [BULK_INSERT] Target table 'EI01' has 27 columns: Id, BusinessKey, EffectiveDate, ExpiryDate, IsCurrent, RowVersion, ImportId, StatementDate, ProcessedDate, DataHash...
+📊 [BULK_DEBUG] Source DataTable has 28 columns:
+📊 [BULK_DEBUG] Source column: 'NGAY_DL' (Type: DateTime)
+📊 [BULK_DEBUG] Source column: 'MA_CN' (Type: String)
+📊 [BULK_DEBUG] Source column: 'MA_KH' (Type: String)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'NGAY_DL' (Type: DateTime)
+📊 [BULK_DEBUG] Source column: 'TEN_KH' (Type: String)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'MA_CN' (Type: String)
+📊 [BULK_DEBUG] Source column: 'LOAI_KH' (Type: String)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'MA_KH' (Type: String)
+📊 [BULK_DEBUG] Source column: 'SDT_EMB' (Type: String)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'TEN_KH' (Type: String)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'LOAI_KH' (Type: String)
+📊 [BULK_DEBUG] Source column: 'TRANG_THAI_EMB' (Type: String)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'SDT_EMB' (Type: String)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'TRANG_THAI_EMB' (Type: String)
+📊 [BULK_DEBUG] Source column: 'NGAY_DK_EMB' (Type: DateTime)
+📊 [BULK_DEBUG] Source column: 'SDT_OTT' (Type: String)
+📊 [BULK_DEBUG] Source column: 'TRANG_THAI_OTT' (Type: String)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'NGAY_DK_EMB' (Type: DateTime)
+📊 [BULK_DEBUG] Source column: 'NGAY_DK_OTT' (Type: DateTime)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'SDT_OTT' (Type: String)
+📊 [BULK_DEBUG] Source column: 'SDT_SMS' (Type: String)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'TRANG_THAI_OTT' (Type: String)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'NGAY_DK_OTT' (Type: DateTime)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'SDT_SMS' (Type: String)
+📊 [BULK_DEBUG] Source column: 'TRANG_THAI_SMS' (Type: String)
+📊 [BULK_DEBUG] Source column: 'NGAY_DK_SMS' (Type: DateTime)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'TRANG_THAI_SMS' (Type: String)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'NGAY_DK_SMS' (Type: DateTime)
+📊 [BULK_DEBUG] Source column: 'SDT_SAV' (Type: String)
+📊 [BULK_DEBUG] Source column: 'TRANG_THAI_SAV' (Type: String)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'SDT_SAV' (Type: String)
+📊 [BULK_DEBUG] Source column: 'NGAY_DK_SAV' (Type: DateTime)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'TRANG_THAI_SAV' (Type: String)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'NGAY_DK_SAV' (Type: DateTime)
+📊 [BULK_DEBUG] Source column: 'SDT_LN' (Type: String)
+📊 [BULK_DEBUG] Source column: 'TRANG_THAI_LN' (Type: String)
+📊 [BULK_DEBUG] Source column: 'NGAY_DK_LN' (Type: DateTime)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'SDT_LN' (Type: String)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'TRANG_THAI_LN' (Type: String)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'NGAY_DK_LN' (Type: DateTime)
+📊 [BULK_DEBUG] Source column: 'USER_EMB' (Type: String)
+📊 [BULK_DEBUG] Source column: 'USER_OTT' (Type: String)
+📊 [BULK_DEBUG] Source column: 'USER_SMS' (Type: String)
+📊 [BULK_DEBUG] Source column: 'USER_SAV' (Type: String)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'USER_EMB' (Type: String)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'USER_OTT' (Type: String)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'USER_SMS' (Type: String)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'USER_SAV' (Type: String)
+📊 [BULK_DEBUG] Source column: 'USER_LN' (Type: String)
+📊 [BULK_DEBUG] Source column: 'CREATED_DATE' (Type: DateTime)
+📊 [BULK_DEBUG] Source column: 'UPDATED_DATE' (Type: DateTime)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'USER_LN' (Type: String)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'CREATED_DATE' (Type: DateTime)
+📊 [BULK_DEBUG] Source column: 'FILE_NAME' (Type: String)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'UPDATED_DATE' (Type: DateTime)
+info: TinhKhoanApp.Api.Services.DirectImportService[0]
+      📊 [BULK_DEBUG] Source column: 'FILE_NAME' (Type: String)
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'NGAY_DL' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'MA_CN' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'MA_KH' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'TEN_KH' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'LOAI_KH' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'SDT_EMB' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'TRANG_THAI_EMB' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'NGAY_DK_EMB' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'SDT_OTT' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'TRANG_THAI_OTT' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'NGAY_DK_OTT' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'SDT_SMS' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'TRANG_THAI_SMS' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'NGAY_DK_SMS' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'SDT_SAV' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'TRANG_THAI_SAV' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'NGAY_DK_SAV' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'SDT_LN' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'TRANG_THAI_LN' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'NGAY_DK_LN' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'USER_EMB' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'USER_OTT' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'USER_SMS' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'USER_SAV' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'USER_LN' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'CREATED_DATE' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'UPDATED_DATE' not found in target table, skipping
+warn: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ⚠️ [BULK_MAPPING] Column 'FILE_NAME' not found in target table, skipping
+fail: TinhKhoanApp.Api.Services.DirectImportService[0]
+      ❌ [EI01_DIRECT] Direct Import failed: 7808_ei01_20241231.csv
+      System.InvalidOperationException: No columns could be mapped between source and target table 'EI01'
+         at TinhKhoanApp.Api.Services.DirectImportService.BulkInsertGenericAsync[T](List`1 records, String tableName) in /Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api/Services/DirectImportService.cs:line 1130
+         at TinhKhoanApp.Api.Services.DirectImportService.ImportGenericCSVAsync[T](String dataType, String tableName, IFormFile file, String statementDate) in /Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api/Services/DirectImportService.cs:line 422
+fail: TinhKhoanApp.Api.Controllers.DirectImportController[0]
+      ❌ [DIRECT_IMPORT_API] Smart import failed: No columns could be mapped between source and target table 'EI01'
+info: Microsoft.Hosting.Lifetime[0]
+      Application is shutting down...

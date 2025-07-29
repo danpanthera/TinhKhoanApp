@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test KPI Tables Fix</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Test KPI Tables Fix - B3 & B4 Dropdown Issue</h1>
+
+    <div class="section">
+        <h2>📊 1. Test KPI Assignment Tables API</h2>
+        <div id="api-test-result">Loading...</div>
+    </div>
+
+    <div class="section">
+        <h2>👥 2. Test Employee KPI Tables (B3 - Giao khoán KPI theo Cán bộ)</h2>
+        <div id="employee-kpi-result">Loading...</div>
+    </div>
+
+    <div class="section">
+        <h2>🏢 3. Test Unit KPI Tables (B4 - Giao khoán KPI theo Chi nhánh)</h2>
+        <div id="unit-kpi-result">Loading...</div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5055/api';
+
+        async function testKpiTablesAPI() {
+            try {
+                const response = await fetch(`${API_BASE}/KpiAssignmentTables`);
+                const data = await response.json();
+
+                if (!Array.isArray(data)) {
+                    throw new Error('API không trả về array');
+                }
+
+                const totalTables = data.length;
+                const tablesWithIndicators = data.filter(t => t.IndicatorCount > 0).length;
+                const categories = [...new Set(data.map(t => t.Category))];
+
+                let html = `
+                    <div class="success">✅ API hoạt động tốt!</div>
+                    <ul>
+                        <li><strong>Tổng số bảng KPI:</strong> ${totalTables}</li>
+                        <li><strong>Bảng có indicators:</strong> ${tablesWithIndicators}</li>
+                        <li><strong>Categories:</strong> ${categories.join(', ')}</li>
+                    </ul>
+                `;
+
+                // Show sample data
+                html += `<h3>Sample data:</h3><table>
+                    <tr><th>ID</th><th>Table Name</th><th>Description</th><th>Category</th><th>Indicators</th></tr>`;
+
+                data.slice(0, 5).forEach(table => {
+                    html += `<tr>
+                        <td>${table.Id}</td>
+                        <td>${table.TableName}</td>
+                        <td>${table.Description}</td>
+                        <td>${table.Category}</td>
+                        <td>${table.IndicatorCount}</td>
+                    </tr>`;
+                });
+                html += '</table>';
+
+                document.getElementById('api-test-result').innerHTML = html;
+                return data;
+
+            } catch (error) {
+                document.getElementById('api-test-result').innerHTML = `
+                    <div class="error">❌ API Error: ${error.message}</div>
+                `;
+                return [];
+            }
+        }
+
+        async function testEmployeeKpiTables(allTables) {
+            try {
+                // Filter tables for CANBO category (như trong EmployeeKpiAssignmentView)
+                const staffTables = allTables.filter(table => table.Category === 'CANBO');
+
+                let html = '';
+                if (staffTables.length === 0) {
+                    html = `<div class="error">❌ Không tìm thấy bảng KPI nào cho cán bộ!</div>
+                            <p>Kiểm tra category filter: đang tìm 'CANBO'</p>`;
+                } else {
+                    html = `<div class="success">✅ Tìm thấy ${staffTables.length} bảng KPI cho cán bộ!</div>`;
+
+                    html += `<h3>Danh sách bảng KPI cho cán bộ:</h3><table>
+                        <tr><th>ID</th><th>Mô tả</th><th>Số indicators</th></tr>`;
+
+                    staffTables.forEach(table => {
+                        html += `<tr>
+                            <td>${table.Id}</td>
+                            <td>${table.Description}</td>
+                            <td>${table.IndicatorCount}</td>
+                        </tr>`;
+                    });
+                    html += '</table>';
+                }
+
+                document.getElementById('employee-kpi-result').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('employee-kpi-result').innerHTML = `
+                    <div class="error">❌ Error: ${error.message}</div>
+                `;
+            }
+        }
+
+        async function testUnitKpiTables(allTables) {
+            try {
+                // Filter tables for CHINHANH category (như trong UnitKpiAssignmentView)
+                const branchTables = allTables.filter(table => table.Category === 'CHINHANH');
+
+                let html = '';
+                if (branchTables.length === 0) {
+                    html = `<div class="error">❌ Không tìm thấy bảng KPI nào cho chi nhánh!</div>
+                            <p>Kiểm tra category filter: đang tìm 'CHINHANH'</p>`;
+                } else {
+                    html = `<div class="success">✅ Tìm thấy ${branchTables.length} bảng KPI cho chi nhánh!</div>`;
+
+                    html += `<h3>Danh sách bảng KPI cho chi nhánh:</h3><table>
+                        <tr><th>ID</th><th>Mô tả</th><th>Số indicators</th></tr>`;
+
+                    branchTables.forEach(table => {
+                        html += `<tr>
+                            <td>${table.Id}</td>
+                            <td>${table.Description}</td>
+                            <td>${table.IndicatorCount}</td>
+                        </tr>`;
+                    });
+                    html += '</table>';
+                }
+
+                document.getElementById('unit-kpi-result').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('unit-kpi-result').innerHTML = `
+                    <div class="error">❌ Error: ${error.message}</div>
+                `;
+            }
+        }
+
+        // Run tests
+        async function runAllTests() {
+            const allTables = await testKpiTablesAPI();
+            if (allTables.length > 0) {
+                await testEmployeeKpiTables(allTables);
+                await testUnitKpiTables(allTables);
+            }
+        }
+
+        // Start tests when page loads
+        runAllTests();
+    </script>
+</body>
+</html>

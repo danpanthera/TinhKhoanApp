@@ -1,0 +1,321 @@
+[
+    {
+        "Id": "0250c6b1abee696e542295504804578a3d9b30e41078c22144ab5b48cd01bc84",
+        "Created": "2025-07-14T17:05:26.312664928Z",
+        "Path": "/opt/mssql/bin/permissions_check.sh",
+        "Args": [
+            "/bin/sh",
+            "-c",
+            "/opt/mssql/bin/launchpadd -usens=false -enableOutboundAccess=true -usesameuser=true -sqlGroup root -- -reparentOrphanedDescendants=true -useDefaultLaunchers=false \u0026 /app/asdepackage/AsdePackage \u0026 /opt/mssql/bin/sqlservr"
+        ],
+        "State": {
+            "Status": "exited",
+            "Running": false,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 0,
+            "ExitCode": 1,
+            "Error": "failed to mount /var/lib/docker/rootfs/overlayfs/0250c6b1abee696e542295504804578a3d9b30e41078c22144ab5b48cd01bc84: mount source: \"overlay\", target: \"/var/lib/docker/rootfs/overlayfs/0250c6b1abee696e542295504804578a3d9b30e41078c22144ab5b48cd01bc84\", fstype: overlay, flags: 0, data: \"index=off,workdir=/var/lib/desktop-containerd/daemon/io.containerd.snapshotter.v1.overlayfs/snapshots/187/work,upperdir=/var/lib/desktop-containerd/daemon/io.containerd.snapshotter.v1.overlayfs/snapshots/187/fs,lowerdir=/var/lib/desktop-containerd/daemon/io.containerd.snapshotter.v1.overlayfs/snapshots/186/fs:/var/lib/desktop-containerd/daemon/io.containerd.snapshotter.v1.overlayfs/snapshots/183/fs:/var/lib/desktop-containerd/daemon/io.containerd.snapshotter.v1.overlayfs/snapshots/182/fs:/var/lib/desktop-containerd/daemon/io.containerd.snapshotter.v1.overlayfs/snapshots/181/fs:/var/lib/desktop-containerd/daemon/io.containerd.snapshotter.v1.overlayfs/snapshots/180/fs:/var/lib/desktop-containerd/daemon/io.containerd.snapshotter.v1.overlayfs/snapshots/179/fs:/var/lib/desktop-containerd/daemon/io.containerd.snapshotter.v1.overlayfs/snapshots/178/fs:/var/lib/desktop-containerd/daemon/io.containerd.snapshotter.v1.overlayfs/snapshots/177/fs:/var/lib/desktop-containerd/daemon/io.containerd.snapshotter.v1.overlayfs/snapshots/176/fs:/var/lib/desktop-containerd/daemon/io.containerd.snapshotter.v1.overlayfs/snapshots/175/fs:/var/lib/desktop-containerd/daemon/io.containerd.snapshotter.v1.overlayfs/snapshots/174/fs:/var/lib/desktop-containerd/daemon/io.containerd.snapshotter.v1.overlayfs/snapshots/173/fs\", err: invalid argument",
+            "StartedAt": "2025-07-18T08:21:18.996769583Z",
+            "FinishedAt": "2025-07-18T08:21:28.428160046Z",
+            "Health": {
+                "Status": "unhealthy",
+                "FailingStreak": 0,
+                "Log": [
+                    {
+                        "Start": "2025-07-18T03:54:10.162669593Z",
+                        "End": "2025-07-18T03:54:10.198811676Z",
+                        "ExitCode": 127,
+                        "Output": "/bin/sh: 1: sqlcmd: not found\n"
+                    },
+                    {
+                        "Start": "2025-07-18T03:55:09.006499759Z",
+                        "End": "2025-07-18T03:55:09.065542967Z",
+                        "ExitCode": 127,
+                        "Output": "/bin/sh: 1: sqlcmd: not found\n"
+                    },
+                    {
+                        "Start": "2025-07-18T07:36:16.573941886Z",
+                        "End": "2025-07-18T07:36:16.610327511Z",
+                        "ExitCode": 127,
+                        "Output": "/bin/sh: 1: sqlcmd: not found\n"
+                    },
+                    {
+                        "Start": "2025-07-18T07:36:23.841282Z",
+                        "End": "2025-07-18T07:36:23.856888375Z",
+                        "ExitCode": -1,
+                        "Output": "OCI runtime exec failed: exec failed: unable to start container process: error executing setns process: exit status 1: unknown"
+                    },
+                    {
+                        "Start": "2025-07-18T08:21:24.107483211Z",
+                        "End": "2025-07-18T08:21:24.149834253Z",
+                        "ExitCode": 127,
+                        "Output": "/bin/sh: 1: sqlcmd: not found\n"
+                    }
+                ]
+            }
+        },
+        "Image": "sha256:902628a8be89e35dfb7895ca31d602974c7bafde4d583a0d0873844feb1c42cf",
+        "ResolvConfPath": "/var/lib/docker/containers/0250c6b1abee696e542295504804578a3d9b30e41078c22144ab5b48cd01bc84/resolv.conf",
+        "HostnamePath": "/var/lib/docker/containers/0250c6b1abee696e542295504804578a3d9b30e41078c22144ab5b48cd01bc84/hostname",
+        "HostsPath": "/var/lib/docker/containers/0250c6b1abee696e542295504804578a3d9b30e41078c22144ab5b48cd01bc84/hosts",
+        "LogPath": "/var/lib/docker/containers/0250c6b1abee696e542295504804578a3d9b30e41078c22144ab5b48cd01bc84/0250c6b1abee696e542295504804578a3d9b30e41078c22144ab5b48cd01bc84-json.log",
+        "Name": "/azure_sql_edge_tinhkhoan",
+        "RestartCount": 1,
+        "Driver": "overlayfs",
+        "Platform": "linux",
+        "MountLabel": "",
+        "ProcessLabel": "",
+        "AppArmorProfile": "",
+        "ExecIDs": null,
+        "HostConfig": {
+            "Binds": null,
+            "ContainerIDFile": "",
+            "LogConfig": {
+                "Type": "json-file",
+                "Config": {}
+            },
+            "NetworkMode": "bridge",
+            "PortBindings": {
+                "1433/tcp": [
+                    {
+                        "HostIp": "",
+                        "HostPort": "1433"
+                    }
+                ]
+            },
+            "RestartPolicy": {
+                "Name": "unless-stopped",
+                "MaximumRetryCount": 0
+            },
+            "AutoRemove": false,
+            "VolumeDriver": "",
+            "VolumesFrom": null,
+            "ConsoleSize": [
+                0,
+                0
+            ],
+            "CapAdd": null,
+            "CapDrop": null,
+            "CgroupnsMode": "private",
+            "Dns": [],
+            "DnsOptions": [],
+            "DnsSearch": [],
+            "ExtraHosts": null,
+            "GroupAdd": null,
+            "IpcMode": "private",
+            "Cgroup": "",
+            "Links": null,
+            "OomScoreAdj": 0,
+            "PidMode": "",
+            "Privileged": false,
+            "PublishAllPorts": false,
+            "ReadonlyRootfs": false,
+            "SecurityOpt": null,
+            "UTSMode": "",
+            "UsernsMode": "",
+            "ShmSize": 67108864,
+            "Runtime": "runc",
+            "Isolation": "",
+            "CpuShares": 0,
+            "Memory": 4294967296,
+            "NanoCpus": 2000000000,
+            "CgroupParent": "",
+            "BlkioWeight": 0,
+            "BlkioWeightDevice": [],
+            "BlkioDeviceReadBps": [],
+            "BlkioDeviceWriteBps": [],
+            "BlkioDeviceReadIOps": [],
+            "BlkioDeviceWriteIOps": [],
+            "CpuPeriod": 0,
+            "CpuQuota": 0,
+            "CpuRealtimePeriod": 0,
+            "CpuRealtimeRuntime": 0,
+            "CpusetCpus": "",
+            "CpusetMems": "",
+            "Devices": [],
+            "DeviceCgroupRules": null,
+            "DeviceRequests": null,
+            "MemoryReservation": 0,
+            "MemorySwap": 6442450944,
+            "MemorySwappiness": null,
+            "OomKillDisable": null,
+            "PidsLimit": null,
+            "Ulimits": [],
+            "CpuCount": 0,
+            "CpuPercent": 0,
+            "IOMaximumIOps": 0,
+            "IOMaximumBandwidth": 0,
+            "MaskedPaths": [
+                "/proc/asound",
+                "/proc/acpi",
+                "/proc/interrupts",
+                "/proc/kcore",
+                "/proc/keys",
+                "/proc/latency_stats",
+                "/proc/timer_list",
+                "/proc/timer_stats",
+                "/proc/sched_debug",
+                "/proc/scsi",
+                "/sys/firmware",
+                "/sys/devices/virtual/powercap"
+            ],
+            "ReadonlyPaths": [
+                "/proc/bus",
+                "/proc/fs",
+                "/proc/irq",
+                "/proc/sys",
+                "/proc/sysrq-trigger"
+            ]
+        },
+        "GraphDriver": {
+            "Data": null,
+            "Name": "overlayfs"
+        },
+        "Mounts": [
+            {
+                "Type": "volume",
+                "Name": "b8571510cab496a89dd96a17a42d0e7998fcce292c6db80e5c3f40250a4329f3",
+                "Source": "/var/lib/docker/volumes/b8571510cab496a89dd96a17a42d0e7998fcce292c6db80e5c3f40250a4329f3/_data",
+                "Destination": "/var/opt/mssql-extensibility",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Type": "volume",
+                "Name": "bcfdbf4a014301e65576583bc87ab631a077453ea039d9ecec48e1c84d055c35",
+                "Source": "/var/lib/docker/volumes/bcfdbf4a014301e65576583bc87ab631a077453ea039d9ecec48e1c84d055c35/_data",
+                "Destination": "/var/opt/mssql-extensibility/data",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            },
+            {
+                "Type": "volume",
+                "Name": "d80a8a913f6257054d5a3379866384ba7ffc7e73cbf94ad76a97f37bacc65ea1",
+                "Source": "/var/lib/docker/volumes/d80a8a913f6257054d5a3379866384ba7ffc7e73cbf94ad76a97f37bacc65ea1/_data",
+                "Destination": "/var/opt/mssql-extensibility/log",
+                "Driver": "local",
+                "Mode": "",
+                "RW": true,
+                "Propagation": ""
+            }
+        ],
+        "Config": {
+            "Hostname": "0250c6b1abee",
+            "Domainname": "",
+            "User": "mssql",
+            "AttachStdin": false,
+            "AttachStdout": false,
+            "AttachStderr": false,
+            "ExposedPorts": {
+                "1401/tcp": {},
+                "1433/tcp": {}
+            },
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "ACCEPT_EULA=Y",
+                "MSSQL_SA_PASSWORD=YourStrong@Password123",
+                "MSSQL_PID=Developer",
+                "MSSQL_MEMORY_LIMIT_MB=3072",
+                "MSSQL_COLLATION=SQL_Latin1_General_CP1_CI_AS",
+                "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "MSSQL_RPC_PORT=135",
+                "CONFIG_EDGE_BUILD=1",
+                "PAL_BOOT_WITH_MINIMAL_CONFIG=1",
+                "PAL_ENABLE_PAGE_ALIGNED_PE_FILE_CREATION=1",
+                "LD_LIBRARY_PATH=/opt/mssql/lib"
+            ],
+            "Cmd": [
+                "/bin/sh",
+                "-c",
+                "/opt/mssql/bin/launchpadd -usens=false -enableOutboundAccess=true -usesameuser=true -sqlGroup root -- -reparentOrphanedDescendants=true -useDefaultLaunchers=false \u0026 /app/asdepackage/AsdePackage \u0026 /opt/mssql/bin/sqlservr"
+            ],
+            "Healthcheck": {
+                "Test": [
+                    "CMD-SHELL",
+                    "sqlcmd -S localhost -U sa -P 'YourStrong@Password123' -Q 'SELECT 1' -b"
+                ],
+                "Interval": 30000000000,
+                "Timeout": 10000000000,
+                "StartPeriod": 60000000000,
+                "Retries": 5
+            },
+            "Image": "mcr.microsoft.com/azure-sql-edge:latest",
+            "Volumes": {
+                "/var/opt/mssql-extensibility": {},
+                "/var/opt/mssql-extensibility/data": {},
+                "/var/opt/mssql-extensibility/log": {}
+            },
+            "WorkingDir": "",
+            "Entrypoint": [
+                "/opt/mssql/bin/permissions_check.sh"
+            ],
+            "OnBuild": null,
+            "Labels": {
+                "com.azure.dev.image.build.sourceversion": "27968dae20b550ae4cfbd3692ee5bee8d0872ad2",
+                "com.azure.dev.image.system.teamfoundationcollectionuri": "https://dev.azure.com/tigerdid/",
+                "com.microsoft.product": "Microsoft SQL Server",
+                "com.microsoft.version": "15.0.2000.1574",
+                "org.opencontainers.image.ref.name": "ubuntu",
+                "org.opencontainers.image.version": "18.04",
+                "vendor": "Microsoft"
+            }
+        },
+        "NetworkSettings": {
+            "Bridge": "",
+            "SandboxID": "",
+            "SandboxKey": "",
+            "Ports": {},
+            "HairpinMode": false,
+            "LinkLocalIPv6Address": "",
+            "LinkLocalIPv6PrefixLen": 0,
+            "SecondaryIPAddresses": null,
+            "SecondaryIPv6Addresses": null,
+            "EndpointID": "",
+            "Gateway": "",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "IPAddress": "",
+            "IPPrefixLen": 0,
+            "IPv6Gateway": "",
+            "MacAddress": "",
+            "Networks": {
+                "bridge": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": null,
+                    "MacAddress": "",
+                    "DriverOpts": null,
+                    "GwPriority": 0,
+                    "NetworkID": "c3227a2f8d7efcc86d5dde53142ba896d753d734bb837ecab04fd28c66cb58bf",
+                    "EndpointID": "",
+                    "Gateway": "",
+                    "IPAddress": "",
+                    "IPPrefixLen": 0,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "DNSNames": null
+                }
+            }
+        },
+        "ImageManifestDescriptor": {
+            "mediaType": "application/vnd.docker.distribution.manifest.v2+json",
+            "digest": "sha256:3544cf1c6847c5cb60e071638c48b1b45d05a64eb2d88d0f83d44b397f40b186",
+            "size": 2634,
+            "platform": {
+                "architecture": "arm64",
+                "os": "linux",
+                "variant": "v8"
+            }
+        }
+    }
+]
