@@ -598,10 +598,10 @@ const loadBackgroundImages = async () => {
         backgroundNames.value.push(...additionalNames.slice(0, needed))
       }
 
-      console.log(
-        `🎉 Đã load ${backgroundImages.value.length} ảnh nền (${loadedImages.length} local + ${backgroundImages.value.length - loadedImages.length} online)!`
-      )
-      console.log('📋 Danh sách ảnh:', backgroundNames.value)
+      // console.log(
+      //   `🎉 Đã load ${backgroundImages.value.length} ảnh nền (${loadedImages.length} local + ${backgroundImages.value.length - loadedImages.length} online)!`
+      // )
+      // console.log('📋 Danh sách ảnh:', backgroundNames.value)
     }
   } catch (error) {
     console.error('❌ Lỗi nghiêm trọng khi load ảnh nền:', error)
