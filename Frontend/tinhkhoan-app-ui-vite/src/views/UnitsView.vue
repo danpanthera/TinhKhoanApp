@@ -217,12 +217,12 @@
                     box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
                   "
                   @mouseover="
-                    $event.target.style.backgroundColor = '#2980b9'
-                    $event.target.style.transform = 'scale(1.05)'
+                    $event.target.style.backgroundColor = '#2980b9';
+                    $event.target.style.transform = 'scale(1.05)';
                   "
                   @mouseout="
-                    $event.target.style.backgroundColor = '#3498db'
-                    $event.target.style.transform = 'scale(1)'
+                    $event.target.style.backgroundColor = '#3498db';
+                    $event.target.style.transform = 'scale(1)';
                   "
                 >
                   {{ expandedNodes.has(branch.Id) ? '−' : '+' }}
