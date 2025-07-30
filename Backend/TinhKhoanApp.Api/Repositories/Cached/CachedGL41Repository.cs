@@ -216,6 +216,15 @@ namespace TinhKhoanApp.Api.Repositories.Cached
         }
 
         /// <summary>
+        /// Đếm số lượng GL41 theo điều kiện
+        /// </summary>
+        public async Task<int> CountAsync(Expression<Func<GL41, bool>> predicate)
+        {
+            // Không cache kết quả này vì predicate có thể thay đổi liên tục
+            return await _repository.CountAsync(predicate);
+        }
+
+        /// <summary>
         /// Kiểm tra GL41 tồn tại theo điều kiện
         /// </summary>
         public async Task<bool> ExistsAsync(Expression<Func<GL41, bool>> predicate)
@@ -260,6 +269,19 @@ namespace TinhKhoanApp.Api.Repositories.Cached
         {
             _logger.LogDebug("Invalidating all GL41 cache");
             _cache.RemoveByPrefix(_cachePrefix);
+        }
+
+        /// <summary>
+        /// Lưu thay đổi và xóa cache
+        /// </summary>
+        public async Task<int> SaveChangesAsync()
+        {
+            var result = await _repository.SaveChangesAsync();
+            if (result > 0)
+            {
+                InvalidateAllCache();
+            }
+            return result;
         }
 
         #endregion

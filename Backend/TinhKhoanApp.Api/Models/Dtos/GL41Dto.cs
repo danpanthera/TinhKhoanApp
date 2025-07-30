@@ -21,7 +21,12 @@ namespace TinhKhoanApp.Api.Models.DTOs
         public string? MA_CN { get; set; }
 
         /// <summary>
-        /// Tài khoản kế toán
+        /// Loại tiền tệ
+        /// </summary>
+        public string? LOAI_TIEN { get; set; }
+
+        /// <summary>
+        /// Mã tài khoản kế toán
         /// </summary>
         public string? MA_TK { get; set; }
 
@@ -31,9 +36,9 @@ namespace TinhKhoanApp.Api.Models.DTOs
         public string? TEN_TK { get; set; }
 
         /// <summary>
-        /// Loại tiền tệ
+        /// Loại bút toán
         /// </summary>
-        public string? CCY { get; set; }
+        public string? LOAI_BT { get; set; }
 
         /// <summary>
         /// Dư nợ đầu kỳ
@@ -46,12 +51,22 @@ namespace TinhKhoanApp.Api.Models.DTOs
         public decimal? DC_DAUKY { get; set; }
 
         /// <summary>
-        /// Phát sinh ghi nợ
+        /// Số bút toán nợ
+        /// </summary>
+        public decimal? SBT_NO { get; set; }
+
+        /// <summary>
+        /// Số tiền ghi nợ
         /// </summary>
         public decimal? ST_GHINO { get; set; }
 
         /// <summary>
-        /// Phát sinh ghi có
+        /// Số bút toán có
+        /// </summary>
+        public decimal? SBT_CO { get; set; }
+
+        /// <summary>
+        /// Số tiền ghi có
         /// </summary>
         public decimal? ST_GHICO { get; set; }
 

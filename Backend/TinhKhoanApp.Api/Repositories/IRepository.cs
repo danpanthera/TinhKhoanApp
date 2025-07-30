@@ -59,8 +59,18 @@ namespace TinhKhoanApp.Api.Repositories
         Task<int> CountAsync();
 
         /// <summary>
+        /// Đếm số lượng entities theo điều kiện
+        /// </summary>
+        Task<int> CountAsync(Expression<Func<T, bool>> predicate);
+
+        /// <summary>
         /// Kiểm tra entity tồn tại
         /// </summary>
         Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate);
+
+        /// <summary>
+        /// Lưu các thay đổi
+        /// </summary>
+        Task<int> SaveChangesAsync();
     }
 }

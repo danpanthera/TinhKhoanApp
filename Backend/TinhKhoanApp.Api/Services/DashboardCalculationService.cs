@@ -219,7 +219,7 @@ namespace TinhKhoanApp.Api.Services
 
                 // Lấy dữ liệu chi tiết từ bảng LN01 mới nhất
                 var ln01Data = await _context.LN01s
-                    .Where(i => i.NGAY_DL.Date == date.Date)
+                    .Where(i => i.NGAY_DL.HasValue && i.NGAY_DL.Value.Date == date.Date)
                     .ToListAsync();
 
                 decimal totalDisbursement = 0;
@@ -236,8 +236,7 @@ namespace TinhKhoanApp.Api.Services
                         if (!belongsToBranch) continue;
 
                         // Lấy số tiền giải ngân từ LN01
-                        var disbursementStr = lnRecord.DISBURSEMENT_AMOUNT ?? "0";
-                        decimal.TryParse(disbursementStr, out var disbursement);
+                        var disbursement = lnRecord.DISBURSEMENT_AMOUNT ?? 0M;
                         if (disbursement > 0)
                         {
                             totalDisbursement += disbursement;
@@ -335,7 +334,7 @@ namespace TinhKhoanApp.Api.Services
 
                 // Lấy dữ liệu chi tiết từ bảng LN01 mới nhất
                 var ln01Data = await _context.LN01s
-                    .Where(i => i.NGAY_DL.Date == date.Date)
+                    .Where(i => i.NGAY_DL.HasValue && i.NGAY_DL.Value.Date == date.Date)
                     .ToListAsync();
 
                 decimal totalDebt = 0;
@@ -354,8 +353,7 @@ namespace TinhKhoanApp.Api.Services
                         if (!belongsToBranch) continue;
 
                         // Lấy số tiền dư nợ từ LN01
-                        var debtAmountStr = lnRecord.DU_NO ?? "0";
-                        decimal.TryParse(debtAmountStr, out var debtAmount);
+                        var debtAmount = lnRecord.DU_NO ?? 0M;
                         if (debtAmount > 0)
                         {
                             totalDebt += debtAmount;

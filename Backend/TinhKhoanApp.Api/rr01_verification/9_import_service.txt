@@ -1,0 +1,269 @@
+79-                    "GL01" => await ImportGL01DirectAsync(file, statementDate),
+80-                    "GL02" => await ImportGL02DirectAsync(file, statementDate),
+81-                    "GL41" => await ImportGL41DirectAsync(file, statementDate),
+82-                    "DPDA" => await ImportDPDADirectAsync(file, statementDate),
+83-                    "EI01" => await ImportEI01DirectAsync(file, statementDate),
+84:                    "RR01" => await ImportRR01DirectAsync(file, statementDate),
+85-                    _ => throw new NotSupportedException($"Data type {dataType} not supported")
+86-                };
+87-            }
+88-            catch (Exception ex)
+89-            {
+--
+464-            Console.WriteLine($"✅ [EI01_IMPORT] Filename validation passed, calling ImportGenericCSVAsync<EI01>");
+465-            return await ImportGenericCSVAsync<EI01>("EI01", "EI01", file, statementDate);
+466-        }
+467-
+468-        /// <summary>
+469:        /// Import RR01 - Risk rating data (uses special parser for non-standard CSV format)
+470-        /// </summary>
+471:        public async Task<DirectImportResult> ImportRR01DirectAsync(IFormFile file, string? statementDate = null)
+472-        {
+473-            var result = new DirectImportResult
+474-            {
+475-                FileName = file.FileName,
+476:                DataType = "RR01",
+477:                TargetTable = "RR01",
+478-                FileSizeBytes = file.Length,
+479-                StartTime = DateTime.UtcNow
+480-            };
+481-
+482-            try
+483-            {
+484:                _logger.LogInformation("🚀 [RR01_DIRECT] Bắt đầu Direct Import với special parser: {FileName}", file.FileName);
+485-
+486:                // Use special parser for RR01 format
+487:                var records = await ParseRR01SpecialFormatAsync<RR01>(file, statementDate);
+488-
+489-                result.ProcessedRecords = records.Count;
+490-                _logger.LogInformation("📊 [IMPORT_DEBUG] Parsed {RecordCount} records from CSV", records.Count);
+491-
+492-                if (records.Count > 0)
+493-                {
+494-                    // Bulk insert vào database
+495:                    var insertedCount = await BulkInsertGenericAsync(records, "RR01");
+496-                }
+497-
+498-                result.Success = true;
+499-                result.NgayDL = ExtractNgayDLFromFileName(file.FileName);
+500-                result.EndTime = DateTime.UtcNow;
+501-
+502:                _logger.LogInformation("✅ [RR01_DIRECT] Direct Import thành công: {RecordCount} records trong {Duration}ms",
+503-                    result.ProcessedRecords, result.Duration.TotalMilliseconds);
+504-
+505-                return result;
+506-            }
+507-            catch (Exception ex)
+508-            {
+509-                result.EndTime = DateTime.UtcNow;
+510-                result.Success = false;
+511-                result.ErrorMessage = ex.Message;
+512-
+513:                _logger.LogError(ex, "❌ [RR01_DIRECT] Lỗi import: {Error}", ex.Message);
+514-                return result;
+515-            }
+516-        }
+517-
+518-        #endregion
+--
+645-            if (upperFileName.Contains("LN03")) return "LN03";
+646-            if (upperFileName.Contains("GL01")) return "GL01";
+647-            if (upperFileName.Contains("GL02")) return "GL02";
+648-            if (upperFileName.Contains("GL41")) return "GL41";
+649-            if (upperFileName.Contains("CA01")) return "CA01";
+650:            if (upperFileName.Contains("RR01")) return "RR01";
+651-            if (upperFileName.Contains("TR01")) return "TR01";
+652-            if (upperFileName.Contains("DPDA")) return "DPDA";
+653-            if (upperFileName.Contains("EI01")) return "EI01";
+654-
+655-            return "DP01"; // Default
+--
+677-
+678-            return DateTime.Now.ToString("dd/MM/yyyy");
+679-        }
+680-
+681-        /// <summary>
+682:        /// Special parser for RR01 format which has non-standard CSV structure
+683-        /// Format: "field1,""field2"",""field3""..."
+684-        /// </summary>
+685:        private async Task<List<T>> ParseRR01SpecialFormatAsync<T>(IFormFile file, string? statementDate = null)
+686-            where T : class, new()
+687-        {
+688-            var records = new List<T>();
+689-            var ngayDL = ExtractNgayDLFromFileName(file.FileName);
+690-
+691:            _logger.LogInformation("🔍 [RR01_SPECIAL] Parsing RR01 special format: {FileName}", file.FileName);
+692-
+693-            using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 8 * 1024 * 1024);
+694-
+695-            // Read header line
+696-            var headerLine = await reader.ReadLineAsync();
+697-            if (string.IsNullOrEmpty(headerLine))
+698-            {
+699:                _logger.LogWarning("❌ [RR01_SPECIAL] No header found");
+700-                return records;
+701-            }
+702-
+703-            // Remove BOM if present
+704-            if (headerLine.StartsWith("\uFEFF"))
+705-            {
+706-                headerLine = headerLine.Substring(1);
+707-            }
+708-
+709-            var headers = headerLine.Split(',').Select(h => h.Trim()).ToArray();
+710:            _logger.LogInformation("📊 [RR01_SPECIAL] Headers: {Headers}", string.Join(", ", headers));
+711-
+712-            // Read data lines
+713-            string? dataLine;
+714-            int lineNumber = 1;
+715-            while ((dataLine = await reader.ReadLineAsync()) != null)
+--
+717-                lineNumber++;
+718-                if (string.IsNullOrWhiteSpace(dataLine)) continue;
+719-
+720-                try
+721-                {
+722:                    // Parse the special RR01 format: "field1,""field2"",""field3""..."
+723:                    var fields = ParseRR01DataLine(dataLine);
+724-
+725:                    _logger.LogDebug("🔍 [RR01_SPECIAL] Line {LineNumber}: Parsed {FieldCount} fields", lineNumber, fields.Length);
+726-
+727-                    if (fields.Length != headers.Length)
+728-                    {
+729:                        _logger.LogWarning("⚠️ [RR01_SPECIAL] Field count mismatch on line {LineNumber}: expected {Expected}, got {Actual}",
+730-                            lineNumber, headers.Length, fields.Length);
+731-                    }
+732-
+733-                    // Create model instance
+734-                    var record = new T();
+--
+754-                                var convertedValue = ConvertCsvValue(fieldValue, property.PropertyType);
+755-                                property.SetValue(record, convertedValue);
+756-                            }
+757-                            catch (Exception ex)
+758-                            {
+759:                                _logger.LogWarning("⚠️ [RR01_SPECIAL] Field conversion error for {Property}: {Error}",
+760-                                    property.Name, ex.Message);
+761-                            }
+762-                        }
+763-                    }
+764-
+--
+766-                    SetCommonProperties(record, ngayDL, file.FileName);
+767-                    records.Add(record);
+768-                }
+769-                catch (Exception ex)
+770-                {
+771:                    _logger.LogWarning("❌ [RR01_SPECIAL] Error parsing line {LineNumber}: {Error}", lineNumber, ex.Message);
+772-                }
+773-            }
+774-
+775:            _logger.LogInformation("✅ [RR01_SPECIAL] Parsed {RecordCount} records", records.Count);
+776-            return records;
+777-        }
+778-
+779-        /// <summary>
+780:        /// Parse RR01 data line with special format: "field1,""field2"",""field3""..."
+781-        /// </summary>
+782:        private string[] ParseRR01DataLine(string dataLine)
+783-        {
+784-            var fields = new List<string>();
+785-
+786-            // Remove outer quotes if present
+787-            var trimmed = dataLine.Trim();
+--
+828-            _logger.LogInformation("🔍 [CSV_PARSE] Bắt đầu parse CSV: {FileName}, Target Type: {TypeName}", file.FileName, typeof(T).Name);
+829-
+830-            using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 8 * 1024 * 1024);
+831-            using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
+832-
+833:            // 🔧 ENHANCED CSV Configuration để handle complex formats như RR01
+834-            csv.Context.Configuration.MissingFieldFound = null; // Bỏ qua fields không tồn tại
+835-            csv.Context.Configuration.HeaderValidated = null; // Bỏ qua validation header
+836-            csv.Context.Configuration.PrepareHeaderForMatch = args => args.Header.ToUpper(); // Case insensitive
+837-
+838-            // 🔧 FIX: Enhanced CSV parsing for complex formats with nested quotes
+--
+1674-                "CLOSE_DATE", "LOCAL_PROVIN_NAME", "LOCAL_DISTRICT_NAME", "LOCAL_WARD_NAME", "TERM_DP_TYPE",
+1675-                "TIME_DP_TYPE", "STATES_CODE", "ZIP_CODE", "COUNTRY_CODE", "TAX_CODE_LOCATION", "MA_CAN_BO_PT",
+1676-                "TEN_CAN_BO_PT", "PHONG_CAN_BO_PT", "NGUOI_NUOC_NGOAI", "QUOC_TICH", "MA_CAN_BO_AGRIBANK",
+1677-                "NGUOI_GIOI_THIEU", "TEN_NGUOI_GIOI_THIEU", "CONTRACT_COUTS_DAY", "SO_KY_AD_LSDB", "UNTBUSCD", "TYGIA"
+1678-            },
+1679:            ["RR01"] = new[]
+1680-            {
+1681-                "CN_LOAI_I", "BRCD", "MA_KH", "TEN_KH", "SO_LDS", "CCY", "SO_LAV", "LOAI_KH", "NGAY_GIAI_NGAN",
+1682-                "NGAY_DEN_HAN", "VAMC_FLG", "NGAY_XLRR", "DUNO_GOC_BAN_DAU", "DUNO_LAI_TICHLUY_BD", "DOC_DAUKY_DA_THU_HT",
+1683-                "DUNO_GOC_HIENTAI", "DUNO_LAI_HIENTAI", "DUNO_NGAN_HAN", "DUNO_TRUNG_HAN", "DUNO_DAI_HAN",
+1684-                "THU_GOC", "THU_LAI", "BDS", "DS", "TSK"
+--
+2083-        /// <summary>
+2084-        /// Kiểm tra data type có hợp lệ không
+2085-        /// </summary>
+2086-        private bool IsValidDataType(string dataType)
+2087-        {
+2088:            var validTypes = new[] { "DP01", "DPDA", "EI01", "GL01", "GL02", "GL41", "LN01", "LN03", "RR01" };
+2089-            return validTypes.Contains(dataType?.ToUpper());
+2090-        }
+2091-
+2092-        /// <summary>
+2093-        /// Xóa import records theo ngày và data type
+--
+2146-                "GL01" => "GL01",
+2147-                "GL02" => "GL02",
+2148-                "GL41" => "GL41",
+2149-                "DPDA" => "DPDA",
+2150-                "EI01" => "EI01",
+2151:                "RR01" => "RR01",
+2152-                _ => null
+2153-            };
+2154-        }
+2155-
+2156-        /// <summary>
+--
+2181-
+2182-                // Danh sách các bảng cần xóa dữ liệu
+2183-                var tablesToClear = new[]
+2184-                {
+2185-                    "DP01", "LN01", "LN03", "GL01", "GL02", "GL41",
+2186:                    "DPDA", "EI01", "RR01"
+2187-                };
+2188-
+2189-                int totalDataRecords = 0;
+2190-
+2191-                foreach (var tableName in tablesToClear)
+--
+2393-                var existingTables = new List<string>();
+2394-                string checkTablesSql = @"
+2395-                    SELECT TABLE_NAME
+2396-                    FROM INFORMATION_SCHEMA.TABLES
+2397-                    WHERE TABLE_TYPE='BASE TABLE'
+2398:                    AND TABLE_NAME IN ('DP01', 'DPDA', 'EI01', 'GL01', 'GL41', 'LN01', 'LN03', 'RR01')";
+2399-
+2400-                using (var checkCmd = new SqlCommand(checkTablesSql, connection))
+2401-                {
+2402-                    using var checkReader = await checkCmd.ExecuteReaderAsync();
+2403-                    while (await checkReader.ReadAsync())
+--
+2420-                }
+2421-
+2422-                sqlBuilder.Append(") SELECT TableName, RecordCount FROM TableCounts ORDER BY TableName");
+2423-
+2424-                // Đặt giá trị mặc định 0 cho các bảng không tồn tại
+2425:                foreach (var table in new[] { "DP01", "DPDA", "EI01", "GL01", "GL41", "LN01", "LN03", "RR01" })
+2426-                {
+2427-                    counts[table] = 0; // Giá trị mặc định
+2428-                }
+2429-
+2430-                // Nếu không có bảng nào tồn tại, trả về counts với tất cả giá trị 0
+--
+3005-                "GL01" => "GL01",      // Basic Table - 27 business columns (NO temporal)
+3006-                "GL02" => "GL02",      // Basic Table - 17 business columns (NO temporal)
+3007-                "GL41" => "GL41",      // Temporal Table - 13 business columns
+3008-                "LN01" => "LN01",      // Temporal Table - 79 business columns
+3009-                "LN03" => "LN03",      // Temporal Table - 17 business columns
+3010:                "RR01" => "RR01",      // Temporal Table - 25 business columns
+3011-                // Legacy tables
+3012-                "CA01" => "CA01",
+3013-                "TR01" => "TR01",
+3014-                _ => throw new ArgumentException($"Unsupported data type: {dataType}")
+3015-            };

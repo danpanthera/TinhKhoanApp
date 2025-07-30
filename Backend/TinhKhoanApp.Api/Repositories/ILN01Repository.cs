@@ -12,7 +12,7 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Lấy dữ liệu LN01 gần đây theo số lượng chỉ định
         /// </summary>
-        Task<IEnumerable<LN01>> GetRecentAsync(int count = 10);
+        new Task<IEnumerable<LN01>> GetRecentAsync(int count = 10);
 
         /// <summary>
         /// Lấy dữ liệu LN01 theo ngày
@@ -62,7 +62,6 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Trả về DbContext cho việc sử dụng trong service layer
         /// </summary>
-        /// <returns>DbContext instance</returns>
-        new DbContext GetDbContext();
+        DbContext GetDbContext();
     }
 }

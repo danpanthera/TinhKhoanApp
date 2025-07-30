@@ -1,5 +1,7 @@
 using TinhKhoanApp.Api.Repositories;
 using TinhKhoanApp.Api.Services.DataServices;
+using TinhKhoanApp.Api.Services;
+using TinhKhoanApp.Api.Services.Interfaces;
 
 namespace TinhKhoanApp.Api.Extensions
 {
@@ -22,9 +24,9 @@ namespace TinhKhoanApp.Api.Extensions
             services.AddScoped<IGL02Repository, GL02Repository>();
             services.AddScoped<IDPDARepository, DPDARepository>();
             services.AddScoped<IEI01Repository, EI01Repository>();
+            services.AddScoped<ILN01Repository, LN01Repository>();
 
             // TODO: Add other repositories as needed
-            // services.AddScoped<ILN01Repository, LN01Repository>();
 
             return services;
         }
@@ -36,10 +38,11 @@ namespace TinhKhoanApp.Api.Extensions
         {
             // Register data services
             services.AddScoped<IDataPreviewService, DataPreviewService>();
-            services.AddScoped<IGL01DataService, GL01DataService>();
-            services.AddScoped<IGL02DataService, GL02DataService>();
-            services.AddScoped<IDPDADataService, DPDADataService>();
-            services.AddScoped<IEI01DataService, EI01DataService>();
+            // services.AddScoped<IGL01DataService, GL01DataService>();
+            // services.AddScoped<IGL02DataService, GL02DataService>();
+            // services.AddScoped<IDPDADataService, DPDADataService>();
+            // services.AddScoped<IEI01DataService, EI01DataService>();
+            services.AddScoped<ILN01Service, LN01Service>();
 
             // TODO: Add other services as needed
 

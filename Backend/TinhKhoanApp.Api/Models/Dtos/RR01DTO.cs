@@ -11,38 +11,43 @@ namespace TinhKhoanApp.Api.Models.DTOs
         // System Column - NGAY_DL first (extracted from filename)
         public DateTime NGAY_DL { get; set; }
 
-        // Business Columns - Exact CSV order
+        // Business Columns - Exact CSV order with proper data types
         public string CN_LOAI_I { get; set; } = string.Empty;
         public string BRCD { get; set; } = string.Empty;
         public string MA_KH { get; set; } = string.Empty;
         public string TEN_KH { get; set; } = string.Empty;
-        public string SO_LDS { get; set; } = string.Empty;
+        public decimal? SO_LDS { get; set; }
         public string CCY { get; set; } = string.Empty;
         public string SO_LAV { get; set; } = string.Empty;
         public string LOAI_KH { get; set; } = string.Empty;
-        public string NGAY_GIAI_NGAN { get; set; } = string.Empty;
-        public string NGAY_DEN_HAN { get; set; } = string.Empty;
+        public DateTime? NGAY_GIAI_NGAN { get; set; }
+        public DateTime? NGAY_DEN_HAN { get; set; }
         public string VAMC_FLG { get; set; } = string.Empty;
-        public string NGAY_XLRR { get; set; } = string.Empty;
-        public string DUNO_GOC_BAN_DAU { get; set; } = string.Empty;
-        public string DUNO_LAI_TICHLUY_BD { get; set; } = string.Empty;
-        public string DOC_DAUKY_DA_THU_HT { get; set; } = string.Empty;
-        public string DUNO_GOC_HIENTAI { get; set; } = string.Empty;
-        public string DUNO_LAI_HIENTAI { get; set; } = string.Empty;
-        public string DUNO_NGAN_HAN { get; set; } = string.Empty;
-        public string DUNO_TRUNG_HAN { get; set; } = string.Empty;
-        public string DUNO_DAI_HAN { get; set; } = string.Empty;
-        public string THU_GOC { get; set; } = string.Empty;
-        public string THU_LAI { get; set; } = string.Empty;
-        public string BDS { get; set; } = string.Empty;
-        public string DS { get; set; } = string.Empty;
-        public string TSK { get; set; } = string.Empty;
+        public DateTime? NGAY_XLRR { get; set; }
+        public decimal? DUNO_GOC_BAN_DAU { get; set; }
+        public decimal? DUNO_LAI_TICHLUY_BD { get; set; }
+        public decimal? DOC_DAUKY_DA_THU_HT { get; set; }
+        public decimal? DUNO_GOC_HIENTAI { get; set; }
+        public decimal? DUNO_LAI_HIENTAI { get; set; }
+        public decimal? DUNO_NGAN_HAN { get; set; }
+        public decimal? DUNO_TRUNG_HAN { get; set; }
+        public decimal? DUNO_DAI_HAN { get; set; }
+        public decimal? THU_GOC { get; set; }
+        public decimal? THU_LAI { get; set; }
+        public decimal? BDS { get; set; }
+        public decimal? DS { get; set; }
+        public decimal? TSK { get; set; }
 
         // System columns
         public long Id { get; set; }
         public DateTime CREATED_DATE { get; set; }
         public DateTime UPDATED_DATE { get; set; }
         public string FILE_NAME { get; set; } = string.Empty;
+        public string? IMPORT_BATCH_ID { get; set; }
+        public string? DATA_SOURCE { get; set; }
+        public string? PROCESSING_STATUS { get; set; }
+        public string? ERROR_MESSAGE { get; set; }
+        public string? ROW_HASH { get; set; }
 
         /// <summary>
         /// Maps RR01 entity to RR01DTO
@@ -80,7 +85,12 @@ namespace TinhKhoanApp.Api.Models.DTOs
                 TSK = entity.TSK,
                 CREATED_DATE = entity.CREATED_DATE,
                 UPDATED_DATE = entity.UPDATED_DATE,
-                FILE_NAME = entity.FILE_NAME
+                FILE_NAME = entity.FILE_NAME,
+                IMPORT_BATCH_ID = entity.IMPORT_BATCH_ID,
+                DATA_SOURCE = entity.DATA_SOURCE,
+                PROCESSING_STATUS = entity.PROCESSING_STATUS,
+                ERROR_MESSAGE = entity.ERROR_MESSAGE,
+                ROW_HASH = entity.ROW_HASH
             };
         }
     }
@@ -93,36 +103,36 @@ namespace TinhKhoanApp.Api.Models.DTOs
         [Required]
         public DateTime NGAY_DL { get; set; }
 
-        // Business fields
+        // Business fields with proper data types
         public string CN_LOAI_I { get; set; } = string.Empty;
         public string BRCD { get; set; } = string.Empty;
-
+        
         [Required]
         public string MA_KH { get; set; } = string.Empty;
-
+        
         public string TEN_KH { get; set; } = string.Empty;
-        public string SO_LDS { get; set; } = string.Empty;
+        public decimal? SO_LDS { get; set; }
         public string CCY { get; set; } = string.Empty;
         public string SO_LAV { get; set; } = string.Empty;
         public string LOAI_KH { get; set; } = string.Empty;
-        public string NGAY_GIAI_NGAN { get; set; } = string.Empty;
-        public string NGAY_DEN_HAN { get; set; } = string.Empty;
+        public DateTime? NGAY_GIAI_NGAN { get; set; }
+        public DateTime? NGAY_DEN_HAN { get; set; }
         public string VAMC_FLG { get; set; } = string.Empty;
-        public string NGAY_XLRR { get; set; } = string.Empty;
-        public string DUNO_GOC_BAN_DAU { get; set; } = string.Empty;
-        public string DUNO_LAI_TICHLUY_BD { get; set; } = string.Empty;
-        public string DOC_DAUKY_DA_THU_HT { get; set; } = string.Empty;
-        public string DUNO_GOC_HIENTAI { get; set; } = string.Empty;
-        public string DUNO_LAI_HIENTAI { get; set; } = string.Empty;
-        public string DUNO_NGAN_HAN { get; set; } = string.Empty;
-        public string DUNO_TRUNG_HAN { get; set; } = string.Empty;
-        public string DUNO_DAI_HAN { get; set; } = string.Empty;
-        public string THU_GOC { get; set; } = string.Empty;
-        public string THU_LAI { get; set; } = string.Empty;
-        public string BDS { get; set; } = string.Empty;
-        public string DS { get; set; } = string.Empty;
-        public string TSK { get; set; } = string.Empty;
-
+        public DateTime? NGAY_XLRR { get; set; }
+        public decimal? DUNO_GOC_BAN_DAU { get; set; }
+        public decimal? DUNO_LAI_TICHLUY_BD { get; set; }
+        public decimal? DOC_DAUKY_DA_THU_HT { get; set; }
+        public decimal? DUNO_GOC_HIENTAI { get; set; }
+        public decimal? DUNO_LAI_HIENTAI { get; set; }
+        public decimal? DUNO_NGAN_HAN { get; set; }
+        public decimal? DUNO_TRUNG_HAN { get; set; }
+        public decimal? DUNO_DAI_HAN { get; set; }
+        public decimal? THU_GOC { get; set; }
+        public decimal? THU_LAI { get; set; }
+        public decimal? BDS { get; set; }
+        public decimal? DS { get; set; }
+        public decimal? TSK { get; set; }
+        
         /// <summary>
         /// Maps CreateRR01DTO to RR01 entity
         /// </summary>
@@ -157,8 +167,7 @@ namespace TinhKhoanApp.Api.Models.DTOs
                 DS = DS,
                 TSK = TSK,
                 CREATED_DATE = DateTime.Now,
-                UPDATED_DATE = DateTime.Now,
-                FILE_NAME = "Manual Entry"
+                UPDATED_DATE = DateTime.Now
             };
         }
     }
@@ -168,7 +177,6 @@ namespace TinhKhoanApp.Api.Models.DTOs
     /// </summary>
     public class UpdateRR01DTO
     {
-        // Business fields that can be updated
         public string? TEN_KH { get; set; }
         public string? SO_LDS { get; set; }
         public string? CCY { get; set; }
@@ -191,38 +199,5 @@ namespace TinhKhoanApp.Api.Models.DTOs
         public string? BDS { get; set; }
         public string? DS { get; set; }
         public string? TSK { get; set; }
-
-        /// <summary>
-        /// Updates the entity with values from this DTO
-        /// </summary>
-        public void UpdateEntity(RR01 entity)
-        {
-            // Update only non-null properties
-            if (TEN_KH != null) entity.TEN_KH = TEN_KH;
-            if (SO_LDS != null) entity.SO_LDS = SO_LDS;
-            if (CCY != null) entity.CCY = CCY;
-            if (SO_LAV != null) entity.SO_LAV = SO_LAV;
-            if (LOAI_KH != null) entity.LOAI_KH = LOAI_KH;
-            if (NGAY_GIAI_NGAN != null) entity.NGAY_GIAI_NGAN = NGAY_GIAI_NGAN;
-            if (NGAY_DEN_HAN != null) entity.NGAY_DEN_HAN = NGAY_DEN_HAN;
-            if (VAMC_FLG != null) entity.VAMC_FLG = VAMC_FLG;
-            if (NGAY_XLRR != null) entity.NGAY_XLRR = NGAY_XLRR;
-            if (DUNO_GOC_BAN_DAU != null) entity.DUNO_GOC_BAN_DAU = DUNO_GOC_BAN_DAU;
-            if (DUNO_LAI_TICHLUY_BD != null) entity.DUNO_LAI_TICHLUY_BD = DUNO_LAI_TICHLUY_BD;
-            if (DOC_DAUKY_DA_THU_HT != null) entity.DOC_DAUKY_DA_THU_HT = DOC_DAUKY_DA_THU_HT;
-            if (DUNO_GOC_HIENTAI != null) entity.DUNO_GOC_HIENTAI = DUNO_GOC_HIENTAI;
-            if (DUNO_LAI_HIENTAI != null) entity.DUNO_LAI_HIENTAI = DUNO_LAI_HIENTAI;
-            if (DUNO_NGAN_HAN != null) entity.DUNO_NGAN_HAN = DUNO_NGAN_HAN;
-            if (DUNO_TRUNG_HAN != null) entity.DUNO_TRUNG_HAN = DUNO_TRUNG_HAN;
-            if (DUNO_DAI_HAN != null) entity.DUNO_DAI_HAN = DUNO_DAI_HAN;
-            if (THU_GOC != null) entity.THU_GOC = THU_GOC;
-            if (THU_LAI != null) entity.THU_LAI = THU_LAI;
-            if (BDS != null) entity.BDS = BDS;
-            if (DS != null) entity.DS = DS;
-            if (TSK != null) entity.TSK = TSK;
-
-            // Always update the timestamp
-            entity.UPDATED_DATE = DateTime.Now;
-        }
     }
 }

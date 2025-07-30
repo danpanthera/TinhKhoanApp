@@ -9,20 +9,25 @@ namespace TinhKhoanApp.Api.Repositories
     /// </summary>
     public class LN01Repository : Repository<LN01>, ILN01Repository
     {
-        private readonly ApplicationDbContext _context;
+        /// <summary>
+        /// DbContext của ứng dụng
+        /// </summary>
+        private readonly new ApplicationDbContext _context;
 
+        /// <summary>
+        /// Khởi tạo repository với DbContext
+        /// </summary>
+        /// <param name="context">DbContext của ứng dụng</param>
         public LN01Repository(ApplicationDbContext context) : base(context)
         {
             _context = context;
         }
 
-        /// <summary>
-        /// Trả về DbContext cho việc sử dụng trong service layer
-        /// </summary>
+        /// <inheritdoc/>
         public DbContext GetDbContext() => _context;
 
         /// <inheritdoc/>
-        public async Task<IEnumerable<LN01>> GetRecentAsync(int count = 10)
+        public new async Task<IEnumerable<LN01>> GetRecentAsync(int count = 10)
         {
             return await _context.LN01s
                 .OrderByDescending(x => x.NGAY_DL)
@@ -98,7 +103,7 @@ namespace TinhKhoanApp.Api.Repositories
                 }
             }
 
-            return await query.SumAsync(x => x.DU_NO_THUC_TE ?? 0);
+            return await query.SumAsync(x => x.DU_NO ?? 0);
         }
 
         /// <inheritdoc/>
@@ -125,7 +130,7 @@ namespace TinhKhoanApp.Api.Repositories
                 }
             }
 
-            return await query.SumAsync(x => x.DU_NO_THUC_TE ?? 0);
+            return await query.SumAsync(x => x.DU_NO ?? 0);
         }
 
         /// <inheritdoc/>

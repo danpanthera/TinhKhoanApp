@@ -20,12 +20,15 @@ namespace TinhKhoanApp.Api.Services
     /// Direct Import Service - Import trực tiếp vào bảng riêng biệt sử dụng SqlBulkCopy
     /// Loại bỏ hoàn toàn ImportedDataItems để tăng hiệu năng 2-5x
     /// </summary>
-    public class DirectImportService
+    public partial class DirectImportService : IDirectImportService
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<DirectImportService> _logger;
         private readonly string _connectionString;
 
+        /// <summary>
+        /// Constructor for DirectImportService - initializes database context, logger and connection string
+        /// </summary>
         public DirectImportService(
             ApplicationDbContext context,
             ILogger<DirectImportService> logger,
@@ -202,23 +205,154 @@ namespace TinhKhoanApp.Api.Services
             var batchSize = 100000;
             var batch = new List<LN01>();
 
-            // Read data rows and convert to LN01 objects
+            // Read data rows and convert to LN01 objects with proper data type conversion
             while (await csvReader.ReadAsync())
             {
                 var ln01 = new LN01();
                 ln01.NGAY_DL = ngayDL;
                 ln01.FILE_NAME = file.FileName;
+                ln01.CREATED_DATE = DateTime.Now;
 
                 // Map CSV columns to LN01 properties (exactly 79 business columns)
                 if (csvReader.ColumnCount >= 79)
                 {
+                    // String fields
                     ln01.BRCD = csvReader.GetField(0) ?? "";
                     ln01.CUSTSEQ = csvReader.GetField(1) ?? "";
                     ln01.CUSTNM = csvReader.GetField(2) ?? "";
                     ln01.TAI_KHOAN = csvReader.GetField(3) ?? "";
                     ln01.CCY = csvReader.GetField(4) ?? "";
-                    ln01.DU_NO = csvReader.GetField(5) ?? "";
-                    // ... etc for all 79 columns (for now just set a few key ones)
+
+                    // Decimal field - use ConvertCsvValue for proper parsing
+                    ln01.DU_NO = (decimal?)ConvertCsvValue(csvReader.GetField(5) ?? "", typeof(decimal?));
+
+                    ln01.DSBSSEQ = csvReader.GetField(6) ?? "";
+
+                    // DateTime fields - use ConvertCsvValue for proper parsing
+                    ln01.TRANSACTION_DATE = (DateTime?)ConvertCsvValue(csvReader.GetField(7) ?? "", typeof(DateTime?));
+                    ln01.DSBSDT = (DateTime?)ConvertCsvValue(csvReader.GetField(8) ?? "", typeof(DateTime?));
+
+                    ln01.DISBUR_CCY = csvReader.GetField(9) ?? "";
+
+                    // Decimal field
+                    ln01.DISBURSEMENT_AMOUNT = (decimal?)ConvertCsvValue(csvReader.GetField(10) ?? "", typeof(decimal?));
+
+                    // DateTime field
+                    ln01.DSBSMATDT = (DateTime?)ConvertCsvValue(csvReader.GetField(11) ?? "", typeof(DateTime?));
+
+                    ln01.BSRTCD = csvReader.GetField(12) ?? "";
+
+                    // Decimal field
+                    ln01.INTEREST_RATE = (decimal?)ConvertCsvValue(csvReader.GetField(13) ?? "", typeof(decimal?));
+
+                    ln01.APPRSEQ = csvReader.GetField(14) ?? "";
+
+                    // DateTime field
+                    ln01.APPRDT = (DateTime?)ConvertCsvValue(csvReader.GetField(15) ?? "", typeof(DateTime?));
+
+                    ln01.APPR_CCY = csvReader.GetField(16) ?? "";
+
+                    // Decimal field
+                    ln01.APPRAMT = (decimal?)ConvertCsvValue(csvReader.GetField(17) ?? "", typeof(decimal?));
+
+                    // DateTime field
+                    ln01.APPRMATDT = (DateTime?)ConvertCsvValue(csvReader.GetField(18) ?? "", typeof(DateTime?));
+
+                    ln01.LOAN_TYPE = csvReader.GetField(19) ?? "";
+                    ln01.FUND_RESOURCE_CODE = csvReader.GetField(20) ?? "";
+                    ln01.FUND_PURPOSE_CODE = csvReader.GetField(21) ?? "";
+
+                    // Decimal field
+                    ln01.REPAYMENT_AMOUNT = (decimal?)ConvertCsvValue(csvReader.GetField(22) ?? "", typeof(decimal?));
+
+                    // DateTime field
+                    ln01.NEXT_REPAY_DATE = (DateTime?)ConvertCsvValue(csvReader.GetField(23) ?? "", typeof(DateTime?));
+
+                    // Decimal field
+                    ln01.NEXT_REPAY_AMOUNT = (decimal?)ConvertCsvValue(csvReader.GetField(24) ?? "", typeof(decimal?));
+
+                    // DateTime field
+                    ln01.NEXT_INT_REPAY_DATE = (DateTime?)ConvertCsvValue(csvReader.GetField(25) ?? "", typeof(DateTime?));
+
+                    ln01.OFFICER_ID = csvReader.GetField(26) ?? "";
+                    ln01.OFFICER_NAME = csvReader.GetField(27) ?? "";
+
+                    // Decimal fields
+                    ln01.INTEREST_AMOUNT = (decimal?)ConvertCsvValue(csvReader.GetField(28) ?? "", typeof(decimal?));
+                    ln01.PASTDUE_INTEREST_AMOUNT = (decimal?)ConvertCsvValue(csvReader.GetField(29) ?? "", typeof(decimal?));
+                    ln01.TOTAL_INTEREST_REPAY_AMOUNT = (decimal?)ConvertCsvValue(csvReader.GetField(30) ?? "", typeof(decimal?));
+
+                    ln01.CUSTOMER_TYPE_CODE = csvReader.GetField(31) ?? "";
+                    ln01.CUSTOMER_TYPE_CODE_DETAIL = csvReader.GetField(32) ?? "";
+                    ln01.TRCTCD = csvReader.GetField(33) ?? "";
+                    ln01.TRCTNM = csvReader.GetField(34) ?? "";
+                    ln01.ADDR1 = csvReader.GetField(35) ?? "";
+                    ln01.PROVINCE = csvReader.GetField(36) ?? "";
+                    ln01.LCLPROVINNM = csvReader.GetField(37) ?? "";
+                    ln01.DISTRICT = csvReader.GetField(38) ?? "";
+                    ln01.LCLDISTNM = csvReader.GetField(39) ?? "";
+                    ln01.COMMCD = csvReader.GetField(40) ?? "";
+                    ln01.LCLWARDNM = csvReader.GetField(41) ?? "";
+
+                    // DateTime field
+                    ln01.LAST_REPAY_DATE = (DateTime?)ConvertCsvValue(csvReader.GetField(42) ?? "", typeof(DateTime?));
+
+                    ln01.SECURED_PERCENT = csvReader.GetField(43) ?? "";
+                    ln01.NHOM_NO = csvReader.GetField(44) ?? "";
+
+                    // DateTime field
+                    ln01.LAST_INT_CHARGE_DATE = (DateTime?)ConvertCsvValue(csvReader.GetField(45) ?? "", typeof(DateTime?));
+
+                    ln01.EXEMPTINT = csvReader.GetField(46) ?? "";
+                    ln01.EXEMPTINTTYPE = csvReader.GetField(47) ?? "";
+
+                    // Decimal field
+                    ln01.EXEMPTINTAMT = (decimal?)ConvertCsvValue(csvReader.GetField(48) ?? "", typeof(decimal?));
+
+                    ln01.GRPNO = csvReader.GetField(49) ?? "";
+                    ln01.BUSCD = csvReader.GetField(50) ?? "";
+                    ln01.BSNSSCLTPCD = csvReader.GetField(51) ?? "";
+                    ln01.USRIDOP = csvReader.GetField(52) ?? "";
+
+                    // Decimal fields
+                    ln01.ACCRUAL_AMOUNT = (decimal?)ConvertCsvValue(csvReader.GetField(53) ?? "", typeof(decimal?));
+                    ln01.ACCRUAL_AMOUNT_END_OF_MONTH = (decimal?)ConvertCsvValue(csvReader.GetField(54) ?? "", typeof(decimal?));
+
+                    ln01.INTCMTH = csvReader.GetField(55) ?? "";
+                    ln01.INTRPYMTH = csvReader.GetField(56) ?? "";
+                    ln01.INTTRMMTH = csvReader.GetField(57) ?? "";
+                    ln01.YRDAYS = csvReader.GetField(58) ?? "";
+                    ln01.REMARK = csvReader.GetField(59) ?? "";
+                    ln01.CHITIEU = csvReader.GetField(60) ?? "";
+                    ln01.CTCV = csvReader.GetField(61) ?? "";
+                    ln01.CREDIT_LINE_YPE = csvReader.GetField(62) ?? "";
+                    ln01.INT_LUMPSUM_PARTIAL_TYPE = csvReader.GetField(63) ?? "";
+                    ln01.INT_PARTIAL_PAYMENT_TYPE = csvReader.GetField(64) ?? "";
+                    ln01.INT_PAYMENT_INTERVAL = csvReader.GetField(65) ?? "";
+                    ln01.AN_HAN_LAI = csvReader.GetField(66) ?? "";
+                    ln01.PHUONG_THUC_GIAI_NGAN_1 = csvReader.GetField(67) ?? "";
+                    ln01.TAI_KHOAN_GIAI_NGAN_1 = csvReader.GetField(68) ?? "";
+
+                    // Decimal field
+                    ln01.SO_TIEN_GIAI_NGAN_1 = (decimal?)ConvertCsvValue(csvReader.GetField(69) ?? "", typeof(decimal?));
+
+                    ln01.PHUONG_THUC_GIAI_NGAN_2 = csvReader.GetField(70) ?? "";
+                    ln01.TAI_KHOAN_GIAI_NGAN_2 = csvReader.GetField(71) ?? "";
+
+                    // Decimal field
+                    ln01.SO_TIEN_GIAI_NGAN_2 = (decimal?)ConvertCsvValue(csvReader.GetField(72) ?? "", typeof(decimal?));
+
+                    ln01.CMT_HC = csvReader.GetField(73) ?? "";
+
+                    // DateTime field
+                    ln01.NGAY_SINH = (DateTime?)ConvertCsvValue(csvReader.GetField(74) ?? "", typeof(DateTime?));
+
+                    ln01.MA_CB_AGRI = csvReader.GetField(75) ?? "";
+                    ln01.MA_NGANH_KT = csvReader.GetField(76) ?? "";
+
+                    // Decimal field
+                    ln01.TY_GIA = (decimal?)ConvertCsvValue(csvReader.GetField(77) ?? "", typeof(decimal?));
+
                     ln01.OFFICER_IPCAS = csvReader.GetField(78) ?? "";
                 }
 
@@ -897,7 +1031,7 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Set common properties for all entities
+        /// Set common properties for all entities like NGAY_DL, FILE_NAME, CREATED_DATE, etc.
         /// </summary>
         private void SetCommonProperties<T>(T record, string ngayDL, string fileName)
         {
@@ -1031,8 +1165,7 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// <summary>
-        /// Generic bulk insert method với improved column mapping
+        /// Generic bulk insert method with improved column mapping
         /// </summary>
         private async Task<int> BulkInsertGenericAsync<T>(List<T> records, string tableName)
         {
@@ -1318,7 +1451,7 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Convert CSV string value to proper type với number formatting chuẩn và enhanced cleaning
+        /// Convert CSV string value to proper type with enhanced cleaning and formatting support
         /// </summary>
         private object? ConvertCsvValue(string csvValue, Type targetType)
         {
@@ -1327,15 +1460,7 @@ namespace TinhKhoanApp.Api.Services
 
             try
             {
-                // 🔧 DEBUG: Log ALL conversion attempts with specific focus on DPDA datetime fields
-                _logger.LogInformation("🎯 [CONVERT] Converting '{Value}' to {Type}", csvValue, targetType.Name);
-
-                if (targetType == typeof(DateTime) || targetType == typeof(DateTime?))
-                {
-                    _logger.LogInformation("🔍 [CONVERT] DATETIME CONVERSION: '{Value}' to {Type}", csvValue, targetType.Name);
-                }
-
-                // 🔧 ENHANCED: Advanced string cleaning for complex CSV formats
+                // Enhanced string cleaning for complex CSV formats
                 var cleanedValue = csvValue.Trim();
 
                 // Remove BOM if present
@@ -1359,7 +1484,7 @@ namespace TinhKhoanApp.Api.Services
 
                 if (underlyingType == typeof(string))
                 {
-                    // 🔧 For strings, apply additional cleaning for bank data
+                    // For strings, apply additional cleaning for bank data
                     var result = cleanedValue;
 
                     // Handle special characters in bank data
@@ -1372,7 +1497,7 @@ namespace TinhKhoanApp.Api.Services
                 }
                 else if (underlyingType == typeof(decimal))
                 {
-                    // 🔧 ENHANCED: Use cleaned value for number parsing and handle quote prefix
+                    // Enhanced decimal parsing for financial data
                     var normalizedValue = cleanedValue;
 
                     // Remove leading single quote that's common in bank CSV exports
@@ -1381,31 +1506,65 @@ namespace TinhKhoanApp.Api.Services
                         normalizedValue = normalizedValue.Substring(1);
                     }
 
+                    // Remove all commas and spaces for proper decimal parsing
                     normalizedValue = normalizedValue.Replace(",", "").Replace(" ", "").Trim();
-                    return decimal.TryParse(normalizedValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var decimalResult)
-                        ? decimalResult : (decimal?)null;
+
+                    if (string.IsNullOrWhiteSpace(normalizedValue))
+                        return null;
+
+                    if (decimal.TryParse(normalizedValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var decimalResult))
+                    {
+                        _logger.LogDebug("✅ [CONVERT] Decimal success: '{Original}' -> '{Cleaned}' -> {Result}",
+                            csvValue, normalizedValue, decimalResult);
+                        return decimalResult;
+                    }
+
+                    _logger.LogWarning("⚠️ [CONVERT] Decimal conversion failed: '{Original}' -> '{Cleaned}'",
+                        csvValue, normalizedValue);
+                    return null;
                 }
                 else if (underlyingType == typeof(int))
                 {
                     var normalizedValue = cleanedValue.Replace(",", "").Replace(" ", "").Trim();
-                    return int.TryParse(normalizedValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var intResult)
-                        ? intResult : (int?)null;
+
+                    if (string.IsNullOrWhiteSpace(normalizedValue))
+                        return null;
+
+                    if (int.TryParse(normalizedValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var intResult))
+                    {
+                        return intResult;
+                    }
+                    return null;
                 }
                 else if (underlyingType == typeof(long))
                 {
                     var normalizedValue = cleanedValue.Replace(",", "").Replace(" ", "").Trim();
-                    return long.TryParse(normalizedValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var longResult)
-                        ? longResult : (long?)null;
+
+                    if (string.IsNullOrWhiteSpace(normalizedValue))
+                        return null;
+
+                    if (long.TryParse(normalizedValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var longResult))
+                    {
+                        return longResult;
+                    }
+                    return null;
                 }
                 else if (underlyingType == typeof(double))
                 {
                     var normalizedValue = cleanedValue.Replace(",", "").Replace(" ", "").Trim();
-                    return double.TryParse(normalizedValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var doubleResult)
-                        ? doubleResult : (double?)null;
+
+                    if (string.IsNullOrWhiteSpace(normalizedValue))
+                        return null;
+
+                    if (double.TryParse(normalizedValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var doubleResult))
+                    {
+                        return doubleResult;
+                    }
+                    return null;
                 }
                 else if (underlyingType == typeof(DateTime))
                 {
-                    // 🔧 ENHANCED: Clean datetime value for bank CSV format
+                    // Enhanced datetime handling for multiple formats
                     var dateValue = cleanedValue;
 
                     // Remove leading single quote that's common in bank CSV exports
@@ -1414,42 +1573,83 @@ namespace TinhKhoanApp.Api.Services
                         dateValue = dateValue.Substring(1);
                     }
 
-                    // Support multiple date formats: dd/MM/yyyy, yyyy-MM-dd, dd-MM-yyyy, etc.
+                    if (string.IsNullOrWhiteSpace(dateValue))
+                        return null;
+
+                    // Support multiple date formats in priority order
                     string[] dateFormats = {
-                        "dd/MM/yyyy", "MM/dd/yyyy", "yyyy-MM-dd", "dd-MM-yyyy",
-                        "dd/MM/yyyy HH:mm:ss", "MM/dd/yyyy HH:mm:ss", "yyyy-MM-dd HH:mm:ss",
-                        "yyyyMMdd", "ddMMyyyy"
+                        "yyyyMMdd",           // Bank standard format: 20250630
+                        "dd/MM/yyyy",         // Common display format: 30/06/2025
+                        "yyyy-MM-dd",         // ISO format: 2025-06-30
+                        "dd-MM-yyyy",         // Alternative format: 30-06-2025
+                        "MM/dd/yyyy",         // US format: 06/30/2025
+                        "dd-MMM-yy",          // Short format: 30-Jun-25
+                        "dd-MMM-yyyy",        // Long format: 30-Jun-2025
+                        "dd/MM/yyyy HH:mm:ss",// With time: 30/06/2025 14:30:00
+                        "yyyy-MM-dd HH:mm:ss" // ISO with time: 2025-06-30 14:30:00
                     };
 
-                    if (DateTime.TryParseExact(dateValue.Trim(), dateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateResult))
+                    if (DateTime.TryParseExact(dateValue.Trim(), dateFormats, CultureInfo.InvariantCulture,
+                        DateTimeStyles.None, out var dateResult))
                     {
-                        _logger.LogDebug("✅ [CONVERT] DateTime success: '{Original}' -> '{Cleaned}' -> {Result}", csvValue, dateValue, dateResult);
+                        _logger.LogDebug("✅ [CONVERT] DateTime success: '{Original}' -> '{Cleaned}' -> {Result}",
+                            csvValue, dateValue, dateResult.ToString("yyyy-MM-dd"));
                         return dateResult;
                     }
 
                     // Fallback to standard parsing
                     if (DateTime.TryParse(dateValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out var fallbackDate))
                     {
-                        _logger.LogDebug("✅ [CONVERT] DateTime fallback success: '{Original}' -> '{Cleaned}' -> {Result}", csvValue, dateValue, fallbackDate);
+                        _logger.LogDebug("✅ [CONVERT] DateTime fallback success: '{Original}' -> '{Cleaned}' -> {Result}",
+                            csvValue, dateValue, fallbackDate.ToString("yyyy-MM-dd"));
                         return fallbackDate;
                     }
 
-                    _logger.LogWarning("⚠️ [CONVERT] DateTime conversion failed: '{Original}' -> '{Cleaned}'", csvValue, dateValue);
-                    return (DateTime?)null;
+                    _logger.LogWarning("⚠️ [CONVERT] DateTime conversion failed: '{Original}' -> '{Cleaned}'",
+                        csvValue, dateValue);
+                    return null;
                 }
                 else if (underlyingType == typeof(bool))
                 {
-                    return bool.TryParse(csvValue, out var boolResult) ? boolResult : (bool?)null;
+                    // Handle common boolean representations
+                    var normalizedValue = cleanedValue.ToLowerInvariant();
+
+                    if (string.IsNullOrWhiteSpace(normalizedValue))
+                        return null;
+
+                    if (normalizedValue == "1" || normalizedValue == "true" || normalizedValue == "yes" || normalizedValue == "y")
+                        return true;
+                    if (normalizedValue == "0" || normalizedValue == "false" || normalizedValue == "no" || normalizedValue == "n")
+                        return false;
+
+                    // Try standard parsing
+                    if (bool.TryParse(normalizedValue, out var boolResult))
+                    {
+                        return boolResult;
+                    }
+
+                    return null;
                 }
                 else
                 {
-                    // Fallback: try direct conversion
-                    return Convert.ChangeType(csvValue.Trim(), underlyingType, CultureInfo.InvariantCulture);
+                    // Fallback: try direct conversion for other types
+                    try
+                    {
+                        var result = Convert.ChangeType(cleanedValue.Trim(), underlyingType, CultureInfo.InvariantCulture);
+                        return result;
+                    }
+                    catch
+                    {
+                        _logger.LogWarning("⚠️ [CONVERT] Direct conversion failed for {Type}: '{Value}'",
+                            underlyingType.Name, cleanedValue);
+                        return null;
+                    }
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogWarning("⚠️ [CSV_CONVERT] Cannot convert '{Value}' to {TargetType}: {Error}", csvValue, targetType.Name, ex.Message);
+                _logger.LogWarning("⚠️ [CSV_CONVERT] Cannot convert '{Value}' to {TargetType}: {Error}",
+                    csvValue, targetType.Name, ex.Message);
                 return null;
             }
         }

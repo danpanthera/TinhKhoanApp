@@ -10,344 +10,568 @@ namespace TinhKhoanApp.Api.Models.DataTables
     [Table("LN01")]
     public class LN01
     {
-        // System Column - NGAY_DL first (extracted from filename)
-        [Column("NGAY_DL", Order = 0)]
-
-        public DateTime NGAY_DL { get; set; }
-
-        // Business Columns - Exact CSV order, all NVARCHAR(50) format
-        [Column("BRCD", Order = 1)]
-        [StringLength(200)]
-        public string BRCD { get; set; } = "";
-
-        [Column("CUSTSEQ", Order = 2)]
-        [StringLength(200)]
-        public string CUSTSEQ { get; set; } = "";
-
-        [Column("CUSTNM", Order = 3)]
-        [StringLength(200)]
-        public string CUSTNM { get; set; } = "";
-
-        [Column("TAI_KHOAN", Order = 4)]
-        [StringLength(200)]
-        public string TAI_KHOAN { get; set; } = "";
-
-        [Column("CCY", Order = 5)]
-        [StringLength(200)]
-        public string CCY { get; set; } = "";
-
-        [Column("DU_NO", Order = 6)]
-        [StringLength(200)]
-        public string DU_NO { get; set; } = "";
-
-        [Column("DSBSSEQ", Order = 7)]
-        [StringLength(200)]
-        public string DSBSSEQ { get; set; } = "";
-
-        [Column("TRANSACTION_DATE", Order = 8)]
-        [StringLength(200)]
-        public string TRANSACTION_DATE { get; set; } = "";
-
-        [Column("DSBSDT", Order = 9)]
-        [StringLength(200)]
-        public string DSBSDT { get; set; } = "";
-
-        [Column("DISBUR_CCY", Order = 10)]
-        [StringLength(200)]
-        public string DISBUR_CCY { get; set; } = "";
-
-        [Column("DISBURSEMENT_AMOUNT", Order = 11)]
-        [StringLength(200)]
-        public string DISBURSEMENT_AMOUNT { get; set; } = "";
-
-        [Column("DSBSMATDT", Order = 12)]
-        [StringLength(200)]
-        public string DSBSMATDT { get; set; } = "";
-
-        [Column("BSRTCD", Order = 13)]
-        [StringLength(200)]
-        public string BSRTCD { get; set; } = "";
-
-        [Column("INTEREST_RATE", Order = 14)]
-        [StringLength(200)]
-        public string INTEREST_RATE { get; set; } = "";
-
-        [Column("APPRSEQ", Order = 15)]
-        [StringLength(200)]
-        public string APPRSEQ { get; set; } = "";
-
-        [Column("APPRDT", Order = 16)]
-        [StringLength(200)]
-        public string APPRDT { get; set; } = "";
-
-        [Column("APPR_CCY", Order = 17)]
-        [StringLength(200)]
-        public string APPR_CCY { get; set; } = "";
-
-        [Column("APPRAMT", Order = 18)]
-        [StringLength(200)]
-        public string APPRAMT { get; set; } = "";
-
-        [Column("APPRMATDT", Order = 19)]
-        [StringLength(200)]
-        public string APPRMATDT { get; set; } = "";
-
-        [Column("LOAN_TYPE", Order = 20)]
-        [StringLength(200)]
-        public string LOAN_TYPE { get; set; } = "";
-
-        [Column("FUND_RESOURCE_CODE", Order = 21)]
-        [StringLength(200)]
-        public string FUND_RESOURCE_CODE { get; set; } = "";
-
-        [Column("FUND_PURPOSE_CODE", Order = 22)]
-        [StringLength(200)]
-        public string FUND_PURPOSE_CODE { get; set; } = "";
-
-        [Column("REPAYMENT_AMOUNT", Order = 23)]
-        [StringLength(200)]
-        public string REPAYMENT_AMOUNT { get; set; } = "";
-
-        [Column("NEXT_REPAY_DATE", Order = 24)]
-        [StringLength(200)]
-        public string NEXT_REPAY_DATE { get; set; } = "";
-
-        [Column("NEXT_REPAY_AMOUNT", Order = 25)]
-        [StringLength(200)]
-        public string NEXT_REPAY_AMOUNT { get; set; } = "";
-
-        [Column("NEXT_INT_REPAY_DATE", Order = 26)]
-        [StringLength(200)]
-        public string NEXT_INT_REPAY_DATE { get; set; } = "";
-
-        [Column("OFFICER_ID", Order = 27)]
-        [StringLength(200)]
-        public string OFFICER_ID { get; set; } = "";
-
-        [Column("OFFICER_NAME", Order = 28)]
-        [StringLength(200)]
-        public string OFFICER_NAME { get; set; } = "";
-
-        [Column("INTEREST_AMOUNT", Order = 29)]
-        [StringLength(200)]
-        public string INTEREST_AMOUNT { get; set; } = "";
-
-        [Column("PASTDUE_INTEREST_AMOUNT", Order = 30)]
-        [StringLength(200)]
-        public string PASTDUE_INTEREST_AMOUNT { get; set; } = "";
-
-        [Column("TOTAL_INTEREST_REPAY_AMOUNT", Order = 31)]
-        [StringLength(200)]
-        public string TOTAL_INTEREST_REPAY_AMOUNT { get; set; } = "";
-
-        [Column("CUSTOMER_TYPE_CODE", Order = 32)]
-        [StringLength(200)]
-        public string CUSTOMER_TYPE_CODE { get; set; } = "";
-
-        [Column("CUSTOMER_TYPE_CODE_DETAIL", Order = 33)]
-        [StringLength(200)]
-        public string CUSTOMER_TYPE_CODE_DETAIL { get; set; } = "";
-
-        [Column("TRCTCD", Order = 34)]
-        [StringLength(200)]
-        public string TRCTCD { get; set; } = "";
-
-        [Column("TRCTNM", Order = 35)]
-        [StringLength(200)]
-        public string TRCTNM { get; set; } = "";
-
-        [Column("ADDR1", Order = 36)]
-        [StringLength(200)]
-        public string ADDR1 { get; set; } = "";
-
-        [Column("PROVINCE", Order = 37)]
-        [StringLength(200)]
-        public string PROVINCE { get; set; } = "";
-
-        [Column("LCLPROVINNM", Order = 38)]
-        [StringLength(200)]
-        public string LCLPROVINNM { get; set; } = "";
-
-        [Column("DISTRICT", Order = 39)]
-        [StringLength(200)]
-        public string DISTRICT { get; set; } = "";
-
-        [Column("LCLDISTNM", Order = 40)]
-        [StringLength(200)]
-        public string LCLDISTNM { get; set; } = "";
-
-        [Column("COMMCD", Order = 41)]
-        [StringLength(200)]
-        public string COMMCD { get; set; } = "";
-
-        [Column("LCLWARDNM", Order = 42)]
-        [StringLength(200)]
-        public string LCLWARDNM { get; set; } = "";
-
-        [Column("LAST_REPAY_DATE", Order = 43)]
-        [StringLength(200)]
-        public string LAST_REPAY_DATE { get; set; } = "";
-
-        [Column("SECURED_PERCENT", Order = 44)]
-        [StringLength(200)]
-        public string SECURED_PERCENT { get; set; } = "";
-
-        [Column("NHOM_NO", Order = 45)]
-        [StringLength(200)]
-        public string NHOM_NO { get; set; } = "";
-
-        [Column("LAST_INT_CHARGE_DATE", Order = 46)]
-        [StringLength(200)]
-        public string LAST_INT_CHARGE_DATE { get; set; } = "";
-
-        [Column("EXEMPTINT", Order = 47)]
-        [StringLength(200)]
-        public string EXEMPTINT { get; set; } = "";
-
-        [Column("EXEMPTINTTYPE", Order = 48)]
-        [StringLength(200)]
-        public string EXEMPTINTTYPE { get; set; } = "";
-
-        [Column("EXEMPTINTAMT", Order = 49)]
-        [StringLength(200)]
-        public string EXEMPTINTAMT { get; set; } = "";
-
-        [Column("GRPNO", Order = 50)]
-        [StringLength(200)]
-        public string GRPNO { get; set; } = "";
-
-        [Column("BUSCD", Order = 51)]
-        [StringLength(200)]
-        public string BUSCD { get; set; } = "";
-
-        [Column("BSNSSCLTPCD", Order = 52)]
-        [StringLength(200)]
-        public string BSNSSCLTPCD { get; set; } = "";
-
-        [Column("USRIDOP", Order = 53)]
-        [StringLength(200)]
-        public string USRIDOP { get; set; } = "";
-
-        [Column("ACCRUAL_AMOUNT", Order = 54)]
-        [StringLength(200)]
-        public string ACCRUAL_AMOUNT { get; set; } = "";
-
-        [Column("ACCRUAL_AMOUNT_END_OF_MONTH", Order = 55)]
-        [StringLength(200)]
-        public string ACCRUAL_AMOUNT_END_OF_MONTH { get; set; } = "";
-
-        [Column("INTCMTH", Order = 56)]
-        [StringLength(200)]
-        public string INTCMTH { get; set; } = "";
-
-        [Column("INTRPYMTH", Order = 57)]
-        [StringLength(200)]
-        public string INTRPYMTH { get; set; } = "";
-
-        [Column("INTTRMMTH", Order = 58)]
-        [StringLength(200)]
-        public string INTTRMMTH { get; set; } = "";
-
-        [Column("YRDAYS", Order = 59)]
-        [StringLength(200)]
-        public string YRDAYS { get; set; } = "";
-
-        [Column("REMARK", Order = 60)]
-        [StringLength(200)]
-        public string REMARK { get; set; } = "";
-
-        [Column("CHITIEU", Order = 61)]
-        [StringLength(200)]
-        public string CHITIEU { get; set; } = "";
-
-        [Column("CTCV", Order = 62)]
-        [StringLength(200)]
-        public string CTCV { get; set; } = "";
-
-        [Column("CREDIT_LINE_YPE", Order = 63)]
-        [StringLength(200)]
-        public string CREDIT_LINE_YPE { get; set; } = "";
-
-        [Column("INT_LUMPSUM_PARTIAL_TYPE", Order = 64)]
-        [StringLength(200)]
-        public string INT_LUMPSUM_PARTIAL_TYPE { get; set; } = "";
-
-        [Column("INT_PARTIAL_PAYMENT_TYPE", Order = 65)]
-        [StringLength(200)]
-        public string INT_PARTIAL_PAYMENT_TYPE { get; set; } = "";
-
-        [Column("INT_PAYMENT_INTERVAL", Order = 66)]
-        [StringLength(200)]
-        public string INT_PAYMENT_INTERVAL { get; set; } = "";
-
-        [Column("AN_HAN_LAI", Order = 67)]
-        [StringLength(200)]
-        public string AN_HAN_LAI { get; set; } = "";
-
-        [Column("PHUONG_THUC_GIAI_NGAN_1", Order = 68)]
-        [StringLength(200)]
-        public string PHUONG_THUC_GIAI_NGAN_1 { get; set; } = "";
-
-        [Column("TAI_KHOAN_GIAI_NGAN_1", Order = 69)]
-        [StringLength(200)]
-        public string TAI_KHOAN_GIAI_NGAN_1 { get; set; } = "";
-
-        [Column("SO_TIEN_GIAI_NGAN_1", Order = 70)]
-        [StringLength(200)]
-        public string SO_TIEN_GIAI_NGAN_1 { get; set; } = "";
-
-        [Column("PHUONG_THUC_GIAI_NGAN_2", Order = 71)]
-        [StringLength(200)]
-        public string PHUONG_THUC_GIAI_NGAN_2 { get; set; } = "";
-
-        [Column("TAI_KHOAN_GIAI_NGAN_2", Order = 72)]
-        [StringLength(200)]
-        public string TAI_KHOAN_GIAI_NGAN_2 { get; set; } = "";
-
-        [Column("SO_TIEN_GIAI_NGAN_2", Order = 73)]
-        [StringLength(200)]
-        public string SO_TIEN_GIAI_NGAN_2 { get; set; } = "";
-
-        [Column("CMT_HC", Order = 74)]
-        [StringLength(200)]
-        public string CMT_HC { get; set; } = "";
-
-        [Column("NGAY_SINH", Order = 75)]
-        [StringLength(200)]
-        public string NGAY_SINH { get; set; } = "";
-
-        [Column("MA_CB_AGRI", Order = 76)]
-        [StringLength(200)]
-        public string MA_CB_AGRI { get; set; } = "";
-
-        [Column("MA_NGANH_KT", Order = 77)]
-        [StringLength(200)]
-        public string MA_NGANH_KT { get; set; } = "";
-
-        [Column("TY_GIA", Order = 78)]
-        [StringLength(200)]
-        public string TY_GIA { get; set; } = "";
-
-        [Column("OFFICER_IPCAS", Order = 79)]
-        [StringLength(200)]
-        public string OFFICER_IPCAS { get; set; } = "";
-
-        // Temporal/System Columns - Always last
+        // Auto-increment ID
+        /// <summary>
+        /// Auto-increment ID
+        /// </summary>
         [Key]
-        [Column("Id", Order = 80)]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Id { get; set; }
 
-        // Temporal columns are shadow properties managed by EF Core automatically
-        // ValidFrom/ValidTo removed - managed as shadow properties by ApplicationDbContext
+        // System Column - NGAY_DL first (extracted from filename)
+        /// <summary>
+        /// Ngày dữ liệu - trích xuất từ tên file (vd: 7800_LN01_20241231.csv -> 2024-12-31)
+        /// </summary>
+        [Column("NGAY_DL")]
+        public DateTime? NGAY_DL { get; set; }
 
-        [Column("CREATED_DATE", Order = 81)]
+        // Business Columns - Exact CSV order with correct data types
+        /// <summary>
+        /// Mã chi nhánh
+        /// </summary>
+        [Column("BRCD")]
+        [StringLength(200)]
+        public string? BRCD { get; set; }
+
+        /// <summary>
+        /// Mã khách hàng
+        /// </summary>
+        [Column("CUSTSEQ")]
+        [StringLength(200)]
+        public string? CUSTSEQ { get; set; }
+
+        /// <summary>
+        /// Tên khách hàng
+        /// </summary>
+        [Column("CUSTNM")]
+        [StringLength(200)]
+        public string? CUSTNM { get; set; }
+
+        /// <summary>
+        /// Số tài khoản
+        /// </summary>
+        [Column("TAI_KHOAN")]
+        [StringLength(200)]
+        public string? TAI_KHOAN { get; set; }
+
+        /// <summary>
+        /// Loại tiền tệ
+        /// </summary>
+        [Column("CCY")]
+        [StringLength(200)]
+        public string? CCY { get; set; }
+
+        /// <summary>
+        /// Dư nợ
+        /// </summary>
+        [Column("DU_NO")]
+        public decimal? DU_NO { get; set; }
+
+        /// <summary>
+        /// Mã giải ngân
+        /// </summary>
+        [Column("DSBSSEQ")]
+        [StringLength(200)]
+        public string? DSBSSEQ { get; set; }
+
+        /// <summary>
+        /// Ngày giao dịch
+        /// </summary>
+        [Column("TRANSACTION_DATE")]
+        public DateTime? TRANSACTION_DATE { get; set; }
+
+        /// <summary>
+        /// Ngày giải ngân
+        /// </summary>
+        [Column("DSBSDT")]
+        public DateTime? DSBSDT { get; set; }
+
+        /// <summary>
+        /// Loại tiền giải ngân
+        /// </summary>
+        [Column("DISBUR_CCY")]
+        [StringLength(200)]
+        public string? DISBUR_CCY { get; set; }
+
+        /// <summary>
+        /// Số tiền giải ngân
+        /// </summary>
+        [Column("DISBURSEMENT_AMOUNT")]
+        public decimal? DISBURSEMENT_AMOUNT { get; set; }
+
+        /// <summary>
+        /// Ngày đáo hạn giải ngân
+        /// </summary>
+        [Column("DSBSMATDT")]
+        public DateTime? DSBSMATDT { get; set; }
+
+        /// <summary>
+        /// Mã lãi suất
+        /// </summary>
+        [Column("BSRTCD")]
+        [StringLength(200)]
+        public string? BSRTCD { get; set; }
+
+        /// <summary>
+        /// Lãi suất
+        /// </summary>
+        [Column("INTEREST_RATE")]
+        public decimal? INTEREST_RATE { get; set; }
+
+        /// <summary>
+        /// Mã phê duyệt
+        /// </summary>
+        [Column("APPRSEQ")]
+        [StringLength(200)]
+        public string? APPRSEQ { get; set; }
+
+        /// <summary>
+        /// Ngày phê duyệt
+        /// </summary>
+        [Column("APPRDT")]
+        public DateTime? APPRDT { get; set; }
+
+        /// <summary>
+        /// Loại tiền phê duyệt
+        /// </summary>
+        [Column("APPR_CCY")]
+        [StringLength(200)]
+        public string? APPR_CCY { get; set; }
+
+        /// <summary>
+        /// Số tiền phê duyệt
+        /// </summary>
+        [Column("APPRAMT")]
+        public decimal? APPRAMT { get; set; }
+
+        /// <summary>
+        /// Ngày đáo hạn phê duyệt
+        /// </summary>
+        [Column("APPRMATDT")]
+        public DateTime? APPRMATDT { get; set; }
+
+        /// <summary>
+        /// Loại khoản vay
+        /// </summary>
+        [Column("LOAN_TYPE")]
+        [StringLength(200)]
+        public string? LOAN_TYPE { get; set; }
+
+        /// <summary>
+        /// Mã nguồn vốn
+        /// </summary>
+        [Column("FUND_RESOURCE_CODE")]
+        [StringLength(200)]
+        public string? FUND_RESOURCE_CODE { get; set; }
+
+        /// <summary>
+        /// Mã mục đích vay
+        /// </summary>
+        [Column("FUND_PURPOSE_CODE")]
+        [StringLength(200)]
+        public string? FUND_PURPOSE_CODE { get; set; }
+
+        /// <summary>
+        /// Số tiền trả
+        /// </summary>
+        [Column("REPAYMENT_AMOUNT")]
+        public decimal? REPAYMENT_AMOUNT { get; set; }
+
+        /// <summary>
+        /// Ngày trả tiếp theo
+        /// </summary>
+        [Column("NEXT_REPAY_DATE")]
+        public DateTime? NEXT_REPAY_DATE { get; set; }
+
+        /// <summary>
+        /// Số tiền trả tiếp theo
+        /// </summary>
+        [Column("NEXT_REPAY_AMOUNT")]
+        public decimal? NEXT_REPAY_AMOUNT { get; set; }
+
+        /// <summary>
+        /// Ngày trả lãi tiếp theo
+        /// </summary>
+        [Column("NEXT_INT_REPAY_DATE")]
+        public DateTime? NEXT_INT_REPAY_DATE { get; set; }
+
+        /// <summary>
+        /// ID cán bộ
+        /// </summary>
+        [Column("OFFICER_ID")]
+        [StringLength(200)]
+        public string? OFFICER_ID { get; set; }
+
+        /// <summary>
+        /// Tên cán bộ
+        /// </summary>
+        [Column("OFFICER_NAME")]
+        [StringLength(200)]
+        public string? OFFICER_NAME { get; set; }
+
+        /// <summary>
+        /// Số tiền lãi
+        /// </summary>
+        [Column("INTEREST_AMOUNT")]
+        public decimal? INTEREST_AMOUNT { get; set; }
+
+        /// <summary>
+        /// Số tiền lãi quá hạn
+        /// </summary>
+        [Column("PASTDUE_INTEREST_AMOUNT")]
+        public decimal? PASTDUE_INTEREST_AMOUNT { get; set; }
+
+        /// <summary>
+        /// Tổng số tiền lãi trả
+        /// </summary>
+        [Column("TOTAL_INTEREST_REPAY_AMOUNT")]
+        public decimal? TOTAL_INTEREST_REPAY_AMOUNT { get; set; }
+
+        /// <summary>
+        /// Mã loại khách hàng
+        /// </summary>
+        [Column("CUSTOMER_TYPE_CODE")]
+        [StringLength(200)]
+        public string? CUSTOMER_TYPE_CODE { get; set; }
+
+        /// <summary>
+        /// Mã loại khách hàng chi tiết
+        /// </summary>
+        [Column("CUSTOMER_TYPE_CODE_DETAIL")]
+        [StringLength(200)]
+        public string? CUSTOMER_TYPE_CODE_DETAIL { get; set; }
+
+        /// <summary>
+        /// Mã ngành
+        /// </summary>
+        [Column("TRCTCD")]
+        [StringLength(200)]
+        public string? TRCTCD { get; set; }
+
+        /// <summary>
+        /// Tên ngành
+        /// </summary>
+        [Column("TRCTNM")]
+        [StringLength(200)]
+        public string? TRCTNM { get; set; }
+
+        /// <summary>
+        /// Địa chỉ 1
+        /// </summary>
+        [Column("ADDR1")]
+        [StringLength(200)]
+        public string? ADDR1 { get; set; }
+
+        /// <summary>
+        /// Tỉnh/thành phố
+        /// </summary>
+        [Column("PROVINCE")]
+        [StringLength(200)]
+        public string? PROVINCE { get; set; }
+
+        /// <summary>
+        /// Tên tỉnh
+        /// </summary>
+        [Column("LCLPROVINNM")]
+        [StringLength(200)]
+        public string? LCLPROVINNM { get; set; }
+
+        /// <summary>
+        /// Quận/huyện
+        /// </summary>
+        [Column("DISTRICT")]
+        [StringLength(200)]
+        public string? DISTRICT { get; set; }
+
+        /// <summary>
+        /// Tên quận/huyện
+        /// </summary>
+        [Column("LCLDISTNM")]
+        [StringLength(200)]
+        public string? LCLDISTNM { get; set; }
+
+        /// <summary>
+        /// Mã xã/phường
+        /// </summary>
+        [Column("COMMCD")]
+        [StringLength(200)]
+        public string? COMMCD { get; set; }
+
+        /// <summary>
+        /// Tên xã/phường
+        /// </summary>
+        [Column("LCLWARDNM")]
+        [StringLength(200)]
+        public string? LCLWARDNM { get; set; }
+
+        /// <summary>
+        /// Ngày trả gần nhất
+        /// </summary>
+        [Column("LAST_REPAY_DATE")]
+        public DateTime? LAST_REPAY_DATE { get; set; }
+
+        /// <summary>
+        /// Phần trăm đảm bảo
+        /// </summary>
+        [Column("SECURED_PERCENT")]
+        [StringLength(200)]
+        public string? SECURED_PERCENT { get; set; }
+
+        /// <summary>
+        /// Nhóm nợ
+        /// </summary>
+        [Column("NHOM_NO")]
+        [StringLength(200)]
+        public string? NHOM_NO { get; set; }
+
+        /// <summary>
+        /// Ngày tính lãi gần nhất
+        /// </summary>
+        [Column("LAST_INT_CHARGE_DATE")]
+        public DateTime? LAST_INT_CHARGE_DATE { get; set; }
+
+        /// <summary>
+        /// Miễn lãi
+        /// </summary>
+        [Column("EXEMPTINT")]
+        [StringLength(200)]
+        public string? EXEMPTINT { get; set; }
+
+        /// <summary>
+        /// Loại miễn lãi
+        /// </summary>
+        [Column("EXEMPTINTTYPE")]
+        [StringLength(200)]
+        public string? EXEMPTINTTYPE { get; set; }
+
+        /// <summary>
+        /// Số tiền miễn lãi
+        /// </summary>
+        [Column("EXEMPTINTAMT")]
+        public decimal? EXEMPTINTAMT { get; set; }
+
+        /// <summary>
+        /// Nhóm số
+        /// </summary>
+        [Column("GRPNO")]
+        [StringLength(200)]
+        public string? GRPNO { get; set; }
+
+        /// <summary>
+        /// Mã kinh doanh
+        /// </summary>
+        [Column("BUSCD")]
+        [StringLength(200)]
+        public string? BUSCD { get; set; }
+
+        /// <summary>
+        /// Mã loại khách hàng kinh doanh
+        /// </summary>
+        [Column("BSNSSCLTPCD")]
+        [StringLength(200)]
+        public string? BSNSSCLTPCD { get; set; }
+
+        /// <summary>
+        /// ID người dùng thao tác
+        /// </summary>
+        [Column("USRIDOP")]
+        [StringLength(200)]
+        public string? USRIDOP { get; set; }
+
+        /// <summary>
+        /// Số tiền dồn tích
+        /// </summary>
+        [Column("ACCRUAL_AMOUNT")]
+        public decimal? ACCRUAL_AMOUNT { get; set; }
+
+        /// <summary>
+        /// Số tiền dồn tích cuối tháng
+        /// </summary>
+        [Column("ACCRUAL_AMOUNT_END_OF_MONTH")]
+        public decimal? ACCRUAL_AMOUNT_END_OF_MONTH { get; set; }
+
+        /// <summary>
+        /// Phương thức tính lãi
+        /// </summary>
+        [Column("INTCMTH")]
+        [StringLength(200)]
+        public string? INTCMTH { get; set; }
+
+        /// <summary>
+        /// Phương thức trả lãi
+        /// </summary>
+        [Column("INTRPYMTH")]
+        [StringLength(200)]
+        public string? INTRPYMTH { get; set; }
+
+        /// <summary>
+        /// Kỳ hạn lãi
+        /// </summary>
+        [Column("INTTRMMTH")]
+        [StringLength(200)]
+        public string? INTTRMMTH { get; set; }
+
+        /// <summary>
+        /// Số ngày trong năm
+        /// </summary>
+        [Column("YRDAYS")]
+        [StringLength(200)]
+        public string? YRDAYS { get; set; }
+
+        /// <summary>
+        /// Ghi chú
+        /// </summary>
+        [Column("REMARK")]
+        [StringLength(1000)]
+        public string? REMARK { get; set; }
+
+        /// <summary>
+        /// Chỉ tiêu
+        /// </summary>
+        [Column("CHITIEU")]
+        [StringLength(200)]
+        public string? CHITIEU { get; set; }
+
+        /// <summary>
+        /// CTCV
+        /// </summary>
+        [Column("CTCV")]
+        [StringLength(200)]
+        public string? CTCV { get; set; }
+
+        /// <summary>
+        /// Loại hạn mức tín dụng
+        /// </summary>
+        [Column("CREDIT_LINE_YPE")]
+        [StringLength(200)]
+        public string? CREDIT_LINE_YPE { get; set; }
+
+        /// <summary>
+        /// Loại trả lãi lump sum một phần
+        /// </summary>
+        [Column("INT_LUMPSUM_PARTIAL_TYPE")]
+        [StringLength(200)]
+        public string? INT_LUMPSUM_PARTIAL_TYPE { get; set; }
+
+        /// <summary>
+        /// Loại thanh toán lãi một phần
+        /// </summary>
+        [Column("INT_PARTIAL_PAYMENT_TYPE")]
+        [StringLength(200)]
+        public string? INT_PARTIAL_PAYMENT_TYPE { get; set; }
+
+        /// <summary>
+        /// Khoảng thời gian thanh toán lãi
+        /// </summary>
+        [Column("INT_PAYMENT_INTERVAL")]
+        [StringLength(200)]
+        public string? INT_PAYMENT_INTERVAL { get; set; }
+
+        /// <summary>
+        /// Ân hạn lãi
+        /// </summary>
+        [Column("AN_HAN_LAI")]
+        [StringLength(200)]
+        public string? AN_HAN_LAI { get; set; }
+
+        /// <summary>
+        /// Phương thức giải ngân 1
+        /// </summary>
+        [Column("PHUONG_THUC_GIAI_NGAN_1")]
+        [StringLength(200)]
+        public string? PHUONG_THUC_GIAI_NGAN_1 { get; set; }
+
+        /// <summary>
+        /// Tài khoản giải ngân 1
+        /// </summary>
+        [Column("TAI_KHOAN_GIAI_NGAN_1")]
+        [StringLength(200)]
+        public string? TAI_KHOAN_GIAI_NGAN_1 { get; set; }
+
+        /// <summary>
+        /// Số tiền giải ngân 1
+        /// </summary>
+        [Column("SO_TIEN_GIAI_NGAN_1")]
+        public decimal? SO_TIEN_GIAI_NGAN_1 { get; set; }
+
+        /// <summary>
+        /// Phương thức giải ngân 2
+        /// </summary>
+        [Column("PHUONG_THUC_GIAI_NGAN_2")]
+        [StringLength(200)]
+        public string? PHUONG_THUC_GIAI_NGAN_2 { get; set; }
+
+        /// <summary>
+        /// Tài khoản giải ngân 2
+        /// </summary>
+        [Column("TAI_KHOAN_GIAI_NGAN_2")]
+        [StringLength(200)]
+        public string? TAI_KHOAN_GIAI_NGAN_2 { get; set; }
+
+        /// <summary>
+        /// Số tiền giải ngân 2
+        /// </summary>
+        [Column("SO_TIEN_GIAI_NGAN_2")]
+        public decimal? SO_TIEN_GIAI_NGAN_2 { get; set; }
+
+        /// <summary>
+        /// CMND/CCCD/Hộ chiếu
+        /// </summary>
+        [Column("CMT_HC")]
+        [StringLength(200)]
+        public string? CMT_HC { get; set; }
+
+        /// <summary>
+        /// Ngày sinh
+        /// </summary>
+        [Column("NGAY_SINH")]
+        public DateTime? NGAY_SINH { get; set; }
+
+        /// <summary>
+        /// Mã cán bộ Agribank
+        /// </summary>
+        [Column("MA_CB_AGRI")]
+        [StringLength(200)]
+        public string? MA_CB_AGRI { get; set; }
+
+        /// <summary>
+        /// Mã ngành kinh tế
+        /// </summary>
+        [Column("MA_NGANH_KT")]
+        [StringLength(200)]
+        public string? MA_NGANH_KT { get; set; }
+
+        /// <summary>
+        /// Tỷ giá
+        /// </summary>
+        [Column("TY_GIA")]
+        public decimal? TY_GIA { get; set; }
+
+        /// <summary>
+        /// Cán bộ IPCAS
+        /// </summary>
+        [Column("OFFICER_IPCAS")]
+        [StringLength(200)]
+        public string? OFFICER_IPCAS { get; set; }
+
+        // System Columns - common for all data tables
+        /// <summary>
+        /// Tên file nguồn
+        /// </summary>
+        [Column("FILE_NAME")]
+        [StringLength(500)]
+        public string? FILE_NAME { get; set; }
+
+        /// <summary>
+        /// Ngày tạo bản ghi
+        /// </summary>
+        [Column("CREATED_DATE")]
         public DateTime CREATED_DATE { get; set; } = DateTime.Now;
 
-        [Column("UPDATED_DATE", Order = 82)]
-        public DateTime UPDATED_DATE { get; set; } = DateTime.Now;
-
-        [Column("FILE_NAME", Order = 85)]
-        [StringLength(500)]
-        public string FILE_NAME { get; set; } = "";
+        /// <summary>
+        /// Ngày cập nhật bản ghi
+        /// </summary>
+        [Column("UPDATED_DATE")]
+        public DateTime? UPDATED_DATE { get; set; }
     }
 }

@@ -85,13 +85,12 @@ builder.Services.AddCors(options =>
 });
 
 // Repository Pattern & Service Layer
-builder.Services.AddApplicationServices(builder.Configuration);
-
-// Cache Services
+builder.Services.AddRepositories();
+builder.Services.AddApplicationServices(); // From DependencyInjectionExtensions// Cache Services
 builder.Services.AddCachingServices(builder.Configuration);
 
 // Essential Services
-builder.Services.AddScoped<IDirectImportService, DirectImportService>();
+// builder.Services.AddScoped<IDirectImportService, DirectImportService>();
 // builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 // builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 

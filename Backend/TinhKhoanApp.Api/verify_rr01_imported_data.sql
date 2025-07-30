@@ -1,0 +1,50 @@
+-- Kiểm tra dữ liệu số và ngày trong bảng RR01 sau khi import
+SELECT 
+    MA_KH,
+    TEN_KH,
+    SO_LDS,
+    NGAY_GIAI_NGAN,
+    NGAY_DEN_HAN,
+    NGAY_XLRR,
+    DUNO_GOC_BAN_DAU,
+    DUNO_LAI_TICHLUY_BD,
+    DUNO_GOC_HIENTAI,
+    DUNO_LAI_HIENTAI,
+    DUNO_NGAN_HAN + DUNO_TRUNG_HAN + DUNO_DAI_HAN AS TONG_DU_NO,
+    THU_GOC,
+    THU_LAI,
+    BDS + DS AS TONG_BAO_DAM,
+    TSK,
+    FILE_NAME,
+    CREATED_DATE
+FROM 
+    RR01
+WHERE 
+    NGAY_DL = CONVERT(DATETIME, '20250730')
+    AND FILE_NAME LIKE '%test%'
+ORDER BY 
+    MA_KH;
+    
+-- Kiểm tra tính toán với kiểu số
+SELECT
+    MA_KH,
+    TEN_KH,
+    DUNO_GOC_BAN_DAU,
+    DUNO_GOC_HIENTAI,
+    (DUNO_GOC_BAN_DAU - DUNO_GOC_HIENTAI) AS GOC_DA_TRA,
+    DUNO_NGAN_HAN,
+    DUNO_TRUNG_HAN,
+    DUNO_DAI_HAN,
+    (DUNO_NGAN_HAN + DUNO_TRUNG_HAN + DUNO_DAI_HAN) AS TONG_DU_NO,
+    CASE 
+        WHEN DUNO_GOC_HIENTAI > 0 THEN 
+            (BDS + DS) / DUNO_GOC_HIENTAI * 100 
+        ELSE 0 
+    END AS TY_LE_BAO_DAM
+FROM
+    RR01
+WHERE 
+    NGAY_DL = CONVERT(DATETIME, '20250730')
+    AND FILE_NAME LIKE '%test%'
+ORDER BY 
+    MA_KH;

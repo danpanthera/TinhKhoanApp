@@ -126,15 +126,15 @@ namespace TinhKhoanApp.Api.Repositories
                 }
             }
 
-            // Tổng số tiền xử lý rủi ro (chuyển từ string sang decimal)
+            // Tổng số tiền xử lý rủi ro
             decimal total = 0;
             var results = await query.ToListAsync();
 
             foreach (var item in results)
             {
-                if (decimal.TryParse(item.SOTIENXLRR?.Replace(",", ""), out decimal amount))
+                if (item.SOTIENXLRR.HasValue)
                 {
-                    total += amount;
+                    total += item.SOTIENXLRR.Value;
                 }
             }
 
@@ -165,15 +165,15 @@ namespace TinhKhoanApp.Api.Repositories
                 }
             }
 
-            // Tổng thu nợ sau xử lý (chuyển từ string sang decimal)
+            // Tổng thu nợ sau xử lý
             decimal total = 0;
             var results = await query.ToListAsync();
 
             foreach (var item in results)
             {
-                if (decimal.TryParse(item.THUNOSAUXL?.Replace(",", ""), out decimal amount))
+                if (item.THUNOSAUXL.HasValue)
                 {
-                    total += amount;
+                    total += item.THUNOSAUXL.Value;
                 }
             }
 

@@ -9,6 +9,10 @@ namespace TinhKhoanApp.Api.Repositories
     /// </summary>
     public class RR01Repository : Repository<RR01>, IRR01Repository
     {
+        /// <summary>
+        /// Constructor for RR01Repository
+        /// </summary>
+        /// <param name="context">Application database context</param>
         public RR01Repository(ApplicationDbContext context) : base(context)
         {
         }
@@ -104,6 +108,34 @@ namespace TinhKhoanApp.Api.Repositories
                 .ToListAsync();
 
             return (data, totalCount);
+        }
+
+        /// <summary>
+        /// Add a new RR01 record
+        /// </summary>
+        public new async Task<RR01> AddAsync(RR01 entity)
+        {
+            await _dbSet.AddAsync(entity);
+            await _context.SaveChangesAsync();
+            return entity;
+        }
+
+        /// <summary>
+        /// Update an existing RR01 record
+        /// </summary>
+        public async Task UpdateAsync(RR01 entity)
+        {
+            _dbSet.Update(entity);
+            await _context.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Delete an RR01 record
+        /// </summary>
+        public async Task DeleteAsync(RR01 entity)
+        {
+            _dbSet.Remove(entity);
+            await _context.SaveChangesAsync();
         }
     }
 }

@@ -36,5 +36,20 @@ namespace TinhKhoanApp.Api.Repositories
             DateTime? statementDate = null,
             string? branchCode = null,
             string? customerId = null);
+
+        /// <summary>
+        /// Add a new RR01 record
+        /// </summary>
+        new Task<RR01> AddAsync(RR01 entity);
+
+        /// <summary>
+        /// Update an existing RR01 record
+        /// </summary>
+        Task UpdateAsync(RR01 entity);
+
+        /// <summary>
+        /// Delete an RR01 record
+        /// </summary>
+        Task DeleteAsync(RR01 entity);
     }
 }

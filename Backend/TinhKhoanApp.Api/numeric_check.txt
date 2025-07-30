@@ -1,0 +1,8 @@
+name                                                                                                                             system_type_id Check_Result            
+-------------------------------------------------------------------------------------------------------------------------------- -------------- ------------------------
+SoTienXLRR                                                                                                                                  106 PASS: Numeric type      
+ThuNoSauXL                                                                                                                                  106 PASS: Numeric type      
+ConLaiNgoaiBang                                                                                                                             106 PASS: Numeric type      
+DuNoNoiBang                                                                                                                                 106 PASS: Numeric type      
+
+(4 rows affected)

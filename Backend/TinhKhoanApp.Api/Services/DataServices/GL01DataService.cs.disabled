@@ -108,15 +108,15 @@ namespace TinhKhoanApp.Api.Services.DataServices
                 decimal totalDebit = await _gl01Repository.GetTotalTransactionsByUnitAsync(unitCode, "DR", date);
                 decimal totalCredit = await _gl01Repository.GetTotalTransactionsByUnitAsync(unitCode, "CR", date);
 
-                Expression<Func<GL01, bool>> predicate = gl01 => gl01.BRCD == unitCode;
+                Expression<Func<GL01, bool>> predicate = gl01 => gl01.POST_BR == unitCode;
                 if (date.HasValue)
                 {
-                    predicate = gl01 => gl01.BRCD == unitCode && gl01.NGAY_DL.Date == date.Value.Date;
+                    predicate = gl01 => gl01.POST_BR == unitCode && gl01.NGAY_DL.Date == date.Value.Date;
                 }
 
                 int totalRecords = await _gl01Repository.CountAsync(predicate);
-                int debitCount = await _gl01Repository.CountAsync(predicate.And(gl01 => gl01.DR_CR_FLG == "DR"));
-                int creditCount = await _gl01Repository.CountAsync(predicate.And(gl01 => gl01.DR_CR_FLG == "CR"));
+                int debitCount = await _gl01Repository.CountAsync(predicate.And(gl01 => gl01.DR_CR == "DR"));
+                int creditCount = await _gl01Repository.CountAsync(predicate.And(gl01 => gl01.DR_CR == "CR"));
 
                 return new GL01SummaryDto
                 {

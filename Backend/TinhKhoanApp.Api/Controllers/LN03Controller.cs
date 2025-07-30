@@ -5,6 +5,9 @@ using TinhKhoanApp.Api.Services;
 
 namespace TinhKhoanApp.Api.Controllers
 {
+    /// <summary>
+    /// API Controller cho dữ liệu LN03 (Dữ liệu phục hồi khoản vay)
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
@@ -14,6 +17,9 @@ namespace TinhKhoanApp.Api.Controllers
         private readonly DirectImportService _directImportService;
         private readonly ILogger<LN03Controller> _logger;
 
+        /// <summary>
+        /// Khởi tạo controller LN03
+        /// </summary>
         public LN03Controller(
             ILN03Service ln03Service,
             DirectImportService directImportService,
@@ -358,20 +364,19 @@ namespace TinhKhoanApp.Api.Controllers
                     return BadRequest("File không phải là file LN03. Tên file phải chứa 'ln03'");
                 }
 
-                // Sử dụng DirectImportService để import dữ liệu
-                var result = await _directImportService.ImportLN03DirectAsync(file, statementDate);
+                // Sử dụng DirectImportService với phương thức cải tiến để import dữ liệu
+                var result = await _directImportService.ImportLN03EnhancedAsync(file, statementDate);
 
                 if (result.Success)
                 {
                     return Ok(new
                     {
                         Success = true,
-                        Message = $"Import thành công {result.RecordsCount} bản ghi",
-                        result.ImportedFileName,
-                        result.RecordsCount,
-                        result.StatementDate,
-                        result.ImportedBy,
-                        result.ImportId
+                        Message = $"Import thành công {result.ProcessedRecords} bản ghi",
+                        FileName = result.FileName,
+                        RecordsCount = result.ProcessedRecords,
+                        NgayDL = result.NgayDL,
+                        BatchId = result.BatchId
                     });
                 }
                 else
@@ -380,7 +385,7 @@ namespace TinhKhoanApp.Api.Controllers
                     {
                         Success = false,
                         Message = result.ErrorMessage,
-                        result.ImportedFileName
+                        FileName = result.FileName
                     });
                 }
             }

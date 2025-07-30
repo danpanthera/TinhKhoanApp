@@ -13,6 +13,11 @@ namespace TinhKhoanApp.Api.Services
         private readonly IRR01Repository _repository;
         private readonly ILogger<RR01Service> _logger;
 
+        /// <summary>
+        /// Constructor for RR01Service
+        /// </summary>
+        /// <param name="repository">RR01 repository</param>
+        /// <param name="logger">Logger for RR01Service</param>
         public RR01Service(IRR01Repository repository, ILogger<RR01Service> logger)
         {
             _repository = repository;
@@ -29,7 +34,7 @@ namespace TinhKhoanApp.Api.Services
         /// <inheritdoc />
         public async Task<RR01DTO?> GetByIdAsync(long id)
         {
-            var entity = await _repository.GetByIdAsync(id);
+            var entity = await _repository.GetByIdAsync((int)id);
             return entity != null ? RR01DTO.FromEntity(entity) : null;
         }
 

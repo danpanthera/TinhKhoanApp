@@ -1,0 +1,11 @@
+IndexName                                                                                                                        IndexType                                                    IsColumnstoreIndex
+-------------------------------------------------------------------------------------------------------------------------------- ------------------------------------------------------------ ------------------
+PK_RR01                                                                                                                          CLUSTERED                                                    NO                
+IX_RR01_NGAY_DL                                                                                                                  NONCLUSTERED                                                 NO                
+IX_RR01_MA_KH                                                                                                                    NONCLUSTERED                                                 NO                
+IX_RR01_NGAY_DL_MA_KH                                                                                                            NONCLUSTERED                                                 NO                
+IX_RR01_FILE_NAME                                                                                                                NONCLUSTERED                                                 NO                
+IX_RR01_IMPORT_BATCH_ID                                                                                                          NONCLUSTERED                                                 NO                
+NCCX_RR01_Analytics                                                                                                              NONCLUSTERED COLUMNSTORE                                     YES               
+
+(7 rows affected)

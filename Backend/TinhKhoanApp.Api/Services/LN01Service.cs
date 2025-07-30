@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models.DataTables;
 using TinhKhoanApp.Api.Models.DTOs;
 using TinhKhoanApp.Api.Repositories;
@@ -12,6 +13,10 @@ namespace TinhKhoanApp.Api.Services
     {
         private readonly ILN01Repository _repository;
 
+        /// <summary>
+        /// Khởi tạo LN01Service với repository
+        /// </summary>
+        /// <param name="repository">Repository LN01</param>
         public LN01Service(ILN01Repository repository)
         {
             _repository = repository;
@@ -96,9 +101,9 @@ namespace TinhKhoanApp.Api.Services
         public async Task<LN01DTO> CreateAsync(CreateLN01DTO createDto)
         {
             var entity = createDto.ToEntity();
-            var result = await _repository.AddAsync(entity);
+            await _repository.AddAsync(entity);
             await _repository.SaveChangesAsync();
-            return LN01DTO.FromEntity(result);
+            return LN01DTO.FromEntity(entity);
         }
 
         /// <inheritdoc/>
@@ -124,14 +129,15 @@ namespace TinhKhoanApp.Api.Services
                 return false;
             }
 
-            await _repository.DeleteAsync(entity);
+            _repository.Remove(entity);
             return await _repository.SaveChangesAsync() > 0;
         }
 
         /// <inheritdoc/>
         public async Task<bool> ExistsAsync(long id)
         {
-            return await _repository.GetDbContext().LN01s.AnyAsync(e => e.Id == id);
+            var context = _repository.GetDbContext() as ApplicationDbContext;
+            return await context!.LN01s.AnyAsync(e => e.Id == id);
         }
 
         /// <inheritdoc/>
