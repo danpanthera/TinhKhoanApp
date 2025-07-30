@@ -15,9 +15,10 @@
     "jsx": "preserve",
 
     /* Linting */
-    "strict": false,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
+    "strict": true,
+    "noImplicitAny": false, // Tạm thời tắt để tránh quá nhiều lỗi
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
     /* Vue specific */

@@ -12,10 +12,17 @@
     "format": "prettier --write \"src/**/*.{vue,js,ts,json,css,md}\"",
     "format:check": "prettier --check \"src/**/*.{vue,js,ts,json,css,md}\"",
     "type-check": "vue-tsc --noEmit",
+    "type-check:advanced": "bash ./check-types.sh",
     "serve": "vite preview",
     "analyze": "vite build --mode analyze",
     "lint": "eslint --ext .js,.ts,.vue --fix src/",
-    "lint:check": "eslint --ext .js,.ts,.vue src/"
+    "lint:check": "eslint --ext .js,.ts,.vue src/",
+    "fix-warnings": "bash ./fix-warnings.sh",
+    "quality-check": "npm run lint && npm run type-check && npm run fix-warnings",
+    "prepare-prod": "./prepare-for-production.sh",
+    "dev-help": "./dev-assistant.sh",
+    "code-report": "./code-quality-report.sh",
+    "component-guide": "./component-guide.sh"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
