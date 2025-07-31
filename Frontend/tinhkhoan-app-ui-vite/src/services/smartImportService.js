@@ -26,7 +26,7 @@ class SmartImportService {
       // Validation file size
       if (file.size > this.MAX_FILE_SIZE) {
         throw new Error(
-          `File ${file.name} quá lớn (${formatFileSize(file.size)}). Giới hạn tối đa: ${formatFileSize(this.MAX_FILE_SIZE)}`,
+          `File ${file.name} quá lớn (${formatFileSize(file.size)}). Giới hạn tối đa: ${formatFileSize(this.MAX_FILE_SIZE)}`
         )
       }
 
@@ -61,7 +61,7 @@ class SmartImportService {
         'Content-Type': 'multipart/form-data',
         // 🚀 Removed Accept-Encoding - Browser handles this automatically
       },
-      timeout: 1200000, // 🚀 Tăng lên 20 phút cho GL01 large files (was 10 minutes)
+      timeout: 300000, // 🚀 Tăng lên 5 phút cho smart upload
       onUploadProgress: progressEvent => {
         if (progressCallback && progressEvent.total) {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
@@ -96,7 +96,7 @@ class SmartImportService {
         'Content-Type': 'multipart/form-data',
         // 🚀 Removed Accept-Encoding - Browser handles this automatically
       },
-      timeout: 1800000, // 🚀 Tăng lên 30 phút cho file siêu lớn (GL01 162MB) - was 15 minutes
+      timeout: 600000, // 🚀 Tăng lên 10 phút cho file lớn
       onUploadProgress: progressEvent => {
         if (progressCallback && progressEvent.total) {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
@@ -129,7 +129,7 @@ class SmartImportService {
       const MAX_CONCURRENT_UPLOADS = 5 // 🚀 Tăng lên 5 file cùng lúc để tăng tốc
 
       console.log(
-        `🚀 Starting PARALLEL Smart Import with ${totalFiles} files (max ${MAX_CONCURRENT_UPLOADS} concurrent)`,
+        `🚀 Starting PARALLEL Smart Import with ${totalFiles} files (max ${MAX_CONCURRENT_UPLOADS} concurrent)`
       )
 
       // 📊 Tracking variables
@@ -144,7 +144,7 @@ class SmartImportService {
 
         if (progressCallback) {
           const currentFiles = Array.from(progressTracking.keys()).filter(
-            fileName => progressTracking.get(fileName) < 100,
+            fileName => progressTracking.get(fileName) < 100
           )
 
           progressCallback({

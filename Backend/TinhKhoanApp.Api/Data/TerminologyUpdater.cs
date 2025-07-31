@@ -9,7 +9,7 @@ namespace TinhKhoanApp.Api.Data
 {
     /// <summary>
     /// Cập nhật và chuẩn hóa terminology trong database
-    /// KTNV -> KTNQ, "Kinh tế Nội vụ" -> "Kế toán và Ngân quỹ"
+    /// KTNV -> KTNQ, "Kinh tế Nội vụ" -> "Kế toán & Ngân quỹ"
     /// </summary>
     public static class TerminologyUpdater
     {

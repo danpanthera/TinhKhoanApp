@@ -10,7 +10,7 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Lấy dữ liệu EI01 mới nhất
         /// </summary>
-        new Task<IEnumerable<EI01>> GetRecentAsync(int count = 10);
+        Task<IEnumerable<EI01>> GetRecentAsync(int count = 10);
 
         /// <summary>
         /// Lấy dữ liệu EI01 theo ngày

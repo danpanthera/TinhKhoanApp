@@ -947,7 +947,6 @@ thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
-**kiểm tra sự thống nhất giữa tất cả các thành phần của bảng EI01: Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO <> giống với actual CSV file structure/columns**
 
 # 2. Bảng DPDA (Quan trọng)
 + Thống nhất cấu trúc dữ liệu Bảng DPDA phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -964,7 +963,6 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 + Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này
-**kiểm tra sự thống nhất giữa tất cả các thành phần của bảng EI01: Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO <> giống với actual CSV file structure/columns**
 
 # 3. Bảng EI01 (Quan trọng)
 + Thống nhất cấu trúc dữ liệu Bảng EI01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -981,7 +979,6 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 + Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này.
-**kiểm tra sự thống nhất giữa tất cả các thành phần của bảng EI01: Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO <> giống với actual CSV file structure/columns**
 
 # 4. Bảng GL01 (Quan trọng)
 + Thống nhất cấu trúc dữ liệu Bảng GL01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -997,7 +994,6 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 + Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này.
-**kiểm tra sự thống nhất giữa tất cả các thành phần của bảng EI01: Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO <> giống với actual CSV file structure/columns**
 
 # 5. Bảng GL02 (Quan trọng)
 + Thống nhất cấu trúc dữ liệu Bảng GL02 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -1013,7 +1009,6 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 + Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này.
-**kiểm tra sự thống nhất giữa tất cả các thành phần của bảng EI01: Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO <> giống với actual CSV file structure/columns**
 
 # 6. Bảng GL41 (Quan trọng)
 + Thống nhất cấu trúc dữ liệu Bảng GL41 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -1029,7 +1024,6 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 + Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này.
-**kiểm tra sự thống nhất giữa tất cả các thành phần của bảng EI01: Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO <> giống với actual CSV file structure/columns**
 
 # 7. Bảng LN01 (Quan trọng)
  Thống nhất cấu trúc dữ liệu Bảng LN01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -1047,7 +1041,6 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 + Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này.
-**kiểm tra sự thống nhất giữa tất cả các thành phần của bảng EI01: Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO <> giống với actual CSV file structure/columns**
 
 # 8. Bảng LN03 (Quan trọng)
  Thống nhất cấu trúc dữ liệu Bảng LN03 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -1065,7 +1058,6 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 + Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này.
-**kiểm tra sự thống nhất giữa tất cả các thành phần của bảng EI01: Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO <> giống với actual CSV file structure/columns**
 
 # 9. Bảng RR01 (Quan trọng)
  Thống nhất cấu trúc dữ liệu Bảng RR01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -1083,8 +1075,6 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 + Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này.
-**kiểm tra sự thống nhất giữa tất cả các thành phần của bảng EI01: Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO <> giống với actual CSV file structure/columns**
-
 
 **CÁCH TỔ CHỨC LẠI CODE:**
 1. Tạo repository layer cho mỗi entity (DP01Repository, LN01Repository, etc.)
@@ -1095,38 +1085,3 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 6. Tách biệt concerns: Controller chỉ xử lý HTTP requests, services xử lý business logic, repositories xử lý data access
 **kiểm tra sự thống nhất giữa tất cả các thành phần của bảng EI01: Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO <> giống với actual CSV file structure/columns**
 Việc tổ chức lại code theo cách này sẽ giúp cấu trúc dự án rõ ràng, dễ bảo trì và theo đúng các best practices trong phát triển phần mềm.
-
-## 🛠️ SAFE PROJECT MANAGEMENT SCRIPTS
-
-**Vấn đề**: VS Code tasks thường bị treo khi check output, gây khó khăn trong việc quản lý dự án.
-
-**Giải pháp**: Tạo các script độc lập để quản lý project an toàn:
-
-### 📋 Check Project Status
-```bash
-./check_project_status.sh
-```
-- Kiểm tra port 5055 (Backend) và 3000 (Frontend)
-- Verify HTTP responses
-- Kiểm tra database connection
-- Hiển thị tổng quan trạng thái dự án
-
-### 🚀 Safe Startup 
-```bash
-./start_project_safe.sh
-```
-- Tự động kill processes cũ trên ports
-- Khởi động Backend và Frontend an toàn
-- Verify startup success
-- Tránh conflicts và task hangs
-
-### 🛑 Safe Shutdown
-```bash
-./stop_project_safe.sh  
-```
-- Gracefully terminate processes
-- Force kill nếu cần thiết
-- Verify clean shutdown
-- Giải phóng ports hoàn toàn
-
-**Lợi ích**: Tránh được vấn đề task output bị treo, quản lý project độc lập khỏi VS Code tasks.

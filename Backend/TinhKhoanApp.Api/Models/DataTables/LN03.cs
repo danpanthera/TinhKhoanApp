@@ -132,32 +132,12 @@ namespace TinhKhoanApp.Api.Models.DataTables
         [StringLength(200)]
         public string LOAINGUONVON { get; set; } = "";
 
-        /// <summary>
-        /// Cột 18 - Không có header trong CSV
-        /// </summary>
-        [Column("COLUMN_18", Order = 18)]
-        [StringLength(200)]
-        public string? COLUMN_18 { get; set; }
-
-        /// <summary>
-        /// Cột 19 - Không có header trong CSV
-        /// </summary>
-        [Column("COLUMN_19", Order = 19)]
-        [StringLength(200)]
-        public string? COLUMN_19 { get; set; }
-
-        /// <summary>
-        /// Cột 20 - Không có header trong CSV (số tiền)
-        /// </summary>
-        [Column("COLUMN_20", Order = 20, TypeName = "decimal(18,2)")]
-        public decimal? COLUMN_20 { get; set; }
-
         // Temporal/System Columns - Always last
         /// <summary>
         /// ID bản ghi (tự động tăng)
         /// </summary>
         [Key]
-        [Column("Id", Order = 21)]
+        [Column("Id", Order = 18)]
         public long Id { get; set; }
 
         // Temporal columns are shadow properties managed by EF Core automatically
@@ -166,19 +146,19 @@ namespace TinhKhoanApp.Api.Models.DataTables
         /// <summary>
         /// Ngày tạo bản ghi
         /// </summary>
-        [Column("CREATED_DATE", Order = 22)]
+        [Column("CREATED_DATE", Order = 19)]
         public DateTime CREATED_DATE { get; set; } = DateTime.Now;
 
         /// <summary>
         /// Ngày cập nhật bản ghi
         /// </summary>
-        [Column("UPDATED_DATE", Order = 23)]
+        [Column("UPDATED_DATE", Order = 20)]
         public DateTime UPDATED_DATE { get; set; } = DateTime.Now;
 
         /// <summary>
         /// Tên file nguồn
         /// </summary>
-        [Column("FILE_NAME", Order = 24)]
+        [Column("FILE_NAME", Order = 21)]
         [StringLength(255)]
         public string FILE_NAME { get; set; } = "";
     }

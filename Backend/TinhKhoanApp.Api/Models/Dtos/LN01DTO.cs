@@ -182,7 +182,7 @@ namespace TinhKhoanApp.Api.Models.DTOs
         /// <summary>
         /// Map từ entity sang DTO
         /// </summary>
-        public static LN01DTO? FromEntity(LN01? entity)
+        public static LN01DTO FromEntity(LN01 entity)
         {
             if (entity == null)
                 return null;

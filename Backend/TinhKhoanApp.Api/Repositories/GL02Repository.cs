@@ -9,7 +9,7 @@ namespace TinhKhoanApp.Api.Repositories
     /// </summary>
     public class GL02Repository : Repository<GL02>, IGL02Repository
     {
-        private new readonly ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context;
 
         public GL02Repository(ApplicationDbContext context) : base(context)
         {
@@ -22,7 +22,7 @@ namespace TinhKhoanApp.Api.Repositories
         public ApplicationDbContext GetDbContext() => _context;
 
         /// <inheritdoc/>
-        public new async Task<IEnumerable<GL02>> GetRecentAsync(int count = 10)
+        public async Task<IEnumerable<GL02>> GetRecentAsync(int count = 10)
         {
             return await _context.GL02
                 .OrderByDescending(x => x.NGAY_DL)

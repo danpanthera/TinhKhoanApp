@@ -833,7 +833,7 @@ namespace TinhKhoanApp.Api.Services
             // 🔧 ENHANCED CSV Configuration để handle complex formats như RR01
             csv.Context.Configuration.MissingFieldFound = null; // Bỏ qua fields không tồn tại
             csv.Context.Configuration.HeaderValidated = null; // Bỏ qua validation header
-            csv.Context.Configuration.PrepareHeaderForMatch = args => args.Header.Trim().ToUpper(); // Case insensitive + trim spaces
+            csv.Context.Configuration.PrepareHeaderForMatch = args => args.Header.ToUpper(); // Case insensitive
 
             // 🔧 FIX: Enhanced CSV parsing for complex formats with nested quotes
             csv.Context.Configuration.BadDataFound = null; // Bỏ qua bad data thay vì throw exception
@@ -850,8 +850,8 @@ namespace TinhKhoanApp.Api.Services
             csv.Read();
             csv.ReadHeader();
 
-            // Log headers để debug - TRIM all headers to remove trailing spaces
-            var headers = csv.HeaderRecord?.Select(h => h.Trim()).ToArray();
+            // Log headers để debug
+            var headers = csv.HeaderRecord;
             Console.WriteLine($"📊 [CSV_PARSE] Headers found for {typeof(T).Name}: {string.Join(", ", headers ?? new string[0])}");
             _logger.LogInformation("📊 [CSV_PARSE] Headers found: {Headers}", string.Join(", ", headers ?? new string[0]));
 
@@ -894,6 +894,7 @@ namespace TinhKhoanApp.Api.Services
                             headerName = headers?.FirstOrDefault(h =>
                                 string.Equals(h, prop.Name, StringComparison.OrdinalIgnoreCase));
                         }
+
                         if (!string.IsNullOrEmpty(headerName))
                         {
                             try
@@ -925,8 +926,8 @@ namespace TinhKhoanApp.Api.Services
                                     }
                                 }
 
-                                // 🎯 DEBUG: Log CRTDTM field value for GL02 to debug
-                                if (typeof(T).Name == "GL02" && prop.Name == "CRTDTM")
+                                // 🎯 DEBUG: Log every field value for GL02 to debug
+                                if (typeof(T).Name == "GL02")
                                 {
                                     Console.WriteLine($"🎯 [GL02_FIELD_DEBUG] {prop.Name}: '{value ?? "NULL"}'");
                                 }
@@ -2838,6 +2839,9 @@ namespace TinhKhoanApp.Api.Services
                 case "GL01":
                     CreateGL01DataTable(dataTable, headers);
                     break;
+                case "GL02":
+                    CreateGL02DataTable(dataTable, headers);
+                    break;
                 default:
                     // Fallback to string columns
                     if (headers != null && headers.Any())
@@ -2961,7 +2965,7 @@ namespace TinhKhoanApp.Api.Services
                  /// </summary>
         private void CreateLN03DataTable(DataTable dataTable, string[]? headers)
         {
-            // CSV Business columns 1-17 (with headers)
+            // CSV Business columns 1-17 (exact order from CSV)
             dataTable.Columns.Add("MACHINHANH", typeof(string));
             dataTable.Columns.Add("TENCHINHANH", typeof(string));
             dataTable.Columns.Add("MAKH", typeof(string));
@@ -2972,7 +2976,7 @@ namespace TinhKhoanApp.Api.Services
             dataTable.Columns.Add("THUNOSAUXL", typeof(decimal));
             dataTable.Columns.Add("CONLAINGOAIBANG", typeof(decimal));
             dataTable.Columns.Add("DUNONOIBANG", typeof(decimal));
-            dataTable.Columns.Add("NHOMNO", typeof(string));
+            dataTable.Columns.Add("NHOMNO", typeof(int));
             dataTable.Columns.Add("MACBTD", typeof(string));
             dataTable.Columns.Add("TENCBTD", typeof(string));
             dataTable.Columns.Add("MAPGD", typeof(string));
@@ -2980,12 +2984,7 @@ namespace TinhKhoanApp.Api.Services
             dataTable.Columns.Add("REFNO", typeof(string));
             dataTable.Columns.Add("LOAINGUONVON", typeof(string));
 
-            // CSV Business columns 18-20 (no headers)
-            dataTable.Columns.Add("COLUMN_18", typeof(string));
-            dataTable.Columns.Add("COLUMN_19", typeof(string));
-            dataTable.Columns.Add("COLUMN_20", typeof(decimal));
-
-            // System columns (21-23)
+            // System columns (18-20)
             dataTable.Columns.Add("Id", typeof(long));
             dataTable.Columns.Add("NGAY_DL", typeof(DateTime));
             dataTable.Columns.Add("FILE_NAME", typeof(string));
@@ -3034,6 +3033,42 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
+        /// Create DataTable for GL02 - Giao dịch sổ cái (17 business columns)
+        /// NGAY_DL from TRDATE column, partitioned columnstore (not temporal)
+        /// </summary>
+        private void CreateGL02DataTable(DataTable dataTable, string[]? headers)
+        {
+            if (headers != null && headers.Any())
+            {
+                foreach (var header in headers)
+                {
+                    dataTable.Columns.Add(header, typeof(string));
+                }
+            }
+            else
+            {
+                // Default GL02 columns if no headers
+                dataTable.Columns.Add("TRDATE", typeof(string));
+                dataTable.Columns.Add("TRBRCD", typeof(string));
+                dataTable.Columns.Add("USERID", typeof(string));
+                dataTable.Columns.Add("JOURSEQ", typeof(string));
+                dataTable.Columns.Add("DYTRSEQ", typeof(string));
+                dataTable.Columns.Add("LOCAC", typeof(string));
+                dataTable.Columns.Add("CCY", typeof(string));
+                dataTable.Columns.Add("BUSCD", typeof(string));
+                dataTable.Columns.Add("UNIT", typeof(string));
+                dataTable.Columns.Add("TRCD", typeof(string));
+                dataTable.Columns.Add("CUSTOMER", typeof(string));
+                dataTable.Columns.Add("TRTP", typeof(string));
+                dataTable.Columns.Add("REFERENCE", typeof(string));
+                dataTable.Columns.Add("REMARK", typeof(string));
+                dataTable.Columns.Add("DRAMOUNT", typeof(string));
+                dataTable.Columns.Add("CRAMOUNT", typeof(string));
+                dataTable.Columns.Add("CRTDTM", typeof(string));
+            }
+        }
+
+        /// <summary>
         /// Lấy tên bảng database cho loại dữ liệu - CẬP NHẬT TẤT CẢ 8 BẢNG DÀNH CHO DỮ LIỆU
         /// </summary>
         private string GetTableNameForDataType(string dataType)
@@ -3047,7 +3082,7 @@ namespace TinhKhoanApp.Api.Services
                 "GL02" => "GL02",      // Basic Table - 17 business columns (NO temporal)
                 "GL41" => "GL41",      // Temporal Table - 13 business columns
                 "LN01" => "LN01",      // Temporal Table - 79 business columns
-                "LN03" => "LN03",      // Temporal Table - 20 business columns (17 header + 3 no header)
+                "LN03" => "LN03",      // Temporal Table - 17 business columns
                 "RR01" => "RR01",      // Temporal Table - 25 business columns
                 // Legacy tables
                 "CA01" => "CA01",

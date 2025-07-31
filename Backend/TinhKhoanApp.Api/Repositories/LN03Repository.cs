@@ -9,7 +9,7 @@ namespace TinhKhoanApp.Api.Repositories
     /// </summary>
     public class LN03Repository : Repository<LN03>, ILN03Repository
     {
-        private new readonly ApplicationDbContext _context;
+        private readonly ApplicationDbContext _context;
 
         public LN03Repository(ApplicationDbContext context) : base(context)
         {
@@ -22,7 +22,7 @@ namespace TinhKhoanApp.Api.Repositories
         public ApplicationDbContext GetDbContext() => _context;
 
         /// <inheritdoc/>
-        public new async Task<IEnumerable<LN03>> GetRecentAsync(int count = 10)
+        public async Task<IEnumerable<LN03>> GetRecentAsync(int count = 10)
         {
             return await _context.LN03s
                 .OrderByDescending(x => x.NGAY_DL)

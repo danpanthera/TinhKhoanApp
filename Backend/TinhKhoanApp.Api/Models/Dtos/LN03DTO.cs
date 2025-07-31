@@ -104,21 +104,6 @@ namespace TinhKhoanApp.Api.Models.DTOs
         public string? LoaiNguonVon { get; set; }
 
         /// <summary>
-        /// Cột 18 - Không có header trong CSV
-        /// </summary>
-        public string? Column18 { get; set; }
-
-        /// <summary>
-        /// Cột 19 - Không có header trong CSV
-        /// </summary>
-        public string? Column19 { get; set; }
-
-        /// <summary>
-        /// Cột 20 - Không có header trong CSV (số tiền)
-        /// </summary>
-        public decimal? Column20 { get; set; }
-
-        /// <summary>
         /// Ngày tạo bản ghi
         /// </summary>
         public DateTime CreatedDate { get; set; }
@@ -159,9 +144,6 @@ namespace TinhKhoanApp.Api.Models.DTOs
                 TaiKhoanHachToan = entity.TAIKHOANHACHTOAN,
                 RefNo = entity.REFNO,
                 LoaiNguonVon = entity.LOAINGUONVON,
-                Column18 = entity.COLUMN_18,
-                Column19 = entity.COLUMN_19,
-                Column20 = entity.COLUMN_20,
                 CreatedDate = entity.CREATED_DATE,
                 UpdatedDate = entity.UPDATED_DATE,
                 FileName = entity.FILE_NAME
@@ -335,145 +317,145 @@ namespace TinhKhoanApp.Api.Models.DTOs
     }
 }
 
-/// <summary>
-/// DTO cho việc tạo mới LN03
-/// </summary>
-public class CreateLN03DTO
-{
     /// <summary>
-    /// Ngày dữ liệu
+    /// DTO cho việc tạo mới LN03
     /// </summary>
-    [Required]
-    public DateTime NgayDL { get; set; } = DateTime.Now;
-
-    /// <summary>
-    /// Mã chi nhánh
-    /// </summary>
-    [Required]
-    [StringLength(200)]
-    public string MaChiNhanh { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Tên chi nhánh
-    /// </summary>
-    [StringLength(200)]
-    public string TenChiNhanh { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Mã khách hàng
-    /// </summary>
-    [Required]
-    [StringLength(200)]
-    public string MaKH { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Tên khách hàng
-    /// </summary>
-    [StringLength(200)]
-    public string TenKH { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Số hợp đồng
-    /// </summary>
-    [Required]
-    [StringLength(200)]
-    public string SoHopDong { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Số tiền xử lý rủi ro
-    /// </summary>
-    public decimal? SoTienXLRR { get; set; }
-
-    /// <summary>
-    /// Ngày phát sinh xử lý
-    /// </summary>
-    public DateTime? NgayPhatSinhXL { get; set; }
-
-    /// <summary>
-    /// Thu nợ sau xử lý
-    /// </summary>
-    public decimal? ThuNoSauXL { get; set; }
-
-    /// <summary>
-    /// Còn lại ngoài bảng
-    /// </summary>
-    public decimal? ConLaiNgoaiBang { get; set; }
-
-    /// <summary>
-    /// Dư nợ nội bảng
-    /// </summary>
-    public decimal? DuNoNoiBang { get; set; }
-
-    /// <summary>
-    /// Nhóm nợ
-    /// </summary>
-    [StringLength(200)]
-    public string? NhomNo { get; set; }
-
-    /// <summary>
-    /// Mã cán bộ tín dụng
-    /// </summary>
-    [StringLength(200)]
-    public string? MaCBTD { get; set; }
-
-    /// <summary>
-    /// Tên cán bộ tín dụng
-    /// </summary>
-    [StringLength(200)]
-    public string? TenCBTD { get; set; }
-
-    /// <summary>
-    /// Mã phòng giao dịch
-    /// </summary>
-    [StringLength(200)]
-    public string? MaPGD { get; set; }
-
-    /// <summary>
-    /// Tài khoản hạch toán
-    /// </summary>
-    [StringLength(200)]
-    public string? TaiKhoanHachToan { get; set; }
-
-    /// <summary>
-    /// Số tham chiếu
-    /// </summary>
-    [StringLength(200)]
-    public string? RefNo { get; set; }
-
-    /// <summary>
-    /// Loại nguồn vốn
-    /// </summary>
-    [StringLength(200)]
-    public string? LoaiNguonVon { get; set; }
-
-    /// <summary>
-    /// Chuyển đổi sang entity
-    /// </summary>
-    public LN03 ToEntity()
+    public class CreateLN03DTO
     {
-        return new LN03
+        /// <summary>
+        /// Ngày dữ liệu
+        /// </summary>
+        [Required]
+        public DateTime NgayDL { get; set; } = DateTime.Now;
+
+        /// <summary>
+        /// Mã chi nhánh
+        /// </summary>
+        [Required]
+        [StringLength(200)]
+        public string MaChiNhanh { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Tên chi nhánh
+        /// </summary>
+        [StringLength(200)]
+        public string TenChiNhanh { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Mã khách hàng
+        /// </summary>
+        [Required]
+        [StringLength(200)]
+        public string MaKH { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Tên khách hàng
+        /// </summary>
+        [StringLength(200)]
+        public string TenKH { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Số hợp đồng
+        /// </summary>
+        [Required]
+        [StringLength(200)]
+        public string SoHopDong { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Số tiền xử lý rủi ro
+        /// </summary>
+        public decimal? SoTienXLRR { get; set; }
+
+        /// <summary>
+        /// Ngày phát sinh xử lý
+        /// </summary>
+        public DateTime? NgayPhatSinhXL { get; set; }
+
+        /// <summary>
+        /// Thu nợ sau xử lý
+        /// </summary>
+        public decimal? ThuNoSauXL { get; set; }
+
+        /// <summary>
+        /// Còn lại ngoài bảng
+        /// </summary>
+        public decimal? ConLaiNgoaiBang { get; set; }
+
+        /// <summary>
+        /// Dư nợ nội bảng
+        /// </summary>
+        public decimal? DuNoNoiBang { get; set; }
+
+        /// <summary>
+        /// Nhóm nợ
+        /// </summary>
+        [StringLength(200)]
+        public string? NhomNo { get; set; }
+
+        /// <summary>
+        /// Mã cán bộ tín dụng
+        /// </summary>
+        [StringLength(200)]
+        public string? MaCBTD { get; set; }
+
+        /// <summary>
+        /// Tên cán bộ tín dụng
+        /// </summary>
+        [StringLength(200)]
+        public string? TenCBTD { get; set; }
+
+        /// <summary>
+        /// Mã phòng giao dịch
+        /// </summary>
+        [StringLength(200)]
+        public string? MaPGD { get; set; }
+
+        /// <summary>
+        /// Tài khoản hạch toán
+        /// </summary>
+        [StringLength(200)]
+        public string? TaiKhoanHachToan { get; set; }
+
+        /// <summary>
+        /// Số tham chiếu
+        /// </summary>
+        [StringLength(200)]
+        public string? RefNo { get; set; }
+
+        /// <summary>
+        /// Loại nguồn vốn
+        /// </summary>
+        [StringLength(200)]
+        public string? LoaiNguonVon { get; set; }
+
+        /// <summary>
+        /// Chuyển đổi sang entity
+        /// </summary>
+        public LN03 ToEntity()
         {
-            NGAY_DL = this.NgayDL,
-            MACHINHANH = this.MaChiNhanh,
-            TENCHINHANH = this.TenChiNhanh,
-            MAKH = this.MaKH,
-            TENKH = this.TenKH ?? string.Empty,
-            SOHOPDONG = this.SoHopDong,
-            SOTIENXLRR = this.SoTienXLRR,
-            NGAYPHATSINHXL = this.NgayPhatSinhXL,
-            THUNOSAUXL = this.ThuNoSauXL,
-            CONLAINGOAIBANG = this.ConLaiNgoaiBang,
-            DUNONOIBANG = this.DuNoNoiBang,
-            NHOMNO = this.NhomNo ?? string.Empty,
-            MACBTD = this.MaCBTD ?? string.Empty,
-            TENCBTD = this.TenCBTD ?? string.Empty,
-            MAPGD = this.MaPGD ?? string.Empty,
-            TAIKHOANHACHTOAN = this.TaiKhoanHachToan ?? string.Empty,
-            REFNO = this.RefNo ?? string.Empty,
-            LOAINGUONVON = this.LoaiNguonVon ?? string.Empty,
-            CREATED_DATE = DateTime.Now,
-            UPDATED_DATE = DateTime.Now,
-            FILE_NAME = $"MANUAL_CREATION_{DateTime.Now:yyyyMMdd}"
-        };
+            return new LN03
+            {
+                NGAY_DL = this.NgayDL,
+                MACHINHANH = this.MaChiNhanh,
+                TENCHINHANH = this.TenChiNhanh,
+                MAKH = this.MaKH,
+                TENKH = this.TenKH ?? string.Empty,
+                SOHOPDONG = this.SoHopDong,
+                SOTIENXLRR = this.SoTienXLRR,
+                NGAYPHATSINHXL = this.NgayPhatSinhXL,
+                THUNOSAUXL = this.ThuNoSauXL,
+                CONLAINGOAIBANG = this.ConLaiNgoaiBang,
+                DUNONOIBANG = this.DuNoNoiBang,
+                NHOMNO = this.NhomNo ?? string.Empty,
+                MACBTD = this.MaCBTD ?? string.Empty,
+                TENCBTD = this.TenCBTD ?? string.Empty,
+                MAPGD = this.MaPGD ?? string.Empty,
+                TAIKHOANHACHTOAN = this.TaiKhoanHachToan ?? string.Empty,
+                REFNO = this.RefNo ?? string.Empty,
+                LOAINGUONVON = this.LoaiNguonVon ?? string.Empty,
+                CREATED_DATE = DateTime.Now,
+                UPDATED_DATE = DateTime.Now,
+                FILE_NAME = $"MANUAL_CREATION_{DateTime.Now:yyyyMMdd}"
+            };
+        }
     }
-}

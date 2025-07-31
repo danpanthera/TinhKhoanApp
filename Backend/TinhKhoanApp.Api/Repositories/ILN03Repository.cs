@@ -15,7 +15,7 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Lấy danh sách LN03 gần đây
         /// </summary>
-        new Task<IEnumerable<LN03>> GetRecentAsync(int count = 10);
+        Task<IEnumerable<LN03>> GetRecentAsync(int count = 10);
 
         /// <summary>
         /// Lấy LN03 theo ID
