@@ -393,12 +393,12 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Import GL01 - ULTRA HIGH-SPEED với direct streaming
+        /// Import GL01 - SILENT ULTRA HIGH-SPEED với direct streaming (no verbose logging)
         /// </summary>
         public async Task<DirectImportResult> ImportGL01DirectAsync(IFormFile file, string? statementDate = null)
         {
-            _logger.LogInformation("🚀 [GL01_ULTRA] ULTRA HIGH-SPEED Import vào bảng GL01");
-            return await ImportUltraHighSpeedAsync<GL01>("GL01", "GL01", file, statementDate);
+            _logger.LogInformation("🚀 [GL01_SILENT] SILENT ULTRA HIGH-SPEED Import vào bảng GL01");
+            return await ImportGL01SilentDirectAsync(file, statementDate);
         }
 
         /// <summary>
@@ -466,6 +466,66 @@ namespace TinhKhoanApp.Api.Services
                 result.ErrorMessage = ex.Message;
                 result.EndTime = DateTime.UtcNow;
                 _logger.LogError(ex, "❌ [GL02_SILENT] Failed: {FileName}", file.FileName);
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// GL01 SILENT DIRECT Import - Tốc độ tối đa, không verbose logging
+        /// Chuyên biệt cho file GL01 lớn (300k+ records) - TR_TIME cho NGAY_DL
+        /// </summary>
+        private async Task<DirectImportResult> ImportGL01SilentDirectAsync(IFormFile file, string? statementDate = null)
+        {
+            var result = new DirectImportResult
+            {
+                FileName = file.FileName,
+                DataType = "GL01",
+                TargetTable = "GL01",
+                FileSizeBytes = file.Length,
+                StartTime = DateTime.UtcNow
+            };
+
+            try
+            {
+                _logger.LogInformation("🔥 [GL01_SILENT] Starting SILENT Direct Import for GL01: {FileName}, Size: {Size}MB",
+                    file.FileName, Math.Round(file.Length / 1024.0 / 1024.0, 2));
+
+                // Extract NgayDL từ filename
+                var ngayDL = ExtractNgayDLFromFileName(file.FileName);
+                result.NgayDL = ngayDL;
+
+                // Create ImportedDataRecord for tracking
+                var importRecord = await CreateImportedDataRecordAsync(file, "GL01", 0);
+                result.ImportedDataRecordId = importRecord.Id;
+
+                // Parse CSV với STREAMING BATCH processing (không load tất cả vào memory)
+                var processedCount = await ParseAndInsertGL01StreamingAsync(file, statementDate);
+                _logger.LogInformation("🔥 [GL01_SILENT] STREAMING processing completed: {Count} records", processedCount);
+
+                if (processedCount > 0)
+                {
+                    result.ProcessedRecords = processedCount;
+
+                    // Update record count
+                    importRecord.RecordsCount = processedCount;
+                    await _context.SaveChangesAsync();
+                }
+
+                result.Success = true;
+                result.BatchId = Guid.NewGuid().ToString();
+                result.EndTime = DateTime.UtcNow;
+
+                _logger.LogInformation("🔥 [GL01_SILENT] COMPLETED: {Count} records in {Duration} seconds",
+                    result.ProcessedRecords, Math.Round(result.Duration.TotalSeconds, 1));
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.ErrorMessage = ex.Message;
+                result.EndTime = DateTime.UtcNow;
+                _logger.LogError(ex, "❌ [GL01_SILENT] Failed: {FileName}", file.FileName);
                 return result;
             }
         }
@@ -799,6 +859,189 @@ namespace TinhKhoanApp.Api.Services
             using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.TableLock, null)
             {
                 DestinationTableName = "GL02",
+                BatchSize = records.Count, // Use actual batch size
+                BulkCopyTimeout = 300, // 5 minutes for each batch
+                EnableStreaming = true
+            };
+
+            // Setup column mappings (no logging for speed)
+            foreach (DataColumn column in dataTable.Columns)
+            {
+                bulkCopy.ColumnMappings.Add(column.ColumnName, column.ColumnName);
+            }
+
+            // Execute batch insert
+            await bulkCopy.WriteToServerAsync(dataTable);
+            return records.Count;
+        }
+
+        /// <summary>
+        /// TRUE STREAMING: Parse và Insert GL01 theo batch nhỏ - không load tất cả vào memory
+        /// Batch size 50k records để tránh memory overflow với file lớn
+        /// GL01: TR_TIME (index 2) cho NGAY_DL thay vì filename
+        /// </summary>
+        private async Task<int> ParseAndInsertGL01StreamingAsync(IFormFile file, string? statementDate = null)
+        {
+            var totalProcessed = 0;
+            var connectionString = _context.Database.GetConnectionString();
+
+            using var stream = file.OpenReadStream();
+            using var reader = new StreamReader(stream, Encoding.UTF8, bufferSize: 65536); // 64KB buffer
+            using var csv = new CsvReader(reader, new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                BufferSize = 65536,
+                HasHeaderRecord = true,
+                TrimOptions = CsvHelper.Configuration.TrimOptions.Trim,
+                ReadingExceptionOccurred = (ex) => false,
+                BadDataFound = null
+            });
+
+            await csv.ReadAsync();
+            csv.ReadHeader();
+
+            var batch = new List<GL01>();
+            const int BATCH_SIZE = 50000; // 50k per batch to avoid memory issues
+            var recordCount = 0;
+
+            while (await csv.ReadAsync())
+            {
+                try
+                {
+                    var record = new GL01
+                    {
+                        // TR_TIME (index 25) -> NGAY_DL (GL01 specific rule)
+                        NGAY_DL = DateTime.TryParseExact(csv.GetField(25)?.Trim() ?? "", "yyyyMMdd",
+                            CultureInfo.InvariantCulture, DateTimeStyles.None, out var trTime) ? trTime : DateTime.Now,
+
+                        STS = csv.GetField(0)?.Trim(),
+                        NGAY_GD = DateTime.TryParseExact(csv.GetField(1)?.Trim() ?? "", "yyyyMMdd",
+                            CultureInfo.InvariantCulture, DateTimeStyles.None, out var ngayGd) ? ngayGd : (DateTime?)null,
+                        NGUOI_TAO = csv.GetField(2)?.Trim(),
+                        DYSEQ = csv.GetField(3)?.Trim(),
+                        TR_TYPE = csv.GetField(4)?.Trim(),
+                        DT_SEQ = csv.GetField(5)?.Trim(),
+                        TAI_KHOAN = csv.GetField(6)?.Trim(),
+                        TEN_TK = csv.GetField(7)?.Trim(),
+                        SO_TIEN_GD = decimal.TryParse(csv.GetField(8)?.Replace(",", "")?.Trim(), out var soTienGd) ? soTienGd : (decimal?)null,
+                        POST_BR = csv.GetField(9)?.Trim(),
+                        LOAI_TIEN = csv.GetField(10)?.Trim(),
+                        DR_CR = csv.GetField(11)?.Trim(),
+                        MA_KH = csv.GetField(12)?.Trim(),
+                        TEN_KH = csv.GetField(13)?.Trim(),
+                        CCA_USRID = csv.GetField(14)?.Trim(),
+                        TR_EX_RT = csv.GetField(15)?.Trim(),
+                        REMARK = csv.GetField(16)?.Trim(),
+                        BUS_CODE = csv.GetField(17)?.Trim(),
+                        UNIT_BUS_CODE = csv.GetField(18)?.Trim(),
+                        TR_CODE = csv.GetField(19)?.Trim(),
+                        TR_NAME = csv.GetField(20)?.Trim(),
+                        REFERENCE = csv.GetField(21)?.Trim(),
+                        VALUE_DATE = DateTime.TryParseExact(csv.GetField(22)?.Trim() ?? "", "yyyyMMdd",
+                            CultureInfo.InvariantCulture, DateTimeStyles.None, out var valueDate) ? valueDate : (DateTime?)null,
+                        DEPT_CODE = csv.GetField(23)?.Trim(),
+                        TR_TIME = csv.GetField(24)?.Trim(),
+                        COMFIRM = csv.GetField(25)?.Trim(),
+                        TRDT_TIME = csv.GetField(26)?.Trim(),
+
+                        CREATED_DATE = DateTime.UtcNow,
+                        UPDATED_DATE = DateTime.UtcNow,
+                        FILE_NAME = file.FileName
+                    };
+
+                    batch.Add(record);
+                    recordCount++;
+
+                    // Insert batch when reached BATCH_SIZE
+                    if (batch.Count >= BATCH_SIZE)
+                    {
+                        var insertedCount = await InsertGL01BatchAsync(batch, connectionString);
+                        totalProcessed += insertedCount;
+                        _logger.LogInformation("🔥 [GL01_STREAMING] Batch {BatchNum}: Inserted {Count} records (Total: {Total})",
+                            (recordCount / BATCH_SIZE), insertedCount, totalProcessed);
+
+                        batch.Clear(); // Clear memory immediately
+                    }
+                }
+                catch
+                {
+                    // Skip malformed rows silently
+                    continue;
+                }
+            }
+
+            // Insert remaining records in final batch
+            if (batch.Count > 0)
+            {
+                var insertedCount = await InsertGL01BatchAsync(batch, connectionString);
+                totalProcessed += insertedCount;
+                _logger.LogInformation("🔥 [GL01_STREAMING] Final batch: Inserted {Count} records (Total: {Total})",
+                    insertedCount, totalProcessed);
+            }
+
+            return totalProcessed;
+        }
+
+        /// <summary>
+        /// Insert một batch GL01 records với optimized SqlBulkCopy
+        /// </summary>
+        private async Task<int> InsertGL01BatchAsync(List<GL01> records, string connectionString)
+        {
+            using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            // Create optimized DataTable for this batch only
+            var dataTable = new DataTable();
+            dataTable.Columns.Add("NGAY_DL", typeof(DateTime));
+            dataTable.Columns.Add("STS", typeof(string));
+            dataTable.Columns.Add("NGAY_GD", typeof(DateTime));
+            dataTable.Columns.Add("NGUOI_TAO", typeof(string));
+            dataTable.Columns.Add("DYSEQ", typeof(string));
+            dataTable.Columns.Add("TR_TYPE", typeof(string));
+            dataTable.Columns.Add("DT_SEQ", typeof(string));
+            dataTable.Columns.Add("TAI_KHOAN", typeof(string));
+            dataTable.Columns.Add("TEN_TK", typeof(string));
+            dataTable.Columns.Add("SO_TIEN_GD", typeof(decimal));
+            dataTable.Columns.Add("POST_BR", typeof(string));
+            dataTable.Columns.Add("LOAI_TIEN", typeof(string));
+            dataTable.Columns.Add("DR_CR", typeof(string));
+            dataTable.Columns.Add("MA_KH", typeof(string));
+            dataTable.Columns.Add("TEN_KH", typeof(string));
+            dataTable.Columns.Add("CCA_USRID", typeof(string));
+            dataTable.Columns.Add("TR_EX_RT", typeof(string));
+            dataTable.Columns.Add("REMARK", typeof(string));
+            dataTable.Columns.Add("BUS_CODE", typeof(string));
+            dataTable.Columns.Add("UNIT_BUS_CODE", typeof(string));
+            dataTable.Columns.Add("TR_CODE", typeof(string));
+            dataTable.Columns.Add("TR_NAME", typeof(string));
+            dataTable.Columns.Add("REFERENCE", typeof(string));
+            dataTable.Columns.Add("VALUE_DATE", typeof(DateTime));
+            dataTable.Columns.Add("DEPT_CODE", typeof(string));
+            dataTable.Columns.Add("TR_TIME", typeof(string));
+            dataTable.Columns.Add("COMFIRM", typeof(string));
+            dataTable.Columns.Add("TRDT_TIME", typeof(string));
+            dataTable.Columns.Add("CREATED_DATE", typeof(DateTime));
+            dataTable.Columns.Add("UPDATED_DATE", typeof(DateTime));
+            dataTable.Columns.Add("FILE_NAME", typeof(string));
+
+            // Populate DataTable from batch
+            foreach (var record in records)
+            {
+                dataTable.Rows.Add(
+                    record.NGAY_DL,
+                    record.STS, record.NGAY_GD, record.NGUOI_TAO, record.DYSEQ, record.TR_TYPE,
+                    record.DT_SEQ, record.TAI_KHOAN, record.TEN_TK, record.SO_TIEN_GD, record.POST_BR,
+                    record.LOAI_TIEN, record.DR_CR, record.MA_KH, record.TEN_KH, record.CCA_USRID,
+                    record.TR_EX_RT, record.REMARK, record.BUS_CODE, record.UNIT_BUS_CODE, record.TR_CODE,
+                    record.TR_NAME, record.REFERENCE, record.VALUE_DATE, record.DEPT_CODE, record.TR_TIME,
+                    record.COMFIRM, record.TRDT_TIME,
+                    record.CREATED_DATE, record.UPDATED_DATE, record.FILE_NAME
+                );
+            }
+
+            // Optimized SqlBulkCopy for small batches
+            using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.TableLock, null)
+            {
+                DestinationTableName = "GL01",
                 BatchSize = records.Count, // Use actual batch size
                 BulkCopyTimeout = 300, // 5 minutes for each batch
                 EnableStreaming = true
