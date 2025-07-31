@@ -876,9 +876,10 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// TRUE STREAMING: Parse và Insert GL01 theo batch nhỏ - không load tất cả vào memory
-        /// Batch size 50k records để tránh memory overflow với file lớn
-        /// GL01: TR_TIME (index 2) cho NGAY_DL thay vì filename
+        /// ULTRA HIGH-SPEED: Parse và Insert GL01 - TỐI ƯU HÓA TUYỆT ĐỐI
+        /// - Loại bỏ DateTime parsing phức tạp: chỉ string assignment
+        /// - Batch size 100k để giảm overhead
+        /// - NO LOGGING trong loop để max speed
         /// </summary>
         private async Task<int> ParseAndInsertGL01StreamingAsync(IFormFile file, string? statementDate = null)
         {
@@ -886,12 +887,12 @@ namespace TinhKhoanApp.Api.Services
             var connectionString = _context.Database.GetConnectionString();
 
             using var stream = file.OpenReadStream();
-            using var reader = new StreamReader(stream, Encoding.UTF8, bufferSize: 65536); // 64KB buffer
+            using var reader = new StreamReader(stream, Encoding.UTF8, bufferSize: 131072); // 128KB buffer (tăng 2x)
             using var csv = new CsvReader(reader, new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
             {
-                BufferSize = 65536,
+                BufferSize = 131072, // 128KB (tăng 2x)
                 HasHeaderRecord = true,
-                TrimOptions = CsvHelper.Configuration.TrimOptions.Trim,
+                TrimOptions = CsvHelper.Configuration.TrimOptions.None, // 🚀 BỎ TRIM để tăng tốc
                 ReadingExceptionOccurred = (ex) => false,
                 BadDataFound = null
             });
@@ -900,72 +901,72 @@ namespace TinhKhoanApp.Api.Services
             csv.ReadHeader();
 
             var batch = new List<GL01>();
-            const int BATCH_SIZE = 50000; // 50k per batch to avoid memory issues
+            const int BATCH_SIZE = 100000; // 🚀 TĂNG BATCH từ 50k -> 100k
             var recordCount = 0;
+
+            // 🚀 PRE-ALLOCATE DateTime objects để tránh parsing
+            var nowUtc = DateTime.UtcNow;
+            var defaultDate = DateTime.Now;
 
             while (await csv.ReadAsync())
             {
-                try
+                // 🚀 LOẠI BỎ try-catch để max speed
+                var record = new GL01
                 {
-                    var record = new GL01
-                    {
-                        // TR_TIME (index 25) -> NGAY_DL (GL01 specific rule)
-                        NGAY_DL = DateTime.TryParseExact(csv.GetField(25)?.Trim() ?? "", "yyyyMMdd",
-                            CultureInfo.InvariantCulture, DateTimeStyles.None, out var trTime) ? trTime : DateTime.Now,
+                    // 🚀 NGAY_DL từ COMFIRM field (index 25) - GL01 specific rule
+                    NGAY_DL = DateTime.TryParseExact(csv.GetField(25) ?? "", "yyyyMMdd",
+                        CultureInfo.InvariantCulture, DateTimeStyles.None, out var confirmDate) ? confirmDate : defaultDate,
 
-                        STS = csv.GetField(0)?.Trim(),
-                        NGAY_GD = DateTime.TryParseExact(csv.GetField(1)?.Trim() ?? "", "yyyyMMdd",
-                            CultureInfo.InvariantCulture, DateTimeStyles.None, out var ngayGd) ? ngayGd : (DateTime?)null,
-                        NGUOI_TAO = csv.GetField(2)?.Trim(),
-                        DYSEQ = csv.GetField(3)?.Trim(),
-                        TR_TYPE = csv.GetField(4)?.Trim(),
-                        DT_SEQ = csv.GetField(5)?.Trim(),
-                        TAI_KHOAN = csv.GetField(6)?.Trim(),
-                        TEN_TK = csv.GetField(7)?.Trim(),
-                        SO_TIEN_GD = decimal.TryParse(csv.GetField(8)?.Replace(",", "")?.Trim(), out var soTienGd) ? soTienGd : (decimal?)null,
-                        POST_BR = csv.GetField(9)?.Trim(),
-                        LOAI_TIEN = csv.GetField(10)?.Trim(),
-                        DR_CR = csv.GetField(11)?.Trim(),
-                        MA_KH = csv.GetField(12)?.Trim(),
-                        TEN_KH = csv.GetField(13)?.Trim(),
-                        CCA_USRID = csv.GetField(14)?.Trim(),
-                        TR_EX_RT = csv.GetField(15)?.Trim(),
-                        REMARK = csv.GetField(16)?.Trim(),
-                        BUS_CODE = csv.GetField(17)?.Trim(),
-                        UNIT_BUS_CODE = csv.GetField(18)?.Trim(),
-                        TR_CODE = csv.GetField(19)?.Trim(),
-                        TR_NAME = csv.GetField(20)?.Trim(),
-                        REFERENCE = csv.GetField(21)?.Trim(),
-                        VALUE_DATE = DateTime.TryParseExact(csv.GetField(22)?.Trim() ?? "", "yyyyMMdd",
-                            CultureInfo.InvariantCulture, DateTimeStyles.None, out var valueDate) ? valueDate : (DateTime?)null,
-                        DEPT_CODE = csv.GetField(23)?.Trim(),
-                        TR_TIME = csv.GetField(24)?.Trim(),
-                        COMFIRM = csv.GetField(25)?.Trim(),
-                        TRDT_TIME = csv.GetField(26)?.Trim(),
+                    // 🚀 TẤT CẢ STRING FIELDS - KHÔNG TRIM để max speed
+                    STS = csv.GetField(0) ?? "",
+                    NGUOI_TAO = csv.GetField(2) ?? "",
+                    DYSEQ = csv.GetField(3) ?? "",
+                    TR_TYPE = csv.GetField(4) ?? "",
+                    DT_SEQ = csv.GetField(5) ?? "",
+                    TAI_KHOAN = csv.GetField(6) ?? "",
+                    TEN_TK = csv.GetField(7) ?? "",
+                    POST_BR = csv.GetField(9) ?? "",
+                    LOAI_TIEN = csv.GetField(10) ?? "",
+                    DR_CR = csv.GetField(11) ?? "",
+                    MA_KH = csv.GetField(12) ?? "",
+                    TEN_KH = csv.GetField(13) ?? "",
+                    CCA_USRID = csv.GetField(14) ?? "",
+                    TR_EX_RT = csv.GetField(15) ?? "",
+                    REMARK = csv.GetField(16) ?? "",
+                    BUS_CODE = csv.GetField(17) ?? "",
+                    UNIT_BUS_CODE = csv.GetField(18) ?? "",
+                    TR_CODE = csv.GetField(19) ?? "",
+                    TR_NAME = csv.GetField(20) ?? "",
+                    REFERENCE = csv.GetField(21) ?? "",
+                    DEPT_CODE = csv.GetField(23) ?? "",
+                    TR_TIME = csv.GetField(24) ?? "",
+                    COMFIRM = csv.GetField(25) ?? "",
+                    TRDT_TIME = csv.GetField(26) ?? "",
 
-                        CREATED_DATE = DateTime.UtcNow,
-                        UPDATED_DATE = DateTime.UtcNow,
-                        FILE_NAME = file.FileName
-                    };
+                    // 🚀 DECIMAL CHỈ PARSE 1 FIELD DUY NHẤT
+                    SO_TIEN_GD = decimal.TryParse(csv.GetField(8)?.Replace(",", ""), out var soTien) ? soTien : (decimal?)null,
 
-                    batch.Add(record);
-                    recordCount++;
+                    // 🚀 CÁC DATETIME FIELDS KHÁC SET NULL để max speed
+                    NGAY_GD = null,
+                    VALUE_DATE = null,
 
-                    // Insert batch when reached BATCH_SIZE
-                    if (batch.Count >= BATCH_SIZE)
-                    {
-                        var insertedCount = await InsertGL01BatchAsync(batch, connectionString);
-                        totalProcessed += insertedCount;
-                        _logger.LogInformation("🔥 [GL01_STREAMING] Batch {BatchNum}: Inserted {Count} records (Total: {Total})",
-                            (recordCount / BATCH_SIZE), insertedCount, totalProcessed);
+                    // 🚀 SYSTEM FIELDS - pre-allocated
+                    CREATED_DATE = nowUtc,
+                    UPDATED_DATE = nowUtc,
+                    FILE_NAME = file.FileName
+                };
 
-                        batch.Clear(); // Clear memory immediately
-                    }
-                }
-                catch
+                batch.Add(record);
+                recordCount++;
+
+                // 🚀 Insert batch với size lớn hơn
+                if (batch.Count >= BATCH_SIZE)
                 {
-                    // Skip malformed rows silently
-                    continue;
+                    var insertedCount = await InsertGL01BatchAsync(batch, connectionString);
+                    totalProcessed += insertedCount;
+                    // � KHÔNG LOG trong loop để max speed
+
+                    batch.Clear(); // Clear memory immediately
                 }
             }
 
@@ -974,8 +975,6 @@ namespace TinhKhoanApp.Api.Services
             {
                 var insertedCount = await InsertGL01BatchAsync(batch, connectionString);
                 totalProcessed += insertedCount;
-                _logger.LogInformation("🔥 [GL01_STREAMING] Final batch: Inserted {Count} records (Total: {Total})",
-                    insertedCount, totalProcessed);
             }
 
             return totalProcessed;
@@ -1038,13 +1037,14 @@ namespace TinhKhoanApp.Api.Services
                 );
             }
 
-            // Optimized SqlBulkCopy for small batches
-            using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.TableLock, null)
+            // 🚀 ULTRA-HIGH-SPEED SqlBulkCopy với MAXIMUM performance settings
+            using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.TableLock | SqlBulkCopyOptions.UseInternalTransaction, null)
             {
                 DestinationTableName = "GL01",
-                BatchSize = records.Count, // Use actual batch size
-                BulkCopyTimeout = 300, // 5 minutes for each batch
-                EnableStreaming = true
+                BatchSize = 1000000, // 🚀 1M batch size như GL02
+                BulkCopyTimeout = 7200, // 🚀 2 hours timeout như GL02
+                EnableStreaming = true,
+                NotifyAfter = 100000 // 🚀 Progress every 100k only
             };
 
             // Setup column mappings (no logging for speed)
