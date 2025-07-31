@@ -250,6 +250,13 @@ class RawDataService {
         acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
         requiredKeyword: 'GL01',
       },
+      GL02: {
+        name: 'GL02',
+        description: 'Dữ liệu giao dịch tổng hợp',
+        icon: '📝',
+        acceptedFormats: ['.csv', '.xlsx', '.xls', '.zip', '.rar', '.7z'],
+        requiredKeyword: 'GL02',
+      },
       DPDA: {
         name: 'DPDA',
         description: 'Dữ liệu sao kê phát hành thẻ',

@@ -97,9 +97,22 @@ builder.Services.AddCachingServices(builder.Configuration);
 // File Upload Configuration
 builder.Services.Configure<FormOptions>(options =>
 {
-    options.MultipartBodyLengthLimit = 524288000; // 500MB
+    options.MultipartBodyLengthLimit = 1073741824; // 1GB for large GL01 files
     options.ValueLengthLimit = int.MaxValue;
     options.ValueCountLimit = int.MaxValue;
+});
+
+// Kestrel Server Configuration for large files
+builder.Services.Configure<IISServerOptions>(options =>
+{
+    options.MaxRequestBodySize = 1073741824; // 1GB
+});
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 1073741824; // 1GB
+    options.Limits.RequestHeadersTimeout = TimeSpan.FromMinutes(5);
+    options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(30);
 });
 
 // JWT Authentication (Optional)

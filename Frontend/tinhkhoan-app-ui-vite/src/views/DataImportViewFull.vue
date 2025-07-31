@@ -3,48 +3,58 @@
     <!-- Header Section -->
     <div class="header-section">
       <h1>🏦 KHO DỮ LIỆU THÔ</h1>
-      <p class="subtitle">Hệ thống quản lý và import dữ liệu nghiệp vụ ngân hàng chuyên nghiệp</p>
+      <p class="subtitle">
+        Hệ thống quản lý và import dữ liệu nghiệp vụ ngân hàng chuyên nghiệp
+      </p>
     </div>
 
     <!-- Thông báo -->
     <div v-if="errorMessage" class="alert alert-error">
       <span class="alert-icon">⚠️</span>
       {{ errorMessage }}
-      <button @click="clearMessage" class="alert-close">×</button>
+      <button class="alert-close" @click="clearMessage">
+        ×
+      </button>
     </div>
 
     <div v-if="successMessage" class="alert alert-success">
       <span class="alert-icon">✅</span>
       {{ successMessage }}
-      <button @click="clearMessage" class="alert-close">×</button>
+      <button class="alert-close" @click="clearMessage">
+        ×
+      </button>
     </div>
 
     <!-- Loading indicator -->
     <div v-if="loading" class="loading-section">
-      <div class="loading-spinner"></div>
+      <div class="loading-spinner" />
       <p>{{ loadingMessage || 'Đang xử lý dữ liệu...' }}</p>
     </div>
 
     <!-- Control Panel -->
     <div class="control-panel">
       <div class="date-control-section">
-        <h3 class="agribank-date-title">🗓️ Chọn ngày sao kê</h3>
+        <h3 class="agribank-date-title">
+          🗓️ Chọn ngày sao kê
+        </h3>
         <div class="date-controls-enhanced">
           <div class="date-range-group">
             <div class="date-input-group">
               <label>Từ ngày:</label>
-              <input v-model="selectedFromDate" type="date" class="date-input agribank-date-input" />
+              <input v-model="selectedFromDate" type="date" class="date-input agribank-date-input">
             </div>
             <div class="date-input-group">
               <label>Đến ngày:</label>
-              <input v-model="selectedToDate" type="date" class="date-input agribank-date-input" />
+              <input v-model="selectedToDate" type="date" class="date-input agribank-date-input">
             </div>
           </div>
           <div class="date-actions-group">
-            <button @click="applyDateFilter" class="btn-filter agribank-btn-filter" :disabled="!selectedFromDate">
+            <button class="btn-filter agribank-btn-filter" :disabled="!selectedFromDate" @click="applyDateFilter">
               🔍 Lọc theo ngày
             </button>
-            <button @click="clearDateFilter" class="btn-clear agribank-btn-clear">🗑️ Xóa bộ lọc</button>
+            <button class="btn-clear agribank-btn-clear" @click="clearDateFilter">
+              🗑️ Xóa bộ lọc
+            </button>
           </div>
         </div>
       </div>
@@ -52,22 +62,28 @@
       <div class="bulk-actions-section">
         <h3>⚡ Thao tác hàng loạt</h3>
         <div class="bulk-actions">
-          <button @click="openSmartImportModal" class="btn-smart-import" :disabled="loading">🧠 Smart Import</button>
-          <button @click="clearAllData" class="btn-clear-all" :disabled="loading">🗑️ Xóa toàn bộ dữ liệu</button>
-          <button @click="refreshAllData" class="btn-refresh" :disabled="loading">🔄 Tải lại dữ liệu</button>
+          <button class="btn-smart-import" :disabled="loading" @click="openSmartImportModal">
+            🧠 Smart Import
+          </button>
+          <button class="btn-clear-all" :disabled="loading" @click="clearAllData">
+            🗑️ Xóa toàn bộ dữ liệu
+          </button>
+          <button class="btn-refresh" :disabled="loading" @click="refreshAllData">
+            🔄 Tải lại dữ liệu
+          </button>
           <button
-            @click="loadTableRecordCounts"
             class="btn-table-counts"
             :disabled="loading"
             title="Lấy số lượng records thực tế từ database"
+            @click="loadTableRecordCounts"
           >
             📊 Real Counts
           </button>
           <button
-            @click="debugRecalculateStats"
             class="btn-debug"
             :disabled="loading"
             title="Debug: Force recalculate stats"
+            @click="debugRecalculateStats"
           >
             🔧 Debug Stats
           </button>
@@ -79,24 +95,34 @@
     <div class="data-types-section agribank-section">
       <div class="section-header agribank-header">
         <div class="header-content">
-          <div class="agribank-logo-header"></div>
+          <div class="agribank-logo-header" />
           <div class="header-text">
             <h2>📊 BẢNG DỮ LIỆU THÔ</h2>
             <p>Theo dõi và quản lý tất cả loại dữ liệu của hệ thống Agribank Lai Châu</p>
           </div>
         </div>
-        <div class="agribank-brand-line"></div>
+        <div class="agribank-brand-line" />
       </div>
 
       <div class="data-types-table agribank-table">
         <table class="enhanced-table">
           <thead class="agribank-thead">
             <tr>
-              <th class="col-datatype">Loại dữ liệu</th>
-              <th class="col-description">Mô tả chi tiết</th>
-              <th class="col-records">Tổng records</th>
-              <th class="col-updated">Cập nhật cuối</th>
-              <th class="col-actions">Thao tác nghiệp vụ</th>
+              <th class="col-datatype">
+                Loại dữ liệu
+              </th>
+              <th class="col-description">
+                Mô tả chi tiết
+              </th>
+              <th class="col-records">
+                Tổng records
+              </th>
+              <th class="col-updated">
+                Cập nhật cuối
+              </th>
+              <th class="col-actions">
+                Thao tác nghiệp vụ
+              </th>
             </tr>
           </thead>
           <tbody class="agribank-tbody">
@@ -126,42 +152,42 @@
               </td>
               <td class="actions-cell">
                 <button
-                  @click="viewDataType(key)"
                   class="btn-action btn-view btn-icon-only"
                   title="Xem dữ liệu import"
                   :disabled="false"
+                  @click="viewDataType(key)"
                 >
                   👁️
                 </button>
                 <button
-                  @click="viewRawDataFromTable(key)"
                   class="btn-action btn-raw-view btn-icon-only"
                   title="Xem dữ liệu thô từ bảng"
                   :disabled="!selectedFromDate"
+                  @click="viewRawDataFromTable(key)"
                 >
                   📊
                 </button>
                 <button
-                  @click="openImportModal(key)"
                   class="btn-action btn-import btn-icon-only"
                   :style="{ backgroundColor: getDataTypeColor(key) }"
                   title="Import dữ liệu"
+                  @click="openImportModal(key)"
                 >
                   📤
                 </button>
                 <button
-                  @click="deleteDataTypeByDate(key)"
                   class="btn-action btn-delete btn-icon-only"
                   title="Xóa theo ngày đã chọn"
                   :disabled="!selectedFromDate || getDataTypeStats(key).totalRecords === 0"
+                  @click="deleteDataTypeByDate(key)"
                 >
                   🗑️
                 </button>
                 <button
-                  @click="deleteAllDataType(key)"
                   class="btn-action btn-delete-all btn-icon-only"
                   title="Xóa toàn bộ dữ liệu bảng này"
                   :disabled="getDataTypeStats(key).totalRecords === 0"
+                  @click="deleteAllDataType(key)"
                 >
                   💥
                 </button>
@@ -177,10 +203,12 @@
       <div class="modal-content import-modal" @click.stop>
         <div class="modal-header">
           <div class="modal-header-content">
-            <div class="modal-icon">📤</div>
+            <div class="modal-icon">
+              📤
+            </div>
             <h3>Import dữ liệu {{ selectedDataType }}</h3>
           </div>
-          <button @click="closeImportModal" class="modal-close" aria-label="Đóng">
+          <button class="modal-close" aria-label="Đóng" @click="closeImportModal">
             <span aria-hidden="true">×</span>
           </button>
         </div>
@@ -191,13 +219,13 @@
               <label class="form-label">Chọn file để import:</label>
               <div class="file-input-container">
                 <input
-                  type="file"
-                  ref="fileInput"
-                  multiple
-                  @change="handleFileSelect"
-                  class="file-input"
                   id="file-upload"
-                />
+                  ref="fileInput"
+                  type="file"
+                  multiple
+                  class="file-input"
+                  @change="handleFileSelect"
+                >
                 <label for="file-upload" class="file-input-label">
                   <span class="file-icon">📎</span>
                   <span>Chọn tệp</span>
@@ -218,7 +246,9 @@
                     <span class="file-name">{{ file.name }}</span>
                     <span class="file-size">({{ formatFileSize(file.size) }})</span>
                   </div>
-                  <button @click="removeFile(index)" class="btn-remove" title="Xóa file này">×</button>
+                  <button class="btn-remove" title="Xóa file này" @click="removeFile(index)">
+                    ×
+                  </button>
                 </li>
               </ul>
             </div>
@@ -230,13 +260,13 @@
                 <span class="upload-status-text">{{ getUploadStatusText() }}</span>
               </div>
               <div class="progress-bar-wrapper">
-                <div class="progress-bar" :style="{ width: `${uploadProgress}%` }"></div>
+                <div class="progress-bar" :style="{ width: `${uploadProgress}%` }" />
               </div>
               <div class="progress-details">
                 <span class="progress-percentage">{{ uploadProgress }}%</span>
-                <span class="progress-file-info" v-if="currentUploadingFile && totalFiles > 0">
+                <span v-if="currentUploadingFile && totalFiles > 0" class="progress-file-info">
                   <strong>{{ currentUploadingFile }}</strong>
-                  <br />
+                  <br>
                   <small>Đang xử lý file {{ uploadedFiles }}/{{ totalFiles }}</small>
                 </span>
               </div>
@@ -249,17 +279,17 @@
                 v-model="importNotes"
                 class="notes-input"
                 placeholder="Thêm ghi chú cho lần import này..."
-              ></textarea>
+              />
             </div>
           </div>
         </div>
 
         <div class="modal-footer">
-          <button @click="closeImportModal" class="btn-cancel">
+          <button class="btn-cancel" @click="closeImportModal">
             <span class="btn-icon">✖️</span>
             <span>Hủy</span>
           </button>
-          <button @click="performImport" class="btn-submit" :disabled="selectedFiles.length === 0 || uploading">
+          <button class="btn-submit" :disabled="selectedFiles.length === 0 || uploading" @click="performImport">
             <span class="btn-icon">{{ uploading ? '⏳' : '📤' }}</span>
             <span>{{ uploading ? 'Đang xử lý...' : 'Import Dữ liệu' }}</span>
           </button>
@@ -272,7 +302,9 @@
       <div class="modal-content data-view-modal" @click.stop>
         <div class="modal-header">
           <h3>Dữ liệu {{ selectedDataType }} {{ statementDateFormatted }}</h3>
-          <button @click="closeDataViewModal" class="modal-close">×</button>
+          <button class="modal-close" @click="closeDataViewModal">
+            ×
+          </button>
         </div>
         <div class="modal-body">
           <div v-if="filteredResults.length > 0" class="data-table-container">
@@ -286,14 +318,18 @@
                   <strong>📊 Dữ liệu đã xử lý từ {{ filteredResults[0].tableName }}</strong>
                 </p>
                 <p>Hiển thị {{ filteredResults[0].processedData.length }} bản ghi đã xử lý</p>
-                <p class="data-source-info">Nguồn: {{ filteredResults[0].dataSource }}</p>
+                <p class="data-source-info">
+                  Nguồn: {{ filteredResults[0].dataSource }}
+                </p>
               </div>
 
               <div class="responsive-table-wrapper">
                 <table class="data-table enhanced-table">
                   <thead class="agribank-thead">
                     <tr>
-                      <th style="width: 50px; text-align: center">#</th>
+                      <th style="width: 50px; text-align: center">
+                        #
+                      </th>
                       <th
                         v-for="(column, index) in Object.keys(filteredResults[0].processedData[0] || {}).slice(0, 10)"
                         :key="index"
@@ -307,7 +343,9 @@
                       v-for="(record, recordIndex) in filteredResults[0].processedData.slice(0, 50)"
                       :key="recordIndex"
                     >
-                      <td style="text-align: center; font-weight: bold; color: #8b1538">{{ recordIndex + 1 }}</td>
+                      <td style="text-align: center; font-weight: bold; color: #8b1538">
+                        {{ recordIndex + 1 }}
+                      </td>
                       <td v-for="(column, columnIndex) in Object.keys(record).slice(0, 10)" :key="columnIndex">
                         <span :title="record[column]">{{ formatCellValue(record[column]) }}</span>
                       </td>
@@ -318,10 +356,8 @@
 
               <div class="table-note">
                 <p>
-                  <i
-                    >💡 Hiển thị 10 cột đầu tiên và tối đa 50 bản ghi. Đây là dữ liệu đã xử lý và lưu trong bảng lịch
-                    sử.</i
-                  >
+                  <i>💡 Hiển thị 10 cột đầu tiên và tối đa 50 bản ghi. Đây là dữ liệu đã xử lý và lưu trong bảng lịch
+                    sử.</i>
                 </p>
               </div>
             </div>
@@ -339,14 +375,18 @@
                   Hiển thị {{ filteredResults[0].previewData.rows?.length || 0 }} /
                   {{ filteredResults[0].recordCount }} bản ghi
                 </p>
-                <p class="data-source-info">Nguồn: Trực tiếp từ DataTable (không qua Import Records)</p>
+                <p class="data-source-info">
+                  Nguồn: Trực tiếp từ DataTable (không qua Import Records)
+                </p>
               </div>
 
               <div class="responsive-table-wrapper">
                 <table class="data-table enhanced-table">
                   <thead class="agribank-thead">
                     <tr>
-                      <th style="width: 50px; text-align: center">#</th>
+                      <th style="width: 50px; text-align: center">
+                        #
+                      </th>
                       <th
                         v-for="(column, index) in Object.keys(filteredResults[0].previewData.rows?.[0] || {}).slice(
                           0,
@@ -363,7 +403,9 @@
                       v-for="(record, recordIndex) in (filteredResults[0].previewData.rows || []).slice(0, 50)"
                       :key="recordIndex"
                     >
-                      <td style="text-align: center; font-weight: bold; color: #8b1538">{{ recordIndex + 1 }}</td>
+                      <td style="text-align: center; font-weight: bold; color: #8b1538">
+                        {{ recordIndex + 1 }}
+                      </td>
                       <td v-for="(column, columnIndex) in Object.keys(record).slice(0, 10)" :key="columnIndex">
                         <span :title="record[column]">{{ formatCellValue(record[column]) }}</span>
                       </td>
@@ -374,10 +416,8 @@
 
               <div class="table-note">
                 <p>
-                  <i
-                    >🎯 Hiển thị 10 cột đầu tiên và tối đa 50 bản ghi từ Direct Preview. Đây là dữ liệu trực tiếp từ
-                    DataTable.</i
-                  >
+                  <i>🎯 Hiển thị 10 cột đầu tiên và tối đa 50 bản ghi từ Direct Preview. Đây là dữ liệu trực tiếp từ
+                    DataTable.</i>
                 </p>
               </div>
             </div>
@@ -398,16 +438,18 @@
                   <tr v-for="(item, index) in filteredResults" :key="index">
                     <td>{{ item.FileName }}</td>
                     <td>{{ formatDateTime(item.ImportDate) }}</td>
-                    <td class="agribank-number">{{ formatRecordCount(item.RecordsCount) }}</td>
+                    <td class="agribank-number">
+                      {{ formatRecordCount(item.RecordsCount) }}
+                    </td>
                     <td>{{ item.Status }}</td>
                     <td>
-                      <button @click="previewImportRecord(item.Id)" class="btn-action btn-view" title="Xem chi tiết">
+                      <button class="btn-action btn-view" title="Xem chi tiết" @click="previewImportRecord(item.Id)">
                         👁️
                       </button>
                       <button
-                        @click="confirmDelete(item.Id, item.FileName)"
                         class="btn-action btn-delete"
                         title="Xóa bản ghi"
+                        @click="confirmDelete(item.Id, item.FileName)"
                       >
                         🗑️
                       </button>
@@ -422,7 +464,9 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button @click="closeDataViewModal" class="btn-cancel">Đóng</button>
+          <button class="btn-cancel" @click="closeDataViewModal">
+            Đóng
+          </button>
         </div>
       </div>
     </div>
@@ -432,7 +476,9 @@
       <div class="modal-content raw-data-modal" @click.stop>
         <div class="modal-header">
           <h3>📊 Chi tiết dữ liệu {{ selectedDataType }}</h3>
-          <button @click="closeRawDataModal" class="modal-close">×</button>
+          <button class="modal-close" @click="closeRawDataModal">
+            ×
+          </button>
         </div>
         <div class="modal-body">
           <div v-if="rawDataRecords.length > 0" class="raw-data-table-container">
@@ -446,7 +492,9 @@
               <table class="raw-data-table enhanced-table">
                 <thead class="agribank-thead">
                   <tr>
-                    <th style="width: 50px; text-align: center">#</th>
+                    <th style="width: 50px; text-align: center">
+                      #
+                    </th>
                     <th v-for="(column, index) in Object.keys(rawDataRecords[0]).slice(0, 12)" :key="index">
                       {{ column }}
                     </th>
@@ -454,7 +502,9 @@
                 </thead>
                 <tbody class="agribank-tbody">
                   <tr v-for="(record, recordIndex) in rawDataRecords" :key="recordIndex">
-                    <td style="text-align: center; font-weight: bold; color: #8b1538">{{ recordIndex + 1 }}</td>
+                    <td style="text-align: center; font-weight: bold; color: #8b1538">
+                      {{ recordIndex + 1 }}
+                    </td>
                     <td v-for="(column, columnIndex) in Object.keys(record).slice(0, 12)" :key="columnIndex">
                       <span :title="record[column]">{{ formatCellValue(record[column]) }}</span>
                     </td>
@@ -471,8 +521,12 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button @click="closeRawDataModal" class="btn-cancel">Đóng</button>
-          <button v-if="rawDataRecords.length > 0" @click="exportRawData" class="btn-export">📥 Xuất dữ liệu</button>
+          <button class="btn-cancel" @click="closeRawDataModal">
+            Đóng
+          </button>
+          <button v-if="rawDataRecords.length > 0" class="btn-export" @click="exportRawData">
+            📥 Xuất dữ liệu
+          </button>
         </div>
       </div>
     </div>
@@ -482,7 +536,9 @@
       <div class="modal-content smart-import-modal" @click.stop>
         <div class="modal-header">
           <h3>🧠 Smart Import - Tự động phân loại dữ liệu</h3>
-          <button class="modal-close" @click="closeSmartImportModal">×</button>
+          <button class="modal-close" @click="closeSmartImportModal">
+            ×
+          </button>
         </div>
         <div class="modal-body">
           <div class="smart-import-info">
@@ -512,7 +568,7 @@
                 type="date"
                 class="date-input agribank-date-input"
                 title="Nếu không chọn, hệ thống sẽ tự động extract từ tên file"
-              />
+              >
               <small class="date-help">💡 Để trống để hệ thống tự động extract từ tên file</small>
             </div>
 
@@ -531,16 +587,37 @@
               <div class="drop-zone-main">
                 <div class="upload-icon-container">
                   <div class="upload-icon-wrapper">
-                    <svg class="upload-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <svg
+                      class="upload-icon"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
                       <path d="M7 16H17L12 11L7 16Z" fill="currentColor" />
-                      <path d="M12 4V11" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                      <path d="M4 20H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                      <path
+                        d="M12 4V11"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                      />
+                      <path
+                        d="M4 20H20"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                      />
                     </svg>
                   </div>
                   <div class="upload-sparkles">
-                    <div class="sparkle sparkle-1">✨</div>
-                    <div class="sparkle sparkle-2">�</div>
-                    <div class="sparkle sparkle-3">⭐</div>
+                    <div class="sparkle sparkle-1">
+                      ✨
+                    </div>
+                    <div class="sparkle sparkle-2">
+                      �
+                    </div>
+                    <div class="sparkle sparkle-3">
+                      ⭐
+                    </div>
                   </div>
                 </div>
 
@@ -550,7 +627,9 @@
                     <span v-else class="drag-active">🎯 Thả file ngay bây giờ!</span>
                   </h3>
 
-                  <p class="drop-subtitle">Hỗ trợ file CSV, XLSX với kích thước tối đa <strong>2GB</strong></p>
+                  <p class="drop-subtitle">
+                    Hỗ trợ file CSV, XLSX với kích thước tối đa <strong>2GB</strong>
+                  </p>
 
                   <div class="upload-divider">
                     <span>hoặc</span>
@@ -558,7 +637,12 @@
 
                   <button type="button" class="btn-select-files" @click="$refs.smartFileInput.click()">
                     <svg class="btn-icon" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 15L12 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                      <path
+                        d="M12 15L12 2"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                      />
                       <path
                         d="M8 6L12 2L16 6"
                         stroke="currentColor"
@@ -581,7 +665,7 @@
                     accept=".csv,.xlsx,.xls"
                     style="display: none"
                     @change="handleSmartFileSelect"
-                  />
+                  >
                 </div>
               </div>
 
@@ -616,7 +700,9 @@
                       📅 {{ formatDate(extractDateFromFileName(file.name)) }}
                     </span>
                   </div>
-                  <button @click="removeSmartFile(index)" class="btn-remove-file">×</button>
+                  <button class="btn-remove-file" @click="removeSmartFile(index)">
+                    ×
+                  </button>
                 </div>
               </div>
             </div>
@@ -625,9 +711,7 @@
               <div class="progress-header">
                 <h4>🚀 Đang xử lý Smart Import (Parallel)...</h4>
                 <div class="progress-info">
-                  <span class="progress-text"
-                    >{{ smartUploadProgress.current }}/{{ smartUploadProgress.total }} file</span
-                  >
+                  <span class="progress-text">{{ smartUploadProgress.current }}/{{ smartUploadProgress.total }} file</span>
                   <span class="progress-percentage">{{ smartUploadProgress.percentage }}%</span>
                 </div>
               </div>
@@ -637,7 +721,9 @@
                 </div>
               </div>
               <div class="current-file-info">
-                <p class="current-file">📤 {{ smartUploadProgress.currentFile }}</p>
+                <p class="current-file">
+                  📤 {{ smartUploadProgress.currentFile }}
+                </p>
                 <p v-if="smartUploadProgress.stage" class="upload-stage">
                   Status:
                   {{
@@ -685,12 +771,10 @@
                     <strong>{{ result.fileName }}</strong>
                     <div v-if="result.success" class="success-details">
                       <span>Category: {{ result.result?.DataType || result.result?.detectedCategory || 'N/A' }}</span>
-                      <span
-                        >Records:
+                      <span>Records:
                         {{
                           formatNumber(result.result?.ProcessedRecords || result.result?.importedRecords || 0, 0)
-                        }}</span
-                      >
+                        }}</span>
                       <span v-if="result.result?.Duration">Time: {{ result.result.Duration }}</span>
                     </div>
                     <div v-else class="error-details">
@@ -703,11 +787,13 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button @click="closeSmartImportModal" class="btn-cancel" :disabled="smartUploading">Đóng</button>
+          <button class="btn-cancel" :disabled="smartUploading" @click="closeSmartImportModal">
+            Đóng
+          </button>
           <button
-            @click="startSmartImport"
             class="btn-smart-upload"
             :disabled="smartSelectedFiles.length === 0 || smartUploading"
+            @click="startSmartImport"
           >
             🚀 Bắt đầu Smart Import
           </button>
@@ -719,7 +805,7 @@
 
 <script setup>
 import { computed, ref } from 'vue'
-import api from '../services/api.js' // ✅ Import api để sử dụng trong fallback strategy
+import api from '../services/api.js'; // ✅ Import api để sử dụng trong fallback strategy
 import audioService from '../services/audioService.js'
 import rawDataService from '../services/rawDataService.js'
 import smartImportService from '../services/smartImportService.js'
@@ -782,10 +868,25 @@ const dataTypeDefinitions = rawDataService.getDataTypeDefinitions()
 // Computed properties
 const sortedDataTypeDefinitions = computed(() => {
   const sorted = {}
-  const sortedKeys = Object.keys(dataTypeDefinitions).sort()
-  sortedKeys.forEach(key => {
+  // 🔧 CUSTOM SORT: GL02 ngay sau GL01 theo thứ tự vần ABC
+  const customOrder = ['DP01', 'DPDA', 'EI01', 'GL01', 'GL02', 'GL41', 'LN01', 'LN03', 'RR01']
+
+  // Add items in custom order first
+  customOrder.forEach(key => {
+    if (dataTypeDefinitions[key]) {
+      sorted[key] = dataTypeDefinitions[key]
+    }
+  })
+
+  // Add any remaining items not in custom order (alphabetically)
+  const remainingKeys = Object.keys(dataTypeDefinitions)
+    .filter(key => !customOrder.includes(key))
+    .sort()
+
+  remainingKeys.forEach(key => {
     sorted[key] = dataTypeDefinitions[key]
   })
+
   return sorted
 })
 
@@ -864,9 +965,9 @@ const getUploadStatusText = () => {
     if (uploadProgress.value < 100) return 'Sắp hoàn thành...'
   } else {
     // Multiple files upload
-    if (uploadProgress.value < 15) return `Đang tải file ${uploadedFiles}/${totalFiles} lên server...`
-    if (uploadProgress.value < 85) return `Đang xử lý file ${uploadedFiles}/${totalFiles}...`
-    if (uploadProgress.value < 100) return `Đang hoàn tất xử lý ${totalFiles} files...`
+    if (uploadProgress.value < 15) return `Đang tải file ${uploadedFiles.value}/${totalFiles.value} lên server...`
+    if (uploadProgress.value < 85) return `Đang xử lý file ${uploadedFiles.value}/${totalFiles.value}...`
+    if (uploadProgress.value < 100) return `Đang hoàn tất xử lý ${totalFiles.value} files...`
   }
 
   return 'Đã hoàn thành tất cả!'
@@ -1014,7 +1115,7 @@ const debugRecalculateStats = async () => {
     console.log('📊 Sample import item:', allImports.value[0])
     console.log(
       '📊 DP01 items:',
-      allImports.value.filter(imp => imp.Category === 'DP01' || imp.dataType === 'DP01' || imp.FileType === 'DP01')
+      allImports.value.filter(imp => imp.Category === 'DP01' || imp.dataType === 'DP01' || imp.FileType === 'DP01'),
     )
   }
 
@@ -1246,7 +1347,7 @@ const refreshDataWithFallback = async () => {
 const clearAllData = async () => {
   if (
     !confirm(
-      '⚠️ BẠN CÓ CHẮC CHẮN MUỐN XÓA TOÀN BỘ DỮ LIỆU?\n\nThao tác này sẽ xóa tất cả dữ liệu đã import và KHÔNG THỂ KHÔI PHỤC!'
+      '⚠️ BẠN CÓ CHẮC CHẮN MUỐN XÓA TOÀN BỘ DỮ LIỆU?\n\nThao tác này sẽ xóa tất cả dữ liệu đã import và KHÔNG THỂ KHÔI PHỤC!',
     )
   ) {
     return
@@ -1328,7 +1429,7 @@ const viewDataType = async dataType => {
       ]
 
       showSuccess(
-        `📊 Xem trước ${formattedData.rows?.length || 0}/${previewResult.totalRecords} records ${dataType}${dateInfo} (Direct Preview)`
+        `📊 Xem trước ${formattedData.rows?.length || 0}/${previewResult.totalRecords} records ${dataType}${dateInfo} (Direct Preview)`,
       )
       showDataViewModal.value = true
     } catch (error) {
@@ -1392,7 +1493,7 @@ const performDeleteByDate = async (dataType, dateStr) => {
             item.dataType === dataType &&
             item.statementDate &&
             new Date(item.statementDate).toISOString().slice(0, 10).replace(/-/g, '') === dateStr
-          )
+          ),
       )
     } else {
       showError(`Lỗi khi xóa dữ liệu: ${result.error}`)
@@ -1612,7 +1713,7 @@ const previewData = async importId => {
         selectedDataType.value = result.data.Category || result.data.category || 'Dữ liệu chi tiết'
 
         showSuccess(
-          `✅ Đã tải ${recordsToShow.length} bản ghi chi tiết từ ${result.data.TotalRecords || result.data.totalRecords} bản ghi`
+          `✅ Đã tải ${recordsToShow.length} bản ghi chi tiết từ ${result.data.TotalRecords || result.data.totalRecords} bản ghi`,
         )
         showRawDataModal.value = true
       } else {
@@ -1662,7 +1763,7 @@ const formatDateTime = dateTimeString => {
 const confirmDelete = async (importId, fileName) => {
   if (
     confirm(
-      `⚠️ Bạn có chắc chắn muốn xóa bản ghi "${fileName}"?\n\nViệc xóa sẽ bao gồm:\n- Xóa bản ghi import khỏi lịch sử\n- Xóa tất cả dữ liệu liên quan trong bảng database\n\nHành động này không thể hoàn tác!`
+      `⚠️ Bạn có chắc chắn muốn xóa bản ghi "${fileName}"?\n\nViệc xóa sẽ bao gồm:\n- Xóa bản ghi import khỏi lịch sử\n- Xóa tất cả dữ liệu liên quan trong bảng database\n\nHành động này không thể hoàn tác!`,
     )
   ) {
     try {
@@ -1786,7 +1887,7 @@ const performImport = async () => {
         const elapsedTime = Date.now() - uploadStartTime.value
         const estimatedCurrentFile = Math.min(
           Math.floor(elapsedTime / estimatedTimePerFile.value),
-          Math.floor(progressInfo.percentage / (100 / selectedFiles.value.length))
+          Math.floor(progressInfo.percentage / (100 / selectedFiles.value.length)),
         )
 
         // Đảm bảo index không vượt quá số file có sẵn
@@ -1810,7 +1911,7 @@ const performImport = async () => {
         }
 
         console.log(
-          `📊 Upload Progress: ${progressInfo.percentage}%, File ${uploadedFiles.value}/${totalFiles.value}: ${currentUploadingFile.value}`
+          `📊 Upload Progress: ${progressInfo.percentage}%, File ${uploadedFiles.value}/${totalFiles.value}: ${currentUploadingFile.value}`,
         )
       },
     }
@@ -2127,7 +2228,7 @@ const startSmartImport = async () => {
       '🧠 Starting OPTIMIZED Smart Import with',
       smartSelectedFiles.value.length,
       'files',
-      `(Total size: ${formatFileSize(totalSize)})`
+      `(Total size: ${formatFileSize(totalSize)})`,
     )
 
     // ✅ OPTIMIZATION: Sử dụng callback để update progress real-time
@@ -2143,7 +2244,7 @@ const startSmartImport = async () => {
       // 📊 Log detailed progress
       if (progressInfo.fileProgress) {
         console.log(
-          `📊 File Progress: ${progressInfo.currentFile} - ${progressInfo.fileProgress.percentage}% (${formatFileSize(progressInfo.fileProgress.loaded)}/${formatFileSize(progressInfo.fileProgress.total)})`
+          `📊 File Progress: ${progressInfo.currentFile} - ${progressInfo.fileProgress.percentage}% (${formatFileSize(progressInfo.fileProgress.loaded)}/${formatFileSize(progressInfo.fileProgress.total)})`,
         )
       }
     }
