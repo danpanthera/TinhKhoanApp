@@ -109,7 +109,7 @@ Luôn cập nhật file này với các thông tin mới nhất về dự án Ti
 - **DPDA Specific**: Filename validation + specialized datetime handling
 
 ## 🚨 QUY TẮC KHỞI ĐỘNG DỰ ÁN - NGHIÊM CẤM VI PHẠM (RẤT Quan trọng)
-- **Backend:**  
+- **Backend:** `cd Backend/TinhKhoanApp.Api && dotnet run`
 - **Frontend:** `cd Frontend/tinhkhoan-app-ui-vite && npm run dev`
 - **Fullstack:** `./start_fullstack.sh` (Tự động khởi động Database -> Backend -> Frontend)
 - **Fast Commit:** `./fast_commit.sh` - nội dung ngắn gọn nhất có thể
