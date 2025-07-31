@@ -194,8 +194,15 @@ namespace TinhKhoanApp.Api.Services
         /// </summary>
         private async Task<int> ImportLN01StreamingAsync(IFormFile file, DateTime ngayDL)
         {
-            using var streamReader = new StreamReader(file.OpenReadStream(), Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 8 * 1024 * 1024);
-            using var csvReader = new CsvReader(streamReader, CultureInfo.InvariantCulture);
+            using var streamReader = new StreamReader(file.OpenReadStream(), Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: 16 * 1024 * 1024); // 🚀 Tăng buffer từ 8MB -> 16MB
+            using var csvReader = new CsvReader(streamReader, new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                BufferSize = 32768, // 🚀 Tăng CSV buffer size cho large files
+                HasHeaderRecord = true,
+                TrimOptions = CsvHelper.Configuration.TrimOptions.Trim,
+                ReadingExceptionOccurred = (ex) => false, // 🚀 Skip malformed rows
+                BadDataFound = null // 🚀 Ignore bad data cho tốc độ
+            });
 
             // Read header (skip it)
             await csvReader.ReadAsync();
@@ -1232,10 +1239,10 @@ namespace TinhKhoanApp.Api.Services
             using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.TableLock | SqlBulkCopyOptions.UseInternalTransaction, null)
             {
                 DestinationTableName = tableName,
-                BatchSize = 100000,
-                BulkCopyTimeout = 600,
+                BatchSize = 250000, // 🚀 Tăng từ 100k -> 250k cho GL01/GL02 large files
+                BulkCopyTimeout = 1800, // 🚀 Tăng từ 600s -> 1800s (30 phút)
                 EnableStreaming = true,
-                NotifyAfter = 50000
+                NotifyAfter = 100000 // 🚀 Tăng notify từ 50k -> 100k
             };
 
             // Smart column mapping - include system columns for data tables
@@ -2736,10 +2743,10 @@ namespace TinhKhoanApp.Api.Services
             using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.TableLock | SqlBulkCopyOptions.UseInternalTransaction, null)
             {
                 DestinationTableName = tableName,
-                BatchSize = 100000,
-                BulkCopyTimeout = 600,
+                BatchSize = 250000, // 🚀 Tăng từ 100k -> 250k cho GL01/GL02 large files
+                BulkCopyTimeout = 1800, // 🚀 Tăng từ 600s -> 1800s (30 phút)
                 EnableStreaming = true,
-                NotifyAfter = 50000
+                NotifyAfter = 100000 // 🚀 Tăng notify từ 50k -> 100k
             };
 
             // Map columns từ DataTable to Database table by name (skip IDENTITY columns)
@@ -2827,20 +2834,27 @@ namespace TinhKhoanApp.Api.Services
             // Create specific columns for each data type with correct types
             switch (dataType.ToUpper())
             {
-                case "LN01":
-                    CreateLN01DataTable(dataTable, headers);
-                    break;
-                case "LN03":
-                    CreateLN03DataTable(dataTable, headers);
-                    break;
                 case "DP01":
                     CreateDP01DataTable(dataTable, headers);
+                    break;
+                case "DPDA":
+                case "EI01":
+                case "GL41":
+                case "RR01":
+                    // Use generic method for other tables
+                    CreateGenericDataTable(dataTable, headers);
                     break;
                 case "GL01":
                     CreateGL01DataTable(dataTable, headers);
                     break;
                 case "GL02":
                     CreateGL02DataTable(dataTable, headers);
+                    break;
+                case "LN01":
+                    CreateLN01DataTable(dataTable, headers);
+                    break;
+                case "LN03":
+                    CreateLN03DataTable(dataTable, headers);
                     break;
                 default:
                     // Fallback to string columns
@@ -3065,6 +3079,29 @@ namespace TinhKhoanApp.Api.Services
                 dataTable.Columns.Add("DRAMOUNT", typeof(string));
                 dataTable.Columns.Add("CRAMOUNT", typeof(string));
                 dataTable.Columns.Add("CRTDTM", typeof(string));
+            }
+        }
+
+        /// <summary>
+        /// Generic DataTable creation for DPDA, EI01, GL41, RR01 tables
+        /// Uses headers from CSV file if available, otherwise creates default columns
+        /// </summary>
+        private void CreateGenericDataTable(DataTable dataTable, string[]? headers)
+        {
+            if (headers != null && headers.Any())
+            {
+                foreach (var header in headers)
+                {
+                    dataTable.Columns.Add(header, typeof(string));
+                }
+            }
+            else
+            {
+                // Default generic columns if no headers
+                for (int i = 1; i <= 50; i++)
+                {
+                    dataTable.Columns.Add($"Column{i}", typeof(string));
+                }
             }
         }
 
