@@ -36,6 +36,9 @@ namespace TinhKhoanApp.Api.Extensions
         /// </summary>
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
+            // Register core services
+            services.AddScoped<IDirectImportService, DirectImportService>();
+
             // Register data services
             services.AddScoped<IDataPreviewService, DataPreviewService>();
             // services.AddScoped<IGL01DataService, GL01DataService>();

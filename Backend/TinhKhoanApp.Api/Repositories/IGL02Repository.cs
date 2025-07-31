@@ -10,7 +10,7 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Lấy dữ liệu GL02 gần đây theo số lượng chỉ định
         /// </summary>
-        Task<IEnumerable<GL02>> GetRecentAsync(int count = 10);
+        new Task<IEnumerable<GL02>> GetRecentAsync(int count = 10);
 
         /// <summary>
         /// Lấy dữ liệu GL02 theo ngày

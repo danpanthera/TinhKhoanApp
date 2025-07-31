@@ -15,7 +15,7 @@ namespace TinhKhoanApp.Api.Services.Caching
         /// <summary>
         /// Lấy dữ liệu từ cache
         /// </summary>
-        T Get<T>(string key);
+        T? Get<T>(string key);
 
         /// <summary>
         /// Thêm dữ liệu vào cache
@@ -56,7 +56,7 @@ namespace TinhKhoanApp.Api.Services.Caching
         /// </summary>
         public async Task<T> GetOrCreateAsync<T>(string key, Func<Task<T>> getDataFunction, TimeSpan? expiration = null)
         {
-            if (_cache.TryGetValue(key, out T cachedData))
+            if (_cache.TryGetValue(key, out T? cachedData) && cachedData != null)
             {
                 _logger.LogDebug("Cache hit for key: {Key}", key);
                 return cachedData;
@@ -71,9 +71,9 @@ namespace TinhKhoanApp.Api.Services.Caching
         /// <summary>
         /// Lấy dữ liệu từ cache
         /// </summary>
-        public T Get<T>(string key)
+        public T? Get<T>(string key)
         {
-            if (_cache.TryGetValue(key, out T cachedData))
+            if (_cache.TryGetValue(key, out T? cachedData) && cachedData != null)
             {
                 _logger.LogDebug("Cache hit for key: {Key}", key);
                 return cachedData;

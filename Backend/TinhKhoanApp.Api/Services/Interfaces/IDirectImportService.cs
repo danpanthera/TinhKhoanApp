@@ -142,5 +142,10 @@ namespace TinhKhoanApp.Api.Services.Interfaces
         /// 🚫 Cancel upload session
         /// </summary>
         Task CancelUploadAsync(string sessionId);
+
+        /// <summary>
+        /// Validate GL02 data - kiểm tra CRTDTM parsing và data integrity
+        /// </summary>
+        Task<object> ValidateGL02DataAsync();
     }
 }

@@ -451,12 +451,23 @@ namespace TinhKhoanApp.Api.Controllers
                     _context.EmployeeRoles.RemoveRange(employeeRolesToDelete);
                 }
 
-                // Xóa nhân viên bằng SQL trực tiếp để tránh conflict với soft delete
-                var idsParam = string.Join(",", validIds);
-                await _context.Database.ExecuteSqlRawAsync($"DELETE FROM Employees WHERE Id IN ({idsParam})");
+                // Xóa nhân viên bằng Entity Framework để tránh SQL injection
+                var employeesToDeleteFromDb = await _context.Employees
+                    .Where(e => validIds.Contains(e.Id))
+                    .ToListAsync();
 
-                // Hoặc nếu muốn dùng soft delete, dùng SQL trực tiếp
-                // await _context.Database.ExecuteSqlRawAsync($"UPDATE Employees SET IsActive = 0 WHERE Id IN ({idsParam})");
+                if (employeesToDeleteFromDb.Any())
+                {
+                    _context.Employees.RemoveRange(employeesToDeleteFromDb);
+                    await _context.SaveChangesAsync();
+                }
+
+                // Hoặc nếu muốn dùng soft delete với Entity Framework
+                // foreach (var emp in employeesToDeleteFromDb)
+                // {
+                //     emp.IsActive = false;
+                // }
+                // await _context.SaveChangesAsync();
 
                 return Ok(new
                 {

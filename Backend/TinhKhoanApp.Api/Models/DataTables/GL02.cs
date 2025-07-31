@@ -8,12 +8,13 @@ namespace TinhKhoanApp.Api.Models.DataTables
     /// SPECIAL: NGAY_DL comes from TRDATE column in CSV, partitioned columnstore (not temporal)
     /// Structure: NGAY_DL -> 17 Business Columns (CSV order) -> System Columns
     /// Import policy: Only files containing "gl02" in filename
+    /// Format: datetime2 (dd/mm/yyyy), decimal #,###.00, string nvarchar(200), REMARK nvarchar(1000)
     /// </summary>
     [Table("GL02")]
     public class GL02
     {
-        // NGAY_DL - DateTime from TRDATE column (Order 0)
-        [Column("NGAY_DL", Order = 0)]
+        // NGAY_DL - DateTime2 from TRDATE column (Order 0) - dd/mm/yyyy format
+        [Column("NGAY_DL", Order = 0, TypeName = "datetime2")]
         public DateTime NGAY_DL { get; set; }
 
         // 17 Business Columns - Exact CSV order with proper data types
@@ -75,7 +76,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
         [Column("CRAMOUNT", Order = 15, TypeName = "decimal(18,2)")]
         public decimal? CRAMOUNT { get; set; }
 
-        [Column("CRTDTM", Order = 16)]
+        [Column("CRTDTM", Order = 16, TypeName = "datetime2")]
         public DateTime? CRTDTM { get; set; }
 
         // System Columns - Primary Key (GL02 is Partitioned Columnstore, NOT Temporal)
@@ -83,11 +84,11 @@ namespace TinhKhoanApp.Api.Models.DataTables
         [Column("Id", Order = 17)]
         public long Id { get; set; }
 
-        [Column("CREATED_DATE", Order = 18)]
+        [Column("CREATED_DATE", Order = 18, TypeName = "datetime2")]
         public DateTime CREATED_DATE { get; set; } = DateTime.UtcNow;
 
-        [Column("UPDATED_DATE", Order = 19)]
-        public DateTime UPDATED_DATE { get; set; } = DateTime.UtcNow;
+        [Column("UPDATED_DATE", Order = 19, TypeName = "datetime2")]
+        public DateTime? UPDATED_DATE { get; set; } = DateTime.UtcNow;
 
         [Column("FILE_NAME", Order = 20)]
         [StringLength(500)]

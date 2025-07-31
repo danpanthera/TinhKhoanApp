@@ -10,7 +10,7 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Lấy dữ liệu DPDA mới nhất
         /// </summary>
-        Task<IEnumerable<DPDA>> GetRecentAsync(int count = 10);
+        new Task<IEnumerable<DPDA>> GetRecentAsync(int count = 10);
 
         /// <summary>
         /// Lấy dữ liệu DPDA theo ngày

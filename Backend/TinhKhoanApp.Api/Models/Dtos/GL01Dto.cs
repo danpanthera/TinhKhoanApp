@@ -2,58 +2,89 @@ namespace TinhKhoanApp.Api.Models.DTOs
 {
     /// <summary>
     /// DTO cho preview dữ liệu GL01 - hiển thị thông tin cơ bản
+    /// Đồng bộ với cấu trúc CSV thực tế (27 business columns)
     /// </summary>
     public class GL01PreviewDto
     {
         /// <summary>
         /// ID bản ghi
         /// </summary>
-        public long ID { get; set; }
+        public long Id { get; set; }
 
         /// <summary>
-        /// Ngày dữ liệu
+        /// Ngày dữ liệu (từ TR_TIME)
         /// </summary>
         public DateTime NGAY_DL { get; set; }
 
         /// <summary>
-        /// Mã chi nhánh
+        /// Trạng thái
         /// </summary>
-        public string? BRCD { get; set; }
+        public string? STS { get; set; }
 
         /// <summary>
-        /// Mã phòng ban
+        /// Ngày giao dịch
         /// </summary>
-        public string? DEPCD { get; set; }
+        public DateTime? NGAY_GD { get; set; }
 
         /// <summary>
-        /// Mã tài khoản giao dịch
+        /// Người tạo
         /// </summary>
-        public string? TRAD_ACCT { get; set; }
+        public string? NGUOI_TAO { get; set; }
+
+        /// <summary>
+        /// Số thứ tự trong ngày
+        /// </summary>
+        public string? DYSEQ { get; set; }
+
+        /// <summary>
+        /// Loại giao dịch
+        /// </summary>
+        public string? TR_TYPE { get; set; }
+
+        /// <summary>
+        /// Số thứ tự chi tiết
+        /// </summary>
+        public string? DT_SEQ { get; set; }
+
+        /// <summary>
+        /// Tài khoản
+        /// </summary>
+        public string? TAI_KHOAN { get; set; }
+
+        /// <summary>
+        /// Tên tài khoản
+        /// </summary>
+        public string? TEN_TK { get; set; }
 
         /// <summary>
         /// Số tiền giao dịch
         /// </summary>
-        public decimal? TR_AMOUNT { get; set; }
+        public decimal? SO_TIEN_GD { get; set; }
 
         /// <summary>
-        /// Loại giao dịch (DR/CR)
+        /// Chi nhánh post
         /// </summary>
-        public string? DR_CR_FLG { get; set; }
+        public string? POST_BR { get; set; }
 
         /// <summary>
-        /// Loại tiền tệ
+        /// Loại tiền
         /// </summary>
-        public string? CCY { get; set; }
+        public string? LOAI_TIEN { get; set; }
 
         /// <summary>
-        /// Mô tả giao dịch
+        /// Ghi nợ/có (DR/CR)
         /// </summary>
-        public string? TR_DESC { get; set; }
+        public string? DR_CR { get; set; }
 
         /// <summary>
-        /// Mã giao dịch
+        /// Mã khách hàng
         /// </summary>
-        public string? TR_CD { get; set; }
+        public string? MA_KH { get; set; }
+
+        /// <summary>
+        /// Tên khách hàng
+        /// </summary>
+        public string? TEN_KH { get; set; }
 
         /// <summary>
         /// Thời điểm tạo bản ghi
@@ -62,73 +93,250 @@ namespace TinhKhoanApp.Api.Models.DTOs
     }
 
     /// <summary>
-    /// DTO cho chi tiết đầy đủ GL01
+    /// DTO đầy đủ cho dữ liệu GL01 - tất cả 27 business columns
+    /// Đồng bộ hoàn toàn với cấu trúc CSV thực tế
     /// </summary>
-    public class GL01DetailDto : GL01PreviewDto
+    public class GL01FullDto
     {
         /// <summary>
-        /// Ngày hiệu lực
+        /// ID bản ghi (tự động tăng)
         /// </summary>
-        public DateTime? VALUE_DATE { get; set; }
+        public long Id { get; set; }
+
+        /// <summary>
+        /// Ngày dữ liệu (từ TR_TIME)
+        /// </summary>
+        public DateTime NGAY_DL { get; set; }
+
+        /// <summary>
+        /// Trạng thái
+        /// </summary>
+        public string? STS { get; set; }
+
+        /// <summary>
+        /// Ngày giao dịch
+        /// </summary>
+        public DateTime? NGAY_GD { get; set; }
+
+        /// <summary>
+        /// Người tạo
+        /// </summary>
+        public string? NGUOI_TAO { get; set; }
+
+        /// <summary>
+        /// Số thứ tự trong ngày
+        /// </summary>
+        public string? DYSEQ { get; set; }
+
+        /// <summary>
+        /// Loại giao dịch
+        /// </summary>
+        public string? TR_TYPE { get; set; }
+
+        /// <summary>
+        /// Số thứ tự chi tiết
+        /// </summary>
+        public string? DT_SEQ { get; set; }
+
+        /// <summary>
+        /// Tài khoản
+        /// </summary>
+        public string? TAI_KHOAN { get; set; }
+
+        /// <summary>
+        /// Tên tài khoản
+        /// </summary>
+        public string? TEN_TK { get; set; }
+
+        /// <summary>
+        /// Số tiền giao dịch
+        /// </summary>
+        public decimal? SO_TIEN_GD { get; set; }
+
+        /// <summary>
+        /// Chi nhánh post
+        /// </summary>
+        public string? POST_BR { get; set; }
+
+        /// <summary>
+        /// Loại tiền
+        /// </summary>
+        public string? LOAI_TIEN { get; set; }
+
+        /// <summary>
+        /// Ghi nợ/có (DR/CR)
+        /// </summary>
+        public string? DR_CR { get; set; }
 
         /// <summary>
         /// Mã khách hàng
         /// </summary>
-        public string? CIF { get; set; }
+        public string? MA_KH { get; set; }
 
         /// <summary>
-        /// Mã tham chiếu
+        /// Tên khách hàng
         /// </summary>
-        public string? REF_NO { get; set; }
+        public string? TEN_KH { get; set; }
 
         /// <summary>
-        /// Số chứng từ
+        /// ID người dùng CCA
         /// </summary>
-        public string? VOUCHER_NO { get; set; }
+        public string? CCA_USRID { get; set; }
 
         /// <summary>
-        /// Mã tài khoản 1
+        /// Tỷ lệ trao đổi giao dịch
         /// </summary>
-        public string? ACCTNO1 { get; set; }
+        public decimal? TR_EX_RT { get; set; }
 
         /// <summary>
-        /// Mã tài khoản 2
+        /// Ghi chú
         /// </summary>
-        public string? ACCTNO2 { get; set; }
+        public string? REMARK { get; set; }
 
         /// <summary>
-        /// Tỷ giá
+        /// Mã nghiệp vụ
         /// </summary>
-        public decimal? EXCH_RATE { get; set; }
+        public string? BUS_CODE { get; set; }
 
         /// <summary>
-        /// Số tiền quy đổi
+        /// Mã đơn vị nghiệp vụ
         /// </summary>
-        public decimal? CONV_AMT { get; set; }
+        public string? UNIT_BUS_CODE { get; set; }
 
         /// <summary>
-        /// Số tiền VNĐ
+        /// Mã giao dịch
         /// </summary>
-        public decimal? VND_AMT { get; set; }
+        public string? TR_CODE { get; set; }
 
         /// <summary>
-        /// Mã người duyệt
+        /// Tên giao dịch
         /// </summary>
-        public string? APPR_ID { get; set; }
+        public string? TR_NAME { get; set; }
 
         /// <summary>
-        /// Trạng thái giao dịch
+        /// Số tham chiếu
         /// </summary>
-        public string? STATUS { get; set; }
+        public string? REFERENCE { get; set; }
+
+        /// <summary>
+        /// Ngày giá trị
+        /// </summary>
+        public DateTime? VALUE_DATE { get; set; }
+
+        /// <summary>
+        /// Mã phòng ban
+        /// </summary>
+        public string? DEPT_CODE { get; set; }
+
+        /// <summary>
+        /// Thời gian giao dịch (từ CSV)
+        /// </summary>
+        public string? TR_TIME { get; set; }
+
+        /// <summary>
+        /// Xác nhận
+        /// </summary>
+        public string? COMFIRM { get; set; }
+
+        /// <summary>
+        /// Thời gian giao dịch chi tiết
+        /// </summary>
+        public string? TRDT_TIME { get; set; }
+
+        /// <summary>
+        /// Thời điểm tạo bản ghi
+        /// </summary>
+        public DateTime? CREATED_DATE { get; set; }
+
+        /// <summary>
+        /// Người tạo bản ghi
+        /// </summary>
+        public string? CREATED_BY { get; set; }
 
         /// <summary>
         /// Thời điểm cập nhật
         /// </summary>
         public DateTime? UPDATED_DATE { get; set; }
+
+        /// <summary>
+        /// Người cập nhật
+        /// </summary>
+        public string? UPDATED_BY { get; set; }
     }
 
     /// <summary>
-    /// DTO thống kê tổng hợp GL01
+    /// DTO chi tiết GL01 - mở rộng từ Preview với các trường bổ sung
+    /// </summary>
+    public class GL01DetailDto : GL01PreviewDto
+    {
+        /// <summary>
+        /// ID người dùng CCA
+        /// </summary>
+        public string? CCA_USRID { get; set; }
+
+        /// <summary>
+        /// Tỷ lệ trao đổi giao dịch
+        /// </summary>
+        public decimal? TR_EX_RT { get; set; }
+
+        /// <summary>
+        /// Ghi chú
+        /// </summary>
+        public string? REMARK { get; set; }
+
+        /// <summary>
+        /// Mã nghiệp vụ
+        /// </summary>
+        public string? BUS_CODE { get; set; }
+
+        /// <summary>
+        /// Mã đơn vị nghiệp vụ
+        /// </summary>
+        public string? UNIT_BUS_CODE { get; set; }
+
+        /// <summary>
+        /// Mã giao dịch
+        /// </summary>
+        public string? TR_CODE { get; set; }
+
+        /// <summary>
+        /// Tên giao dịch
+        /// </summary>
+        public string? TR_NAME { get; set; }
+
+        /// <summary>
+        /// Số tham chiếu
+        /// </summary>
+        public string? REFERENCE { get; set; }
+
+        /// <summary>
+        /// Ngày giá trị
+        /// </summary>
+        public DateTime? VALUE_DATE { get; set; }
+
+        /// <summary>
+        /// Mã phòng ban
+        /// </summary>
+        public string? DEPT_CODE { get; set; }
+
+        /// <summary>
+        /// Thời gian giao dịch (từ CSV)
+        /// </summary>
+        public string? TR_TIME { get; set; }
+
+        /// <summary>
+        /// Xác nhận
+        /// </summary>
+        public string? COMFIRM { get; set; }
+
+        /// <summary>
+        /// Thời gian giao dịch chi tiết
+        /// </summary>
+        public string? TRDT_TIME { get; set; }
+    }
+
+    /// <summary>
+    /// DTO thống kê tổng hợp GL01 - theo cấu trúc CSV thực tế
     /// </summary>
     public class GL01SummaryDto
     {
@@ -138,12 +346,12 @@ namespace TinhKhoanApp.Api.Models.DTOs
         public int TotalTransactions { get; set; }
 
         /// <summary>
-        /// Tổng số giao dịch ghi nợ
+        /// Tổng số giao dịch ghi nợ (DR)
         /// </summary>
         public int TotalDebitTransactions { get; set; }
 
         /// <summary>
-        /// Tổng số giao dịch ghi có
+        /// Tổng số giao dịch ghi có (CR)
         /// </summary>
         public int TotalCreditTransactions { get; set; }
 
@@ -163,8 +371,28 @@ namespace TinhKhoanApp.Api.Models.DTOs
         public DateTime? Date { get; set; }
 
         /// <summary>
-        /// Mã đơn vị
+        /// Chi nhánh Post (POST_BR)
         /// </summary>
-        public string? UnitCode { get; set; }
+        public string? PostBranch { get; set; }
+
+        /// <summary>
+        /// Mã phòng ban (DEPT_CODE)
+        /// </summary>
+        public string? DepartmentCode { get; set; }
+
+        /// <summary>
+        /// Loại tiền chủ yếu (LOAI_TIEN)
+        /// </summary>
+        public string? PrimaryCurrency { get; set; }
+
+        /// <summary>
+        /// Thời gian từ
+        /// </summary>
+        public DateTime? FromDate { get; set; }
+
+        /// <summary>
+        /// Thời gian đến
+        /// </summary>
+        public DateTime? ToDate { get; set; }
     }
 }

@@ -833,7 +833,7 @@ namespace TinhKhoanApp.Api.Services
             // 🔧 ENHANCED CSV Configuration để handle complex formats như RR01
             csv.Context.Configuration.MissingFieldFound = null; // Bỏ qua fields không tồn tại
             csv.Context.Configuration.HeaderValidated = null; // Bỏ qua validation header
-            csv.Context.Configuration.PrepareHeaderForMatch = args => args.Header.ToUpper(); // Case insensitive
+            csv.Context.Configuration.PrepareHeaderForMatch = args => args.Header.Trim().ToUpper(); // Case insensitive + trim spaces
 
             // 🔧 FIX: Enhanced CSV parsing for complex formats with nested quotes
             csv.Context.Configuration.BadDataFound = null; // Bỏ qua bad data thay vì throw exception
@@ -850,8 +850,8 @@ namespace TinhKhoanApp.Api.Services
             csv.Read();
             csv.ReadHeader();
 
-            // Log headers để debug
-            var headers = csv.HeaderRecord;
+            // Log headers để debug - TRIM all headers to remove trailing spaces
+            var headers = csv.HeaderRecord?.Select(h => h.Trim()).ToArray();
             Console.WriteLine($"📊 [CSV_PARSE] Headers found for {typeof(T).Name}: {string.Join(", ", headers ?? new string[0])}");
             _logger.LogInformation("📊 [CSV_PARSE] Headers found: {Headers}", string.Join(", ", headers ?? new string[0]));
 
@@ -894,7 +894,6 @@ namespace TinhKhoanApp.Api.Services
                             headerName = headers?.FirstOrDefault(h =>
                                 string.Equals(h, prop.Name, StringComparison.OrdinalIgnoreCase));
                         }
-
                         if (!string.IsNullOrEmpty(headerName))
                         {
                             try
@@ -926,6 +925,12 @@ namespace TinhKhoanApp.Api.Services
                                     }
                                 }
 
+                                // 🎯 DEBUG: Log CRTDTM field value for GL02 to debug
+                                if (typeof(T).Name == "GL02" && prop.Name == "CRTDTM")
+                                {
+                                    Console.WriteLine($"🎯 [GL02_FIELD_DEBUG] {prop.Name}: '{value ?? "NULL"}'");
+                                }
+
                                 if (!string.IsNullOrEmpty(value))
                                 {
                                     // 🔧 ENHANCED: Clean up value (remove extra quotes, trim)
@@ -939,6 +944,14 @@ namespace TinhKhoanApp.Api.Services
                                         value = value.Replace("\"\"", "\"");
                                     }
 
+                                    // 🎯 DEBUG: Log GL02 CRTDTM field conversions specifically
+                                    if (typeof(T).Name == "GL02" && prop.Name == "CRTDTM")
+                                    {
+                                        Console.WriteLine($"🎯 [GL02_DEBUG] Converting {prop.Name}: '{value}' -> Type: {prop.PropertyType.Name}");
+                                        _logger.LogInformation("🎯 [GL02_DEBUG] Converting {PropertyName}: '{Value}' -> Type: {PropertyType}",
+                                            prop.Name, value, prop.PropertyType.Name);
+                                    }
+
                                     // 🎯 DEBUG: Log DPDA datetime field conversions specifically
                                     if (typeof(T).Name == "DPDA" && (prop.Name == "NGAY_NOP_DON" || prop.Name == "NGAY_PHAT_HANH"))
                                     {
@@ -949,6 +962,22 @@ namespace TinhKhoanApp.Api.Services
 
                                     // Convert value based on property type
                                     var convertedValue = ConvertCsvValue(value, prop.PropertyType);
+
+                                    // 🎯 EMERGENCY FIX: Direct conversion for GL02 CRTDTM field if ConvertCsvValue fails
+                                    if (typeof(T).Name == "GL02" && prop.Name == "CRTDTM" &&
+                                        (convertedValue == null || convertedValue is string))
+                                    {
+                                        if (DateTime.TryParseExact(value, "yyyyMMdd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out var gl02Date))
+                                        {
+                                            convertedValue = gl02Date;
+                                            Console.WriteLine($"🔧 [GL02_EMERGENCY] Fixed CRTDTM conversion: {prop.Name} = '{value}' -> {gl02Date}");
+                                        }
+                                        else
+                                        {
+                                            Console.WriteLine($"❌ [GL02_EMERGENCY] Failed to convert CRTDTM: {prop.Name} = '{value}'");
+                                            convertedValue = null;
+                                        }
+                                    }
 
                                     // 🎯 EMERGENCY FIX: Direct conversion for DPDA datetime fields if ConvertCsvValue fails
                                     if (typeof(T).Name == "DPDA" && (prop.Name == "NGAY_NOP_DON" || prop.Name == "NGAY_PHAT_HANH") &&
@@ -982,6 +1011,12 @@ namespace TinhKhoanApp.Api.Services
                                             Console.WriteLine($"💡 [EI01_EMERGENCY] NULL/Empty datetime field: {prop.Name} = '{value}' -> NULL");
                                             convertedValue = null;
                                         }
+                                    }
+
+                                    // 🎯 DEBUG: Log conversion result for GL02 CRTDTM field
+                                    if (typeof(T).Name == "GL02" && prop.Name == "CRTDTM")
+                                    {
+                                        Console.WriteLine($"🎯 [GL02_DEBUG] Conversion result for {prop.Name}: '{value}' -> {convertedValue?.GetType().Name ?? "NULL"} = {convertedValue}");
                                     }
 
                                     // 🎯 DEBUG: Log conversion result for DPDA datetime fields
@@ -1579,6 +1614,7 @@ namespace TinhKhoanApp.Api.Services
                     // Support multiple date formats in priority order
                     string[] dateFormats = {
                         "yyyyMMdd",           // Bank standard format: 20250630
+                        "yyyyMMdd HH:mm:ss",  // GL02 CRTDTM format: 20241201 11:35:22
                         "dd/MM/yyyy",         // Common display format: 30/06/2025
                         "yyyy-MM-dd",         // ISO format: 2025-06-30
                         "dd-MM-yyyy",         // Alternative format: 30-06-2025
@@ -2395,7 +2431,7 @@ namespace TinhKhoanApp.Api.Services
                     SELECT TABLE_NAME
                     FROM INFORMATION_SCHEMA.TABLES
                     WHERE TABLE_TYPE='BASE TABLE'
-                    AND TABLE_NAME IN ('DP01', 'DPDA', 'EI01', 'GL01', 'GL41', 'LN01', 'LN03', 'RR01')";
+                    AND TABLE_NAME IN ('DP01', 'DPDA', 'EI01', 'GL01', 'GL02', 'GL41', 'LN01', 'LN03', 'RR01')";
 
                 using (var checkCmd = new SqlCommand(checkTablesSql, connection))
                 {
@@ -2422,7 +2458,7 @@ namespace TinhKhoanApp.Api.Services
                 sqlBuilder.Append(") SELECT TableName, RecordCount FROM TableCounts ORDER BY TableName");
 
                 // Đặt giá trị mặc định 0 cho các bảng không tồn tại
-                foreach (var table in new[] { "DP01", "DPDA", "EI01", "GL01", "GL41", "LN01", "LN03", "RR01" })
+                foreach (var table in new[] { "DP01", "DPDA", "EI01", "GL01", "GL02", "GL41", "LN01", "LN03", "RR01" })
                 {
                     counts[table] = 0; // Giá trị mặc định
                 }
@@ -2925,7 +2961,7 @@ namespace TinhKhoanApp.Api.Services
                  /// </summary>
         private void CreateLN03DataTable(DataTable dataTable, string[]? headers)
         {
-            // CSV Business columns 1-17 (exact order from CSV)
+            // CSV Business columns 1-17 (with headers)
             dataTable.Columns.Add("MACHINHANH", typeof(string));
             dataTable.Columns.Add("TENCHINHANH", typeof(string));
             dataTable.Columns.Add("MAKH", typeof(string));
@@ -2936,7 +2972,7 @@ namespace TinhKhoanApp.Api.Services
             dataTable.Columns.Add("THUNOSAUXL", typeof(decimal));
             dataTable.Columns.Add("CONLAINGOAIBANG", typeof(decimal));
             dataTable.Columns.Add("DUNONOIBANG", typeof(decimal));
-            dataTable.Columns.Add("NHOMNO", typeof(int));
+            dataTable.Columns.Add("NHOMNO", typeof(string));
             dataTable.Columns.Add("MACBTD", typeof(string));
             dataTable.Columns.Add("TENCBTD", typeof(string));
             dataTable.Columns.Add("MAPGD", typeof(string));
@@ -2944,7 +2980,12 @@ namespace TinhKhoanApp.Api.Services
             dataTable.Columns.Add("REFNO", typeof(string));
             dataTable.Columns.Add("LOAINGUONVON", typeof(string));
 
-            // System columns (18-20)
+            // CSV Business columns 18-20 (no headers)
+            dataTable.Columns.Add("COLUMN_18", typeof(string));
+            dataTable.Columns.Add("COLUMN_19", typeof(string));
+            dataTable.Columns.Add("COLUMN_20", typeof(decimal));
+
+            // System columns (21-23)
             dataTable.Columns.Add("Id", typeof(long));
             dataTable.Columns.Add("NGAY_DL", typeof(DateTime));
             dataTable.Columns.Add("FILE_NAME", typeof(string));
@@ -3006,7 +3047,7 @@ namespace TinhKhoanApp.Api.Services
                 "GL02" => "GL02",      // Basic Table - 17 business columns (NO temporal)
                 "GL41" => "GL41",      // Temporal Table - 13 business columns
                 "LN01" => "LN01",      // Temporal Table - 79 business columns
-                "LN03" => "LN03",      // Temporal Table - 17 business columns
+                "LN03" => "LN03",      // Temporal Table - 20 business columns (17 header + 3 no header)
                 "RR01" => "RR01",      // Temporal Table - 25 business columns
                 // Legacy tables
                 "CA01" => "CA01",
@@ -3217,5 +3258,59 @@ namespace TinhKhoanApp.Api.Services
         }
 
         #endregion
+
+        /// <summary>
+        /// Validate GL02 data - kiểm tra CRTDTM parsing và data integrity
+        /// </summary>
+        public async Task<object> ValidateGL02DataAsync()
+        {
+            try
+            {
+                using var connection = new SqlConnection(_connectionString);
+                await connection.OpenAsync();
+
+                var query = @"
+                    SELECT
+                        COUNT(*) as TotalRecords,
+                        COUNT(CASE WHEN CRTDTM IS NOT NULL THEN 1 END) as RecordsWithCRTDTM,
+                        COUNT(CASE WHEN CRTDTM IS NULL THEN 1 END) as RecordsWithNullCRTDTM,
+                        MIN(CRTDTM) as MinCRTDTM,
+                        MAX(CRTDTM) as MaxCRTDTM,
+                        COUNT(CASE WHEN DRAMOUNT IS NOT NULL AND DRAMOUNT > 0 THEN 1 END) as RecordsWithDRAMOUNT,
+                        COUNT(CASE WHEN CRAMOUNT IS NOT NULL AND CRAMOUNT > 0 THEN 1 END) as RecordsWithCRAMOUNT,
+                        MAX(CREATED_DATE) as LatestImport
+                    FROM GL02";
+
+                using var command = new SqlCommand(query, connection);
+                using var reader = await command.ExecuteReaderAsync();
+
+                if (await reader.ReadAsync())
+                {
+                    return new
+                    {
+                        Success = true,
+                        TotalRecords = reader.GetInt32("TotalRecords"),
+                        RecordsWithCRTDTM = reader.GetInt32("RecordsWithCRTDTM"),
+                        RecordsWithNullCRTDTM = reader.GetInt32("RecordsWithNullCRTDTM"),
+                        MinCRTDTM = reader.IsDBNull("MinCRTDTM") ? (DateTime?)null : reader.GetDateTime("MinCRTDTM"),
+                        MaxCRTDTM = reader.IsDBNull("MaxCRTDTM") ? (DateTime?)null : reader.GetDateTime("MaxCRTDTM"),
+                        RecordsWithDRAMOUNT = reader.GetInt32("RecordsWithDRAMOUNT"),
+                        RecordsWithCRAMOUNT = reader.GetInt32("RecordsWithCRAMOUNT"),
+                        LatestImport = reader.IsDBNull("LatestImport") ? (DateTime?)null : reader.GetDateTime("LatestImport"),
+                        CRTDTMParsingSuccess = reader.GetInt32("RecordsWithCRTDTM") > 0,
+                        Message = reader.GetInt32("RecordsWithCRTDTM") > 0
+                            ? "CRTDTM parsing successful"
+                            : "CRTDTM parsing failed - all values are NULL"
+                    };
+                }
+
+                return new { Success = false, Message = "No data found in GL02 table" };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [GL02_VALIDATE] Error validating GL02 data");
+                return new { Success = false, Message = $"Error: {ex.Message}" };
+            }
+        }
     }
 }

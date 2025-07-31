@@ -414,5 +414,23 @@ namespace TinhKhoanApp.Api.Controllers
                 return StatusCode(500, new { success = false, error = ex.Message });
             }
         }
+
+        /// <summary>
+        /// Kiểm tra dữ liệu GL02 - CRTDTM parsing validation
+        /// </summary>
+        [HttpGet("gl02/validate")]
+        public async Task<ActionResult> ValidateGL02Data()
+        {
+            try
+            {
+                var validationResult = await _directImportService.ValidateGL02DataAsync();
+                return Ok(validationResult);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [GL02_VALIDATE] Error validating GL02 data");
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
+        }
     }
 }
