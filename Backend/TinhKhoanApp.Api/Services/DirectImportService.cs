@@ -393,21 +393,234 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Import GL01 - Bảng đặc biệt với filename range và TR_TIME làm NGAY_DL
+        /// Import GL01 - ULTRA HIGH-SPEED với direct streaming
         /// </summary>
         public async Task<DirectImportResult> ImportGL01DirectAsync(IFormFile file, string? statementDate = null)
         {
-            _logger.LogInformation("🚀 [GL01] Import vào bảng GL01");
-            return await ImportGenericCSVAsync<GL01>("GL01", "GL01", file, statementDate);
+            _logger.LogInformation("🚀 [GL01_ULTRA] ULTRA HIGH-SPEED Import vào bảng GL01");
+            return await ImportUltraHighSpeedAsync<GL01>("GL01", "GL01", file, statementDate);
         }
 
         /// <summary>
-        /// Import GL02 - General Ledger Transactions với TRDATE->NGAY_DL conversion
+        /// Import GL02 - ULTRA HIGH-SPEED với silent direct import (no verbose logging)
         /// </summary>
         public async Task<DirectImportResult> ImportGL02DirectAsync(IFormFile file, string? statementDate = null)
         {
-            _logger.LogInformation("🚀 [GL02] Import vào bảng GL02");
-            return await ImportGenericCSVAsync<GL02>("GL02", "GL02", file, statementDate);
+            _logger.LogInformation("🚀 [GL02_SILENT] SILENT ULTRA HIGH-SPEED Import vào bảng GL02");
+            return await ImportGL02SilentDirectAsync(file, statementDate);
+        }
+
+        /// <summary>
+        /// GL02 SILENT DIRECT Import - Tốc độ tối đa, không verbose logging
+        /// Chuyên biệt cho file GL02 lớn (300k+ records)
+        /// </summary>
+        private async Task<DirectImportResult> ImportGL02SilentDirectAsync(IFormFile file, string? statementDate = null)
+        {
+            var result = new DirectImportResult
+            {
+                FileName = file.FileName,
+                DataType = "GL02",
+                TargetTable = "GL02",
+                FileSizeBytes = file.Length,
+                StartTime = DateTime.UtcNow
+            };
+
+            try
+            {
+                _logger.LogInformation("🔥 [GL02_SILENT] Starting SILENT Direct Import for GL02: {FileName}, Size: {Size}MB",
+                    file.FileName, Math.Round(file.Length / 1024.0 / 1024.0, 2));
+
+                // Extract NgayDL từ filename
+                var ngayDL = ExtractNgayDLFromFileName(file.FileName);
+                result.NgayDL = ngayDL;
+
+                // Create ImportedDataRecord for tracking
+                var importRecord = await CreateImportedDataRecordAsync(file, "GL02", 0);
+                result.ImportedDataRecordId = importRecord.Id;
+
+                // Parse CSV với tốc độ tối đa (no logging per record)
+                var records = await ParseGL02SilentAsync(file, statementDate);
+                _logger.LogInformation("🔥 [GL02_SILENT] Parsed {Count} records, starting SILENT bulk insert", records.Count);
+
+                if (records.Any())
+                {
+                    // SILENT bulk insert - no column mapping logs
+                    var insertedCount = await BulkInsertGL02SilentAsync(records);
+                    result.ProcessedRecords = insertedCount;
+
+                    // Update record count
+                    importRecord.RecordsCount = insertedCount;
+                    await _context.SaveChangesAsync();
+                }
+
+                result.Success = true;
+                result.BatchId = Guid.NewGuid().ToString();
+                result.EndTime = DateTime.UtcNow;
+
+                _logger.LogInformation("🔥 [GL02_SILENT] COMPLETED: {Count} records in {Duration} seconds",
+                    result.ProcessedRecords, Math.Round(result.Duration.TotalSeconds, 1));
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.ErrorMessage = ex.Message;
+                result.EndTime = DateTime.UtcNow;
+                _logger.LogError(ex, "❌ [GL02_SILENT] Failed: {FileName}", file.FileName);
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// Parse GL02 CSV SILENT - no verbose logging, max speed
+        /// </summary>
+        private async Task<List<GL02>> ParseGL02SilentAsync(IFormFile file, string? statementDate = null)
+        {
+            var records = new List<GL02>();
+
+            using var stream = file.OpenReadStream();
+            using var reader = new StreamReader(stream, Encoding.UTF8, bufferSize: 32768); // 32KB buffer
+            using var csv = new CsvReader(reader, new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                BufferSize = 32768,
+                HasHeaderRecord = true,
+                TrimOptions = CsvHelper.Configuration.TrimOptions.Trim,
+                ReadingExceptionOccurred = (ex) => false, // Skip malformed rows
+                BadDataFound = null // Ignore bad data
+            });
+
+            await csv.ReadAsync();
+            csv.ReadHeader();
+
+            var recordCount = 0;
+            while (await csv.ReadAsync())
+            {
+                try
+                {
+                    var record = new GL02
+                    {
+                        // TRDATE (index 0) -> NGAY_DL
+                        NGAY_DL = DateTime.TryParseExact(csv.GetField(0)?.Trim() ?? "", "yyyyMMdd",
+                            CultureInfo.InvariantCulture, DateTimeStyles.None, out var date) ? date : DateTime.Now,
+
+                        TRBRCD = csv.GetField(1)?.Trim(),
+                        USERID = csv.GetField(2)?.Trim(),
+                        JOURSEQ = csv.GetField(3)?.Trim(),
+                        DYTRSEQ = csv.GetField(4)?.Trim(),
+                        LOCAC = csv.GetField(5)?.Trim(),
+                        CCY = csv.GetField(6)?.Trim(),
+                        BUSCD = csv.GetField(7)?.Trim(),
+                        UNIT = csv.GetField(8)?.Trim(),
+                        TRCD = csv.GetField(9)?.Trim(),
+                        CUSTOMER = csv.GetField(10)?.Trim(),
+                        TRTP = csv.GetField(11)?.Trim(),
+                        REFERENCE = csv.GetField(12)?.Trim(),
+                        REMARK = csv.GetField(13)?.Trim(),
+
+                        // Numeric fields with error handling
+                        DRAMOUNT = decimal.TryParse(csv.GetField(14)?.Replace(",", "")?.Trim(), out var dr) ? dr : 0,
+                        CRAMOUNT = decimal.TryParse(csv.GetField(15)?.Replace(",", "")?.Trim(), out var cr) ? cr : 0,
+
+                        // CRTDTM field
+                        CRTDTM = DateTime.TryParseExact(csv.GetField(16)?.Trim() ?? "", "yyyyMMdd",
+                            CultureInfo.InvariantCulture, DateTimeStyles.None, out var crtdtm) ? crtdtm : (DateTime?)null,
+
+                        // System fields
+                        CREATED_DATE = DateTime.UtcNow,
+                        UPDATED_DATE = DateTime.UtcNow,
+                        FILE_NAME = file.FileName
+                    };
+
+                    records.Add(record);
+                    recordCount++;
+
+                    // Progress log every 100k records only
+                    if (recordCount % 100000 == 0)
+                    {
+                        _logger.LogInformation("🔥 [GL02_SILENT] Parsed {Count} records", recordCount);
+                    }
+                }
+                catch
+                {
+                    // Skip malformed rows silently for max speed
+                    continue;
+                }
+            }
+
+            return records;
+        }
+
+        /// <summary>
+        /// SILENT Bulk Insert for GL02 - no column mapping logs, max performance
+        /// </summary>
+        private async Task<int> BulkInsertGL02SilentAsync(List<GL02> records)
+        {
+            var connectionString = _context.Database.GetConnectionString();
+            using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            // Create DataTable for GL02
+            var dataTable = new DataTable();
+            dataTable.Columns.Add("NGAY_DL", typeof(DateTime));
+            dataTable.Columns.Add("TRBRCD", typeof(string));
+            dataTable.Columns.Add("USERID", typeof(string));
+            dataTable.Columns.Add("JOURSEQ", typeof(string));
+            dataTable.Columns.Add("DYTRSEQ", typeof(string));
+            dataTable.Columns.Add("LOCAC", typeof(string));
+            dataTable.Columns.Add("CCY", typeof(string));
+            dataTable.Columns.Add("BUSCD", typeof(string));
+            dataTable.Columns.Add("UNIT", typeof(string));
+            dataTable.Columns.Add("TRCD", typeof(string));
+            dataTable.Columns.Add("CUSTOMER", typeof(string));
+            dataTable.Columns.Add("TRTP", typeof(string));
+            dataTable.Columns.Add("REFERENCE", typeof(string));
+            dataTable.Columns.Add("REMARK", typeof(string));
+            dataTable.Columns.Add("DRAMOUNT", typeof(decimal));
+            dataTable.Columns.Add("CRAMOUNT", typeof(decimal));
+            dataTable.Columns.Add("CRTDTM", typeof(DateTime));
+            dataTable.Columns.Add("CREATED_DATE", typeof(DateTime));
+            dataTable.Columns.Add("UPDATED_DATE", typeof(DateTime));
+            dataTable.Columns.Add("FILE_NAME", typeof(string));
+
+            // Populate DataTable SILENT (no logging per record)
+            foreach (var record in records)
+            {
+                dataTable.Rows.Add(
+                    record.NGAY_DL,
+                    record.TRBRCD, record.USERID, record.JOURSEQ, record.DYTRSEQ, record.LOCAC,
+                    record.CCY, record.BUSCD, record.UNIT, record.TRCD, record.CUSTOMER,
+                    record.TRTP, record.REFERENCE, record.REMARK,
+                    record.DRAMOUNT, record.CRAMOUNT, record.CRTDTM,
+                    record.CREATED_DATE, record.UPDATED_DATE, record.FILE_NAME
+                );
+            }
+
+            // ULTRA-HIGH-SPEED SqlBulkCopy settings
+            using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.TableLock | SqlBulkCopyOptions.UseInternalTransaction, null)
+            {
+                DestinationTableName = "GL02",
+                BatchSize = 750000, // 750k for optimal speed
+                BulkCopyTimeout = 7200, // 2 hours
+                EnableStreaming = true,
+                NotifyAfter = 100000 // Progress every 100k only
+            };
+
+            // Column mappings SILENT (no logging)
+            foreach (DataColumn column in dataTable.Columns)
+            {
+                bulkCopy.ColumnMappings.Add(column.ColumnName, column.ColumnName);
+            }
+
+            // Progress tracking
+            bulkCopy.SqlRowsCopied += (sender, e) =>
+            {
+                _logger.LogInformation("🔥 [GL02_SILENT] Inserted {Count} records", e.RowsCopied);
+            };
+
+            // Execute SILENT bulk copy
+            await bulkCopy.WriteToServerAsync(dataTable);
+            return records.Count;
         }
 
         /// <summary>
@@ -529,7 +742,7 @@ namespace TinhKhoanApp.Api.Services
         /// <summary>
         /// Generic CSV import method
         /// </summary>
-        private async Task<DirectImportResult> ImportGenericCSVAsync<T>(string dataType, string tableName, IFormFile file, string? statementDate = null)
+        private async Task<DirectImportResult> ImportGenericCSVAsync<T>(string dataType, string tableName, IFormFile file, string? statementDate = null, bool ultraHighSpeed = false)
             where T : class, new()
         {
             var result = new DirectImportResult
@@ -560,7 +773,7 @@ namespace TinhKhoanApp.Api.Services
                 if (records.Any())
                 {
                     _logger.LogInformation("📊 [IMPORT_DEBUG] Starting bulk insert for {Count} records", records.Count);
-                    var insertedCount = await BulkInsertGenericAsync(records, tableName);
+                    var insertedCount = await BulkInsertGenericAsync(records, tableName, ultraHighSpeed);
                     result.ProcessedRecords = insertedCount;
 
                     // Update record count
@@ -633,6 +846,183 @@ namespace TinhKhoanApp.Api.Services
                 _logger.LogError(ex, "❌ [{DataType}_DIRECT] Excel Direct Import failed: {FileName}", dataType, file.FileName);
                 return result;
             }
+        }
+
+        /// <summary>
+        /// ULTRA HIGH-SPEED Import cho GL01/GL02 - Streaming + Optimized Bulk Insert
+        /// Không load toàn bộ vào memory, xử lý theo chunks để tốc độ tối đa
+        /// </summary>
+        private async Task<DirectImportResult> ImportUltraHighSpeedAsync<T>(string dataType, string tableName, IFormFile file, string? statementDate = null)
+            where T : class, new()
+        {
+            var result = new DirectImportResult
+            {
+                FileName = file.FileName,
+                DataType = dataType,
+                TargetTable = tableName,
+                FileSizeBytes = file.Length,
+                StartTime = DateTime.UtcNow
+            };
+
+            try
+            {
+                _logger.LogInformation("🚀 [ULTRA_SPEED] Starting ULTRA HIGH-SPEED import for {DataType}: {FileName}", dataType, file.FileName);
+
+                // Extract NgayDL từ filename
+                var ngayDL = ExtractNgayDLFromFileName(file.FileName);
+                result.NgayDL = ngayDL;
+
+                // Create ImportedDataRecord for tracking
+                var importRecord = await CreateImportedDataRecordAsync(file, dataType, 0);
+                result.ImportedDataRecordId = importRecord.Id;
+
+                // ULTRA HIGH-SPEED: Direct streaming import without loading all to memory
+                var processedRecords = await StreamingBulkInsertAsync<T>(file, tableName, dataType, statementDate);
+                result.ProcessedRecords = processedRecords;
+
+                // Update record count
+                importRecord.RecordsCount = processedRecords;
+                await _context.SaveChangesAsync();
+
+                result.Success = true;
+                result.BatchId = Guid.NewGuid().ToString();
+                result.EndTime = DateTime.UtcNow;
+
+                _logger.LogInformation("🚀 [ULTRA_SPEED] COMPLETED: {Count} records in {Duration}ms",
+                    result.ProcessedRecords, result.Duration.TotalMilliseconds);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.ErrorMessage = ex.Message;
+                result.EndTime = DateTime.UtcNow;
+                _logger.LogError(ex, "❌ [ULTRA_SPEED] Failed: {FileName}", file.FileName);
+                return result;
+            }
+        }
+
+        /// <summary>
+        /// ULTRA HIGH-SPEED: Stream CSV directly to SqlBulkCopy without loading into memory
+        /// Optimized for GL01/GL02 large files (300k+ records)
+        /// </summary>
+        private async Task<int> StreamingBulkInsertAsync<T>(IFormFile file, string tableName, string dataType, string? statementDate = null)
+            where T : class, new()
+        {
+            var connectionString = _context.Database.GetConnectionString();
+            var processedCount = 0;
+
+            using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            // Ultra-optimized SqlBulkCopy settings for maximum performance
+            using var bulkCopy = new SqlBulkCopy(connection)
+            {
+                DestinationTableName = tableName,
+                BatchSize = 500000, // 500k records per batch
+                BulkCopyTimeout = 3600, // 1 hour timeout
+                EnableStreaming = true,
+                NotifyAfter = 50000 // Progress notification every 50k records
+            };
+
+            // Enable all performance optimizations
+            bulkCopy.SqlRowsCopied += (sender, e) =>
+            {
+                _logger.LogInformation("🚀 [STREAMING] Processed {Count} records for {Table}", e.RowsCopied, tableName);
+            };
+
+            try
+            {
+                _logger.LogInformation("🚀 [STREAMING] Starting streaming bulk insert for {Table}: {FileName}", tableName, file.FileName);
+
+                using var stream = file.OpenReadStream();
+                using var reader = new StreamReader(stream, Encoding.UTF8, bufferSize: 16777216); // 16MB buffer
+                using var csv = new CsvReader(reader, new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
+                {
+                    BufferSize = 65536, // 64KB CSV buffer for maximum speed
+                    HasHeaderRecord = true,
+                    TrimOptions = CsvHelper.Configuration.TrimOptions.Trim,
+                    ReadingExceptionOccurred = (ex) => false, // Skip malformed rows for speed
+                    BadDataFound = null // Ignore bad data for maximum performance
+                });
+
+                // Skip header row
+                await csv.ReadAsync();
+                csv.ReadHeader();
+
+                // Create DataReader for streaming to SqlBulkCopy
+                var dataReader = new StreamingDataReader<T>(csv, dataType, statementDate, _logger);
+
+                // Map columns for SqlBulkCopy
+                SetupColumnMappings<T>(bulkCopy, dataType);
+
+                // Execute streaming bulk copy
+                await bulkCopy.WriteToServerAsync(dataReader);
+                processedCount = dataReader.RecordCount;
+
+                _logger.LogInformation("✅ [STREAMING] Successfully streamed {Count} records to {Table}", processedCount, tableName);
+                return processedCount;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [STREAMING] Failed streaming bulk insert for {Table}", tableName);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Setup column mappings for SqlBulkCopy based on data type
+        /// Special handling for GL02: CSV TRDATE -> DB NGAY_DL
+        /// </summary>
+        private void SetupColumnMappings<T>(SqlBulkCopy bulkCopy, string dataType)
+        {
+            bulkCopy.ColumnMappings.Clear();
+
+            if (dataType == "GL02")
+            {
+                // Special mapping for GL02: CSV columns -> Database columns
+                var csvColumns = new[]
+                {
+                    "TRDATE", "TRBRCD", "USERID", "JOURSEQ", "DYTRSEQ", "LOCAC", "CCY", "BUSCD", "UNIT", "TRCD",
+                    "CUSTOMER", "TRTP", "REFERENCE", "REMARK", "DRAMOUNT", "CRAMOUNT", "CRTDTM"
+                };
+
+                var dbColumns = new[]
+                {
+                    "NGAY_DL", "TRBRCD", "USERID", "JOURSEQ", "DYTRSEQ", "LOCAC", "CCY", "BUSCD", "UNIT", "TRCD",
+                    "CUSTOMER", "TRTP", "REFERENCE", "REMARK", "DRAMOUNT", "CRAMOUNT", "CRTDTM"
+                };
+
+                // Map CSV columns to database columns
+                for (int i = 0; i < Math.Min(csvColumns.Length, dbColumns.Length); i++)
+                {
+                    bulkCopy.ColumnMappings.Add(i, dbColumns[i]);
+                    _logger.LogDebug("🔗 [GL02_MAPPING] CSV column {Index} ({CsvCol}) -> DB column {DbCol}",
+                        i, csvColumns[i], dbColumns[i]);
+                }
+
+                // Add system columns with default values (these won't come from CSV)
+                bulkCopy.ColumnMappings.Add("CREATED_DATE", "CREATED_DATE");
+                bulkCopy.ColumnMappings.Add("FILE_NAME", "FILE_NAME");
+            }
+            else
+            {
+                // Standard mapping for other data types
+                var properties = typeof(T).GetProperties();
+                foreach (var prop in properties)
+                {
+                    // Skip navigation properties and non-database columns
+                    if (prop.PropertyType.IsClass && prop.PropertyType != typeof(string))
+                        continue;
+                    if (prop.GetCustomAttributes(typeof(NotMappedAttribute), false).Any())
+                        continue;
+
+                    bulkCopy.ColumnMappings.Add(prop.Name, prop.Name);
+                }
+            }
+
+            _logger.LogDebug("🔗 [STREAMING] Mapped {Count} columns for {DataType}", bulkCopy.ColumnMappings.Count, dataType);
         }
 
         #endregion
@@ -1210,7 +1600,7 @@ namespace TinhKhoanApp.Api.Services
         /// <summary>
         /// Generic bulk insert method with improved column mapping
         /// </summary>
-        private async Task<int> BulkInsertGenericAsync<T>(List<T> records, string tableName)
+        private async Task<int> BulkInsertGenericAsync<T>(List<T> records, string tableName, bool ultraHighSpeed = false)
         {
             if (!records.Any()) return 0;
 
@@ -1239,10 +1629,10 @@ namespace TinhKhoanApp.Api.Services
             using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.TableLock | SqlBulkCopyOptions.UseInternalTransaction, null)
             {
                 DestinationTableName = tableName,
-                BatchSize = 250000, // 🚀 Tăng từ 100k -> 250k cho GL01/GL02 large files
-                BulkCopyTimeout = 1800, // 🚀 Tăng từ 600s -> 1800s (30 phút)
+                BatchSize = ultraHighSpeed ? 750000 : 500000, // 🚀 OPTIMIZED: 750k for GL02 (optimal sweet spot)
+                BulkCopyTimeout = ultraHighSpeed ? 7200 : 3600, // 🚀 ULTRA: 2 hours for GL02, 1 hour for others
                 EnableStreaming = true,
-                NotifyAfter = 100000 // 🚀 Tăng notify từ 50k -> 100k
+                NotifyAfter = ultraHighSpeed ? 100000 : 50000 // 🚀 Less frequent logging for speed
             };
 
             // Smart column mapping - include system columns for data tables
@@ -2740,13 +3130,13 @@ namespace TinhKhoanApp.Api.Services
             using var connection = new SqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.TableLock | SqlBulkCopyOptions.UseInternalTransaction, null)
+            using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.TableLock | SqlBulkCopyOptions.UseInternalTransaction | SqlBulkCopyOptions.FireTriggers, null)
             {
                 DestinationTableName = tableName,
-                BatchSize = 250000, // 🚀 Tăng từ 100k -> 250k cho GL01/GL02 large files
-                BulkCopyTimeout = 1800, // 🚀 Tăng từ 600s -> 1800s (30 phút)
+                BatchSize = 500000, // 🚀 ULTRA OPTIMIZATION: 250k -> 500k cho GL02 338k records
+                BulkCopyTimeout = 3600, // 🚀 EXTEND: 1800s -> 3600s (1 giờ)
                 EnableStreaming = true,
-                NotifyAfter = 100000 // 🚀 Tăng notify từ 50k -> 100k
+                NotifyAfter = 50000 // 🚀 REDUCE: 100k -> 50k để theo dõi progress tốt hơn
             };
 
             // Map columns từ DataTable to Database table by name (skip IDENTITY columns)
@@ -3382,6 +3772,196 @@ namespace TinhKhoanApp.Api.Services
             {
                 _logger.LogError(ex, "❌ [GL02_VALIDATE] Error validating GL02 data");
                 return new { Success = false, Message = $"Error: {ex.Message}" };
+            }
+        }
+    }
+
+    /// <summary>
+    /// Custom DataReader implementation for streaming CSV data directly to SqlBulkCopy
+    /// Optimized for ultra-high-speed processing of large files without memory overhead
+    /// </summary>
+    public class StreamingDataReader<T> : IDataReader, IDisposable where T : class, new()
+    {
+        private readonly CsvReader _csvReader;
+        private readonly PropertyInfo[] _properties;
+        private readonly ILogger _logger;
+        private readonly string _dataType;
+        private readonly string? _statementDate;
+        private bool _disposed = false;
+        private int _recordCount = 0;
+
+        public int RecordCount => _recordCount;
+
+        public StreamingDataReader(CsvReader csvReader, string dataType, string? statementDate, ILogger logger)
+        {
+            _csvReader = csvReader;
+            _dataType = dataType;
+            _statementDate = statementDate;
+            _logger = logger;
+            _properties = typeof(T).GetProperties()
+                .Where(p => p.CanWrite && !p.PropertyType.IsClass || p.PropertyType == typeof(string))
+                .ToArray();
+        }
+
+        public bool Read()
+        {
+            try
+            {
+                var hasData = _csvReader.Read();
+                if (hasData)
+                {
+                    _recordCount++;
+                    if (_recordCount % 50000 == 0)
+                    {
+                        _logger.LogInformation("🚀 [STREAMING_READER] Streamed {Count} records", _recordCount);
+                    }
+                }
+                return hasData;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("⚠️ [STREAMING_READER] Skipping malformed row {Count}: {Error}", _recordCount + 1, ex.Message);
+                // Try to continue reading
+                try
+                {
+                    return _csvReader.Read();
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+        }
+
+        public object GetValue(int i)
+        {
+            try
+            {
+                var csvValue = _csvReader.GetField(i)?.Trim();
+
+                if (string.IsNullOrWhiteSpace(csvValue))
+                    return DBNull.Value;
+
+                // Special handling for GL02 TRDATE (column 0) -> NGAY_DL conversion
+                if (_dataType == "GL02" && i == 0)
+                {
+                    // Convert TRDATE (YYYYMMDD) to NGAY_DL (datetime2)
+                    if (csvValue.Length == 8 && DateTime.TryParseExact(csvValue, "yyyyMMdd",
+                        CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateResult))
+                    {
+                        _logger.LogDebug("🗓️ [GL02_TRDATE] Converting TRDATE '{TRDATE}' to NGAY_DL '{NGAY_DL}'",
+                            csvValue, dateResult.ToString("yyyy-MM-dd"));
+                        return dateResult;
+                    }
+                    else
+                    {
+                        _logger.LogWarning("⚠️ [GL02_TRDATE] Invalid TRDATE format: '{TRDATE}', using current date", csvValue);
+                        return DateTime.Now.Date;
+                    }
+                }
+
+                // For non-GL02 data types, use standard property-based conversion
+                if (i >= _properties.Length) return DBNull.Value;
+
+                var property = _properties[i];
+                var targetType = property.PropertyType;
+                var underlyingType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+
+                if (underlyingType == typeof(string))
+                {
+                    return csvValue;
+                }
+                else if (underlyingType == typeof(DateTime))
+                {
+                    if (DateTime.TryParseExact(csvValue, new[] { "dd/MM/yyyy", "yyyy-MM-dd", "yyyyMMdd" },
+                        CultureInfo.InvariantCulture, DateTimeStyles.None, out var dateResult))
+                        return dateResult;
+                    return DBNull.Value;
+                }
+                else if (underlyingType == typeof(decimal))
+                {
+                    var normalizedValue = csvValue.Replace(",", "").Replace(" ", "").Trim();
+                    if (normalizedValue.StartsWith("'"))
+                        normalizedValue = normalizedValue.Substring(1);
+
+                    if (decimal.TryParse(normalizedValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var decimalResult))
+                        return decimalResult;
+                    return DBNull.Value;
+                }
+                else if (underlyingType == typeof(int))
+                {
+                    var normalizedValue = csvValue.Replace(",", "").Replace(" ", "").Trim();
+                    if (int.TryParse(normalizedValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var intResult))
+                        return intResult;
+                    return DBNull.Value;
+                }
+                else if (underlyingType == typeof(long))
+                {
+                    var normalizedValue = csvValue.Replace(",", "").Replace(" ", "").Trim();
+                    if (long.TryParse(normalizedValue, NumberStyles.Any, CultureInfo.InvariantCulture, out var longResult))
+                        return longResult;
+                    return DBNull.Value;
+                }
+                else if (underlyingType == typeof(bool))
+                {
+                    return csvValue.Equals("1") || csvValue.Equals("true", StringComparison.OrdinalIgnoreCase);
+                }
+
+                return DBNull.Value;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("⚠️ [STREAMING_READER] Error converting column {Index}: {Error}", i, ex.Message);
+                return DBNull.Value;
+            }
+        }
+
+        // Required IDataReader implementation
+        public int FieldCount => _properties.Length;
+        public string GetName(int i) => i < _properties.Length ? _properties[i].Name : string.Empty;
+        public Type GetFieldType(int i) => i < _properties.Length ? _properties[i].PropertyType : typeof(object);
+        public bool IsDBNull(int i) => GetValue(i) == DBNull.Value;
+        public object this[int i] => GetValue(i);
+        public object this[string name] => throw new NotImplementedException();
+
+        // Unused methods for IDataReader compliance
+        public bool NextResult() => false;
+        public void Close() => Dispose();
+        public DataTable GetSchemaTable() => throw new NotImplementedException();
+        public int Depth => 0;
+        public bool IsClosed => _disposed;
+        public int RecordsAffected => _recordCount;
+        public bool GetBoolean(int i) => Convert.ToBoolean(GetValue(i));
+        public byte GetByte(int i) => Convert.ToByte(GetValue(i));
+        public long GetBytes(int i, long fieldOffset, byte[]? buffer, int bufferoffset, int length) => throw new NotImplementedException();
+        public char GetChar(int i) => Convert.ToChar(GetValue(i));
+        public long GetChars(int i, long fieldoffset, char[]? buffer, int bufferoffset, int length) => throw new NotImplementedException();
+        public IDataReader GetData(int i) => throw new NotImplementedException();
+        public string GetDataTypeName(int i) => GetFieldType(i).Name;
+        public DateTime GetDateTime(int i) => Convert.ToDateTime(GetValue(i));
+        public decimal GetDecimal(int i) => Convert.ToDecimal(GetValue(i));
+        public double GetDouble(int i) => Convert.ToDouble(GetValue(i));
+        public float GetFloat(int i) => Convert.ToSingle(GetValue(i));
+        public Guid GetGuid(int i) => (Guid)GetValue(i);
+        public short GetInt16(int i) => Convert.ToInt16(GetValue(i));
+        public int GetInt32(int i) => Convert.ToInt32(GetValue(i));
+        public long GetInt64(int i) => Convert.ToInt64(GetValue(i));
+        public int GetOrdinal(string name) => Array.FindIndex(_properties, p => p.Name == name);
+        public string GetString(int i) => Convert.ToString(GetValue(i)) ?? string.Empty;
+        public int GetValues(object[] values)
+        {
+            var count = Math.Min(values.Length, FieldCount);
+            for (int i = 0; i < count; i++)
+                values[i] = GetValue(i);
+            return count;
+        }
+
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                _disposed = true;
+                _logger.LogInformation("✅ [STREAMING_READER] Disposed after processing {Count} records", _recordCount);
             }
         }
     }

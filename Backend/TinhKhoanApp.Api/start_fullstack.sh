@@ -100,19 +100,41 @@ echo -e "${YELLOW}💡 Press Ctrl+C to stop all services${NC}"
 
 # Keep script running để maintain processes
 echo -e "${YELLOW}🔄 Services running. Press Ctrl+C to stop...${NC}"
-while true; do
-    sleep 10
+echo -e "${BLUE}💡 Monitoring services health every 30 seconds...${NC}"
 
-    # Check services health
-    if ! pgrep -f "dotnet.*TinhKhoan" >/dev/null; then
-        echo -e "${RED}⚠️  Backend process died, restarting...${NC}"
-        cd "${BACKEND_PATH}"
-        ./start_backend.sh &
+while true; do
+    sleep 30  # 🔧 Tăng từ 10s lên 30s để không check quá thường xuyên
+
+    # Check backend health bằng cách test API endpoint thay vì process name
+    if ! curl -s http://localhost:5055/health >/dev/null 2>&1; then
+        echo -e "${RED}⚠️  Backend API not responding, checking process...${NC}"
+
+        # Double check với process pattern rộng hơn
+        if ! pgrep -f "dotnet.*5055" >/dev/null && ! pgrep -f "TinhKhoanApp.Api" >/dev/null; then
+            echo -e "${RED}🔄 Restarting backend...${NC}"
+            cd "${BACKEND_PATH}"
+            ./start_backend.sh &
+            sleep 15  # 🔧 Chờ backend khởi động
+        else
+            echo -e "${YELLOW}🔍 Backend process exists but API not responding (may be starting up)${NC}"
+        fi
+    else
+        echo -e "${GREEN}✅ Backend health check OK${NC}"
     fi
 
-    if ! pgrep -f "npm.*dev" >/dev/null; then
-        echo -e "${RED}⚠️  Frontend process died, restarting...${NC}"
-        cd "${FRONTEND_PATH}"
-        ./start_frontend.sh &
+    # Check frontend health bằng cách test port 3000
+    if ! curl -s http://localhost:3000 >/dev/null 2>&1; then
+        echo -e "${RED}⚠️  Frontend not responding, checking process...${NC}"
+
+        if ! pgrep -f "npm.*dev" >/dev/null && ! pgrep -f "vite.*3000" >/dev/null; then
+            echo -e "${RED}🔄 Restarting frontend...${NC}"
+            cd "${FRONTEND_PATH}"
+            ./start_frontend.sh &
+            sleep 10  # 🔧 Chờ frontend khởi động
+        else
+            echo -e "${YELLOW}🔍 Frontend process exists but not responding (may be starting up)${NC}"
+        fi
+    else
+        echo -e "${GREEN}✅ Frontend health check OK${NC}"
     fi
 done
