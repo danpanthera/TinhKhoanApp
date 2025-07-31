@@ -998,11 +998,11 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 # 5. Bảng GL02 (Quan trọng)
 + Thống nhất cấu trúc dữ liệu Bảng GL02 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
 + Theo chuẩn Partitioned Columnstore
-+ Business Column tham chiếu theo file csv *gl02* (thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/)
++ Business Column tham chiếu theo file csv *gl02* (thư mục chứa file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/)
 + Số lượng Cột busiess column = 17
 + Cho phép các trường, cột có giá trị NULL
 + Cột NGAY_DL trong bảng GL02 lấy từ cột TRDATE của file csv *gl02* có định dạng datetime2 (dd/mm/yyyy)
-+ Define (Model, Database, EF, BulkCopy) đảm bảo thống nhất: Các cột có chứa "DATE", "NGAY" đưa về format datetime2 (dd/mm/yyyy); các cột có chứa "AMT", "AMOUNT", "BALANCE", "SO_TIEN_GD", "SO_DU" ở dạng number #,###.00 (vd: 250,000.89); cột CRTDTM về dạng dd/mm/yyyy hh:mm:ss (có thể phải tạo proper conversion; có thể phải kiểm tra ở ParseGenericCSVAsync; ImportGenericCSVAsync; BulkInsertGenericAsync)
++ Define (Model, Database, EF, BulkCopy) đảm bảo thống nhất: Các cột có chứa "DATE", "NGAY", "CRTDTM" đưa về format datetime2 (dd/mm/yyyy); các cột có chứa "AMT", "AMOUNT", "BALANCE", "SO_TIEN_GD", "SO_DU" ở dạng number #,###.00 (vd: 250,000.89); cột CRTDTM về dạng dd/mm/yyyy hh:mm:ss (có thể phải tạo proper conversion; có thể phải kiểm tra ở ParseGenericCSVAsync; ImportGenericCSVAsync; BulkInsertGenericAsync)
 + Các cột còn lại dạng String/Nvachar: Tất cả có độ dài 200 ký tự, riêng cột "REMARK" dài 1000 ký tự
 + Cấu trúc bảng dữ liệu: NGAY_DL -> Business Column -> System column (nếu có)
 + Chỉ cho phép import các file có filename chứa ký tự "gl02"
@@ -1085,3 +1085,38 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 6. Tách biệt concerns: Controller chỉ xử lý HTTP requests, services xử lý business logic, repositories xử lý data access
 **kiểm tra sự thống nhất giữa tất cả các thành phần của bảng EI01: Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO <> giống với actual CSV file structure/columns**
 Việc tổ chức lại code theo cách này sẽ giúp cấu trúc dự án rõ ràng, dễ bảo trì và theo đúng các best practices trong phát triển phần mềm.
+
+## 🛠️ SAFE PROJECT MANAGEMENT SCRIPTS
+
+**Vấn đề**: VS Code tasks thường bị treo khi check output, gây khó khăn trong việc quản lý dự án.
+
+**Giải pháp**: Tạo các script độc lập để quản lý project an toàn:
+
+### 📋 Check Project Status
+```bash
+./check_project_status.sh
+```
+- Kiểm tra port 5055 (Backend) và 3000 (Frontend)
+- Verify HTTP responses
+- Kiểm tra database connection
+- Hiển thị tổng quan trạng thái dự án
+
+### 🚀 Safe Startup 
+```bash
+./start_project_safe.sh
+```
+- Tự động kill processes cũ trên ports
+- Khởi động Backend và Frontend an toàn
+- Verify startup success
+- Tránh conflicts và task hangs
+
+### 🛑 Safe Shutdown
+```bash
+./stop_project_safe.sh  
+```
+- Gracefully terminate processes
+- Force kill nếu cần thiết
+- Verify clean shutdown
+- Giải phóng ports hoàn toàn
+
+**Lợi ích**: Tránh được vấn đề task output bị treo, quản lý project độc lập khỏi VS Code tasks.
