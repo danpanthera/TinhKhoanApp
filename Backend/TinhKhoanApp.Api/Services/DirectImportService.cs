@@ -438,18 +438,16 @@ namespace TinhKhoanApp.Api.Services
                 var importRecord = await CreateImportedDataRecordAsync(file, "GL02", 0);
                 result.ImportedDataRecordId = importRecord.Id;
 
-                // Parse CSV với tốc độ tối đa (no logging per record)
-                var records = await ParseGL02SilentAsync(file, statementDate);
-                _logger.LogInformation("🔥 [GL02_SILENT] Parsed {Count} records, starting SILENT bulk insert", records.Count);
+                // Parse CSV với STREAMING BATCH processing (không load tất cả vào memory)
+                var processedCount = await ParseAndInsertGL02StreamingAsync(file, statementDate);
+                _logger.LogInformation("🔥 [GL02_SILENT] STREAMING processing completed: {Count} records", processedCount);
 
-                if (records.Any())
+                if (processedCount > 0)
                 {
-                    // SILENT bulk insert - no column mapping logs
-                    var insertedCount = await BulkInsertGL02SilentAsync(records);
-                    result.ProcessedRecords = insertedCount;
+                    result.ProcessedRecords = processedCount;
 
                     // Update record count
-                    importRecord.RecordsCount = insertedCount;
+                    importRecord.RecordsCount = processedCount;
                     await _context.SaveChangesAsync();
                 }
 
@@ -656,6 +654,165 @@ namespace TinhKhoanApp.Api.Services
 
             Console.WriteLine($"✅ [DPDA_IMPORT] Filename validation passed, calling ImportGenericCSVAsync<DPDA>");
             return await ImportGenericCSVAsync<DPDA>("DPDA", "DPDA", file, statementDate);
+        }
+
+        /// <summary>
+        /// TRUE STREAMING: Parse và Insert GL02 theo batch nhỏ - không load tất cả vào memory
+        /// Batch size 50k records để tránh memory overflow với file 338k+ records
+        /// </summary>
+        private async Task<int> ParseAndInsertGL02StreamingAsync(IFormFile file, string? statementDate = null)
+        {
+            var totalProcessed = 0;
+            var connectionString = _context.Database.GetConnectionString();
+
+            using var stream = file.OpenReadStream();
+            using var reader = new StreamReader(stream, Encoding.UTF8, bufferSize: 65536); // 64KB buffer
+            using var csv = new CsvReader(reader, new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                BufferSize = 65536,
+                HasHeaderRecord = true,
+                TrimOptions = CsvHelper.Configuration.TrimOptions.Trim,
+                ReadingExceptionOccurred = (ex) => false,
+                BadDataFound = null
+            });
+
+            await csv.ReadAsync();
+            csv.ReadHeader();
+
+            var batch = new List<GL02>();
+            const int BATCH_SIZE = 50000; // 50k per batch to avoid memory issues
+            var recordCount = 0;
+
+            while (await csv.ReadAsync())
+            {
+                try
+                {
+                    var record = new GL02
+                    {
+                        // TRDATE (index 0) -> NGAY_DL
+                        NGAY_DL = DateTime.TryParseExact(csv.GetField(0)?.Trim() ?? "", "yyyyMMdd",
+                            CultureInfo.InvariantCulture, DateTimeStyles.None, out var date) ? date : DateTime.Now,
+
+                        TRBRCD = csv.GetField(1)?.Trim(),
+                        USERID = csv.GetField(2)?.Trim(),
+                        JOURSEQ = csv.GetField(3)?.Trim(),
+                        DYTRSEQ = csv.GetField(4)?.Trim(),
+                        LOCAC = csv.GetField(5)?.Trim(),
+                        CCY = csv.GetField(6)?.Trim(),
+                        BUSCD = csv.GetField(7)?.Trim(),
+                        UNIT = csv.GetField(8)?.Trim(),
+                        TRCD = csv.GetField(9)?.Trim(),
+                        CUSTOMER = csv.GetField(10)?.Trim(),
+                        TRTP = csv.GetField(11)?.Trim(),
+                        REFERENCE = csv.GetField(12)?.Trim(),
+                        REMARK = csv.GetField(13)?.Trim(),
+
+                        DRAMOUNT = decimal.TryParse(csv.GetField(14)?.Replace(",", "")?.Trim(), out var dr) ? dr : 0,
+                        CRAMOUNT = decimal.TryParse(csv.GetField(15)?.Replace(",", "")?.Trim(), out var cr) ? cr : 0,
+
+                        CRTDTM = DateTime.TryParseExact(csv.GetField(16)?.Trim() ?? "", "yyyyMMdd",
+                            CultureInfo.InvariantCulture, DateTimeStyles.None, out var crtdtm) ? crtdtm : (DateTime?)null,
+
+                        CREATED_DATE = DateTime.UtcNow,
+                        UPDATED_DATE = DateTime.UtcNow,
+                        FILE_NAME = file.FileName
+                    };
+
+                    batch.Add(record);
+                    recordCount++;
+
+                    // Insert batch when reached BATCH_SIZE
+                    if (batch.Count >= BATCH_SIZE)
+                    {
+                        var insertedCount = await InsertGL02BatchAsync(batch, connectionString);
+                        totalProcessed += insertedCount;
+                        _logger.LogInformation("🔥 [GL02_STREAMING] Batch {BatchNum}: Inserted {Count} records (Total: {Total})",
+                            (recordCount / BATCH_SIZE), insertedCount, totalProcessed);
+
+                        batch.Clear(); // Clear memory immediately
+                    }
+                }
+                catch
+                {
+                    // Skip malformed rows silently
+                    continue;
+                }
+            }
+
+            // Insert remaining records in final batch
+            if (batch.Count > 0)
+            {
+                var insertedCount = await InsertGL02BatchAsync(batch, connectionString);
+                totalProcessed += insertedCount;
+                _logger.LogInformation("🔥 [GL02_STREAMING] Final batch: Inserted {Count} records (Total: {Total})",
+                    insertedCount, totalProcessed);
+            }
+
+            return totalProcessed;
+        }
+
+        /// <summary>
+        /// Insert một batch GL02 records với optimized SqlBulkCopy
+        /// </summary>
+        private async Task<int> InsertGL02BatchAsync(List<GL02> records, string connectionString)
+        {
+            using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            // Create optimized DataTable for this batch only
+            var dataTable = new DataTable();
+            dataTable.Columns.Add("NGAY_DL", typeof(DateTime));
+            dataTable.Columns.Add("TRBRCD", typeof(string));
+            dataTable.Columns.Add("USERID", typeof(string));
+            dataTable.Columns.Add("JOURSEQ", typeof(string));
+            dataTable.Columns.Add("DYTRSEQ", typeof(string));
+            dataTable.Columns.Add("LOCAC", typeof(string));
+            dataTable.Columns.Add("CCY", typeof(string));
+            dataTable.Columns.Add("BUSCD", typeof(string));
+            dataTable.Columns.Add("UNIT", typeof(string));
+            dataTable.Columns.Add("TRCD", typeof(string));
+            dataTable.Columns.Add("CUSTOMER", typeof(string));
+            dataTable.Columns.Add("TRTP", typeof(string));
+            dataTable.Columns.Add("REFERENCE", typeof(string));
+            dataTable.Columns.Add("REMARK", typeof(string));
+            dataTable.Columns.Add("DRAMOUNT", typeof(decimal));
+            dataTable.Columns.Add("CRAMOUNT", typeof(decimal));
+            dataTable.Columns.Add("CRTDTM", typeof(DateTime));
+            dataTable.Columns.Add("CREATED_DATE", typeof(DateTime));
+            dataTable.Columns.Add("UPDATED_DATE", typeof(DateTime));
+            dataTable.Columns.Add("FILE_NAME", typeof(string));
+
+            // Populate DataTable from batch
+            foreach (var record in records)
+            {
+                dataTable.Rows.Add(
+                    record.NGAY_DL,
+                    record.TRBRCD, record.USERID, record.JOURSEQ, record.DYTRSEQ, record.LOCAC,
+                    record.CCY, record.BUSCD, record.UNIT, record.TRCD, record.CUSTOMER,
+                    record.TRTP, record.REFERENCE, record.REMARK,
+                    record.DRAMOUNT, record.CRAMOUNT, record.CRTDTM,
+                    record.CREATED_DATE, record.UPDATED_DATE, record.FILE_NAME
+                );
+            }
+
+            // Optimized SqlBulkCopy for small batches
+            using var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.TableLock, null)
+            {
+                DestinationTableName = "GL02",
+                BatchSize = records.Count, // Use actual batch size
+                BulkCopyTimeout = 300, // 5 minutes for each batch
+                EnableStreaming = true
+            };
+
+            // Setup column mappings (no logging for speed)
+            foreach (DataColumn column in dataTable.Columns)
+            {
+                bulkCopy.ColumnMappings.Add(column.ColumnName, column.ColumnName);
+            }
+
+            // Execute batch insert
+            await bulkCopy.WriteToServerAsync(dataTable);
+            return records.Count;
         }
 
         /// <summary>
