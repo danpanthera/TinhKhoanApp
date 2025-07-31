@@ -947,6 +947,7 @@ thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
+**kiểm tra sự thống nhất giữa tất cả các thành phần của bảng EI01: Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO <> giống với actual CSV file structure/columns**
 
 # 2. Bảng DPDA (Quan trọng)
 + Thống nhất cấu trúc dữ liệu Bảng DPDA phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -963,6 +964,7 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 + Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này
+**kiểm tra sự thống nhất giữa tất cả các thành phần của bảng EI01: Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO <> giống với actual CSV file structure/columns**
 
 # 3. Bảng EI01 (Quan trọng)
 + Thống nhất cấu trúc dữ liệu Bảng EI01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -979,6 +981,7 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 + Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này.
+**kiểm tra sự thống nhất giữa tất cả các thành phần của bảng EI01: Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO <> giống với actual CSV file structure/columns**
 
 # 4. Bảng GL01 (Quan trọng)
 + Thống nhất cấu trúc dữ liệu Bảng GL01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -994,6 +997,7 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 + Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này.
+**kiểm tra sự thống nhất giữa tất cả các thành phần của bảng EI01: Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO <> giống với actual CSV file structure/columns**
 
 # 5. Bảng GL02 (Quan trọng)
 + Thống nhất cấu trúc dữ liệu Bảng GL02 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -1009,6 +1013,7 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 + Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này.
+**kiểm tra sự thống nhất giữa tất cả các thành phần của bảng EI01: Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO <> giống với actual CSV file structure/columns**
 
 # 6. Bảng GL41 (Quan trọng)
 + Thống nhất cấu trúc dữ liệu Bảng GL41 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -1024,6 +1029,7 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 + Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này.
+**kiểm tra sự thống nhất giữa tất cả các thành phần của bảng EI01: Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO <> giống với actual CSV file structure/columns**
 
 # 7. Bảng LN01 (Quan trọng)
  Thống nhất cấu trúc dữ liệu Bảng LN01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -1041,6 +1047,7 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 + Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này.
+**kiểm tra sự thống nhất giữa tất cả các thành phần của bảng EI01: Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO <> giống với actual CSV file structure/columns**
 
 # 8. Bảng LN03 (Quan trọng)
  Thống nhất cấu trúc dữ liệu Bảng LN03 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -1058,6 +1065,7 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 + Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này.
+**kiểm tra sự thống nhất giữa tất cả các thành phần của bảng EI01: Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO <> giống với actual CSV file structure/columns**
 
 # 9. Bảng RR01 (Quan trọng)
  Thống nhất cấu trúc dữ liệu Bảng RR01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -1075,6 +1083,8 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 + Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này.
+**kiểm tra sự thống nhất giữa tất cả các thành phần của bảng EI01: Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO <> giống với actual CSV file structure/columns**
+
 
 **CÁCH TỔ CHỨC LẠI CODE:**
 1. Tạo repository layer cho mỗi entity (DP01Repository, LN01Repository, etc.)
