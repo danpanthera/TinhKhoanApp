@@ -1,0 +1,17 @@
+<Project>
+  <PropertyGroup>
+    <!-- Suppress specific warnings globally -->
+    <NoWarn>$(NoWarn);CS1591;CS0108;CS0114;CS8603;CS8600;CS1570</NoWarn>
+
+    <!-- Enable nullable reference types -->
+    <Nullable>enable</Nullable>
+
+    <!-- Documentation file -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- Treat warnings as informational only -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+    <WarningsNotAsErrors />
+  </PropertyGroup>
+</Project>

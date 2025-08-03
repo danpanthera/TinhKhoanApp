@@ -48,7 +48,7 @@ namespace TinhKhoanApp.Api.Services
 
             try
             {
-                // Use DirectImportService for smart import - bypasses legacy ImportedDataItems completely
+                // Use DirectImportService for smart import - Direct Import workflow only
                 _logger.LogInformation("🎯 Using DirectImportService smart import for file: {FileName}", file.FileName);
 
                 var directResult = await _directImportService.ImportSmartDirectAsync(file);
@@ -60,7 +60,7 @@ namespace TinhKhoanApp.Api.Services
 
                 if (directResult.Success)
                 {
-                    // Create metadata record for tracking (without ImportedDataItems)
+                    // Create metadata record for tracking (Direct Import workflow)
                     var metadataRecord = new ImportedDataRecord
                     {
                         FileName = file.FileName,

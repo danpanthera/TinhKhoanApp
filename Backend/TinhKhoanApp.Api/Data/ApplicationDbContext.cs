@@ -45,7 +45,7 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
 
         // DbSets cho hệ thống Import dữ liệu
         public DbSet<ImportedDataRecord> ImportedDataRecords { get; set; }
-        // 🗑️ REMOVED: ImportedDataItem - Replaced with DirectImportService workflow
+        // ✅ CLEANED: Removed legacy ImportedDataItem - Using DirectImportService workflow only
 
         // 🚀 DbSets cho 8 bảng dữ liệu thô chính (DirectImport với Temporal Tables + Columnstore)
         public DbSet<DataTables.DP01> DP01 { get; set; } // Re-enabled for basic access
@@ -456,10 +456,10 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
                       .HasDatabaseName("IX_ImportedDataRecords_ImportDate");
             });
 
-            // ✅ CLEANED: Removed ImportedDataItem configuration - using Direct Import workflow
+            // ✅ CLEANED: Removed legacy ImportedDataItem configuration - Direct Import only
 
             // 🎯 Custom SQL để tạo Columnstore Index (sẽ chạy qua migration)
-            // ✅ CLEANED: Removed ImportedDataItems Columnstore Index configuration
+            // ✅ CLEANED: Direct Import workflow - data stored in specific tables with optimized indexes
             // Direct Import workflow stores data directly in specific tables with their own indexes
 
             // 🚀 === CẤU HÌNH TEMPORAL TABLES VỚI TÊN CỘT CSV GỐC ===

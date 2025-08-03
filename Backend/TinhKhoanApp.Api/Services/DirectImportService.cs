@@ -12,21 +12,24 @@ using System.Threading.Tasks.Dataflow;
 using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models;
 using TinhKhoanApp.Api.Models.DataTables;
+using TinhKhoanApp.Api.Models.Configuration;
 using TinhKhoanApp.Api.Services.Interfaces;
 using CsvHelper;
 using OfficeOpenXml;
+using Microsoft.Extensions.Options;
 
 namespace TinhKhoanApp.Api.Services
 {
     /// <summary>
     /// Direct Import Service - Import trực tiếp vào bảng riêng biệt sử dụng SqlBulkCopy
-    /// Loại bỏ hoàn toàn ImportedDataItems để tăng hiệu năng 2-5x
+    /// Hiệu năng cao với Direct Import workflow, bỏ qua các bước trung gian
     /// </summary>
     public partial class DirectImportService : IDirectImportService
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<DirectImportService> _logger;
         private readonly string _connectionString;
+        private readonly DirectImportSettings _directImportSettings;
 
         /// <summary>
         /// Constructor for DirectImportService - initializes database context, logger and connection string
@@ -40,6 +43,10 @@ namespace TinhKhoanApp.Api.Services
             _logger = logger;
             _connectionString = configuration.GetConnectionString("DefaultConnection")
                 ?? throw new InvalidOperationException("Connection string not found");
+
+            // Bind DirectImport configuration
+            _directImportSettings = new DirectImportSettings();
+            configuration.GetSection("DirectImport").Bind(_directImportSettings);
         }
 
         /// <summary>
@@ -387,11 +394,92 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Import LN03 - Bad debt data
+        /// Import LN03 - Bad debt data với 20 cột (17 có header + 3 không header)
+        /// Luôn import trực tiếp vào bảng dữ liệu theo cấu hình AlwaysDirectImport
         /// </summary>
         public async Task<DirectImportResult> ImportLN03DirectAsync(IFormFile file, string? statementDate = null)
         {
-            return await ImportGenericCSVAsync<LN03>("LN03", "LN03", file, statementDate);
+            var ln03Config = _directImportSettings.LN03;
+            _logger.LogInformation("🚀 [LN03] Starting DIRECT import với configuration: AlwaysDirectImport={AlwaysDirectImport}, UseCustomParser={UseCustomParser}, BatchSize={BatchSize}",
+                ln03Config.AlwaysDirectImport, ln03Config.UseCustomParser, ln03Config.BatchSize);
+
+            var result = new DirectImportResult
+            {
+                FileName = file.FileName,
+                DataType = "LN03",
+                TargetTable = "LN03",
+                FileSizeBytes = file.Length,
+                StartTime = DateTime.UtcNow
+            };
+
+            try
+            {
+                // ✅ DIRECT IMPORT ENFORCED - Bỏ qua tất cả xử lý trung gian
+                if (!ln03Config.AlwaysDirectImport)
+                {
+                    throw new InvalidOperationException("LN03 must always use direct import according to configuration");
+                }
+
+                // Extract NgayDL từ filename
+                var ngayDL = ExtractNgayDLFromFileName(file.FileName);
+                result.NgayDL = ngayDL;
+
+                // Create ImportedDataRecord for tracking (minimal overhead)
+                var importRecord = await CreateImportedDataRecordAsync(file, "LN03", 0);
+                result.ImportedDataRecordId = importRecord.Id;
+
+                // ✅ Use configured custom LN03 CSV parser for 20-column support
+                if (!ln03Config.UseCustomParser)
+                {
+                    throw new InvalidOperationException("LN03 requires custom parser for 20-column structure");
+                }
+
+                string csvContent;
+                using (var reader = new StreamReader(file.OpenReadStream()))
+                {
+                    csvContent = await reader.ReadToEndAsync();
+                }
+
+                DateTime ngayDlDateTime;
+                if (!DateTime.TryParseExact(ngayDL, "dd/MM/yyyy", null, DateTimeStyles.None, out ngayDlDateTime))
+                {
+                    ngayDlDateTime = DateTime.Today; // fallback
+                }
+
+                var records = LN03CsvParser.ParseCsv(csvContent, ngayDlDateTime);
+                _logger.LogInformation("📊 [LN03_PARSE] Parsed {Count} records from CSV with custom parser (configured batch size: {BatchSize})",
+                    records.Count, ln03Config.BatchSize);
+
+                if (records.Any())
+                {
+                    _logger.LogInformation("📊 [LN03_DIRECT_INSERT] Starting DIRECT bulk insert for {Count} records - BYPASS ALL INTERMEDIATE PROCESSING", records.Count);
+
+                    // ✅ DIRECT BULK INSERT - Configured for maximum performance
+                    var insertedCount = await BulkInsertGenericAsync(records, "LN03", false);
+                    result.ProcessedRecords = insertedCount;
+
+                    // Update record count
+                    importRecord.RecordsCount = insertedCount;
+                    await _context.SaveChangesAsync();
+                }
+
+                result.Success = true;
+                result.BatchId = Guid.NewGuid().ToString();
+                result.EndTime = DateTime.UtcNow;
+
+                _logger.LogInformation("✅ [LN03_DIRECT] Import TRỰC TIẾP thành công: {Count} records trong {Duration}ms - Configuration Applied Successfully",
+                    result.ProcessedRecords, result.Duration.TotalMilliseconds);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [LN03] Import failed: {Error}", ex.Message);
+                result.Success = false;
+                result.ErrorMessage = ex.Message;
+                result.EndTime = DateTime.UtcNow;
+                return result;
+            }
         }
 
         /// <summary>
@@ -2553,7 +2641,8 @@ namespace TinhKhoanApp.Api.Services
                     p.Name != "SysEndTime" &&
                     // ✅ INCLUDE system columns như CREATED_DATE/UPDATED_DATE - đã set values trong SetCommonProperties
                     !p.Name.StartsWith("System") &&
-                    p.GetCustomAttributes(typeof(ColumnAttribute), false).Length > 0) // Chỉ lấy properties có Column attribute
+                    // ✅ For LN03 và models without ColumnAttribute, include all business properties
+                    (p.GetCustomAttributes(typeof(ColumnAttribute), false).Length > 0 || typeof(T).Name == "LN03"))
                 .ToArray();
 
             var columnMappings = new Dictionary<string, string>(); // PropertyName -> ColumnName
@@ -4225,12 +4314,17 @@ namespace TinhKhoanApp.Api.Services
             // dataTable.Columns.Add("UPDATED_DATE", typeof(DateTime));
             dataTable.Columns.Add("FILE_NAME", typeof(string));
         }        /// <summary>
-                 /// Tạo DataTable cho LN03 với đúng column types
-                 /// NEW STRUCTURE: CSV business columns FIRST, then system columns
+                 /// Tạo DataTable cho LN03 với đúng 20 business columns + system columns
+                 /// CSV Structure: 17 có header + 3 không có header = 20 business columns
+                 /// Headers: MACHINHANH,TENCHINHANH,MAKH,TENKH,SOHOPDONG,SOTIENXLRR,NGAYPHATSINHXL,THUNOSAUXL,CONLAINGOAIBANG,DUNONOIBANG,NHOMNO,MACBTD,TENCBTD,MAPGD,TAIKHOANHACHTOAN,REFNO,LOAINGUONVON
+                 /// No headers: MALOAI,LOAIKHACHHANG,HANMUCPHEDUYET
                  /// </summary>
         private void CreateLN03DataTable(DataTable dataTable, string[]? headers)
         {
-            // CSV Business columns 1-17 (exact order from CSV)
+            // System column NGAY_DL phải đứng đầu theo quy tắc
+            dataTable.Columns.Add("NGAY_DL", typeof(DateTime));
+
+            // 17 cột có header từ CSV (indexes 0-16)
             dataTable.Columns.Add("MACHINHANH", typeof(string));
             dataTable.Columns.Add("TENCHINHANH", typeof(string));
             dataTable.Columns.Add("MAKH", typeof(string));
@@ -4241,7 +4335,7 @@ namespace TinhKhoanApp.Api.Services
             dataTable.Columns.Add("THUNOSAUXL", typeof(decimal));
             dataTable.Columns.Add("CONLAINGOAIBANG", typeof(decimal));
             dataTable.Columns.Add("DUNONOIBANG", typeof(decimal));
-            dataTable.Columns.Add("NHOMNO", typeof(int));
+            dataTable.Columns.Add("NHOMNO", typeof(string)); // string, không phải int
             dataTable.Columns.Add("MACBTD", typeof(string));
             dataTable.Columns.Add("TENCBTD", typeof(string));
             dataTable.Columns.Add("MAPGD", typeof(string));
@@ -4249,10 +4343,15 @@ namespace TinhKhoanApp.Api.Services
             dataTable.Columns.Add("REFNO", typeof(string));
             dataTable.Columns.Add("LOAINGUONVON", typeof(string));
 
-            // System columns (18-20)
-            dataTable.Columns.Add("Id", typeof(long));
-            dataTable.Columns.Add("NGAY_DL", typeof(DateTime));
-            dataTable.Columns.Add("FILE_NAME", typeof(string));
+            // 3 cột không có header (indexes 17-19)
+            dataTable.Columns.Add("MALOAI", typeof(string));
+            dataTable.Columns.Add("LOAIKHACHHANG", typeof(string));
+            dataTable.Columns.Add("HANMUCPHEDUYET", typeof(decimal));
+
+            // System columns
+            dataTable.Columns.Add("CREATED_BY", typeof(string));
+            dataTable.Columns.Add("CREATED_DATE", typeof(DateTime));
+            dataTable.Columns.Add("FILE_ORIGIN", typeof(string));
         }
 
         /// <summary>

@@ -17,9 +17,9 @@ namespace TinhKhoanApp.Api.Controllers
         {
             return Ok(new
             {
-                message = "Backend đã sẵn sàng",
+                message = "Backend đã sẵn sàng với Direct Import",
                 timestamp = DateTime.Now,
-                version = "Updated with ImportedDataItems"
+                version = "Direct Import Ready - No ImportedDataItems"
             });
         }
     }

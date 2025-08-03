@@ -8,7 +8,7 @@ namespace TinhKhoanApp.Api.Services
 {
     /// <summary>
     /// Service để xử lý import dữ liệu thô với Direct Import workflow
-    /// Chỉ sử dụng ImportedDataRecord metadata, không cần ImportedDataItems
+    /// Sử dụng Direct Import Tables thay vì legacy ImportedDataItems
     /// </summary>
     public interface IRawDataProcessingService
     {
@@ -55,7 +55,7 @@ namespace TinhKhoanApp.Api.Services
                     return result;
                 }
 
-                // Get imported data record (metadata only, no ImportedDataItems needed)
+                // Get imported data record (metadata only, Direct Import workflow)
                 var importedRecord = await _context.ImportedDataRecords
                     .FirstOrDefaultAsync(r => r.Id == importedDataRecordId);
 

@@ -4,8 +4,8 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <!-- Tạm thời tắt một số nullable warnings để tập trung vào logic -->
-    <NoWarn>CS8618;CS8604;CS8601;CS8602;CS8629;CS0219;CS1998</NoWarn>
+    <!-- Suppress warnings for fast development -->
+    <NoWarn>CS8618;CS8604;CS8601;CS8602;CS8629;CS0219;CS1998;CS1591;CS0108;CS0114;CS8603;CS8600;EF1002;CS1570</NoWarn>
     <!-- XML Documentation for Swagger -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
@@ -34,10 +34,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- Exclude backup directories and files from build -->
-    <Compile Remove="backup_importeddataitems_20250709_201445/**" />
-    <None Include="backup_importeddataitems_20250709_201445/**" />
-
     <!-- Exclude test files from build -->
     <Compile Remove="Tests/**" />
     <None Include="Tests/**" />

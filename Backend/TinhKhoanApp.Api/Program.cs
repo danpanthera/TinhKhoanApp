@@ -86,7 +86,13 @@ builder.Services.AddCors(options =>
 
 // Repository Pattern & Service Layer
 builder.Services.AddRepositories();
-builder.Services.AddApplicationServices(); // From DependencyInjectionExtensions// Cache Services
+builder.Services.AddApplicationServices(); // From DependencyInjectionExtensions
+
+// Configure DirectImport Settings
+builder.Services.Configure<TinhKhoanApp.Api.Models.Configuration.DirectImportSettings>(
+    builder.Configuration.GetSection("DirectImport"));
+
+// Cache Services
 builder.Services.AddCachingServices(builder.Configuration);
 
 // Essential Services

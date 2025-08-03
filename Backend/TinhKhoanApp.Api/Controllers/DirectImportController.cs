@@ -12,7 +12,7 @@ namespace TinhKhoanApp.Api.Controllers
 {
     /// <summary>
     /// Controller cho Direct Import - Import trực tiếp vào bảng riêng biệt
-    /// Bỏ hoàn toàn ImportedDataItems để tăng hiệu năng 2-5x
+    /// Hiệu năng cao với SqlBulkCopy, bỏ qua các bước xử lý trung gian
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
@@ -951,6 +951,90 @@ namespace TinhKhoanApp.Api.Controllers
                 );";
 
             await command.ExecuteNonQueryAsync();
+        }
+
+        /// <summary>
+        /// LN03 Direct Import - Chuyên biệt cho Bad debt data với 20 cột
+        /// Luôn import trực tiếp vào bảng dữ liệu theo cấu hình AlwaysDirectImport
+        /// </summary>
+        /// <param name="file">File LN03 CSV với 20 cột (17 có header + 3 không header)</param>
+        /// <param name="statementDate">Ngày báo cáo (optional)</param>
+        /// <returns>Kết quả import với thông tin chi tiết về LN03 direct import</returns>
+        [HttpPost("ln03-direct")]
+        [DisableRequestSizeLimit]
+        public async Task<ActionResult<object>> LN03DirectImport(
+            IFormFile file,
+            [FromQuery] string? statementDate = null)
+        {
+            try
+            {
+                if (file == null || file.Length == 0)
+                {
+                    return BadRequest("File LN03 không được để trống");
+                }
+
+                // Validate file là LN03
+                var dataType = _directImportService.DetectDataTypeFromFileName(file.FileName);
+                if (dataType != "LN03")
+                {
+                    return BadRequest($"File không phải LN03. Detected type: {dataType}. Endpoint này chỉ dành riêng cho LN03.");
+                }
+
+                var fileSizeMB = file.Length / 1024.0 / 1024.0;
+                _logger.LogInformation("🚀 [LN03_DIRECT_API] Starting LN03 direct import: {FileName}, Size: {FileSize}MB",
+                    file.FileName, fileSizeMB);
+
+                // ✅ DIRECT IMPORT - Luôn bypass mọi xử lý trung gian
+                var result = await _directImportService.ImportLN03DirectAsync(file, statementDate);
+
+                if (result.Success)
+                {
+                    var recordsPerSecond = result.ProcessedRecords / Math.Max(result.Duration.TotalSeconds, 0.001);
+                    _logger.LogInformation("✅ [LN03_DIRECT_API] LN03 direct import SUCCESS: {Records} records in {Duration}ms ({Rate:F0} records/sec)",
+                        result.ProcessedRecords, result.Duration.TotalMilliseconds, recordsPerSecond);
+
+                    return Ok(new
+                    {
+                        success = true,
+                        message = "LN03 import trực tiếp thành công",
+                        dataType = "LN03",
+                        targetTable = "LN03",
+                        fileName = result.FileName,
+                        processedRecords = result.ProcessedRecords,
+                        durationMs = result.Duration.TotalMilliseconds,
+                        recordsPerSecond = recordsPerSecond,
+                        ngayDL = result.NgayDL,
+                        importMode = "DIRECT_IMPORT_ONLY",
+                        configurationApplied = "AlwaysDirectImport=true, UseCustomParser=true",
+                        result
+                    });
+                }
+                else
+                {
+                    _logger.LogError("❌ [LN03_DIRECT_API] LN03 direct import FAILED: {Error}", result.ErrorMessage);
+                    return BadRequest(new
+                    {
+                        success = false,
+                        message = "LN03 import trực tiếp thất bại",
+                        error = result.ErrorMessage,
+                        fileName = result.FileName,
+                        dataType = "LN03",
+                        result
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "💥 [LN03_DIRECT_API] LN03 direct import EXCEPTION: {FileName}", file?.FileName);
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "Lỗi hệ thống khi import LN03 trực tiếp",
+                    error = ex.Message,
+                    fileName = file?.FileName ?? "Unknown",
+                    dataType = "LN03"
+                });
+            }
         }
     }
 }

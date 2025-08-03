@@ -5,7 +5,7 @@ namespace TinhKhoanApp.Api.Services.Interfaces
 {
     /// <summary>
     /// Interface cho Direct Import Service - Import trực tiếp vào bảng riêng biệt
-    /// Bỏ hoàn toàn ImportedDataItems để tăng hiệu năng
+    /// Sử dụng SqlBulkCopy để tăng hiệu năng cao
     /// </summary>
     public interface IDirectImportService
     {
