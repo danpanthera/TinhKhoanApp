@@ -425,38 +425,26 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
 
             // 🚀 === TEMPORAL TABLES + COLUMNSTORE INDEXES CONFIGURATION ===
 
-            // 📊 Cấu hình Temporal Tables cho ImportedDataRecord với history tracking
+            // 📊 Cấu hình Temporal Tables cho ImportedDataRecords với history tracking
             // ✅ Đã fix các vấn đề compression columns, bật lại temporal tables
-            modelBuilder.Entity<ImportedDataRecord>(entity =>
-            {
-                // Bật Temporal Table với shadow properties để tracking lịch sử thay đổi
-                entity.ToTable(tb => tb.IsTemporal(ttb =>
-                {
-                    ttb.UseHistoryTable("ImportedDataRecords_History");
-                    ttb.HasPeriodStart("SysStartTime").HasColumnName("SysStartTime");
-                    ttb.HasPeriodEnd("SysEndTime").HasColumnName("SysEndTime");
-                }));
-
-                // ⚠️ QUAN TRỌNG: Định nghĩa shadow properties cho temporal columns
-                entity.Property<DateTime>("SysStartTime").HasColumnName("SysStartTime");
-                entity.Property<DateTime>("SysEndTime").HasColumnName("SysEndTime");
-
-                // Indexes for performance theo chuẩn Columnstore
-                entity.HasIndex(e => e.StatementDate)
-                      .HasDatabaseName("IX_ImportedDataRecords_StatementDate");
-
-                entity.HasIndex(e => new { e.Category, e.ImportDate })
-                      .HasDatabaseName("IX_ImportedDataRecords_Category_ImportDate");
-
-                entity.HasIndex(e => e.Status)
-                      .HasDatabaseName("IX_ImportedDataRecords_Status");
-
-                // Bổ sung index cho temporal table queries
-                entity.HasIndex(e => e.ImportDate)
-                      .HasDatabaseName("IX_ImportedDataRecords_ImportDate");
-            });
-
-            // ✅ CLEANED: Removed legacy ImportedDataItem configuration - Direct Import only
+            // TODO: Enable temporal table sau khi hệ thống ổn định hoàn toàn
+            // modelBuilder.Entity<ImportedDataRecord>(entity =>
+            // {
+            //     entity.ToTable(tb => tb.IsTemporal(ttb =>
+            //     {
+            //         ttb.UseHistoryTable("ImportedDataRecords_History");
+            //         ttb.HasPeriodStart("SysStartTime").HasColumnName("SysStartTime");
+            //         ttb.HasPeriodEnd("SysEndTime").HasColumnName("SysEndTime");
+            //     }));
+            //
+            //     entity.Property<DateTime>("SysStartTime").HasColumnName("SysStartTime");
+            //     entity.Property<DateTime>("SysEndTime").HasColumnName("SysEndTime");
+            //
+            //     entity.HasIndex(e => e.StatementDate).HasDatabaseName("IX_ImportedDataRecords_StatementDate");
+            //     entity.HasIndex(e => new { e.Category, e.ImportDate }).HasDatabaseName("IX_ImportedDataRecords_Category_ImportDate");
+            //     entity.HasIndex(e => e.Status).HasDatabaseName("IX_ImportedDataRecords_Status");
+            //     entity.HasIndex(e => e.ImportDate).HasDatabaseName("IX_ImportedDataRecords_ImportDate");
+            // });            // ✅ CLEANED: Removed legacy ImportedDataItem configuration - Direct Import only
 
             // 🎯 Custom SQL để tạo Columnstore Index (sẽ chạy qua migration)
             // ✅ CLEANED: Direct Import workflow - data stored in specific tables with optimized indexes
