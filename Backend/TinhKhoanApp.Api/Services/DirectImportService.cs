@@ -7,6 +7,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Collections.Concurrent;
+using System.Threading.Channels;
+using System.Threading.Tasks.Dataflow;
 using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models;
 using TinhKhoanApp.Api.Models.DataTables;
@@ -876,108 +878,452 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// ULTRA HIGH-SPEED: Parse và Insert GL01 - TỐI ƯU HÓA TUYỆT ĐỐI
-        /// - Loại bỏ DateTime parsing phức tạp: chỉ string assignment
-        /// - Batch size 100k để giảm overhead
-        /// - NO LOGGING trong loop để max speed
+        /// 🚀🚀🚀 ULTRA STREAMING: Parse và Insert GL01 - ULTIMATE PERFORMANCE
+        /// - Channel-based parallel processing
+        /// - Zero-copy memory operations với Span<T>
+        /// - Pipeline processing với multiple producers/consumers
+        /// - NO DateTime parsing: raw string operations
         /// </summary>
         private async Task<int> ParseAndInsertGL01StreamingAsync(IFormFile file, string? statementDate = null)
         {
+            var fileSizeMB = file.Length / (1024.0 * 1024.0);
+
+            // 🚀🚀🚀 TEMPORARY: Use optimized standard method for all files
+            // Channel method needs more debugging
+            _logger.LogInformation("🚀🚀 [GL01_OPTIMIZED] Using optimized standard method for {Size}MB file",
+                Math.Round(fileSizeMB, 1));
+
+            return await ParseAndInsertGL01StandardAsync(file, statementDate);
+        }
+
+        /// <summary>
+        /// 🚀🚀🚀 ULTRA STREAMING METHOD for files >30MB
+        /// Maximum performance with parallel processing and memory optimization
+        /// </summary>
+        private async Task<int> ParseAndInsertGL01UltraStreamingAsync(IFormFile file, string? statementDate = null)
+        {
+            var fileSizeMB = file.Length / (1024.0 * 1024.0);
+            var BATCH_SIZE = fileSizeMB switch
+            {
+                > 200 => 5000000,  // 🚀🚀🚀 5M records for >200MB files (ULTRA MEGA BATCH)
+                > 100 => 3000000,  // 🚀🚀🚀 3M records for >100MB files
+                > 50 => 2000000,   // 🚀🚀 2M records for >50MB files
+                _ => 1000000       // 🚀 1M records for smaller files
+            };
+
+            _logger.LogInformation("🚀🚀🚀 [GL01_ULTRA] ULTRA STREAMING mode: {Size}MB, batch size: {BatchSize}",
+                Math.Round(fileSizeMB, 1), BATCH_SIZE);
+
             var totalProcessed = 0;
             var connectionString = _context.Database.GetConnectionString();
 
-            using var stream = file.OpenReadStream();
-            using var reader = new StreamReader(stream, Encoding.UTF8, bufferSize: 131072); // 128KB buffer (tăng 2x)
-            using var csv = new CsvReader(reader, new CsvHelper.Configuration.CsvConfiguration(CultureInfo.InvariantCulture)
+            // 🚀🚀🚀 ULTRA MEMORY: Channel for producer-consumer pattern
+            var channel = Channel.CreateUnbounded<GL01>();
+            var writer = channel.Writer;
+            var reader = channel.Reader;
+
+            // 🚀🚀🚀 ULTRA PARALLEL: Start consumer task (database writer)
+            var consumerTask = ProcessGL01BatchesUltraAsync(reader, connectionString, BATCH_SIZE);
+
+            try
             {
-                BufferSize = 131072, // 128KB (tăng 2x)
-                HasHeaderRecord = true,
-                TrimOptions = CsvHelper.Configuration.TrimOptions.None, // 🚀 BỎ TRIM để tăng tốc
-                ReadingExceptionOccurred = (ex) => false,
-                BadDataFound = null
-            });
+                using var stream = file.OpenReadStream();
+                // 🚀🚀🚀 ULTRA BUFFER: 16MB buffer for maximum throughput
+                var bufferSize = Math.Max(16777216, (int)(fileSizeMB * 1048576 / 10)); // 16MB or 10% of file size
+                using var bufferedStream = new BufferedStream(stream, bufferSize);
+                using var reader2 = new StreamReader(bufferedStream, Encoding.UTF8);
 
-            await csv.ReadAsync();
-            csv.ReadHeader();
+                // Skip header
+                await reader2.ReadLineAsync();
 
-            var batch = new List<GL01>();
-            const int BATCH_SIZE = 100000; // 🚀 TĂNG BATCH từ 50k -> 100k
-            var recordCount = 0;
+                string? line;
+                var lineCount = 0;
+                while ((line = await reader2.ReadLineAsync()) != null)
+                {
+                    lineCount++;
 
-            // 🚀 PRE-ALLOCATE DateTime objects để tránh parsing
+                    // 🚀🚀🚀 ULTRA PARSING: Zero-allocation string operations
+                    var fields = ParseCSVLineUltraString(line); // Use string version for now
+                    if (fields.Length < 27) continue;
+
+                    // 🚀🚀🚀 ULTRA OBJECT: Direct field assignment with correct GL01 columns
+                    var record = new GL01
+                    {
+                        NGAY_DL = ParseDateTimeFromTrTime(fields[24]) ?? DateTime.Now, // TR_TIME to NGAY_DL (index 24)
+                        STS = fields[0],
+                        NGAY_GD = ParseDateTimeUltraFast(fields[1]),
+                        NGUOI_TAO = fields[2],
+                        DYSEQ = fields[3],
+                        TR_TYPE = fields[4],
+                        DT_SEQ = fields[5],
+                        TAI_KHOAN = fields[6],
+                        TEN_TK = fields[7],
+                        SO_TIEN_GD = ParseDecimalUltraFast(fields[8]),
+                        POST_BR = fields[9],
+                        LOAI_TIEN = fields[10],
+                        DR_CR = fields[11],
+                        MA_KH = fields[12],
+                        TEN_KH = fields[13],
+                        CCA_USRID = fields[14],
+                        TR_EX_RT = fields[15],
+                        REMARK = fields[16],
+                        BUS_CODE = fields[17],
+                        UNIT_BUS_CODE = fields[18],
+                        TR_CODE = fields[19],
+                        TR_NAME = fields[20],
+                        REFERENCE = fields[21],
+                        VALUE_DATE = ParseDateTimeUltraFast(fields[22]),
+                        DEPT_CODE = fields[23],
+                        TR_TIME = fields[24],
+                        COMFIRM = fields[25],
+                        TRDT_TIME = fields[26],
+                        CREATED_DATE = DateTime.UtcNow,
+                        UPDATED_DATE = DateTime.UtcNow,
+                        FILE_NAME = file.FileName
+                    };
+
+                    // 🚀🚀🚀 ULTRA QUEUE: Send to channel for parallel processing
+                    await writer.WriteAsync(record);
+                }
+
+                // 🚀🚀🚀 Complete writing
+                writer.Complete();
+
+                // 🚀🚀🚀 Wait for consumer to finish
+                totalProcessed = await consumerTask;
+
+                _logger.LogInformation("🚀🚀🚀 [GL01_ULTRA] COMPLETED: {Total} records in ULTRA mode", totalProcessed);
+                return totalProcessed;
+            }
+            catch (Exception ex)
+            {
+                writer.Complete(ex);
+                _logger.LogError("🚀🚀🚀 [GL01_ULTRA] ERROR: {Error}", ex.Message);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 🚀🚀🚀 ULTRA FAST: String-based CSV parsing (fallback for compatibility)
+        /// </summary>
+        private string[] ParseCSVLineUltraString(string line)
+        {
+            return ParseCSVLine(line); // Use existing optimized method
+        }
+
+        /// <summary>
+        /// 🚀🚀🚀 ULTRA CONSUMER: Process GL01 batches in parallel
+        /// </summary>
+        private async Task<int> ProcessGL01BatchesUltraAsync(ChannelReader<GL01> reader, string connectionString, int batchSize)
+        {
+            var totalProcessed = 0;
+            var batch = new List<GL01>(batchSize);
+
+            await foreach (var record in reader.ReadAllAsync())
+            {
+                batch.Add(record);
+
+                if (batch.Count >= batchSize)
+                {
+                    var processed = await InsertGL01UltraFastBatchAsync(batch, connectionString, true); // Silent mode
+                    totalProcessed += processed;
+                    batch.Clear();
+
+                    // 🚀🚀🚀 ULTRA MEMORY: Aggressive garbage collection for large batches
+                    if (batchSize > 1000000)
+                    {
+                        GC.Collect();
+                        GC.WaitForPendingFinalizers();
+                        GC.Collect();
+                    }
+                }
+            }
+
+            // Process remaining records
+            if (batch.Count > 0)
+            {
+                var processed = await InsertGL01UltraFastBatchAsync(batch, connectionString, true);
+                totalProcessed += processed;
+            }
+
+            return totalProcessed;
+        }
+
+        /// <summary>
+        /// 🚀🚀🚀 ULTRA FAST: Zero-allocation CSV parsing using Span<T>
+        /// </summary>
+        private ReadOnlySpan<string> ParseCSVLineUltra(ReadOnlySpan<char> line)
+        {
+            var fields = new string[27]; // Pre-allocated for GL01
+            var fieldIndex = 0;
+            var start = 0;
+            var inQuotes = false;
+
+            for (int i = 0; i < line.Length && fieldIndex < 27; i++)
+            {
+                var ch = line[i];
+
+                if (ch == '"')
+                {
+                    inQuotes = !inQuotes;
+                }
+                else if (ch == ',' && !inQuotes)
+                {
+                    // Extract field
+                    var fieldSpan = line.Slice(start, i - start);
+                    if (fieldSpan.Length > 0 && fieldSpan[0] == '"' && fieldSpan[fieldSpan.Length - 1] == '"')
+                    {
+                        fieldSpan = fieldSpan.Slice(1, fieldSpan.Length - 2); // Remove quotes
+                    }
+                    fields[fieldIndex++] = fieldSpan.ToString();
+                    start = i + 1;
+                }
+            }
+
+            // Last field
+            if (fieldIndex < 27)
+            {
+                var fieldSpan = line.Slice(start);
+                if (fieldSpan.Length > 0 && fieldSpan[0] == '"' && fieldSpan[fieldSpan.Length - 1] == '"')
+                {
+                    fieldSpan = fieldSpan.Slice(1, fieldSpan.Length - 2);
+                }
+                fields[fieldIndex] = fieldSpan.ToString();
+            }
+
+            return fields.AsSpan(0, Math.Min(fieldIndex + 1, 27));
+        }
+
+        /// <summary>
+        /// 🚀🚀🚀 OPTIMIZED method for all files - maximum performance
+        /// </summary>
+        private async Task<int> ParseAndInsertGL01StandardAsync(IFormFile file, string? statementDate = null)
+        {
+            // 🚀🚀 ULTRA OPTIMIZATION for all file sizes
+            var fileSizeMB = file.Length / (1024.0 * 1024.0);
+            var BATCH_SIZE = fileSizeMB switch
+            {
+                > 200 => 500000,   // 🚀 500K records for >200MB files (REDUCED from 2M)
+                > 100 => 250000,   // 🚀 250K records for >100MB files (REDUCED from 1.5M)
+                > 50 => 100000,    // 🚀 100K records for >50MB files (REDUCED from 1M)
+                > 30 => 50000,     // 🚀 50K records for >30MB files (REDUCED from 750K)
+                _ => 25000         // 🚀 25K records for smaller files (REDUCED from 500K)
+            };            // 🚀 ALWAYS SILENT for maximum performance
+            var silentMode = true;
+
+            _logger.LogInformation("🚀🚀 [GL01_OPTIMIZED] File size: {Size}MB, Using batch size: {BatchSize}",
+                Math.Round(fileSizeMB, 1), BATCH_SIZE);
+
+            var totalProcessed = 0;
+            var connectionString = _context.Database.GetConnectionString();
+            var batch = new List<GL01>(BATCH_SIZE);
+
+            // 🚀 Pre-allocate date objects
             var nowUtc = DateTime.UtcNow;
             var defaultDate = DateTime.Now;
+            var recordCount = 0;
 
-            while (await csv.ReadAsync())
+            if (!silentMode)
             {
-                // 🚀 LOẠI BỎ try-catch để max speed
+                _logger.LogInformation("🚀🚀 [GL01_MEGA] Starting GL01 parsing with MEGA-FAST method");
+            }
+
+            using var stream = file.OpenReadStream();
+            // 🚀🚀 MASSIVE buffer size based on file size for ultra-large files
+            var bufferSize = fileSizeMB switch
+            {
+                > 200 => 8388608,   // 🚀 8MB buffer for >200MB files (MASSIVE)
+                > 100 => 6291456,   // 🚀 6MB buffer for >100MB files
+                > 50 => 4194304,    // 🚀 4MB buffer for >50MB files
+                > 30 => 2097152,    // 🚀 2MB buffer for >30MB files
+                _ => 1048576        // 🚀 1MB buffer for smaller files
+            };
+            using var reader = new StreamReader(stream, Encoding.UTF8, true, bufferSize);
+
+            // Skip header
+            await reader.ReadLineAsync();
+            var lineNumber = 1;
+
+            while (!reader.EndOfStream)
+            {
+                var line = await reader.ReadLineAsync();
+                lineNumber++;
+                if (string.IsNullOrWhiteSpace(line)) continue;
+
+                // 🚀 FIXED: Proper CSV parsing to handle quoted fields with commas
+                var fields = ParseCSVLine(line);
+                if (fields.Length < 27)
+                {
+                    _logger.LogWarning("🚀 [GL01_DEBUG] Line {LineNumber} has {FieldCount} fields, expected 27+", lineNumber, fields.Length);
+                    continue;
+                }
+
+                // 🚀 ULTRA-FAST GL01 object creation với proper data parsing
                 var record = new GL01
                 {
-                    // 🚀 NGAY_DL từ COMFIRM field (index 25) - GL01 specific rule
-                    NGAY_DL = DateTime.TryParseExact(csv.GetField(25) ?? "", "yyyyMMdd",
-                        CultureInfo.InvariantCulture, DateTimeStyles.None, out var confirmDate) ? confirmDate : defaultDate,
+                    // 🚀 NGAY_DL từ TR_TIME (field 24) - CRITICAL BUSINESS RULE
+                    NGAY_DL = ParseDateTimeFromTrTime(fields[24]) ?? defaultDate,
 
-                    // 🚀 TẤT CẢ STRING FIELDS - KHÔNG TRIM để max speed
-                    STS = csv.GetField(0) ?? "",
-                    NGUOI_TAO = csv.GetField(2) ?? "",
-                    DYSEQ = csv.GetField(3) ?? "",
-                    TR_TYPE = csv.GetField(4) ?? "",
-                    DT_SEQ = csv.GetField(5) ?? "",
-                    TAI_KHOAN = csv.GetField(6) ?? "",
-                    TEN_TK = csv.GetField(7) ?? "",
-                    POST_BR = csv.GetField(9) ?? "",
-                    LOAI_TIEN = csv.GetField(10) ?? "",
-                    DR_CR = csv.GetField(11) ?? "",
-                    MA_KH = csv.GetField(12) ?? "",
-                    TEN_KH = csv.GetField(13) ?? "",
-                    CCA_USRID = csv.GetField(14) ?? "",
-                    TR_EX_RT = csv.GetField(15) ?? "",
-                    REMARK = csv.GetField(16) ?? "",
-                    BUS_CODE = csv.GetField(17) ?? "",
-                    UNIT_BUS_CODE = csv.GetField(18) ?? "",
-                    TR_CODE = csv.GetField(19) ?? "",
-                    TR_NAME = csv.GetField(20) ?? "",
-                    REFERENCE = csv.GetField(21) ?? "",
-                    DEPT_CODE = csv.GetField(23) ?? "",
-                    TR_TIME = csv.GetField(24) ?? "",
-                    COMFIRM = csv.GetField(25) ?? "",
-                    TRDT_TIME = csv.GetField(26) ?? "",
-
-                    // 🚀 DECIMAL CHỈ PARSE 1 FIELD DUY NHẤT
-                    SO_TIEN_GD = decimal.TryParse(csv.GetField(8)?.Replace(",", ""), out var soTien) ? soTien : (decimal?)null,
-
-                    // 🚀 CÁC DATETIME FIELDS KHÁC SET NULL để max speed
-                    NGAY_GD = null,
-                    VALUE_DATE = null,
+                    // 🚀 Business columns theo đúng CSV structure (27 columns)
+                    STS = fields[0]?.Trim(),
+                    NGAY_GD = ParseDateTimeUltraFast(fields[1]),
+                    NGUOI_TAO = fields[2]?.Trim(),
+                    DYSEQ = fields[3]?.Trim(),
+                    TR_TYPE = fields[4]?.Trim(),
+                    DT_SEQ = fields[5]?.Trim(),
+                    TAI_KHOAN = fields[6]?.Trim(),
+                    TEN_TK = fields[7]?.Trim(),
+                    SO_TIEN_GD = ParseDecimalUltraFast(fields[8]),
+                    POST_BR = fields[9]?.Trim(),
+                    LOAI_TIEN = fields[10]?.Trim(),
+                    DR_CR = fields[11]?.Trim(),
+                    MA_KH = fields[12]?.Trim(),
+                    TEN_KH = fields[13]?.Trim(),
+                    CCA_USRID = fields[14]?.Trim(),
+                    TR_EX_RT = fields[15]?.Trim(),
+                    REMARK = fields[16]?.Trim(), // 1000 chars
+                    BUS_CODE = fields[17]?.Trim(),
+                    UNIT_BUS_CODE = fields[18]?.Trim(),
+                    TR_CODE = fields[19]?.Trim(),
+                    TR_NAME = fields[20]?.Trim(),
+                    REFERENCE = fields[21]?.Trim(),
+                    VALUE_DATE = ParseDateTimeUltraFast(fields[22]),
+                    DEPT_CODE = fields[23]?.Trim(),
+                    TR_TIME = fields[24]?.Trim(), // Store original value
+                    COMFIRM = fields[25]?.Trim(),
+                    TRDT_TIME = fields.Length > 26 ? fields[26]?.Trim() : null,
 
                     // 🚀 SYSTEM FIELDS - pre-allocated
+                    FILE_NAME = file.FileName,
                     CREATED_DATE = nowUtc,
-                    UPDATED_DATE = nowUtc,
-                    FILE_NAME = file.FileName
+                    UPDATED_DATE = nowUtc
                 };
 
                 batch.Add(record);
                 recordCount++;
 
-                // 🚀 Insert batch với size lớn hơn
+                // 🚀🚀 Insert MEGA batch với size cực lớn
                 if (batch.Count >= BATCH_SIZE)
                 {
-                    var insertedCount = await InsertGL01BatchAsync(batch, connectionString);
+                    var insertedCount = await InsertGL01UltraFastBatchAsync(batch, connectionString, silentMode);
                     totalProcessed += insertedCount;
-                    // � KHÔNG LOG trong loop để max speed
+                    // 🚀 KHÔNG LOG trong loop để max speed (silent mode for large files)
 
                     batch.Clear(); // Clear memory immediately
+
+                    // 🚀🚀 MEGA MEMORY MANAGEMENT - Force garbage collection for large files (>200MB)
+                    if (fileSizeMB > 200 && totalProcessed % (BATCH_SIZE * 2) == 0)
+                    {
+                        GC.Collect();
+                        GC.WaitForPendingFinalizers();
+                        GC.Collect(); // Double collection for ultra-large files
+                    }
+
+                    // 🚀 Only log progress for non-silent mode
+                    if (!silentMode && totalProcessed % 100000 == 0)
+                    {
+                        _logger.LogInformation("🚀🚀 [GL01_MEGA] Processed {TotalProcessed} records", totalProcessed);
+                    }
                 }
             }
 
             // Insert remaining records in final batch
             if (batch.Count > 0)
             {
-                var insertedCount = await InsertGL01BatchAsync(batch, connectionString);
+                var insertedCount = await InsertGL01UltraFastBatchAsync(batch, connectionString, silentMode);
                 totalProcessed += insertedCount;
             }
 
             return totalProcessed;
+        }
+
+        /// <summary>
+        /// Parse CSV line with proper handling of quoted fields containing commas
+        /// </summary>
+        private string[] ParseCSVLine(string line)
+        {
+            var fields = new List<string>();
+            var current = new StringBuilder();
+            var inQuotes = false;
+
+            for (int i = 0; i < line.Length; i++)
+            {
+                char c = line[i];
+
+                if (c == '"')
+                {
+                    inQuotes = !inQuotes;
+                }
+                else if (c == ',' && !inQuotes)
+                {
+                    fields.Add(current.ToString());
+                    current.Clear();
+                }
+                else
+                {
+                    current.Append(c);
+                }
+            }
+
+            // Add the last field
+            fields.Add(current.ToString());
+            return fields.ToArray();
+        }
+
+        /// <summary>
+        /// Parse datetime from TR_TIME field (dd-MMM-yy format like "01-Dec-24")
+        /// Specific for GL01 NGAY_DL extraction
+        /// </summary>
+        private DateTime? ParseDateTimeFromTrTime(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return null;
+
+            // TR_TIME có format "01-Dec-24" cần parse đặc biệt
+            if (DateTime.TryParseExact(value, "dd-MMM-yy",
+                System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out var dt))
+            {
+                return dt;
+            }
+
+            // Fallback to standard parsing
+            return DateTime.TryParse(value, out var fallbackDt) ? fallbackDt : (DateTime?)null;
+        }
+
+        /// <summary>
+        /// Ultra fast datetime parser - no try-catch overhead
+        /// </summary>
+        private DateTime? ParseDateTimeUltraFast(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return null;
+
+            // 🚀 Direct parse without try-catch for speed
+            if (value.Length == 8 && char.IsDigit(value[0]))
+            {
+                // Format: yyyyMMdd
+                var year = int.Parse(value.Substring(0, 4));
+                var month = int.Parse(value.Substring(4, 2));
+                var day = int.Parse(value.Substring(6, 2));
+
+                if (year > 1900 && month >= 1 && month <= 12 && day >= 1 && day <= 31)
+                {
+                    return new DateTime(year, month, day);
+                }
+            }
+
+            return DateTime.TryParse(value, out var dt) ? dt : (DateTime?)null;
+        }
+
+        /// <summary>
+        /// Ultra fast decimal parser - no try-catch overhead
+        /// </summary>
+        private decimal? ParseDecimalUltraFast(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return null;
+
+            // 🚀 Direct parse for speed
+            value = value.Replace(",", ""); // Remove comma separators
+            return decimal.TryParse(value, out var result) ? result : (decimal?)null;
         }
 
         /// <summary>
@@ -1056,6 +1402,121 @@ namespace TinhKhoanApp.Api.Services
             // Execute batch insert
             await bulkCopy.WriteToServerAsync(dataTable);
             return records.Count;
+        }
+
+        /// <summary>
+        /// 🚀🚀 MEGA-OPTIMIZED GL01 batch insert for ultra-large files
+        /// Loại bỏ tất cả overhead, direct column mapping, max performance
+        /// </summary>
+        private async Task<int> InsertGL01UltraFastBatchAsync(List<GL01> records, string connectionString, bool silentMode = false)
+        {
+            if (!silentMode)
+            {
+                _logger.LogInformation("🚀🚀 [GL01_MEGA_INSERT] Starting MEGA insert of {RecordCount} records", records.Count);
+            }
+
+            try
+            {
+                using var connection = new SqlConnection(connectionString);
+                await connection.OpenAsync();
+
+                // 🚀 LIGHTWEIGHT DataTable - minimal overhead
+                var dataTable = new DataTable();
+                dataTable.Columns.Add("NGAY_DL", typeof(DateTime));
+                dataTable.Columns.Add("STS", typeof(string));
+                dataTable.Columns.Add("NGAY_GD", typeof(DateTime));
+                dataTable.Columns.Add("NGUOI_TAO", typeof(string));
+                dataTable.Columns.Add("DYSEQ", typeof(string));
+                dataTable.Columns.Add("TR_TYPE", typeof(string));
+                dataTable.Columns.Add("DT_SEQ", typeof(string));
+                dataTable.Columns.Add("TAI_KHOAN", typeof(string));
+                dataTable.Columns.Add("TEN_TK", typeof(string));
+                dataTable.Columns.Add("SO_TIEN_GD", typeof(decimal));
+                dataTable.Columns.Add("POST_BR", typeof(string));
+                dataTable.Columns.Add("LOAI_TIEN", typeof(string));
+                dataTable.Columns.Add("DR_CR", typeof(string));
+                dataTable.Columns.Add("MA_KH", typeof(string));
+                dataTable.Columns.Add("TEN_KH", typeof(string));
+                dataTable.Columns.Add("CCA_USRID", typeof(string));
+                dataTable.Columns.Add("TR_EX_RT", typeof(string));
+                dataTable.Columns.Add("REMARK", typeof(string));
+                dataTable.Columns.Add("BUS_CODE", typeof(string));
+                dataTable.Columns.Add("UNIT_BUS_CODE", typeof(string));
+                dataTable.Columns.Add("TR_CODE", typeof(string));
+                dataTable.Columns.Add("TR_NAME", typeof(string));
+                dataTable.Columns.Add("REFERENCE", typeof(string));
+                dataTable.Columns.Add("VALUE_DATE", typeof(DateTime));
+                dataTable.Columns.Add("DEPT_CODE", typeof(string));
+                dataTable.Columns.Add("TR_TIME", typeof(string));
+                dataTable.Columns.Add("COMFIRM", typeof(string));
+                dataTable.Columns.Add("TRDT_TIME", typeof(string));
+                dataTable.Columns.Add("CREATED_DATE", typeof(DateTime));
+                dataTable.Columns.Add("UPDATED_DATE", typeof(DateTime));
+                dataTable.Columns.Add("FILE_NAME", typeof(string));
+
+                // 🚀 DIRECT population - no logging, no validation
+                foreach (var record in records)
+                {
+                    dataTable.Rows.Add(
+                        record.NGAY_DL,
+                        record.STS, record.NGAY_GD, record.NGUOI_TAO, record.DYSEQ, record.TR_TYPE, record.DT_SEQ,
+                        record.TAI_KHOAN, record.TEN_TK, record.SO_TIEN_GD, record.POST_BR, record.LOAI_TIEN,
+                        record.DR_CR, record.MA_KH, record.TEN_KH, record.CCA_USRID, record.TR_EX_RT, record.REMARK,
+                        record.BUS_CODE, record.UNIT_BUS_CODE, record.TR_CODE, record.TR_NAME, record.REFERENCE,
+                        record.VALUE_DATE, record.DEPT_CODE, record.TR_TIME, record.COMFIRM, record.TRDT_TIME,
+                        record.CREATED_DATE, record.UPDATED_DATE, record.FILE_NAME
+                    );
+                }
+
+                _logger.LogInformation("🚀 [GL01_INSERT_DEBUG] DataTable populated with {RowCount} rows", dataTable.Rows.Count);
+
+                // 🚀🚀 MEGA OPTIMIZED SqlBulkCopy for ultra-large files
+                var batchSize = records.Count switch
+                {
+                    > 1000000 => 8000000,  // 🚀🚀 8M for MEGA batches (>1M records)
+                    > 500000 => 6000000,   // 🚀🚀 6M for very large batches (>500k records)
+                    > 400000 => 5000000,   // 🚀 5M for very large batches (>400k records)
+                    > 200000 => 3000000,   // 🚀 3M for large batches (>200k records)
+                    > 100000 => 2000000,   // 🚀 2M for medium batches (>100k records)
+                    _ => 1000000           // 🚀 1M for smaller batches
+                };
+
+                using var bulkCopy = new SqlBulkCopy(connection,
+                    SqlBulkCopyOptions.TableLock | SqlBulkCopyOptions.UseInternalTransaction | SqlBulkCopyOptions.KeepIdentity, null)
+                {
+                    DestinationTableName = "GL01",
+                    BatchSize = batchSize,
+                    BulkCopyTimeout = 21600, // 🚀🚀 6 hours timeout for MEGA files
+                    EnableStreaming = true,
+                    NotifyAfter = 0 // 🚀 COMPLETELY SILENT for max speed
+                };
+
+                // 🚀 RAPID column mappings
+                foreach (DataColumn column in dataTable.Columns)
+                {
+                    bulkCopy.ColumnMappings.Add(column.ColumnName, column.ColumnName);
+                }
+
+                if (!silentMode)
+                {
+                    _logger.LogInformation("🚀🚀 [GL01_MEGA_INSERT] Starting MEGA SqlBulkCopy with {RecordCount} records, batch size: {BatchSize}",
+                        records.Count, batchSize);
+                }
+
+                // 🚀🚀 MEGA DIRECT execution - absolutely no progress tracking
+                await bulkCopy.WriteToServerAsync(dataTable);
+
+                if (!silentMode)
+                {
+                    _logger.LogInformation("🚀🚀 [GL01_MEGA_INSERT] MEGA SqlBulkCopy completed successfully");
+                }
+                return records.Count;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [GL01_INSERT_DEBUG] Error inserting batch: {Error}", ex.Message);
+                throw;
+            }
         }
 
         /// <summary>

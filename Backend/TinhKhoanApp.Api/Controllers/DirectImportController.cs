@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Net.Http.Headers;
 using System.Threading.Channels;
 using TinhKhoanApp.Api.Helpers;
+using TinhKhoanApp.Api.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace TinhKhoanApp.Api.Controllers
 {
@@ -18,13 +20,19 @@ namespace TinhKhoanApp.Api.Controllers
     {
         private readonly IDirectImportService _directImportService;
         private readonly ILogger<DirectImportController> _logger;
+        private readonly ApplicationDbContext _context;
 
+        /// <summary>
+        /// Constructor
+        /// </summary>
         public DirectImportController(
             IDirectImportService directImportService,
-            ILogger<DirectImportController> logger)
+            ILogger<DirectImportController> logger,
+            ApplicationDbContext context)
         {
             _directImportService = directImportService;
             _logger = logger;
+            _context = context;
         }
 
         /// <summary>
@@ -35,7 +43,7 @@ namespace TinhKhoanApp.Api.Controllers
         /// <returns>Kết quả import với thông tin chi tiết</returns>
         [HttpPost("smart")]
         [DisableRequestSizeLimit]
-        public async Task<ActionResult<DirectImportResult>> ImportSmartDirect(
+        public async Task<ActionResult<object>> ImportSmartDirect(
             IFormFile file,
             [FromQuery] string? statementDate = null)
         {
@@ -44,6 +52,15 @@ namespace TinhKhoanApp.Api.Controllers
                 if (file == null || file.Length == 0)
                 {
                     return BadRequest("File không được để trống");
+                }
+
+                // 🎯 AUTO-ROUTE GL01 to OPTIMIZED WORKFLOW
+                var dataType = _directImportService.DetectDataTypeFromFileName(file.FileName);
+                if (dataType == "GL01")
+                {
+                    _logger.LogInformation("🔄 [SMART_ROUTING] Auto-routing GL01 to optimized workflow: {FileName}", file.FileName);
+                    var optimizedResult = await OptimizedGL01Import(file, statementDate);
+                    return optimizedResult;
                 }
 
                 _logger.LogInformation("🚀 [DIRECT_IMPORT_API] Smart import start: {FileName}, Size: {FileSize}MB",
@@ -71,6 +88,183 @@ namespace TinhKhoanApp.Api.Controllers
                     Success = false,
                     ErrorMessage = $"Lỗi hệ thống: {ex.Message}",
                     FileName = file?.FileName ?? "Unknown"
+                });
+            }
+        }
+
+        /// <summary>
+        /// 🚀 SMART GL01 IMPORT - Tự động quản lý columnstore index cho optimal performance
+        /// Workflow: Disable columnstore → Import → Re-enable columnstore
+        /// </summary>
+        /// <param name="file">File GL01 CSV</param>
+        /// <param name="statementDate">Ngày báo cáo (optional)</param>
+        /// <param name="skipColumnstoreManagement">Bỏ qua tự động quản lý columnstore index</param>
+        /// <returns>Kết quả import với thông tin chi tiết về performance</returns>
+        [HttpPost("smart-gl01")]
+        [DisableRequestSizeLimit]
+        public async Task<ActionResult<object>> SmartGL01Import(
+            IFormFile file,
+            [FromQuery] string? statementDate = null,
+            [FromQuery] bool skipColumnstoreManagement = false)
+        {
+            var performanceLog = new List<string>();
+            var startTime = DateTime.Now;
+
+            try
+            {
+                if (file == null || file.Length == 0)
+                {
+                    return BadRequest("File không được để trống");
+                }
+
+                // Detect data type
+                var dataType = _directImportService.DetectDataTypeFromFileName(file.FileName);
+                if (dataType != "GL01")
+                {
+                    return BadRequest($"File không phải GL01. Detected type: {dataType}. Sử dụng endpoint /smart cho các loại file khác.");
+                }
+
+                var fileSizeMB = file.Length / 1024.0 / 1024.0;
+                var isLargeFile = fileSizeMB > 10; // Files > 10MB được coi là lớn
+
+                _logger.LogInformation("🚀 [SMART_GL01] Starting smart GL01 import: {FileName}, Size: {FileSize}MB, Large: {IsLarge}",
+                    file.FileName, fileSizeMB, isLargeFile);
+
+                performanceLog.Add($"⏱️ Start time: {startTime:HH:mm:ss.fff}");
+                performanceLog.Add($"📂 File: {file.FileName} ({fileSizeMB:F2} MB)");
+                performanceLog.Add($"📊 Large file mode: {isLargeFile}");
+
+                bool columnstoreWasDisabled = false;
+                bool columnstoreExisted = false;
+
+                // STEP 1: Check và disable columnstore index nếu cần
+                if (!skipColumnstoreManagement && isLargeFile)
+                {
+                    var checkIndexTime = DateTime.Now;
+                    var indexInfo = await CheckGL01IndexesInternal();
+                    columnstoreExisted = indexInfo.Any(i => i.IndexType?.Contains("COLUMNSTORE") == true);
+
+                    if (columnstoreExisted)
+                    {
+                        performanceLog.Add($"🔍 Found columnstore index at {checkIndexTime:HH:mm:ss.fff}");
+
+                        var disableTime = DateTime.Now;
+                        await DisableColumnstoreIndexInternal();
+                        columnstoreWasDisabled = true;
+
+                        performanceLog.Add($"🔧 Disabled columnstore at {disableTime:HH:mm:ss.fff} (took {(DateTime.Now - disableTime).TotalMilliseconds:F0}ms)");
+                        _logger.LogInformation("🔧 [SMART_GL01] Disabled columnstore index for large file import");
+                    }
+                    else
+                    {
+                        performanceLog.Add($"✅ No columnstore index found - proceeding with normal import");
+                    }
+                }
+
+                // STEP 2: Perform the actual import
+                var importStartTime = DateTime.Now;
+                performanceLog.Add($"🚀 Starting import at {importStartTime:HH:mm:ss.fff}");
+
+                var result = await _directImportService.ImportSmartDirectAsync(file, statementDate);
+
+                var importEndTime = DateTime.Now;
+                var importDuration = importEndTime - importStartTime;
+                performanceLog.Add($"✅ Import completed at {importEndTime:HH:mm:ss.fff} (took {importDuration.TotalSeconds:F2}s)");
+
+                // STEP 3: Re-enable columnstore index nếu đã disable
+                if (columnstoreWasDisabled && !skipColumnstoreManagement)
+                {
+                    var enableStartTime = DateTime.Now;
+                    performanceLog.Add($"🔄 Re-enabling columnstore at {enableStartTime:HH:mm:ss.fff}");
+
+                    // Enable columnstore trong background để không block response
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await EnableColumnstoreIndexInternal();
+                            var enableEndTime = DateTime.Now;
+                            _logger.LogInformation("🔧 [SMART_GL01] Re-enabled columnstore index in background (took {Duration}ms)",
+                                (enableEndTime - enableStartTime).TotalMilliseconds);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "❌ [SMART_GL01] Failed to re-enable columnstore index in background");
+                        }
+                    });
+
+                    performanceLog.Add($"🔄 Columnstore re-enable started in background");
+                }
+
+                var totalTime = DateTime.Now - startTime;
+                performanceLog.Add($"🏁 Total workflow time: {totalTime.TotalSeconds:F2}s");
+
+                if (result.Success)
+                {
+                    var response = new
+                    {
+                        Success = result.Success,
+                        FileName = result.FileName,
+                        DataType = result.DataType,
+                        TargetTable = result.TargetTable,
+                        FileSizeBytes = result.FileSizeBytes,
+                        FileSizeMB = fileSizeMB,
+                        ProcessedRecords = result.ProcessedRecords,
+                        ErrorRecords = result.ErrorRecords,
+                        NgayDL = result.NgayDL,
+                        BatchId = result.BatchId,
+                        ImportedDataRecordId = result.ImportedDataRecordId,
+                        StartTime = result.StartTime,
+                        EndTime = result.EndTime,
+                        Duration = result.Duration,
+                        RecordsPerSecond = result.RecordsPerSecond,
+                        MBPerSecond = result.MBPerSecond,
+
+                        // Smart workflow specific info
+                        SmartWorkflow = new
+                        {
+                            IsLargeFile = isLargeFile,
+                            ColumnstoreManagement = new
+                            {
+                                Enabled = !skipColumnstoreManagement,
+                                ColumnstoreExisted = columnstoreExisted,
+                                WasDisabled = columnstoreWasDisabled,
+                                ReEnabledInBackground = columnstoreWasDisabled
+                            },
+                            TotalWorkflowTime = totalTime,
+                            ImportOnlyTime = importDuration,
+                            PerformanceLog = performanceLog
+                        }
+                    };
+
+                    _logger.LogInformation("✅ [SMART_GL01] Workflow completed successfully: {Records} records in {Duration}ms",
+                        result.ProcessedRecords, totalTime.TotalMilliseconds);
+
+                    return Ok(response);
+                }
+                else
+                {
+                    _logger.LogError("❌ [SMART_GL01] Import failed: {Error}", result.ErrorMessage);
+                    return BadRequest(new
+                    {
+                        Success = false,
+                        Error = result.ErrorMessage,
+                        SmartWorkflow = new { PerformanceLog = performanceLog }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                var errorTime = DateTime.Now;
+                performanceLog.Add($"💥 Error at {errorTime:HH:mm:ss.fff}: {ex.Message}");
+
+                _logger.LogError(ex, "💥 [SMART_GL01] Smart workflow exception: {FileName}", file?.FileName);
+                return StatusCode(500, new
+                {
+                    Success = false,
+                    Error = $"Lỗi hệ thống: {ex.Message}",
+                    FileName = file?.FileName ?? "Unknown",
+                    SmartWorkflow = new { PerformanceLog = performanceLog }
                 });
             }
         }
@@ -431,6 +625,332 @@ namespace TinhKhoanApp.Api.Controllers
                 _logger.LogError(ex, "❌ [GL02_VALIDATE] Error validating GL02 data");
                 return StatusCode(500, new { success = false, error = ex.Message });
             }
+        }
+
+        /// <summary>
+        /// Check GL01 table indexes - Debug performance issues
+        /// </summary>
+        [HttpGet("debug/gl01-indexes")]
+        public async Task<ActionResult> CheckGL01Indexes()
+        {
+            try
+            {
+                var sql = @"
+                    SELECT
+                        i.name as IndexName,
+                        i.type_desc as IndexType,
+                        i.is_unique as IsUnique,
+                        i.is_primary_key as IsPrimaryKey,
+                        STRING_AGG(c.name, ', ') as Columns
+                    FROM sys.indexes i
+                    JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+                    JOIN sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id
+                    WHERE i.object_id = OBJECT_ID('GL01')
+                    GROUP BY i.name, i.type_desc, i.is_unique, i.is_primary_key, i.index_id
+                    ORDER BY i.index_id;";
+
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = sql;
+
+                var indexes = new List<object>();
+                using var reader = await command.ExecuteReaderAsync();
+
+                while (await reader.ReadAsync())
+                {
+                    indexes.Add(new
+                    {
+                        IndexName = reader["IndexName"]?.ToString(),
+                        IndexType = reader["IndexType"]?.ToString(),
+                        IsUnique = reader["IsUnique"],
+                        IsPrimaryKey = reader["IsPrimaryKey"],
+                        Columns = reader["Columns"]?.ToString()
+                    });
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    indexCount = indexes.Count,
+                    indexes = indexes
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [DEBUG] Error checking GL01 indexes");
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Disable columnstore index for bulk insert performance
+        /// </summary>
+        [HttpPost("debug/disable-columnstore")]
+        public async Task<ActionResult> DisableColumnstoreIndex()
+        {
+            try
+            {
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = "DROP INDEX NCCI_GL01_Analytics ON GL01;";
+
+                await command.ExecuteNonQueryAsync();
+
+                _logger.LogInformation("🔧 [DEBUG] Disabled columnstore index NCCI_GL01_Analytics");
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Columnstore index disabled for bulk insert performance",
+                    warning = "Remember to re-enable after bulk import!"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [DEBUG] Error disabling columnstore index");
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Re-enable columnstore index after bulk insert
+        /// </summary>
+        [HttpPost("debug/enable-columnstore")]
+        public async Task<ActionResult> EnableColumnstoreIndex()
+        {
+            try
+            {
+                var connection = _context.Database.GetDbConnection();
+                await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = @"
+                    CREATE NONCLUSTERED COLUMNSTORE INDEX NCCI_GL01_Analytics
+                    ON GL01 (
+                        NGAY_DL, STS, NGAY_GD, NGUOI_TAO, DYSEQ, TR_TYPE, DT_SEQ, TAI_KHOAN, TEN_TK,
+                        SO_TIEN_GD, POST_BR, LOAI_TIEN, DR_CR, MA_KH, TEN_KH, CCA_USRID, TR_EX_RT,
+                        REMARK, BUS_CODE, UNIT_BUS_CODE, TR_CODE, TR_NAME, REFERENCE, VALUE_DATE,
+                        DEPT_CODE, TR_TIME, COMFIRM, TRDT_TIME, CREATED_DATE, UPDATED_DATE, FILE_NAME
+                    );";
+
+                await command.ExecuteNonQueryAsync();
+
+                _logger.LogInformation("🔧 [DEBUG] Re-enabled columnstore index NCCI_GL01_Analytics");
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Columnstore index re-enabled for analytics performance"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [DEBUG] Error enabling columnstore index");
+                return StatusCode(500, new { success = false, error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// 🎯 OPTIMIZED GL01 BULK IMPORT - Using SQL Server bulk optimization hints
+        /// Faster alternative to dropping/recreating columnstore index
+        /// </summary>
+        [HttpPost("optimized-gl01")]
+        [DisableRequestSizeLimit]
+        public async Task<ActionResult<object>> OptimizedGL01Import(
+            IFormFile file,
+            [FromQuery] string? statementDate = null)
+        {
+            try
+            {
+                if (file == null || file.Length == 0)
+                {
+                    return BadRequest("File không được để trống");
+                }
+
+                // Detect data type
+                var dataType = _directImportService.DetectDataTypeFromFileName(file.FileName);
+                if (dataType != "GL01")
+                {
+                    return BadRequest($"File không phải GL01. Detected type: {dataType}");
+                }
+
+                var fileSizeMB = file.Length / 1024.0 / 1024.0;
+                _logger.LogInformation("🎯 [OPTIMIZED_GL01] Starting optimized bulk import: {FileName}, Size: {FileSize}MB",
+                    file.FileName, fileSizeMB);
+
+                var startTime = DateTime.Now;
+
+                // OPTIMIZATION 1: Disable auto-update statistics during bulk import
+                await ExecuteOptimizationCommand("ALTER INDEX ALL ON GL01 SET (STATISTICS_NORECOMPUTE = ON);");
+
+                // OPTIMIZATION 2: Set bulk import options
+                await ExecuteOptimizationCommand("ALTER DATABASE TinhKhoanDB SET AUTO_UPDATE_STATISTICS OFF;");
+
+                // Perform the import with optimized settings
+                var result = await _directImportService.ImportSmartDirectAsync(file, statementDate);
+
+                // OPTIMIZATION 3: Re-enable statistics (in background)
+                _ = Task.Run(async () =>
+                {
+                    await Task.Delay(1000); // Wait for import to complete
+                    await ExecuteOptimizationCommand("ALTER DATABASE TinhKhoanDB SET AUTO_UPDATE_STATISTICS ON;");
+                    await ExecuteOptimizationCommand("ALTER INDEX ALL ON GL01 SET (STATISTICS_NORECOMPUTE = OFF);");
+                    await ExecuteOptimizationCommand("UPDATE STATISTICS GL01;");
+                });
+
+                var endTime = DateTime.Now;
+                var duration = endTime - startTime;
+
+                if (result.Success)
+                {
+                    var response = new
+                    {
+                        Success = result.Success,
+                        FileName = result.FileName,
+                        DataType = result.DataType,
+                        TargetTable = result.TargetTable,
+                        FileSizeBytes = result.FileSizeBytes,
+                        FileSizeMB = fileSizeMB,
+                        ProcessedRecords = result.ProcessedRecords,
+                        ErrorRecords = result.ErrorRecords,
+                        NgayDL = result.NgayDL,
+                        BatchId = result.BatchId,
+                        ImportedDataRecordId = result.ImportedDataRecordId,
+                        StartTime = result.StartTime,
+                        EndTime = result.EndTime,
+                        Duration = result.Duration,
+                        RecordsPerSecond = result.RecordsPerSecond,
+                        MBPerSecond = result.MBPerSecond,
+
+                        OptimizationInfo = new
+                        {
+                            Method = "SQL Server Bulk Optimization Hints",
+                            StatisticsDisabled = true,
+                            ColumnstoreIntact = true,
+                            Note = "Statistics re-enabled in background"
+                        }
+                    };
+
+                    _logger.LogInformation("✅ [OPTIMIZED_GL01] Import completed: {Records} records in {Duration}s",
+                        result.ProcessedRecords, duration.TotalSeconds);
+
+                    return Ok(response);
+                }
+                else
+                {
+                    return BadRequest(result);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [OPTIMIZED_GL01] Error in optimized import");
+                return StatusCode(500, new { Success = false, Error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Helper method to execute optimization commands
+        /// </summary>
+        private async Task ExecuteOptimizationCommand(string sql)
+        {
+            try
+            {
+                var connection = _context.Database.GetDbConnection();
+                if (connection.State != System.Data.ConnectionState.Open)
+                    await connection.OpenAsync();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = sql;
+                await command.ExecuteNonQueryAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "⚠️ [OPTIMIZATION] Failed to execute: {SQL}", sql);
+            }
+        }
+
+        /// <summary>
+        /// Internal method to check GL01 indexes
+        /// </summary>
+        private async Task<List<dynamic>> CheckGL01IndexesInternal()
+        {
+            var sql = @"
+                SELECT
+                    i.name as IndexName,
+                    i.type_desc as IndexType,
+                    i.is_unique as IsUnique,
+                    i.is_primary_key as IsPrimaryKey,
+                    STRING_AGG(c.name, ', ') as Columns
+                FROM sys.indexes i
+                JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+                JOIN sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id
+                WHERE i.object_id = OBJECT_ID('GL01')
+                GROUP BY i.name, i.type_desc, i.is_unique, i.is_primary_key, i.index_id
+                ORDER BY i.index_id;";
+
+            var connection = _context.Database.GetDbConnection();
+            await connection.OpenAsync();
+
+            using var command = connection.CreateCommand();
+            command.CommandText = sql;
+
+            var indexes = new List<dynamic>();
+            using var reader = await command.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                indexes.Add(new
+                {
+                    IndexName = reader["IndexName"]?.ToString(),
+                    IndexType = reader["IndexType"]?.ToString(),
+                    IsUnique = reader["IsUnique"],
+                    IsPrimaryKey = reader["IsPrimaryKey"],
+                    Columns = reader["Columns"]?.ToString()
+                });
+            }
+
+            return indexes;
+        }
+
+        /// <summary>
+        /// Internal method to disable columnstore index
+        /// </summary>
+        private async Task DisableColumnstoreIndexInternal()
+        {
+            var connection = _context.Database.GetDbConnection();
+            if (connection.State != System.Data.ConnectionState.Open)
+                await connection.OpenAsync();
+
+            using var command = connection.CreateCommand();
+            command.CommandText = "DROP INDEX NCCI_GL01_Analytics ON GL01;";
+
+            await command.ExecuteNonQueryAsync();
+        }
+
+        /// <summary>
+        /// Internal method to enable columnstore index
+        /// </summary>
+        private async Task EnableColumnstoreIndexInternal()
+        {
+            var connection = _context.Database.GetDbConnection();
+            if (connection.State != System.Data.ConnectionState.Open)
+                await connection.OpenAsync();
+
+            using var command = connection.CreateCommand();
+            command.CommandText = @"
+                CREATE NONCLUSTERED COLUMNSTORE INDEX NCCI_GL01_Analytics
+                ON GL01 (
+                    NGAY_DL, STS, NGAY_GD, NGUOI_TAO, DYSEQ, TR_TYPE, DT_SEQ, TAI_KHOAN, TEN_TK,
+                    SO_TIEN_GD, POST_BR, LOAI_TIEN, DR_CR, MA_KH, TEN_KH, CCA_USRID, TR_EX_RT,
+                    REMARK, BUS_CODE, UNIT_BUS_CODE, TR_CODE, TR_NAME, REFERENCE, VALUE_DATE,
+                    DEPT_CODE, TR_TIME, COMFIRM, TRDT_TIME, CREATED_DATE, UPDATED_DATE, FILE_NAME
+                );";
+
+            await command.ExecuteNonQueryAsync();
         }
     }
 }
