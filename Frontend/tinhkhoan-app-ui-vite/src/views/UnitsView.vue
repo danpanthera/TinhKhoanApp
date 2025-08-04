@@ -465,6 +465,9 @@ const selectedUnits = ref(new Set())
 
 // Computed property để lấy danh sách CNL1 có sẵn
 const availableCNL1Units = computed(() => {
+  if (!unitStore.allUnits || !Array.isArray(unitStore.allUnits)) {
+    return []
+  }
   return unitStore.allUnits.filter(u => {
     const type = (u.type || '').toUpperCase()
     return type === 'CNL1'
@@ -540,6 +543,9 @@ const removeFromSelection = unitId => {
 }
 
 const getUnitDisplayName = unitId => {
+  if (!unitStore.allUnits || !Array.isArray(unitStore.allUnits)) {
+    return `ID: ${unitId}`
+  }
   const unit = unitStore.allUnits.find(u => u.id === unitId)
   return unit ? `${unit.name} (${unit.code})` : `ID: ${unitId}`
 }
@@ -598,11 +604,17 @@ const toggleSelectAllVisible = () => {
 
 // Function để kiểm tra xem một branch có children không
 const hasChildrenForBranch = branchId => {
+  if (!unitStore.allUnits || !Array.isArray(unitStore.allUnits)) {
+    return false
+  }
   return unitStore.allUnits.some(unit => unit.ParentUnitId === branchId)
 }
 
 // Computed property để sort tất cả units theo ID cho grid view
 const sortedAllUnits = computed(() => {
+  if (!unitStore.allUnits || !Array.isArray(unitStore.allUnits)) {
+    return []
+  }
   return [...unitStore.allUnits].sort((a, b) => (a.Id || 0) - (b.Id || 0))
 })
 
@@ -773,6 +785,10 @@ const handleSubmitUnit = async () => {
 
     // Nếu người dùng nhập parentUnitId, kiểm tra xem có phải CNL1 không
     if (parentIdToSubmit) {
+      if (!unitStore.allUnits || !Array.isArray(unitStore.allUnits)) {
+        formError.value = 'Dữ liệu đơn vị chưa được tải!'
+        return
+      }
       const parent = unitStore.allUnits.find(u => u.id === parentIdToSubmit)
       if (!parent || (parent.type || '').toUpperCase() !== 'CNL1') {
         formError.value = 'ID chi nhánh cha phải là ID của một đơn vị CNL1!'
@@ -783,6 +799,10 @@ const handleSubmitUnit = async () => {
   }
   if (unitLevel.value === 3 && (typeToSubmit === 'PGD' || typeToSubmit === 'KH' || typeToSubmit === 'KTNQ')) {
     // Phòng nghiệp vụ/PGD chỉ được trực thuộc CNL2
+    if (!unitStore.allUnits || !Array.isArray(unitStore.allUnits)) {
+      formError.value = 'Dữ liệu đơn vị chưa được tải!'
+      return
+    }
     const parent = unitStore.allUnits.find(u => u.id === parentIdToSubmit)
     if (!parent || (parent.type || '').toUpperCase() !== 'CNL2') {
       formError.value = 'Phòng giao dịch, Phòng KH, Phòng KTNQ chỉ được trực thuộc CNL2!'
@@ -869,13 +889,19 @@ const confirmDeleteUnit = async unitId => {
 
 // Computed property cho các nhánh gốc (CNL1)
 const branches = computed(() => {
+  if (!unitStore.allUnits || !Array.isArray(unitStore.allUnits)) {
+    return []
+  }
   // Dựa vào dữ liệu thực tế, units chỉ có Id, Code, Name - không có Type hay ParentUnitId
   // Hiển thị tất cả units và sắp xếp theo Id
-  return unitStore.allUnits.sort((a, b) => (a.Id || 0) - (b.Id || 0))
+  return [...unitStore.allUnits].sort((a, b) => (a.Id || 0) - (b.Id || 0))
 })
 
 // Computed property cho các phòng ban theo từng nhánh
 const departmentsByBranch = computed(() => {
+  if (!unitStore.allUnits || !Array.isArray(unitStore.allUnits)) {
+    return {}
+  }
   const map = {}
   unitStore.allUnits.forEach(u => {
     if (u.ParentUnitId) {
@@ -935,6 +961,9 @@ const unitLevel = computed(() => {
 
 // Computed property để lấy danh sách các tùy chọn chi nhánh cha
 const parentBranchOptions = computed(() => {
+  if (!unitStore.allUnits || !Array.isArray(unitStore.allUnits)) {
+    return []
+  }
   if (unitLevel.value === 1) {
     // CNL1 không có cha
     return []
@@ -952,6 +981,9 @@ const parentBranchOptions = computed(() => {
 
 // Computed property để lấy danh sách các phòng nghiệp vụ theo loại đơn vị
 const departmentOptions = computed(() => {
+  if (!unitStore.allUnits || !Array.isArray(unitStore.allUnits)) {
+    return []
+  }
   if (!currentUnit.value.parentUnitId) return []
   const parent = unitStore.allUnits.find(u => u.id === Number(currentUnit.value.parentUnitId))
   if (!parent) return []
@@ -960,7 +992,7 @@ const departmentOptions = computed(() => {
   if (type === 'CNL1') {
     // Lấy các phòng nghiệp vụ PNVL1 thực tế từ database
     const pnvl1Units = unitStore.allUnits.filter(
-      u => u.parentUnitId === parent.id && (u.type || '').toUpperCase() === 'PNVL1'
+      u => u.parentUnitId === parent.id && (u.type || '').toUpperCase() === 'PNVL1',
     )
     return pnvl1Units.map(u => ({
       value: u.code,
