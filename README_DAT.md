@@ -8,10 +8,11 @@ trên docker có container chứa SQL server với tên là "azure_sql_edge_tinh
 Luôn để backend port là 5055, frontend port là 3000.
 - ✅ **46 Units:** ĐÃ HOÀN THÀNH đầy đủ 46 units
 - ✅ **23 Roles:** ĐÃ HOÀN THÀNH đầy đủ 23 roles
-- ✅ **Employees:** ĐÃ CÓ 13 employees với CRUD hoàn chỉnh - User tự chọn roles qua dropdown
-- ✅ **05 Positions:** ĐÃ CÓ đầy đủ positions (Giám đốc, Phó GĐ, Trưởng phòng, Phó phòng, Nhân viên)
+- ✅ **Employees:** ĐÃ CÓ CRUD hoàn chỉnh với dropdown selection roles
+- ✅ **05 Positions:** ĐÃ CÓ CRUD hoàn chỉnh với 5 positions (Giám đốc, Phó GĐ, Trưởng phòng, Phó phòng, Nhân viên)
 - ✅ **32 KPI Tables:** ĐÃ HOÀN THÀNH với 257 chỉ tiêu KPI - CATEGORY THỐNG NHẤT: CANBO/CHINHANH
-- ✅ **TqHkKtnb:** ĐÃ TẠO bảng KPI thứ 23 cho role "Tq HK Kiểm tra nội bộ"cập nhật file này với các thông tin mới nhất về dự án TinhKhoanApp.doc
+- ✅ **TqHkKtnb:** ĐÃ TẠO bảng KPI thứ 23 cho role "Tq HK Kiểm tra nội bộ"
+- ✅ **CRUD MENU SYSTEM:** Tất cả menu A1-A4 đã có CRUD đầy đủ (Units, Employees, Positions, Roles)
 **Quy ước toàn dự án:**
 + Mã A1 là menu màn hình Đơn vị
 + Mã A2 là menu màn hình Nhân viên

@@ -13,7 +13,9 @@
         font-family: monospace;
       "
     >
-      <h3 style="margin: 0 0 10px 0; color: #1976d2">🔍 DEBUG INFO</h3>
+      <h3 style="margin: 0 0 10px 0; color: #1976d2">
+        🔍 DEBUG INFO
+      </h3>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 14px">
         <div><strong>Store Loading:</strong> {{ unitStore.isLoading }}</div>
         <div><strong>Store Error:</strong> {{ unitStore.error || 'None' }}</div>
@@ -24,8 +26,8 @@
         </div>
       </div>
       <button
-        @click="loadUnits"
         style="margin-top: 10px; background: #1976d2; color: white; border: none; padding: 8px 16px; border-radius: 4px"
+        @click="loadUnits"
       >
         🔄 Reload Units
       </button>
@@ -38,37 +40,36 @@
     >
       <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 16px">
         <button
-          @click="toggleSelectionMode"
           class="action-button"
           :style="{
             backgroundColor: isSelectionMode ? '#e74c3c' : '#2ecc71',
             borderColor: isSelectionMode ? '#c0392b' : '#27ae60',
           }"
+          @click="toggleSelectionMode"
         >
           {{ isSelectionMode ? '✕ Thoát chế độ chọn' : '☑ Chọn Đơn vị' }}
         </button>
 
         <button
           v-if="isSelectionMode && selectedUnits.size > 0"
-          @click="selectAllVisible"
           class="action-button"
           style="background-color: #3498db; border-color: #2980b9"
+          @click="selectAllVisible"
         >
           Chọn tất cả hiển thị
         </button>
 
         <button
           v-if="isSelectionMode && selectedUnits.size > 0"
-          @click="clearSelection"
           class="action-button"
           style="background-color: #95a5a6; border-color: #7f8c8d"
+          @click="clearSelection"
         >
           Bỏ chọn tất cả
         </button>
 
         <button
           v-if="selectedUnits.size > 0"
-          @click="confirmDeleteSelected"
           class="delete-btn"
           style="
             background-color: #e74c3c;
@@ -78,6 +79,7 @@
             border-radius: 4px;
             cursor: pointer;
           "
+          @click="confirmDeleteSelected"
         >
           🗑 Xóa đã chọn ({{ selectedUnits.size }})
         </button>
@@ -85,7 +87,9 @@
 
       <!-- Hiển thị danh sách đơn vị đã chọn -->
       <div v-if="selectedUnits.size > 0" class="selected-units-display">
-        <h4 style="margin: 0 0 12px 0; color: #2c3e50">Đơn vị đã chọn ({{ selectedUnits.size }}):</h4>
+        <h4 style="margin: 0 0 12px 0; color: #2c3e50">
+          Đơn vị đã chọn ({{ selectedUnits.size }}):
+        </h4>
         <div
           style="
             max-height: 120px;
@@ -111,8 +115,8 @@
           >
             {{ getUnitDisplayName(unitId) }}
             <button
-              @click="removeFromSelection(unitId)"
               style="background: none; border: none; color: white; margin-left: 6px; cursor: pointer; font-weight: bold"
+              @click="removeFromSelection(unitId)"
             >
               ×
             </button>
@@ -121,10 +125,10 @@
       </div>
     </div>
 
-    <button @click="openUnitModal" class="action-button" style="margin-bottom: 18px; margin-right: 12px">
+    <button class="action-button" style="margin-bottom: 18px; margin-right: 12px" @click="openUnitModal">
       Nhập Đơn vị
     </button>
-    <button @click="loadUnits" :disabled="unitStore.isLoading" class="action-button">
+    <button :disabled="unitStore.isLoading" class="action-button" @click="loadUnits">
       {{ unitStore.isLoading ? 'Đang tải...' : 'Tải lại Danh sách Đơn vị' }}
     </button>
 
@@ -142,8 +146,12 @@
         v-model="viewMode"
         style="min-width: 140px; padding: 6px 10px; border-radius: 4px; border: 1px solid #ced4da"
       >
-        <option value="tree">Sơ đồ cây</option>
-        <option value="grid">Dạng lưới</option>
+        <option value="tree">
+          Sơ đồ cây
+        </option>
+        <option value="grid">
+          Dạng lưới
+        </option>
       </select>
     </div>
 
@@ -190,12 +198,11 @@
                   v-if="isSelectionMode"
                   type="checkbox"
                   :checked="selectedUnits.has(branch.Id)"
-                  @change="toggleUnitSelection(branch.Id)"
                   style="margin-right: 8px; transform: scale(1.2)"
-                />
+                  @change="toggleUnitSelection(branch.Id)"
+                >
                 <button
                   v-if="hasChildrenForBranch(branch.Id)"
-                  @click="toggleNode(branch.Id)"
                   class="toggle-button-enhanced"
                   style="
                     background: #3498db;
@@ -216,6 +223,7 @@
                     justify-content: center;
                     box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
                   "
+                  @click="toggleNode(branch.Id)"
                   @mouseover="
                     $event.target.style.backgroundColor = '#2980b9';
                     $event.target.style.transform = 'scale(1.05)';
@@ -227,13 +235,17 @@
                 >
                   {{ expandedNodes.has(branch.Id) ? '−' : '+' }}
                 </button>
-                <span v-else :style="{ marginRight: isSelectionMode ? '6px' : '34px' }"></span>
+                <span v-else :style="{ marginRight: isSelectionMode ? '6px' : '34px' }" />
                 <span style="font-size: 1.1em">🏢</span>
                 <strong style="font-size: 1.1em; color: #2c3e50">{{ branch.Name }}</strong>
               </div>
               <div class="actions" style="display: flex; gap: 8px; flex-shrink: 0">
-                <button @click="startEditUnitWithModal(branch)" class="edit-btn">Sửa</button>
-                <button @click="confirmDeleteUnit(branch.Id)" class="delete-btn">Xóa</button>
+                <button class="edit-btn" @click="startEditUnitWithModal(branch)">
+                  Sửa
+                </button>
+                <button class="delete-btn" @click="confirmDeleteUnit(branch.Id)">
+                  Xóa
+                </button>
               </div>
             </div>
             <!-- Hàng thông tin chi tiết -->
@@ -261,22 +273,26 @@
             </div>
             <TreeDepartments
               v-if="hasChildrenForBranch(branch.Id) && expandedNodes.has(branch.Id)"
-              :parentId="branch.Id"
-              :allUnits="unitStore.allUnits"
+              :parent-id="branch.Id"
+              :all-units="unitStore.allUnits"
               :level="0"
-              :isSelectionMode="isSelectionMode"
-              :selectedUnits="selectedUnits"
-              :expandedNodes="expandedNodes"
-              @editUnit="startEditUnitWithModal"
-              @deleteUnit="confirmDeleteUnit"
-              @toggleSelection="toggleUnitSelection"
-              @toggleNode="toggleNode"
+              :is-selection-mode="isSelectionMode"
+              :selected-units="selectedUnits"
+              :expanded-nodes="expandedNodes"
+              @edit-unit="startEditUnitWithModal"
+              @delete-unit="confirmDeleteUnit"
+              @toggle-selection="toggleUnitSelection"
+              @toggle-node="toggleNode"
             />
           </li>
         </template>
       </ul>
-      <p v-else-if="!unitStore.isLoading && !unitStore.error && !formError">Không có đơn vị nào để hiển thị.</p>
-      <p v-if="unitStore.isLoading && unitStore.allUnits.length === 0">Đang tải danh sách đơn vị...</p>
+      <p v-else-if="!unitStore.isLoading && !unitStore.error && !formError">
+        Không có đơn vị nào để hiển thị.
+      </p>
+      <p v-if="unitStore.isLoading && unitStore.allUnits.length === 0">
+        Đang tải danh sách đơn vị...
+      </p>
     </div>
     <div v-else-if="viewMode === 'grid' && !unitStore.isLoading">
       <table style="width: 100%; border-collapse: collapse; background: #fafdff; border-radius: 6px; overflow: hidden">
@@ -286,16 +302,28 @@
               <input
                 type="checkbox"
                 :checked="isAllVisibleSelected"
-                @change="toggleSelectAllVisible"
                 style="transform: scale(1.2)"
-              />
+                @change="toggleSelectAllVisible"
+              >
             </th>
-            <th style="padding: 10px; border-bottom: 1px solid #e0e0e0">ID</th>
-            <th style="padding: 10px; border-bottom: 1px solid #e0e0e0">Mã Đơn vị</th>
-            <th style="padding: 10px; border-bottom: 1px solid #e0e0e0">Tên Đơn vị</th>
-            <th style="padding: 10px; border-bottom: 1px solid #e0e0e0">Loại</th>
-            <th style="padding: 10px; border-bottom: 1px solid #e0e0e0">ID Cha</th>
-            <th style="padding: 10px; border-bottom: 1px solid #e0e0e0">Thao tác</th>
+            <th style="padding: 10px; border-bottom: 1px solid #e0e0e0">
+              ID
+            </th>
+            <th style="padding: 10px; border-bottom: 1px solid #e0e0e0">
+              Mã Đơn vị
+            </th>
+            <th style="padding: 10px; border-bottom: 1px solid #e0e0e0">
+              Tên Đơn vị
+            </th>
+            <th style="padding: 10px; border-bottom: 1px solid #e0e0e0">
+              Loại
+            </th>
+            <th style="padding: 10px; border-bottom: 1px solid #e0e0e0">
+              ID Cha
+            </th>
+            <th style="padding: 10px; border-bottom: 1px solid #e0e0e0">
+              Thao tác
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -304,29 +332,51 @@
               <input
                 type="checkbox"
                 :checked="selectedUnits.has(unit.Id)"
-                @change="toggleUnitSelection(unit.Id)"
                 style="transform: scale(1.2)"
-              />
+                @change="toggleUnitSelection(unit.Id)"
+              >
             </td>
-            <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0">{{ unit.Id }}</td>
-            <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0">{{ unit.Code }}</td>
-            <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0">{{ unit.Name }}</td>
-            <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0">{{ unit.Type }}</td>
-            <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0">{{ unit.ParentUnitId ?? '-' }}</td>
             <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0">
-              <button @click="startEditUnitWithModal(unit)" class="edit-btn">Sửa</button>
-              <button @click="confirmDeleteUnit(unit.Id)" class="delete-btn">Xóa</button>
+              {{ unit.Id }}
+            </td>
+            <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0">
+              {{ unit.Code }}
+            </td>
+            <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0">
+              {{ unit.Name }}
+            </td>
+            <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0">
+              {{ unit.Type }}
+            </td>
+            <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0">
+              {{ unit.ParentUnitId ?? '-' }}
+            </td>
+            <td style="padding: 8px 10px; border-bottom: 1px solid #e0e0e0">
+              <button class="edit-btn" @click="startEditUnitWithModal(unit)">
+                Sửa
+              </button>
+              <button class="delete-btn" @click="confirmDeleteUnit(unit.Id)">
+                Xóa
+              </button>
             </td>
           </tr>
         </tbody>
       </table>
-      <p v-if="unitStore.allUnits.length === 0 && !unitStore.isLoading">Không có đơn vị nào để hiển thị.</p>
-      <p v-if="unitStore.isLoading && unitStore.allUnits.length === 0">Đang tải danh sách đơn vị...</p>
+      <p v-if="unitStore.allUnits.length === 0 && !unitStore.isLoading">
+        Không có đơn vị nào để hiển thị.
+      </p>
+      <p v-if="unitStore.isLoading && unitStore.allUnits.length === 0">
+        Đang tải danh sách đơn vị...
+      </p>
     </div>
-    <p v-else-if="!unitStore.isLoading && !unitStore.error && !formError">Không có đơn vị nào để hiển thị.</p>
-    <p v-if="unitStore.isLoading && unitStore.allUnits.length === 0">Đang tải danh sách đơn vị...</p>
+    <p v-else-if="!unitStore.isLoading && !unitStore.error && !formError">
+      Không có đơn vị nào để hiển thị.
+    </p>
+    <p v-if="unitStore.isLoading && unitStore.allUnits.length === 0">
+      Đang tải danh sách đơn vị...
+    </p>
 
-    <hr class="separator" />
+    <hr class="separator">
 
     <div class="form-container">
       <h2>{{ isEditing ? 'Cập nhật Đơn vị' : 'Thêm Đơn vị Mới' }}</h2>
@@ -334,35 +384,35 @@
         <div class="form-group">
           <label for="unitCode">Mã Đơn vị:</label>
           <input
-            type="text"
             id="unitCode"
+            type="text"
             :value="currentUnit.code"
-            @input="currentUnit.code = $event.target.value"
             required
-          />
+            @input="currentUnit.code = $event.target.value"
+          >
         </div>
         <div class="form-group">
           <label for="unitName">Tên Đơn vị:</label>
           <input
-            type="text"
             id="unitName"
+            type="text"
             :value="currentUnit.name"
-            @input="currentUnit.name = $event.target.value"
             required
-          />
+            @input="currentUnit.name = $event.target.value"
+          >
         </div>
         <div class="form-group">
           <label for="parentUnitId">Chi nhánh cha (ID):</label>
           <input
-            type="text"
             id="parentUnitId"
+            type="text"
             :value="formatNumber(currentUnit.parentUnitId || 0)"
-            @input="e => handleParentUnitIdInput(e)"
-            @blur="e => handleParentUnitIdBlur(e)"
             placeholder="Nhập ID chi nhánh cha (bỏ trống nếu là chi nhánh gốc)"
             min="1"
             style="min-width: 200px; padding: 8px 12px; border-radius: 4px; border: 1px solid #ced4da"
-          />
+            @input="e => handleParentUnitIdInput(e)"
+            @blur="e => handleParentUnitIdBlur(e)"
+          >
           <!-- Hiển thị thông báo cho CNL2 -->
           <div v-if="currentUnit.type === 'CNL2'" class="helper-text">
             <p style="margin: 8px 0 4px 0; font-size: 0.9em; color: #6c757d">
@@ -395,13 +445,27 @@
             required
             style="min-width: 200px; padding: 8px 12px; border-radius: 4px; border: 1px solid #ced4da"
           >
-            <option value="">-- Chọn loại đơn vị --</option>
-            <option value="CNL1">CNL1</option>
-            <option value="CNL2">CNL2</option>
-            <option value="PGDL1">PGDL1</option>
-            <option value="PGDL2">PGDL2</option>
-            <option value="PNVL1">PNVL1</option>
-            <option value="PNVL2">PNVL2</option>
+            <option value="">
+              -- Chọn loại đơn vị --
+            </option>
+            <option value="CNL1">
+              CNL1
+            </option>
+            <option value="CNL2">
+              CNL2
+            </option>
+            <option value="PGDL1">
+              PGDL1
+            </option>
+            <option value="PGDL2">
+              PGDL2
+            </option>
+            <option value="PNVL1">
+              PNVL1
+            </option>
+            <option value="PNVL2">
+              PNVL2
+            </option>
           </select>
         </div>
         <div class="form-actions">
@@ -416,15 +480,26 @@
                   : 'Thêm Đơn vị'
             }}
           </button>
-          <button type="button" @click="cancelEdit" v-if="isEditing" class="cancel-btn action-button">Hủy</button>
+          <button
+            v-if="isEditing"
+            type="button"
+            class="cancel-btn action-button"
+            @click="cancelEdit"
+          >
+            Hủy
+          </button>
         </div>
       </form>
     </div>
 
     <!-- Loading indicator -->
     <div v-if="unitStore.isLoading" style="text-align: center; padding: 40px; color: #666;">
-      <div style="font-size: 18px; margin-bottom: 10px;">🔄 Đang tải dữ liệu đơn vị...</div>
-      <div style="color: #999;">Vui lòng đợi trong giây lát</div>
+      <div style="font-size: 18px; margin-bottom: 10px;">
+        🔄 Đang tải dữ liệu đơn vị...
+      </div>
+      <div style="color: #999;">
+        Vui lòng đợi trong giây lát
+      </div>
     </div>
 
     <!-- XÓA form-container cũ ở dưới cùng (ẩn form nhập đơn vị cũ) -->
@@ -720,13 +795,13 @@ const handleSubmitUnit = async () => {
   formError.value = null
   unitStore.error = null
 
-  let codeToSubmit = typeof currentUnit.value.code === 'string' ? currentUnit.value.code.trim() : ''
-  let nameToSubmit = typeof currentUnit.value.name === 'string' ? currentUnit.value.name.trim() : ''
-  let parentIdToSubmit =
+  const codeToSubmit = typeof currentUnit.value.code === 'string' ? currentUnit.value.code.trim() : ''
+  const nameToSubmit = typeof currentUnit.value.name === 'string' ? currentUnit.value.name.trim() : ''
+  const parentIdToSubmit =
     currentUnit.value.parentUnitId !== null && currentUnit.value.parentUnitId !== ''
       ? Number(currentUnit.value.parentUnitId)
       : null
-  let typeToSubmit = typeof currentUnit.value.type === 'string' ? currentUnit.value.type.trim() : ''
+  const typeToSubmit = typeof currentUnit.value.type === 'string' ? currentUnit.value.type.trim() : ''
 
   if (!codeToSubmit) {
     formError.value = 'Mã đơn vị không được để trống!'
@@ -754,7 +829,7 @@ const handleSubmitUnit = async () => {
   console.log('Giá trị currentUnit.value (gốc từ form):', JSON.parse(JSON.stringify(currentUnit.value)))
   console.log(
     'Dữ liệu sẽ được kiểm tra và gửi đi (unitDataForSubmission):',
-    JSON.parse(JSON.stringify(unitDataForSubmission))
+    JSON.parse(JSON.stringify(unitDataForSubmission)),
   )
   // Log typeof từng trường để debug lỗi backend
   Object.entries(unitDataForSubmission).forEach(([k, v]) => {
@@ -762,7 +837,7 @@ const handleSubmitUnit = async () => {
   })
   console.log(
     'Danh sách đơn vị hiện có:',
-    unitStore.allUnits.map(u => ({ id: u.id, code: u.code, type: u.type, parentUnitId: u.parentUnitId }))
+    unitStore.allUnits.map(u => ({ id: u.id, code: u.code, type: u.type, parentUnitId: u.parentUnitId })),
   )
 
   if (!unitDataForSubmission.code) {
@@ -1062,7 +1137,7 @@ const TreeDepartments = defineComponent({
     const safeParentId = computed(() => (typeof props.parentId === 'number' ? props.parentId : 0))
     const safeAllUnits = computed(() => (Array.isArray(props.allUnits) ? props.allUnits : []))
     const children = computed(() =>
-      safeAllUnits.value.filter(u => u.ParentUnitId === safeParentId.value).sort((a, b) => (a.Id || 0) - (b.Id || 0))
+      safeAllUnits.value.filter(u => u.ParentUnitId === safeParentId.value).sort((a, b) => (a.Id || 0) - (b.Id || 0)),
     )
 
     // Check if a node has children
@@ -1156,18 +1231,18 @@ const TreeDepartments = defineComponent({
                                 e.target.style.transform = 'scale(1)'
                               },
                             },
-                            isNodeExpanded ? '−' : '+'
+                            isNodeExpanded ? '−' : '+',
                           )
                         : h(
                             'span',
                             {
                               style: 'font-size: 0.9em; margin-right: 30px; color: #bdc3c7;',
                             },
-                            isLeafNode ? '└─' : '├─'
+                            isLeafNode ? '└─' : '├─',
                           ),
                       h('span', { style: 'font-size: 0.9em;' }, dept.type === 'CNL2' ? '🏢' : '🏬'),
                       h('strong', { style: 'font-size: 1em; color: #2c3e50;' }, dept.Name),
-                    ]
+                    ],
                   ),
                   h(
                     'div',
@@ -1178,9 +1253,9 @@ const TreeDepartments = defineComponent({
                     [
                       h('button', { class: 'edit-btn', onClick: () => emit('editUnit', dept) }, 'Sửa'),
                       h('button', { class: 'delete-btn', onClick: () => emit('deleteUnit', dept.Id) }, 'Xóa'),
-                    ]
+                    ],
                   ),
-                ]
+                ],
               ),
               // Hàng thông tin chi tiết
               h(
@@ -1196,23 +1271,23 @@ const TreeDepartments = defineComponent({
                     {
                       style: 'background: #f1f2f6; padding: 2px 5px; border-radius: 3px;',
                     },
-                    `ID: ${dept.Id}`
+                    `ID: ${dept.Id}`,
                   ),
                   h(
                     'span',
                     {
                       style: 'background: #f1f2f6; padding: 2px 5px; border-radius: 3px;',
                     },
-                    `Mã: ${dept.Code}`
+                    `Mã: ${dept.Code}`,
                   ),
                   h(
                     'span',
                     {
                       style: 'background: #f1f2f6; padding: 2px 5px; border-radius: 3px;',
                     },
-                    `Loại: ${dept.Type || 'Phòng nghiệp vụ'}`
+                    `Loại: ${dept.Type || 'Phòng nghiệp vụ'}`,
                   ),
-                ]
+                ],
               ),
               // Only render children if node is expanded and has children
               hasChildNodes && isNodeExpanded
@@ -1229,9 +1304,9 @@ const TreeDepartments = defineComponent({
                     onToggleNode: id => emit('toggleNode', id),
                   })
                 : null,
-            ]
+            ],
           )
-        })
+        }),
       )
     }
   },

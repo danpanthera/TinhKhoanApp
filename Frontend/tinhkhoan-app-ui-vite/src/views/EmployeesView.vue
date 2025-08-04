@@ -2,25 +2,25 @@
   <div class="employees-view">
     <h1>Quản lý Nhân viên</h1>
     <div style="display: flex; gap: 10px; margin-bottom: 20px">
-      <button @click="loadInitialData" :disabled="isOverallLoading" class="action-button">
+      <button :disabled="isOverallLoading" class="action-button" @click="loadInitialData">
         {{ isOverallLoading ? 'Đang tải dữ liệu...' : 'Tải lại Danh sách Nhân viên' }}
       </button>
-      <button @click="scrollToAddEmployeeForm" class="action-button add-employee-btn" style="background-color: #28a745">
+      <button class="action-button add-employee-btn" style="background-color: #28a745" @click="scrollToAddEmployeeForm">
         + Thêm nhân viên
       </button>
 
       <!-- Các nút cho tính năng chọn nhiều -->
       <template v-if="pagedEmployees.length > 0">
-        <button @click="toggleSelectAll" class="action-button" style="background-color: #6c757d">
+        <button class="action-button" style="background-color: #6c757d" @click="toggleSelectAll">
           {{ isAllSelected ? 'Bỏ chọn tất cả' : 'Chọn tất cả' }}
         </button>
 
         <button
           v-if="selectedEmployeeIds.length > 0"
-          @click="confirmDeleteSelected"
           class="action-button"
           style="background-color: #dc3545; color: white"
           :disabled="isDeleting"
+          @click="confirmDeleteSelected"
         >
           {{ isDeleting ? 'Đang xóa...' : `Xóa (${selectedEmployeeIds.length}) nhân viên đã chọn` }}
         </button>
@@ -47,9 +47,15 @@
         v-model.number="pageSize"
         style="min-width: 80px; padding: 4px 8px; border-radius: 4px; border: 1px solid #ced4da"
       >
-        <option :value="20">20</option>
-        <option :value="50">50</option>
-        <option :value="100">100</option>
+        <option :value="20">
+          20
+        </option>
+        <option :value="50">
+          50
+        </option>
+        <option :value="100">
+          100
+        </option>
       </select>
     </div>
 
@@ -58,20 +64,49 @@
         <thead>
           <tr>
             <th style="width: 50px; min-width: 50px">
-              <input type="checkbox" :checked="isAllSelected" @change="toggleSelectAll" title="Chọn/Bỏ chọn tất cả" />
+              <input
+                type="checkbox"
+                :checked="isAllSelected"
+                title="Chọn/Bỏ chọn tất cả"
+                @change="toggleSelectAll"
+              >
             </th>
-            <th style="width: 80px; min-width: 80px">Thao tác</th>
-            <th style="width: 70px">Mã NV</th>
-            <th style="width: 90px">Mã CB</th>
-            <th style="width: 140px">Họ tên</th>
-            <th style="width: 100px">Tên ĐN</th>
-            <th style="width: 110px">Chi nhánh</th>
-            <th style="width: 110px">Phòng nghiệp vụ</th>
-            <th style="width: 110px">Chức vụ</th>
-            <th style="width: 110px">Vai trò</th>
-            <th style="width: 120px">Email</th>
-            <th style="width: 100px">SĐT</th>
-            <th style="width: 80px">Trạng thái</th>
+            <th style="width: 80px; min-width: 80px">
+              Thao tác
+            </th>
+            <th style="width: 70px">
+              Mã NV
+            </th>
+            <th style="width: 90px">
+              Mã CB
+            </th>
+            <th style="width: 140px">
+              Họ tên
+            </th>
+            <th style="width: 100px">
+              Tên ĐN
+            </th>
+            <th style="width: 110px">
+              Chi nhánh
+            </th>
+            <th style="width: 110px">
+              Phòng nghiệp vụ
+            </th>
+            <th style="width: 110px">
+              Chức vụ
+            </th>
+            <th style="width: 110px">
+              Vai trò
+            </th>
+            <th style="width: 120px">
+              Email
+            </th>
+            <th style="width: 100px">
+              SĐT
+            </th>
+            <th style="width: 80px">
+              Trạng thái
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -82,20 +117,22 @@
           >
             <td class="checkbox-cell">
               <input
+                v-model="selectedEmployeeIds"
                 type="checkbox"
                 :value="employee.Id"
-                v-model="selectedEmployeeIds"
                 :disabled="employee.Username === 'admin'"
                 :title="employee.Username === 'admin' ? 'Không thể chọn tài khoản admin' : 'Chọn nhân viên này'"
-              />
+              >
             </td>
             <td class="action-cell">
-              <button @click="startEditEmployee(employee)" class="edit-btn">Sửa</button>
+              <button class="edit-btn" @click="startEditEmployee(employee)">
+                Sửa
+              </button>
               <button
-                @click="confirmDeleteEmployee(employee.Id)"
                 class="delete-btn"
                 :disabled="employee.Username === 'admin'"
                 :title="employee.Username === 'admin' ? 'Không thể xóa tài khoản admin' : 'Xóa nhân viên'"
+                @click="confirmDeleteEmployee(employee.Id)"
               >
                 Xóa
               </button>
@@ -115,8 +152,8 @@
             <td>
               {{
                 employee.PositionName ||
-                positionStore.allPositions.find(p => p.Id === employee.PositionId)?.Name ||
-                'N/A'
+                  positionStore.allPositions.find(p => p.Id === employee.PositionId)?.Name ||
+                  'N/A'
               }}
             </td>
             <td>{{ getRoleNames(employee) }}</td>
@@ -128,22 +165,40 @@
       </table>
     </template>
     <template v-else>
-      <p v-if="employeeStore.isLoading">Đang tải danh sách nhân viên...</p>
-      <p v-else-if="displayError">{{ displayError }}</p>
-      <p v-else>Không có nhân viên nào để hiển thị.</p>
+      <p v-if="employeeStore.isLoading">
+        Đang tải danh sách nhân viên...
+      </p>
+      <p v-else-if="displayError">
+        {{ displayError }}
+      </p>
+      <p v-else>
+        Không có nhân viên nào để hiển thị.
+      </p>
     </template>
     <div
       v-if="totalPages > 1"
       style="margin: 12px 0; display: flex; align-items: center; gap: 12px; justify-content: flex-end"
     >
-      <button @click="prevPage" :disabled="page === 1" class="action-button" style="padding: 4px 10px">&lt;</button>
+      <button
+        :disabled="page === 1"
+        class="action-button"
+        style="padding: 4px 10px"
+        @click="prevPage"
+      >
+        &lt;
+      </button>
       <span>Trang {{ page }} / {{ totalPages }}</span>
-      <button @click="nextPage" :disabled="page === totalPages" class="action-button" style="padding: 4px 10px">
+      <button
+        :disabled="page === totalPages"
+        class="action-button"
+        style="padding: 4px 10px"
+        @click="nextPage"
+      >
         &gt;
       </button>
     </div>
 
-    <hr class="separator" />
+    <hr class="separator">
 
     <div class="form-container">
       <h2>
@@ -153,85 +208,93 @@
         <div class="form-row">
           <div class="form-group">
             <label for="employeeCode">Mã Nhân viên:</label>
-            <input type="text" id="employeeCode" :value="currentEmployee.employeeCode" disabled required />
+            <input
+              id="employeeCode"
+              type="text"
+              :value="currentEmployee.employeeCode"
+              disabled
+              required
+            >
           </div>
           <div class="form-group">
             <label for="cbCode">Mã CB:</label>
             <input
-              type="text"
               id="cbCode"
               v-model="currentEmployee.cbCode"
-              @input="onCBCodeInput"
+              type="text"
               required
               pattern="[0-9]*"
               inputmode="numeric"
               maxlength="9"
               placeholder="Nhập 9 chữ số"
-            />
+              @input="onCBCodeInput"
+            >
           </div>
         </div>
         <div class="form-group">
           <label for="fullName">Họ và Tên:</label>
           <input
-            type="text"
             id="fullName"
+            type="text"
             :value="currentEmployee.fullName"
-            @input="onInputTextOnly('fullName', $event)"
             required
-          />
+            @input="onInputTextOnly('fullName', $event)"
+          >
         </div>
         <div class="form-group">
           <label for="username">Tên Đăng nhập:</label>
           <input
-            type="text"
             id="username"
+            type="text"
             :value="currentEmployee.username"
-            @input="onUsernameInput($event)"
             required
             :disabled="isEditing"
-          />
+            @input="onUsernameInput($event)"
+          >
         </div>
-        <div class="form-group" v-if="!isEditing">
+        <div v-if="!isEditing" class="form-group">
           <label for="password">Mật khẩu:</label>
           <input
-            type="password"
             id="password"
+            type="password"
             :value="currentEmployee.passwordHash"
-            @input="currentEmployee.passwordHash = $event.target.value"
             placeholder="Nhập mật khẩu khi thêm mới"
             :required="!isEditing"
-          />
+            @input="currentEmployee.passwordHash = $event.target.value"
+          >
         </div>
         <div class="form-row">
           <div class="form-group">
             <label for="email">Email:</label>
             <input
-              type="email"
               id="email"
-              :value="currentEmployee.email"
-              @input="currentEmployee.email = $event.target.value"
               ref="emailInputRef"
+              type="email"
+              :value="currentEmployee.email"
               required
-            />
+              @input="currentEmployee.email = $event.target.value"
+            >
           </div>
           <div class="form-group">
             <label for="phoneNumber">Số Điện thoại:</label>
             <input
-              type="tel"
               id="phoneNumber"
+              ref="phoneNumberInputRef"
+              type="tel"
               :value="currentEmployee.phoneNumber"
-              @input="onInputNumberOnly('phoneNumber', $event)"
               pattern="[0-9]*"
               inputmode="numeric"
-              ref="phoneNumberInputRef"
-            />
+              @input="onInputNumberOnly('phoneNumber', $event)"
+            >
           </div>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label for="branchId">Chi nhánh:</label>
             <select id="branchId" v-model.number="selectedBranchId" required>
-              <option :value="null" disabled>-- Chọn Chi nhánh --</option>
+              <option :value="null" disabled>
+                -- Chọn Chi nhánh --
+              </option>
               <option v-for="branch in branchOptions" :key="branch.Id || branch.Id" :value="branch.Id || branch.Id">
                 {{ branch.Name || branch.Name }} ({{ branch.Code || branch.Code }})
               </option>
@@ -239,8 +302,15 @@
           </div>
           <div class="form-group">
             <label for="departmentId">Phòng nghiệp vụ:</label>
-            <select id="departmentId" v-model.number="currentEmployee.unitId" :disabled="!selectedBranchId" required>
-              <option :value="null" disabled>-- Chọn Phòng nghiệp vụ --</option>
+            <select
+              id="departmentId"
+              v-model.number="currentEmployee.unitId"
+              :disabled="!selectedBranchId"
+              required
+            >
+              <option :value="null" disabled>
+                -- Chọn Phòng nghiệp vụ --
+              </option>
               <option v-for="dept in departmentOptions" :key="dept.Id || dept.Id" :value="dept.Id || dept.Id">
                 {{ dept.Name || dept.Name }} ({{ dept.Code || dept.Code }})
               </option>
@@ -253,10 +323,12 @@
             <select
               id="positionId"
               :value="currentEmployee.positionId"
-              @change="currentEmployee.positionId = $event.target.value === '' ? null : Number($event.target.value)"
               required
+              @change="currentEmployee.positionId = $event.target.value === '' ? null : Number($event.target.value)"
             >
-              <option :value="null" disabled>-- Chọn Chức vụ --</option>
+              <option :value="null" disabled>
+                -- Chọn Chức vụ --
+              </option>
               <option
                 v-for="position in positionStore.allPositions"
                 :key="position.Id || position.Id"
@@ -269,7 +341,9 @@
           <div class="form-group">
             <label for="roleId">Vai trò:</label>
             <select id="roleId" v-model.number="currentEmployee.roleId" required>
-              <option :value="null" disabled>-- Chọn Vai trò --</option>
+              <option :value="null" disabled>
+                -- Chọn Vai trò --
+              </option>
               <option v-for="role in sortedRoles" :key="role.Id || role.Id" :value="role.Id || role.Id">
                 {{ role.Name || role.Name }}
                 <span v-if="role.Description" style="color: #666">- {{ role.Description }}</span>
@@ -282,8 +356,12 @@
           <div class="form-group">
             <label for="isActive">Trạng thái hoạt động:</label>
             <select id="isActive" v-model="currentEmployee.isActive">
-              <option :value="true">Hoạt động</option>
-              <option :value="false">Không hoạt động</option>
+              <option :value="true">
+                Hoạt động
+              </option>
+              <option :value="false">
+                Không hoạt động
+              </option>
             </select>
           </div>
         </div>
@@ -300,7 +378,14 @@
                   : 'Thêm Nhân viên'
             }}
           </button>
-          <button type="button" @click="cancelEdit" v-if="isEditing" class="action-button secondary">Hủy</button>
+          <button
+            v-if="isEditing"
+            type="button"
+            class="action-button secondary"
+            @click="cancelEdit"
+          >
+            Hủy
+          </button>
         </div>
       </form>
     </div>
@@ -465,7 +550,7 @@ const departmentOptions = computed(() => {
 
   if (!selectedBranchId.value) return []
   if (!unitStore.allUnits || !Array.isArray(unitStore.allUnits)) return []
-  
+
   const branch = unitStore.allUnits.find(u => (u.Id || u.Id) === Number(selectedBranchId.value))
 
   console.log('🔍 departmentOptions - found branch:', branch)
@@ -574,7 +659,7 @@ const startEditEmployee = async employee => {
   }
   console.log(
     'Dữ liệu nhân viên được nạp vào form sửa (startEditEmployee):',
-    JSON.parse(JSON.stringify(currentEmployee.value))
+    JSON.parse(JSON.stringify(currentEmployee.value)),
   )
 }
 
@@ -677,7 +762,7 @@ const handleSubmitEmployee = async () => {
   employeeStore.error = null
 
   // Extract and clean data for submission
-  let dataToProcess = extractEmployeePrimitives(currentEmployee.value)
+  const dataToProcess = extractEmployeePrimitives(currentEmployee.value)
 
   // Override roleId with current form value to ensure latest selection is used
   if (currentEmployee.value.roleId && !isNaN(Number(currentEmployee.value.roleId))) {
@@ -933,7 +1018,7 @@ watch(
     // Lọc ra những ID không còn tồn tại
     const existingIds = employeeStore.allEmployees.map(emp => emp.Id)
     selectedEmployeeIds.value = selectedEmployeeIds.value.filter(id => existingIds.includes(id))
-  }
+  },
 )
 
 // ========================================
@@ -942,7 +1027,7 @@ watch(
 // INPUT VALIDATION FUNCTIONS
 // ========================================
 function onInputNumberOnly(field, event) {
-  let val = event.target.value.replace(/[^0-9]/g, '')
+  const val = event.target.value.replace(/[^0-9]/g, '')
   currentEmployee.value[field] = val
 }
 
@@ -955,12 +1040,12 @@ function onCBCodeInput(event) {
 }
 
 function onInputTextOnly(field, event) {
-  let val = event.target.value.replace(/[^a-zA-ZÀ-ỹ\s]/g, '')
+  const val = event.target.value.replace(/[^a-zA-ZÀ-ỹ\s]/g, '')
   currentEmployee.value[field] = val
 }
 
 function onUsernameInput(event) {
-  let val = event.target.value.replace(/[^a-zA-Z0-9]/g, '')
+  const val = event.target.value.replace(/[^a-zA-Z0-9]/g, '')
   currentEmployee.value.username = val
 
   // Auto-generate email when creating new employee (not when editing)
