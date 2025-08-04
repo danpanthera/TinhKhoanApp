@@ -356,10 +356,18 @@ const isDeleting = ref(false)
 const page = ref(1)
 const pageSize = ref(20)
 const pagedEmployees = computed(() => {
+  if (!employeeStore.allEmployees || !Array.isArray(employeeStore.allEmployees)) {
+    return []
+  }
   const start = (page.value - 1) * pageSize.value
   return employeeStore.allEmployees.slice(start, start + pageSize.value)
 })
-const totalPages = computed(() => Math.ceil(employeeStore.allEmployees.length / pageSize.value))
+const totalPages = computed(() => {
+  if (!employeeStore.allEmployees || !Array.isArray(employeeStore.allEmployees)) {
+    return 0
+  }
+  return Math.ceil(employeeStore.allEmployees.length / pageSize.value)
+})
 function prevPage() {
   if (page.value > 1) page.value--
 }
@@ -373,6 +381,7 @@ watch(pageSize, () => {
 // Computed properties cho tính năng chọn nhiều
 const selectableEmployees = computed(() => {
   // Lọc ra những nhân viên có thể chọn (không phải admin)
+  if (!pagedEmployees.value || !Array.isArray(pagedEmployees.value)) return []
   return pagedEmployees.value.filter(emp => emp.username !== 'admin')
 })
 
@@ -387,6 +396,7 @@ const isOverallLoading = computed(() => {
 
 // Computed để sắp xếp roles theo ABC
 const sortedRoles = computed(() => {
+  if (!roleStore.allRoles || !Array.isArray(roleStore.allRoles)) return []
   return [...roleStore.allRoles].sort((a, b) => {
     const nameA = (a.Name || a.name || '').toLowerCase()
     const nameB = (b.Name || b.name || '').toLowerCase()
@@ -402,6 +412,8 @@ const displayError = computed(() => {
 // Updated branchOptions: Custom ordering theo yêu cầu Hội Sở → Nậm Hàng
 const branchOptions = computed(() => {
   console.log('🔍 branchOptions computed - unitStore.allUnits:', unitStore.allUnits)
+
+  if (!unitStore.allUnits || !Array.isArray(unitStore.allUnits)) return []
 
   // Định nghĩa thứ tự theo yêu cầu: Hội Sở → Bình Lư → Phong Thổ → Sìn Hồ → Bum Tở → Than Uyên → Đoàn Kết → Tân Uyên → Nậm Hàng
   const customOrder = [
@@ -452,6 +464,8 @@ const departmentOptions = computed(() => {
   console.log('🔍 departmentOptions computed - selectedBranchId:', selectedBranchId.value)
 
   if (!selectedBranchId.value) return []
+  if (!unitStore.allUnits || !Array.isArray(unitStore.allUnits)) return []
+  
   const branch = unitStore.allUnits.find(u => (u.Id || u.Id) === Number(selectedBranchId.value))
 
   console.log('🔍 departmentOptions - found branch:', branch)
