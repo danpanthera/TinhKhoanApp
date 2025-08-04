@@ -30,7 +30,7 @@ namespace TinhKhoanApp.Api.Controllers
                 TableType = t.TableType.ToString(),
                 TableName = t.TableName ?? "",
                 Description = t.Description ?? "",
-                Category = MapCategory(t.Category ?? ""),
+                Category = MapCategory(t.Category ?? ""), // Dùng mapping function
                 IsActive = true,
                 CreatedDate = t.CreatedDate,
                 IndicatorCount = 0
@@ -41,24 +41,15 @@ namespace TinhKhoanApp.Api.Controllers
 
         private string MapCategory(string originalCategory)
         {
-            // Map categories to frontend expected values
+            // Map categories từ database sang frontend display
             switch (originalCategory)
             {
-                case "TRUONG_PHONG":
-                case "PHO_TRUONG_PHONG":
-                case "KINH_DOANH":
-                case "TIN_DUNG":
-                case "KE_TOAN":
-                case "PHONG_CHUC_NANG":
-                case "PHONG_GIAO_DICH":
-                case "CHI_NHANH":
-                case "BO_PHAN":
-                case "CONG_NGHE":
-                case "KHAC":
-                case "TRUNG_TAM":
+                case "CANBO":
                     return "Dành cho Cán bộ";
-                default:
+                case "CHINHANH":
                     return "Dành cho Chi nhánh";
+                default:
+                    return originalCategory; // Trả về nguyên bản nếu không match
             }
         }
 

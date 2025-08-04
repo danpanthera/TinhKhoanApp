@@ -213,7 +213,7 @@ namespace TinhKhoanApp.Api.Data
         /// </summary>
         private static string GetCategoryForTableType(KpiTableType tableType)
         {
-            return IsBranchTableType(tableType) ? "Chi nhánh" : "Vai trò cán bộ";
+            return IsBranchTableType(tableType) ? "CHINHANH" : "CANBO";
         }
     }
 }
