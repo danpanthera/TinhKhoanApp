@@ -54,8 +54,8 @@ namespace TinhKhoanApp.Api.Services
         }
 
         private async Task<ImportResponseDto> ImportDataInternalAsync<T>(
-            ImportRequestDto request, 
-            List<T> data, 
+            ImportRequestDto request,
+            List<T> data,
             DbSet<T> dbSet) where T : BaseHistoryModel
         {
             var response = new ImportResponseDto
@@ -101,12 +101,12 @@ namespace TinhKhoanApp.Api.Services
                     .ToListAsync();
 
                 var stats = new ImportCounts { NewRecords = 0, UpdatedRecords = 0, DeletedRecords = 0 };
-                
+
                 // Process new and updated records
                 foreach (var newRecord in data)
                 {
                     var existingRecord = currentRecords.FirstOrDefault(x => x.SourceID == newRecord.SourceID);
-                    
+
                     if (existingRecord == null)
                     {
                         // New record
@@ -120,7 +120,7 @@ namespace TinhKhoanApp.Api.Services
                         existingRecord.ValidTo = importDate;
                         existingRecord.IsCurrent = false;
                         existingRecord.ModifiedDate = importDate;
-                        
+
                         // Add new version
                         newRecord.VersionNumber = existingRecord.VersionNumber + 1;
                         dbSet.Add(newRecord);
@@ -130,9 +130,9 @@ namespace TinhKhoanApp.Api.Services
                 }
 
                 // Process deleted records
-                var deletedRecords = currentRecords.Where(existing => 
+                var deletedRecords = currentRecords.Where(existing =>
                     !data.Any(newRecord => newRecord.SourceID == existing.SourceID)).ToList();
-                
+
                 foreach (var deletedRecord in deletedRecords)
                 {
                     deletedRecord.ValidTo = importDate;
@@ -262,7 +262,7 @@ namespace TinhKhoanApp.Api.Services
             try
             {
                 var cutoffDate = DateTime.Now.AddMonths(-retainMonths);
-                
+
                 // Only delete non-current records older than cutoff
                 var deletedCount = await _context.Database.ExecuteSqlAsync(
                     $"DELETE FROM {tableName}_History WHERE IsCurrent = 0 AND ValidTo < {cutoffDate}");

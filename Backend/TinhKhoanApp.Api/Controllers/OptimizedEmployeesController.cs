@@ -136,7 +136,7 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 var employee = await _repository.GetByIdAsync(id);
-                
+
                 if (employee == null)
                 {
                     return NotFound(new ApiResponse<EmployeeDetailDto>
@@ -270,7 +270,7 @@ namespace TinhKhoanApp.Api.Controllers
                 // Check for duplicate employee code
                 var existingByCode = await _context.Employees
                     .AnyAsync(e => e.EmployeeCode == createDto.EmployeeCode);
-                
+
                 if (existingByCode)
                 {
                     return Conflict(new ApiResponse<EmployeeDetailDto>
@@ -283,7 +283,7 @@ namespace TinhKhoanApp.Api.Controllers
                 // Check for duplicate CB code
                 var existingByCB = await _context.Employees
                     .AnyAsync(e => e.CBCode == createDto.CBCode);
-                
+
                 if (existingByCB)
                 {
                     return Conflict(new ApiResponse<EmployeeDetailDto>
@@ -329,7 +329,7 @@ namespace TinhKhoanApp.Api.Controllers
                     Roles = new List<RoleDto>()
                 };
 
-                return CreatedAtAction(nameof(GetEmployee), new { id = createdEmployee.Id }, 
+                return CreatedAtAction(nameof(GetEmployee), new { id = createdEmployee.Id },
                     new ApiResponse<EmployeeDetailDto>
                     {
                         Success = true,
@@ -449,7 +449,7 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 var success = await _repository.DeleteAsync(id);
-                
+
                 if (!success)
                 {
                     return NotFound(new ApiResponse<bool>
@@ -491,7 +491,7 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 var cacheKey = "employee:stats";
                 var cachedStats = await _cache.GetAsync<EmployeeStatsDto>(cacheKey);
-                
+
                 if (cachedStats != null)
                 {
                     return Ok(new ApiResponse<EmployeeStatsDto>

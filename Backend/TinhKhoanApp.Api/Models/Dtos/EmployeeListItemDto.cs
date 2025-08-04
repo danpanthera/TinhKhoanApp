@@ -16,14 +16,14 @@ namespace TinhKhoanApp.Api.Models.Dtos
 
         public int UnitId { get; set; }
         public string? UnitName { get; set; }
-        
+
         public int PositionId { get; set; }
         public string? PositionName { get; set; }
-        
+
         // Role information
         public List<RoleDto> Roles { get; set; } = new List<RoleDto>();
     }
-    
+
     public class RoleDto
     {
         public int Id { get; set; }
