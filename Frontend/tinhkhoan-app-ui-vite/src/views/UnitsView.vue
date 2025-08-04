@@ -278,7 +278,7 @@
       <p v-else-if="!unitStore.isLoading && !unitStore.error && !formError">Không có đơn vị nào để hiển thị.</p>
       <p v-if="unitStore.isLoading && unitStore.allUnits.length === 0">Đang tải danh sách đơn vị...</p>
     </div>
-    <div v-else-if="viewMode === 'grid'">
+    <div v-else-if="viewMode === 'grid' && !unitStore.isLoading">
       <table style="width: 100%; border-collapse: collapse; background: #fafdff; border-radius: 6px; overflow: hidden">
         <thead>
           <tr style="background: #eaf6ff">
@@ -419,6 +419,12 @@
           <button type="button" @click="cancelEdit" v-if="isEditing" class="cancel-btn action-button">Hủy</button>
         </div>
       </form>
+    </div>
+
+    <!-- Loading indicator -->
+    <div v-if="unitStore.isLoading" style="text-align: center; padding: 40px; color: #666;">
+      <div style="font-size: 18px; margin-bottom: 10px;">🔄 Đang tải dữ liệu đơn vị...</div>
+      <div style="color: #999;">Vui lòng đợi trong giây lát</div>
     </div>
 
     <!-- XÓA form-container cũ ở dưới cùng (ẩn form nhập đơn vị cũ) -->
@@ -629,7 +635,7 @@ function loadUnits() {
 
 // Load data khi component được mount
 onMounted(() => {
-  console.log('UnitsView mounted, current units count:', unitStore.allUnits.length)
+  console.log('UnitsView mounted')
   console.log('Is loading:', unitStore.isLoading)
   console.log('Error:', unitStore.error)
 
