@@ -47,6 +47,9 @@ namespace TinhKhoanApp.Api.Extensions
             // services.AddScoped<IEI01DataService, EI01DataService>();
             services.AddScoped<ILN01Service, LN01Service>();
 
+            // Register KPI assignment services - Fix cho Menu B3
+            services.AddScoped<IEmployeeKpiAssignmentService, EmployeeKpiAssignmentService>();
+
             // TODO: Add other services as needed
 
             return services;
