@@ -11,7 +11,7 @@ namespace TinhKhoanApp.Api.Services.Interfaces
     public interface IGL41Service
     {
         // Preview operations
-        Task<ApiResponse<PagedResult<DPDAPreviewDto>>> GetPreviewAsync(int page = 1, int pageSize = 10, string? branchCode = null);
+        Task<ApiResponse<PagedResult<GL41PreviewDto>>> GetPreviewAsync(int page = 1, int pageSize = 10, string? branchCode = null);
 
         // CRUD operations
         Task<ApiResponse<GL41DetailsDto>> GetByIdAsync(long id);

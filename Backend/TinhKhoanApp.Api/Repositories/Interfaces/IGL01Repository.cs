@@ -18,8 +18,8 @@ namespace TinhKhoanApp.Api.Repositories.Interfaces
         Task<ApiResponse<bool>> DeleteAsync(long id);
 
         // === PAGINATION & SEARCH ===
-        Task<ApiResponse<PagedResult<EI01PreviewDto>>> GetPagedAsync(int pageNumber, int pageSize);
-        Task<ApiResponse<PagedResult<EI01PreviewDto>>> SearchAsync(string searchTerm, int pageNumber, int pageSize);
+        Task<ApiResponse<PagedResult<GL01PreviewDto>>> GetPagedAsync(int pageNumber, int pageSize);
+        Task<ApiResponse<PagedResult<GL01PreviewDto>>> SearchAsync(string searchTerm, int pageNumber, int pageSize);
         Task<ApiResponse<IEnumerable<GL01PreviewDto>>> GetByBranchAsync(string branchCode);
         Task<ApiResponse<IEnumerable<GL01PreviewDto>>> GetByAccountAsync(string accountNumber);
 

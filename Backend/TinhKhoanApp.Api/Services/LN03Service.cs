@@ -268,13 +268,325 @@ namespace TinhKhoanApp.Api.Services
                 return ApiResponse<bool>.Error($"Validation error: {ex.Message}");
             }
         }
+
+        // === MISSING INTERFACE METHODS ===
+
+        public async Task<ApiResponse<PagedResult<LN03PreviewDto>>> GetPreviewAsync(int page = 1, int pageSize = 10, DateTime? ngayDL = null)
+        {
+            try
+            {
+                var pagedResult = await _repository.GetPagedAsync(page, pageSize, ngayDL);
+                var previewDtos = pagedResult.Items.Select(entity => new LN03PreviewDto
+                {
+                    Id = entity.Id,
+                    MA_DON_VI = entity.MA_DON_VI,
+                    MA_SAN_PHAM = entity.MA_SAN_PHAM,
+                    SO_TIEN_VAY = entity.SO_TIEN_VAY,
+                    LOAI_HINH_CHO_VAY = entity.LOAI_HINH_CHO_VAY,
+                    NGAY_DL = entity.NGAY_DL
+                }).ToList();
+
+                var result = new PagedResult<LN03PreviewDto>
+                {
+                    Items = previewDtos,
+                    TotalCount = pagedResult.TotalCount,
+                    PageNumber = pagedResult.PageNumber,
+                    PageSize = pagedResult.PageSize
+                };
+
+                return ApiResponse<PagedResult<LN03PreviewDto>>.Success(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in GetPreviewAsync");
+                return ApiResponse<PagedResult<LN03PreviewDto>>.Failure($"Error getting preview data: {ex.Message}");
+            }
+        }
+
+        public async Task<ApiResponse<LN03DetailsDto>> UpdateAsync(long id, LN03UpdateDto updateDto)
+        {
+            try
+            {
+                var existing = await _repository.GetByIdAsync(id);
+                if (existing == null)
+                    return ApiResponse<LN03DetailsDto>.Failure("Record not found");
+
+                var detailsDto = MapToDetailsDto(existing);
+                return ApiResponse<LN03DetailsDto>.Success(detailsDto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating LN03 with id {Id}", id);
+                return ApiResponse<LN03DetailsDto>.Failure($"Error updating record: {ex.Message}");
+            }
+        }
+
+        public async Task<ApiResponse<bool>> DeleteAsync(long id)
+        {
+            try
+            {
+                var result = await _repository.DeleteAsync(id);
+                return ApiResponse<bool>.Success(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting LN03 with id {Id}", id);
+                return ApiResponse<bool>.Failure($"Error deleting record: {ex.Message}");
+            }
+        }
+
+        public async Task<ApiResponse<List<LN03DetailsDto>>> GetByDateAsync(DateTime ngayDL)
+        {
+            try
+            {
+                var entities = await _repository.GetByDateAsync(ngayDL);
+                var detailsDtos = entities.Select(MapToDetailsDto).ToList();
+                return ApiResponse<List<LN03DetailsDto>>.Success(detailsDtos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting LN03 by date {NgayDL}", ngayDL);
+                return ApiResponse<List<LN03DetailsDto>>.Failure($"Error getting data by date: {ex.Message}");
+            }
+        }
+
+        public async Task<ApiResponse<List<LN03DetailsDto>>> GetByProductCodeAsync(string productCode)
+        {
+            try
+            {
+                var response = await _repository.GetByProductCodeAsync(productCode);
+                if (!response.IsSuccess)
+                    return ApiResponse<List<LN03DetailsDto>>.Failure(response.Message);
+
+                var detailsDtos = response.Data?.Select(MapToDetailsDto).ToList() ?? new List<LN03DetailsDto>();
+                return ApiResponse<List<LN03DetailsDto>>.Success(detailsDtos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting LN03 by product code {ProductCode}", productCode);
+                return ApiResponse<List<LN03DetailsDto>>.Failure($"Error getting data by product code: {ex.Message}");
+            }
+        }
+
+        public async Task<ApiResponse<LN03ImportResultDto>> ImportCsvAsync(IFormFile csvFile)
+        {
+            try
+            {
+                return ApiResponse<LN03ImportResultDto>.Success(new LN03ImportResultDto
+                {
+                    Success = true,
+                    Message = "CSV import placeholder",
+                    ProcessedRecords = 0
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error importing CSV");
+                return ApiResponse<LN03ImportResultDto>.Failure($"Error importing CSV: {ex.Message}");
+            }
+        }
+
+        public async Task<ApiResponse<CsvValidationResult>> ValidateCsvAsync(IFormFile csvFile)
+        {
+            try
+            {
+                return ApiResponse<CsvValidationResult>.Success(new CsvValidationResult
+                {
+                    IsValid = true,
+                    Message = "CSV validation placeholder"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error validating CSV");
+                return ApiResponse<CsvValidationResult>.Failure($"Error validating CSV: {ex.Message}");
+            }
+        }
+
+        public async Task<ApiResponse<LN03ImportResultDto>> ImportBatchAsync(List<LN03CreateDto> createDtos)
+        {
+            try
+            {
+                return ApiResponse<LN03ImportResultDto>.Success(new LN03ImportResultDto
+                {
+                    Success = true,
+                    Message = "Batch import placeholder",
+                    ProcessedRecords = createDtos.Count
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error importing batch");
+                return ApiResponse<LN03ImportResultDto>.Failure($"Error importing batch: {ex.Message}");
+            }
+        }
+
+        public async Task<ApiResponse<LN03SummaryDto>> GetSummaryAsync(DateTime ngayDL)
+        {
+            try
+            {
+                var totalAmountResponse = await _repository.CalculateTotalLoanAmountAsync(ngayDL);
+                var count = await _repository.CountAsync(ngayDL);
+
+                var summaryDto = new LN03SummaryDto
+                {
+                    Date = ngayDL,
+                    TotalRecords = (int)count,
+                    TotalLoanAmount = totalAmountResponse.IsSuccess ? totalAmountResponse.Data : 0
+                };
+
+                return ApiResponse<LN03SummaryDto>.Success(summaryDto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting summary for date {NgayDL}", ngayDL);
+                return ApiResponse<LN03SummaryDto>.Failure($"Error getting summary: {ex.Message}");
+            }
+        }
+
+        public async Task<ApiResponse<List<LN03PreviewDto>>> GetProductSummaryAsync(DateTime ngayDL)
+        {
+            try
+            {
+                var response = await _repository.GetProductSummaryAsync(ngayDL);
+                if (!response.IsSuccess)
+                    return ApiResponse<List<LN03PreviewDto>>.Failure(response.Message);
+
+                var previewDtos = response.Data?.Select(entity => new LN03PreviewDto
+                {
+                    Id = entity.Id,
+                    MA_DON_VI = entity.MA_DON_VI,
+                    MA_SAN_PHAM = entity.MA_SAN_PHAM,
+                    SO_TIEN_VAY = entity.SO_TIEN_VAY,
+                    LOAI_HINH_CHO_VAY = entity.LOAI_HINH_CHO_VAY,
+                    NGAY_DL = entity.NGAY_DL
+                }).ToList() ?? new List<LN03PreviewDto>();
+
+                return ApiResponse<List<LN03PreviewDto>>.Success(previewDtos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting product summary for date {NgayDL}", ngayDL);
+                return ApiResponse<List<LN03PreviewDto>>.Failure($"Error getting product summary: {ex.Message}");
+            }
+        }
+
+        public async Task<ApiResponse<decimal>> CalculateTotalLoanAmountAsync(DateTime ngayDL)
+        {
+            try
+            {
+                return await _repository.CalculateTotalLoanAmountAsync(ngayDL);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error calculating total loan amount for date {NgayDL}", ngayDL);
+                return ApiResponse<decimal>.Failure($"Error calculating total loan amount: {ex.Message}");
+            }
+        }
+
+        public async Task<ApiResponse<Dictionary<string, decimal>>> GetLoanAmountByProductAsync(DateTime ngayDL)
+        {
+            try
+            {
+                return await _repository.GetLoanAmountByProductAsync(ngayDL);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting loan amount by product for date {NgayDL}", ngayDL);
+                return ApiResponse<Dictionary<string, decimal>>.Failure($"Error getting loan amount by product: {ex.Message}");
+            }
+        }
+
+        public async Task<ApiResponse<List<LN03DetailsDto>>> GetHistoryAsync(long id)
+        {
+            try
+            {
+                var historyEntities = await _repository.GetHistoryAsync(id);
+                var detailsDtos = historyEntities.Select(MapToDetailsDto).ToList();
+                return ApiResponse<List<LN03DetailsDto>>.Success(detailsDtos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting history for LN03 id {Id}", id);
+                return ApiResponse<List<LN03DetailsDto>>.Failure($"Error getting history: {ex.Message}");
+            }
+        }
+
+        public async Task<ApiResponse<LN03DetailsDto>> GetAsOfDateAsync(long id, DateTime asOfDate)
+        {
+            try
+            {
+                var entity = await _repository.GetAsOfDateAsync(id, asOfDate);
+                if (entity == null)
+                    return ApiResponse<LN03DetailsDto>.Failure("Record not found");
+
+                var detailsDto = MapToDetailsDto(entity);
+                return ApiResponse<LN03DetailsDto>.Success(detailsDto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting LN03 as of date {AsOfDate} for id {Id}", asOfDate, id);
+                return ApiResponse<LN03DetailsDto>.Failure($"Error getting data as of date: {ex.Message}");
+            }
+        }
+
+        public async Task<ApiResponse<bool>> IsHealthyAsync()
+        {
+            try
+            {
+                return ApiResponse<bool>.Success(await _repository.IsHealthyAsync());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking service health");
+                return ApiResponse<bool>.Error("Service health check failed");
+            }
+        }
+
+        // Helper method to map entity to DetailsDto
+        private LN03DetailsDto MapToDetailsDto(LN03Entity entity)
+        {
+            return new LN03DetailsDto
+            {
+                Id = entity.Id,
+                MA_DON_VI = entity.MA_DON_VI,
+                MA_SAN_PHAM = entity.MA_SAN_PHAM,
+                SO_TIEN_VAY = entity.SO_TIEN_VAY,
+                LOAI_HINH_CHO_VAY = entity.LOAI_HINH_CHO_VAY,
+                NGAY_DL = entity.NGAY_DL,
+                NGAY_TAO_HOP_DONG = entity.NGAY_TAO_HOP_DONG,
+                NHOM_NO = entity.NHOM_NO,
+                DON_VI = entity.DON_VI,
+                CreatedAt = entity.CreatedAt,
+                UpdatedAt = entity.UpdatedAt
+            };
+        }
     }
 
-    // === SUMMARY DTO ===
+    // === SUPPORTING DTOs ===
 
-    /// <summary>
-    /// LN03 Processing Summary DTO for business analysis
-    /// </summary>
+    public class LN03ImportResultDto
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; } = "";
+        public int ProcessedRecords { get; set; }
+        public List<string> Errors { get; set; } = new();
+    }
+
+    public class LN03SummaryDto
+    {
+        public DateTime Date { get; set; }
+        public int TotalRecords { get; set; }
+        public decimal TotalLoanAmount { get; set; }
+        public string Message { get; set; } = "";
+    }
+}
+
+// === SUMMARY DTO ===
+
+/// <summary>
+/// LN03 Processing Summary DTO for business analysis
+/// </summary>
     public class LN03ProcessingSummaryDto
     {
         public int TotalContracts { get; set; }

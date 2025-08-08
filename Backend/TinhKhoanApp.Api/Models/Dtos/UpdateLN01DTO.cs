@@ -167,7 +167,7 @@ namespace TinhKhoanApp.Api.Models.DTOs
         /// <summary>
         /// Cập nhật entity từ DTO (chỉ cập nhật các trường không null)
         /// </summary>
-        public void UpdateEntity(LN01 entity)
+        public void UpdateEntity(Models.DataTables.LN01 entity)
         {
             if (entity == null) return;
 

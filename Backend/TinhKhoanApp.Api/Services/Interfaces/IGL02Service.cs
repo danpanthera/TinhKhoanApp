@@ -11,7 +11,7 @@ namespace TinhKhoanApp.Api.Services.Interfaces
     public interface IGL02Service
     {
         // Preview operations
-        Task<ApiResponse<PagedResult<DPDAPreviewDto>>> GetPreviewAsync(int page = 1, int pageSize = 10, DateTime? trDate = null);
+        Task<ApiResponse<PagedResult<GL02PreviewDto>>> GetPreviewAsync(int page = 1, int pageSize = 10, DateTime? trDate = null);
 
         // CRUD operations
         Task<ApiResponse<GL02DetailsDto>> GetByIdAsync(long id);

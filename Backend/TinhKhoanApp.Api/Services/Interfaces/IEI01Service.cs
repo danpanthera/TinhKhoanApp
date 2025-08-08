@@ -11,7 +11,7 @@ namespace TinhKhoanApp.Api.Services.Interfaces
     public interface IEI01Service
     {
         // Preview operations
-        Task<ApiResponse<PagedResult<DPDAPreviewDto>>> GetPreviewAsync(int page = 1, int pageSize = 10, string? branchCode = null);
+        Task<ApiResponse<PagedResult<EI01PreviewDto>>> GetPreviewAsync(int page = 1, int pageSize = 10, string? branchCode = null);
 
         // CRUD operations
         Task<ApiResponse<EI01DetailsDto>> GetByIdAsync(long id);
