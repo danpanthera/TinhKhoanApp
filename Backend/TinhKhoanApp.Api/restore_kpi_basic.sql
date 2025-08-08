@@ -13,7 +13,7 @@ INSERT INTO KpiAssignmentTables (TableType, TableName, Description, Category, Is
 (1, 'PhophongKhcn', N'KPI Phó phòng Khách hàng Cá nhân', 'CANBO', 1, GETDATE()),
 (1, 'Cbtd', N'KPI Cán bộ Tín dụng', 'CANBO', 1, GETDATE()),
 
--- First 3 CHINHANH tables  
+-- First 3 CHINHANH tables
 (2, 'HoiSo', N'KPI Hội Sở', 'CHINHANH', 1, GETDATE()),
 (2, 'BinhLu', N'KPI Chi nhánh Bình Lư', 'CHINHANH', 1, GETDATE()),
 (2, 'PhongTho', N'KPI Chi nhánh Phong Thổ', 'CHINHANH', 1, GETDATE());
@@ -26,7 +26,7 @@ INSERT INTO KpiIndicators (TableId, IndicatorName, MaxScore, Unit, OrderIndex, V
 (1, N'Huy động vốn', 100, N'Tỷ đồng', 3, 2, 1),
 (1, N'Chất lượng tín dụng', 100, N'%', 4, 1, 1);
 
--- HoiSo indicators (TableId = 6)  
+-- HoiSo indicators (TableId = 6)
 INSERT INTO KpiIndicators (TableId, IndicatorName, MaxScore, Unit, OrderIndex, ValueType, IsActive) VALUES
 (6, N'Tăng trưởng tín dụng', 100, N'%', 1, 1, 1),
 (6, N'Huy động vốn', 100, N'%', 2, 1, 1),
