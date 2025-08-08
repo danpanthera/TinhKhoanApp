@@ -60,7 +60,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
         /// <summary>
         /// Tìm kiếm DPDA theo nhiều tiêu chí
         /// </summary>
-        Task<ApiResponse<PagedResult<DPDAPreviewDto> SearchDPDAAsync(
+        Task<ApiResponse<PagedResult<DPDAPreviewDto>>> SearchDPDAAsync(
             string? keyword,
             string? branchCode,
             string? customerCode,

@@ -40,7 +40,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
         /// <summary>
         /// Tìm kiếm DP01 theo nhiều tiêu chí
         /// </summary>
-        Task<ApiResponse<PagedResult<DP01PreviewDto> SearchDP01Async(
+        Task<ApiResponse<PagedResult<DP01PreviewDto>>> SearchDP01Async(
             string? keyword,
             string? branchCode,
             string? customerCode,

@@ -18,8 +18,8 @@ namespace TinhKhoanApp.Api.Services.Interfaces
         Task<ApiResponse<LN01DetailsDto>> CreateAsync(LN01CreateDto createDto);
         Task<ApiResponse<LN01DetailsDto>> UpdateAsync(long id, LN01UpdateDto updateDto);
         Task<ApiResponse<bool>> DeleteAsync(long id);
-        Task<ApiResponse<List<LN01DetailsDto> GetByDateAsync(DateTime ngayDL);
-        Task<ApiResponse<List<LN01DetailsDto> GetByLoanNumberAsync(string loanNumber);
+        Task<ApiResponse<List<LN01DetailsDto>>> GetByDateAsync(DateTime ngayDL);
+        Task<ApiResponse<List<LN01DetailsDto>>> GetByLoanNumberAsync(string loanNumber);
 
         // Import operations
         Task<ApiResponse<LN01ImportResultDto>> ImportCsvAsync(IFormFile csvFile);
@@ -28,12 +28,12 @@ namespace TinhKhoanApp.Api.Services.Interfaces
 
         // Business logic operations
         Task<ApiResponse<LN01SummaryDto>> GetSummaryAsync(DateTime ngayDL);
-        Task<ApiResponse<List<LN01PreviewDto> GetLoanPortfolioAsync(DateTime ngayDL);
+        Task<ApiResponse<List<LN01PreviewDto>>> GetLoanPortfolioAsync(DateTime ngayDL);
         Task<ApiResponse<decimal>> CalculateTotalOutstandingAsync(DateTime ngayDL);
         Task<ApiResponse<decimal>> CalculateOverdueAmountAsync(DateTime ngayDL);
 
         // Temporal operations
-        Task<ApiResponse<List<LN01DetailsDto> GetHistoryAsync(long id);
+        Task<ApiResponse<List<LN01DetailsDto>>> GetHistoryAsync(long id);
         Task<ApiResponse<LN01DetailsDto>> GetAsOfDateAsync(long id, DateTime asOfDate);
 
         // System operations

@@ -18,8 +18,8 @@ namespace TinhKhoanApp.Api.Services.Interfaces
         Task<ApiResponse<GL02DetailsDto>> CreateAsync(GL02CreateDto createDto);
         Task<ApiResponse<GL02DetailsDto>> UpdateAsync(long id, GL02UpdateDto updateDto);
         Task<ApiResponse<bool>> DeleteAsync(long id);
-        Task<ApiResponse<List<GL02DetailsDto> GetByDateAsync(DateTime trDate);
-        Task<ApiResponse<List<GL02DetailsDto> GetByAccountAsync(string accountCode);
+        Task<ApiResponse<List<GL02DetailsDto>>> GetByDateAsync(DateTime trDate);
+        Task<ApiResponse<List<GL02DetailsDto>>> GetByAccountAsync(string accountCode);
 
         // Import operations
         Task<ApiResponse<GL02ImportResultDto>> ImportCsvAsync(IFormFile csvFile);
@@ -28,13 +28,13 @@ namespace TinhKhoanApp.Api.Services.Interfaces
 
         // Business logic operations
         Task<ApiResponse<GL02SummaryDto>> GetSummaryAsync(DateTime trDate);
-        Task<ApiResponse<List<GL02PreviewDto> GetTransactionsByBranchAsync(string branchCode, DateTime trDate);
+        Task<ApiResponse<List<GL02PreviewDto>>> GetTransactionsByBranchAsync(string branchCode, DateTime trDate);
         Task<ApiResponse<decimal>> GetTotalDebitAmountAsync(DateTime trDate);
         Task<ApiResponse<decimal>> GetTotalCreditAmountAsync(DateTime trDate);
-        Task<ApiResponse<Dictionary<string, decimal> GetBalanceByAccountAsync(DateTime trDate);
+        Task<ApiResponse<Dictionary<string, decimal>>> GetBalanceByAccountAsync(DateTime trDate);
 
         // Temporal operations
-        Task<ApiResponse<List<GL02DetailsDto> GetHistoryAsync(long id);
+        Task<ApiResponse<List<GL02DetailsDto>>> GetHistoryAsync(long id);
         Task<ApiResponse<GL02DetailsDto>> GetAsOfDateAsync(long id, DateTime asOfDate);
 
         // System operations

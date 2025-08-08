@@ -18,8 +18,8 @@ namespace TinhKhoanApp.Api.Services.Interfaces
         Task<ApiResponse<GL41DetailsDto>> CreateAsync(GL41CreateDto createDto);
         Task<ApiResponse<GL41DetailsDto>> UpdateAsync(long id, GL41UpdateDto updateDto);
         Task<ApiResponse<bool>> DeleteAsync(long id);
-        Task<ApiResponse<List<GL41DetailsDto> GetByBranchAsync(string branchCode);
-        Task<ApiResponse<List<GL41DetailsDto> GetByAccountAsync(string accountCode);
+        Task<ApiResponse<List<GL41DetailsDto>>> GetByBranchAsync(string branchCode);
+        Task<ApiResponse<List<GL41DetailsDto>>> GetByAccountAsync(string accountCode);
 
         // Import operations
         Task<ApiResponse<GL41ImportResultDto>> ImportCsvAsync(IFormFile csvFile);
@@ -28,13 +28,13 @@ namespace TinhKhoanApp.Api.Services.Interfaces
 
         // Business logic operations
         Task<ApiResponse<GL41SummaryDto>> GetSummaryAsync();
-        Task<ApiResponse<List<GL41PreviewDto> GetBalancesByBranchAsync(string branchCode);
+        Task<ApiResponse<List<GL41PreviewDto>>> GetBalancesByBranchAsync(string branchCode);
         Task<ApiResponse<decimal>> GetTotalOpeningBalanceAsync();
         Task<ApiResponse<decimal>> GetTotalClosingBalanceAsync();
-        Task<ApiResponse<Dictionary<string, decimal> GetBalanceByAccountTypeAsync();
+        Task<ApiResponse<Dictionary<string, decimal>>> GetBalanceByAccountTypeAsync();
 
         // Temporal operations
-        Task<ApiResponse<List<GL41DetailsDto> GetHistoryAsync(long id);
+        Task<ApiResponse<List<GL41DetailsDto>>> GetHistoryAsync(long id);
         Task<ApiResponse<GL41DetailsDto>> GetAsOfDateAsync(long id, DateTime asOfDate);
 
         // System operations

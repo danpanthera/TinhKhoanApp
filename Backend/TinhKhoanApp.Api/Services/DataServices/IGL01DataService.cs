@@ -45,7 +45,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
         /// <summary>
         /// Tìm kiếm GL01 theo nhiều tiêu chí
         /// </summary>
-        Task<ApiResponse<PagedResult<GL01PreviewDto> SearchGL01Async(
+        Task<ApiResponse<PagedResult<GL01PreviewDto>>> SearchGL01Async(
             string? keyword,
             string? unitCode,
             string? accountCode,

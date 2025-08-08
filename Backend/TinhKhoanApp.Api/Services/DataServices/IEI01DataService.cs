@@ -69,7 +69,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
         /// <summary>
         /// Tìm kiếm EI01 theo nhiều tiêu chí
         /// </summary>
-        Task<ApiResponse<PagedResult<EI01PreviewDto> SearchEI01Async(
+        Task<ApiResponse<PagedResult<EI01PreviewDto>>> SearchEI01Async(
             string? keyword,
             string? branchCode,
             string? customerCode,

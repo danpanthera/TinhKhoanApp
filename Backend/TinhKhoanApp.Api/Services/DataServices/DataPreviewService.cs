@@ -95,7 +95,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
             }
         }
 
-        public async Task<ApiResponse<PagedResult<DP01PreviewDto>>>> SearchDP01Async(
+        public async Task<ApiResponse<PagedResult<DP01PreviewDto>>> SearchDP01Async(
             string? keyword,
             string? branchCode,
             DateTime? fromDate,

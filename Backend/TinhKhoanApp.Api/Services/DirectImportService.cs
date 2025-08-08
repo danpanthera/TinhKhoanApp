@@ -4106,7 +4106,7 @@ namespace TinhKhoanApp.Api.Services
         /// <summary>
         /// Đọc file thành chunks để xử lý parallel
         /// </summary>
-        private async Task<List<List<string[]> ReadFileIntoChunksAsync(Stream fileStream, int chunkSize)
+        private async Task<List<List<string[]>>> ReadFileIntoChunksAsync(Stream fileStream, int chunkSize)
         {
             var chunks = new List<List<string[]>>();
 

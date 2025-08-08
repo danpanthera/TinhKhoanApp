@@ -18,7 +18,7 @@ namespace TinhKhoanApp.Api.Services.Interfaces
         Task<ApiResponse<RR01DetailsDto>> CreateAsync(RR01CreateDto createDto);
         Task<ApiResponse<RR01DetailsDto>> UpdateAsync(long id, RR01UpdateDto updateDto);
         Task<ApiResponse<bool>> DeleteAsync(long id);
-        Task<ApiResponse<List<RR01DetailsDto> GetByDateAsync(DateTime ngayDL);
+        Task<ApiResponse<List<RR01DetailsDto>>> GetByDateAsync(DateTime ngayDL);
 
         // Import operations
         Task<ApiResponse<RR01ImportResultDto>> ImportCsvAsync(IFormFile csvFile);
@@ -27,11 +27,11 @@ namespace TinhKhoanApp.Api.Services.Interfaces
 
         // Business logic operations
         Task<ApiResponse<RR01SummaryDto>> GetSummaryAsync(DateTime ngayDL);
-        Task<ApiResponse<List<RR01PreviewDto> GetRiskSummaryAsync(DateTime fromDate, DateTime toDate);
+        Task<ApiResponse<List<RR01PreviewDto>>> GetRiskSummaryAsync(DateTime fromDate, DateTime toDate);
         Task<ApiResponse<decimal>> CalculateTotalRiskExposureAsync(DateTime ngayDL);
 
         // Temporal operations
-        Task<ApiResponse<List<RR01DetailsDto> GetHistoryAsync(long id);
+        Task<ApiResponse<List<RR01DetailsDto>>> GetHistoryAsync(long id);
         Task<ApiResponse<RR01DetailsDto>> GetAsOfDateAsync(long id, DateTime asOfDate);
 
         // System operations

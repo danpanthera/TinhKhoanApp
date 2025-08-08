@@ -126,7 +126,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
             }
         }
 
-        public async Task<ApiResponse<PagedResult<GL41PreviewDto> SearchGL41Async(
+        public async Task<ApiResponse<PagedResult<GL41PreviewDto>>> SearchGL41Async(
             string? keyword,
             string? unitCode,
             string? accountCode,
