@@ -1,4 +1,6 @@
 using TinhKhoanApp.Api.Models.DTOs;
+using TinhKhoanApp.Api.Models.DTOs.GL02;
+using TinhKhoanApp.Api.Models.Common;
 
 namespace TinhKhoanApp.Api.Services.DataServices
 {
@@ -15,7 +17,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
         /// <summary>
         /// Lấy chi tiết bản ghi GL02
         /// </summary>
-        Task<GL02DetailDto?> GetGL02DetailAsync(long id);
+        Task<GL02DetailsDto?> GetGL02DetailAsync(long id);
 
         /// <summary>
         /// Lấy dữ liệu GL02 theo ngày

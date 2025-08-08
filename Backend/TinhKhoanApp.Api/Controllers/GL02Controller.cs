@@ -2,6 +2,7 @@ using TinhKhoanApp.Api.Models.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TinhKhoanApp.Api.Models.DTOs;
+using TinhKhoanApp.Api.Models.DTOs.GL02;
 using TinhKhoanApp.Api.Services.DataServices;
 
 namespace TinhKhoanApp.Api.Controllers
@@ -44,7 +45,7 @@ namespace TinhKhoanApp.Api.Controllers
         /// Lấy chi tiết bản ghi GL02 theo ID
         /// </summary>
         [HttpGet("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GL02DetailDto))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GL02DetailsDto))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetGL02Detail(long id)

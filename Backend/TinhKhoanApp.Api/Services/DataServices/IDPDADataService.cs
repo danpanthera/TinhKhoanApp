@@ -1,4 +1,8 @@
+using TinhKhoanApp.Api.Models.DTOs.DPDA;
+using TinhKhoanApp.Api.Models.Common;
 using TinhKhoanApp.Api.Models.DTOs;
+using TinhKhoanApp.Api.Models.DTOs.DPDA;
+using TinhKhoanApp.Api.Models.Common;
 
 namespace TinhKhoanApp.Api.Services.DataServices
 {
@@ -15,7 +19,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
         /// <summary>
         /// Lấy chi tiết bản ghi DPDA
         /// </summary>
-        Task<DPDADetailDto?> GetDPDADetailAsync(int id);
+        Task<DPDADetailsDto?> GetDPDADetailAsync(int id);
 
         /// <summary>
         /// Lấy dữ liệu DPDA theo ngày

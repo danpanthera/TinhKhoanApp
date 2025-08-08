@@ -1,4 +1,6 @@
 using TinhKhoanApp.Api.Models.DTOs;
+using TinhKhoanApp.Api.Models.DTOs.EI01;
+using TinhKhoanApp.Api.Models.Common;
 
 namespace TinhKhoanApp.Api.Services.DataServices
 {
@@ -15,7 +17,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
         /// <summary>
         /// Lấy chi tiết bản ghi EI01
         /// </summary>
-        Task<EI01DetailDto?> GetEI01DetailAsync(long id);
+        Task<EI01DetailsDto?> GetEI01DetailAsync(long id);
 
         /// <summary>
         /// Lấy dữ liệu EI01 theo ngày

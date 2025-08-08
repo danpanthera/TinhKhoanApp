@@ -1,4 +1,6 @@
 using TinhKhoanApp.Api.Models.DTOs;
+using TinhKhoanApp.Api.Models.DTOs.GL41;
+using TinhKhoanApp.Api.Models.Common;
 
 namespace TinhKhoanApp.Api.Services.DataServices
 {
@@ -15,7 +17,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
         /// <summary>
         /// Lấy chi tiết bản ghi GL41
         /// </summary>
-        Task<GL41DetailDto?> GetGL41DetailAsync(long id);
+        Task<GL41DetailsDto?> GetGL41DetailAsync(long id);
 
         /// <summary>
         /// Lấy dữ liệu GL41 theo chi nhánh

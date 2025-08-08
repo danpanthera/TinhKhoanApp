@@ -1,6 +1,7 @@
 using TinhKhoanApp.Api.Models.Common;
 using Microsoft.AspNetCore.Mvc;
 using TinhKhoanApp.Api.Models.DTOs;
+using TinhKhoanApp.Api.Models.DTOs.DP01;
 using TinhKhoanApp.Api.Services.DataServices;
 
 namespace TinhKhoanApp.Api.Controllers
@@ -51,7 +52,7 @@ namespace TinhKhoanApp.Api.Controllers
         /// Lấy chi tiết một bản ghi DP01
         /// </summary>
         [HttpGet("{id}")]
-        [ProducesResponseType(typeof(ApiResponse<DP01DetailDto>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<DP01DetailsDto>), 200)]
         [ProducesResponseType(typeof(ApiResponse<object>), 404)]
         [ProducesResponseType(typeof(ApiResponse<object>), 400)]
         public async Task<IActionResult> GetDP01Detail(long id)
@@ -63,7 +64,7 @@ namespace TinhKhoanApp.Api.Controllers
                 if (data == null)
                     return NotFound(ApiResponse<object>.Error($"DP01 record with ID {id} not found", "DP01_NOT_FOUND"));
 
-                return Ok(ApiResponse<DP01DetailDto>.Ok(data, "DP01 detail retrieved successfully"));
+                return Ok(ApiResponse<DP01DetailsDto>.Ok(data, "DP01 detail retrieved successfully"));
             }
             catch (Exception ex)
             {

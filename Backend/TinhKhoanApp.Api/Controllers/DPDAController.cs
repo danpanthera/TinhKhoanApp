@@ -1,6 +1,7 @@
 using TinhKhoanApp.Api.Models.Common;
 using Microsoft.AspNetCore.Mvc;
 using TinhKhoanApp.Api.Models.DTOs;
+using TinhKhoanApp.Api.Models.DTOs.DPDA;
 using TinhKhoanApp.Api.Services.DataServices;
 
 namespace TinhKhoanApp.Api.Controllers
@@ -47,7 +48,7 @@ namespace TinhKhoanApp.Api.Controllers
         /// Lấy chi tiết một bản ghi DPDA
         /// </summary>
         [HttpGet("{id}")]
-        [ProducesResponseType(typeof(ApiResponse<DPDADetailDto>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<DPDADetailsDto>), 200)]
         [ProducesResponseType(typeof(ApiResponse<object>), 404)]
         [ProducesResponseType(typeof(ApiResponse<object>), 400)]
         public async Task<IActionResult> GetDPDADetail(int id)
@@ -58,7 +59,7 @@ namespace TinhKhoanApp.Api.Controllers
                 if (data == null)
                     return NotFound(ApiResponse<object>.Error($"DPDA record with ID {id} not found", "DPDA_NOT_FOUND"));
 
-                return Ok(ApiResponse<DPDADetailDto>.Ok(data, "DPDA detail retrieved successfully"));
+                return Ok(ApiResponse<DPDADetailsDto>.Ok(data, "DPDA detail retrieved successfully"));
             }
             catch (Exception ex)
             {

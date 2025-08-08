@@ -2,6 +2,8 @@ using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Models.DataTables;
 using TinhKhoanApp.Api.Models.DTOs;
+using TinhKhoanApp.Api.Models.DTOs.DP01;
+using TinhKhoanApp.Api.Models.Common;
 using TinhKhoanApp.Api.Repositories;
 
 namespace TinhKhoanApp.Api.Services.DataServices
@@ -36,7 +38,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
             }
         }
 
-        public async Task<DP01DetailDto?> GetDP01DetailAsync(long id)
+        public async Task<DP01DetailsDto?> GetDP01DetailAsync(long id)
         {
             try
             {
@@ -44,7 +46,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
                 if (record == null)
                     return null;
 
-                return MapToDP01DetailDto(record);
+                return MapToDP01DetailsDto(record);
             }
             catch (Exception ex)
             {
@@ -213,7 +215,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
                 var dtos = MapToDP01PreviewDtos(pagedRecords);
 
                 // Create paged response
-                return ApiResponse<PagedResult<DP01PreviewDto>.Ok(
+                return ApiResponse < PagedResult<DP01PreviewDto>.Ok(
                     dtos,
                     page,
                     pageSize,
@@ -223,7 +225,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error searching DP01 data");
-                return ApiResponse<PagedResult<DP01PreviewDto>.Error(
+                return ApiResponse < PagedResult<DP01PreviewDto>.Error(
                     "Failed to search DP01 data",
                     "DP01_SEARCH_ERROR");
             }
@@ -256,9 +258,9 @@ namespace TinhKhoanApp.Api.Services.DataServices
             };
         }
 
-        private DP01DetailDto MapToDP01DetailDto(DP01 record)
+        private DP01DetailsDto MapToDP01DetailsDto(DP01 record)
         {
-            return new DP01DetailDto
+            return new DP01DetailsDto
             {
                 // Base properties from DP01PreviewDto
                 Id = record.Id,

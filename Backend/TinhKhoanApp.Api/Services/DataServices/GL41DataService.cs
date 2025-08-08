@@ -2,6 +2,8 @@ using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Models.DataTables;
 using TinhKhoanApp.Api.Models.DTOs;
+using TinhKhoanApp.Api.Models.DTOs.GL41;
+using TinhKhoanApp.Api.Models.Common;
 using TinhKhoanApp.Api.Repositories;
 
 namespace TinhKhoanApp.Api.Services.DataServices
@@ -36,7 +38,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
             }
         }
 
-        public async Task<GL41DetailDto?> GetGL41DetailAsync(long id)
+        public async Task<GL41DetailsDto?> GetGL41DetailAsync(long id)
         {
             try
             {
@@ -44,7 +46,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
                 if (record == null)
                     return null;
 
-                return MapToGL41DetailDto(record);
+                return MapToGL41DetailsDto(record);
             }
             catch (Exception ex)
             {
@@ -185,7 +187,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
                 var dtos = MapToGL41PreviewDtos(pagedRecords);
 
                 // Create paged response
-                return ApiResponse<PagedResult<GL41PreviewDto>.Ok(
+                return ApiResponse < PagedResult<GL41PreviewDto>.Ok(
                     dtos,
                     page,
                     pageSize,
@@ -195,7 +197,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error searching GL41 data");
-                return ApiResponse<PagedResult<GL41PreviewDto>.Error(
+                return ApiResponse < PagedResult<GL41PreviewDto>.Error(
                     "Failed to search GL41 data",
                     "GL41_SEARCH_ERROR");
             }
@@ -231,9 +233,9 @@ namespace TinhKhoanApp.Api.Services.DataServices
             };
         }
 
-        private GL41DetailDto MapToGL41DetailDto(GL41 record)
+        private GL41DetailsDto MapToGL41DetailsDto(GL41 record)
         {
-            return new GL41DetailDto
+            return new GL41DetailsDto
             {
                 // Base properties from GL41PreviewDto
                 ID = record.ID,

@@ -2,6 +2,7 @@ using TinhKhoanApp.Api.Models.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TinhKhoanApp.Api.Models.DTOs;
+using TinhKhoanApp.Api.Models.DTOs.EI01;
 using TinhKhoanApp.Api.Services.DataServices;
 
 namespace TinhKhoanApp.Api.Controllers
@@ -44,7 +45,7 @@ namespace TinhKhoanApp.Api.Controllers
         /// Lấy chi tiết bản ghi EI01 theo ID
         /// </summary>
         [HttpGet("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(EI01DetailDto))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(EI01DetailsDto))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetEI01Detail(long id)

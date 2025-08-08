@@ -1,6 +1,7 @@
 using TinhKhoanApp.Api.Models.Common;
 using Microsoft.AspNetCore.Mvc;
 using TinhKhoanApp.Api.Models.DTOs;
+using TinhKhoanApp.Api.Models.DTOs.GL41;
 using TinhKhoanApp.Api.Services.DataServices;
 
 namespace TinhKhoanApp.Api.Controllers
@@ -47,7 +48,7 @@ namespace TinhKhoanApp.Api.Controllers
         /// Lấy chi tiết một bản ghi GL41
         /// </summary>
         [HttpGet("{id}")]
-        [ProducesResponseType(typeof(ApiResponse<GL41DetailDto>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<GL41DetailsDto>), 200)]
         [ProducesResponseType(typeof(ApiResponse<object>), 404)]
         [ProducesResponseType(typeof(ApiResponse<object>), 400)]
         public async Task<IActionResult> GetGL41Detail(long id)
@@ -58,7 +59,7 @@ namespace TinhKhoanApp.Api.Controllers
                 if (data == null)
                     return NotFound(ApiResponse<object>.Error($"GL41 record with ID {id} not found", "GL41_NOT_FOUND"));
 
-                return Ok(ApiResponse<GL41DetailDto>.Ok(data, "GL41 detail retrieved successfully"));
+                return Ok(ApiResponse<GL41DetailsDto>.Ok(data, "GL41 detail retrieved successfully"));
             }
             catch (Exception ex)
             {

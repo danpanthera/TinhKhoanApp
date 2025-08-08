@@ -1,4 +1,6 @@
 using TinhKhoanApp.Api.Models.DTOs;
+using TinhKhoanApp.Api.Models.DTOs.DP01;
+using TinhKhoanApp.Api.Models.Common;
 
 namespace TinhKhoanApp.Api.Services.DataServices
 {
@@ -15,7 +17,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
         /// <summary>
         /// Lấy chi tiết bản ghi DP01
         /// </summary>
-        Task<DP01DetailDto?> GetDP01DetailAsync(int id);
+        Task<DP01DetailsDto?> GetDP01DetailAsync(int id);
 
         /// <summary>
         /// Lấy dữ liệu DP01 theo chi nhánh

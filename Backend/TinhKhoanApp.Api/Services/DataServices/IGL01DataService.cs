@@ -1,4 +1,8 @@
+using TinhKhoanApp.Api.Models.DTOs.GL01;
+using TinhKhoanApp.Api.Models.Common;
 using TinhKhoanApp.Api.Models.DTOs;
+using TinhKhoanApp.Api.Models.DTOs.GL01;
+using TinhKhoanApp.Api.Models.Common;
 
 namespace TinhKhoanApp.Api.Services.DataServices
 {
@@ -15,7 +19,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
         /// <summary>
         /// Lấy chi tiết bản ghi GL01
         /// </summary>
-        Task<GL01DetailDto?> GetGL01DetailAsync(long id);
+        Task<GL01DetailsDto?> GetGL01DetailAsync(long id);
 
         /// <summary>
         /// Lấy dữ liệu GL01 theo ngày
