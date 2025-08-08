@@ -70,7 +70,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
         /// <summary>
         /// Tìm kiếm GL02 theo nhiều tiêu chí
         /// </summary>
-        Task<PagedApiResponse<GL02PreviewDto>> SearchGL02Async(
+        Task<ApiResponse<PagedResult<GL02PreviewDto> SearchGL02Async(
             string? keyword,
             string? branchCode,
             string? unit,

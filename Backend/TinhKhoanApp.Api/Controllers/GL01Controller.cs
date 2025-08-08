@@ -1,3 +1,4 @@
+using TinhKhoanApp.Api.Models.Common;
 using Microsoft.AspNetCore.Mvc;
 using TinhKhoanApp.Api.Models.DTOs;
 using TinhKhoanApp.Api.Services.DataServices;
@@ -170,7 +171,7 @@ namespace TinhKhoanApp.Api.Controllers
         /// Tìm kiếm GL01 theo nhiều tiêu chí
         /// </summary>
         [HttpGet("search")]
-        [ProducesResponseType(typeof(ApiResponse<PagedApiResponse<GL01PreviewDto>>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<ApiResponse<PagedResult<GL01PreviewDto>>>), 200)]
         [ProducesResponseType(typeof(ApiResponse<object>), 400)]
         public async Task<IActionResult> SearchGL01(
             [FromQuery] string? keyword = null,
@@ -187,7 +188,7 @@ namespace TinhKhoanApp.Api.Controllers
                 var data = await _gl01DataService.SearchGL01Async(
                     keyword, unitCode, accountCode, transactionType, fromDate, toDate, page, pageSize);
 
-                return Ok(ApiResponse<PagedApiResponse<GL01PreviewDto>>.Ok(data, "GL01 search results retrieved successfully"));
+                return Ok(ApiResponse<ApiResponse<PagedResult<GL01PreviewDto>>>.Ok(data, "GL01 search results retrieved successfully"));
             }
             catch (Exception ex)
             {

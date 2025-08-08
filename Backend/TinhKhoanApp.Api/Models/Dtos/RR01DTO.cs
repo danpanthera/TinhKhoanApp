@@ -52,7 +52,7 @@ namespace TinhKhoanApp.Api.Models.DTOs
         /// <summary>
         /// Maps RR01 entity to RR01DTO
         /// </summary>
-        public static RR01DTO FromEntity(RR01 entity)
+        public static RR01DTO FromEntity(DataTables.RR01 entity)
         {
             return new RR01DTO
             {
@@ -106,10 +106,10 @@ namespace TinhKhoanApp.Api.Models.DTOs
         // Business fields with proper data types
         public string CN_LOAI_I { get; set; } = string.Empty;
         public string BRCD { get; set; } = string.Empty;
-        
+
         [Required]
         public string MA_KH { get; set; } = string.Empty;
-        
+
         public string TEN_KH { get; set; } = string.Empty;
         public decimal? SO_LDS { get; set; }
         public string CCY { get; set; } = string.Empty;
@@ -132,13 +132,13 @@ namespace TinhKhoanApp.Api.Models.DTOs
         public decimal? BDS { get; set; }
         public decimal? DS { get; set; }
         public decimal? TSK { get; set; }
-        
+
         /// <summary>
         /// Maps CreateRR01DTO to RR01 entity
         /// </summary>
-        public RR01 ToEntity()
+        public DataTables.RR01 ToEntity()
         {
-            return new RR01
+            return new DataTables.RR01
             {
                 NGAY_DL = NGAY_DL,
                 CN_LOAI_I = CN_LOAI_I,

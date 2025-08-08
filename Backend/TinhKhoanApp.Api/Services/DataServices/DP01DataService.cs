@@ -146,7 +146,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
             }
         }
 
-        public async Task<PagedApiResponse<DP01PreviewDto>> SearchDP01Async(
+        public async Task<ApiResponse<PagedResult<DP01PreviewDto> SearchDP01Async(
             string? keyword,
             string? branchCode,
             string? customerCode,
@@ -213,7 +213,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
                 var dtos = MapToDP01PreviewDtos(pagedRecords);
 
                 // Create paged response
-                return PagedApiResponse<DP01PreviewDto>.Ok(
+                return ApiResponse<PagedResult<DP01PreviewDto>.Ok(
                     dtos,
                     page,
                     pageSize,
@@ -223,7 +223,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error searching DP01 data");
-                return PagedApiResponse<DP01PreviewDto>.Error(
+                return ApiResponse<PagedResult<DP01PreviewDto>.Error(
                     "Failed to search DP01 data",
                     "DP01_SEARCH_ERROR");
             }

@@ -1,3 +1,4 @@
+using TinhKhoanApp.Api.Models.Common;
 using Microsoft.AspNetCore.Mvc;
 using TinhKhoanApp.Api.Models.DTOs;
 using TinhKhoanApp.Api.Services.DataServices;
@@ -230,7 +231,7 @@ namespace TinhKhoanApp.Api.Controllers
         /// Tìm kiếm DPDA theo nhiều tiêu chí
         /// </summary>
         [HttpGet("search")]
-        [ProducesResponseType(typeof(ApiResponse<PagedApiResponse<DPDAPreviewDto>>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<ApiResponse<PagedResult<DPDAPreviewDto>>>), 200)]
         [ProducesResponseType(typeof(ApiResponse<object>), 400)]
         public async Task<IActionResult> SearchDPDA(
             [FromQuery] string? keyword = null,
@@ -249,7 +250,7 @@ namespace TinhKhoanApp.Api.Controllers
                 var data = await _dpdaDataService.SearchDPDAAsync(
                     keyword, branchCode, customerCode, accountNumber, cardNumber, status, fromDate, toDate, page, pageSize);
 
-                return Ok(ApiResponse<PagedApiResponse<DPDAPreviewDto>>.Ok(data, "DPDA search results retrieved successfully"));
+                return Ok(ApiResponse<ApiResponse<PagedResult<DPDAPreviewDto>>>.Ok(data, "DPDA search results retrieved successfully"));
             }
             catch (Exception ex)
             {

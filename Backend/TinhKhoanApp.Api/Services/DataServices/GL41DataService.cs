@@ -126,7 +126,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
             }
         }
 
-        public async Task<PagedApiResponse<GL41PreviewDto>> SearchGL41Async(
+        public async Task<ApiResponse<PagedResult<GL41PreviewDto> SearchGL41Async(
             string? keyword,
             string? unitCode,
             string? accountCode,
@@ -185,7 +185,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
                 var dtos = MapToGL41PreviewDtos(pagedRecords);
 
                 // Create paged response
-                return PagedApiResponse<GL41PreviewDto>.Ok(
+                return ApiResponse<PagedResult<GL41PreviewDto>.Ok(
                     dtos,
                     page,
                     pageSize,
@@ -195,7 +195,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error searching GL41 data");
-                return PagedApiResponse<GL41PreviewDto>.Error(
+                return ApiResponse<PagedResult<GL41PreviewDto>.Error(
                     "Failed to search GL41 data",
                     "GL41_SEARCH_ERROR");
             }

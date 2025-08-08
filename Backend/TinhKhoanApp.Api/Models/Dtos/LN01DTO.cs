@@ -182,12 +182,12 @@ namespace TinhKhoanApp.Api.Models.DTOs
         /// <summary>
         /// Map từ entity sang DTO
         /// </summary>
-        public static LN01DTO FromEntity(LN01 entity)
+        public static LN01DTO FromEntity(DataTables.LN01 entity)
         {
             if (entity == null)
                 return null;
 
-            return new LN01DTO
+            return new DataTables.LN01DTO
             {
                 Id = entity.Id,
                 NgayDL = entity.NGAY_DL,
@@ -229,9 +229,9 @@ namespace TinhKhoanApp.Api.Models.DTOs
         /// <summary>
         /// Tạo entity từ DTO
         /// </summary>
-        public LN01 ToEntity()
+        public DataTables.LN01 ToEntity()
         {
-            return new LN01
+            return new DataTables.LN01
             {
                 Id = this.Id,
                 NGAY_DL = this.NgayDL,

@@ -1,3 +1,4 @@
+using TinhKhoanApp.Api.Models.Common;
 using Microsoft.AspNetCore.Mvc;
 
 namespace TinhKhoanApp.Api.Controllers

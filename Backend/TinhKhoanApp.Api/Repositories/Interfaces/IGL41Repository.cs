@@ -1,3 +1,4 @@
+using TinhKhoanApp.Api.Models.Common;
 using TinhKhoanApp.Api.Models.DTOs;
 using TinhKhoanApp.Api.Models.DTOs.GL41;
 
@@ -17,8 +18,8 @@ namespace TinhKhoanApp.Api.Repositories.Interfaces
         Task<ApiResponse<bool>> DeleteAsync(long id);
 
         // === PAGINATION & SEARCH ===
-        Task<ApiResponse<PagedResult>GL41PreviewDto>>>> GetPagedAsync(int pageNumber, int pageSize);
-        Task<ApiResponse<PagedResult>GL41PreviewDto>>>> SearchAsync(string searchTerm, int pageNumber, int pageSize);
+        Task<ApiResponse<PagedResult<EI01PreviewDto>>> GetPagedAsync(int pageNumber, int pageSize);
+        Task<ApiResponse<PagedResult<EI01PreviewDto>>> SearchAsync(string searchTerm, int pageNumber, int pageSize);
         Task<ApiResponse<IEnumerable<GL41PreviewDto>>> GetByBranchAsync(string branchCode);
         Task<ApiResponse<IEnumerable<GL41PreviewDto>>> GetByAccountAsync(string accountNumber);
 

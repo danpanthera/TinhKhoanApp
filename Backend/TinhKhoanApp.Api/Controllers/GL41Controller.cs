@@ -1,3 +1,4 @@
+using TinhKhoanApp.Api.Models.Common;
 using Microsoft.AspNetCore.Mvc;
 using TinhKhoanApp.Api.Models.DTOs;
 using TinhKhoanApp.Api.Services.DataServices;
@@ -130,7 +131,7 @@ namespace TinhKhoanApp.Api.Controllers
         /// Tìm kiếm dữ liệu GL41 theo nhiều tiêu chí
         /// </summary>
         [HttpGet("search")]
-        [ProducesResponseType(typeof(PagedApiResponse<GL41PreviewDto>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<PagedResult<GL41PreviewDto>>), 200)]
         [ProducesResponseType(typeof(ApiResponse<object>), 400)]
         public async Task<IActionResult> SearchGL41(
             [FromQuery] string? keyword,

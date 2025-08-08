@@ -1,3 +1,4 @@
+using TinhKhoanApp.Api.Models.Common;
 #pragma warning disable CS8602 // Dereference of a possibly null reference
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

@@ -182,7 +182,7 @@ namespace TinhKhoanApp.Api.Repositories.Base
 
         // === PAGINATION & SEARCH ===
 
-        public virtual async Task<ApiResponse<PagedResult>TEntity>>>> GetPagedAsync(int pageNumber, int pageSize)
+        public virtual async Task<ApiResponse<PagedResult<TEntity>>> GetPagedAsync(int pageNumber, int pageSize)
         {
             try
             {
@@ -205,7 +205,7 @@ namespace TinhKhoanApp.Api.Repositories.Base
                     TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
                 };
 
-                return ApiResponse<PagedResult>TEntity>>>.Success(
+                return ApiResponse<PagedResult<TEntity>>.Success(
                     pagedResult,
                     $"Retrieved page {pageNumber} of {typeof(TEntity).Name} records"
                 );
@@ -213,7 +213,7 @@ namespace TinhKhoanApp.Api.Repositories.Base
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting paged {EntityType}", typeof(TEntity).Name);
-                return ApiResponse<PagedResult>TEntity>>>.Error(
+                return ApiResponse<PagedResult<TEntity>>.Error(
                     $"Failed to get paged {typeof(TEntity).Name}: {ex.Message}"
                 );
             }

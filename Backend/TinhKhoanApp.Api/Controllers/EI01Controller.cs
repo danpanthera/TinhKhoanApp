@@ -1,3 +1,4 @@
+using TinhKhoanApp.Api.Models.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TinhKhoanApp.Api.Models.DTOs;
@@ -305,7 +306,7 @@ namespace TinhKhoanApp.Api.Controllers
         /// Tìm kiếm EI01 theo nhiều tiêu chí
         /// </summary>
         [HttpGet("search")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PagedApiResponse<EI01PreviewDto>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ApiResponse<PagedResult<EI01PreviewDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> SearchEI01(
             [FromQuery] string? keyword = null,

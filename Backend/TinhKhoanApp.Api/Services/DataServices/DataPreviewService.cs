@@ -95,7 +95,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
             }
         }
 
-        public async Task<PagedApiResponse<DP01PreviewDto>> SearchDP01Async(
+        public async Task<ApiResponse<PagedResult<DP01PreviewDto>>>> SearchDP01Async(
             string? keyword,
             string? branchCode,
             DateTime? fromDate,
@@ -151,7 +151,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
                 var dtos = MapToDP01PreviewDtos(pagedRecords);
 
                 // Create paged response
-                return PagedApiResponse<DP01PreviewDto>.Create(
+                return ApiResponse < PagedResult<DP01PreviewDto>.Create(
                     dtos,
                     totalCount,
                     page,
@@ -160,7 +160,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error searching DP01 data");
-                return PagedApiResponse<DP01PreviewDto>.Create(
+                return ApiResponse < PagedResult<DP01PreviewDto>.Create(
                     Enumerable.Empty<DP01PreviewDto>(),
                     0,
                     page,

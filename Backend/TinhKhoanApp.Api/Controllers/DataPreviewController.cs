@@ -1,3 +1,4 @@
+using TinhKhoanApp.Api.Models.Common;
 using Microsoft.AspNetCore.Mvc;
 using TinhKhoanApp.Api.Models.DTOs;
 using TinhKhoanApp.Api.Services.DataServices;
@@ -133,7 +134,7 @@ namespace TinhKhoanApp.Api.Controllers
         /// Tìm kiếm dữ liệu DP01 theo nhiều tiêu chí
         /// </summary>
         [HttpGet("dp01/search")]
-        [ProducesResponseType(typeof(PagedApiResponse<DP01PreviewDto>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<PagedResult<DP01PreviewDto>>), 200)]
         [ProducesResponseType(typeof(ApiResponse<object>), 400)]
         public async Task<IActionResult> SearchDP01(
             [FromQuery] string? keyword,

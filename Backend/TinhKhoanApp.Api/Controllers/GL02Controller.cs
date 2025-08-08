@@ -1,3 +1,4 @@
+using TinhKhoanApp.Api.Models.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TinhKhoanApp.Api.Models.DTOs;
@@ -320,7 +321,7 @@ namespace TinhKhoanApp.Api.Controllers
         /// Tìm kiếm GL02 theo nhiều tiêu chí
         /// </summary>
         [HttpGet("search")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PagedApiResponse<GL02PreviewDto>))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(ApiResponse<PagedResult<GL02PreviewDto>>))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> SearchGL02(
             [FromQuery] string? keyword = null,

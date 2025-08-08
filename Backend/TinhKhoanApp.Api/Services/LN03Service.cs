@@ -23,7 +23,7 @@ namespace TinhKhoanApp.Api.Services
 
         // === BASIC CRUD OPERATIONS ===
 
-        public async Task<ApiResponse<IEnumerable<LN03PreviewDto>>> GetAllAsync()
+        public async Task<ApiResponse<IEnumerable<LN03PreviewDto> GetAllAsync()
         {
             try
             {
@@ -79,7 +79,7 @@ namespace TinhKhoanApp.Api.Services
 
         // === BUSINESS QUERY METHODS ===
 
-        public async Task<ApiResponse<IEnumerable<LN03PreviewDto>>> GetByBranchAsync(string maCN)
+        public async Task<ApiResponse<IEnumerable<LN03PreviewDto> GetByBranchAsync(string maCN)
         {
             try
             {
@@ -98,7 +98,7 @@ namespace TinhKhoanApp.Api.Services
             }
         }
 
-        public async Task<ApiResponse<IEnumerable<LN03PreviewDto>>> GetByCustomerAsync(string maKH)
+        public async Task<ApiResponse<IEnumerable<LN03PreviewDto> GetByCustomerAsync(string maKH)
         {
             try
             {
@@ -117,7 +117,7 @@ namespace TinhKhoanApp.Api.Services
             }
         }
 
-        public async Task<ApiResponse<IEnumerable<LN03PreviewDto>>> GetByContractAsync(string soHopDong)
+        public async Task<ApiResponse<IEnumerable<LN03PreviewDto> GetByContractAsync(string soHopDong)
         {
             try
             {
@@ -189,7 +189,7 @@ namespace TinhKhoanApp.Api.Services
             }
         }
 
-        public async Task<ApiResponse<IEnumerable<LN03PreviewDto>>> GetOverdueContractsAsync()
+        public async Task<ApiResponse<IEnumerable<LN03PreviewDto> GetOverdueContractsAsync()
         {
             try
             {

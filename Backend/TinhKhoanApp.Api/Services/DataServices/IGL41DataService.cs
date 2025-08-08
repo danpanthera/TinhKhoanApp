@@ -35,7 +35,7 @@ namespace TinhKhoanApp.Api.Services.DataServices
         /// <summary>
         /// Tìm kiếm GL41 theo nhiều tiêu chí
         /// </summary>
-        Task<PagedApiResponse<GL41PreviewDto>> SearchGL41Async(
+        Task<ApiResponse<PagedResult<GL41PreviewDto> SearchGL41Async(
             string? keyword,
             string? unitCode,
             string? accountCode,

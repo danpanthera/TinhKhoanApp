@@ -54,4 +54,18 @@ namespace TinhKhoanApp.Api.Models.Common
         public string Body { get; set; } = string.Empty;
         public DateTime CachedAt { get; set; } = DateTime.UtcNow;
     }
+
+    /// <summary>
+    /// CSV Validation Result
+    /// </summary>
+    public class CsvValidationResult
+    {
+        public bool IsValid { get; set; }
+        public int ExpectedColumns { get; set; }
+        public int ActualColumns { get; set; }
+        public List<string> MissingColumns { get; set; } = new();
+        public List<string> ExtraColumns { get; set; } = new();
+        public List<string> ValidationErrors { get; set; } = new();
+        public List<string> ValidationWarnings { get; set; } = new();
+    }
 }

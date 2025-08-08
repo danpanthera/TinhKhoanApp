@@ -26,7 +26,7 @@ namespace TinhKhoanApp.Api.Models.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [Column(TypeName = "datetime2(3)")]
-        public DateTime? UpdatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
 
         // Temporal table support
         [Column(TypeName = "datetime2(3)")]

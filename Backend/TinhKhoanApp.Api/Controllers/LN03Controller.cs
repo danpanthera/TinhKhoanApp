@@ -157,33 +157,13 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
-        /// <summary>
-        /// Lấy dữ liệu LN03 theo ID
-        /// </summary>
-        [HttpGet("{id}")]
-        public async Task<ActionResult<LN03DTO>> GetById(long id)
-        {
-            try
-            {
-                var result = await _ln03Service.GetByIdAsync(id);
-                if (result == null)
-                {
-                    return NotFound($"Không tìm thấy bản ghi LN03 với ID: {id}");
-                }
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi lấy dữ liệu LN03 với ID: {ID}", id);
-                return StatusCode(500, "Đã xảy ra lỗi khi xử lý yêu cầu");
-            }
-        }
+
 
         /// <summary>
         /// Lấy dữ liệu LN03 gần đây
         /// </summary>
         [HttpGet("recent")]
-        public async Task<ActionResult<IEnumerable<LN03DTO>>> GetRecent([FromQuery] int count = 10)
+        public async Task<ActionResult<IEnumerable<LN03PreviewDto>>> GetRecent([FromQuery] int count = 10)
         {
             try
             {
@@ -201,7 +181,7 @@ namespace TinhKhoanApp.Api.Controllers
         /// Lấy dữ liệu LN03 theo ngày
         /// </summary>
         [HttpGet("by-date")]
-        public async Task<ActionResult<IEnumerable<LN03DTO>>> GetByDate(
+        public async Task<ActionResult<IEnumerable<LN03PreviewDto>>> GetByDate(
             [FromQuery] DateTime date,
             [FromQuery] int maxResults = 100)
         {
@@ -221,7 +201,7 @@ namespace TinhKhoanApp.Api.Controllers
         /// Lấy dữ liệu LN03 theo khoảng thời gian
         /// </summary>
         [HttpGet("by-date-range")]
-        public async Task<ActionResult<IEnumerable<LN03DTO>>> GetByDateRange(
+        public async Task<ActionResult<IEnumerable<LN03PreviewDto>>> GetByDateRange(
             [FromQuery] DateTime fromDate,
             [FromQuery] DateTime toDate,
             [FromQuery] int maxResults = 100)
@@ -248,7 +228,7 @@ namespace TinhKhoanApp.Api.Controllers
         /// Lấy dữ liệu LN03 theo mã chi nhánh
         /// </summary>
         [HttpGet("by-branch/{branchCode}")]
-        public async Task<ActionResult<IEnumerable<LN03DTO>>> GetByBranchCode(
+        public async Task<ActionResult<IEnumerable<LN03PreviewDto>>> GetByBranchCode(
             string branchCode,
             [FromQuery] int maxResults = 100)
         {
@@ -268,7 +248,7 @@ namespace TinhKhoanApp.Api.Controllers
         /// Lấy dữ liệu LN03 theo mã khách hàng
         /// </summary>
         [HttpGet("by-customer/{customerCode}")]
-        public async Task<ActionResult<IEnumerable<LN03DTO>>> GetByCustomerCode(
+        public async Task<ActionResult<IEnumerable<LN03PreviewDto>>> GetByCustomerCode(
             string customerCode,
             [FromQuery] int maxResults = 100)
         {
@@ -288,7 +268,7 @@ namespace TinhKhoanApp.Api.Controllers
         /// Lấy dữ liệu LN03 theo mã cán bộ tín dụng
         /// </summary>
         [HttpGet("by-officer/{officerCode}")]
-        public async Task<ActionResult<IEnumerable<LN03DTO>>> GetByOfficerCode(
+        public async Task<ActionResult<IEnumerable<LN03PreviewDto>>> GetByOfficerCode(
             string officerCode,
             [FromQuery] int maxResults = 100)
         {
@@ -308,7 +288,7 @@ namespace TinhKhoanApp.Api.Controllers
         /// Lấy dữ liệu LN03 theo nhóm nợ
         /// </summary>
         [HttpGet("by-debt-group/{debtGroup}")]
-        public async Task<ActionResult<IEnumerable<LN03DTO>>> GetByDebtGroup(
+        public async Task<ActionResult<IEnumerable<LN03PreviewDto>>> GetByDebtGroup(
             string debtGroup,
             [FromQuery] int maxResults = 100)
         {
@@ -364,94 +344,11 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
-        /// <summary>
-        /// Tạo mới dữ liệu LN03
-        /// </summary>
-        [HttpPost]
-        [Authorize(Roles = "Admin,DataAdmin")]
-        public async Task<ActionResult<LN03DTO>> Create([FromBody] CreateLN03DTO createDto)
-        {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
 
-                var result = await _ln03Service.CreateAsync(createDto);
-                return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi tạo mới dữ liệu LN03");
-                return StatusCode(500, "Đã xảy ra lỗi khi xử lý yêu cầu");
-            }
-        }
 
-        /// <summary>
-        /// Cập nhật dữ liệu LN03
-        /// </summary>
-        [HttpPut("{id}")]
-        [Authorize(Roles = "Admin,DataAdmin")]
-        public async Task<ActionResult<LN03DTO>> Update(long id, [FromBody] UpdateLN03DTO updateDto)
-        {
-            try
-            {
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
 
-                var exists = await _ln03Service.ExistsAsync(id);
-                if (!exists)
-                {
-                    return NotFound($"Không tìm thấy bản ghi LN03 với ID: {id}");
-                }
 
-                var result = await _ln03Service.UpdateAsync(id, updateDto);
-                if (result == null)
-                {
-                    return NotFound($"Không tìm thấy bản ghi LN03 với ID: {id}");
-                }
 
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi cập nhật dữ liệu LN03 với ID: {ID}", id);
-                return StatusCode(500, "Đã xảy ra lỗi khi xử lý yêu cầu");
-            }
-        }
-
-        /// <summary>
-        /// Xóa dữ liệu LN03
-        /// </summary>
-        [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin,DataAdmin")]
-        public async Task<ActionResult> Delete(long id)
-        {
-            try
-            {
-                var exists = await _ln03Service.ExistsAsync(id);
-                if (!exists)
-                {
-                    return NotFound($"Không tìm thấy bản ghi LN03 với ID: {id}");
-                }
-
-                var result = await _ln03Service.DeleteAsync(id);
-                if (!result)
-                {
-                    return StatusCode(500, "Xóa dữ liệu không thành công");
-                }
-
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Lỗi khi xóa dữ liệu LN03 với ID: {ID}", id);
-                return StatusCode(500, "Đã xảy ra lỗi khi xử lý yêu cầu");
-            }
-        }
 
         /// <summary>
         /// Import dữ liệu LN03 từ file CSV
@@ -551,7 +448,7 @@ namespace TinhKhoanApp.Api.Controllers
         /// Get processing summary for loan recovery
         /// </summary>
         [HttpGet("summary/processing")]
-        [ProducesResponseType(typeof(ApiResponse<LN03ProcessingSummaryDto>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<LN03SummaryDto>), 200)]
         [ProducesResponseType(typeof(ApiResponse<string>), 500)]
         public async Task<IActionResult> GetProcessingSummary()
         {

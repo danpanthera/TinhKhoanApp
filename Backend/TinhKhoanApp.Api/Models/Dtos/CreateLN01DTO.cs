@@ -167,9 +167,9 @@ namespace TinhKhoanApp.Api.Models.DTOs
         /// <summary>
         /// Tạo entity từ DTO
         /// </summary>
-        public LN01 ToEntity()
+        public TinhKhoanApp.Api.Models.DataTables.LN01 ToEntity()
         {
-            return new LN01
+            return new TinhKhoanApp.Api.Models.DataTables.LN01
             {
                 NGAY_DL = this.NgayDL,
                 BRCD = this.BranchCode,

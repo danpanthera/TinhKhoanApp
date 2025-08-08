@@ -64,9 +64,9 @@ namespace TinhKhoanApp.Api.Controllers
         /// Lấy preview data DP01 với pagination
         /// </summary>
         [HttpGet("dp01/preview")]
-        [ProducesResponseType(typeof(ApiResponse<PagedResult>DP01PreviewDto>>>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<PagedResult<DP01PreviewDto>>), 200)]
         [ProducesResponseType(typeof(ApiResponse<object>), 400)]
-        public async Task<ActionResult<ApiResponse<PagedResult>DP01PreviewDto>>>>> GetDP01Preview(
+        public async Task<ActionResult<ApiResponse<PagedResult<DP01PreviewDto>>>> GetDP01Preview(
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 10,
             [FromQuery] DateTime? ngayDL = null)
