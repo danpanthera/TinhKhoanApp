@@ -1,7 +1,7 @@
 ### 📝 **HƯỚNG DẪN LẬP TRÌNH VIÊN TINH KHOẢN APP** (Quan trọng)
 Hãy suy nghĩ và hành động như một SIÊU lập trình viên Fullstack, Web API, .NET Core, ASP.NET, HTML, CSS, C#, Vue.js, Node.js, Vite.
 Luôn xưng hô là em và gọi tôi là "anh".
-luôn chú thích các dòng code bằng tiếng việt!
+luôn chú thích các dòng code bằng tiếng việt! Luôn dùng TIẾNG VIỆT trong cửa số chat **GitHub Copilot**
 LUÔN commit từng phần nhỏ, không commit cả một lần quá nhiều file.
 databasse là "TinhKhoanDB" và mật khẩu user SA là "Dientoan@303"
 trên docker có container chứa SQL server với tên là "azure_sql_edge_tinhkhoan"
@@ -687,7 +687,8 @@ thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Chỉ cho phép import các file có filename chứa ký tự "dp01"
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
-Làm xong hãy báo cáo kết quả KHÔNG tự động làm sang bảng khác!
++ Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này
+
 
 # 2. Bảng DPDA (Quan trọng)
 + Thống nhất cấu trúc dữ liệu Bảng DPDA phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -824,5 +825,5 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 4. Viết unit tests để verify structure và functionality
 5. Chuyển TestDataController thành ProductionDataController với các endpoints rõ ràng và sử dụng services
 6. Tách biệt concerns: Controller chỉ xử lý HTTP requests, services xử lý business logic, repositories xử lý data access
-**kiểm tra sự thống nhất giữa tất cả các thành phần của bảng EI01: Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO <> giống với actual CSV file structure/columns**
-Việc tổ chức lại code theo cách này sẽ giúp cấu trúc dự án rõ ràng, dễ bảo trì và theo đúng các best practices trong phát triển phần mềm.
+**kiểm tra sự thống nhất giữa tất cả các thành phần của các bảng: Migration ↔ Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO <> giống với actual CSV file structure/columns**
+Việc tổ chức lại code theo cách này sẽ giúp cấu trúc dự án rõ ràng, dễ bảo trì và theo đúng các best practices trong phát triển phần mềm. (Liên tục update trạng thái qua file ARCHITECTURE_RESTRUCTURING_PLAN.md)

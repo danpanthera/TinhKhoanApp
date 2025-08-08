@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "Frontend/tinhkhoan-app-ui-vite"
+		},
+		{
+			"path": "Backend/TinhKhoanApp.Api"
+		}
+	],
+	"settings": {}
+}
