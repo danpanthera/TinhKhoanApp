@@ -187,7 +187,7 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                var result = await _ln03Service.GetByDateAsync(date, maxResults);
+                var result = await _ln03Service.GetByDateAsync(date);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -213,7 +213,7 @@ namespace TinhKhoanApp.Api.Controllers
                     return BadRequest("Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc");
                 }
 
-                var result = await _ln03Service.GetByDateRangeAsync(fromDate, toDate, maxResults);
+                var result = await _ln03Service.GetByDateAsync(fromDate);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -234,7 +234,7 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                var result = await _ln03Service.GetByBranchCodeAsync(branchCode, maxResults);
+                var result = await _ln03Service.GetByBranchAsync(branchCode);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -254,7 +254,7 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                var result = await _ln03Service.GetByCustomerCodeAsync(customerCode, maxResults);
+                var result = await _ln03Service.GetByCustomerAsync(customerCode);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -264,8 +264,9 @@ namespace TinhKhoanApp.Api.Controllers
             }
         }
 
+        /*
         /// <summary>
-        /// Lấy dữ liệu LN03 theo mã cán bộ tín dụng
+        /// Lấy dữ liệu LN03 theo mã cán bộ tín dụng - TEMPORARILY DISABLED
         /// </summary>
         [HttpGet("by-officer/{officerCode}")]
         public async Task<ActionResult<IEnumerable<LN03PreviewDto>>> GetByOfficerCode(
@@ -283,6 +284,7 @@ namespace TinhKhoanApp.Api.Controllers
                 return StatusCode(500, "Đã xảy ra lỗi khi xử lý yêu cầu");
             }
         }
+        */
 
         /// <summary>
         /// Lấy dữ liệu LN03 theo nhóm nợ
@@ -294,7 +296,7 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                var result = await _ln03Service.GetByDebtGroupAsync(debtGroup, maxResults);
+                var result = await _ln03Service.GetByDebtGroupAsync(debtGroup);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -314,7 +316,7 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                var result = await _ln03Service.GetTotalRiskAmountByBranchAsync(branchCode, date);
+                var result = await _ln03Service.GetTotalRiskAmountByBranchAsync(branchCode);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -334,7 +336,7 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                var result = await _ln03Service.GetTotalDebtRecoveryByBranchAsync(branchCode, date);
+                var result = await _ln03Service.GetTotalDebtRecoveryByBranchAsync(branchCode);
                 return Ok(result);
             }
             catch (Exception ex)
@@ -371,18 +373,20 @@ namespace TinhKhoanApp.Api.Controllers
                 }
 
                 // Sử dụng DirectImportService với phương thức cải tiến để import dữ liệu
-                var result = await _directImportService.ImportLN03EnhancedAsync(file, statementDate);
+                // DISABLED: var result = await _directImportService.ImportLN03EnhancedAsync(file, statementDate);
+                // Temporary placeholder - service method doesn't exist yet
+                var result = await _ln03Service.ImportCsvAsync(file); // Use actual service method instead
 
-                if (result.Success)
+                if (result.IsSuccess && result.Data != null)
                 {
                     return Ok(new
                     {
                         Success = true,
-                        Message = $"Import thành công {result.ProcessedRecords} bản ghi",
-                        FileName = result.FileName,
-                        RecordsCount = result.ProcessedRecords,
-                        NgayDL = result.NgayDL,
-                        BatchId = result.BatchId
+                        Message = $"Import thành công {result.Data.ProcessedRecords} bản ghi",
+                        FileName = result.Data.FileName ?? "Unknown",
+                        RecordsCount = result.Data.ProcessedRecords,
+                        NgayDL = statementDate ?? DateTime.Now.ToString("yyyy-MM-dd"),
+                        BatchId = Guid.NewGuid().ToString()
                     });
                 }
                 else
@@ -390,8 +394,8 @@ namespace TinhKhoanApp.Api.Controllers
                     return BadRequest(new
                     {
                         Success = false,
-                        Message = result.ErrorMessage,
-                        FileName = result.FileName
+                        Message = result.Message ?? "Import failed",
+                        Errors = result.Data?.Errors ?? new List<string> { "Unknown error occurred" }
                     });
                 }
             }

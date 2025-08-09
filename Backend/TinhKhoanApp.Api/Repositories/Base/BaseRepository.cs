@@ -36,7 +36,7 @@ namespace TinhKhoanApp.Api.Repositories.Base
                     .OrderByDescending(e => e.CreatedAt)
                     .ToListAsync();
 
-                return ApiResponse<IEnumerable<TEntity>>.Success(
+                return ApiResponse<IEnumerable<TEntity>>.Ok(
                     entities,
                     $"Retrieved {entities.Count} {typeof(TEntity).Name} records"
                 );
@@ -66,7 +66,7 @@ namespace TinhKhoanApp.Api.Repositories.Base
                     );
                 }
 
-                return ApiResponse<TEntity?>.Success(
+                return ApiResponse<TEntity?>.Ok(
                     entity,
                     $"{typeof(TEntity).Name} found"
                 );
@@ -94,7 +94,7 @@ namespace TinhKhoanApp.Api.Repositories.Base
 
                 _logger.LogInformation("Created {EntityType} with ID: {Id}", typeof(TEntity).Name, entity.Id);
 
-                return ApiResponse<TEntity>.Success(
+                return ApiResponse<TEntity>.Ok(
                     entity,
                     $"{typeof(TEntity).Name} created successfully"
                 );
@@ -132,7 +132,7 @@ namespace TinhKhoanApp.Api.Repositories.Base
 
                 _logger.LogInformation("Updated {EntityType} with ID: {Id}", typeof(TEntity).Name, id);
 
-                return ApiResponse<TEntity>.Success(
+                return ApiResponse<TEntity>.Ok(
                     entity,
                     $"{typeof(TEntity).Name} updated successfully"
                 );
@@ -166,7 +166,7 @@ namespace TinhKhoanApp.Api.Repositories.Base
 
                 _logger.LogInformation("Deleted {EntityType} with ID: {Id}", typeof(TEntity).Name, id);
 
-                return ApiResponse<bool>.Success(
+                return ApiResponse<bool>.Ok(
                     true,
                     $"{typeof(TEntity).Name} deleted successfully"
                 );
@@ -201,11 +201,10 @@ namespace TinhKhoanApp.Api.Repositories.Base
                     Items = items,
                     TotalCount = totalCount,
                     PageNumber = pageNumber,
-                    PageSize = pageSize,
-                    TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
+                    PageSize = pageSize
                 };
 
-                return ApiResponse<PagedResult<TEntity>>.Success(
+                return ApiResponse<PagedResult<TEntity>>.Ok(
                     pagedResult,
                     $"Retrieved page {pageNumber} of {typeof(TEntity).Name} records"
                 );
@@ -242,7 +241,7 @@ namespace TinhKhoanApp.Api.Repositories.Base
                 _logger.LogInformation("Successfully bulk inserted {Count} {EntityType} records",
                     entityList.Count, typeof(TEntity).Name);
 
-                return ApiResponse<bool>.Success(
+                return ApiResponse<bool>.Ok(
                     true,
                     $"Bulk inserted {entityList.Count} {typeof(TEntity).Name} records"
                 );
@@ -263,7 +262,7 @@ namespace TinhKhoanApp.Api.Repositories.Base
             try
             {
                 var exists = await _dbSet.AnyAsync(e => e.Id == id);
-                return ApiResponse<bool>.Success(exists, $"{typeof(TEntity).Name} existence checked");
+                return ApiResponse<bool>.Ok(exists, $"{typeof(TEntity).Name} existence checked");
             }
             catch (Exception ex)
             {
@@ -277,7 +276,7 @@ namespace TinhKhoanApp.Api.Repositories.Base
             try
             {
                 var count = await _dbSet.CountAsync();
-                return ApiResponse<long>.Success(count, $"{typeof(TEntity).Name} count retrieved");
+                return ApiResponse<long>.Ok(count, $"{typeof(TEntity).Name} count retrieved");
             }
             catch (Exception ex)
             {

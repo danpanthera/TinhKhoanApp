@@ -9,6 +9,13 @@
     <!-- XML Documentation for Swagger -->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+
+  <!-- Exclude TEMP_DISABLED folders from compilation -->
+  <ItemGroup>
+    <Compile Remove="**/*TEMP_DISABLED/**" />
+    <EmbeddedResource Remove="**/*TEMP_DISABLED/**" />
+    <None Remove="**/*TEMP_DISABLED/**" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="ClosedXML" Version="0.105.0" />

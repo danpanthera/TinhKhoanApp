@@ -35,6 +35,63 @@ namespace TinhKhoanApp.Api.Models.Common
         public List<string> Errors { get; set; } = new List<string>();
         public int? StatusCode { get; set; }
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+        public string? ErrorCode { get; set; }
+
+        // Static helper methods
+        public static ApiResponse<T> Ok(T data, string? message = null)
+        {
+            return new ApiResponse<T>
+            {
+                Success = true,
+                Data = data,
+                Message = message ?? "Success",
+                StatusCode = 200
+            };
+        }
+
+        public static ApiResponse<T> Error(string message, int statusCode = 400)
+        {
+            return new ApiResponse<T>
+            {
+                Success = false,
+                Message = message,
+                ErrorCode = statusCode.ToString(),
+                StatusCode = statusCode
+            };
+        }
+
+        public static ApiResponse<T> Error(string message, string errorCode, int statusCode = 400)
+        {
+            return new ApiResponse<T>
+            {
+                Success = false,
+                Message = message,
+                ErrorCode = errorCode,
+                StatusCode = statusCode
+            };
+        }
+
+        public static ApiResponse<T> Failure(string message, int statusCode = 500)
+        {
+            return new ApiResponse<T>
+            {
+                Success = false,
+                Message = message,
+                ErrorCode = statusCode.ToString(),
+                StatusCode = statusCode
+            };
+        }
+
+        public static ApiResponse<T> Failure(string message, string errorCode, int statusCode = 500)
+        {
+            return new ApiResponse<T>
+            {
+                Success = false,
+                Message = message,
+                ErrorCode = errorCode,
+                StatusCode = statusCode
+            };
+        }
     }
 
     public class BulkOperationResult

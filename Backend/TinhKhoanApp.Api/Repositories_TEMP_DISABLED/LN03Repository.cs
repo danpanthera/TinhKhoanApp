@@ -26,14 +26,9 @@ namespace TinhKhoanApp.Api.Repositories
         {
             try
             {
-                var entities = await GetAllEntitiesAsync();
-                if (!entities.IsSuccess || entities.Data == null)
-                {
-                    return ApiResponse<IEnumerable<LN03PreviewDto>>.Error(entities.Message);
-                }
-
-                var dtos = entities.Data.Select(ConvertToPreviewDto).ToList();
-                return ApiResponse<IEnumerable<LN03PreviewDto>>.Success(dtos,
+                var entities = await _dbSet.ToListAsync();
+                var dtos = entities.Select(ConvertToPreviewDto).ToList();
+                return ApiResponse<IEnumerable<LN03PreviewDto>>.Ok(dtos,
                     $"Retrieved {dtos.Count} LN03 records");
             }
             catch (Exception ex)
@@ -47,14 +42,14 @@ namespace TinhKhoanApp.Api.Repositories
         {
             try
             {
-                var entityResponse = await GetByIdEntityAsync(id);
-                if (!entityResponse.IsSuccess || entityResponse.Data == null)
+                var entity = await base.GetByIdAsync(id);
+                if (!entity.Success || entity.Data == null)
                 {
-                    return ApiResponse<LN03DetailsDto?>.Error(entityResponse.Message);
+                    return ApiResponse<LN03DetailsDto?>.Error(entity.Message ?? "Entity not found", 404);
                 }
 
-                var dto = ConvertToDetailsDto(entityResponse.Data);
-                return ApiResponse<LN03DetailsDto?>.Success(dto, "LN03 record retrieved successfully");
+                var dto = ConvertToDetailsDto(entity.Data);
+                return ApiResponse<LN03DetailsDto?>.Ok(dto, "LN03 record retrieved successfully");
             }
             catch (Exception ex)
             {
@@ -67,20 +62,20 @@ namespace TinhKhoanApp.Api.Repositories
         {
             try
             {
-                var entity = ConvertToEntity(createDto);
-                var createdResponse = await CreateEntityAsync(entity);
+                var entity = ConvertFromCreateDto(createDto);
+                var createdEntity = await base.CreateAsync(entity);
 
-                if (!createdResponse.IsSuccess || createdResponse.Data == null)
+                if (!createdEntity.Success || createdEntity.Data == null)
                 {
-                    return ApiResponse<LN03DetailsDto>.Error(createdResponse.Message);
+                    return ApiResponse<LN03DetailsDto>.Error(createdEntity.Message ?? "Failed to create");
                 }
 
-                var dto = ConvertToDetailsDto(createdResponse.Data);
-                return ApiResponse<LN03DetailsDto>.Success(dto, "LN03 record created successfully");
+                var dto = ConvertToDetailsDto(createdEntity.Data);
+                return ApiResponse<LN03DetailsDto>.Ok(dto, "LN03 record created successfully");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in LN03Repository.CreateAsync");
+                _logger.LogError(ex, "Error in LN03Repository.CreateAsync: {Error}", ex.Message);
                 return ApiResponse<LN03DetailsDto>.Error($"Repository error: {ex.Message}");
             }
         }
@@ -97,7 +92,7 @@ namespace TinhKhoanApp.Api.Repositories
                     .ToListAsync();
 
                 var dtos = entities.Select(ConvertToPreviewDto).ToList();
-                return ApiResponse<IEnumerable<LN03PreviewDto>>.Success(dtos,
+                return ApiResponse<IEnumerable<LN03PreviewDto>>.Ok(dtos,
                     $"Retrieved {dtos.Count} LN03 records for branch {maCN}");
             }
             catch (Exception ex)
@@ -117,7 +112,7 @@ namespace TinhKhoanApp.Api.Repositories
                     .ToListAsync();
 
                 var dtos = entities.Select(ConvertToPreviewDto).ToList();
-                return ApiResponse<IEnumerable<LN03PreviewDto>>.Success(dtos,
+                return ApiResponse<IEnumerable<LN03PreviewDto>>.Ok(dtos,
                     $"Retrieved {dtos.Count} LN03 records for customer {maKH}");
             }
             catch (Exception ex)
@@ -137,7 +132,7 @@ namespace TinhKhoanApp.Api.Repositories
                     .ToListAsync();
 
                 var dtos = entities.Select(ConvertToPreviewDto).ToList();
-                return ApiResponse<IEnumerable<LN03PreviewDto>>.Success(dtos,
+                return ApiResponse<IEnumerable<LN03PreviewDto>>.Ok(dtos,
                     $"Retrieved {dtos.Count} LN03 records for contract {soHopDong}");
             }
             catch (Exception ex)
@@ -154,7 +149,7 @@ namespace TinhKhoanApp.Api.Repositories
                 var total = await _context.Set<LN03Entity>()
                     .SumAsync(x => x.SOTIENXLRR ?? 0);
 
-                return ApiResponse<decimal>.Success(total,
+                return ApiResponse<decimal>.Ok(total,
                     $"Total LN03 processing amount: {total:C}");
             }
             catch (Exception ex)
@@ -166,80 +161,105 @@ namespace TinhKhoanApp.Api.Repositories
 
         // === DTO CONVERSION METHODS ===
 
+        private LN03Entity ConvertFromCreateDto(LN03CreateDto createDto)
+        {
+            return new LN03Entity
+            {
+                NGAY_DL = createDto.NGAY_DL,
+                MACHINHANH = createDto.MACHINHANH,
+                TENCHINHANH = createDto.TENCHINHANH,
+                MAKH = createDto.MAKH,
+                TENKH = createDto.TENKH,
+                SOHOPDONG = createDto.SOHOPDONG,
+                SOTIENXLRR = createDto.SOTIENXLRR,
+                NGAYPHATSINHXL = createDto.NGAYPHATSINHXL,
+                THUNOSAUXL = createDto.THUNOSAUXL,
+                CONLAINGOAIBANG = createDto.CONLAINGOAIBANG,
+                DUNONOIBANG = createDto.DUNONOIBANG,
+                NHOMNO = createDto.NHOMNO,
+                MACBTD = createDto.MACBTD,
+                TENCBTD = createDto.TENCBTD,
+                MAPGD = createDto.MAPGD,
+                TAIKHOANHACHTOAN = createDto.TAIKHOANHACHTOAN,
+                REFNO = createDto.REFNO,
+                LOAINGUONVON = createDto.LOAINGUONVON,
+                Column18 = createDto.Column18,
+                Column19 = createDto.Column19,
+                Column20 = createDto.Column20,
+                FileName = createDto.FileName,
+                CreatedAt = DateTime.UtcNow
+            };
+        }
+
         private LN03PreviewDto ConvertToPreviewDto(LN03Entity entity)
         {
             return new LN03PreviewDto
             {
                 Id = entity.Id,
+                NGAY_DL = entity.NGAY_DL,
                 MACHINHANH = entity.MACHINHANH ?? string.Empty,
+                TENCHINHANH = entity.TENCHINHANH ?? string.Empty,
                 MAKH = entity.MAKH ?? string.Empty,
+                TENKH = entity.TENKH ?? string.Empty,
                 SOHOPDONG = entity.SOHOPDONG ?? string.Empty,
                 SOTIENXLRR = entity.SOTIENXLRR ?? 0,
-                TRANGTHAI = entity.TRANGTHAI ?? string.Empty,
-                NGAYXULY = entity.NGAYXULY,
-                LOAIVAY = entity.LOAIVAY ?? string.Empty,
-                CreatedAt = entity.CreatedAt,
-                UpdatedAt = entity.UpdatedAt ?? entity.CreatedAt
+                NGAYPHATSINHXL = entity.NGAYPHATSINHXL,
+                THUNOSAUXL = entity.THUNOSAUXL ?? 0,
+                CONLAINGOAIBANG = entity.CONLAINGOAIBANG ?? 0,
+                DUNONOIBANG = entity.DUNONOIBANG ?? 0,
+                NHOMNO = entity.NHOMNO ?? string.Empty,
+                MACBTD = entity.MACBTD ?? string.Empty,
+                TENCBTD = entity.TENCBTD ?? string.Empty,
+                MAPGD = entity.MAPGD ?? string.Empty,
+                TAIKHOANHACHTOAN = entity.TAIKHOANHACHTOAN ?? string.Empty,
+                REFNO = entity.REFNO ?? string.Empty,
+                LOAINGUONVON = entity.LOAINGUONVON ?? string.Empty,
+                Column18 = entity.Column18 ?? string.Empty,
+                Column19 = entity.Column19 ?? string.Empty,
+                Column20 = entity.Column20 ?? 0,
+                CreatedDate = entity.CreatedAt
             };
         }
 
         private LN03DetailsDto ConvertToDetailsDto(LN03Entity entity)
         {
+            var preview = ConvertToPreviewDto(entity);
+
             return new LN03DetailsDto
             {
-                Id = entity.Id,
-                MACHINHANH = entity.MACHINHANH ?? string.Empty,
-                MAKH = entity.MAKH ?? string.Empty,
-                SOHOPDONG = entity.SOHOPDONG ?? string.Empty,
-                SOTIENXLRR = entity.SOTIENXLRR ?? 0,
-                TRANGTHAI = entity.TRANGTHAI ?? string.Empty,
-                NGAYXULY = entity.NGAYXULY,
-                NGAYHETHAN = entity.NGAYHETHAN,
-                LOAIVAY = entity.LOAIVAY ?? string.Empty,
-                LAIXUAT = entity.LAIXUAT ?? 0,
-                KYHANGUI = entity.KYHANGUI ?? string.Empty,
-                MANHANVIEN = entity.MANHANVIEN ?? string.Empty,
-                SOTIENGOC = entity.SOTIENGOC ?? 0,
-                SOTIENLAI = entity.SOTIENLAI ?? 0,
-                GHICHU = entity.GHICHU ?? string.Empty,
-                NGAYCAPNHAT = entity.NGAYCAPNHAT,
-                MADONVI = entity.MADONVI ?? string.Empty,
-                // Headerless columns
-                Column18 = entity.Column18 ?? string.Empty,
-                Column19 = entity.Column19 ?? string.Empty,
-                Column20 = entity.Column20 ?? string.Empty,
-                CreatedAt = entity.CreatedAt,
-                UpdatedAt = entity.UpdatedAt ?? entity.CreatedAt,
-                FileName = entity.FileName,
-                ImportId = entity.ImportId,
-                ImportMetadata = entity.ImportMetadata
-            };
-        }
+                // Copy all from preview
+                Id = preview.Id,
+                NGAY_DL = preview.NGAY_DL,
+                MACHINHANH = preview.MACHINHANH,
+                TENCHINHANH = preview.TENCHINHANH,
+                MAKH = preview.MAKH,
+                TENKH = preview.TENKH,
+                SOHOPDONG = preview.SOHOPDONG,
+                SOTIENXLRR = preview.SOTIENXLRR,
+                NGAYPHATSINHXL = preview.NGAYPHATSINHXL,
+                THUNOSAUXL = preview.THUNOSAUXL,
+                CONLAINGOAIBANG = preview.CONLAINGOAIBANG,
+                DUNONOIBANG = preview.DUNONOIBANG,
+                NHOMNO = preview.NHOMNO,
+                MACBTD = preview.MACBTD,
+                TENCBTD = preview.TENCBTD,
+                MAPGD = preview.MAPGD,
+                TAIKHOANHACHTOAN = preview.TAIKHOANHACHTOAN,
+                REFNO = preview.REFNO,
+                LOAINGUONVON = preview.LOAINGUONVON,
+                Column18 = preview.Column18,
+                Column19 = preview.Column19,
+                Column20 = preview.Column20,
+                CreatedDate = preview.CreatedDate,
 
-        private LN03Entity ConvertToEntity(LN03CreateDto createDto)
-        {
-            return new LN03Entity
-            {
-                MACHINHANH = createDto.MACHINHANH,
-                MAKH = createDto.MAKH,
-                SOHOPDONG = createDto.SOHOPDONG,
-                SOTIENXLRR = createDto.SOTIENXLRR,
-                TRANGTHAI = createDto.TRANGTHAI,
-                NGAYXULY = createDto.NGAYXULY,
-                NGAYHETHAN = createDto.NGAYHETHAN,
-                LOAIVAY = createDto.LOAIVAY,
-                LAIXUAT = createDto.LAIXUAT,
-                KYHANGUI = createDto.KYHANGUI,
-                MANHANVIEN = createDto.MANHANVIEN,
-                SOTIENGOC = createDto.SOTIENGOC,
-                SOTIENLAI = createDto.SOTIENLAI,
-                GHICHU = createDto.GHICHU,
-                NGAYCAPNHAT = createDto.NGAYCAPNHAT,
-                MADONVI = createDto.MADONVI,
-                Column18 = createDto.Column18,
-                Column19 = createDto.Column19,
-                Column20 = createDto.Column20,
-                CreatedAt = DateTime.UtcNow
+                // Add details-specific fields
+                ValidFromDate = entity.SysStartTime,
+                ValidToDate = entity.SysEndTime,
+                ImportBatch = entity.ImportId?.ToString(),
+                DataSource = entity.FileName,
+                RecordVersion = 1, // Default version
+                IsActive = true,
+                LastModifiedBy = "System"
             };
         }
 
@@ -253,8 +273,8 @@ namespace TinhKhoanApp.Api.Repositories
                 if (ngayDL.HasValue)
                     query = query.Where(x => x.NGAY_DL.Date == ngayDL.Value.Date);
 
-                var results = await query.Where(x => x.MA_SAN_PHAM == productCode).ToListAsync();
-                return ApiResponse<IEnumerable<LN03Entity>>.Success(results);
+                var results = await query.Where(x => x.TENKH == productCode).ToListAsync();
+                return ApiResponse<IEnumerable<LN03Entity>>.Ok(results);
             }
             catch (Exception ex)
             {
@@ -271,8 +291,8 @@ namespace TinhKhoanApp.Api.Repositories
                 if (ngayDL.HasValue)
                     query = query.Where(x => x.NGAY_DL.Date == ngayDL.Value.Date);
 
-                var results = await query.Where(x => x.DON_VI == donVi).ToListAsync();
-                return ApiResponse<IEnumerable<LN03Entity>>.Success(results);
+                var results = await query.Where(x => x.MACHINHANH == donVi).ToListAsync();
+                return ApiResponse<IEnumerable<LN03Entity>>.Ok(results);
             }
             catch (Exception ex)
             {
@@ -286,9 +306,9 @@ namespace TinhKhoanApp.Api.Repositories
             try
             {
                 var results = await _context.Set<LN03Entity>()
-                    .Where(x => x.LOAI_HINH_CHO_VAY == loanType && x.NGAY_DL.Date == ngayDL.Date)
+                    .Where(x => x.LOAINGUONVON == loanType && x.NGAY_DL.Date == ngayDL.Date)
                     .ToListAsync();
-                return ApiResponse<IEnumerable<LN03Entity>>.Success(results);
+                return ApiResponse<IEnumerable<LN03Entity>>.Ok(results);
             }
             catch (Exception ex)
             {
@@ -303,8 +323,8 @@ namespace TinhKhoanApp.Api.Repositories
             {
                 var total = await _context.Set<LN03Entity>()
                     .Where(x => x.NGAY_DL.Date == ngayDL.Date)
-                    .SumAsync(x => x.SO_TIEN_VAY ?? 0);
-                return ApiResponse<decimal>.Success(total);
+                    .SumAsync(x => x.SOTIENXLRR ?? 0);
+                return ApiResponse<decimal>.Ok(total);
             }
             catch (Exception ex)
             {
@@ -319,10 +339,10 @@ namespace TinhKhoanApp.Api.Repositories
             {
                 var results = await _context.Set<LN03Entity>()
                     .Where(x => x.NGAY_DL.Date == ngayDL.Date)
-                    .GroupBy(x => x.MA_SAN_PHAM)
-                    .Select(g => new { Product = g.Key, Amount = g.Sum(x => x.SO_TIEN_VAY ?? 0) })
+                    .GroupBy(x => x.REFNO)
+                    .Select(g => new { Product = g.Key, Amount = g.Sum(x => x.SOTIENXLRR ?? 0) })
                     .ToDictionaryAsync(x => x.Product ?? "", x => x.Amount);
-                return ApiResponse<Dictionary<string, decimal>>.Success(results);
+                return ApiResponse<Dictionary<string, decimal>>.Ok(results);
             }
             catch (Exception ex)
             {
@@ -337,10 +357,10 @@ namespace TinhKhoanApp.Api.Repositories
             {
                 var results = await _context.Set<LN03Entity>()
                     .Where(x => x.NGAY_DL.Date == ngayDL.Date)
-                    .GroupBy(x => x.DON_VI)
-                    .Select(g => new { DonVi = g.Key, Amount = g.Sum(x => x.SO_TIEN_VAY ?? 0) })
+                    .GroupBy(x => x.MACHINHANH)
+                    .Select(g => new { DonVi = g.Key, Amount = g.Sum(x => x.SOTIENXLRR ?? 0) })
                     .ToDictionaryAsync(x => x.DonVi ?? "", x => x.Amount);
-                return ApiResponse<Dictionary<string, decimal>>.Success(results);
+                return ApiResponse<Dictionary<string, decimal>>.Ok(results);
             }
             catch (Exception ex)
             {
@@ -355,10 +375,10 @@ namespace TinhKhoanApp.Api.Repositories
             {
                 var results = await _context.Set<LN03Entity>()
                     .Where(x => x.NGAY_DL.Date == ngayDL.Date)
-                    .GroupBy(x => x.MA_SAN_PHAM)
+                    .GroupBy(x => x.REFNO)
                     .Select(g => new { Product = g.Key, Count = g.Count() })
                     .ToDictionaryAsync(x => x.Product ?? "", x => x.Count);
-                return ApiResponse<Dictionary<string, int>>.Success(results);
+                return ApiResponse<Dictionary<string, int>>.Ok(results);
             }
             catch (Exception ex)
             {
@@ -373,10 +393,10 @@ namespace TinhKhoanApp.Api.Repositories
             {
                 var results = await _context.Set<LN03Entity>()
                     .Where(x => x.NGAY_DL.Date == ngayDL.Date)
-                    .GroupBy(x => x.MA_SAN_PHAM)
+                    .GroupBy(x => x.REFNO)
                     .Select(g => g.First())
                     .ToListAsync();
-                return ApiResponse<IEnumerable<LN03Entity>>.Success(results);
+                return ApiResponse<IEnumerable<LN03Entity>>.Ok(results);
             }
             catch (Exception ex)
             {
@@ -390,9 +410,9 @@ namespace TinhKhoanApp.Api.Repositories
             try
             {
                 var average = await _context.Set<LN03Entity>()
-                    .Where(x => x.NGAY_DL.Date == ngayDL.Date && x.SO_TIEN_VAY.HasValue)
-                    .AverageAsync(x => x.SO_TIEN_VAY.Value);
-                return ApiResponse<decimal>.Success(average);
+                    .Where(x => x.NGAY_DL.Date == ngayDL.Date && x.SOTIENXLRR.HasValue)
+                    .AverageAsync(x => x.SOTIENXLRR.Value);
+                return ApiResponse<decimal>.Ok(average);
             }
             catch (Exception ex)
             {
@@ -407,10 +427,10 @@ namespace TinhKhoanApp.Api.Repositories
             {
                 var results = await _context.Set<LN03Entity>()
                     .Where(x => x.NGAY_DL.Date == ngayDL.Date)
-                    .GroupBy(x => x.NHOM_NO)
-                    .Select(g => new { Group = g.Key, Amount = g.Sum(x => x.SO_TIEN_VAY ?? 0) })
+                    .GroupBy(x => x.NHOMNO)
+                    .Select(g => new { Group = g.Key, Amount = g.Sum(x => x.SOTIENXLRR ?? 0) })
                     .ToDictionaryAsync(x => x.Group ?? "", x => x.Amount);
-                return ApiResponse<Dictionary<string, decimal>>.Success(results);
+                return ApiResponse<Dictionary<string, decimal>>.Ok(results);
             }
             catch (Exception ex)
             {
@@ -424,9 +444,9 @@ namespace TinhKhoanApp.Api.Repositories
             try
             {
                 var results = await _context.Set<LN03Entity>()
-                    .Where(x => x.NGAY_DL.Date == ngayDL.Date && x.SO_TIEN_VAY >= threshold)
+                    .Where(x => x.NGAY_DL.Date == ngayDL.Date && x.SOTIENXLRR >= threshold)
                     .ToListAsync();
-                return ApiResponse<IEnumerable<LN03Entity>>.Success(results);
+                return ApiResponse<IEnumerable<LN03Entity>>.Ok(results);
             }
             catch (Exception ex)
             {
@@ -440,9 +460,9 @@ namespace TinhKhoanApp.Api.Repositories
             try
             {
                 var results = await _context.Set<LN03Entity>()
-                    .Where(x => x.NGAY_DL.Date == ngayDL.Date && x.SO_TIEN_VAY < threshold)
+                    .Where(x => x.NGAY_DL.Date == ngayDL.Date && x.SOTIENXLRR < threshold)
                     .ToListAsync();
-                return ApiResponse<IEnumerable<LN03Entity>>.Success(results);
+                return ApiResponse<IEnumerable<LN03Entity>>.Ok(results);
             }
             catch (Exception ex)
             {
@@ -482,7 +502,7 @@ namespace TinhKhoanApp.Api.Repositories
             }
         }
 
-        public new async Task<LN03Entity?> GetByIdAsync(long id)
+        public new async Task<LN03Entity?> GetEntityByIdAsync(long id)
         {
             try
             {
@@ -493,6 +513,12 @@ namespace TinhKhoanApp.Api.Repositories
                 _logger.LogError(ex, "Error getting LN03Entity by id {Id}", id);
                 return null;
             }
+        }
+
+        // Implementation for IBaseRepository<LN03Entity>
+        async Task<LN03Entity?> IBaseRepository<LN03Entity>.GetByIdAsync(long id)
+        {
+            return await GetEntityByIdAsync(id);
         }
 
         public new async Task<LN03Entity> CreateAsync(LN03Entity entity)

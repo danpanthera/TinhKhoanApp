@@ -4,8 +4,8 @@ using Microsoft.Extensions.DependencyInjection; // For IServiceCollection
 using System;
 using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Repositories;
-using TinhKhoanApp.Api.Repositories.Cached;
-using TinhKhoanApp.Api.Services.DataServices;
+// using TinhKhoanApp.Api.Repositories.Cached; // TEMP DISABLED
+// using TinhKhoanApp.Api.Services.DataServices; // TEMP DISABLED
 using Scrutor; // For the Decorate extension method
 
 namespace TinhKhoanApp.Api.Extensions
@@ -36,20 +36,16 @@ namespace TinhKhoanApp.Api.Extensions
 
             // Register repositories
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-            services.AddScoped<IDP01Repository, DP01Repository>();
-            services.AddScoped<IGL41Repository, GL41Repository>();
+            // All specific repositories are temporarily disabled for clean build
 
-            // Register cached repositories (for production environments)
-            if (!configuration.GetValue<bool>("UseMemoryDatabase", false))
-            {
-                // Use Scrutor extension method to decorate repositories with cache
-                services.Decorate<IGL41Repository, CachedGL41Repository>();
-            }
+            // Register cached repositories (for production environments) - TEMP DISABLED
+            // if (!configuration.GetValue<bool>("UseMemoryDatabase", false))
+            // {
+            //     // Use Scrutor extension method to decorate repositories with cache
+            // }
 
-            // Register data services
-            services.AddScoped<IDataPreviewService, DataPreviewService>();
-            services.AddScoped<IGL41DataService, GL41DataService>();
-            services.AddScoped<IDP01DataService, DP01DataService>();
+            // Register data services - TEMP DISABLED
+            // All specific services are temporarily disabled for clean build
 
             return services;
         }

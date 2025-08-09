@@ -13,6 +13,7 @@ namespace TinhKhoanApp.Api.Repositories.Interfaces
     {
         // Preview operations
         Task<PagedResult<T>> GetPagedAsync(int page, int pageSize, DateTime? ngayDL = null);
+        Task<ApiResponse<IEnumerable<T>>> GetAllAsync();
 
         // Basic CRUD operations
         Task<T?> GetByIdAsync(long id);

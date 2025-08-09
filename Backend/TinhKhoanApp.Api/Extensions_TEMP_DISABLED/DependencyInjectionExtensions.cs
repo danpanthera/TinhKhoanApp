@@ -1,5 +1,5 @@
 using TinhKhoanApp.Api.Repositories;
-using TinhKhoanApp.Api.Services.DataServices;
+// using TinhKhoanApp.Api.Services.DataServices; // TEMP DISABLED
 using TinhKhoanApp.Api.Services;
 using TinhKhoanApp.Api.Services.Interfaces;
 
@@ -45,7 +45,7 @@ namespace TinhKhoanApp.Api.Extensions
             // services.AddScoped<IGL02DataService, GL02DataService>();
             // services.AddScoped<IDPDADataService, DPDADataService>();
             // services.AddScoped<IEI01DataService, EI01DataService>();
-            services.AddScoped<ILN01Service, LN01Service>();
+            // services.AddScoped<ILN01Service, LN01Service>(); // TODO: Fix LN01 implementation
 
             // Register KPI assignment services - Fix cho Menu B3
             services.AddScoped<IEmployeeKpiAssignmentService, EmployeeKpiAssignmentService>();

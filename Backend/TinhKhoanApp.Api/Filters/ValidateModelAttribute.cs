@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using TinhKhoanApp.Api.Models.DTOs;
+using TinhKhoanApp.Api.Models.Common;
 
 namespace TinhKhoanApp.Api.Filters
 {
@@ -26,8 +27,11 @@ namespace TinhKhoanApp.Api.Filters
                     }).ToArray();
 
                 // Return a standardized API response with validation errors
-                var response = ApiResponse<object>.Error("Dữ liệu không hợp lệ", "VALIDATION_ERROR");
-                response.ValidationErrors = errors;
+                var response = ApiResponse<object>.Error("Dữ liệu không hợp lệ", 400);
+                foreach (var error in errors)
+                {
+                    response.Errors.Add($"{error.Field}: {string.Join(", ", error.Messages)}");
+                }
 
                 context.Result = new BadRequestObjectResult(response);
             }

@@ -826,4 +826,6 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 5. Chuyển TestDataController thành ProductionDataController với các endpoints rõ ràng và sử dụng services
 6. Tách biệt concerns: Controller chỉ xử lý HTTP requests, services xử lý business logic, repositories xử lý data access
 **kiểm tra sự thống nhất giữa tất cả các thành phần của các bảng: Migration ↔ Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO <> giống với actual CSV file structure/columns**
+Đảm bảo Service code KHÔNG expect tên cột khác so với tên cột của file CSV gốc
 Việc tổ chức lại code theo cách này sẽ giúp cấu trúc dự án rõ ràng, dễ bảo trì và theo đúng các best practices trong phát triển phần mềm. (Liên tục update trạng thái qua file ARCHITECTURE_RESTRUCTURING_PLAN.md)
++ Đảm bảo cấu trúc bảng (ngoài các cột NGAY_DL, System Column và Temporal Column) phải đồng nhất từ CSV <- Database <- Model <- EF <- BulkCopy <- Direct Import <- DTO <- Services <- Repository <- Entity <- Controller (business Column của CSV là chuẩn là tham chiếu)
