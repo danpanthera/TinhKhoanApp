@@ -818,14 +818,34 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 + Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này.
 
-**CÁCH TỔ CHỨC LẠI CODE:**
-1. Tạo repository layer cho mỗi entity (DP01Repository, LN01Repository, etc.)
-2. Tạo service layer cho business logic (DataPreviewService, ImportService, etc.)
-3. Tạo DTO/View Models cho API responses
+**CÁCH TỔ CHỨC LẠI CODE CHO 9 BẢNG CORE DATA:** 
+**🚨 QUAN TRỌNG: Hãy làm với từng bảng, xong bảng này mới được làm sang bảng khác!**
+
+**📋 THỨ TỰ THỰC HIỆN (9 bảng core data):**
+1. **DP01** (63 business columns) - Temporal Table + Columnstore
+2. **DPDA** (13 business columns) - Temporal Table + Columnstore  
+3. **EI01** (24 business columns) - Temporal Table + Columnstore
+4. **GL01** (27 business columns) - Partitioned Columnstore (NO temporal)
+5. **GL02** (17 business columns) - Partitioned Columnstore (NO temporal)
+6. **GL41** (13 business columns) - Temporal Table + Columnstore
+7. **LN01** (79 business columns) - Temporal Table + Columnstore
+8. **LN03** (20 business columns) - Temporal Table + Columnstore
+9. **RR01** (25 business columns) - Temporal Table + Columnstore
+
+**🔧 STEPS CHO MỖI BẢNG (thực hiện tuần tự):**
+1. Tạo repository layer cho entity (VD: DP01Repository, LN01Repository, etc.)
+2. Tạo service layer cho business logic (VD: DP01Service, ImportService, etc.)
+3. Tạo DTO/View Models cho API responses (VD: DP01PreviewDto, DP01CreateDto, etc.)
 4. Viết unit tests để verify structure và functionality
-5. Chuyển TestDataController thành ProductionDataController với các endpoints rõ ràng và sử dụng services
+5. Tạo Controller endpoints rõ ràng sử dụng services (VD: DP01Controller)
 6. Tách biệt concerns: Controller chỉ xử lý HTTP requests, services xử lý business logic, repositories xử lý data access
-**kiểm tra sự thống nhất giữa tất cả các thành phần của các bảng: Migration ↔ Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO <> giống với actual CSV file structure/columns**
-Đảm bảo Service code KHÔNG expect tên cột khác so với tên cột của file CSV gốc
-Việc tổ chức lại code theo cách này sẽ giúp cấu trúc dự án rõ ràng, dễ bảo trì và theo đúng các best practices trong phát triển phần mềm. (Liên tục update trạng thái qua file ARCHITECTURE_RESTRUCTURING_PLAN.md)
+
+**✅ VERIFICATION CHO MỖI BẢNG:**
+**kiểm tra sự thống nhất giữa tất cả các thành phần của từng bảng: Migration ↔ Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO ↔ Controller ↔ giống với actual CSV file structure/columns**
+
+**🚨 QUY TẮC QUAN TRỌNG:**
+- Đảm bảo Service code KHÔNG expect tên cột khác so với tên cột của file CSV gốc
+- Business Column của CSV là chuẩn và là tham chiếu cho tất cả layers
+- Việc tổ chức lại code theo cách này sẽ giúp cấu trúc dự án rõ ràng, dễ bảo trì và theo đúng các best practices trong phát triển phần mềm
+- Liên tục update trạng thái qua file ARCHITECTURE_RESTRUCTURING_PLAN.md sau khi hoàn thành mỗi bảng
 + Đảm bảo cấu trúc bảng (ngoài các cột NGAY_DL, System Column và Temporal Column) phải đồng nhất từ CSV <- Database <- Model <- EF <- BulkCopy <- Direct Import <- DTO <- Services <- Repository <- Entity <- Controller (business Column của CSV là chuẩn là tham chiếu)
