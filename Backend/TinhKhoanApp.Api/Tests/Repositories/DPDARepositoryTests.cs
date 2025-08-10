@@ -1,57 +1,59 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
-using Moq;
 using Xunit;
+using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models.DataTables;
 using TinhKhoanApp.Api.Repositories;
+using TinhKhoanApp.Api.Repositories.Interfaces;
 
 namespace TinhKhoanApp.Api.Tests.Repositories
 {
-    public class DPDARepositoryTests
+    /// <summary>
+    /// Repository tests cho DPDA - Data Access Layer validation
+    /// Kiểm tra consistency với database structure: 13 business columns + Temporal Table + Columnstore
+    /// </summary>
+    public class DPDARepositoryTests : IDisposable
     {
-        private readonly Mock<DbSet<DPDA>> _mockSet;
-        private readonly Mock<ApplicationDbContext> _mockContext;
-        private readonly DPDARepository _repository;
-        private readonly List<DPDA> _data;
+        private readonly ApplicationDbContext _context;
+        private readonly IDPDARepository _repository;
 
         public DPDARepositoryTests()
         {
-            // Sample test data
-            _data = new List<DPDA>
+            // Setup in-memory database cho DPDA repository testing
+            var options = new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+                .Options;
+
+            _context = new ApplicationDbContext(options);
+            _repository = new DPDARepository(_context);
+        }
+
+        #region DPDA Repository CRUD Tests
+
+        [Fact]
+        public async Task AddAsync_Should_Create_DPDA_With_All_Business_Columns()
+        {
+            // Arrange - DPDA entity với 13 business columns đầy đủ
+            var dpda = new DPDA
             {
-                new DPDA {
-                    Id = 1,
-                    NGAY_DL = new DateTime(2025, 3, 1),
-                    MA_CHI_NHANH = "7808",
-                    MA_KHACH_HANG = "123456",
-                    TEN_KHACH_HANG = "Nguyễn Văn A",
-                    SO_TAI_KHOAN = "1000123456",
-                    LOAI_THE = "ATM",
-                    SO_THE = "9704123456789012",
-                    TRANG_THAI = "ACTIVE",
-                    NGAY_NOP_DON = new DateTime(2025, 2, 15),
-                    NGAY_PHAT_HANH = new DateTime(2025, 2, 20),
-                    CREATED_DATE = DateTime.Now.AddDays(-10)
-                },
-                new DPDA {
-                    Id = 2,
-                    NGAY_DL = new DateTime(2025, 3, 1),
-                    MA_CHI_NHANH = "7808",
-                    MA_KHACH_HANG = "654321",
-                    TEN_KHACH_HANG = "Trần Thị B",
-                    SO_TAI_KHOAN = "1000654321",
-                    LOAI_THE = "VISA",
-                    SO_THE = "4583123456789876",
-                    TRANG_THAI = "PENDING",
-                    NGAY_NOP_DON = new DateTime(2025, 2, 25),
+                NGAY_DL = new DateTime(2024, 12, 31),
+                MA_CHI_NHANH = "CNL1",
+                MA_KHACH_HANG = "KH001",
+                TEN_KHACH_HANG = "Nguyen Van Test",
+                SO_TK = "1234567890123",
+                TEN_TK = "Tai khoan tiet kiem",
+                LOAI_TK = "TD",
+                SO_DU = 1500000.75m,
+                NGAY_MO_TK = new DateTime(2024, 01, 15),
+                TINH_TRANG = "HOAT_DONG",
+                MA_SP = "SP001",
+                TEN_SP = "San pham tiet kiem",
+                LAI_SUAT = 0.065m,
+                KY_HAN = 12
                     NGAY_PHAT_HANH = null,
-                    CREATED_DATE = DateTime.Now.AddDays(-5)
-                },
-                new DPDA {
+                CREATED_DATE = DateTime.Now.AddDays(-5)
+            },
+                new DPDA
+                {
                     Id = 3,
                     NGAY_DL = new DateTime(2025, 3, 2),
                     MA_CHI_NHANH = "7800",
@@ -65,7 +67,8 @@ namespace TinhKhoanApp.Api.Tests.Repositories
                     NGAY_PHAT_HANH = new DateTime(2025, 2, 15),
                     CREATED_DATE = DateTime.Now.AddDays(-15)
                 },
-                new DPDA {
+                new DPDA
+                {
                     Id = 4,
                     NGAY_DL = new DateTime(2025, 3, 2),
                     MA_CHI_NHANH = "7800",
@@ -81,19 +84,19 @@ namespace TinhKhoanApp.Api.Tests.Repositories
                 },
             };
 
-            // Configure mock DbSet
-            _mockSet = new Mock<DbSet<DPDA>>();
+        // Configure mock DbSet
+        _mockSet = new Mock<DbSet<DPDA>>();
             _mockSet.As<IQueryable<DPDA>>().Setup(m => m.Provider).Returns(_data.AsQueryable().Provider);
-            _mockSet.As<IQueryable<DPDA>>().Setup(m => m.Expression).Returns(_data.AsQueryable().Expression);
-            _mockSet.As<IQueryable<DPDA>>().Setup(m => m.ElementType).Returns(_data.AsQueryable().ElementType);
-            _mockSet.As<IQueryable<DPDA>>().Setup(m => m.GetEnumerator()).Returns(_data.AsQueryable().GetEnumerator());
+        _mockSet.As<IQueryable<DPDA>>().Setup(m => m.Expression).Returns(_data.AsQueryable().Expression);
+        _mockSet.As<IQueryable<DPDA>>().Setup(m => m.ElementType).Returns(_data.AsQueryable().ElementType);
+        _mockSet.As<IQueryable<DPDA>>().Setup(m => m.GetEnumerator()).Returns(_data.AsQueryable().GetEnumerator());
 
-            // Configure mock DbContext
-            _mockContext = new Mock<ApplicationDbContext>();
+        // Configure mock DbContext
+        _mockContext = new Mock<ApplicationDbContext>();
             _mockContext.Setup(c => c.Set<DPDA>()).Returns(_mockSet.Object);
 
-            // Create repository with mock context
-            _repository = new DPDARepository(_mockContext.Object);
+        // Create repository with mock context
+        _repository = new DPDARepository(_mockContext.Object);
         }
 
         [Fact]
