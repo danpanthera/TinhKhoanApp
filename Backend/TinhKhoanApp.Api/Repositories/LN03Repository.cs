@@ -589,47 +589,95 @@ namespace TinhKhoanApp.Api.Repositories
 
         public new async Task<BulkOperationResult> BulkInsertAsync(List<LN03Entity> entities)
         {
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             try
             {
                 await _context.Set<LN03Entity>().AddRangeAsync(entities);
                 var affectedRows = await _context.SaveChangesAsync();
-                return new BulkOperationResult { Success = true, AffectedRows = affectedRows };
+                stopwatch.Stop();
+                return new BulkOperationResult
+                {
+                    TotalProcessed = entities.Count,
+                    SuccessCount = affectedRows,
+                    ErrorCount = 0,
+                    ProcessingTime = stopwatch.Elapsed
+                };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error bulk inserting LN03Entity records");
-                return new BulkOperationResult { Success = false, AffectedRows = 0, ErrorMessage = ex.Message };
+                stopwatch.Stop();
+                return new BulkOperationResult
+                {
+                    TotalProcessed = entities.Count,
+                    SuccessCount = 0,
+                    ErrorCount = entities.Count,
+                    Errors = new List<string> { ex.Message },
+                    ProcessingTime = stopwatch.Elapsed
+                };
             }
         }
 
         public new async Task<BulkOperationResult> BulkUpdateAsync(List<LN03Entity> entities)
         {
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             try
             {
                 _context.Set<LN03Entity>().UpdateRange(entities);
                 var affectedRows = await _context.SaveChangesAsync();
-                return new BulkOperationResult { Success = true, AffectedRows = affectedRows };
+                stopwatch.Stop();
+                return new BulkOperationResult
+                {
+                    TotalProcessed = entities.Count,
+                    SuccessCount = affectedRows,
+                    ErrorCount = 0,
+                    ProcessingTime = stopwatch.Elapsed
+                };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error bulk updating LN03Entity records");
-                return new BulkOperationResult { Success = false, AffectedRows = 0, ErrorMessage = ex.Message };
+                stopwatch.Stop();
+                return new BulkOperationResult
+                {
+                    TotalProcessed = entities.Count,
+                    SuccessCount = 0,
+                    ErrorCount = entities.Count,
+                    Errors = new List<string> { ex.Message },
+                    ProcessingTime = stopwatch.Elapsed
+                };
             }
         }
 
         public new async Task<BulkOperationResult> BulkDeleteAsync(List<long> ids)
         {
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             try
             {
                 var entities = await _context.Set<LN03Entity>().Where(x => ids.Contains(x.Id)).ToListAsync();
                 _context.Set<LN03Entity>().RemoveRange(entities);
                 var affectedRows = await _context.SaveChangesAsync();
-                return new BulkOperationResult { Success = true, AffectedRows = affectedRows };
+                stopwatch.Stop();
+                return new BulkOperationResult
+                {
+                    TotalProcessed = ids.Count,
+                    SuccessCount = affectedRows,
+                    ErrorCount = 0,
+                    ProcessingTime = stopwatch.Elapsed
+                };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error bulk deleting LN03Entity records");
-                return new BulkOperationResult { Success = false, AffectedRows = 0, ErrorMessage = ex.Message };
+                stopwatch.Stop();
+                return new BulkOperationResult
+                {
+                    TotalProcessed = ids.Count,
+                    SuccessCount = 0,
+                    ErrorCount = ids.Count,
+                    Errors = new List<string> { ex.Message },
+                    ProcessingTime = stopwatch.Elapsed
+                };
             }
         }
 

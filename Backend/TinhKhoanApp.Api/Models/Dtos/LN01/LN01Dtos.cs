@@ -395,11 +395,8 @@ namespace TinhKhoanApp.Api.Models.DTOs.LN01
         public decimal TY_GIA { get; set; }
         public string OFFICER_IPCAS { get; set; } = string.Empty;
 
-        // System columns
-        public DateTime CreatedAt { get; set; }
-        public DateTime UpdatedAt { get; set; }
-        public DateTime SysStartTime { get; set; }
-        public DateTime SysEndTime { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public DateTime? UpdatedDate { get; set; }
     }
 
     /// <summary>
@@ -407,20 +404,12 @@ namespace TinhKhoanApp.Api.Models.DTOs.LN01
     /// </summary>
     public class LN01SummaryDto
     {
-        public long TotalRecords { get; set; }
-        public long TotalActiveLoans { get; set; }
+        public DateTime NgayDL { get; set; }
+        public int TotalRecords { get; set; }
+        public decimal TotalLoanAmount { get; set; }
         public decimal TotalOutstandingAmount { get; set; }
-        public decimal TotalDisbursementAmount { get; set; }
-        public decimal TotalInterestAmount { get; set; }
-        public decimal TotalPastdueInterestAmount { get; set; }
-        public decimal AverageInterestRate { get; set; }
-        public Dictionary<string, long> LoansByType { get; set; } = new();
-        public Dictionary<string, long> LoansByBranch { get; set; } = new();
-        public Dictionary<string, decimal> OutstandingByCurrency { get; set; } = new();
-        public Dictionary<string, long> LoansByOfficer { get; set; } = new();
-        public long OverdueLoansCount { get; set; }
-        public decimal OverdueAmount { get; set; }
-        public DateTime GeneratedAt { get; set; }
+        public decimal TotalOverdueAmount { get; set; }
+        public DateTime LastUpdated { get; set; }
     }
 
     /// <summary>

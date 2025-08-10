@@ -104,7 +104,7 @@ builder.Services.AddCachingServices(builder.Configuration);
 // builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.IGL02Repository, TinhKhoanApp.Api.Repositories.GL02Repository>(); // TODO: Fix GL02
 // builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.IGL41Repository, TinhKhoanApp.Api.Repositories.GL41Repository>(); // TODO: Fix GL41
 // builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.ILN01Repository, TinhKhoanApp.Api.Repositories.LN01Repository>(); // TODO: Fix LN01
-// builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.ILN03Repository, TinhKhoanApp.Api.Repositories.LN03Repository>(); // ✅ LN03 Ready - TEMP DISABLED
+builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.ILN03Repository, TinhKhoanApp.Api.Repositories.LN03Repository>(); // ✅ LN03 Ready - ENABLED FOR PHASE 2
 // builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.IRR01Repository, TinhKhoanApp.Api.Repositories.RR01Repository>(); // TODO: Fix RR01
 
 // Service Layer - Focus on LN03 (temporarily disabled for clean build)

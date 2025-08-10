@@ -36,6 +36,7 @@ namespace TinhKhoanApp.Api.Extensions
 
             // Register repositories
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+            services.AddScoped(typeof(TinhKhoanApp.Api.Repositories.Interfaces.IBaseRepository<>), typeof(TinhKhoanApp.Api.Repositories.GenericRepository<>));
             // All specific repositories are temporarily disabled for clean build
 
             // Register cached repositories (for production environments) - TEMP DISABLED

@@ -22,17 +22,28 @@ namespace TinhKhoanApp.Api.Models.DTOs.RR01
         public string? SO_LAV { get; set; }
         public string? LOAI_KH { get; set; }
         public DateTime? NGAY_GIAI_NGAN { get; set; }
+        public DateTime? NGAY_DAO_HAN { get; set; }
         public DateTime? NGAY_DEN_HAN { get; set; }
         public string? VAMC_FLG { get; set; }
         public DateTime? NGAY_XLRR { get; set; }
+        public decimal? SO_TIEN_GIAI_NGAN { get; set; }
         public decimal? DUNO_GOC_BAN_DAU { get; set; }
         public decimal? DUNO_LAI_TICHLUY_BD { get; set; }
+        public decimal? DOC_DAUKY_DA_THU_GOC { get; set; }
         public decimal? DOC_DAUKY_DA_THU_HT { get; set; }
+        public decimal? SL_TRA_LAI_TRONG_KY { get; set; }
+        public decimal? SL_TRA_GOC_TRONG_KY { get; set; }
+        public decimal? DUNO_CL_CUOIKY { get; set; }
+        public decimal? DUNO_LAI_TICHLUY_CK { get; set; }
         public decimal? DUNO_GOC_HIENTAI { get; set; }
         public decimal? DUNO_LAI_HIENTAI { get; set; }
         public decimal? DUNO_NGAN_HAN { get; set; }
         public decimal? DUNO_TRUNG_HAN { get; set; }
         public decimal? DUNO_DAI_HAN { get; set; }
+        public string? NHOM_NO { get; set; }
+        public string? NHOM_NO_HT { get; set; }
+        public string? DT_PHAN_LOAI { get; set; }
+        public string? NHAN_VIEN_CHT { get; set; }
         public decimal? THU_GOC { get; set; }
         public decimal? THU_LAI { get; set; }
         public decimal? BDS { get; set; }
@@ -148,14 +159,11 @@ namespace TinhKhoanApp.Api.Models.DTOs.RR01
         public int TotalRecords { get; set; }
         public int TotalBranches { get; set; }
         public int TotalCustomers { get; set; }
-        public decimal TotalDuNoGoc { get; set; }
-        public decimal TotalDuNoLai { get; set; }
-        public decimal TotalThuGoc { get; set; }
-        public decimal TotalThuLai { get; set; }
-        public decimal TotalBDS { get; set; }
-        public decimal TotalDS { get; set; }
-        public DateTime LastImportDate { get; set; }
-        public string? FileName { get; set; }
+        public decimal TotalOutstandingPrincipal { get; set; }
+        public decimal TotalAccumulatedInterest { get; set; }
+        public decimal TotalInterestRepayments { get; set; }
+        public decimal TotalPrincipalRepayments { get; set; }
+        public DateTime LastUpdated { get; set; }
     }
 
     /// <summary>

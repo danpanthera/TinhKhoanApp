@@ -56,7 +56,7 @@ Luôn để backend port là 5055, frontend port là 3000.
 - **EI01**: Temporal Table với 24 business columns + History tracking ✅ OPERATIONAL
 - **GL41**: Temporal Table với 13 business columns + History tracking ✅ OPERATIONAL
 - **LN01**: Temporal Table với 79 business columns + History tracking ✅ OPERATIONAL
-- **LN03**: Temporal Table với 20 business columns + DirectImport optimized ✅ OPERATIONAL
+- **LN03**: Temporal Table với 20 business columns (17 có header + 3 không header) + DirectImport optimized ✅ OPERATIONAL
 - **RR01**: Temporal Table với 25 business columns + History tracking ✅ OPERATIONAL
 
 ✅ **DirectImport Configuration:**
@@ -228,8 +228,8 @@ Luôn kiểm tra file test cho 08 bảng dữ liệu từ thư mục sau:
 | **EI01** | 24            | 5           | 29    | Temporal + Columnstore              |
 | **GL01** | 27            | 5           | 32    | **Partitioned Columnstore**         |
 | **GL41** | 13            | 5           | 18    | Temporal + Columnstore              |
-| **LN01** | 79            | 5           | 84    | Temporal + Columnstore              |
-| **LN03** | 17            | 5           | 22    | Temporal + Columnstore              |
+| **LN01** | 79            | 5           | 86    | Temporal + Columnstore              |
+| **LN03** | 20 (17+3)     | 5           | 27    | Temporal + Columnstore              |
 | **RR01** | 25            | 5           | 30    | Temporal + Columnstore              |
 | **DPDA** | 13            | 5           | 18    | Temporal + Columnstore              |
 
@@ -588,7 +588,7 @@ docker run -e "ACCEPT_EULA=Y" \
 - **GL02**: 17 business + 5 system + 2 temporal = 34 total columns (partitioned columnstore)
 - **GL41**: 13 business + 5 system + 2 temporal = 20 total columns
 - **LN01**: 79 business + 5 system + 2 temporal = 86 total columns
-- **LN03**: 17 business + 5 system + 2 temporal = 24 total columns
+- **LN03**: 20 business (17 có header + 3 không header) + 5 system + 2 temporal = 27 total columns
 - **RR01**: 25 business + 5 system + 2 temporal = 32 total columns
 # ================================================================================================#
 
