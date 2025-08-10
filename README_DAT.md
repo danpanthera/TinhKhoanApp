@@ -848,4 +848,4 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 - Business Column của CSV là chuẩn và là tham chiếu cho tất cả layers
 - Việc tổ chức lại code theo cách này sẽ giúp cấu trúc dự án rõ ràng, dễ bảo trì và theo đúng các best practices trong phát triển phần mềm
 - Liên tục update trạng thái qua file ARCHITECTURE_RESTRUCTURING_PLAN.md sau khi hoàn thành mỗi bảng
-+ Đảm bảo cấu trúc bảng (ngoài các cột NGAY_DL, System Column và Temporal Column) phải đồng nhất từ CSV <- Database <- Model <- EF <- BulkCopy <- Direct Import <- DTO <- Services <- Repository <- Entity <- Controller (business Column của CSV là chuẩn là tham chiếu)
++ Đảm bảo cấu trúc bảng (ngoài các cột NGAY_DL, System Column và Temporal Column) phải đồng nhất business column từ CSV <- Database <- Model <- EF <- BulkCopy <- Direct Import <- DTO <- Services <- Repository <- Entity <- Controller (business Column của CSV là chuẩn là tham chiếu) Cấu trúc cuối cùng là NGAY_DL-> Business Column -> Temporal/System Column
