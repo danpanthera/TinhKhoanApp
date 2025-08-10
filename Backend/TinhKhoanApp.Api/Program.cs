@@ -98,7 +98,7 @@ builder.Services.AddCachingServices(builder.Configuration);
 // 🎯 PHASE 2B: DEPENDENCY INJECTION CONFIGURATION
 // Repository Layer - Focus on LN03 (currently disabled for clean build)
 builder.Services.AddScoped<IDP01Repository, DP01Repository>(); // ✅ DP01 ENABLED - Step 1 Complete
-// builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.IDPDARepository, TinhKhoanApp.Api.Repositories.DPDARepository>(); // TODO: Fix DPDA
+builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IDPDARepository, TinhKhoanApp.Api.Repositories.DPDARepository>(); // DPDA Repository - Step 1 Complete
 // builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.IEI01Repository, TinhKhoanApp.Api.Repositories.EI01Repository>(); // TODO: Fix EI01
 // builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.IGL01Repository, TinhKhoanApp.Api.Repositories.GL01Repository>(); // TODO: Fix GL01
 // builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.IGL02Repository, TinhKhoanApp.Api.Repositories.GL02Repository>(); // TODO: Fix GL02
