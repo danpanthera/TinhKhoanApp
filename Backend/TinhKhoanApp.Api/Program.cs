@@ -4,7 +4,7 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Services;
-using TinhKhoanApp.Api.Services.Interfaces;
+// using TinhKhoanApp.Api.Services.Interfaces; // Disabled for DP01+DPDA focus
 using TinhKhoanApp.Api.Filters;
 using TinhKhoanApp.Api.Middleware;
 using TinhKhoanApp.Api.HealthChecks;
@@ -99,7 +99,7 @@ builder.Services.AddCachingServices(builder.Configuration);
 // Repository Layer - Only enable repositories that compile successfully
 builder.Services.AddScoped<IDP01Repository, DP01Repository>(); // ✅ DP01 ENABLED - Works
 builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IDPDARepository, TinhKhoanApp.Api.Repositories.DPDARepository>(); // ✅ DPDA Repository ENABLED
-builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.ILN03Repository, TinhKhoanApp.Api.Repositories.LN03Repository>(); // ✅ LN03 Repository ENABLED - Works
+// builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.ILN03Repository, TinhKhoanApp.Api.Repositories.LN03Repository>(); // ✅ REMOVED - Cleanup focus on DP01+DPDA
 // TODO: Fix repository interface implementations for the following (have compilation errors):
 // builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IEI01Repository, TinhKhoanApp.Api.Repositories.EI01Repository>(); // TODO: Fix interface implementation
 // builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IGL01Repository, TinhKhoanApp.Api.Repositories.GL01Repository>(); // TODO: Fix interface implementation
@@ -110,9 +110,9 @@ builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.ILN03Reposit
 
 // Service Layer - Only services with implementations are enabled
 builder.Services.AddScoped<IDP01Service, DP01Service>(); // ✅ DP01 ENABLED - Has implementation
-builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.ILN03Service, TinhKhoanApp.Api.Services.LN03Service>(); // ✅ LN03 ENABLED - Has implementation
+// builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.ILN03Service, TinhKhoanApp.Api.Services.LN03Service>(); // ✅ REMOVED - Cleanup focus on DP01+DPDA
 // TODO: Create service implementations for the following:
-// builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IDPDAService, TinhKhoanApp.Api.Services.DPDAService>(); // TODO: Implement DPDAService
+builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IDPDAService, TinhKhoanApp.Api.Services.DPDAService>(); // ✅ DPDA ENABLED - Complete implementation
 // builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IEI01Service, TinhKhoanApp.Api.Services.EI01Service>(); // TODO: Implement EI01Service
 // builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL01Service, TinhKhoanApp.Api.Services.GL01Service>(); // TODO: Implement GL01Service
 // builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL02Service, TinhKhoanApp.Api.Services.GL02Service>(); // TODO: Implement GL02Service

@@ -1,6 +1,7 @@
 using TinhKhoanApp.Api.Models.Entities;
 using TinhKhoanApp.Api.Models.Dtos.DP01;
 using TinhKhoanApp.Api.Repositories;
+using TinhKhoanApp.Api.Services.Interfaces;
 
 namespace TinhKhoanApp.Api.Services
 {

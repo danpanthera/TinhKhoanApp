@@ -17,16 +17,13 @@ namespace TinhKhoanApp.Api.Services
     public class DPDAService : IDPDAService
     {
         private readonly IDPDARepository _dpdaRepository;
-        private readonly IDirectImportService _directImportService;
         private readonly ILogger<DPDAService> _logger;
 
         public DPDAService(
             IDPDARepository dpdaRepository,
-            IDirectImportService directImportService,
             ILogger<DPDAService> logger)
         {
             _dpdaRepository = dpdaRepository;
-            _directImportService = directImportService;
             _logger = logger;
         }
 
