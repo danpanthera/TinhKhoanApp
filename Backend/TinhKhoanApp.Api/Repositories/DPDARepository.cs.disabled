@@ -30,7 +30,7 @@ namespace TinhKhoanApp.Api.Repositories
             // Apply search filter if provided
             if (!string.IsNullOrEmpty(searchTerm))
             {
-                query = query.Where(x =>
+                query = query.Where(x => 
                     x.MA_CHI_NHANH.Contains(searchTerm) ||
                     x.MA_KHACH_HANG.Contains(searchTerm) ||
                     x.TEN_KHACH_HANG.Contains(searchTerm) ||
@@ -39,7 +39,7 @@ namespace TinhKhoanApp.Api.Repositories
             }
 
             var totalCount = await query.LongCountAsync();
-
+            
             var entities = await query
                 .OrderByDescending(x => x.CreatedAt)
                 .Skip((pageNumber - 1) * pageSize)
@@ -111,7 +111,7 @@ namespace TinhKhoanApp.Api.Repositories
         public async Task<Dictionary<string, long>> GetCountByBranchAsync(DateTime? asOfDate = null)
         {
             var query = _context.Set<DPDAEntity>().AsQueryable();
-
+            
             if (asOfDate.HasValue)
             {
                 query = query.Where(x => x.CreatedAt <= asOfDate.Value);
@@ -129,7 +129,7 @@ namespace TinhKhoanApp.Api.Repositories
         public async Task<Dictionary<string, long>> GetCountByCardTypeAsync(DateTime? asOfDate = null)
         {
             var query = _context.Set<DPDAEntity>().AsQueryable();
-
+            
             if (asOfDate.HasValue)
             {
                 query = query.Where(x => x.CreatedAt <= asOfDate.Value);
@@ -142,12 +142,12 @@ namespace TinhKhoanApp.Api.Repositories
         }
 
         /// <summary>
-        /// Get DPDA count by status (TRANG_THAI)
+        /// Get DPDA count by status (TRANG_THAI)  
         /// </summary>
         public async Task<Dictionary<string, long>> GetCountByStatusAsync(DateTime? asOfDate = null)
         {
             var query = _context.Set<DPDAEntity>().AsQueryable();
-
+            
             if (asOfDate.HasValue)
             {
                 query = query.Where(x => x.CreatedAt <= asOfDate.Value);

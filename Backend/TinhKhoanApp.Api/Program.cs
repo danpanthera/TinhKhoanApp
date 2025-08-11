@@ -88,17 +88,18 @@ builder.Services.AddCors(options =>
 // builder.Services.AddRepositories();
 // builder.Services.AddApplicationServices(); // From DependencyInjectionExtensions
 
-// Configure DirectImport Settings
-builder.Services.Configure<TinhKhoanApp.Api.Models.Configuration.DirectImportSettings>(
-    builder.Configuration.GetSection("DirectImport"));
+// Configure DirectImport Settings (DISABLED for now)
+// builder.Services.Configure<TinhKhoanApp.Api.Models.Configuration.DirectImportSettings>(
+//     builder.Configuration.GetSection("DirectImport"));
 
-// Cache Services
-builder.Services.AddCachingServices(builder.Configuration);
+// Cache Services (DISABLED for now)
+// builder.Services.AddCachingServices(builder.Configuration);
 
 // 🎯 PHASE 3A: DEPENDENCY INJECTION CONFIGURATION - WORKING REPOSITORIES ONLY
 // Repository Layer - Only enable repositories that compile successfully
 builder.Services.AddScoped<IDP01Repository, DP01Repository>(); // ✅ DP01 ENABLED - Works
-builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IDPDARepository, TinhKhoanApp.Api.Repositories.DPDARepository>(); // ✅ DPDA Repository ENABLED
+// TODO: Fix DPDA Repository - Interface mismatch with BaseRepository
+// builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.IDPDARepository, TinhKhoanApp.Api.Repositories.DPDARepository>(); // ✅ DPDA Repository - NEEDS FIX
 // builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.ILN03Repository, TinhKhoanApp.Api.Repositories.LN03Repository>(); // ✅ REMOVED - Cleanup focus on DP01+DPDA
 // TODO: Fix repository interface implementations for the following (have compilation errors):
 // builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IEI01Repository, TinhKhoanApp.Api.Repositories.EI01Repository>(); // TODO: Fix interface implementation
@@ -109,10 +110,10 @@ builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IDPDARepository, TinhKh
 // builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IRR01Repository, TinhKhoanApp.Api.Repositories.RR01Repository>(); // TODO: Fix interface implementation - Has 23 missing methods
 
 // Service Layer - Only services with implementations are enabled
-builder.Services.AddScoped<IDP01Service, DP01Service>(); // ✅ DP01 ENABLED - Has implementation
+builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IDP01Service, DP01Service>(); // ✅ DP01 ENABLED - Has implementation
 // builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.ILN03Service, TinhKhoanApp.Api.Services.LN03Service>(); // ✅ REMOVED - Cleanup focus on DP01+DPDA
-// TODO: Create service implementations for the following:
-builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IDPDAService, TinhKhoanApp.Api.Services.DPDAService>(); // ✅ DPDA ENABLED - Complete implementation
+// TODO: Enable DPDA Service after Repository fix
+// builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IDPDAService, TinhKhoanApp.Api.Services.DPDAService>(); // ✅ DPDA - NEEDS Repository fix first
 // builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IEI01Service, TinhKhoanApp.Api.Services.EI01Service>(); // TODO: Implement EI01Service
 // builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL01Service, TinhKhoanApp.Api.Services.GL01Service>(); // TODO: Implement GL01Service
 // builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL02Service, TinhKhoanApp.Api.Services.GL02Service>(); // TODO: Implement GL02Service
@@ -125,8 +126,8 @@ builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IDPDAService, Ti
 // builder.Services.AddScoped<TinhKhoanApp.Api.Services.DataServices.IDP01DataService, TinhKhoanApp.Api.Services.DataServices.DP01DataService>(); // TODO
 // builder.Services.AddScoped<TinhKhoanApp.Api.Services.DataServices.IDPDADataService, TinhKhoanApp.Api.Services.DataServices.DPDADataService>(); // TODO
 
-// Essential Services
-builder.Services.AddScoped<TinhKhoanApp.Api.Services.DirectImportService>();
+// Essential Services (DISABLED for now)
+// builder.Services.AddScoped<TinhKhoanApp.Api.Services.DirectImportService>();
 // builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 // builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 

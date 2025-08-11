@@ -1,297 +1,209 @@
+using TinhKhoanApp.Api.Models.Common;
 using Microsoft.AspNetCore.Mvc;
-using TinhKhoanApp.Api.Services;
-using TinhKhoanApp.Api.Services.Interfaces;
+using TinhKhoanApp.Api.Models.Dtos;
 using TinhKhoanApp.Api.Models.Dtos.DP01;
-using System.Net;
+using TinhKhoanApp.Api.Services.DataServices;
 
 namespace TinhKhoanApp.Api.Controllers
 {
     /// <summary>
-    /// DP01 Controller - API endpoints cho bảng DP01 (Tiền gửi có kỳ hạn)
-    /// Xử lý 63 business columns theo CSV structure
-    /// Business columns từ CSV là single source of truth
+    /// Controller cho dữ liệu DP01 (Tài khoản tiền gửi)
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class DP01Controller : ControllerBase
     {
-        private readonly IDP01Service _dp01Service;
+        private readonly IDP01DataService _dp01DataService;
         private readonly ILogger<DP01Controller> _logger;
 
-        public DP01Controller(IDP01Service dp01Service, ILogger<DP01Controller> logger)
+        /// <summary>
+        /// Khởi tạo controller với các dependencies
+        /// </summary>
+        public DP01Controller(
+            IDP01DataService dp01DataService,
+            ILogger<DP01Controller> logger)
         {
-            _dp01Service = dp01Service;
+            _dp01DataService = dp01DataService;
             _logger = logger;
         }
 
         /// <summary>
-        /// Lấy tất cả DP01 records với paging
+        /// Lấy preview dữ liệu DP01 mới nhất
         /// </summary>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<DP01PreviewDto>>> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 100)
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<DP01PreviewDto>>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+        public async Task<IActionResult> GetDP01Preview([FromQuery] int count = 10)
         {
             try
             {
-                _logger.LogInformation("Getting DP01 records - Page: {PageNumber}, Size: {PageSize}", pageNumber, pageSize);
-
-                var records = await _dp01Service.GetAllAsync(pageNumber, pageSize);
-                var totalCount = await _dp01Service.GetTotalCountAsync();
-
-                Response.Headers.Add("X-Total-Count", totalCount.ToString());
-                Response.Headers.Add("X-Page-Number", pageNumber.ToString());
-                Response.Headers.Add("X-Page-Size", pageSize.ToString());
-
-                return Ok(records);
+                _logger.LogInformation("Retrieving DP01 preview data, count: {Count}", count);
+                var data = await _dp01DataService.GetDP01PreviewAsync(count);
+                return Ok(ApiResponse<IEnumerable<DP01PreviewDto>>.Ok(data, "DP01 preview data retrieved successfully"));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting DP01 records");
-                return StatusCode(500, "Internal server error");
+                _logger.LogError(ex, "Error retrieving DP01 preview data");
+                return BadRequest(ApiResponse<object>.Error("Failed to retrieve DP01 preview data", "DP01_PREVIEW_ERROR"));
             }
         }
 
         /// <summary>
-        /// Lấy DP01 theo ID
+        /// Lấy chi tiết một bản ghi DP01
         /// </summary>
         [HttpGet("{id}")]
-        public async Task<ActionResult<DP01DetailsDto>> GetById(int id)
+        [ProducesResponseType(typeof(ApiResponse<DP01DetailsDto>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<object>), 404)]
+        [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+        public async Task<IActionResult> GetDP01Detail(long id)
         {
             try
             {
-                _logger.LogInformation("Getting DP01 record by ID: {Id}", id);
+                _logger.LogInformation("Retrieving DP01 detail for ID {Id}", id);
+                var data = await _dp01DataService.GetDP01DetailAsync(id);
+                if (data == null)
+                    return NotFound(ApiResponse<object>.Error($"DP01 record with ID {id} not found", "DP01_NOT_FOUND"));
 
-                var record = await _dp01Service.GetByIdAsync(id);
-                if (record == null)
-                {
-                    return NotFound($"DP01 record with ID {id} not found");
-                }
-
-                return Ok(record);
+                return Ok(ApiResponse<DP01DetailsDto>.Ok(data, "DP01 detail retrieved successfully"));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting DP01 record by ID: {Id}", id);
-                return StatusCode(500, "Internal server error");
+                _logger.LogError(ex, "Error retrieving DP01 detail for ID {Id}", id);
+                return BadRequest(ApiResponse<object>.Error("Failed to retrieve DP01 detail", "DP01_DETAIL_ERROR"));
             }
         }
 
         /// <summary>
-        /// Lấy DP01 records gần nhất
+        /// Lấy dữ liệu DP01 theo chi nhánh
         /// </summary>
-        [HttpGet("recent")]
-        public async Task<ActionResult<IEnumerable<DP01PreviewDto>>> GetRecent([FromQuery] int count = 10)
+        [HttpGet("branch/{branchCode}")]
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<DP01PreviewDto>>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+        public async Task<IActionResult> GetDP01ByBranch(string branchCode, [FromQuery] int maxResults = 100)
         {
             try
             {
-                _logger.LogInformation("Getting recent DP01 records - Count: {Count}", count);
-
-                var records = await _dp01Service.GetRecentAsync(count);
-                return Ok(records);
+                _logger.LogInformation("Retrieving DP01 data for branch {BranchCode}, maxResults: {MaxResults}",
+                    branchCode, maxResults);
+                var data = await _dp01DataService.GetDP01ByBranchAsync(branchCode, maxResults);
+                return Ok(ApiResponse<IEnumerable<DP01PreviewDto>>.Ok(data,
+                    $"DP01 data for branch {branchCode} retrieved successfully"));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting recent DP01 records");
-                return StatusCode(500, "Internal server error");
+                _logger.LogError(ex, "Error retrieving DP01 data for branch {BranchCode}", branchCode);
+                return BadRequest(ApiResponse<object>.Error("Failed to retrieve DP01 data for branch", "DP01_BRANCH_ERROR"));
             }
         }
 
         /// <summary>
-        /// Lấy DP01 theo ngày dữ liệu (NGAY_DL)
+        /// Lấy dữ liệu DP01 theo khách hàng
         /// </summary>
-        [HttpGet("by-date/{date}")]
-        public async Task<ActionResult<IEnumerable<DP01PreviewDto>>> GetByDate(DateTime date)
+        [HttpGet("customer/{customerCode}")]
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<DP01PreviewDto>>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+        public async Task<IActionResult> GetDP01ByCustomer(string customerCode, [FromQuery] int maxResults = 100)
         {
             try
             {
-                _logger.LogInformation("Getting DP01 records by date: {Date}", date);
-
-                var records = await _dp01Service.GetByDateAsync(date);
-                return Ok(records);
+                _logger.LogInformation("Retrieving DP01 data for customer {CustomerCode}, maxResults: {MaxResults}",
+                    customerCode, maxResults);
+                var data = await _dp01DataService.GetDP01ByCustomerAsync(customerCode, maxResults);
+                return Ok(ApiResponse<IEnumerable<DP01PreviewDto>>.Ok(data,
+                    $"DP01 data for customer {customerCode} retrieved successfully"));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting DP01 records by date: {Date}", date);
-                return StatusCode(500, "Internal server error");
+                _logger.LogError(ex, "Error retrieving DP01 data for customer {CustomerCode}", customerCode);
+                return BadRequest(ApiResponse<object>.Error("Failed to retrieve DP01 data for customer", "DP01_CUSTOMER_ERROR"));
             }
         }
 
         /// <summary>
-        /// Lấy DP01 theo mã chi nhánh (MA_CN) - Business column từ CSV
+        /// Lấy dữ liệu DP01 theo số tài khoản
         /// </summary>
-        [HttpGet("by-branch/{branchCode}")]
-        public async Task<ActionResult<IEnumerable<DP01PreviewDto>>> GetByBranchCode(string branchCode, [FromQuery] int maxResults = 100)
+        [HttpGet("account/{accountNumber}")]
+        [ProducesResponseType(typeof(ApiResponse<IEnumerable<DP01PreviewDto>>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+        public async Task<IActionResult> GetDP01ByAccountNumber(string accountNumber, [FromQuery] int maxResults = 100)
         {
             try
             {
-                _logger.LogInformation("Getting DP01 records by branch code: {BranchCode}", branchCode);
-
-                var records = await _dp01Service.GetByBranchCodeAsync(branchCode, maxResults);
-                return Ok(records);
+                _logger.LogInformation("Retrieving DP01 data for account {AccountNumber}, maxResults: {MaxResults}",
+                    accountNumber, maxResults);
+                var data = await _dp01DataService.GetDP01ByAccountNumberAsync(accountNumber, maxResults);
+                return Ok(ApiResponse<IEnumerable<DP01PreviewDto>>.Ok(data,
+                    $"DP01 data for account {accountNumber} retrieved successfully"));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting DP01 records by branch code: {BranchCode}", branchCode);
-                return StatusCode(500, "Internal server error");
+                _logger.LogError(ex, "Error retrieving DP01 data for account {AccountNumber}", accountNumber);
+                return BadRequest(ApiResponse<object>.Error("Failed to retrieve DP01 data for account", "DP01_ACCOUNT_ERROR"));
             }
         }
 
         /// <summary>
-        /// Lấy DP01 theo mã khách hàng (MA_KH) - Business column từ CSV
+        /// Lấy thống kê tổng hợp DP01 theo chi nhánh
         /// </summary>
-        [HttpGet("by-customer/{customerCode}")]
-        public async Task<ActionResult<IEnumerable<DP01PreviewDto>>> GetByCustomerCode(string customerCode, [FromQuery] int maxResults = 100)
+        [HttpGet("summary/branch/{branchCode}")]
+        [ProducesResponseType(typeof(ApiResponse<DP01SummaryDto>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+        public async Task<IActionResult> GetDP01SummaryByBranch(string branchCode, [FromQuery] DateTime? date = null)
         {
             try
             {
-                _logger.LogInformation("Getting DP01 records by customer code: {CustomerCode}", customerCode);
-
-                var records = await _dp01Service.GetByCustomerCodeAsync(customerCode, maxResults);
-                return Ok(records);
+                _logger.LogInformation("Retrieving DP01 summary for branch {BranchCode}, date: {Date}",
+                    branchCode, date?.ToString("yyyy-MM-dd") ?? "latest");
+                var data = await _dp01DataService.GetDP01SummaryByBranchAsync(branchCode, date);
+                return Ok(ApiResponse<DP01SummaryDto>.Ok(data, $"DP01 summary for branch {branchCode} retrieved successfully"));
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting DP01 records by customer code: {CustomerCode}", customerCode);
-                return StatusCode(500, "Internal server error");
+                _logger.LogError(ex, "Error retrieving DP01 summary for branch {BranchCode}", branchCode);
+                return BadRequest(ApiResponse<object>.Error("Failed to retrieve DP01 summary for branch", "DP01_SUMMARY_ERROR"));
             }
         }
 
         /// <summary>
-        /// Lấy DP01 theo số tài khoản (SO_TAI_KHOAN) - Business column từ CSV
+        /// Tìm kiếm dữ liệu DP01 theo nhiều tiêu chí
         /// </summary>
-        [HttpGet("by-account/{accountNumber}")]
-        public async Task<ActionResult<IEnumerable<DP01PreviewDto>>> GetByAccountNumber(string accountNumber, [FromQuery] int maxResults = 100)
+        [HttpGet("search")]
+        [ProducesResponseType(typeof(ApiResponse<PagedResult<DP01PreviewDto>>), 200)]
+        [ProducesResponseType(typeof(ApiResponse<object>), 400)]
+        public async Task<IActionResult> SearchDP01(
+            [FromQuery] string? keyword,
+            [FromQuery] string? branchCode,
+            [FromQuery] string? customerCode,
+            [FromQuery] string? accountNumber,
+            [FromQuery] DateTime? fromDate,
+            [FromQuery] DateTime? toDate,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 20)
         {
             try
             {
-                _logger.LogInformation("Getting DP01 records by account number: {AccountNumber}", accountNumber);
+                _logger.LogInformation("Searching DP01 data with parameters: keyword={Keyword}, branchCode={BranchCode}, " +
+                    "customerCode={CustomerCode}, accountNumber={AccountNumber}, fromDate={FromDate}, toDate={ToDate}, " +
+                    "page={Page}, pageSize={PageSize}",
+                    keyword, branchCode, customerCode, accountNumber,
+                    fromDate?.ToString("yyyy-MM-dd"), toDate?.ToString("yyyy-MM-dd"), page, pageSize);
 
-                var records = await _dp01Service.GetByAccountNumberAsync(accountNumber, maxResults);
-                return Ok(records);
+                var data = await _dp01DataService.SearchDP01Async(
+                    keyword,
+                    branchCode,
+                    customerCode,
+                    accountNumber,
+                    fromDate,
+                    toDate,
+                    page,
+                    pageSize);
+
+                return Ok(data);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting DP01 records by account number: {AccountNumber}", accountNumber);
-                return StatusCode(500, "Internal server error");
-            }
-        }
-
-        /// <summary>
-        /// Lấy tổng số dư theo chi nhánh (CURRENT_BALANCE) - Business column từ CSV
-        /// </summary>
-        [HttpGet("total-balance/{branchCode}")]
-        public async Task<ActionResult<decimal>> GetTotalBalanceByBranch(string branchCode, [FromQuery] DateTime? date = null)
-        {
-            try
-            {
-                _logger.LogInformation("Getting total balance for branch: {BranchCode}, Date: {Date}", branchCode, date);
-
-                var totalBalance = await _dp01Service.GetTotalBalanceByBranchAsync(branchCode, date);
-                return Ok(totalBalance);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting total balance for branch: {BranchCode}", branchCode);
-                return StatusCode(500, "Internal server error");
-            }
-        }
-
-        /// <summary>
-        /// Lấy thống kê tổng quan DP01
-        /// </summary>
-        [HttpGet("statistics")]
-        public async Task<ActionResult<DP01SummaryDto>> GetStatistics([FromQuery] DateTime? date = null)
-        {
-            try
-            {
-                _logger.LogInformation("Getting DP01 statistics for date: {Date}", date);
-
-                var statistics = await _dp01Service.GetStatisticsAsync(date);
-                return Ok(statistics);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting DP01 statistics");
-                return StatusCode(500, "Internal server error");
-            }
-        }
-
-        /// <summary>
-        /// Tạo DP01 record mới
-        /// </summary>
-        [HttpPost]
-        public async Task<ActionResult<DP01DetailsDto>> Create([FromBody] DP01CreateDto createDto)
-        {
-            try
-            {
-                _logger.LogInformation("Creating new DP01 record for customer: {CustomerCode}", createDto.MA_KH);
-
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                var createdRecord = await _dp01Service.CreateAsync(createDto);
-                return CreatedAtAction(nameof(GetById), new { id = createdRecord.Id }, createdRecord);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating DP01 record");
-                return StatusCode(500, "Internal server error");
-            }
-        }
-
-        /// <summary>
-        /// Cập nhật DP01 record
-        /// </summary>
-        [HttpPut("{id}")]
-        public async Task<ActionResult<DP01DetailsDto>> Update(int id, [FromBody] DP01UpdateDto updateDto)
-        {
-            try
-            {
-                _logger.LogInformation("Updating DP01 record ID: {Id}", id);
-
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
-                var updatedRecord = await _dp01Service.UpdateAsync(id, updateDto);
-                if (updatedRecord == null)
-                {
-                    return NotFound($"DP01 record with ID {id} not found");
-                }
-
-                return Ok(updatedRecord);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating DP01 record ID: {Id}", id);
-                return StatusCode(500, "Internal server error");
-            }
-        }
-
-        /// <summary>
-        /// Xóa DP01 record
-        /// </summary>
-        [HttpDelete("{id}")]
-        public async Task<ActionResult> Delete(int id)
-        {
-            try
-            {
-                _logger.LogInformation("Deleting DP01 record ID: {Id}", id);
-
-                var isDeleted = await _dp01Service.DeleteAsync(id);
-                if (!isDeleted)
-                {
-                    return NotFound($"DP01 record with ID {id} not found");
-                }
-
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error deleting DP01 record ID: {Id}", id);
-                return StatusCode(500, "Internal server error");
+                _logger.LogError(ex, "Error searching DP01 data");
+                return BadRequest(ApiResponse<object>.Error("Failed to search DP01 data", "DP01_SEARCH_ERROR"));
             }
         }
     }
