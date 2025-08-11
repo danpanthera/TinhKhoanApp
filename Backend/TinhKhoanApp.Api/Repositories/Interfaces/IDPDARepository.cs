@@ -1,61 +1,80 @@
-using TinhKhoanApp.Api.Models.DataTables;
+using TinhKhoanApp.Api.Models.Entities;
+using TinhKhoanApp.Api.Repositories.Interfaces;
 
 namespace TinhKhoanApp.Api.Repositories.Interfaces
 {
     /// <summary>
     /// Interface cho DPDA Repository - Thẻ nộp đơn gửi tiết kiệm
-    /// Extend IRepository<DPDA> với các business methods cho DPDA data
-    /// CSV Structure: 13 business columns - MA_CHI_NHANH, MA_KHACH_HANG, TEN_KHACH_HANG, SO_TAI_KHOAN, LOAI_THE, SO_THE, NGAY_NOP_DON, NGAY_PHAT_HANH, USER_PHAT_HANH, TRANG_THAI, PHAN_LOAI, GIAO_THE, LOAI_PHAT_HANH
+    /// Theo pattern IDP01Repository với 13 business columns từ CSV
+    /// CSV-First: Business columns từ CSV là chuẩn cho tất cả layers
     /// </summary>
-    public interface IDPDARepository : IRepository<DPDA>
+    public interface IDPDARepository : IBaseRepository<DPDAEntity>
     {
-        /// <summary>
-        /// Lấy danh sách DPDA theo ngày dữ liệu
-        /// </summary>
-        /// <param name="ngayDl">Ngày dữ liệu (YYYY-MM-DD)</param>
-        /// <returns>Danh sách DPDA records</returns>
-        Task<IEnumerable<DPDA>> GetByDateAsync(DateTime ngayDl);
+        #region Paging Support
 
         /// <summary>
-        /// Lấy danh sách DPDA theo mã chi nhánh
+        /// Get DPDA with paging and optional search
         /// </summary>
-        /// <param name="maChiNhanh">Mã chi nhánh</param>
-        /// <returns>Danh sách DPDA theo chi nhánh</returns>
-        Task<IEnumerable<DPDA>> GetByBranchCodeAsync(string maChiNhanh);
+        Task<(IEnumerable<DPDAEntity> entities, long totalCount)> GetPagedAsync(int pageNumber, int pageSize, string? searchTerm = null);
+
+        #endregion
+
+        #region Business Key Searches - CSV column names preserved
 
         /// <summary>
-        /// Lấy danh sách DPDA theo mã khách hàng
+        /// Search DPDA by customer code (MA_KHACH_HANG)
         /// </summary>
-        /// <param name="maKhachHang">Mã khách hàng</param>
-        /// <returns>Danh sách DPDA theo khách hàng</returns>
-        Task<IEnumerable<DPDA>> GetByCustomerCodeAsync(string maKhachHang);
+        Task<IEnumerable<DPDAEntity>> GetByCustomerCodeAsync(string customerCode, int limit = 100);
 
         /// <summary>
-        /// Lấy danh sách DPDA theo số tài khoản
+        /// Search DPDA by branch code (MA_CHI_NHANH)
         /// </summary>
-        /// <param name="soTaiKhoan">Số tài khoản</param>
-        /// <returns>Danh sách DPDA theo tài khoản</returns>
-        Task<IEnumerable<DPDA>> GetByAccountNumberAsync(string soTaiKhoan);
+        Task<IEnumerable<DPDAEntity>> GetByBranchCodeAsync(string branchCode, int limit = 100);
 
         /// <summary>
-        /// Lấy danh sách DPDA theo trạng thái thẻ
+        /// Search DPDA by account number (SO_TAI_KHOAN)
         /// </summary>
-        /// <param name="trangThai">Trạng thái thẻ</param>
-        /// <returns>Danh sách DPDA theo trạng thái</returns>
-        Task<IEnumerable<DPDA>> GetByCardStatusAsync(string trangThai);
+        Task<IEnumerable<DPDAEntity>> GetByAccountNumberAsync(string accountNumber, int limit = 100);
 
         /// <summary>
-        /// Lấy danh sách DPDA theo loại thẻ
+        /// Search DPDA by card number (SO_THE)
         /// </summary>
-        /// <param name="loaiThe">Loại thẻ</param>
-        /// <returns>Danh sách DPDA theo loại thẻ</returns>
-        Task<IEnumerable<DPDA>> GetByCardTypeAsync(string loaiThe);
+        Task<IEnumerable<DPDAEntity>> GetByCardNumberAsync(string cardNumber, int limit = 100);
+
+        #endregion
+
+        #region Analytics Support for Summary DTO
 
         /// <summary>
-        /// Lấy thống kê DPDA theo ngày
+        /// Get total DPDA count
         /// </summary>
-        /// <param name="ngayDl">Ngày dữ liệu</param>
-        /// <returns>Số lượng records theo ngày</returns>
-        Task<int> GetCountByDateAsync(DateTime ngayDl);
+        Task<long> GetTotalCountAsync();
+
+        /// <summary>
+        /// Get card count by status (TRANG_THAI)
+        /// </summary>
+        Task<Dictionary<string, long>> GetCardCountByStatusAsync();
+
+        /// <summary>
+        /// Get card count by type (LOAI_THE)
+        /// </summary>
+        Task<Dictionary<string, long>> GetCardCountByTypeAsync();
+
+        /// <summary>
+        /// Get card count by branch (MA_CHI_NHANH) - Top N
+        /// </summary>
+        Task<Dictionary<string, long>> GetCardCountByBranchAsync(int topN = 10);
+
+        /// <summary>
+        /// Get card count by category (PHAN_LOAI)
+        /// </summary>
+        Task<Dictionary<string, long>> GetCardCountByCategoryAsync();
+
+        /// <summary>
+        /// Get card count issued in date range (NGAY_PHAT_HANH)
+        /// </summary>
+        Task<long> GetCardCountByDateRangeAsync(DateTime startDate, DateTime endDate);
+
+        #endregion
     }
 }
