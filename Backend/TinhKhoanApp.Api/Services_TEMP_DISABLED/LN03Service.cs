@@ -1,5 +1,5 @@
-using TinhKhoanApp.Api.Models.DTOs;
-using TinhKhoanApp.Api.Models.DTOs;
+using TinhKhoanApp.Api.Models.Dtos;
+using TinhKhoanApp.Api.Models.Dtos;
 using TinhKhoanApp.Api.Models.Entities;
 using TinhKhoanApp.Api.Repositories.Interfaces;
 using TinhKhoanApp.Api.Services.Interfaces;

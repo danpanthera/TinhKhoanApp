@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Mvc;
-using TinhKhoanApp.Api.Models.DTOs.DP01;
-using TinhKhoanApp.Api.Models.DTOs.RR01;
-using TinhKhoanApp.Api.Models.DTOs.LN01;
-using TinhKhoanApp.Api.Models.DTOs;
-using TinhKhoanApp.Api.Models.DTOs.DPDA;
-using TinhKhoanApp.Api.Models.DTOs.GL01;
-using TinhKhoanApp.Api.Models.DTOs.GL02;
-using TinhKhoanApp.Api.Models.DTOs.GL41;
-using TinhKhoanApp.Api.Models.DTOs.EI01;
+using TinhKhoanApp.Api.Models.Dtos.DP01;
+using TinhKhoanApp.Api.Models.Dtos.RR01;
+using TinhKhoanApp.Api.Models.Dtos.LN01;
+using TinhKhoanApp.Api.Models.Dtos;
+using TinhKhoanApp.Api.Models.Dtos.DPDA;
+using TinhKhoanApp.Api.Models.Dtos.GL01;
+using TinhKhoanApp.Api.Models.Dtos.GL02;
+using TinhKhoanApp.Api.Models.Dtos.GL41;
+using TinhKhoanApp.Api.Models.Dtos.EI01;
 using TinhKhoanApp.Api.Models.Common;
 using TinhKhoanApp.Api.Services.Interfaces;
 

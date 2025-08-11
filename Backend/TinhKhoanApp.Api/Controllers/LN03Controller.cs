@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using TinhKhoanApp.Api.Models.DTOs;
+using TinhKhoanApp.Api.Models.Dtos;
 using TinhKhoanApp.Api.Services.Interfaces;
 
 namespace TinhKhoanApp.Api.Controllers

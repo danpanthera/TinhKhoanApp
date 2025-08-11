@@ -57,7 +57,7 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<DataTables.GL41> GL41 { get; set; }
         public DbSet<DataTables.DPDA> DPDA { get; set; }
         public DbSet<DataTables.EI01> EI01 { get; set; }
-        public DbSet<DataTables.RR01> RR01 { get; set; }
+        // public DbSet<DataTables.RR01> RR01 { get; set; } // Temporary disabled - needs entity/DTO alignment
 
         // 🔄 DbSets with plural names for backward compatibility
         // Note: DP01s removed - using DP01 directly
@@ -68,7 +68,7 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<DataTables.GL41> GL41s { get; set; }
         public DbSet<DataTables.DPDA> DPDAs { get; set; }
         public DbSet<DataTables.EI01> EI01s { get; set; }
-        public DbSet<DataTables.RR01> RR01s { get; set; }
+        // public DbSet<DataTables.RR01> RR01s { get; set; } // Temporary disabled - needs entity/DTO alignment
 
         // 🆕 DbSets cho Modern Entity Layer (Repository Pattern)
         // public DbSet<RR01Entity> RR01Entities { get; set; } // Temporary disabled - conflicts with DataTables.RR01

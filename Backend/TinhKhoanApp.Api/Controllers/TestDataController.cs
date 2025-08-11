@@ -165,7 +165,7 @@ namespace TinhKhoanApp.Api.Controllers
                     GL01_Count = await _context.GL01.CountAsync(),
                     DPDA_Count = await _context.DPDA.CountAsync(),
                     EI01_Count = await _context.EI01.CountAsync(),
-                    RR01_Count = await _context.RR01.CountAsync(),
+                    // RR01_Count = await _context.RR01.CountAsync(), // Temporary disabled
                     LastImport = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")
                 };
 

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using TinhKhoanApp.Api.Services.Interfaces;
-using TinhKhoanApp.Api.Models.DTOs.RR01;
+using TinhKhoanApp.Api.Models.Dtos.RR01;
 using TinhKhoanApp.Api.Models.Common;
 
 namespace TinhKhoanApp.Api.Controllers

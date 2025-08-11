@@ -1,6 +1,6 @@
-using TinhKhoanApp.Api.Models.DTOs.DP01;
+using TinhKhoanApp.Api.Models.Dtos.DP01;
 using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.DTOs;
+using TinhKhoanApp.Api.Models.Dtos;
 
 namespace TinhKhoanApp.Api.Services.DataServices
 {

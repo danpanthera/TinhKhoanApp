@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models.RawData;
 using TinhKhoanApp.Api.Models.DataTables;
-using TinhKhoanApp.Api.Models.DTOs;
+using TinhKhoanApp.Api.Models.Dtos;
 using TinhKhoanApp.Api.Services;
 using System.Text;
 using System.Text.Json;

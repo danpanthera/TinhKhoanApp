@@ -1,6 +1,6 @@
 using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.DTOs;
-using TinhKhoanApp.Api.Models.DTOs.DPDA;
+using TinhKhoanApp.Api.Models.Dtos;
+using TinhKhoanApp.Api.Models.Dtos.DPDA;
 
 namespace TinhKhoanApp.Api.Repositories.Interfaces
 {

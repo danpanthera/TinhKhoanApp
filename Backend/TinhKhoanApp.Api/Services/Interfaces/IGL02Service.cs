@@ -1,4 +1,4 @@
-using TinhKhoanApp.Api.Models.DTOs.GL02;
+using TinhKhoanApp.Api.Models.Dtos.GL02;
 using TinhKhoanApp.Api.Models.Common;
 
 namespace TinhKhoanApp.Api.Services.Interfaces

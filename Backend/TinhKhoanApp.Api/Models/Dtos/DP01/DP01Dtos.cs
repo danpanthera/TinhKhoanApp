@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace TinhKhoanApp.Api.Models.DTOs.DP01
+namespace TinhKhoanApp.Api.Models.Dtos.DP01
 {
     /// <summary>
     /// DP01 Preview DTO - để hiển thị preview data từ bảng DP01

@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using TinhKhoanApp.Api.Models.DTOs.LN01;
+using TinhKhoanApp.Api.Models.Dtos.LN01;
 using TinhKhoanApp.Api.Models.Common;
 using TinhKhoanApp.Api.Repositories.Interfaces;
 using TinhKhoanApp.Api.Models.Entities;

@@ -1,4 +1,4 @@
-using TinhKhoanApp.Api.Models.DTOs;
+using TinhKhoanApp.Api.Models.Dtos;
 
 namespace TinhKhoanApp.Api.Services.Interfaces
 {

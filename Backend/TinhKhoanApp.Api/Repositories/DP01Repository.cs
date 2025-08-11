@@ -1,13 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models.DataTables;
+using TinhKhoanApp.Api.Models.Entities;
 
 namespace TinhKhoanApp.Api.Repositories
 {
     /// <summary>
     /// DP01 Repository - triển khai IDP01Repository
+    /// CSV Business Columns: 63 columns from 7800_dp01_20241231.csv
     /// </summary>
-    public class DP01Repository : Repository<DP01>, IDP01Repository
+    public class DP01Repository : Repository<DP01Entity>, IDP01Repository
     {
         public DP01Repository(ApplicationDbContext context) : base(context)
         {
@@ -16,7 +17,7 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Lấy dữ liệu DP01 gần đây nhất, sắp xếp theo CreatedAt
         /// </summary>
-        public new async Task<IEnumerable<DP01>> GetRecentAsync(int count = 10)
+        public new async Task<IEnumerable<DP01Entity>> GetRecentAsync(int count = 10)
         {
             return await _dbSet
                 .OrderByDescending(dp01 => dp01.CreatedAt)
@@ -24,14 +25,14 @@ namespace TinhKhoanApp.Api.Repositories
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<DP01>> GetByDateAsync(DateTime date)
+        public async Task<IEnumerable<DP01Entity>> GetByDateAsync(DateTime date)
         {
             return await _dbSet
-                .Where(dp01 => dp01.NGAY_DL != null && dp01.NGAY_DL.Value.Date == date.Date)
+                .Where(dp01 => dp01.NGAY_DL.Date == date.Date)
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<DP01>> GetByBranchCodeAsync(string branchCode, int maxResults = 100)
+        public async Task<IEnumerable<DP01Entity>> GetByBranchCodeAsync(string branchCode, int maxResults = 100)
         {
             return await _dbSet
                 .Where(dp01 => dp01.MA_CN == branchCode)
@@ -40,7 +41,7 @@ namespace TinhKhoanApp.Api.Repositories
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<DP01>> GetByCustomerCodeAsync(string customerCode, int maxResults = 100)
+        public async Task<IEnumerable<DP01Entity>> GetByCustomerCodeAsync(string customerCode, int maxResults = 100)
         {
             return await _dbSet
                 .Where(dp01 => dp01.MA_KH == customerCode)
@@ -49,7 +50,7 @@ namespace TinhKhoanApp.Api.Repositories
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<DP01>> GetByAccountNumberAsync(string accountNumber, int maxResults = 100)
+        public async Task<IEnumerable<DP01Entity>> GetByAccountNumberAsync(string accountNumber, int maxResults = 100)
         {
             return await _dbSet
                 .Where(dp01 => dp01.SO_TAI_KHOAN == accountNumber)
@@ -64,7 +65,7 @@ namespace TinhKhoanApp.Api.Repositories
 
             if (date.HasValue)
             {
-                query = query.Where(dp01 => dp01.NGAY_DL != null && dp01.NGAY_DL.Value.Date == date.Value.Date);
+                query = query.Where(dp01 => dp01.NGAY_DL.Date == date.Value.Date);
             }
 
             return await query

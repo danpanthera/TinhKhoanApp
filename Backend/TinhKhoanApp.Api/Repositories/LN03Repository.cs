@@ -1,7 +1,7 @@
-using TinhKhoanApp.Api.Models.DTOs;
+using TinhKhoanApp.Api.Models.Dtos;
 using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Models.Entities;
-using TinhKhoanApp.Api.Models.DTOs;
+using TinhKhoanApp.Api.Models.Dtos;
 using TinhKhoanApp.Api.Repositories.Interfaces;
 using TinhKhoanApp.Api.Repositories.Base;
 using TinhKhoanApp.Api.Models.Common;

@@ -1,7 +1,7 @@
 using TinhKhoanApp.Api.Models.Common;
 using Microsoft.AspNetCore.Mvc;
-using TinhKhoanApp.Api.Models.DTOs;
-using TinhKhoanApp.Api.Models.DTOs.DP01;
+using TinhKhoanApp.Api.Models.Dtos;
+using TinhKhoanApp.Api.Models.Dtos.DP01;
 using TinhKhoanApp.Api.Services.DataServices;
 
 namespace TinhKhoanApp.Api.Controllers

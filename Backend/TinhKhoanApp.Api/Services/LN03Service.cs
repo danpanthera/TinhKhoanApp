@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Models.DTOs;
+using TinhKhoanApp.Api.Models.Dtos;
 using TinhKhoanApp.Api.Repositories.Interfaces;
 using TinhKhoanApp.Api.Models.Common;
 using TinhKhoanApp.Api.Models.Entities;

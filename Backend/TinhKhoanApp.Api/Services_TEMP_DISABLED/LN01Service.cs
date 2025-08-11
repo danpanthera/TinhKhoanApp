@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models.DataTables;
-using TinhKhoanApp.Api.Models.DTOs.LN01;
+using TinhKhoanApp.Api.Models.Dtos.LN01;
 using TinhKhoanApp.Api.Repositories;
 
 namespace TinhKhoanApp.Api.Services

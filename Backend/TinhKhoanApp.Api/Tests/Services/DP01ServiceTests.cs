@@ -6,7 +6,7 @@ using TinhKhoanApp.Api.Services;
 using TinhKhoanApp.Api.Services.Interfaces;
 using TinhKhoanApp.Api.Repositories.Interfaces;
 using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models.DTOs.DP01;
+using TinhKhoanApp.Api.Models.Dtos.DP01;
 using TinhKhoanApp.Api.Models.Common;
 using Moq;
 
