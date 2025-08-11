@@ -3,6 +3,7 @@ using TinhKhoanApp.Api.Models; // Đảm bảo namespace này đúng với nơi 
 using TinhKhoanApp.Api.Models.RawData; // Thêm namespace cho Raw Data models
 using TinhKhoanApp.Api.Models.Temporal; // Thêm namespace cho Temporal models
 using TinhKhoanApp.Api.Models.Dashboard; // Thêm namespace cho Dashboard models
+using TinhKhoanApp.Api.Models.Entities; // Thêm namespace cho Modern Entity models
 using DataTables = TinhKhoanApp.Api.Models.DataTables; // Alias để tránh conflict
 
 namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
@@ -48,7 +49,7 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         // ✅ CLEANED: Removed legacy ImportedDataItem - Using DirectImportService workflow only
 
         // 🚀 DbSets cho 8 bảng dữ liệu thô chính (DirectImport với Temporal Tables + Columnstore)
-        public DbSet<DataTables.DP01> DP01 { get; set; } // Re-enabled for basic access
+        public DbSet<DP01Entity> DP01 { get; set; } // ✅ Modern Entity với 63 business columns
         public DbSet<DataTables.LN01> LN01 { get; set; }
         public DbSet<DataTables.LN03> LN03 { get; set; }
         public DbSet<DataTables.GL01> GL01 { get; set; }
@@ -68,6 +69,9 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<DataTables.DPDA> DPDAs { get; set; }
         public DbSet<DataTables.EI01> EI01s { get; set; }
         public DbSet<DataTables.RR01> RR01s { get; set; }
+
+        // 🆕 DbSets cho Modern Entity Layer (Repository Pattern)
+        // public DbSet<RR01Entity> RR01Entities { get; set; } // Temporary disabled - conflicts with DataTables.RR01
 
         // 🗄️ DbSets cho hệ thống Kho Dữ liệu Thô (Legacy)
         public DbSet<Models.RawDataImport> LegacyRawDataImports { get; set; }
@@ -369,18 +373,18 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
             // === DECIMAL PRECISION CONFIGURATION FOR DATA TABLES ===
             // Fix specific decimal property precision warnings for the 12 data tables
 
-            // DP01 decimal properties + Temporal Table - ENABLED
-            modelBuilder.Entity<DataTables.DP01>(entity =>
+            // DP01 decimal properties + Temporal Table - ✅ MODERN ENTITY
+            modelBuilder.Entity<DP01Entity>(entity =>
             {
                 // Decimal precision for AMOUNT/BALANCE columns
                 entity.Property(e => e.CURRENT_BALANCE).HasPrecision(18, 2);
-                entity.Property(e => e.RATE).HasPrecision(18, 6);
+                entity.Property(e => e.RATE).HasPrecision(18, 2);
                 entity.Property(e => e.ACRUAL_AMOUNT).HasPrecision(18, 2);
                 entity.Property(e => e.ACRUAL_AMOUNT_END).HasPrecision(18, 2);
                 entity.Property(e => e.DRAMT).HasPrecision(18, 2);
                 entity.Property(e => e.CRAMT).HasPrecision(18, 2);
-                entity.Property(e => e.SPECIAL_RATE).HasPrecision(18, 6);
-                entity.Property(e => e.TYGIA).HasPrecision(18, 6);
+                entity.Property(e => e.SPECIAL_RATE).HasPrecision(18, 2);
+                entity.Property(e => e.TYGIA).HasPrecision(18, 2);
 
                 // Temporal Table configuration
                 entity.ToTable(tb => tb.IsTemporal(ttb =>
@@ -511,8 +515,8 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         /// </summary>
         private void ConfigureMainTableWithOriginalColumns(ModelBuilder modelBuilder)
         {
-            // Cấu hình bảng DP01 với cấu trúc temporal table + columnstore
-            ConfigureDataTableWithTemporal<DataTables.DP01>(modelBuilder, "DP01");
+            // Cấu hình bảng DP01 với cấu trúc temporal table + columnstore - ✅ MODERN ENTITY
+            ConfigureDataTableWithTemporal<DP01Entity>(modelBuilder, "DP01");
         }
 
         /// <summary>

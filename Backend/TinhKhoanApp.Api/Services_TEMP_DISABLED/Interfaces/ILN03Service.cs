@@ -1,6 +1,6 @@
 using TinhKhoanApp.Api.Models.DTOs;
 using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.DTOs.LN03;
+using TinhKhoanApp.Api.Models.DTOs;
 
 namespace TinhKhoanApp.Api.Services.Interfaces
 {

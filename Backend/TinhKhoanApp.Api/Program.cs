@@ -95,28 +95,30 @@ builder.Services.Configure<TinhKhoanApp.Api.Models.Configuration.DirectImportSet
 // Cache Services
 builder.Services.AddCachingServices(builder.Configuration);
 
-// 🎯 PHASE 2B: DEPENDENCY INJECTION CONFIGURATION
-// Repository Layer - Focus on LN03 (currently disabled for clean build)
-builder.Services.AddScoped<IDP01Repository, DP01Repository>(); // ✅ DP01 ENABLED - Step 1 Complete
-builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IDPDARepository, TinhKhoanApp.Api.Repositories.DPDARepository>(); // DPDA Repository - Step 1 Complete
-// builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.IEI01Repository, TinhKhoanApp.Api.Repositories.EI01Repository>(); // TODO: Fix EI01
-// builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.IGL01Repository, TinhKhoanApp.Api.Repositories.GL01Repository>(); // TODO: Fix GL01
-// builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.IGL02Repository, TinhKhoanApp.Api.Repositories.GL02Repository>(); // TODO: Fix GL02
-// builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.IGL41Repository, TinhKhoanApp.Api.Repositories.GL41Repository>(); // TODO: Fix GL41
-// builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.ILN01Repository, TinhKhoanApp.Api.Repositories.LN01Repository>(); // TODO: Fix LN01
-builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.ILN03Repository, TinhKhoanApp.Api.Repositories.LN03Repository>(); // ✅ LN03 Ready - ENABLED FOR PHASE 2
-// builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.IRR01Repository, TinhKhoanApp.Api.Repositories.RR01Repository>(); // TODO: Fix RR01
+// 🎯 PHASE 3A: DEPENDENCY INJECTION CONFIGURATION - WORKING REPOSITORIES ONLY
+// Repository Layer - Only enable repositories that compile successfully
+builder.Services.AddScoped<IDP01Repository, DP01Repository>(); // ✅ DP01 ENABLED - Works
+builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IDPDARepository, TinhKhoanApp.Api.Repositories.DPDARepository>(); // ✅ DPDA Repository ENABLED
+builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.ILN03Repository, TinhKhoanApp.Api.Repositories.LN03Repository>(); // ✅ LN03 Repository ENABLED - Works
+// TODO: Fix repository interface implementations for the following (have compilation errors):
+// builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IEI01Repository, TinhKhoanApp.Api.Repositories.EI01Repository>(); // TODO: Fix interface implementation
+// builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IGL01Repository, TinhKhoanApp.Api.Repositories.GL01Repository>(); // TODO: Fix interface implementation
+// builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IGL02Repository, TinhKhoanApp.Api.Repositories.GL02Repository>(); // TODO: Fix interface implementation
+// builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IGL41Repository, TinhKhoanApp.Api.Repositories.GL41Repository>(); // TODO: Fix interface implementation
+// builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.ILN01Repository, TinhKhoanApp.Api.Repositories.LN01Repository>(); // TODO: Fix interface implementation
+// builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IRR01Repository, TinhKhoanApp.Api.Repositories.RR01Repository>(); // TODO: Fix interface implementation - Has 23 missing methods
 
-// Service Layer - Focus on LN03 (temporarily disabled for clean build)
-builder.Services.AddScoped<IDP01Service, DP01Service>(); // ✅ DP01 ENABLED - Step 2 Complete
-// builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IDPDAService, TinhKhoanApp.Api.Services.DPDAService>(); // TODO: Fix DPDA
-// builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IEI01Service, TinhKhoanApp.Api.Services.EI01Service>(); // TODO: Fix EI01
-// builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL01Service, TinhKhoanApp.Api.Services.GL01Service>(); // TODO: Fix GL01
-// builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL02Service, TinhKhoanApp.Api.Services.GL02Service>(); // TODO: Fix GL02
-// builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL41Service, TinhKhoanApp.Api.Services.GL41Service>(); // TODO: Fix GL41
-// builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.ILN01Service, TinhKhoanApp.Api.Services.LN01Service>(); // TODO: Fix LN01
-// builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.ILN03Service, TinhKhoanApp.Api.Services.LN03Service>(); // ✅ LN03 Ready - TEMP DISABLED
-// builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IRR01Service, TinhKhoanApp.Api.Services.RR01Service>(); // TODO: Fix RR01
+// Service Layer - Only services with implementations are enabled
+builder.Services.AddScoped<IDP01Service, DP01Service>(); // ✅ DP01 ENABLED - Has implementation
+builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.ILN03Service, TinhKhoanApp.Api.Services.LN03Service>(); // ✅ LN03 ENABLED - Has implementation
+// TODO: Create service implementations for the following:
+// builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IDPDAService, TinhKhoanApp.Api.Services.DPDAService>(); // TODO: Implement DPDAService
+// builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IEI01Service, TinhKhoanApp.Api.Services.EI01Service>(); // TODO: Implement EI01Service
+// builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL01Service, TinhKhoanApp.Api.Services.GL01Service>(); // TODO: Implement GL01Service
+// builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL02Service, TinhKhoanApp.Api.Services.GL02Service>(); // TODO: Implement GL02Service
+// builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL41Service, TinhKhoanApp.Api.Services.GL41Service>(); // TODO: Implement GL41Service
+// builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.ILN01Service, TinhKhoanApp.Api.Services.LN01Service>(); // TODO: Implement LN01Service
+// builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IRR01Service, TinhKhoanApp.Api.Services.RR01Service>(); // TODO: Implement RR01Service
 
 // Data Services Layer - TODO: Fix implementations
 // builder.Services.AddScoped<TinhKhoanApp.Api.Services.DataServices.IDataPreviewService, TinhKhoanApp.Api.Services.DataServices.DataPreviewService>(); // TODO

@@ -99,7 +99,7 @@ namespace TinhKhoanApp.Api.Services
 
                 // Lấy dữ liệu chi tiết từ bảng DP01 mới nhất
                 var dp01Data = await _context.DP01
-                    .Where(i => i.DataSource == latestImportRecord.FileName)
+                    .Where(i => i.FILE_NAME == latestImportRecord.FileName) // ✅ Updated to use FILE_NAME instead of DataSource
                     .ToListAsync();
 
                 decimal totalNguonVon = 0;

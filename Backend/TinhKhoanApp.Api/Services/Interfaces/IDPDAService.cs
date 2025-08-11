@@ -11,6 +11,27 @@ namespace TinhKhoanApp.Api.Services.Interfaces
     /// </summary>
     public interface IDPDAService
     {
+        #region Controller Support Methods
+
+        /// <summary>
+        /// Get DPDA preview with paging and search (Controller compatible)
+        /// </summary>
+        /// <param name="pageNumber">Page number</param>
+        /// <param name="pageSize">Page size</param>
+        /// <param name="searchTerm">Search term</param>
+        /// <returns>ApiResponse with PagedResult</returns>
+        Task<ApiResponse<PagedResult<DPDAPreviewDto>>> GetPreviewAsync(int pageNumber, int pageSize, string? searchTerm = null);
+
+        /// <summary>
+        /// Import CSV via IFormFile (Controller compatible)
+        /// </summary>
+        /// <param name="file">CSV file</param>
+        /// <param name="uploadedBy">User who uploaded</param>
+        /// <returns>ApiResponse with import result</returns>
+        Task<ApiResponse<DPDAImportResultDto>> ImportCsvAsync(IFormFile file, string uploadedBy);
+
+        #endregion
+
         #region CRUD Operations với DTO Mapping
 
         /// <summary>

@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using TinhKhoanApp.Api.Models.DTOs.DP01;
 using TinhKhoanApp.Api.Models.DTOs.RR01;
 using TinhKhoanApp.Api.Models.DTOs.LN01;
-using TinhKhoanApp.Api.Models.DTOs.LN03;
+using TinhKhoanApp.Api.Models.DTOs;
 using TinhKhoanApp.Api.Models.DTOs.DPDA;
 using TinhKhoanApp.Api.Models.DTOs.GL01;
 using TinhKhoanApp.Api.Models.DTOs.GL02;

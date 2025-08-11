@@ -3,53 +3,59 @@ using TinhKhoanApp.Api.Models.DataTables;
 namespace TinhKhoanApp.Api.Repositories
 {
     /// <summary>
-    /// Interface for RR01 Repository operations
+    /// Interface cho RR01 Repository - Dữ liệu tỷ giá ngoại tệ
+    /// RR01: 25 business columns - Exchange rate data
     /// </summary>
     public interface IRR01Repository : IRepository<RR01>
     {
         /// <summary>
-        /// Get all RR01 records for a specific statement date
+        /// Lấy dữ liệu RR01 gần đây nhất
         /// </summary>
-        Task<IEnumerable<RR01>> GetByDateAsync(DateTime statementDate);
+        new Task<IEnumerable<RR01>> GetRecentAsync(int count = 10);
 
         /// <summary>
-        /// Get all RR01 records for a specific branch
+        /// Lấy dữ liệu RR01 theo ngày dữ liệu (NGAY_DL)
         /// </summary>
-        Task<IEnumerable<RR01>> GetByBranchAsync(string branchCode, DateTime? statementDate = null);
+        Task<IEnumerable<RR01>> GetByDateAsync(DateTime date);
 
         /// <summary>
-        /// Get all RR01 records for a specific customer
+        /// Lấy dữ liệu RR01 theo mã chi nhánh (MA_CN)
         /// </summary>
-        Task<IEnumerable<RR01>> GetByCustomerAsync(string customerId, DateTime? statementDate = null);
+        Task<IEnumerable<RR01>> GetByBranchCodeAsync(string branchCode, int maxResults = 100);
 
         /// <summary>
-        /// Get all RR01 records imported from a specific file
+        /// Lấy dữ liệu RR01 theo loại tiền (LOAI_TIEN)
         /// </summary>
-        Task<IEnumerable<RR01>> GetByFileNameAsync(string fileName);
+        Task<IEnumerable<RR01>> GetByCurrencyTypeAsync(string currencyType, int maxResults = 100);
 
         /// <summary>
-        /// Get RR01 records with pagination
+        /// Lấy tổng số dư theo chi nhánh
         /// </summary>
-        Task<(IEnumerable<RR01> Records, int TotalCount)> GetPagedAsync(
-            int pageNumber,
-            int pageSize,
-            DateTime? statementDate = null,
-            string? branchCode = null,
-            string? customerId = null);
+        Task<decimal> GetTotalBalanceByBranchAsync(string branchCode, DateTime? date = null);
 
         /// <summary>
-        /// Add a new RR01 record
+        /// Kiểm tra trùng lặp dữ liệu
         /// </summary>
-        new Task<RR01> AddAsync(RR01 entity);
+        Task<bool> IsDuplicateAsync(string branchCode, string currencyType, DateTime dataDate);
 
         /// <summary>
-        /// Update an existing RR01 record
+        /// Lấy danh sách chi nhánh có dữ liệu
         /// </summary>
-        Task UpdateAsync(RR01 entity);
+        Task<IEnumerable<string>> GetDistinctBranchCodesAsync(DateTime? date = null);
 
         /// <summary>
-        /// Delete an RR01 record
+        /// Lấy danh sách loại tiền có dữ liệu
         /// </summary>
-        Task DeleteAsync(RR01 entity);
+        Task<IEnumerable<string>> GetDistinctCurrencyTypesAsync(DateTime? date = null);
+
+        /// <summary>
+        /// Bulk insert cho import CSV nhanh
+        /// </summary>
+        Task<int> BulkInsertAsync(IEnumerable<RR01> entities);
+
+        /// <summary>
+        /// Lấy thống kê tổng quan
+        /// </summary>
+        Task<Dictionary<string, object>> GetStatisticsAsync(DateTime? date = null);
     }
 }

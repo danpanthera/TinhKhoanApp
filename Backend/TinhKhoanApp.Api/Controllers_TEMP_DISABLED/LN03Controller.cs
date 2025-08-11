@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TinhKhoanApp.Api.Models.DTOs.LN03;
+using TinhKhoanApp.Api.Models.DTOs;
 using TinhKhoanApp.Api.Services.Interfaces;
 using TinhKhoanApp.Api.Models.DTOs;
 using TinhKhoanApp.Api.Models.Common;
