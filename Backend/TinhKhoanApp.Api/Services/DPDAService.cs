@@ -384,12 +384,13 @@ namespace TinhKhoanApp.Api.Services
                 PHAN_LOAI = entity.PHAN_LOAI,
                 GIAO_THE = entity.GIAO_THE,
                 LOAI_PHAT_HANH = entity.LOAI_PHAT_HANH,
-                // System/Metadata columns
+                // System columns từ ITemporalEntity
                 CreatedAt = entity.CreatedAt,
                 UpdatedAt = entity.UpdatedAt,
-                FileName = entity.FileName,
-                ImportId = entity.ImportId,
-                ImportMetadata = entity.ImportMetadata
+                // Import tracking metadata - sẽ implement later trong DirectImport
+                FileName = $"dpda_{entity.NGAY_DL:yyyyMMdd}.csv", // Derived từ NGAY_DL
+                ImportId = Guid.NewGuid(), // Temporary - sẽ implement trong DirectImport
+                ImportMetadata = $"DPDA data for {entity.NGAY_DL:dd/MM/yyyy}" // Temporary
             };
         }
 

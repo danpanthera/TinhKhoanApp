@@ -141,7 +141,7 @@
 | Table    | Entity  | DTOs    | Repository | Service | Controller | Import  | Status               |
 | -------- | ------- | ------- | ---------- | ------- | ---------- | ------- | -------------------- |
 | **DP01** | ✅ 100% | ✅ 100% | ✅ 100%    | ✅ 100% | ✅ 100%    | ✅ 100% | 🎉 **COMPLETE**      |
-| **DPDA** | ✅ 100% | ❌ Need | ✅ 100%    | ❌ Need | ❌ Need    | ✅ 100% | 🔧 Need DTOs/Service |
+| **DPDA** | ✅ 100% | ✅ 100% | ✅ 100%    | ✅ 100% | ✅ 100%    | ✅ 100% | 🎉 COMPLETE          |
 | **EI01** | ✅ 100% | ❌ Need | ✅ 100%    | ❌ Need | ❌ Need    | ✅ 100% | 🔧 Need DTOs/Service |
 | **GL01** | ✅ 100% | ❌ Need | ✅ 100%    | ❌ Need | ❌ Need    | ✅ 100% | 🔧 Need DTOs/Service |
 | **GL02** | ✅ 100% | ❌ Need | ✅ 100%    | ❌ Need | ❌ Need    | ✅ 100% | 🔧 Need DTOs/Service |

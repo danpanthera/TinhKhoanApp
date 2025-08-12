@@ -12,27 +12,10 @@ namespace TinhKhoanApp.Api.Models.Entities
     [Table("DP01")]
     public class DP01Entity : ITemporalEntity
     {
-        // === SYSTEM COLUMNS ===
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public long Id { get; set; }
-
-        // NGAY_DL - Ngày dữ liệu (lấy từ filename) - System column đầu tiên
+        // === NGAY_DL - FIRST COLUMN ===
+        // NGAY_DL - Ngày dữ liệu (lấy từ filename dd/mm/yyyy) - ALWAYS FIRST
         [Required]
         public DateTime NGAY_DL { get; set; }
-
-        [Required]
-        public DateTime CreatedAt { get; set; }
-
-        [Required]
-        public DateTime UpdatedAt { get; set; }
-
-        [StringLength(255)]
-        public string? FILE_NAME { get; set; }
-
-        // === TEMPORAL TABLE COLUMNS ===
-        public DateTime SysStartTime { get; set; }
-        public DateTime SysEndTime { get; set; }
 
         // === BUSINESS COLUMNS (63 columns from CSV - EXACT ORDER) ===
 
@@ -279,5 +262,23 @@ namespace TinhKhoanApp.Api.Models.Entities
         // Column 63: TYGIA - Tỷ giá
         [Column(TypeName = "decimal(18,2)")]
         public decimal? TYGIA { get; set; }
+
+        // === TEMPORAL TABLE COLUMNS (cuối cùng theo yêu cầu) ===
+        public DateTime SysStartTime { get; set; }
+        public DateTime SysEndTime { get; set; }
+
+        // === SYSTEM COLUMNS (cuối cùng) ===
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public long Id { get; set; }
+
+        [Required]
+        public DateTime CreatedAt { get; set; }
+
+        [Required]
+        public DateTime UpdatedAt { get; set; }
+
+        [StringLength(255)]
+        public string? FILE_NAME { get; set; }
     }
 }

@@ -83,6 +83,26 @@ namespace TinhKhoanApp.Api.Models
         public string Details { get; set; } = string.Empty;
 
         /// <summary>
+        /// Danh sách lỗi xảy ra trong quá trình import
+        /// </summary>
+        public List<string> Errors { get; set; } = new List<string>();
+
+        /// <summary>
+        /// Thời gian xử lý (milliseconds)
+        /// </summary>
+        public double ProcessingTimeMs { get; set; }
+
+        /// <summary>
+        /// Import ID để tracking
+        /// </summary>
+        public string ImportId { get; set; } = Guid.NewGuid().ToString();
+
+        /// <summary>
+        /// Status của import process
+        /// </summary>
+        public string Status { get; set; } = "Processing";
+
+        /// <summary>
         /// Tốc độ import (records/second)
         /// </summary>
         public double RecordsPerSecond

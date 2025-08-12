@@ -6,203 +6,202 @@ namespace TinhKhoanApp.Api.Models.Entities
 {
     /// <summary>
     /// EI01 Entity - E-Banking Information Table
-    /// 24 business columns + system columns
+    /// Cấu trúc: NGAY_DL -> 24 Business Columns -> System + Temporal Columns
     /// CSV Source: 7800_ei01_20241231.csv
+    /// Business Columns: MA_CN,MA_KH,TEN_KH,LOAI_KH,SDT_EMB,TRANG_THAI_EMB,NGAY_DK_EMB,SDT_OTT,TRANG_THAI_OTT,NGAY_DK_OTT,SDT_SMS,TRANG_THAI_SMS,NGAY_DK_SMS,SDT_SAV,TRANG_THAI_SAV,NGAY_DK_SAV,SDT_LN,TRANG_THAI_LN,NGAY_DK_LN,USER_EMB,USER_OTT,USER_SMS,USER_SAV,USER_LN
     /// </summary>
     [Table("EI01")]
     [Index(nameof(MA_CN), Name = "IX_EI01_MA_CN")]
     [Index(nameof(MA_KH), Name = "IX_EI01_MA_KH")]
-    [Index(nameof(LOAI_KH), Name = "IX_EI01_LOAI_KH")]
-    [Index(nameof(SDT_EMB), Name = "IX_EI01_SDT_EMB")]
-    [Index(nameof(TRANG_THAI_EMB), Name = "IX_EI01_TRANG_THAI_EMB")]
+    [Index(nameof(TEN_KH), Name = "IX_EI01_TEN_KH")]
+    [Index(nameof(NGAY_DL), Name = "IX_EI01_NGAY_DL")]
     public class EI01Entity : ITemporalEntity
     {
-        // === SYSTEM COLUMNS (từ ITemporalEntity) ===
+        // === PRIMARY KEY ===
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Id { get; set; }
 
+        // === NGAY_DL - System Column (lấy từ filename) ===
+        /// <summary>
+        /// Ngày dữ liệu - lấy từ filename format: 7800_ei01_YYYYMMDD.csv -> datetime2 (dd/mm/yyyy)
+        /// </summary>
         [Required]
-        [Column(TypeName = "datetime2(3)")]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        [Column(TypeName = "datetime2(3)")]
-        public DateTime UpdatedAt { get; set; }
-
-        // Temporal table support
-        [Column(TypeName = "datetime2(3)")]
-        public DateTime SysStartTime { get; set; }
-
-        [Column(TypeName = "datetime2(3)")]
-        public DateTime SysEndTime { get; set; }
+        [Column(TypeName = "datetime2")]
+        public DateTime NGAY_DL { get; set; }
 
         // === BUSINESS COLUMNS (24 columns theo CSV structure) ===
 
         /// <summary>
-        /// Mã chi nhánh - BUSINESS KEY
+        /// Mã chi nhánh - Column 1
         /// </summary>
-        [Required]
-        [Column(TypeName = "nvarchar(10)")]
-        public string MA_CN { get; set; } = string.Empty;
+        [Column(TypeName = "nvarchar(200)")]
+        public string? MA_CN { get; set; }
 
         /// <summary>
-        /// Mã khách hàng - BUSINESS KEY
+        /// Mã khách hàng - Column 2
         /// </summary>
-        [Required]
-        [Column(TypeName = "nvarchar(50)")]
-        public string MA_KH { get; set; } = string.Empty;
+        [Column(TypeName = "nvarchar(200)")]
+        public string? MA_KH { get; set; }
 
         /// <summary>
-        /// Tên khách hàng
+        /// Tên khách hàng - Column 3
         /// </summary>
-        [Required]
-        [Column(TypeName = "nvarchar(255)")]
-        public string TEN_KH { get; set; } = string.Empty;
+        [Column(TypeName = "nvarchar(200)")]
+        public string? TEN_KH { get; set; }
 
         /// <summary>
-        /// Loại khách hàng - BUSINESS KEY
+        /// Loại khách hàng - Column 4
         /// </summary>
-        [Column(TypeName = "nvarchar(50)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string? LOAI_KH { get; set; }
 
         /// <summary>
-        /// Số điện thoại EMB (E-Mobile Banking)
+        /// SĐT EMB - Column 5
         /// </summary>
-        [Column(TypeName = "nvarchar(20)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string? SDT_EMB { get; set; }
 
         /// <summary>
-        /// Trạng thái EMB - BUSINESS KEY
+        /// Trạng thái EMB - Column 6
         /// </summary>
-        [Column(TypeName = "nvarchar(50)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string? TRANG_THAI_EMB { get; set; }
 
         /// <summary>
-        /// Ngày đăng ký EMB
+        /// Ngày đăng ký EMB - Column 7 (DATE format dd/mm/yyyy)
         /// </summary>
-        [Column(TypeName = "date")]
+        [Column(TypeName = "datetime2")]
         public DateTime? NGAY_DK_EMB { get; set; }
 
         /// <summary>
-        /// Số điện thoại OTT (One Time Token)
+        /// SĐT OTT - Column 8
         /// </summary>
-        [Column(TypeName = "nvarchar(20)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string? SDT_OTT { get; set; }
 
         /// <summary>
-        /// Trạng thái OTT
+        /// Trạng thái OTT - Column 9
         /// </summary>
-        [Column(TypeName = "nvarchar(50)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string? TRANG_THAI_OTT { get; set; }
 
         /// <summary>
-        /// Ngày đăng ký OTT
+        /// Ngày đăng ký OTT - Column 10 (DATE format dd/mm/yyyy)
         /// </summary>
-        [Column(TypeName = "date")]
+        [Column(TypeName = "datetime2")]
         public DateTime? NGAY_DK_OTT { get; set; }
 
         /// <summary>
-        /// Số điện thoại SMS
+        /// SĐT SMS - Column 11
         /// </summary>
-        [Column(TypeName = "nvarchar(20)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string? SDT_SMS { get; set; }
 
         /// <summary>
-        /// Trạng thái SMS - BUSINESS KEY
+        /// Trạng thái SMS - Column 12
         /// </summary>
-        [Column(TypeName = "nvarchar(50)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string? TRANG_THAI_SMS { get; set; }
 
         /// <summary>
-        /// Ngày đăng ký SMS
+        /// Ngày đăng ký SMS - Column 13 (DATE format dd/mm/yyyy)
         /// </summary>
-        [Column(TypeName = "date")]
+        [Column(TypeName = "datetime2")]
         public DateTime? NGAY_DK_SMS { get; set; }
 
         /// <summary>
-        /// Số điện thoại SAV (Savings)
+        /// SĐT SAV - Column 14
         /// </summary>
-        [Column(TypeName = "nvarchar(20)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string? SDT_SAV { get; set; }
 
         /// <summary>
-        /// Trạng thái SAV
+        /// Trạng thái SAV - Column 15
         /// </summary>
-        [Column(TypeName = "nvarchar(50)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string? TRANG_THAI_SAV { get; set; }
 
         /// <summary>
-        /// Ngày đăng ký SAV
+        /// Ngày đăng ký SAV - Column 16 (DATE format dd/mm/yyyy)
         /// </summary>
-        [Column(TypeName = "date")]
+        [Column(TypeName = "datetime2")]
         public DateTime? NGAY_DK_SAV { get; set; }
 
         /// <summary>
-        /// Số điện thoại LN (Loan)
+        /// SĐT LN - Column 17
         /// </summary>
-        [Column(TypeName = "nvarchar(20)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string? SDT_LN { get; set; }
 
         /// <summary>
-        /// Trạng thái LN
+        /// Trạng thái LN - Column 18
         /// </summary>
-        [Column(TypeName = "nvarchar(50)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string? TRANG_THAI_LN { get; set; }
 
         /// <summary>
-        /// Ngày đăng ký LN
+        /// Ngày đăng ký LN - Column 19 (DATE format dd/mm/yyyy)
         /// </summary>
-        [Column(TypeName = "date")]
+        [Column(TypeName = "datetime2")]
         public DateTime? NGAY_DK_LN { get; set; }
 
         /// <summary>
-        /// User EMB
+        /// User EMB - Column 20
         /// </summary>
-        [Column(TypeName = "nvarchar(100)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string? USER_EMB { get; set; }
 
         /// <summary>
-        /// User OTT
+        /// User OTT - Column 21
         /// </summary>
-        [Column(TypeName = "nvarchar(100)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string? USER_OTT { get; set; }
 
         /// <summary>
-        /// User SMS
+        /// User SMS - Column 22
         /// </summary>
-        [Column(TypeName = "nvarchar(100)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string? USER_SMS { get; set; }
 
         /// <summary>
-        /// User SAV
+        /// User SAV - Column 23
         /// </summary>
-        [Column(TypeName = "nvarchar(100)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string? USER_SAV { get; set; }
 
         /// <summary>
-        /// User LN
+        /// User LN - Column 24
         /// </summary>
-        [Column(TypeName = "nvarchar(100)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string? USER_LN { get; set; }
 
-        // === METADATA COLUMNS ===
+        // === SYSTEM COLUMNS ===
+        /// <summary>
+        /// Created date - System column (IEntity interface)
+        /// </summary>
+        [Required]
+        [Column(TypeName = "datetime2")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         /// <summary>
-        /// Tên file import (7800_ei01_20241231.csv)
+        /// Updated date - System column (IEntity interface)
         /// </summary>
-        [Column(TypeName = "nvarchar(500)")]
-        public string? FileName { get; set; }
+        [Required]
+        [Column(TypeName = "datetime2")]
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        // === TEMPORAL COLUMNS (cuối cùng - ITemporalEntity interface) ===
+        /// <summary>
+        /// Temporal table start time - System generated (ITemporalEntity interface)
+        /// </summary>
+        [Column("ValidFrom")]
+        public DateTime SysStartTime { get; set; }
 
         /// <summary>
-        /// Import batch ID để tracking
+        /// Temporal table end time - System generated (ITemporalEntity interface)
         /// </summary>
-        [Column(TypeName = "uniqueidentifier")]
-        public Guid? ImportId { get; set; }
-
-        /// <summary>
-        /// Additional metadata về import process
-        /// </summary>
-        [Column(TypeName = "nvarchar(1000)")]
-        public string? ImportMetadata { get; set; }
+        [Column("ValidTo")]
+        public DateTime SysEndTime { get; set; }
     }
 }

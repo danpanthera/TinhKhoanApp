@@ -137,7 +137,7 @@ namespace TinhKhoanApp.Api.Repositories
 
             return await query
                 .GroupBy(x => x.LOAI_THE)
-                .Select(g => new { CardType = g.Key, Count = g.LongCount() })
+                .Select(g => new { CardType = g.Key ?? "N/A", Count = g.LongCount() })
                 .ToDictionaryAsync(x => x.CardType, x => x.Count);
         }
 
@@ -155,7 +155,7 @@ namespace TinhKhoanApp.Api.Repositories
 
             return await query
                 .GroupBy(x => x.TRANG_THAI)
-                .Select(g => new { Status = g.Key, Count = g.LongCount() })
+                .Select(g => new { Status = g.Key ?? "N/A", Count = g.LongCount() })
                 .ToDictionaryAsync(x => x.Status, x => x.Count);
         }
 

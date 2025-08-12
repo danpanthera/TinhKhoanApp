@@ -101,6 +101,7 @@ namespace TinhKhoanApp.Api.Services
             {
                 "DP01" => await ImportDP01Async(file, statementDate),
                 "DPDA" => await ImportDPDAAsync(file, statementDate),
+                "EI01" => await ImportEI01Async(file, statementDate),
                 "LN03" => await ImportLN03EnhancedAsync(file, statementDate),
                 _ => throw new NotSupportedException($"DataType '{dataType}' chưa được hỗ trợ")
             };
@@ -214,6 +215,65 @@ namespace TinhKhoanApp.Api.Services
                 _logger.LogError(ex, "❌ [DPDA] Import error: {Error}", ex.Message);
                 result.Success = false;
                 result.Errors.Add($"DPDA import error: {ex.Message}");
+            }
+            finally
+            {
+                result.EndTime = DateTime.UtcNow;
+                result.ProcessingTimeMs = (int)(result.EndTime - result.StartTime).TotalMilliseconds;
+            }
+
+            return result;
+        }
+
+        #endregion
+
+        #region EI01 Import
+
+        /// <summary>
+        /// Import EI01 từ CSV - 24 business columns
+        /// </summary>
+        public async Task<DirectImportResult> ImportEI01Async(IFormFile file, string? statementDate = null)
+        {
+            _logger.LogInformation("🚀 [EI01] Import EI01 from CSV: {FileName}", file.FileName);
+
+            var result = new DirectImportResult
+            {
+                FileName = file.FileName,
+                DataType = "EI01",
+                TargetTable = "EI01",
+                FileSizeBytes = file.Length,
+                StartTime = DateTime.UtcNow
+            };
+
+            try
+            {
+                // Extract NgayDL từ filename
+                var ngayDL = ExtractNgayDLFromFileName(file.FileName);
+                result.NgayDL = ngayDL;
+
+                // Parse EI01 CSV
+                var records = await ParseEI01CsvAsync(file);
+                _logger.LogInformation("📊 [EI01] Đã parse {Count} records từ CSV", records.Count);
+
+                if (records.Any())
+                {
+                    // Bulk insert EI01
+                    var insertedCount = await BulkInsertGenericAsync(records, "EI01");
+                    result.ProcessedRecords = insertedCount;
+                    result.Success = true;
+                    _logger.LogInformation("✅ [EI01] Import thành công {Count} records", insertedCount);
+                }
+                else
+                {
+                    result.Success = false;
+                    result.Errors.Add("Không tìm thấy EI01 records hợp lệ trong CSV");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [EI01] Import error: {Error}", ex.Message);
+                result.Success = false;
+                result.Errors.Add($"EI01 import error: {ex.Message}");
             }
             finally
             {
@@ -352,7 +412,7 @@ namespace TinhKhoanApp.Api.Services
             return new DirectImportResult
             {
                 Success = true,
-                ImportId = importId,
+                ImportId = importId.ToString(),
                 Status = "Completed"
             };
         }
@@ -427,6 +487,33 @@ namespace TinhKhoanApp.Api.Services
             });
 
             await foreach (var record in csv.GetRecordsAsync<DPDAEntity>())
+            {
+                // Set audit fields
+                record.CreatedAt = DateTime.UtcNow;
+                record.UpdatedAt = DateTime.UtcNow;
+
+                records.Add(record);
+            }
+
+            return records;
+        }
+
+        /// <summary>
+        /// Parse EI01 CSV với 24 business columns
+        /// </summary>
+        private async Task<List<EI01Entity>> ParseEI01CsvAsync(IFormFile file)
+        {
+            var records = new List<EI01Entity>();
+
+            using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
+            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true,
+                MissingFieldFound = null,
+                HeaderValidated = null
+            });
+
+            await foreach (var record in csv.GetRecordsAsync<EI01Entity>())
             {
                 // Set audit fields
                 record.CreatedAt = DateTime.UtcNow;

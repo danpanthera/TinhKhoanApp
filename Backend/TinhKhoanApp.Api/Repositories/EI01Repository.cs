@@ -1,25 +1,25 @@
 using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models.DataTables;
+using TinhKhoanApp.Api.Models.Entities;
 
 namespace TinhKhoanApp.Api.Repositories
 {
     /// <summary>
     /// EI01 Repository - triển khai IEI01Repository
     /// </summary>
-    public class EI01Repository : Repository<EI01>, IEI01Repository
+    public class EI01Repository : Repository<EI01Entity>, IEI01Repository
     {
         public EI01Repository(ApplicationDbContext context) : base(context)
         {
         }
 
         /// <summary>
-        /// Lấy dữ liệu EI01 gần đây nhất, sắp xếp theo CREATED_DATE
+        /// Lấy dữ liệu EI01 gần đây nhất, sắp xếp theo CreatedAt
         /// </summary>
-        public new async Task<IEnumerable<EI01>> GetRecentAsync(int count = 10)
+        public new async Task<IEnumerable<EI01Entity>> GetRecentAsync(int count = 10)
         {
             return await _dbSet
-                .OrderByDescending(ei01 => ei01.CREATED_DATE)
+                .OrderByDescending(ei01 => ei01.CreatedAt)
                 .Take(count)
                 .ToListAsync();
         }
@@ -27,7 +27,7 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Lấy dữ liệu EI01 theo ngày
         /// </summary>
-        public async Task<IEnumerable<EI01>> GetByDateAsync(DateTime date)
+        public async Task<IEnumerable<EI01Entity>> GetByDateAsync(DateTime date)
         {
             return await _dbSet
                 .Where(ei01 => ei01.NGAY_DL.Date == date.Date)
@@ -37,11 +37,11 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Lấy dữ liệu EI01 theo mã chi nhánh
         /// </summary>
-        public async Task<IEnumerable<EI01>> GetByBranchCodeAsync(string branchCode, int maxResults = 100)
+        public async Task<IEnumerable<EI01Entity>> GetByBranchCodeAsync(string branchCode, int maxResults = 100)
         {
             return await _dbSet
                 .Where(ei01 => ei01.MA_CN == branchCode)
-                .OrderByDescending(ei01 => ei01.CREATED_DATE)
+                .OrderByDescending(ei01 => ei01.CreatedAt)
                 .Take(maxResults)
                 .ToListAsync();
         }
@@ -49,11 +49,11 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Lấy dữ liệu EI01 theo mã khách hàng
         /// </summary>
-        public async Task<IEnumerable<EI01>> GetByCustomerCodeAsync(string customerCode, int maxResults = 100)
+        public async Task<IEnumerable<EI01Entity>> GetByCustomerCodeAsync(string customerCode, int maxResults = 100)
         {
             return await _dbSet
                 .Where(ei01 => ei01.MA_KH == customerCode)
-                .OrderByDescending(ei01 => ei01.CREATED_DATE)
+                .OrderByDescending(ei01 => ei01.CreatedAt)
                 .Take(maxResults)
                 .ToListAsync();
         }
@@ -61,11 +61,11 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Lấy dữ liệu EI01 theo loại khách hàng
         /// </summary>
-        public async Task<IEnumerable<EI01>> GetByCustomerTypeAsync(string customerType, int maxResults = 100)
+        public async Task<IEnumerable<EI01Entity>> GetByCustomerTypeAsync(string customerType, int maxResults = 100)
         {
             return await _dbSet
                 .Where(ei01 => ei01.LOAI_KH == customerType)
-                .OrderByDescending(ei01 => ei01.CREATED_DATE)
+                .OrderByDescending(ei01 => ei01.CreatedAt)
                 .Take(maxResults)
                 .ToListAsync();
         }
@@ -73,7 +73,7 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Lấy dữ liệu EI01 theo số điện thoại (bất kỳ loại dịch vụ nào)
         /// </summary>
-        public async Task<IEnumerable<EI01>> GetByPhoneNumberAsync(string phoneNumber, int maxResults = 100)
+        public async Task<IEnumerable<EI01Entity>> GetByPhoneNumberAsync(string phoneNumber, int maxResults = 100)
         {
             return await _dbSet
                 .Where(ei01 =>
@@ -82,7 +82,7 @@ namespace TinhKhoanApp.Api.Repositories
                     ei01.SDT_SMS == phoneNumber ||
                     ei01.SDT_SAV == phoneNumber ||
                     ei01.SDT_LN == phoneNumber)
-                .OrderByDescending(ei01 => ei01.CREATED_DATE)
+                .OrderByDescending(ei01 => ei01.CreatedAt)
                 .Take(maxResults)
                 .ToListAsync();
         }
@@ -90,11 +90,11 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Lấy dữ liệu EI01 theo trạng thái của dịch vụ EMB
         /// </summary>
-        public async Task<IEnumerable<EI01>> GetByEMBStatusAsync(string status, int maxResults = 100)
+        public async Task<IEnumerable<EI01Entity>> GetByEMBStatusAsync(string status, int maxResults = 100)
         {
             return await _dbSet
                 .Where(ei01 => ei01.TRANG_THAI_EMB == status)
-                .OrderByDescending(ei01 => ei01.CREATED_DATE)
+                .OrderByDescending(ei01 => ei01.CreatedAt)
                 .Take(maxResults)
                 .ToListAsync();
         }
@@ -102,11 +102,11 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Lấy dữ liệu EI01 theo trạng thái của dịch vụ OTT
         /// </summary>
-        public async Task<IEnumerable<EI01>> GetByOTTStatusAsync(string status, int maxResults = 100)
+        public async Task<IEnumerable<EI01Entity>> GetByOTTStatusAsync(string status, int maxResults = 100)
         {
             return await _dbSet
                 .Where(ei01 => ei01.TRANG_THAI_OTT == status)
-                .OrderByDescending(ei01 => ei01.CREATED_DATE)
+                .OrderByDescending(ei01 => ei01.CreatedAt)
                 .Take(maxResults)
                 .ToListAsync();
         }
@@ -114,11 +114,11 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Lấy dữ liệu EI01 theo trạng thái của dịch vụ SMS
         /// </summary>
-        public async Task<IEnumerable<EI01>> GetBySMSStatusAsync(string status, int maxResults = 100)
+        public async Task<IEnumerable<EI01Entity>> GetBySMSStatusAsync(string status, int maxResults = 100)
         {
             return await _dbSet
                 .Where(ei01 => ei01.TRANG_THAI_SMS == status)
-                .OrderByDescending(ei01 => ei01.CREATED_DATE)
+                .OrderByDescending(ei01 => ei01.CreatedAt)
                 .Take(maxResults)
                 .ToListAsync();
         }
@@ -158,7 +158,7 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Lấy dữ liệu EI01 được đăng ký trong khoảng thời gian
         /// </summary>
-        public async Task<IEnumerable<EI01>> GetByRegistrationDateRangeAsync(DateTime fromDate, DateTime toDate, string serviceType, int maxResults = 100)
+        public async Task<IEnumerable<EI01Entity>> GetByRegistrationDateRangeAsync(DateTime fromDate, DateTime toDate, string serviceType, int maxResults = 100)
         {
             var query = _dbSet.AsQueryable();
 
@@ -196,11 +196,11 @@ namespace TinhKhoanApp.Api.Repositories
                     break;
                 default:
                     // Mặc định không lọc theo ngày đăng ký
-                    return Enumerable.Empty<EI01>().ToList();
+                    return Enumerable.Empty<EI01Entity>().ToList();
             }
 
             return await query
-                .OrderByDescending(ei01 => ei01.CREATED_DATE)
+                .OrderByDescending(ei01 => ei01.CreatedAt)
                 .Take(maxResults)
                 .ToListAsync();
         }
@@ -208,7 +208,7 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Cập nhật nhiều EI01
         /// </summary>
-        public void UpdateRange(IEnumerable<EI01> entities)
+        public void UpdateRange(IEnumerable<EI01Entity> entities)
         {
             _dbSet.UpdateRange(entities);
         }

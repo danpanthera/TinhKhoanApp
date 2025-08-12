@@ -6,136 +6,139 @@ namespace TinhKhoanApp.Api.Models.Entities
 {
     /// <summary>
     /// DPDA Entity - Debit Card Table
-    /// 13 business columns + system columns
-    /// CSV Source: 7800_dpda_20241231.csv
+    /// Cấu trúc: NGAY_DL -> 13 Business Columns -> System + Temporal Columns
+    /// CSV Source: 7800_dpda_20250331.csv
+    /// Business Columns: MA_CHI_NHANH,MA_KHACH_HANG,TEN_KHACH_HANG,SO_TAI_KHOAN,LOAI_THE,SO_THE,NGAY_NOP_DON,NGAY_PHAT_HANH,USER_PHAT_HANH,TRANG_THAI,PHAN_LOAI,GIAO_THE,LOAI_PHAT_HANH
     /// </summary>
     [Table("DPDA")]
     [Index(nameof(MA_CHI_NHANH), Name = "IX_DPDA_MA_CHI_NHANH")]
     [Index(nameof(MA_KHACH_HANG), Name = "IX_DPDA_MA_KHACH_HANG")]
     [Index(nameof(SO_TAI_KHOAN), Name = "IX_DPDA_SO_TAI_KHOAN")]
     [Index(nameof(SO_THE), Name = "IX_DPDA_SO_THE")]
+    [Index(nameof(NGAY_DL), Name = "IX_DPDA_NGAY_DL")]
     public class DPDAEntity : ITemporalEntity
     {
-        // === SYSTEM COLUMNS (từ ITemporalEntity) ===
+        // === PRIMARY KEY ===
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Id { get; set; }
 
+        // === NGAY_DL - System Column (lấy từ filename) ===
+        /// <summary>
+        /// Ngày dữ liệu - lấy từ filename format: 7800_dpda_YYYYMMDD.csv -> datetime2 (dd/mm/yyyy)
+        /// </summary>
         [Required]
-        [Column(TypeName = "datetime2(3)")]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        [Column(TypeName = "datetime2(3)")]
-        public DateTime UpdatedAt { get; set; }
-
-        // Temporal table support
-        [Column(TypeName = "datetime2(3)")]
-        public DateTime SysStartTime { get; set; }
-
-        [Column(TypeName = "datetime2(3)")]
-        public DateTime SysEndTime { get; set; }
+        [Column(TypeName = "datetime2")]
+        public DateTime NGAY_DL { get; set; }
 
         // === BUSINESS COLUMNS (13 columns theo CSV structure) ===
 
         /// <summary>
-        /// Mã chi nhánh - BUSINESS KEY
+        /// Mã chi nhánh - Column 1
         /// </summary>
         [Required]
-        [Column(TypeName = "nvarchar(50)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string MA_CHI_NHANH { get; set; } = string.Empty;
 
         /// <summary>
-        /// Mã khách hàng - BUSINESS KEY
+        /// Mã khách hàng - Column 2
         /// </summary>
         [Required]
-        [Column(TypeName = "nvarchar(50)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string MA_KHACH_HANG { get; set; } = string.Empty;
 
         /// <summary>
-        /// Tên khách hàng
+        /// Tên khách hàng - Column 3
         /// </summary>
-        [Column(TypeName = "nvarchar(255)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string? TEN_KHACH_HANG { get; set; }
 
         /// <summary>
-        /// Số tài khoản - BUSINESS KEY
+        /// Số tài khoản - Column 4
         /// </summary>
-        [Required]
-        [Column(TypeName = "nvarchar(50)")]
-        public string SO_TAI_KHOAN { get; set; } = string.Empty;
+        [Column(TypeName = "nvarchar(200)")]
+        public string? SO_TAI_KHOAN { get; set; }
 
         /// <summary>
-        /// Loại thẻ
+        /// Loại thẻ - Column 5
         /// </summary>
-        [Column(TypeName = "nvarchar(50)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string? LOAI_THE { get; set; }
 
         /// <summary>
-        /// Số thẻ - BUSINESS KEY
+        /// Số thẻ - Column 6
         /// </summary>
-        [Column(TypeName = "nvarchar(50)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string? SO_THE { get; set; }
 
         /// <summary>
-        /// Ngày nộp đơn
+        /// Ngày nộp đơn - Column 7 (DATE format dd/mm/yyyy)
         /// </summary>
-        [Column(TypeName = "date")]
+        [Column(TypeName = "datetime2")]
         public DateTime? NGAY_NOP_DON { get; set; }
 
         /// <summary>
-        /// Ngày phát hành
+        /// Ngày phát hành - Column 8 (DATE format dd/mm/yyyy)
         /// </summary>
-        [Column(TypeName = "date")]
+        [Column(TypeName = "datetime2")]
         public DateTime? NGAY_PHAT_HANH { get; set; }
 
         /// <summary>
-        /// User phát hành
+        /// User phát hành - Column 9
         /// </summary>
-        [Column(TypeName = "nvarchar(100)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string? USER_PHAT_HANH { get; set; }
 
         /// <summary>
-        /// Trạng thái
+        /// Trạng thái - Column 10
         /// </summary>
-        [Column(TypeName = "nvarchar(50)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string? TRANG_THAI { get; set; }
 
         /// <summary>
-        /// Phân loại
+        /// Phân loại - Column 11
         /// </summary>
-        [Column(TypeName = "nvarchar(50)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string? PHAN_LOAI { get; set; }
 
         /// <summary>
-        /// Giao thẻ
+        /// Giao thẻ - Column 12
         /// </summary>
-        [Column(TypeName = "nvarchar(50)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string? GIAO_THE { get; set; }
 
         /// <summary>
-        /// Loại phát hành
+        /// Loại phát hành - Column 13
         /// </summary>
-        [Column(TypeName = "nvarchar(50)")]
+        [Column(TypeName = "nvarchar(200)")]
         public string? LOAI_PHAT_HANH { get; set; }
 
-        // === METADATA COLUMNS ===
+        // === SYSTEM COLUMNS ===
+        /// <summary>
+        /// Created date - System column (IEntity interface)
+        /// </summary>
+        [Required]
+        [Column(TypeName = "datetime2")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         /// <summary>
-        /// Tên file import (7800_dpda_20241231.csv)
+        /// Updated date - System column (IEntity interface)
         /// </summary>
-        [Column(TypeName = "nvarchar(500)")]
-        public string? FileName { get; set; }
+        [Required]
+        [Column(TypeName = "datetime2")]
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        // === TEMPORAL COLUMNS (cuối cùng - ITemporalEntity interface) ===
+        /// <summary>
+        /// Temporal table start time - System generated (ITemporalEntity interface)
+        /// </summary>
+        [Column("ValidFrom")]
+        public DateTime SysStartTime { get; set; }
 
         /// <summary>
-        /// Import batch ID để tracking
+        /// Temporal table end time - System generated (ITemporalEntity interface)
         /// </summary>
-        [Column(TypeName = "uniqueidentifier")]
-        public Guid? ImportId { get; set; }
-
-        /// <summary>
-        /// Additional metadata về import process
-        /// </summary>
-        [Column(TypeName = "nvarchar(1000)")]
-        public string? ImportMetadata { get; set; }
+        [Column("ValidTo")]
+        public DateTime SysEndTime { get; set; }
     }
 }

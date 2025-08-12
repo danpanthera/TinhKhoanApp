@@ -18,6 +18,9 @@ namespace TinhKhoanApp.Api.Services.Interfaces
         // DPDA Import Methods
         Task<DirectImportResult> ImportDPDAAsync(IFormFile file, string? statementDate = null);
 
+        // EI01 Import Methods
+        Task<DirectImportResult> ImportEI01Async(IFormFile file, string? statementDate = null);
+
         // LN03 Import Methods
         Task<DirectImportResult> ImportLN03EnhancedAsync(IFormFile file, string? statementDate = null);
 
