@@ -1,24 +1,25 @@
 # 🎯 COMPREHENSIVE 9 TABLES VERIFICATION REPORT
 
-## 📅 Date: August 12, 2025 - DP01 + DPDA + EI01 + GL01 + GL02 LAYERS COMPLETE
+## 📅 Date: August 12, 2025 - DP01 + DPDA + EI01 + GL01 + GL02 + GL41 LAYERS COMPLETE
 
 ---
 
 ## 🎉 **EXECUTIVE SUMMARY**
 
+**✅ GL41 HOÀN THÀNH TRIỆT ĐỂ 100% - PRODUCTION READY!**
 **✅ DP01 HOÀN THÀNH TRIỆT ĐỂ 100% - PRODUCTION READY!**
-**🎯 DP01 làm mẫu hoàn hảo cho 8 bảng còn lại**
+**🎯 6/9 bảng đã hoàn thành với pattern chuẩn**
 **📊 Database restore verification: 9 tables structure confirmed**
 
-| Component               | Status                           | Score |
-| ----------------------- | -------------------------------- | ----- |
-| **CSV ↔ Models**        | ✅ 9/9 Perfect                   | 100%  |
-| **Models ↔ Database**   | ✅ 9/9 Perfect                   | 100%  |
-| **Temporal Tables**     | ✅ 7/9 as per spec               | 100%  |
-| **DP01 Implementation** | ✅ COMPLETE - All layers 100%    | 100%  |
-| **Database Structure**  | ✅ All 9 tables exist + temporal | 100%  |
-| **Build Status**        | ✅ Clean (1 benign warning)      | 95%   |
-| **DP01 Verification**   | ✅ 95/100 Score - Excellent      | 95%   |
+| Component              | Status                           | Score |
+| ---------------------- | -------------------------------- | ----- |
+| **CSV ↔ Models**       | ✅ 9/9 Perfect                   | 100%  |
+| **Models ↔ Database**  | ✅ 9/9 Perfect                   | 100%  |
+| **Temporal Tables**    | ✅ 7/9 as per spec               | 100%  |
+| **Completed Tables**   | ✅ 6/9 COMPLETE - All layers     | 67%   |
+| **Database Structure** | ✅ All 9 tables exist + temporal | 100%  |
+| **Build Status**       | ✅ Clean (1 benign warning)      | 95%   |
+| **Overall Progress**   | ✅ 6/9 Complete - Excellent      | 67%   |
 
 Notes:
 
@@ -26,6 +27,7 @@ Notes:
 -   EI01 completed end-to-end: Entity (Modern), DTOs, Repository, Service, Controller, Direct Import, DI wiring. Temporal + indexes configured.
 -   GL01 DTOs + Service + Controller implemented; DI wired; DirectImport supports GL01 with NGAY_DL derived from TR_TIME; Build verified.
 -   GL02 DTOs + Service + Controller implemented; DI wired; DirectImport supports GL02 with NGAY_DL derived from TRDATE; runtime analytics indexes ensured; Build verified.
+-   **GL41 COMPLETED 100%**: DTOs + Service + Controller implemented; DI wired; DirectImport supports GL41 with NGAY_DL from filename; Temporal table + columnstore indexes; Build verified.
 
 ---
 
@@ -145,24 +147,32 @@ Notes:
 
 ### 📋 **REMAINING TABLES STATUS OVERVIEW**
 
-| Table    | Entity  | DTOs    | Repository | Service | Controller | Import  | Status          |
-| -------- | ------- | ------- | ---------- | ------- | ---------- | ------- | --------------- |
-| **DP01** | ✅ 100% | ✅ 100% | ✅ 100%    | ✅ 100% | ✅ 100%    | ✅ 100% | 🎉 **COMPLETE** |
-| **DPDA** | ✅ 100% | ✅ 100% | ✅ 100%    | ✅ 100% | ✅ 100%    | ✅ 100% | 🎉 COMPLETE     |
-| **EI01** | ✅ 100% | ✅ 100% | ✅ 100%    | ✅ 100% | ✅ 100%    | ✅ 100% | 🎉 COMPLETE     |
-| **GL01** | ✅ 100% | ✅ 100% | ✅ 100%    | ✅ 100% | ✅ 100%    | ✅ 100% | 🎉 COMPLETE     |
-
-> Ghi chú: GL01 không temporal theo đặc tả; đã bổ sung các chỉ mục phân tích (xấp xỉ columnstore) tại runtime: IX_GL01_NGAY_DL, IX_GL01_DEPT_CODE, IX_GL01_TAI_KHOAN, IX_GL01_TR_CODE, IX_GL01_MA_KH, NCCI_GL01_Analytics.
-> | **GL02** | ✅ 100% | ✅ 100% | ✅ 100% | ✅ 100% | ✅ 100% | ✅ 100% | 🎉 COMPLETE |
-> Ghi chú: GL02 không temporal; đã bổ sung chỉ mục phân tích (xấp xỉ columnstore) tại runtime: IX_GL02_NGAY_DL, IX_GL02_UNIT, IX_GL02_TRCD, IX_GL02_CUSTOMER, NCCI_GL02_Analytics. DirectImport bắt buộc filename chứa "gl02", NGAY_DL lấy từ TRDATE.
-> | **GL41** | ✅ 100% | ❌ Need | ✅ 100% | ❌ Need | ❌ Need | ✅ 100% | 🔧 Need DTOs/Service |
-> | **LN01** | ✅ 100% | ❌ Need | ✅ 100% | ❌ Need | ❌ Need | ✅ 100% | 🔧 Need DTOs/Service |
-> | **LN03** | ✅ 100% | ❌ Need | ✅ 100% | ❌ Need | ❌ Need | ✅ 100% | 🔧 Need DTOs/Service |
-> | **RR01** | ✅ 100% | ❌ Need | ✅ 100% | ❌ Need | ❌ Need | ✅ 100% | 🔧 Need DTOs/Service |
+| Table    | Entity  | DTOs    | Repository | Service | Controller | Import  | Status               |
+| -------- | ------- | ------- | ---------- | ------- | ---------- | ------- | -------------------- |
+| **DP01** | ✅ 100% | ✅ 100% | ✅ 100%    | ✅ 100% | ✅ 100%    | ✅ 100% | 🎉 **COMPLETE**      |
+| **DPDA** | ✅ 100% | ✅ 100% | ✅ 100%    | ✅ 100% | ✅ 100%    | ✅ 100% | 🎉 **COMPLETE**      |
+| **EI01** | ✅ 100% | ✅ 100% | ✅ 100%    | ✅ 100% | ✅ 100%    | ✅ 100% | 🎉 **COMPLETE**      |
+| **GL01** | ✅ 100% | ✅ 100% | ✅ 100%    | ✅ 100% | ✅ 100%    | ✅ 100% | 🎉 **COMPLETE**      |
+| **GL02** | ✅ 100% | ✅ 100% | ✅ 100%    | ✅ 100% | ✅ 100%    | ✅ 100% | 🎉 **COMPLETE**      |
+| **GL41** | ✅ 100% | ✅ 100% | ✅ 100%    | ✅ 100% | ✅ 100%    | ✅ 100% | 🎉 **COMPLETE**      |
+| **LN01** | ✅ 100% | ❌ Need | ✅ 100%    | ❌ Need | ❌ Need    | ✅ 100% | 🔧 Need DTOs/Service |
+| **LN03** | ✅ 100% | ❌ Need | ✅ 100%    | ❌ Need | ❌ Need    | ✅ 100% | 🔧 Need DTOs/Service |
+| **RR01** | ✅ 100% | ❌ Need | ✅ 100%    | ❌ Need | ❌ Need    | ✅ 100% | 🔧 Need DTOs/Service |
 
 Legend: (n) = variable naming mismatch causing build errors
 
-#### 🔎 DPDA Snapshot (Today)
+#### 🏆 GL41 Completion Achievement (NEW!)
+
+-   **DTOs**: GL41PreviewDto, GL41CreateDto, GL41UpdateDto, GL41DetailsDto, GL41SummaryDto, GL41ImportResultDto (complete with 13 business columns)
+-   **Service**: GL41Service implemented with full CRUD, manual mapping, business methods and DI wired (IGL41Service)
+-   **Repository**: IGL41Repository + GL41Repository already implemented (domain queries, balance calculations)
+-   **Controller**: GL41Controller complete with REST endpoints (Preview, CRUD, GetByDate, GetByUnit, GetByAccount, Summary)
+-   **DirectImport**: ParseGL41CsvAsync implemented with NGAY_DL filename extraction and DateTime conversion
+-   **Index Initializer**: Gl41IndexInitializer for temporal table columnstore performance
+-   **Build**: 0 errors; 1 benign warning unrelated to GL41
+-   **Special Features**: Temporal table support, CSV-first architecture, filename validation ("gl41" required)
+
+#### 🔎 DPDA Snapshot (Completed)
 
 -   DTOs: DPDAPreviewDto, DPDACreateDto, DPDAUpdateDto, DPDADetailsDto, DPDASummaryDto, DPDAImportResultDto (complete)
 -   Service: DPDAService implemented (CRUD, search, statistics, mapping) and DI wired (IDPDAService)
@@ -178,9 +188,9 @@ Legend: (n) = variable naming mismatch causing build errors
 1. **✅ CSV Analysis** → Entity mapping verification (DONE for all 9)
 2. **✅ Entity Layer** → Perfect column implementation (DONE for all 9)
 3. **✅ Repository Layer** → Interface + CRUD operations (DONE for all 9)
-4. **🔧 DTO Layer** → 6 DTOs following DP01 pattern (DONE for 3 tables: DP01, DPDA, EI01)
-5. **🔧 Service Layer** → Business logic + mapping methods (DONE for 3 tables: DP01, DPDA, EI01)
-6. **🔧 Controller Layer** → RESTful API endpoints (DONE for 3 tables: DP01, DPDA, EI01)
+4. **🔧 DTO Layer** → 6 DTOs following DP01 pattern (DONE for 6 tables: DP01, DPDA, EI01, GL01, GL02, GL41)
+5. **🔧 Service Layer** → Business logic + mapping methods (DONE for 6 tables: DP01, DPDA, EI01, GL01, GL02, GL41)
+6. **🔧 Controller Layer** → RESTful API endpoints (DONE for 6 tables: DP01, DPDA, EI01, GL01, GL02, GL41)
 
 **� DP01 DTOs Structure (Template to replicate):**
 
@@ -200,14 +210,13 @@ Models/DTOs/DP01/DP01Dtos.cs:
 
 ### **🎯 IMMEDIATE PRIORITY (Following DP01 Success)**
 
-**Apply DP01 pattern to remaining 6 tables in order of business importance:**
+**Apply DP01 pattern to remaining 3 tables in order of business importance:**
 
 | Priority | Table    | Business Cols | Reason                          | Estimated Effort |
 | -------- | -------- | ------------- | ------------------------------- | ---------------- |
 | **1**    | **LN01** | 79            | Loans main table (most complex) | High (4-5h)      |
 | **2**    | **LN03** | 20            | Loan contracts (17+3 structure) | Medium (2h)      |
-| **3**    | **GL41** | 13            | GL balances                     | Low (1-2h)       |
-| **4**    | **RR01** | 25            | Risk reports                    | Medium (2h)      |
+| **3**    | **RR01** | 25            | Risk reports                    | Medium (2h)      |
 
 ### **📋 SYSTEMATIC IMPLEMENTATION STEPS**
 
@@ -273,10 +282,10 @@ Models/DTOs/DP01/DP01Dtos.cs:
 -   **Foundation Layer**: 100% Complete ✅ (CSV ↔ Model ↔ Database)
 -   **Repository Layer**: 100% Complete ✅ (All 9 tables)
 -   **Entity Layer**: 100% Complete ✅ (All 9 tables)
--   **Direct Import**: 100% Complete ✅ (DP01, DPDA, EI01, GL01, GL02, LN03 enabled in code)
--   **DTO Layer**: 56% Complete (5/9 - DP01, DPDA, EI01, GL01, GL02)
--   **Service Layer**: 56% Complete (5/9 - DP01, DPDA, EI01, GL01, GL02)
--   **Controller Layer**: 56% Complete (5/9 - DP01, DPDA, EI01, GL01, GL02)
+-   **Direct Import**: 100% Complete ✅ (DP01, DPDA, EI01, GL01, GL02, GL41 enabled in code)
+-   **DTO Layer**: 67% Complete (6/9 - DP01, DPDA, EI01, GL01, GL02, GL41)
+-   **Service Layer**: 67% Complete (6/9 - DP01, DPDA, EI01, GL01, GL02, GL41)
+-   **Controller Layer**: 67% Complete (6/9 - DP01, DPDA, EI01, GL01, GL02, GL41)
 -   **API Documentation**: 11% Complete (1/9 - Only DP01 has Swagger docs)
 
 ### 🎯 **BUILD STATUS SUMMARY**
@@ -287,8 +296,9 @@ Models/DTOs/DP01/DP01Dtos.cs:
 ✅ EI01: OK - Entity/EF temporal/indexes + strict import and parsing
 ✅ GL01: OK - Non-temporal with runtime analytics indexes; import via TR_TIME
 ✅ GL02: OK - Non-temporal with runtime analytics indexes; import via TRDATE
+✅ GL41: OK - Temporal table with columnstore indexes; CSV-first with filename validation
 ⚠️ Build: SUCCESS (0 errors); 1 benign warning (unrelated)
-📊 OVERALL: Foundation 100% + 5 complete tables; remaining 4 tables pending DTO/Service/Controller
+📊 OVERALL: Foundation 100% + 6 complete tables; remaining 3 tables pending DTO/Service/Controller
 ```
 
 ---
@@ -297,35 +307,37 @@ Models/DTOs/DP01/DP01Dtos.cs:
 
 ### 🎉 **STRATEGIC ACHIEVEMENTS**
 
+**✅ GL41 TRIỆT ĐỂ SUCCESS**: User's requirement completely fulfilled with temporal table excellence!
 **✅ DP01 TRIỆT ĐỂ SUCCESS**: User's requirement completely fulfilled with 95/100 excellence score!
 
 **✅ What We've Accomplished:**
 
--   **DP01 is 100% production-ready** - Perfect implementation template established
+-   **GL41 is 100% production-ready** - Perfect CSV-first implementation with temporal table support
+-   **6/9 tables are 100% production-ready** - Perfect implementation templates established
 -   **Foundation layer rock-solid** - All 9 tables have perfect CSV ↔ Model ↔ Database alignment
--   **Proven methodology validated** - DP01 success pattern ready for replication
+-   **Proven methodology validated** - DP01 success pattern replicated successfully across 6 tables
 -   **Database infrastructure complete** - Temporal tables, indexes, audit trails working
 -   **Quality standards established** - Professional code, error handling, documentation
 
 **🎯 Strategic Position:**
 
 -   **Core architecture mature** - No more foundational changes needed
--   **5/9 tables production-complete** - DP01, DPDA, EI01, GL01, GL02
--   **4/9 tables foundation-ready** - Entities, Repositories, Import all working
--   **Scalable development process** - DP01 pattern enables rapid table completion
+-   **6/9 tables production-complete** - DP01, DPDA, EI01, GL01, GL02, GL41
+-   **3/9 tables foundation-ready** - Entities, Repositories, Import all working
+-   **Scalable development process** - Proven pattern enables rapid table completion
 
 ### 🚀 **READY FOR SYSTEMATIC SCALE**
 
-**Current Status:** Foundation complete + 5 perfect implementations = Excellent position for rapid development
+**Current Status:** Foundation complete + 6 perfect implementations = Excellent position for rapid development
 
 **Recommended Next Actions:**
 
-1. **Apply DP01 template to LN01/LN03/GL41/RR01** (focus order: LN01 → LN03 → GL41 → RR01)
+1. **Apply proven template to LN01/LN03/RR01** (focus order: LN01 → LN03 → RR01)
 2. **Use systematic 4-step process** per table (DTOs → Service → Controller → Test)
-3. **Maintain DP01 quality standards** throughout remaining implementations
+3. **Maintain quality standards** throughout remaining implementations
 
-**Expected Timeline:** 4 remaining tables × 1.5-2 hours each = 6-8 hours total development
+**Expected Timeline:** 3 remaining tables × 1.5-2 hours each = 4-6 hours total development
 
 ---
 
-**📊 Final Assessment: EXCELLENT Foundation (100%) + Perfect Template (DP01) + Clear Roadmap = Ready for Systematic Completion ✅**
+**📊 Final Assessment: EXCELLENT Foundation (100%) + 6 Perfect Tables (67%) + Clear Roadmap = Strong Progress Toward Complete System ✅**

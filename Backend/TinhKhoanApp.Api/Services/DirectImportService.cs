@@ -105,6 +105,7 @@ namespace TinhKhoanApp.Api.Services
                 "LN03" => await ImportLN03EnhancedAsync(file, statementDate),
                 "GL01" => await ImportGL01Async(file, statementDate),
                 "GL02" => await ImportGL02Async(file, statementDate),
+                "GL41" => await ImportGL41Async(file, statementDate),
                 _ => throw new NotSupportedException($"DataType '{dataType}' chưa được hỗ trợ")
             };
         }
@@ -411,6 +412,67 @@ namespace TinhKhoanApp.Api.Services
                 _logger.LogError(ex, "❌ [GL02] Import error: {Error}", ex.Message);
                 result.Success = false;
                 result.Errors.Add($"GL02 import error: {ex.Message}");
+            }
+            finally
+            {
+                result.EndTime = DateTime.UtcNow;
+                result.ProcessingTimeMs = (int)(result.EndTime - result.StartTime).TotalMilliseconds;
+            }
+
+            return result;
+        }
+
+        #endregion
+
+        #region GL41 Import
+
+        /// <summary>
+        /// Import GL41 từ CSV - 13 business columns; NGAY_DL lấy từ filename; temporal table
+        /// </summary>
+        public async Task<DirectImportResult> ImportGL41Async(IFormFile file, string? statementDate = null)
+        {
+            _logger.LogInformation("🚀 [GL41] Import GL41 from CSV: {FileName}", file.FileName);
+
+            var result = new DirectImportResult
+            {
+                FileName = file.FileName,
+                DataType = "GL41",
+                TargetTable = "GL41",
+                FileSizeBytes = file.Length,
+                StartTime = DateTime.UtcNow
+            };
+
+            try
+            {
+                // Strict: only allow filename containing "gl41"
+                if (!file.FileName.ToLower().Contains("gl41"))
+                {
+                    throw new InvalidOperationException($"Filename '{file.FileName}' is not allowed. Only files containing 'gl41' are accepted.");
+                }
+
+                // Parse GL41 CSV
+                var records = await ParseGL41CsvAsync(file);
+                _logger.LogInformation("📊 [GL41] Đã parse {Count} records từ CSV", records.Count);
+
+                if (records.Any())
+                {
+                    // Bulk insert GL41
+                    var insertedCount = await BulkInsertGenericAsync(records, "GL41");
+                    result.ProcessedRecords = insertedCount;
+                    result.Success = true;
+                    _logger.LogInformation("✅ [GL41] Import thành công {Count} records", insertedCount);
+                }
+                else
+                {
+                    result.Success = false;
+                    result.Errors.Add("Không tìm thấy GL41 records hợp lệ trong CSV");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [GL41] Import error: {Error}", ex.Message);
+                result.Success = false;
+                result.Errors.Add($"GL41 import error: {ex.Message}");
             }
             finally
             {
@@ -785,6 +847,44 @@ namespace TinhKhoanApp.Api.Services
                 record.FILE_NAME = file.FileName;
 
                 // Normalize numeric from string TR_EX_RT if needed is handled at query level; keep CSV-first mapping
+
+                records.Add(record);
+            }
+
+            return records;
+        }
+
+        /// <summary>
+        /// Parse GL41 CSV: NGAY_DL từ filename; 13 business columns; temporal table
+        /// </summary>
+        private async Task<List<GL41>> ParseGL41CsvAsync(IFormFile file)
+        {
+            var records = new List<GL41>();
+
+            using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
+            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true,
+                MissingFieldFound = null,
+                HeaderValidated = null
+            });
+
+            // Date parsing preferences for decimal amounts
+            var dtOptions = csv.Context.TypeConverterOptionsCache.GetOptions<DateTime>();
+            dtOptions.Formats = new[] { "dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "d/M/yyyy", "yyyyMMdd" };
+
+            // Extract NGAY_DL from filename và convert to DateTime
+            var ngayDlString = ExtractNgayDLFromFileName(file.FileName);
+            var ngayDlDateTime = DateTime.ParseExact(ngayDlString, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+
+            await foreach (var record in csv.GetRecordsAsync<GL41>())
+            {
+                // Set NGAY_DL từ filename (không có trong CSV)
+                record.NGAY_DL = ngayDlDateTime;
+
+                // Normalize audit fields
+                record.CREATED_DATE = DateTime.UtcNow;
+                record.FILE_NAME = file.FileName;
 
                 records.Add(record);
             }

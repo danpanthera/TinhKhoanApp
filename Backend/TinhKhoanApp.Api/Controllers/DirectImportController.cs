@@ -9,6 +9,9 @@ namespace TinhKhoanApp.Api.Controllers
     /// DP01: chỉ file chứa "dp01" trong filename
     /// DPDA: chỉ file chứa "dpda" trong filename
     /// EI01: chỉ file chứa "ei01" trong filename
+    /// GL01: chỉ file chứa "gl01" trong filename
+    /// GL02: chỉ file chứa "gl02" trong filename
+    /// GL41: chỉ file chứa "gl41" trong filename
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
@@ -27,7 +30,7 @@ namespace TinhKhoanApp.Api.Controllers
 
         /// <summary>
         /// Smart Import endpoint - tự động detect dataType từ filename
-        /// DP01/DPDA/EI01/LN03/GL01: chỉ cho phép file chứa mã tương ứng trong filename
+        /// DP01/DPDA/EI01/GL01/GL02/GL41/LN03: chỉ cho phép file chứa mã tương ứng trong filename
         /// </summary>
         [HttpPost("smart")]
         public async Task<IActionResult> SmartImport(
@@ -46,7 +49,7 @@ namespace TinhKhoanApp.Api.Controllers
                 if (dataType == null)
                 {
                     return BadRequest(ApiResponse<object>.Error(
-            $"Tên file '{file.FileName}' không hợp lệ. File phải chứa một trong các mã: dp01, dpda, ei01, gl01, ln03.",
+            $"Tên file '{file.FileName}' không hợp lệ. File phải chứa một trong các mã: dp01, dpda, ei01, gl01, gl02, gl41, ln03.",
                         "INVALID_FILENAME"));
                 }
 
@@ -98,6 +101,11 @@ namespace TinhKhoanApp.Api.Controllers
             if (lowerFileName.Contains("gl02"))
             {
                 return "GL02";
+            }
+
+            if (lowerFileName.Contains("gl41"))
+            {
+                return "GL41";
             }
 
             if (lowerFileName.Contains("ln03"))

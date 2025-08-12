@@ -30,6 +30,9 @@ namespace TinhKhoanApp.Api.Services.Interfaces
         // GL02 Import Methods
         Task<DirectImportResult> ImportGL02Async(IFormFile file, string? statementDate = null);
 
+        // GL41 Import Methods
+        Task<DirectImportResult> ImportGL41Async(IFormFile file, string? statementDate = null);
+
         // Utility Methods
         string ExtractNgayDLFromFileName(string fileName);
         Task<bool> ValidateFileFormatAsync(IFormFile file, string expectedDataType);

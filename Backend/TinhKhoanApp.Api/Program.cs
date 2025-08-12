@@ -105,7 +105,7 @@ builder.Services.AddScoped<IEI01Repository, EI01Repository>(); // ✅ EI01 ENABL
 // TODO: Fix repository interface implementations for the following (have compilation errors):
 builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IGL01Repository, TinhKhoanApp.Api.Repositories.GL01Repository>(); // ✅ GL01 Repository ENABLED
 builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IGL02Repository, TinhKhoanApp.Api.Repositories.GL02Repository>(); // ✅ GL02 Repository ENABLED
-// builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IGL41Repository, TinhKhoanApp.Api.Repositories.GL41Repository>(); // TODO: Fix interface implementation
+builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IGL41Repository, TinhKhoanApp.Api.Repositories.GL41Repository>(); // ✅ GL41 Repository ENABLED
 // builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.ILN01Repository, TinhKhoanApp.Api.Repositories.LN01Repository>(); // TODO: Fix interface implementation
 // builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IRR01Repository, TinhKhoanApp.Api.Repositories.RR01Repository>(); // TODO: Fix interface implementation - Has 23 missing methods
 
@@ -119,8 +119,9 @@ builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL01Service, Ti
 // Ensure GL01 analytics indexes exist at startup (columnstore approximation)
 builder.Services.AddHostedService<TinhKhoanApp.Api.Services.Startup.Gl01IndexInitializer>();
 builder.Services.AddHostedService<TinhKhoanApp.Api.Services.Startup.Gl02IndexInitializer>();
+builder.Services.AddHostedService<TinhKhoanApp.Api.Services.Startup.Gl41IndexInitializer>(); // ✅ GL41 Index Initializer
 builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL02Service, TinhKhoanApp.Api.Services.GL02Service>(); // ✅ GL02 Service ENABLED
-// builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL41Service, TinhKhoanApp.Api.Services.GL41Service>(); // TODO: Implement GL41Service
+builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL41Service, TinhKhoanApp.Api.Services.GL41Service>(); // ✅ GL41 Service ENABLED
 // builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.ILN01Service, TinhKhoanApp.Api.Services.LN01Service>(); // TODO: Implement LN01Service
 // builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IRR01Service, TinhKhoanApp.Api.Services.RR01Service>(); // TODO: Implement RR01Service
 
