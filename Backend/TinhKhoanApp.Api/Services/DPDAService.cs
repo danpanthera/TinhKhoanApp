@@ -164,7 +164,7 @@ namespace TinhKhoanApp.Api.Services
                 UpdateFromDto(existingEntity, updateDto);
                 existingEntity.UpdatedAt = DateTime.UtcNow;
 
-                var updatedEntity = await _dpdaRepository.UpdateAsync(updateDto.Id, existingEntity);
+                var updatedEntity = await _dpdaRepository.UpdateAsync(existingEntity);
                 var detailsDto = MapToDetailsDto(updatedEntity);
 
                 return ApiResponse<DPDADetailsDto>.Ok(detailsDto);
@@ -307,7 +307,7 @@ namespace TinhKhoanApp.Api.Services
                 summary.CardsByType = cardsByType.ToDictionary(x => x.Key ?? "N/A", x => x.Value);
 
                 // Cards by branch (Top 10)
-                var cardsByBranch = await _dpdaRepository.GetCardCountByBranchAsync(10);
+                var cardsByBranch = await _dpdaRepository.GetCardCountByBranchAsync(asOfDate);
                 summary.CardsByBranch = cardsByBranch.ToDictionary(x => x.Key ?? "N/A", x => x.Value);
 
                 // Cards by category
@@ -317,10 +317,12 @@ namespace TinhKhoanApp.Api.Services
                 // Cards issued this month
                 var startOfMonth = new DateTime(effectiveDate.Year, effectiveDate.Month, 1);
                 var endOfMonth = startOfMonth.AddMonths(1).AddDays(-1);
-                summary.CardsIssuedThisMonth = await _dpdaRepository.GetCardCountByDateRangeAsync(startOfMonth, endOfMonth);
+                var thisMonthData = await _dpdaRepository.GetCardCountByDateRangeAsync(startOfMonth, endOfMonth);
+                summary.CardsIssuedThisMonth = thisMonthData.Values.Sum();
 
                 // Cards issued today
-                summary.CardsIssuedToday = await _dpdaRepository.GetCardCountByDateRangeAsync(effectiveDate, effectiveDate);
+                var todayData = await _dpdaRepository.GetCardCountByDateRangeAsync(effectiveDate, effectiveDate);
+                summary.CardsIssuedToday = todayData.Values.Sum();
 
                 summary.LastUpdated = DateTime.UtcNow;
 

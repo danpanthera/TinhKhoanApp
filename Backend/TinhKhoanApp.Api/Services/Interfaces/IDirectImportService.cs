@@ -1,0 +1,29 @@
+using Microsoft.AspNetCore.Http;
+using TinhKhoanApp.Api.Models;
+
+namespace TinhKhoanApp.Api.Services.Interfaces
+{
+    /// <summary>
+    /// Interface cho Direct Import Service - CSV upload và processing
+    /// </summary>
+    public interface IDirectImportService
+    {
+        // Generic Import Methods
+        Task<DirectImportResult> ImportFromCsvAsync<T>(IFormFile file, string dataType, string? statementDate = null) where T : class;
+        Task<DirectImportResult> ImportGenericAsync(IFormFile file, string dataType, string? statementDate = null);
+
+        // DP01 Import Methods
+        Task<DirectImportResult> ImportDP01Async(IFormFile file, string? statementDate = null);
+
+        // DPDA Import Methods
+        Task<DirectImportResult> ImportDPDAAsync(IFormFile file, string? statementDate = null);
+
+        // LN03 Import Methods
+        Task<DirectImportResult> ImportLN03EnhancedAsync(IFormFile file, string? statementDate = null);
+
+        // Utility Methods
+        string ExtractNgayDLFromFileName(string fileName);
+        Task<bool> ValidateFileFormatAsync(IFormFile file, string expectedDataType);
+        Task<DirectImportResult> GetImportStatusAsync(Guid importId);
+    }
+}

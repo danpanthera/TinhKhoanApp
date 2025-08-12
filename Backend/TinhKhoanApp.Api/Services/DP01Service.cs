@@ -295,7 +295,7 @@ namespace TinhKhoanApp.Api.Services
         {
             return new DP01Entity
             {
-                NGAY_DL = createDto.NGAY_DL,
+                NGAY_DL = createDto.NGAY_DL ?? DateTime.Now,
 
                 // All 63 business columns
                 MA_CN = createDto.MA_CN,

@@ -12,7 +12,7 @@ namespace TinhKhoanApp.Api.Repositories
     /// Theo pattern DP01Repository với 13 business columns từ CSV
     /// CSV-First: Business columns từ CSV là chuẩn cho tất cả layers
     /// </summary>
-    public class DPDARepository : BaseRepository<DPDAEntity>, IDPDARepository
+    public class DPDARepository : Repository<DPDAEntity>, IDPDARepository
     {
         public DPDARepository(ApplicationDbContext context) : base(context)
         {
@@ -157,6 +157,154 @@ namespace TinhKhoanApp.Api.Repositories
                 .GroupBy(x => x.TRANG_THAI)
                 .Select(g => new { Status = g.Key, Count = g.LongCount() })
                 .ToDictionaryAsync(x => x.Status, x => x.Count);
+        }
+
+        #endregion
+
+        #region Basic CRUD Operations
+
+        /// <summary>
+        /// Get all DPDA entities
+        /// </summary>
+        public async Task<IEnumerable<DPDAEntity>> GetAllAsync()
+        {
+            return await _context.Set<DPDAEntity>().ToListAsync();
+        }
+
+        /// <summary>
+        /// Get DPDA entity by ID
+        /// </summary>
+        public async Task<DPDAEntity?> GetByIdAsync(long id)
+        {
+            return await _context.Set<DPDAEntity>().FindAsync(id);
+        }
+
+        /// <summary>
+        /// Create new DPDA entity
+        /// </summary>
+        public async Task<DPDAEntity> CreateAsync(DPDAEntity entity)
+        {
+            _context.Set<DPDAEntity>().Add(entity);
+            await _context.SaveChangesAsync();
+            return entity;
+        }
+
+        /// <summary>
+        /// Update existing DPDA entity
+        /// </summary>
+        public async Task<DPDAEntity> UpdateAsync(DPDAEntity entity)
+        {
+            _context.Set<DPDAEntity>().Update(entity);
+            await _context.SaveChangesAsync();
+            return entity;
+        }
+
+        /// <summary>
+        /// Delete DPDA entity by ID
+        /// </summary>
+        public async Task<bool> DeleteAsync(long id)
+        {
+            var entity = await GetByIdAsync(id);
+            if (entity == null) return false;
+
+            _context.Set<DPDAEntity>().Remove(entity);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        /// <summary>
+        /// Get total count by branch code
+        /// </summary>
+        public async Task<long> GetTotalCountByBranchAsync(string branchCode, DateTime? date = null)
+        {
+            var query = _context.Set<DPDAEntity>().AsQueryable();
+
+            // Filter by branch code
+            query = query.Where(x => x.MA_CHI_NHANH == branchCode);
+
+            // Apply date filter if provided
+            if (date.HasValue)
+            {
+                var startOfDay = date.Value.Date;
+                var endOfDay = startOfDay.AddDays(1);
+                query = query.Where(x => x.CreatedAt >= startOfDay && x.CreatedAt < endOfDay);
+            }
+
+            return await query.LongCountAsync();
+        }
+
+        /// <summary>
+        /// Get card type distribution - rename from GetCountByCardTypeAsync
+        /// </summary>
+        public async Task<Dictionary<string, long>> GetCardTypeDistributionAsync(DateTime? asOfDate = null)
+        {
+            return await GetCountByCardTypeAsync(asOfDate);
+        }
+
+        /// <summary>
+        /// Get status distribution - rename from GetCountByStatusAsync
+        /// </summary>
+        public async Task<Dictionary<string, long>> GetStatusDistributionAsync(DateTime? asOfDate = null)
+        {
+            return await GetCountByStatusAsync(asOfDate);
+        }
+
+        /// <summary>
+        /// Get total count of all DPDA records
+        /// </summary>
+        public async Task<long> GetTotalCountAsync()
+        {
+            return await _context.Set<DPDAEntity>().LongCountAsync();
+        }
+
+        /// <summary>
+        /// Get card count by status - alias for GetStatusDistributionAsync
+        /// </summary>
+        public async Task<Dictionary<string, long>> GetCardCountByStatusAsync(DateTime? asOfDate = null)
+        {
+            return await GetStatusDistributionAsync(asOfDate);
+        }
+
+        /// <summary>
+        /// Get card count by type - alias for GetCardTypeDistributionAsync
+        /// </summary>
+        public async Task<Dictionary<string, long>> GetCardCountByTypeAsync(DateTime? asOfDate = null)
+        {
+            return await GetCardTypeDistributionAsync(asOfDate);
+        }
+
+        /// <summary>
+        /// Get card count by branch - same as GetCountByBranchAsync
+        /// </summary>
+        public async Task<Dictionary<string, long>> GetCardCountByBranchAsync(DateTime? asOfDate = null)
+        {
+            return await GetCountByBranchAsync(asOfDate);
+        }
+
+        /// <summary>
+        /// Get card count by category - placeholder implementation
+        /// </summary>
+        public async Task<Dictionary<string, long>> GetCardCountByCategoryAsync(DateTime? asOfDate = null)
+        {
+            // Implement based on actual category field in DPDAEntity
+            // For now, return empty dictionary
+            return new Dictionary<string, long>();
+        }
+
+        /// <summary>
+        /// Get card count by date range
+        /// </summary>
+        public async Task<Dictionary<string, long>> GetCardCountByDateRangeAsync(DateTime startDate, DateTime endDate)
+        {
+            var query = _context.Set<DPDAEntity>().AsQueryable();
+
+            // Apply date range filter
+            query = query.Where(x => x.CreatedAt >= startDate && x.CreatedAt <= endDate);
+
+            return await query
+                .GroupBy(x => x.CreatedAt.Date)
+                .Select(g => new { Date = g.Key.ToString("yyyy-MM-dd"), Count = g.LongCount() })
+                .ToDictionaryAsync(x => x.Date, x => x.Count);
         }
 
         #endregion
