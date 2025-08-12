@@ -59,7 +59,7 @@ Notes:
 | **DP01** | ✅ PERFECT | 63            | 73         | ✅ Yes   | ✅ Yes  | PK + 5 more |
 | **DPDA** | ✅ PERFECT | 13            | 20         | ✅ Yes   | ✅ Yes  | PK + Custom |
 | **EI01** | ✅ PERFECT | 24            | 31         | ✅ Yes   | ✅ Yes  | PK + Custom |
-| **GL01** | ✅ READY   | 27            | 32         | ❌ No    | ❌ No   | PK          |
+| **GL01** | ✅ READY   | 27            | 32         | ❌ No    | ❌ No   | PK + 6 idx  |
 | **GL02** | ✅ READY   | 17            | 21         | ❌ No    | ❌ No   | PK          |
 | **GL41** | ✅ READY   | 13            | 21         | ✅ Yes   | ✅ Yes  | PK + Custom |
 | **LN01** | ✅ READY   | 79            | 86         | ✅ Yes   | ✅ Yes  | PK + Custom |
@@ -150,6 +150,7 @@ Notes:
 | **DPDA** | ✅ 100% | ✅ 100% | ✅ 100%    | ✅ 100% | ✅ 100%    | ✅ 100% | 🎉 COMPLETE          |
 | **EI01** | ✅ 100% | ✅ 100% | ✅ 100%    | ✅ 100% | ✅ 100%    | ✅ 100% | 🎉 COMPLETE          |
 | **GL01** | ✅ 100% | ✅ 100% | ✅ 100%    | ✅ 100% | ✅ 100%    | ✅ 100% | 🎉 COMPLETE          |
+> Ghi chú: GL01 không temporal theo đặc tả; đã bổ sung các chỉ mục phân tích (xấp xỉ columnstore) tại runtime: IX_GL01_NGAY_DL, IX_GL01_DEPT_CODE, IX_GL01_TAI_KHOAN, IX_GL01_TR_CODE, IX_GL01_MA_KH, NCCI_GL01_Analytics.
 | **GL02** | ✅ 100% | ❌ Need | ✅ 100%    | ❌ Need | ❌ Need    | ✅ 100% | 🔧 Need DTOs/Service |
 | **GL41** | ✅ 100% | ❌ Need | ✅ 100%    | ❌ Need | ❌ Need    | ✅ 100% | 🔧 Need DTOs/Service |
 | **LN01** | ✅ 100% | ❌ Need | ✅ 100%    | ❌ Need | ❌ Need    | ✅ 100% | 🔧 Need DTOs/Service |

@@ -24,6 +24,9 @@ namespace TinhKhoanApp.Api.Services.Interfaces
         // LN03 Import Methods
         Task<DirectImportResult> ImportLN03EnhancedAsync(IFormFile file, string? statementDate = null);
 
+        // GL01 Import Methods
+        Task<DirectImportResult> ImportGL01Async(IFormFile file, string? statementDate = null);
+
         // Utility Methods
         string ExtractNgayDLFromFileName(string fileName);
         Task<bool> ValidateFileFormatAsync(IFormFile file, string expectedDataType);

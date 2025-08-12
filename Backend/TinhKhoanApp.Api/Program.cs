@@ -116,6 +116,8 @@ builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IEI01Service, EI
 // TODO: Enable DPDA Service after Repository fix
 // builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IDPDAService, TinhKhoanApp.Api.Services.DPDAService>(); // ✅ DPDA - NEEDS Repository fix first
 builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL01Service, TinhKhoanApp.Api.Services.GL01Service>(); // ✅ GL01 Service ENABLED
+// Ensure GL01 analytics indexes exist at startup (columnstore approximation)
+builder.Services.AddHostedService<TinhKhoanApp.Api.Services.Startup.Gl01IndexInitializer>();
 // builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL02Service, TinhKhoanApp.Api.Services.GL02Service>(); // TODO: Implement GL02Service
 // builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL41Service, TinhKhoanApp.Api.Services.GL41Service>(); // TODO: Implement GL41Service
 // builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.ILN01Service, TinhKhoanApp.Api.Services.LN01Service>(); // TODO: Implement LN01Service
