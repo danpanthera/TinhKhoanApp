@@ -56,7 +56,8 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<DataTables.GL02> GL02 { get; set; }
         public DbSet<DataTables.GL41> GL41 { get; set; }
         public DbSet<DataTables.DPDA> DPDA { get; set; }
-        public DbSet<DataTables.EI01> EI01 { get; set; }
+        // ✅ Use Modern Entity for EI01 to ensure CSV-first consistency across layers
+        public DbSet<EI01Entity> EI01 { get; set; }
         // public DbSet<DataTables.RR01> RR01 { get; set; } // Temporary disabled - needs entity/DTO alignment
 
         // 🔄 DbSets with plural names for backward compatibility
@@ -67,7 +68,7 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<DataTables.GL02> GL02s { get; set; }
         public DbSet<DataTables.GL41> GL41s { get; set; }
         public DbSet<DataTables.DPDA> DPDAs { get; set; }
-        public DbSet<DataTables.EI01> EI01s { get; set; }
+        // Removed plural DbSet for DataTables.EI01 to avoid table mapping conflicts
         // public DbSet<DataTables.RR01> RR01s { get; set; } // Temporary disabled - needs entity/DTO alignment
 
         // 🆕 DbSets cho Modern Entity Layer (Repository Pattern)
@@ -400,6 +401,29 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
                     .IsUnique(false);
             });
 
+            // EI01 Temporal Table configuration - ✅ MODERN ENTITY
+            modelBuilder.Entity<EI01Entity>(entity =>
+            {
+                // Temporal Table configuration
+                entity.ToTable(tb => tb.IsTemporal(ttb =>
+                {
+                    ttb.UseHistoryTable("EI01_History");
+                    ttb.HasPeriodStart("ValidFrom");
+                    ttb.HasPeriodEnd("ValidTo");
+                }));
+
+                // Indexes for query performance
+                entity.HasIndex(e => e.NGAY_DL)
+                    .HasDatabaseName("IX_EI01_NGAY_DL");
+                entity.HasIndex(e => e.MA_CN)
+                    .HasDatabaseName("IX_EI01_MA_CN");
+
+                // Columnstore-like analytics index (regular index due to provider limits)
+                entity.HasIndex(e => new { e.NGAY_DL, e.MA_CN })
+                    .HasDatabaseName("NCCI_EI01_Analytics")
+                    .IsUnique(false);
+            });
+
             // GL01 decimal properties
             modelBuilder.Entity<DataTables.GL01>(entity =>
             {
@@ -528,8 +552,7 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
             // 💰 Cấu hình bảng DPDA - Tiền gửi của dân
             ConfigureDataTableWithTemporal<DataTables.DPDA>(modelBuilder, "DPDA");
 
-            // 📊 Cấu hình bảng EI01 - Thu nhập khác
-            ConfigureDataTableWithTemporal<DataTables.EI01>(modelBuilder, "EI01");
+            // 📊 Cấu hình bảng EI01 - dùng Modern Entity EI01Entity (configured above)
 
             // 📋 Cấu hình bảng GL01 - Sổ cái tổng hợp (Partitioned Columnstore - NOT Temporal)
             ConfigureDataTableBasic<DataTables.GL01>(modelBuilder, "GL01");

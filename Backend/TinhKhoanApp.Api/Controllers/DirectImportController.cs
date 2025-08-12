@@ -7,6 +7,8 @@ namespace TinhKhoanApp.Api.Controllers
     /// <summary>
     /// Controller cho Direct Import - chỉ cho phép import file đúng format
     /// DP01: chỉ file chứa "dp01" trong filename
+    /// DPDA: chỉ file chứa "dpda" trong filename
+    /// EI01: chỉ file chứa "ei01" trong filename
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
@@ -25,7 +27,7 @@ namespace TinhKhoanApp.Api.Controllers
 
         /// <summary>
         /// Smart Import endpoint - tự động detect dataType từ filename
-        /// DP01: chỉ cho phép file chứa "dp01"
+        /// DP01/DPDA/EI01/LN03: chỉ cho phép file chứa mã tương ứng trong filename
         /// </summary>
         [HttpPost("smart")]
         public async Task<IActionResult> SmartImport(

@@ -247,6 +247,12 @@ namespace TinhKhoanApp.Api.Services
 
             try
             {
+                // Strict: only allow filename containing "ei01"
+                if (!file.FileName.ToLower().Contains("ei01"))
+                {
+                    throw new InvalidOperationException($"Filename '{file.FileName}' is not allowed. Only files containing 'ei01' are accepted.");
+                }
+
                 // Extract NgayDL từ filename
                 var ngayDL = ExtractNgayDLFromFileName(file.FileName);
                 result.NgayDL = ngayDL;
@@ -257,6 +263,15 @@ namespace TinhKhoanApp.Api.Services
 
                 if (records.Any())
                 {
+                    // Set NGAY_DL for all records from filename (CSV-first rule)
+                    if (DateTime.TryParse(result.NgayDL, out var ngayDlDate))
+                    {
+                        foreach (var r in records)
+                        {
+                            r.NGAY_DL = ngayDlDate;
+                        }
+                    }
+
                     // Bulk insert EI01
                     var insertedCount = await BulkInsertGenericAsync(records, "EI01");
                     result.ProcessedRecords = insertedCount;
@@ -513,11 +528,20 @@ namespace TinhKhoanApp.Api.Services
                 HeaderValidated = null
             });
 
+            // Ensure DateTime parsing uses dd/MM/yyyy as primary format
+            var dtOptions = csv.Context.TypeConverterOptionsCache.GetOptions<DateTime>();
+            dtOptions.Formats = new[] { "dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "d/M/yyyy" };
+            var ndtOptions = csv.Context.TypeConverterOptionsCache.GetOptions<DateTime?>();
+            ndtOptions.Formats = dtOptions.Formats;
+
             await foreach (var record in csv.GetRecordsAsync<EI01Entity>())
             {
                 // Set audit fields
                 record.CreatedAt = DateTime.UtcNow;
                 record.UpdatedAt = DateTime.UtcNow;
+
+                // Normalize date fields to datetime2 (dd/MM/yyyy)
+                // CsvHelper already maps to DateTime? when possible; extra normalization hooks can be added if needed
 
                 records.Add(record);
             }
