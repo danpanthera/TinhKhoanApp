@@ -95,6 +95,11 @@ namespace TinhKhoanApp.Api.Controllers
                 return "GL01";
             }
 
+            if (lowerFileName.Contains("gl02"))
+            {
+                return "GL02";
+            }
+
             if (lowerFileName.Contains("ln03"))
             {
                 return "LN03";

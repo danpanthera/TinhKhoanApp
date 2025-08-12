@@ -101,11 +101,17 @@ namespace TinhKhoanApp.Api.Models.DataTables
             get => NGAY_DL.ToString("yyyyMMdd");
             set
             {
-                if (!string.IsNullOrEmpty(value) && value.Length == 8)
+                if (!string.IsNullOrWhiteSpace(value))
                 {
-                    if (DateTime.TryParseExact(value, "yyyyMMdd", null, System.Globalization.DateTimeStyles.None, out DateTime result))
+                    var raw = value.Trim();
+                    var formats = new[] { "dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "d/M/yyyy", "yyyyMMdd" };
+                    if (DateTime.TryParseExact(raw, formats, null, System.Globalization.DateTimeStyles.None, out var dt))
                     {
-                        NGAY_DL = result;
+                        NGAY_DL = dt.Date;
+                    }
+                    else if (DateTime.TryParse(raw, out var parsed))
+                    {
+                        NGAY_DL = parsed.Date;
                     }
                 }
             }

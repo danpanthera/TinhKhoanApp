@@ -104,6 +104,7 @@ namespace TinhKhoanApp.Api.Services
                 "EI01" => await ImportEI01Async(file, statementDate),
                 "LN03" => await ImportLN03EnhancedAsync(file, statementDate),
                 "GL01" => await ImportGL01Async(file, statementDate),
+                "GL02" => await ImportGL02Async(file, statementDate),
                 _ => throw new NotSupportedException($"DataType '{dataType}' chưa được hỗ trợ")
             };
         }
@@ -349,6 +350,67 @@ namespace TinhKhoanApp.Api.Services
                 _logger.LogError(ex, "❌ [LN03_ENHANCED] Import error: {Error}", ex.Message);
                 result.Success = false;
                 result.Errors.Add($"LN03 enhanced import error: {ex.Message}");
+            }
+            finally
+            {
+                result.EndTime = DateTime.UtcNow;
+                result.ProcessingTimeMs = (int)(result.EndTime - result.StartTime).TotalMilliseconds;
+            }
+
+            return result;
+        }
+
+        #endregion
+
+        #region GL02 Import
+
+        /// <summary>
+        /// Import GL02 từ CSV - 17 business columns; NGAY_DL lấy từ TRDATE; non-temporal
+        /// </summary>
+        public async Task<DirectImportResult> ImportGL02Async(IFormFile file, string? statementDate = null)
+        {
+            _logger.LogInformation("🚀 [GL02] Import GL02 from CSV: {FileName}", file.FileName);
+
+            var result = new DirectImportResult
+            {
+                FileName = file.FileName,
+                DataType = "GL02",
+                TargetTable = "GL02",
+                FileSizeBytes = file.Length,
+                StartTime = DateTime.UtcNow
+            };
+
+            try
+            {
+                // Strict: only allow filename containing "gl02"
+                if (!file.FileName.ToLower().Contains("gl02"))
+                {
+                    throw new InvalidOperationException($"Filename '{file.FileName}' is not allowed. Only files containing 'gl02' are accepted.");
+                }
+
+                // Parse GL02 CSV
+                var records = await ParseGL02CsvAsync(file);
+                _logger.LogInformation("📊 [GL02] Đã parse {Count} records từ CSV", records.Count);
+
+                if (records.Any())
+                {
+                    // Bulk insert GL02
+                    var insertedCount = await BulkInsertGenericAsync(records, "GL02");
+                    result.ProcessedRecords = insertedCount;
+                    result.Success = true;
+                    _logger.LogInformation("✅ [GL02] Import thành công {Count} records", insertedCount);
+                }
+                else
+                {
+                    result.Success = false;
+                    result.Errors.Add("Không tìm thấy GL02 records hợp lệ trong CSV");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [GL02] Import error: {Error}", ex.Message);
+                result.Success = false;
+                result.Errors.Add($"GL02 import error: {ex.Message}");
             }
             finally
             {
@@ -628,6 +690,44 @@ namespace TinhKhoanApp.Api.Services
 
             await foreach (var record in csv.GetRecordsAsync<LN03>())
             {
+                records.Add(record);
+            }
+
+            return records;
+        }
+
+        /// <summary>
+        /// Parse GL02 CSV: NGAY_DL từ TRDATE; datetime2 dd/MM/yyyy; decimals #,###.00
+        /// </summary>
+        private async Task<List<GL02>> ParseGL02CsvAsync(IFormFile file)
+        {
+            var records = new List<GL02>();
+
+            using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
+            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true,
+                MissingFieldFound = null,
+                HeaderValidated = null
+            });
+
+            // Date parsing preferences
+            var dtOptions = csv.Context.TypeConverterOptionsCache.GetOptions<DateTime>();
+            dtOptions.Formats = new[] { "dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "d/M/yyyy", "yyyyMMdd" };
+            var ndtOptions = csv.Context.TypeConverterOptionsCache.GetOptions<DateTime?>();
+            ndtOptions.Formats = new[] { "dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "d/M/yyyy", "yyyyMMdd", "dd/MM/yyyy HH:mm:ss", "yyyy-MM-dd HH:mm:ss" };
+
+            await foreach (var record in csv.GetRecordsAsync<GL02>())
+            {
+                // NGAY_DL đã map qua setter TRDATE (NotMapped) khi CsvHelper gán
+
+                // Ensure CRTDTM in datetime2 if present (CsvHelper handles via formats above)
+
+                // Normalize audit fields and filename
+                record.CREATED_DATE = DateTime.UtcNow;
+                record.UPDATED_DATE = DateTime.UtcNow;
+                record.FILE_NAME = file.FileName;
+
                 records.Add(record);
             }
 
