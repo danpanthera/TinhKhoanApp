@@ -103,6 +103,7 @@ namespace TinhKhoanApp.Api.Services
                 "DPDA" => await ImportDPDAAsync(file, statementDate),
                 "EI01" => await ImportEI01Async(file, statementDate),
                 "LN03" => await ImportLN03EnhancedAsync(file, statementDate),
+                "GL01" => await ImportGL01Async(file, statementDate),
                 _ => throw new NotSupportedException($"DataType '{dataType}' chưa được hỗ trợ")
             };
         }
@@ -360,6 +361,67 @@ namespace TinhKhoanApp.Api.Services
 
         #endregion
 
+        #region GL01 Import
+
+        /// <summary>
+        /// Import GL01 từ CSV - 27 business columns; NGAY_DL lấy từ TR_TIME
+        /// </summary>
+        public async Task<DirectImportResult> ImportGL01Async(IFormFile file, string? statementDate = null)
+        {
+            _logger.LogInformation("🚀 [GL01] Import GL01 from CSV: {FileName}", file.FileName);
+
+            var result = new DirectImportResult
+            {
+                FileName = file.FileName,
+                DataType = "GL01",
+                TargetTable = "GL01",
+                FileSizeBytes = file.Length,
+                StartTime = DateTime.UtcNow
+            };
+
+            try
+            {
+                // Strict: only allow filename containing "gl01"
+                if (!file.FileName.ToLower().Contains("gl01"))
+                {
+                    throw new InvalidOperationException($"Filename '{file.FileName}' is not allowed. Only files containing 'gl01' are accepted.");
+                }
+
+                // Parse GL01 CSV
+                var records = await ParseGL01CsvAsync(file);
+                _logger.LogInformation("📊 [GL01] Đã parse {Count} records từ CSV", records.Count);
+
+                if (records.Any())
+                {
+                    // Bulk insert GL01
+                    var insertedCount = await BulkInsertGenericAsync(records, "GL01");
+                    result.ProcessedRecords = insertedCount;
+                    result.Success = true;
+                    _logger.LogInformation("✅ [GL01] Import thành công {Count} records", insertedCount);
+                }
+                else
+                {
+                    result.Success = false;
+                    result.Errors.Add("Không tìm thấy GL01 records hợp lệ trong CSV");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [GL01] Import error: {Error}", ex.Message);
+                result.Success = false;
+                result.Errors.Add($"GL01 import error: {ex.Message}");
+            }
+            finally
+            {
+                result.EndTime = DateTime.UtcNow;
+                result.ProcessingTimeMs = (int)(result.EndTime - result.StartTime).TotalMilliseconds;
+            }
+
+            return result;
+        }
+
+        #endregion
+
         #region Utility Methods
 
         /// <summary>
@@ -566,6 +628,64 @@ namespace TinhKhoanApp.Api.Services
 
             await foreach (var record in csv.GetRecordsAsync<LN03>())
             {
+                records.Add(record);
+            }
+
+            return records;
+        }
+
+        /// <summary>
+        /// Parse GL01 CSV với 27 business columns, set NGAY_DL từ TR_TIME (date component)
+        /// </summary>
+        private async Task<List<GL01>> ParseGL01CsvAsync(IFormFile file)
+        {
+            var records = new List<GL01>();
+
+            using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
+            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true,
+                MissingFieldFound = null,
+                HeaderValidated = null
+            });
+
+            // Date parsing preferences (dd/MM/yyyy common), and allow timestamp for TR_TIME
+            var dtOptions = csv.Context.TypeConverterOptionsCache.GetOptions<DateTime>();
+            dtOptions.Formats = new[] { "dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "d/M/yyyy", "yyyyMMdd" };
+            var ndtOptions = csv.Context.TypeConverterOptionsCache.GetOptions<DateTime?>();
+            ndtOptions.Formats = dtOptions.Formats;
+
+            await foreach (var record in csv.GetRecordsAsync<GL01>())
+            {
+                // Derive NGAY_DL from TR_TIME (date component only)
+                if (!string.IsNullOrWhiteSpace(record.TR_TIME))
+                {
+                    // Try multiple patterns observed in source data
+                    var raw = record.TR_TIME!.Trim();
+                    DateTime parsedDateTime;
+                    if (DateTime.TryParseExact(raw, new[] { "yyyyMMddHHmmss", "yyyy-MM-dd HH:mm:ss", "dd/MM/yyyy HH:mm:ss", "yyyyMMdd" }, CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedDateTime))
+                    {
+                        record.NGAY_DL = parsedDateTime.Date;
+                    }
+                    else if (DateTime.TryParse(raw, out var fallbackDt))
+                    {
+                        record.NGAY_DL = fallbackDt.Date;
+                    }
+                    else
+                    {
+                        // fallback to today but log
+                        _logger.LogWarning("⚠️ [GL01] Không parse được TR_TIME='{TR_TIME}', fallback Today", record.TR_TIME);
+                        record.NGAY_DL = DateTime.Today;
+                    }
+                }
+
+                // Normalize audit fields
+                record.CREATED_DATE = DateTime.UtcNow;
+                record.UPDATED_DATE = DateTime.UtcNow;
+                record.FILE_NAME = file.FileName;
+
+                // Normalize numeric from string TR_EX_RT if needed is handled at query level; keep CSV-first mapping
+
                 records.Add(record);
             }
 

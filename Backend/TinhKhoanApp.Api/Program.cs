@@ -103,7 +103,7 @@ builder.Services.AddScoped<IEI01Repository, EI01Repository>(); // ✅ EI01 ENABL
 // builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.IDPDARepository, TinhKhoanApp.Api.Repositories.DPDARepository>(); // ✅ DPDA Repository - NEEDS FIX
 // builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.Interfaces.ILN03Repository, TinhKhoanApp.Api.Repositories.LN03Repository>(); // ✅ REMOVED - Cleanup focus on DP01+DPDA
 // TODO: Fix repository interface implementations for the following (have compilation errors):
-// builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IGL01Repository, TinhKhoanApp.Api.Repositories.GL01Repository>(); // TODO: Fix interface implementation
+builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IGL01Repository, TinhKhoanApp.Api.Repositories.GL01Repository>(); // ✅ GL01 Repository ENABLED
 // builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IGL02Repository, TinhKhoanApp.Api.Repositories.GL02Repository>(); // TODO: Fix interface implementation
 // builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IGL41Repository, TinhKhoanApp.Api.Repositories.GL41Repository>(); // TODO: Fix interface implementation
 // builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.ILN01Repository, TinhKhoanApp.Api.Repositories.LN01Repository>(); // TODO: Fix interface implementation
@@ -115,7 +115,7 @@ builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IEI01Service, EI
 // builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.ILN03Service, TinhKhoanApp.Api.Services.LN03Service>(); // ✅ REMOVED - Cleanup focus on DP01+DPDA
 // TODO: Enable DPDA Service after Repository fix
 // builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IDPDAService, TinhKhoanApp.Api.Services.DPDAService>(); // ✅ DPDA - NEEDS Repository fix first
-// builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL01Service, TinhKhoanApp.Api.Services.GL01Service>(); // TODO: Implement GL01Service
+builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL01Service, TinhKhoanApp.Api.Services.GL01Service>(); // ✅ GL01 Service ENABLED
 // builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL02Service, TinhKhoanApp.Api.Services.GL02Service>(); // TODO: Implement GL02Service
 // builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL41Service, TinhKhoanApp.Api.Services.GL41Service>(); // TODO: Implement GL41Service
 // builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.ILN01Service, TinhKhoanApp.Api.Services.LN01Service>(); // TODO: Implement LN01Service
