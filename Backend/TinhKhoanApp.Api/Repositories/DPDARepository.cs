@@ -307,6 +307,32 @@ namespace TinhKhoanApp.Api.Repositories
                 .ToDictionaryAsync(x => x.Date, x => x.Count);
         }
 
+        /// <summary>
+        /// Search DPDA by status (TRANG_THAI)
+        /// </summary>
+        public async Task<IEnumerable<DPDAEntity>> GetByStatusAsync(string status, int maxResults = 100)
+        {
+            return await _context.Set<DPDAEntity>()
+                .Where(x => x.TRANG_THAI == status)
+                .OrderByDescending(x => x.CreatedAt)
+                .Take(maxResults)
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Get DPDA items by NGAY_DL date
+        /// </summary>
+        public async Task<IEnumerable<DPDAEntity>> GetByDateAsync(DateTime date, int maxResults = 100)
+        {
+            var start = date.Date;
+            var end = start.AddDays(1);
+            return await _context.Set<DPDAEntity>()
+                .Where(x => x.NGAY_DL >= start && x.NGAY_DL < end)
+                .OrderByDescending(x => x.CreatedAt)
+                .Take(maxResults)
+                .ToListAsync();
+        }
+
         #endregion
     }
 }

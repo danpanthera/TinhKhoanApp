@@ -26,45 +26,6 @@ namespace TinhKhoanApp.Api.Controllers
         }
 
         /// <summary>
-        /// Tạo mới bản ghi DPDA
-        /// </summary>
-        [HttpPost]
-        [ProducesResponseType(typeof(ApiResponse<DPDADetailsDto>), 200)]
-        [ProducesResponseType(typeof(ApiResponse<object>), 400)]
-        public async Task<IActionResult> Create([FromBody] DPDACreateDto dto)
-        {
-            var result = await _dpdaService.CreateAsync(dto);
-            if (result.Success) return Ok(result);
-            return BadRequest(result);
-        }
-
-        /// <summary>
-        /// Cập nhật bản ghi DPDA
-        /// </summary>
-        [HttpPut]
-        [ProducesResponseType(typeof(ApiResponse<DPDADetailsDto>), 200)]
-        [ProducesResponseType(typeof(ApiResponse<object>), 400)]
-        public async Task<IActionResult> Update([FromBody] DPDAUpdateDto dto)
-        {
-            var result = await _dpdaService.UpdateAsync(dto);
-            if (result.Success) return Ok(result);
-            return BadRequest(result);
-        }
-
-        /// <summary>
-        /// Xóa bản ghi DPDA theo ID
-        /// </summary>
-        [HttpDelete("{id}")]
-        [ProducesResponseType(typeof(ApiResponse<bool>), 200)]
-        [ProducesResponseType(typeof(ApiResponse<object>), 400)]
-        public async Task<IActionResult> Delete(long id)
-        {
-            var result = await _dpdaService.DeleteAsync(id);
-            if (result.Success) return Ok(result);
-            return BadRequest(result);
-        }
-
-        /// <summary>
         /// Lấy preview dữ liệu DPDA mới nhất với paging
         /// </summary>
         [HttpGet]
@@ -108,7 +69,7 @@ namespace TinhKhoanApp.Api.Controllers
                 if (!result.Success || result.Data == null)
                     return NotFound(ApiResponse<object>.Error($"DPDA record with ID {id} not found", "DPDA_NOT_FOUND"));
 
-                return Ok(result);
+                return Ok(ApiResponse<DPDADetailsDto>.Ok(result.Data, "DPDA detail retrieved successfully"));
             }
             catch (Exception ex)
             {
@@ -127,8 +88,8 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                var result = await _dpdaService.GetPreviewAsync(1, maxResults, date.ToString("yyyy-MM-dd"));
-                return Ok(result);
+                var data = await _dpdaService.GetByDateAsync(date, maxResults);
+                return Ok(data);
             }
             catch (Exception ex)
             {
@@ -147,8 +108,8 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                var result = await _dpdaService.GetByBranchCodeAsync(branchCode, maxResults);
-                return Ok(result);
+                var data = await _dpdaService.GetByBranchCodeAsync(branchCode, maxResults);
+                return Ok(data);
             }
             catch (Exception ex)
             {
@@ -167,8 +128,8 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                var result = await _dpdaService.GetByCustomerCodeAsync(customerCode, maxResults);
-                return Ok(result);
+                var data = await _dpdaService.GetByCustomerCodeAsync(customerCode, maxResults);
+                return Ok(data);
             }
             catch (Exception ex)
             {
@@ -187,8 +148,8 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                var result = await _dpdaService.GetByAccountNumberAsync(accountNumber, maxResults);
-                return Ok(result);
+                var data = await _dpdaService.GetByAccountNumberAsync(accountNumber, maxResults);
+                return Ok(data);
             }
             catch (Exception ex)
             {
@@ -207,8 +168,8 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                var result = await _dpdaService.GetByCardNumberAsync(cardNumber, maxResults);
-                return Ok(result);
+                var data = await _dpdaService.GetByCardNumberAsync(cardNumber, maxResults);
+                return Ok(data);
             }
             catch (Exception ex)
             {
@@ -227,8 +188,8 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                var result = await _dpdaService.GetPreviewAsync(1, maxResults, status);
-                return Ok(result);
+                var data = await _dpdaService.GetByStatusAsync(status, maxResults);
+                return Ok(data);
             }
             catch (Exception ex)
             {
@@ -247,8 +208,8 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                var result = await _dpdaService.GetStatisticsAsync(date);
-                return Ok(result);
+                var data = await _dpdaService.GetStatisticsAsync(date);
+                return Ok(data);
             }
             catch (Exception ex)
             {
@@ -267,8 +228,8 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                var result = await _dpdaService.GetStatisticsAsync(date);
-                return Ok(result);
+                var data = await _dpdaService.GetStatisticsAsync(date);
+                return Ok(data);
             }
             catch (Exception ex)
             {
@@ -297,9 +258,9 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
-                // TaM THI deNG: Sed deNG searchTerm tran preview
-                var result = await _dpdaService.GetPreviewAsync(page, pageSize, keyword);
-                return Ok(result);
+                // For now, fallback to preview with searchTerm as keyword
+                var data = await _dpdaService.GetPreviewAsync(page, pageSize, keyword);
+                return Ok(data);
             }
             catch (Exception ex)
             {

@@ -23,6 +23,8 @@ namespace TinhKhoanApp.Api.Repositories.Interfaces
         Task<IEnumerable<DPDAEntity>> GetByCustomerCodeAsync(string customerCode, int maxResults = 100);
         Task<IEnumerable<DPDAEntity>> GetByAccountNumberAsync(string accountNumber, int maxResults = 100);
         Task<IEnumerable<DPDAEntity>> GetByCardNumberAsync(string cardNumber, int maxResults = 100);
+        Task<IEnumerable<DPDAEntity>> GetByStatusAsync(string status, int maxResults = 100);
+        Task<IEnumerable<DPDAEntity>> GetByDateAsync(DateTime date, int maxResults = 100);
 
         // Analytics methods
         Task<long> GetTotalCountByBranchAsync(string branchCode, DateTime? date = null);

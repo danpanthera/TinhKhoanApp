@@ -261,6 +261,42 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
+        /// Search DPDA by status
+        /// </summary>
+        public async Task<ApiResponse<List<DPDAPreviewDto>>> GetByStatusAsync(string status, int limit = 100)
+        {
+            try
+            {
+                var entities = await _dpdaRepository.GetByStatusAsync(status, limit);
+                var previewDtos = entities.Select(MapToPreviewDto).ToList();
+                return ApiResponse<List<DPDAPreviewDto>>.Ok(previewDtos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting DPDA by status: {Status}", status);
+                return ApiResponse<List<DPDAPreviewDto>>.Error($"Lỗi khi tìm DPDA theo trạng thái: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Get DPDA by NGAY_DL date
+        /// </summary>
+        public async Task<ApiResponse<List<DPDAPreviewDto>>> GetByDateAsync(DateTime date, int maxResults = 100)
+        {
+            try
+            {
+                var entities = await _dpdaRepository.GetByDateAsync(date, maxResults);
+                var previewDtos = entities.Select(MapToPreviewDto).ToList();
+                return ApiResponse<List<DPDAPreviewDto>>.Ok(previewDtos);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting DPDA by date: {Date}", date);
+                return ApiResponse<List<DPDAPreviewDto>>.Error($"Lỗi khi tìm DPDA theo ngày: {ex.Message}");
+            }
+        }
+
+        /// <summary>
         /// Search DPDA by card number
         /// Business key search với CSV column names
         /// </summary>

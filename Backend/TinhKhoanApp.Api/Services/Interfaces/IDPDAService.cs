@@ -25,6 +25,8 @@ namespace TinhKhoanApp.Api.Services.Interfaces
         Task<ApiResponse<List<DPDAPreviewDto>>> GetByBranchCodeAsync(string branchCode, int limit = 100);
         Task<ApiResponse<List<DPDAPreviewDto>>> GetByAccountNumberAsync(string accountNumber, int limit = 100);
         Task<ApiResponse<List<DPDAPreviewDto>>> GetByCardNumberAsync(string cardNumber, int limit = 100);
+        Task<ApiResponse<List<DPDAPreviewDto>>> GetByStatusAsync(string status, int limit = 100);
+        Task<ApiResponse<List<DPDAPreviewDto>>> GetByDateAsync(DateTime date, int maxResults = 100);
 
         // Analytics operations
         Task<ApiResponse<DPDASummaryDto>> GetStatisticsAsync(DateTime? asOfDate = null);
