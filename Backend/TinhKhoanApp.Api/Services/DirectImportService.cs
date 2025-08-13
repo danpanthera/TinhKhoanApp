@@ -982,9 +982,12 @@ namespace TinhKhoanApp.Api.Services
         /// <summary>
         /// Parse GL02 CSV: NGAY_DL từ TRDATE; datetime2 dd/MM/yyyy; decimals #,###.00
         /// </summary>
-        private async Task<List<GL02>> ParseGL02CsvAsync(IFormFile file)
+        /// <summary>
+        /// Parse GL02 CSV với 17 business columns, set NGAY_DL từ TRDATE
+        /// </summary>
+        private async Task<List<GL02Entity>> ParseGL02CsvAsync(IFormFile file)
         {
-            var records = new List<GL02>();
+            var records = new List<GL02Entity>();
 
             using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
             using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -1000,16 +1003,51 @@ namespace TinhKhoanApp.Api.Services
             var ndtOptions = csv.Context.TypeConverterOptionsCache.GetOptions<DateTime?>();
             ndtOptions.Formats = new[] { "dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "d/M/yyyy", "yyyyMMdd", "dd/MM/yyyy HH:mm:ss", "yyyy-MM-dd HH:mm:ss" };
 
-            await foreach (var record in csv.GetRecordsAsync<GL02>())
+            await foreach (var csvRecord in csv.GetRecordsAsync<dynamic>())
             {
-                // NGAY_DL đã map qua setter TRDATE (NotMapped) khi CsvHelper gán
+                var record = new GL02Entity();
 
-                // Ensure CRTDTM in datetime2 if present (CsvHelper handles via formats above)
+                // Declare variables first to avoid scope issues
+                DateTime trdate = DateTime.MinValue;
+                DateTime crtdtm = DateTime.MinValue;
+                decimal dramount = 0;
+                decimal cramount = 0;
 
-                // Normalize audit fields and filename
-                record.CREATED_DATE = DateTime.UtcNow;
-                record.UPDATED_DATE = DateTime.UtcNow;
-                record.FILE_NAME = file.FileName;
+                // Map 17 business columns từ CSV
+                if (csvRecord.TRDATE != null && DateTime.TryParse(csvRecord.TRDATE.ToString(), out trdate))
+                {
+                    record.TRDATE = trdate;
+                    record.NGAY_DL = trdate.Date; // NGAY_DL derived from TRDATE
+                }
+
+                record.TRBRCD = csvRecord.TRBRCD?.ToString() ?? string.Empty;
+                record.USERID = csvRecord.USERID?.ToString();
+                record.JOURSEQ = csvRecord.JOURSEQ?.ToString();
+                record.DYTRSEQ = csvRecord.DYTRSEQ?.ToString();
+                record.LOCAC = csvRecord.LOCAC?.ToString() ?? string.Empty;
+                record.CCY = csvRecord.CCY?.ToString() ?? string.Empty;
+                record.BUSCD = csvRecord.BUSCD?.ToString();
+                record.UNIT = csvRecord.UNIT?.ToString();
+                record.TRCD = csvRecord.TRCD?.ToString();
+                record.CUSTOMER = csvRecord.CUSTOMER?.ToString();
+                record.TRTP = csvRecord.TRTP?.ToString();
+                record.REFERENCE = csvRecord.REFERENCE?.ToString();
+                record.REMARK = csvRecord.REMARK?.ToString();
+
+                // Parse amounts
+                if (decimal.TryParse(csvRecord.DRAMOUNT?.ToString(), out dramount))
+                    record.DRAMOUNT = dramount;
+                if (decimal.TryParse(csvRecord.CRAMOUNT?.ToString(), out cramount))
+                    record.CRAMOUNT = cramount;
+
+                // Parse CRTDTM
+                if (csvRecord.CRTDTM != null && DateTime.TryParse(csvRecord.CRTDTM.ToString(), out crtdtm))
+                    record.CRTDTM = crtdtm;
+
+                // System columns
+                record.CreatedAt = DateTime.UtcNow;
+                record.UpdatedAt = DateTime.UtcNow;
+                record.FileName = file.FileName;
 
                 records.Add(record);
             }

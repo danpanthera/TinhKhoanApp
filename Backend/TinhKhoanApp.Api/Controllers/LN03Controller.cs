@@ -133,7 +133,7 @@ namespace TinhKhoanApp.Api.Controllers
         public Task<bool> ExistsAsync(System.Linq.Expressions.Expression<Func<Models.DataTables.LN03, bool>> predicate) => Task.FromResult(_data.AsQueryable().Any(predicate));
         public Task<IEnumerable<Models.DataTables.LN03>> FindAsync(System.Linq.Expressions.Expression<Func<Models.DataTables.LN03, bool>> predicate) => Task.FromResult(_data.AsQueryable().Where(predicate).AsEnumerable());
         public Task<IEnumerable<Models.DataTables.LN03>> GetAllAsync() => Task.FromResult(_data.AsEnumerable());
-        public Task<Models.DataTables.LN03?> GetByIdAsync(int id) => Task.FromResult(_data.FirstOrDefault(x => x.Id == id));
+        public Task<Models.DataTables.LN03?> GetByIdAsync(long id) => Task.FromResult(_data.FirstOrDefault(x => x.Id == id));
         public Task<IEnumerable<Models.DataTables.LN03>> GetRecentAsync(int count) => Task.FromResult(_data.OrderByDescending(x => x.NGAY_DL).ThenByDescending(x => x.CREATED_DATE).Take(count).AsEnumerable());
         public void Remove(Models.DataTables.LN03 entity) { _data.Remove(entity); }
         public void RemoveRange(IEnumerable<Models.DataTables.LN03> entities) { foreach (var e in entities) _data.Remove(e); }

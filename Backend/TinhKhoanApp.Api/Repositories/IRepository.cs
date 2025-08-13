@@ -21,7 +21,7 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Lấy một entity theo id
         /// </summary>
-        Task<T?> GetByIdAsync(int id);
+        Task<T?> GetByIdAsync(long id);
 
         /// <summary>
         /// Lấy các entities gần đây nhất, sắp xếp theo CreatedAt giảm dần

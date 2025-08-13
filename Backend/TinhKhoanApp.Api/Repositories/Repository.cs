@@ -54,7 +54,7 @@ namespace TinhKhoanApp.Api.Repositories
         /// </summary>
         /// <param name="id">Entity ID</param>
         /// <returns>Entity or null</returns>
-        public virtual async Task<T?> GetByIdAsync(int id)
+        public virtual async Task<T?> GetByIdAsync(long id)
         {
             return await _dbSet.FindAsync(id);
         }

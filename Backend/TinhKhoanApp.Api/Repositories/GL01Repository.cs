@@ -1,13 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models.DataTables;
+using TinhKhoanApp.Api.Models.Entities;
 
 namespace TinhKhoanApp.Api.Repositories
 {
     /// <summary>
     /// GL01 Repository - triển khai IGL01Repository
     /// </summary>
-    public class GL01Repository : Repository<GL01>, IGL01Repository
+    public class GL01Repository : Repository<GL01Entity>, IGL01Repository
     {
         /// <summary>
         /// Constructor khởi tạo GL01Repository với ApplicationDbContext
@@ -17,12 +17,12 @@ namespace TinhKhoanApp.Api.Repositories
         }
 
         /// <summary>
-        /// Lấy dữ liệu GL01 gần đây nhất, sắp xếp theo CREATED_DATE
+        /// Lấy dữ liệu GL01 gần đây nhất, sắp xếp theo CreatedAt
         /// </summary>
-        public new async Task<IEnumerable<GL01>> GetRecentAsync(int count = 10)
+        public new async Task<IEnumerable<GL01Entity>> GetRecentAsync(int count = 10)
         {
             return await _dbSet
-                .OrderByDescending(gl01 => gl01.CREATED_DATE)
+                .OrderByDescending(gl01 => gl01.CreatedAt)
                 .Take(count)
                 .ToListAsync();
         }
@@ -30,7 +30,7 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Lấy dữ liệu GL01 theo ngày
         /// </summary>
-        public async Task<IEnumerable<GL01>> GetByDateAsync(DateTime date)
+        public async Task<IEnumerable<GL01Entity>> GetByDateAsync(DateTime date)
         {
             return await _dbSet
                 .Where(gl01 => gl01.NGAY_DL.Date == date.Date)
@@ -40,11 +40,11 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Lấy dữ liệu GL01 theo mã đơn vị
         /// </summary>
-        public async Task<IEnumerable<GL01>> GetByUnitCodeAsync(string unitCode, int maxResults = 100)
+        public async Task<IEnumerable<GL01Entity>> GetByUnitCodeAsync(string unitCode, int maxResults = 100)
         {
             return await _dbSet
                 .Where(gl01 => gl01.POST_BR == unitCode)
-                .OrderByDescending(gl01 => gl01.CREATED_DATE)
+                .OrderByDescending(gl01 => gl01.CreatedAt)
                 .Take(maxResults)
                 .ToListAsync();
         }
@@ -52,11 +52,11 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Lấy dữ liệu GL01 theo tài khoản
         /// </summary>
-        public async Task<IEnumerable<GL01>> GetByAccountCodeAsync(string accountCode, int maxResults = 100)
+        public async Task<IEnumerable<GL01Entity>> GetByAccountCodeAsync(string accountCode, int maxResults = 100)
         {
             return await _dbSet
                 .Where(gl01 => gl01.TAI_KHOAN == accountCode)
-                .OrderByDescending(gl01 => gl01.CREATED_DATE)
+                .OrderByDescending(gl01 => gl01.CreatedAt)
                 .Take(maxResults)
                 .ToListAsync();
         }
@@ -89,7 +89,7 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Cập nhật nhiều GL01
         /// </summary>
-        public void UpdateRange(IEnumerable<GL01> entities)
+        public void UpdateRange(IEnumerable<GL01Entity> entities)
         {
             _dbSet.UpdateRange(entities);
         }

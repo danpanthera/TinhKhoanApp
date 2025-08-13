@@ -1,4 +1,4 @@
-using TinhKhoanApp.Api.Models.DataTables;
+using TinhKhoanApp.Api.Models.Entities;
 using TinhKhoanApp.Api.Models.Common;
 
 namespace TinhKhoanApp.Api.Repositories.Interfaces
@@ -9,22 +9,22 @@ namespace TinhKhoanApp.Api.Repositories.Interfaces
     public interface IDPDARepository
     {
         // Basic CRUD - match Repository<T> pattern
-        Task<IEnumerable<DPDA>> GetAllAsync();
-        Task<DPDA?> GetByIdAsync(long id);
-        Task<DPDA> CreateAsync(DPDA entity);
-        Task<DPDA> UpdateAsync(DPDA entity);
+        Task<IEnumerable<DPDAEntity>> GetAllAsync();
+        Task<DPDAEntity?> GetByIdAsync(long id);
+        Task<DPDAEntity> CreateAsync(DPDAEntity entity);
+        Task<DPDAEntity> UpdateAsync(DPDAEntity entity);
         Task<bool> DeleteAsync(long id);
 
         // Paging support
-        Task<(IEnumerable<DPDA> entities, long totalCount)> GetPagedAsync(int pageNumber, int pageSize, string? searchTerm = null);
+        Task<(IEnumerable<DPDAEntity> entities, long totalCount)> GetPagedAsync(int pageNumber, int pageSize, string? searchTerm = null);
 
         // DPDA-specific query methods
-        Task<IEnumerable<DPDA>> GetByBranchCodeAsync(string branchCode, int maxResults = 100);
-        Task<IEnumerable<DPDA>> GetByCustomerCodeAsync(string customerCode, int maxResults = 100);
-        Task<IEnumerable<DPDA>> GetByAccountNumberAsync(string accountNumber, int maxResults = 100);
-        Task<IEnumerable<DPDA>> GetByCardNumberAsync(string cardNumber, int maxResults = 100);
-        Task<IEnumerable<DPDA>> GetByStatusAsync(string status, int maxResults = 100);
-        Task<IEnumerable<DPDA>> GetByDateAsync(DateTime date, int maxResults = 100);
+        Task<IEnumerable<DPDAEntity>> GetByBranchCodeAsync(string branchCode, int maxResults = 100);
+        Task<IEnumerable<DPDAEntity>> GetByCustomerCodeAsync(string customerCode, int maxResults = 100);
+        Task<IEnumerable<DPDAEntity>> GetByAccountNumberAsync(string accountNumber, int maxResults = 100);
+        Task<IEnumerable<DPDAEntity>> GetByCardNumberAsync(string cardNumber, int maxResults = 100);
+        Task<IEnumerable<DPDAEntity>> GetByStatusAsync(string status, int maxResults = 100);
+        Task<IEnumerable<DPDAEntity>> GetByDateAsync(DateTime date, int maxResults = 100);
 
         // Analytics methods
         Task<long> GetTotalCountByBranchAsync(string branchCode, DateTime? date = null);

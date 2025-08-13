@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models.DataTables;
+using TinhKhoanApp.Api.Models.Entities;
 using TinhKhoanApp.Api.Models.Common;
 using TinhKhoanApp.Api.Repositories.Interfaces;
 using TinhKhoanApp.Api.Repositories.Base;
@@ -12,7 +12,7 @@ namespace TinhKhoanApp.Api.Repositories
     /// Theo pattern DP01Repository với 13 business columns từ CSV
     /// CSV-First: Business columns từ CSV là chuẩn cho tất cả layers
     /// </summary>
-    public class DPDARepository : Repository<DPDA>, IDPDARepository
+    public class DPDARepository : Repository<DPDAEntity>, IDPDARepository
     {
         public DPDARepository(ApplicationDbContext context) : base(context)
         {
@@ -23,9 +23,9 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Get DPDA with paging and optional search
         /// </summary>
-        public async Task<(IEnumerable<DPDA> entities, long totalCount)> GetPagedAsync(int pageNumber, int pageSize, string? searchTerm = null)
+        public async Task<(IEnumerable<DPDAEntity> entities, long totalCount)> GetPagedAsync(int pageNumber, int pageSize, string? searchTerm = null)
         {
-            var query = _context.Set<DPDA>().AsQueryable();
+            var query = _context.Set<DPDAEntity>().AsQueryable();
 
             // Apply search filter if provided
             if (!string.IsNullOrEmpty(searchTerm))
@@ -40,7 +40,7 @@ namespace TinhKhoanApp.Api.Repositories
             var totalCount = await query.LongCountAsync();
 
             var entities = await query
-                .OrderByDescending(x => x.CREATED_DATE)
+                .OrderByDescending(x => x.CreatedAt)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -55,11 +55,11 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Search DPDA by customer code (MA_KHACH_HANG)
         /// </summary>
-        public async Task<IEnumerable<DPDA>> GetByCustomerCodeAsync(string customerCode, int limit = 100)
+        public async Task<IEnumerable<DPDAEntity>> GetByCustomerCodeAsync(string customerCode, int limit = 100)
         {
-            return await _context.Set<DPDA>()
+            return await _context.Set<DPDAEntity>()
                 .Where(x => x.MA_KHACH_HANG == customerCode)
-                .OrderByDescending(x => x.CREATED_DATE)
+                .OrderByDescending(x => x.CreatedAt)
                 .Take(limit)
                 .ToListAsync();
         }
@@ -67,11 +67,11 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Search DPDA by branch code (MA_CHI_NHANH)
         /// </summary>
-        public async Task<IEnumerable<DPDA>> GetByBranchCodeAsync(string branchCode, int limit = 100)
+        public async Task<IEnumerable<DPDAEntity>> GetByBranchCodeAsync(string branchCode, int limit = 100)
         {
-            return await _context.Set<DPDA>()
+            return await _context.Set<DPDAEntity>()
                 .Where(x => x.MA_CHI_NHANH == branchCode)
-                .OrderByDescending(x => x.CREATED_DATE)
+                .OrderByDescending(x => x.CreatedAt)
                 .Take(limit)
                 .ToListAsync();
         }
@@ -79,11 +79,11 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Search DPDA by account number (SO_TAI_KHOAN)
         /// </summary>
-        public async Task<IEnumerable<DPDA>> GetByAccountNumberAsync(string accountNumber, int limit = 100)
+        public async Task<IEnumerable<DPDAEntity>> GetByAccountNumberAsync(string accountNumber, int limit = 100)
         {
-            return await _context.Set<DPDA>()
+            return await _context.Set<DPDAEntity>()
                 .Where(x => x.SO_TAI_KHOAN == accountNumber)
-                .OrderByDescending(x => x.CREATED_DATE)
+                .OrderByDescending(x => x.CreatedAt)
                 .Take(limit)
                 .ToListAsync();
         }
@@ -91,11 +91,11 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Search DPDA by card number (SO_THE)
         /// </summary>
-        public async Task<IEnumerable<DPDA>> GetByCardNumberAsync(string cardNumber, int limit = 100)
+        public async Task<IEnumerable<DPDAEntity>> GetByCardNumberAsync(string cardNumber, int limit = 100)
         {
-            return await _context.Set<DPDA>()
+            return await _context.Set<DPDAEntity>()
                 .Where(x => x.SO_THE == cardNumber)
-                .OrderByDescending(x => x.CREATED_DATE)
+                .OrderByDescending(x => x.CreatedAt)
                 .Take(limit)
                 .ToListAsync();
         }
@@ -109,11 +109,11 @@ namespace TinhKhoanApp.Api.Repositories
         /// </summary>
         public async Task<Dictionary<string, long>> GetCountByBranchAsync(DateTime? asOfDate = null)
         {
-            var query = _context.Set<DPDA>().AsQueryable();
+            var query = _context.Set<DPDAEntity>().AsQueryable();
 
             if (asOfDate.HasValue)
             {
-                query = query.Where(x => x.CREATED_DATE <= asOfDate.Value);
+                query = query.Where(x => x.CreatedAt <= asOfDate.Value);
             }
 
             return await query
@@ -127,11 +127,11 @@ namespace TinhKhoanApp.Api.Repositories
         /// </summary>
         public async Task<Dictionary<string, long>> GetCountByCardTypeAsync(DateTime? asOfDate = null)
         {
-            var query = _context.Set<DPDA>().AsQueryable();
+            var query = _context.Set<DPDAEntity>().AsQueryable();
 
             if (asOfDate.HasValue)
             {
-                query = query.Where(x => x.CREATED_DATE <= asOfDate.Value);
+                query = query.Where(x => x.CreatedAt <= asOfDate.Value);
             }
 
             return await query
@@ -145,11 +145,11 @@ namespace TinhKhoanApp.Api.Repositories
         /// </summary>
         public async Task<Dictionary<string, long>> GetCountByStatusAsync(DateTime? asOfDate = null)
         {
-            var query = _context.Set<DPDA>().AsQueryable();
+            var query = _context.Set<DPDAEntity>().AsQueryable();
 
             if (asOfDate.HasValue)
             {
-                query = query.Where(x => x.CREATED_DATE <= asOfDate.Value);
+                query = query.Where(x => x.CreatedAt <= asOfDate.Value);
             }
 
             return await query
@@ -165,25 +165,25 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Get all DPDA entities
         /// </summary>
-        public async Task<IEnumerable<DPDA>> GetAllAsync()
+        public async Task<IEnumerable<DPDAEntity>> GetAllAsync()
         {
-            return await _context.Set<DPDA>().ToListAsync();
+            return await _context.Set<DPDAEntity>().ToListAsync();
         }
 
         /// <summary>
         /// Get DPDA entity by ID
         /// </summary>
-        public async Task<DPDA?> GetByIdAsync(long id)
+        public async Task<DPDAEntity?> GetByIdAsync(long id)
         {
-            return await _context.Set<DPDA>().FindAsync(id);
+            return await _context.Set<DPDAEntity>().FindAsync(id);
         }
 
         /// <summary>
         /// Create new DPDA entity
         /// </summary>
-        public async Task<DPDA> CreateAsync(DPDA entity)
+        public async Task<DPDAEntity> CreateAsync(DPDAEntity entity)
         {
-            _context.Set<DPDA>().Add(entity);
+            _context.Set<DPDAEntity>().Add(entity);
             await _context.SaveChangesAsync();
             return entity;
         }
@@ -191,9 +191,9 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Update existing DPDA entity
         /// </summary>
-        public async Task<DPDA> UpdateAsync(DPDA entity)
+        public async Task<DPDAEntity> UpdateAsync(DPDAEntity entity)
         {
-            _context.Set<DPDA>().Update(entity);
+            _context.Set<DPDAEntity>().Update(entity);
             await _context.SaveChangesAsync();
             return entity;
         }
@@ -206,7 +206,7 @@ namespace TinhKhoanApp.Api.Repositories
             var entity = await GetByIdAsync(id);
             if (entity == null) return false;
 
-            _context.Set<DPDA>().Remove(entity);
+            _context.Set<DPDAEntity>().Remove(entity);
             await _context.SaveChangesAsync();
             return true;
         }
@@ -216,7 +216,7 @@ namespace TinhKhoanApp.Api.Repositories
         /// </summary>
         public async Task<long> GetTotalCountByBranchAsync(string branchCode, DateTime? date = null)
         {
-            var query = _context.Set<DPDA>().AsQueryable();
+            var query = _context.Set<DPDAEntity>().AsQueryable();
 
             // Filter by branch code
             query = query.Where(x => x.MA_CHI_NHANH == branchCode);
@@ -226,7 +226,7 @@ namespace TinhKhoanApp.Api.Repositories
             {
                 var startOfDay = date.Value.Date;
                 var endOfDay = startOfDay.AddDays(1);
-                query = query.Where(x => x.CREATED_DATE >= startOfDay && x.CREATED_DATE < endOfDay);
+                query = query.Where(x => x.CreatedAt >= startOfDay && x.CreatedAt < endOfDay);
             }
 
             return await query.LongCountAsync();
@@ -253,7 +253,7 @@ namespace TinhKhoanApp.Api.Repositories
         /// </summary>
         public async Task<long> GetTotalCountAsync()
         {
-            return await _context.Set<DPDA>().LongCountAsync();
+            return await _context.Set<DPDAEntity>().LongCountAsync();
         }
 
         /// <summary>
@@ -295,13 +295,13 @@ namespace TinhKhoanApp.Api.Repositories
         /// </summary>
         public async Task<Dictionary<string, long>> GetCardCountByDateRangeAsync(DateTime startDate, DateTime endDate)
         {
-            var query = _context.Set<DPDA>().AsQueryable();
+            var query = _context.Set<DPDAEntity>().AsQueryable();
 
             // Apply date range filter
-            query = query.Where(x => x.CREATED_DATE >= startDate && x.CREATED_DATE <= endDate);
+            query = query.Where(x => x.CreatedAt >= startDate && x.CreatedAt <= endDate);
 
             return await query
-                .GroupBy(x => x.CREATED_DATE.Date)
+                .GroupBy(x => x.CreatedAt.Date)
                 .Select(g => new { Date = g.Key.ToString("yyyy-MM-dd"), Count = g.LongCount() })
                 .ToDictionaryAsync(x => x.Date, x => x.Count);
         }
@@ -309,11 +309,11 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Search DPDA by status (TRANG_THAI)
         /// </summary>
-        public async Task<IEnumerable<DPDA>> GetByStatusAsync(string status, int maxResults = 100)
+        public async Task<IEnumerable<DPDAEntity>> GetByStatusAsync(string status, int maxResults = 100)
         {
-            return await _context.Set<DPDA>()
+            return await _context.Set<DPDAEntity>()
                 .Where(x => x.TRANG_THAI == status)
-                .OrderByDescending(x => x.CREATED_DATE)
+                .OrderByDescending(x => x.CreatedAt)
                 .Take(maxResults)
                 .ToListAsync();
         }
@@ -321,13 +321,13 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Get DPDA items by NGAY_DL date
         /// </summary>
-        public async Task<IEnumerable<DPDA>> GetByDateAsync(DateTime date, int maxResults = 100)
+        public async Task<IEnumerable<DPDAEntity>> GetByDateAsync(DateTime date, int maxResults = 100)
         {
             var start = date.Date;
             var end = start.AddDays(1);
-            return await _context.Set<DPDA>()
+            return await _context.Set<DPDAEntity>()
                 .Where(x => x.NGAY_DL >= start && x.NGAY_DL < end)
-                .OrderByDescending(x => x.CREATED_DATE)
+                .OrderByDescending(x => x.CreatedAt)
                 .Take(maxResults)
                 .ToListAsync();
         }

@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.DataTables;
+using TinhKhoanApp.Api.Models.Entities;
 using TinhKhoanApp.Api.Models.Dtos.GL01;
 using TinhKhoanApp.Api.Repositories;
 using TinhKhoanApp.Api.Services.Interfaces;
@@ -50,15 +50,15 @@ namespace TinhKhoanApp.Api.Services
 
         public async Task<ApiResponse<GL01DetailsDto>> CreateAsync(GL01CreateDto dto)
         {
-            var entity = new GL01
+            var entity = new GL01Entity
             {
                 NGAY_DL = dto.NGAY_DL,
                 TAI_KHOAN = dto.TAI_KHOAN,
                 DR_CR = dto.DR_CR,
                 SO_TIEN_GD = dto.SO_TIEN_GD,
                 POST_BR = dto.POST_BR,
-                CREATED_DATE = DateTime.UtcNow,
-                UPDATED_DATE = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
             await _repo.AddAsync(entity);
             await _repo.SaveChangesAsync();
@@ -73,7 +73,7 @@ namespace TinhKhoanApp.Api.Services
 
             if (dto.SO_TIEN_GD.HasValue) existing.SO_TIEN_GD = dto.SO_TIEN_GD;
             if (!string.IsNullOrWhiteSpace(dto.REMARK)) existing.REMARK = dto.REMARK;
-            existing.UPDATED_DATE = DateTime.UtcNow;
+            existing.UpdatedAt = DateTime.UtcNow;
 
             _repo.Update(existing);
             await _repo.SaveChangesAsync();
@@ -102,7 +102,7 @@ namespace TinhKhoanApp.Api.Services
             });
         }
 
-        private static GL01PreviewDto MapToPreview(GL01 e) => new()
+        private static GL01PreviewDto MapToPreview(GL01Entity e) => new()
         {
             Id = e.Id,
             NGAY_DL = e.NGAY_DL,
@@ -115,7 +115,7 @@ namespace TinhKhoanApp.Api.Services
             MA_KH = e.MA_KH
         };
 
-        private static GL01DetailsDto MapToDetails(GL01 e) => new()
+        private static GL01DetailsDto MapToDetails(GL01Entity e) => new()
         {
             Id = e.Id,
             NGAY_DL = e.NGAY_DL,
@@ -134,7 +134,7 @@ namespace TinhKhoanApp.Api.Services
             MA_KH = e.MA_KH,
             TEN_KH = e.TEN_KH,
             CCA_USRID = e.CCA_USRID,
-            TR_EX_RT = decimal.TryParse(e.TR_EX_RT, out var rt) ? rt : null,
+            TR_EX_RT = e.TR_EX_RT,
             REMARK = e.REMARK,
             BUS_CODE = e.BUS_CODE,
             UNIT_BUS_CODE = e.UNIT_BUS_CODE,
@@ -143,11 +143,11 @@ namespace TinhKhoanApp.Api.Services
             REFERENCE = e.REFERENCE,
             VALUE_DATE = e.VALUE_DATE,
             DEPT_CODE = e.DEPT_CODE,
-            TR_TIME = e.TR_TIME,
+            TR_TIME = e.TR_TIME?.ToString(@"hh\:mm\:ss"),
             COMFIRM = e.COMFIRM,
-            TRDT_TIME = e.TRDT_TIME,
-            CREATED_DATE = e.CREATED_DATE,
-            UPDATED_DATE = e.UPDATED_DATE,
+            TRDT_TIME = e.TRDT_TIME?.ToString("yyyy-MM-dd HH:mm:ss"),
+            CREATED_DATE = e.CreatedAt,
+            UPDATED_DATE = e.UpdatedAt,
             FILE_NAME = e.FILE_NAME
         };
     }

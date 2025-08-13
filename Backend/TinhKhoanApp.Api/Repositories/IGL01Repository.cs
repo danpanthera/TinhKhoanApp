@@ -1,31 +1,31 @@
-using TinhKhoanApp.Api.Models.DataTables;
+using TinhKhoanApp.Api.Models.Entities;
 
 namespace TinhKhoanApp.Api.Repositories
 {
     /// <summary>
     /// Interface cho GL01 Repository - mở rộng từ IRepository
     /// </summary>
-    public interface IGL01Repository : IRepository<GL01>
+    public interface IGL01Repository : IRepository<GL01Entity>
     {
         /// <summary>
         /// Lấy dữ liệu GL01 gần đây nhất
         /// </summary>
-        new Task<IEnumerable<GL01>> GetRecentAsync(int count = 10);
+        new Task<IEnumerable<GL01Entity>> GetRecentAsync(int count = 10);
 
         /// <summary>
         /// Lấy dữ liệu GL01 theo ngày dữ liệu (NGAY_DL)
         /// </summary>
-        Task<IEnumerable<GL01>> GetByDateAsync(DateTime date);
+        Task<IEnumerable<GL01Entity>> GetByDateAsync(DateTime date);
 
         /// <summary>
         /// Lấy dữ liệu GL01 theo mã đơn vị
         /// </summary>
-        Task<IEnumerable<GL01>> GetByUnitCodeAsync(string unitCode, int maxResults = 100);
+        Task<IEnumerable<GL01Entity>> GetByUnitCodeAsync(string unitCode, int maxResults = 100);
 
         /// <summary>
         /// Lấy dữ liệu GL01 theo tài khoản
         /// </summary>
-        Task<IEnumerable<GL01>> GetByAccountCodeAsync(string accountCode, int maxResults = 100);
+        Task<IEnumerable<GL01Entity>> GetByAccountCodeAsync(string accountCode, int maxResults = 100);
 
         /// <summary>
         /// Lấy tổng giao dịch theo mã đơn vị và loại giao dịch (DR/CR)
@@ -40,6 +40,6 @@ namespace TinhKhoanApp.Api.Repositories
         /// <summary>
         /// Cập nhật nhiều GL01
         /// </summary>
-        void UpdateRange(IEnumerable<GL01> entities);
+        void UpdateRange(IEnumerable<GL01Entity> entities);
     }
 }

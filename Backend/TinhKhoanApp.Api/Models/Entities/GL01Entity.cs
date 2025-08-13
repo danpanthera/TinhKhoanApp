@@ -15,9 +15,9 @@ namespace TinhKhoanApp.Api.Models.Entities
     [Index(nameof(MA_KH), Name = "IX_GL01_MA_KH")]
     [Index(nameof(DYSEQ), Name = "IX_GL01_DYSEQ")]
     [Index(nameof(DR_CR), Name = "IX_GL01_DR_CR")]
-    public class GL01Entity : ITemporalEntity
+    public class GL01Entity
     {
-        // === SYSTEM COLUMNS (từ ITemporalEntity) ===
+        // === SYSTEM COLUMNS (GL01 là NON-TEMPORAL) ===
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Id { get; set; }
@@ -29,12 +29,14 @@ namespace TinhKhoanApp.Api.Models.Entities
         [Column(TypeName = "datetime2(3)")]
         public DateTime UpdatedAt { get; set; }
 
-        // Temporal table support
-        [Column(TypeName = "datetime2(3)")]
-        public DateTime SysStartTime { get; set; }
+        // === NGAY_DL (lấy từ TR_TIME cột 25) ===
+        [Required]
+        [Column(TypeName = "datetime2")]
+        public DateTime NGAY_DL { get; set; }
 
-        [Column(TypeName = "datetime2(3)")]
-        public DateTime SysEndTime { get; set; }
+        // === FILE_NAME (track source file) ===
+        [Column(TypeName = "nvarchar(255)")]
+        public string? FILE_NAME { get; set; }
 
         // === BUSINESS COLUMNS (27 columns theo CSV structure) ===
 
