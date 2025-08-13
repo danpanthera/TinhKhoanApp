@@ -92,3 +92,8 @@ IMPORT_FIXES_*.md
 ISSUE_FIXES_*.md
 *_IMPLEMENTATION.md
 COMPLETION_*.md
+*.tar.gz
+*.bak  
+*.csv
+*.log
+.DS_Store
