@@ -88,9 +88,9 @@ builder.Services.AddCors(options =>
 // builder.Services.AddRepositories();
 // builder.Services.AddApplicationServices(); // From DependencyInjectionExtensions
 
-// Configure DirectImport Settings (DISABLED for now)
-// builder.Services.Configure<TinhKhoanApp.Api.Models.Configuration.DirectImportSettings>(
-//     builder.Configuration.GetSection("DirectImport"));
+// Configure DirectImport Settings
+builder.Services.Configure<TinhKhoanApp.Api.Models.Configuration.DirectImportSettings>(
+    builder.Configuration.GetSection("DirectImport"));
 
 // Cache Services (DISABLED for now)
 // builder.Services.AddCachingServices(builder.Configuration);
@@ -106,7 +106,7 @@ builder.Services.AddScoped<IEI01Repository, EI01Repository>(); // ✅ EI01 ENABL
 builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IGL01Repository, TinhKhoanApp.Api.Repositories.GL01Repository>(); // ✅ GL01 Repository ENABLED
 builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IGL02Repository, TinhKhoanApp.Api.Repositories.GL02Repository>(); // ✅ GL02 Repository ENABLED
 builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IGL41Repository, TinhKhoanApp.Api.Repositories.GL41Repository>(); // ✅ GL41 Repository ENABLED
-// builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.ILN01Repository, TinhKhoanApp.Api.Repositories.LN01Repository>(); // TODO: Fix interface implementation
+builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.ILN01Repository, TinhKhoanApp.Api.Repositories.LN01Repository>(); // ✅ LN01 Repository ENABLED
 // builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.IRR01Repository, TinhKhoanApp.Api.Repositories.RR01Repository>(); // TODO: Fix interface implementation - Has 23 missing methods
 
 // Service Layer - Only services with implementations are enabled
@@ -120,18 +120,22 @@ builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL01Service, Ti
 builder.Services.AddHostedService<TinhKhoanApp.Api.Services.Startup.Gl01IndexInitializer>();
 builder.Services.AddHostedService<TinhKhoanApp.Api.Services.Startup.Gl02IndexInitializer>();
 builder.Services.AddHostedService<TinhKhoanApp.Api.Services.Startup.Gl41IndexInitializer>(); // ✅ GL41 Index Initializer
+builder.Services.AddHostedService<TinhKhoanApp.Api.Services.Startup.Ln03IndexInitializer>(); // ✅ LN03 Index Initializer
 builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL02Service, TinhKhoanApp.Api.Services.GL02Service>(); // ✅ GL02 Service ENABLED
 builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL41Service, TinhKhoanApp.Api.Services.GL41Service>(); // ✅ GL41 Service ENABLED
-// builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.ILN01Service, TinhKhoanApp.Api.Services.LN01Service>(); // TODO: Implement LN01Service
-// builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IRR01Service, TinhKhoanApp.Api.Services.RR01Service>(); // TODO: Implement RR01Service
+builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.ILN01Service, TinhKhoanApp.Api.Services.LN01Service>(); // ✅ LN01 Service ENABLED
+// 🆕 LN03 wiring (CSV-first DataTables model)
+builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.ILN03DataRepository, TinhKhoanApp.Api.Repositories.LN03Repository>();
+builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.ILN03Service, TinhKhoanApp.Api.Services.LN03Service>();
+builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IRR01Service, TinhKhoanApp.Api.Services.RR01Service>(); // RR01Service completed
 
 // Data Services Layer - TODO: Fix implementations
 // builder.Services.AddScoped<TinhKhoanApp.Api.Services.DataServices.IDataPreviewService, TinhKhoanApp.Api.Services.DataServices.DataPreviewService>(); // TODO
 // builder.Services.AddScoped<TinhKhoanApp.Api.Services.DataServices.IDP01DataService, TinhKhoanApp.Api.Services.DataServices.DP01DataService>(); // TODO
 // builder.Services.AddScoped<TinhKhoanApp.Api.Services.DataServices.IDPDADataService, TinhKhoanApp.Api.Services.DataServices.DPDADataService>(); // TODO
 
-// Essential Services (DISABLED for now)
-// builder.Services.AddScoped<TinhKhoanApp.Api.Services.DirectImportService>();
+// Essential Services
+builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IDirectImportService, TinhKhoanApp.Api.Services.DirectImportService>();
 // builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 // builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 

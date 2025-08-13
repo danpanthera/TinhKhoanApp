@@ -6,7 +6,7 @@ namespace TinhKhoanApp.Api.Models.DataTables;
 /// <summary>
 /// LN03 - Loan data với 20 cột (17 có header + 3 không header)
 /// Headers theo CSV thực tế: MACHINHANH,TENCHINHANH,MAKH,TENKH,SOHOPDONG,SOTIENXLRR,NGAYPHATSINHXL,THUNOSAUXL,CONLAINGOAIBANG,DUNONOIBANG,NHOMNO,MACBTD,TENCBTD,MAPGD,TAIKHOANHACHTOAN,REFNO,LOAINGUONVON
-/// 3 cột cuối không có header: MALOAI, LOAIKHACHHANG, SOTIEN
+/// 3 cột cuối không có header nhưng có dữ liệu: ["100", "Cá nhân", "6000000000"]
 /// </summary>
 [Table("LN03")]
 public class LN03
@@ -81,76 +81,85 @@ public class LN03
     /// <summary>
     /// Còn lại ngoài bảng
     /// </summary>
-    [Column(Order = 10, TypeName = "decimal(18,2)")]
+    [Column(Order = 9, TypeName = "decimal(18,2)")]
     public decimal? CONLAINGOAIBANG { get; set; }
 
     /// <summary>
     /// Dư nợ nội bảng
     /// </summary>
+    [Column(Order = 10, TypeName = "decimal(18,2)")]
     public decimal? DUNONOIBANG { get; set; }
 
     /// <summary>
     /// Nhóm nợ
     /// </summary>
+    [Column(Order = 11)]
     [StringLength(200)]
     public string? NHOMNO { get; set; }
 
     /// <summary>
     /// Mã cán bộ tín dụng
     /// </summary>
+    [Column(Order = 12)]
     [StringLength(200)]
     public string? MACBTD { get; set; }
 
     /// <summary>
     /// Tên cán bộ tín dụng
     /// </summary>
+    [Column(Order = 13)]
     [StringLength(200)]
     public string? TENCBTD { get; set; }
 
     /// <summary>
     /// Mã phòng giao dịch
     /// </summary>
+    [Column(Order = 14)]
     [StringLength(200)]
     public string? MAPGD { get; set; }
 
     /// <summary>
     /// Tài khoản hạch toán
     /// </summary>
+    [Column(Order = 15)]
     [StringLength(200)]
     public string? TAIKHOANHACHTOAN { get; set; }
 
     /// <summary>
     /// Reference number
     /// </summary>
+    [Column(Order = 16)]
     [StringLength(200)]
     public string? REFNO { get; set; }
 
     /// <summary>
     /// Loại nguồn vốn
     /// </summary>
+    [Column(Order = 17)]
     [StringLength(200)]
     public string? LOAINGUONVON { get; set; }
 
-    // 3 cột không có header
+    // 3 cột không có header - dựa trên CSV thực tế
 
     /// <summary>
-    /// Mã loại (cột 18 - không có header)
+    /// Cột 18 (không có header) - giá trị như "100"
     /// </summary>
+    [Column(Order = 18)]
     [StringLength(200)]
-    public string? MALOAI { get; set; }
+    public string? Column18 { get; set; }
 
     /// <summary>
-    /// Loại khách hàng (cột 19 - không có header)
+    /// Cột 19 (không có header) - giá trị như "Cá nhân"
     /// </summary>
+    [Column(Order = 19)]
     [StringLength(200)]
-    public string? LOAIKHACHHANG { get; set; }
+    public string? Column19 { get; set; }
 
     /// <summary>
-    /// Số tiền (cột 20 - không có header)
+    /// Cột 20 (không có header) - giá trị số lớn như "6000000000"
     /// </summary>
-    public decimal? SOTIEN { get; set; }
-
-    // System fields
+    [Column(Order = 20, TypeName = "decimal(18,2)")]
+    public decimal? Column20 { get; set; }    // System fields
 
     /// <summary>
     /// Người tạo

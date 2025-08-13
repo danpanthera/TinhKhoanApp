@@ -1,4 +1,4 @@
-using TinhKhoanApp.Api.Models.Entities;
+using TinhKhoanApp.Api.Models.DataTables;
 using TinhKhoanApp.Api.Models.Dtos.DP01;
 using TinhKhoanApp.Api.Repositories;
 using TinhKhoanApp.Api.Services.Interfaces;
@@ -137,7 +137,7 @@ namespace TinhKhoanApp.Api.Services
 
         // === PRIVATE MAPPING METHODS ===
 
-        private IEnumerable<DP01PreviewDto> MapToPreviewDto(IEnumerable<DP01Entity> dp01Records)
+        private IEnumerable<DP01PreviewDto> MapToPreviewDto(IEnumerable<DP01> dp01Records)
         {
             return dp01Records.Select(dp01 => new DP01PreviewDto
             {
@@ -214,7 +214,7 @@ namespace TinhKhoanApp.Api.Services
             });
         }
 
-        private DP01DetailsDto MapToDetailsDto(DP01Entity dp01)
+        private DP01DetailsDto MapToDetailsDto(DP01 dp01)
         {
             return new DP01DetailsDto
             {
@@ -291,9 +291,9 @@ namespace TinhKhoanApp.Api.Services
             };
         }
 
-        private DP01Entity MapFromCreateDto(DP01CreateDto createDto)
+        private DP01 MapFromCreateDto(DP01CreateDto createDto)
         {
-            return new DP01Entity
+            return new DP01
             {
                 NGAY_DL = createDto.NGAY_DL ?? DateTime.Now,
 
@@ -364,7 +364,7 @@ namespace TinhKhoanApp.Api.Services
             };
         }
 
-        private void UpdateFromDto(DP01Entity dp01, DP01UpdateDto updateDto)
+        private void UpdateFromDto(DP01 dp01, DP01UpdateDto updateDto)
         {
             // Update all 63 business columns
             dp01.MA_CN = updateDto.MA_CN;

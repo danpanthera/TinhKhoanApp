@@ -102,10 +102,12 @@ namespace TinhKhoanApp.Api.Services
                 "DP01" => await ImportDP01Async(file, statementDate),
                 "DPDA" => await ImportDPDAAsync(file, statementDate),
                 "EI01" => await ImportEI01Async(file, statementDate),
+                "LN01" => await ImportLN01Async(file, statementDate),
                 "LN03" => await ImportLN03EnhancedAsync(file, statementDate),
                 "GL01" => await ImportGL01Async(file, statementDate),
                 "GL02" => await ImportGL02Async(file, statementDate),
                 "GL41" => await ImportGL41Async(file, statementDate),
+                "RR01" => await ImportRR01Async(file, statementDate),
                 _ => throw new NotSupportedException($"DataType '{dataType}' chưa được hỗ trợ")
             };
         }
@@ -304,6 +306,85 @@ namespace TinhKhoanApp.Api.Services
 
         #endregion
 
+        #region LN01 Import
+
+        /// <summary>
+        /// Import LN01 từ CSV - 79 business columns (Loan Data)
+        /// </summary>
+        public async Task<DirectImportResult> ImportLN01Async(IFormFile file, string? statementDate = null)
+        {
+            _logger.LogInformation("🚀 [LN01] Import LN01 from CSV: {FileName}", file.FileName);
+
+            var result = new DirectImportResult
+            {
+                FileName = file.FileName,
+                DataType = "LN01",
+                TargetTable = "LN01",
+                FileSizeBytes = file.Length,
+                StartTime = DateTime.UtcNow
+            };
+
+            try
+            {
+                // Validate filename contains "ln01"
+                if (!file.FileName.ToLower().Contains("ln01"))
+                {
+                    result.Success = false;
+                    result.Errors.Add("File name phải chứa 'ln01' để import LN01 data");
+                    return result;
+                }
+
+                // Extract NgayDL từ filename
+                var ngayDL = ExtractNgayDLFromFileName(file.FileName);
+                result.NgayDL = ngayDL;
+
+                // Parse LN01 CSV
+                var records = await ParseLN01CsvAsync(file);
+                _logger.LogInformation("📊 [LN01] Đã parse {Count} records từ CSV", records.Count);
+
+                if (records.Any())
+                {
+                    // Set NGAY_DL for all records from filename (CSV-first rule)
+                    if (DateTime.TryParse(result.NgayDL, out var ngayDlDate))
+                    {
+                        foreach (var record in records)
+                        {
+                            record.NGAY_DL = ngayDlDate;
+                            record.FILE_NAME = file.FileName;
+                            record.CreatedAt = DateTime.UtcNow;
+                            record.UpdatedAt = DateTime.UtcNow;
+                        }
+                    }
+
+                    // Bulk insert LN01
+                    var insertedCount = await BulkInsertGenericAsync(records, "LN01");
+                    result.ProcessedRecords = insertedCount;
+                    result.Success = true;
+                    _logger.LogInformation("✅ [LN01] Import thành công {Count} records", insertedCount);
+                }
+                else
+                {
+                    result.Success = false;
+                    result.Errors.Add("Không tìm thấy records hợp lệ trong LN01 CSV file");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [LN01] Import error: {Error}", ex.Message);
+                result.Success = false;
+                result.Errors.Add($"LN01 import error: {ex.Message}");
+            }
+            finally
+            {
+                result.EndTime = DateTime.UtcNow;
+                result.ProcessingTimeMs = (int)(result.EndTime - result.StartTime).TotalMilliseconds;
+            }
+
+            return result;
+        }
+
+        #endregion
+
         #region LN03 Import
 
         /// <summary>
@@ -324,6 +405,12 @@ namespace TinhKhoanApp.Api.Services
 
             try
             {
+                // Strict: only allow filename containing "ln03"
+                if (!file.FileName.ToLower().Contains("ln03"))
+                {
+                    throw new InvalidOperationException($"Filename '{file.FileName}' is not allowed. Only files containing 'ln03' are accepted.");
+                }
+
                 // Extract NgayDL từ filename
                 var ngayDL = ExtractNgayDLFromFileName(file.FileName);
                 result.NgayDL = ngayDL;
@@ -334,11 +421,38 @@ namespace TinhKhoanApp.Api.Services
 
                 if (records.Any())
                 {
-                    // Bulk insert LN03
-                    var insertedCount = await BulkInsertGenericAsync(records, "LN03");
-                    result.ProcessedRecords = insertedCount;
-                    result.Success = true;
-                    _logger.LogInformation("✅ [LN03_ENHANCED] Import thành công {Count} records", insertedCount);
+                    // Set NGAY_DL cho tất cả records từ filename + audit fields
+                    if (DateTime.TryParse(result.NgayDL, out var ngayDlDate))
+                    {
+                        foreach (var r in records)
+                        {
+                            r.NGAY_DL = ngayDlDate;
+                            r.CREATED_DATE = DateTime.UtcNow;
+                            r.FILE_ORIGIN = file.FileName;
+                        }
+                    }
+
+                    // Upsert đơn giản: xóa dữ liệu cùng NGAY_DL trước khi insert (replace-by-date)
+                    using var tx = await _context.Database.BeginTransactionAsync();
+                    try
+                    {
+                        if (DateTime.TryParse(result.NgayDL, out var ngayToDelete))
+                        {
+                            var affected = await _context.LN03s.Where(x => x.NGAY_DL.Date == ngayToDelete.Date).ExecuteDeleteAsync();
+                            _logger.LogInformation("🧹 [LN03] Đã xoá {Count} bản ghi cũ cho ngày {Ngay}", affected, ngayToDelete.ToString("yyyy-MM-dd"));
+                        }
+
+                        var insertedCount = await BulkInsertGenericAsync(records, "LN03");
+                        await tx.CommitAsync();
+                        result.ProcessedRecords = insertedCount;
+                        result.Success = true;
+                        _logger.LogInformation("✅ [LN03_ENHANCED] Import thành công {Count} records", insertedCount);
+                    }
+                    catch
+                    {
+                        await tx.RollbackAsync();
+                        throw;
+                    }
                 }
                 else
                 {
@@ -648,9 +762,9 @@ namespace TinhKhoanApp.Api.Services
         /// <summary>
         /// Parse DP01 CSV với 63 business columns
         /// </summary>
-        private async Task<List<DP01Entity>> ParseDP01CsvAsync(IFormFile file)
+        private async Task<List<DP01>> ParseDP01CsvAsync(IFormFile file)
         {
-            var records = new List<DP01Entity>();
+            var records = new List<DP01>();
 
             using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
             using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -660,11 +774,13 @@ namespace TinhKhoanApp.Api.Services
                 HeaderValidated = null
             });
 
-            await foreach (var record in csv.GetRecordsAsync<DP01Entity>())
+            await foreach (var record in csv.GetRecordsAsync<DP01>())
             {
                 // Set audit fields
                 record.CreatedAt = DateTime.UtcNow;
                 record.UpdatedAt = DateTime.UtcNow;
+                record.ImportDateTime = DateTime.UtcNow;
+                record.FILE_NAME = file.FileName;
 
                 records.Add(record);
             }
@@ -675,9 +791,9 @@ namespace TinhKhoanApp.Api.Services
         /// <summary>
         /// Parse DPDA CSV với 13 business columns
         /// </summary>
-        private async Task<List<DPDAEntity>> ParseDPDACsvAsync(IFormFile file)
+        private async Task<List<DPDA>> ParseDPDACsvAsync(IFormFile file)
         {
-            var records = new List<DPDAEntity>();
+            var records = new List<DPDA>();
 
             using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
             using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -687,11 +803,34 @@ namespace TinhKhoanApp.Api.Services
                 HeaderValidated = null
             });
 
-            await foreach (var record in csv.GetRecordsAsync<DPDAEntity>())
+            var fileName = Path.GetFileName(file.FileName);
+            var ngayDlString = ExtractNgayDLFromFileName(fileName);
+            var ngayDl = DateTime.TryParse(ngayDlString, out var date) ? date : DateTime.Today;
+
+            await foreach (var record in csv.GetRecordsAsync<dynamic>())
             {
-                // Set audit fields
-                record.CreatedAt = DateTime.UtcNow;
-                record.UpdatedAt = DateTime.UtcNow;
+                var dpda = new DPDA
+                {
+                    NGAY_DL = ngayDl,
+                    MA_CHI_NHANH = record.MA_CHI_NHANH ?? "",
+                    MA_KHACH_HANG = record.MA_KHACH_HANG ?? "",
+                    TEN_KHACH_HANG = record.TEN_KHACH_HANG ?? "",
+                    SO_TAI_KHOAN = record.SO_TAI_KHOAN ?? "",
+                    LOAI_THE = record.LOAI_THE ?? "",
+                    SO_THE = record.SO_THE ?? "",
+                    NGAY_NOP_DON = ParseDateTimeSafely(record.NGAY_NOP_DON),
+                    NGAY_PHAT_HANH = ParseDateTimeSafely(record.NGAY_PHAT_HANH),
+                    USER_PHAT_HANH = record.USER_PHAT_HANH ?? "",
+                    TRANG_THAI = record.TRANG_THAI ?? "",
+                    PHAN_LOAI = record.PHAN_LOAI ?? "",
+                    GIAO_THE = record.GIAO_THE ?? "",
+                    LOAI_PHAT_HANH = record.LOAI_PHAT_HANH ?? "",
+                    CREATED_DATE = DateTime.Now,
+                    UPDATED_DATE = DateTime.Now,
+                    FILE_NAME = fileName
+                };
+
+                records.Add(dpda);
 
                 records.Add(record);
             }
@@ -736,11 +875,11 @@ namespace TinhKhoanApp.Api.Services
         }
 
         /// <summary>
-        /// Parse LN03 CSV với enhanced processing
+        /// Parse LN01 CSV với 79 business columns
         /// </summary>
-        private async Task<List<LN03>> ParseLN03EnhancedAsync(IFormFile file, string? statementDate)
+        private async Task<List<LN01>> ParseLN01CsvAsync(IFormFile file)
         {
-            var records = new List<LN03>();
+            var records = new List<LN01>();
 
             using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
             using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -750,9 +889,91 @@ namespace TinhKhoanApp.Api.Services
                 HeaderValidated = null
             });
 
-            await foreach (var record in csv.GetRecordsAsync<LN03>())
+            // Ensure DateTime parsing uses dd/MM/yyyy as primary format
+            var dtOptions = csv.Context.TypeConverterOptionsCache.GetOptions<DateTime>();
+            dtOptions.Formats = new[] { "dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "d/M/yyyy" };
+            var ndtOptions = csv.Context.TypeConverterOptionsCache.GetOptions<DateTime?>();
+            ndtOptions.Formats = dtOptions.Formats;
+
+            await foreach (var record in csv.GetRecordsAsync<LN01>())
             {
+                // Set audit fields
+                record.CreatedAt = DateTime.UtcNow;
+                record.UpdatedAt = DateTime.UtcNow;
+
+                // Normalize date fields to datetime2 (dd/MM/yyyy)
+                // CsvHelper already maps to DateTime? when possible; extra normalization hooks can be added if needed
+
                 records.Add(record);
+            }
+
+            return records;
+        }
+
+        /// <summary>
+        /// Parse LN03 CSV với enhanced processing
+        /// </summary>
+        private async Task<List<LN03>> ParseLN03EnhancedAsync(IFormFile file, string? statementDate)
+        {
+            var records = new List<LN03>();
+
+            using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
+            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true,
+                MissingFieldFound = null,
+                HeaderValidated = null
+            };
+            using var csv = new CsvReader(reader, config);
+
+            // Read header and check column count
+            csv.Read();
+            csv.ReadHeader();
+            var headerCount = csv.HeaderRecord?.Length ?? 0;
+            _logger.LogInformation("🔍 [LN03] CSV has {HeaderCount} headers", headerCount);
+
+            while (csv.Read())
+            {
+                try
+                {
+                    var record = new LN03();
+
+                    // Map the 17 header columns directly
+                    record.MACHINHANH = csv.GetField("MACHINHANH");
+                    record.TENCHINHANH = csv.GetField("TENCHINHANH");
+                    record.MAKH = csv.GetField("MAKH");
+                    record.TENKH = csv.GetField("TENKH");
+                    record.SOHOPDONG = csv.GetField("SOHOPDONG");
+
+                    // Parse decimal fields with robust error handling
+                    record.SOTIENXLRR = ParseDecimalSafely(csv.GetField("SOTIENXLRR"));
+
+                    // Parse date field
+                    record.NGAYPHATSINHXL = ParseDateTimeSafely(csv.GetField("NGAYPHATSINHXL"));
+
+                    record.THUNOSAUXL = ParseDecimalSafely(csv.GetField("THUNOSAUXL"));
+                    record.CONLAINGOAIBANG = ParseDecimalSafely(csv.GetField("CONLAINGOAIBANG"));
+                    record.DUNONOIBANG = ParseDecimalSafely(csv.GetField("DUNONOIBANG"));
+                    record.NHOMNO = csv.GetField("NHOMNO");
+                    record.MACBTD = csv.GetField("MACBTD");
+                    record.TENCBTD = csv.GetField("TENCBTD");
+                    record.MAPGD = csv.GetField("MAPGD");
+                    record.TAIKHOANHACHTOAN = csv.GetField("TAIKHOANHACHTOAN");
+                    record.REFNO = csv.GetField("REFNO");
+                    record.LOAINGUONVON = csv.GetField("LOAINGUONVON");
+
+                    // Map the 3 no-header columns by index (18, 19, 20)
+                    record.Column18 = csv.GetField(17); // 0-based index for column 18
+                    record.Column19 = csv.GetField(18); // 0-based index for column 19
+                    record.Column20 = ParseDecimalSafely(csv.GetField(19)); // 0-based index for column 20
+
+                    records.Add(record);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning("⚠️ [LN03] Row parsing error: {Error}", ex.Message);
+                    // Continue processing other rows
+                }
             }
 
             return records;
@@ -911,6 +1132,269 @@ namespace TinhKhoanApp.Api.Services
                 throw;
             }
         }
+
+        #region Helper Methods for Parsing
+
+        /// <summary>
+        /// Parse decimal values safely with support for thousand separators and various formats
+        /// </summary>
+        private decimal? ParseDecimalSafely(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+
+            // Remove quotes and trim whitespace
+            value = value.Trim('"', ' ');
+
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+
+            // Try parsing with various number formats
+            if (decimal.TryParse(value, NumberStyles.AllowDecimalPoint | NumberStyles.AllowThousands | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var result))
+                return result;
+
+            // Try with Vietnamese format (comma as thousands separator)
+            if (decimal.TryParse(value.Replace(",", ""), NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out result))
+                return result;
+
+            // Log warning but don't throw
+            _logger.LogWarning("⚠️ Cannot parse decimal value: '{Value}'", value);
+            return null;
+        }
+
+        /// <summary>
+        /// Parse DateTime values safely with support for multiple formats
+        /// </summary>
+        private DateTime? ParseDateTimeSafely(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+
+            // Remove quotes and trim
+            value = value.Trim('"', ' ');
+
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+
+            // Try multiple date formats
+            var formats = new[] { "dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "d/M/yyyy", "yyyyMMdd", "dd/MM/yyyy HH:mm:ss" };
+
+            foreach (var format in formats)
+            {
+                if (DateTime.TryParseExact(value, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out var result))
+                    return result;
+            }
+
+            // Try general parsing as last resort
+            if (DateTime.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.None, out var generalResult))
+                return generalResult;
+
+            // Log warning but don't throw
+            _logger.LogWarning("⚠️ Cannot parse DateTime value: '{Value}'", value);
+            return null;
+        }
+
+        #endregion
+
+        #region RR01 Import
+
+        /// <summary>
+        /// Import RR01 từ CSV - 25 business columns (Risk Report)
+        /// NGAY_DL từ filename, strict filename validation containing "rr01"
+        /// </summary>
+        public async Task<DirectImportResult> ImportRR01Async(IFormFile file, string? statementDate = null)
+        {
+            _logger.LogInformation("🚀 [RR01] Import RR01 Risk Report from CSV: {FileName}", file.FileName);
+
+            var result = new DirectImportResult
+            {
+                FileName = file.FileName,
+                DataType = "RR01",
+                TargetTable = "RR01",
+                FileSizeBytes = file.Length,
+                StartTime = DateTime.UtcNow
+            };
+
+            try
+            {
+                // Strict: only allow filename containing "rr01"
+                if (!file.FileName.ToLower().Contains("rr01"))
+                {
+                    result.Success = false;
+                    result.Errors.Add("❌ File name must contain 'rr01' for RR01 import");
+                    return result;
+                }
+
+                // Extract NgayDL từ filename và convert sang DateTime
+                var ngayDlString = ExtractNgayDLFromFileName(file.FileName);
+                var ngayDlDate = DateTime.ParseExact(ngayDlString, "yyyy-MM-dd", CultureInfo.InvariantCulture);
+                result.NgayDL = ngayDlString;
+
+                // Parse RR01 CSV
+                var records = await ParseRR01CsvAsync(file, ngayDlDate);
+                _logger.LogInformation("📊 [RR01] Đã parse {Count} records từ CSV", records.Count);
+
+                if (records.Any())
+                {
+                    // Set NGAY_DL và audit fields cho tất cả records trước khi insert
+                    foreach (var record in records)
+                    {
+                        record.NGAY_DL = ngayDlDate;
+                        record.FILE_NAME = file.FileName;
+                        record.CREATED_DATE = DateTime.UtcNow;
+                    }
+
+                    // Replace-by-date upsert pattern: delete existing data for this date, then insert new
+                    using var transaction = await _context.Database.BeginTransactionAsync();
+                    try
+                    {
+                        // Delete existing records cho ngày này
+                        var existingRecords = _context.RR01.Where(r => r.NGAY_DL.Date == ngayDlDate.Date);
+                        _context.RR01.RemoveRange(existingRecords);
+                        await _context.SaveChangesAsync();
+
+                        // Bulk insert new records
+                        var insertedCount = await BulkInsertGenericAsync(records, "RR01");
+
+                        await transaction.CommitAsync();
+
+                        result.ProcessedRecords = insertedCount;
+                        result.Success = true;
+                        _logger.LogInformation("✅ [RR01] Import thành công {Count} records for date {Date}", insertedCount, ngayDlDate.ToString("yyyy-MM-dd"));
+                    }
+                    catch
+                    {
+                        await transaction.RollbackAsync();
+                        throw;
+                    }
+                }
+                else
+                {
+                    result.Success = false;
+                    result.Errors.Add("Không tìm thấy RR01 records hợp lệ trong CSV");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [RR01] Import error: {Error}", ex.Message);
+                result.Success = false;
+                result.Errors.Add($"RR01 import error: {ex.Message}");
+            }
+            finally
+            {
+                result.EndTime = DateTime.UtcNow;
+                result.ProcessingTimeMs = (int)(result.EndTime - result.StartTime).TotalMilliseconds;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Parse RR01 CSV với enhanced processing cho 25 business columns
+        /// Hỗ trợ robust date/decimal parsing theo format riêng của RR01
+        /// </summary>
+        private async Task<List<RR01>> ParseRR01CsvAsync(IFormFile file, DateTime ngayDL)
+        {
+            var records = new List<RR01>();
+
+            using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
+            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true,
+                MissingFieldFound = null,
+                HeaderValidated = null
+            };
+            using var csv = new CsvReader(reader, config);
+
+            // Read header and check column count
+            csv.Read();
+            csv.ReadHeader();
+            var headerCount = csv.HeaderRecord?.Length ?? 0;
+            _logger.LogInformation("🔍 [RR01] CSV has {HeaderCount} headers", headerCount);
+
+            while (csv.Read())
+            {
+                try
+                {
+                    var record = new RR01();
+
+                    // Map the 25 business columns directly from CSV headers
+                    record.CN_LOAI_I = csv.GetField("CN_LOAI_I");
+                    record.BRCD = csv.GetField("BRCD");
+                    record.MA_KH = csv.GetField("MA_KH");
+                    record.TEN_KH = csv.GetField("TEN_KH");
+                    record.SO_LDS = csv.GetField("SO_LDS");
+                    record.CCY = csv.GetField("CCY");
+                    record.SO_LAV = csv.GetField("SO_LAV");
+                    record.LOAI_KH = csv.GetField("LOAI_KH");
+
+                    // Parse date fields - RR01 uses YYYYMMDD format
+                    record.NGAY_GIAI_NGAN = ParseRR01DateSafely(csv.GetField("NGAY_GIAI_NGAN"));
+                    record.NGAY_DEN_HAN = ParseRR01DateSafely(csv.GetField("NGAY_DEN_HAN"));
+                    record.NGAY_XLRR = ParseRR01DateSafely(csv.GetField("NGAY_XLRR"));
+
+                    record.VAMC_FLG = csv.GetField("VAMC_FLG");
+
+                    // Parse decimal fields with robust error handling
+                    record.DUNO_GOC_BAN_DAU = ParseDecimalSafely(csv.GetField("DUNO_GOC_BAN_DAU"));
+                    record.DUNO_LAI_TICHLUY_BD = ParseDecimalSafely(csv.GetField("DUNO_LAI_TICHLUY_BD"));
+                    record.DOC_DAUKY_DA_THU_HT = ParseDecimalSafely(csv.GetField("DOC_DAUKY_DA_THU_HT"));
+                    record.DUNO_GOC_HIENTAI = ParseDecimalSafely(csv.GetField("DUNO_GOC_HIENTAI"));
+                    record.DUNO_LAI_HIENTAI = ParseDecimalSafely(csv.GetField("DUNO_LAI_HIENTAI"));
+                    record.DUNO_NGAN_HAN = ParseDecimalSafely(csv.GetField("DUNO_NGAN_HAN"));
+                    record.DUNO_TRUNG_HAN = ParseDecimalSafely(csv.GetField("DUNO_TRUNG_HAN"));
+                    record.DUNO_DAI_HAN = ParseDecimalSafely(csv.GetField("DUNO_DAI_HAN"));
+                    record.THU_GOC = ParseDecimalSafely(csv.GetField("THU_GOC"));
+                    record.THU_LAI = ParseDecimalSafely(csv.GetField("THU_LAI"));
+                    record.BDS = ParseDecimalSafely(csv.GetField("BDS"));
+                    record.DS = ParseDecimalSafely(csv.GetField("DS"));
+                    record.TSK = ParseDecimalSafely(csv.GetField("TSK"));
+
+                    records.Add(record);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning("⚠️ [RR01] Row parsing error: {Error}", ex.Message);
+                    // Continue processing other rows
+                }
+            }
+
+            return records;
+        }
+
+        /// <summary>
+        /// Parse RR01 date fields - RR01 sử dụng format YYYYMMDD
+        /// </summary>
+        private DateTime? ParseRR01DateSafely(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+
+            // Remove quotes and trim
+            value = value.Trim('"', ' ');
+
+            if (string.IsNullOrWhiteSpace(value))
+                return null;
+
+            // RR01 specific format: YYYYMMDD
+            if (value.Length == 8 && DateTime.TryParseExact(value, "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var result))
+                return result;
+
+            // Fallback to general date formats
+            var formats = new[] { "dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "d/M/yyyy" };
+
+            foreach (var format in formats)
+            {
+                if (DateTime.TryParseExact(value, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out result))
+                    return result;
+            }
+
+            // Log warning but don't throw
+            _logger.LogWarning("⚠️ [RR01] Cannot parse date value: '{Value}'", value);
+            return null;
+        }
+
+        #endregion
 
         #endregion
     }

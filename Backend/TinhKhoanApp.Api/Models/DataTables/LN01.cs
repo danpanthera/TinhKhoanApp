@@ -1,14 +1,20 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using TinhKhoanApp.Api.Models.Entities;
 
 namespace TinhKhoanApp.Api.Models.DataTables
 {
     /// <summary>
     /// LN01 - Loan Data Model with exact CSV column structure
-    /// Structure: NGAY_DL -> Business Columns (CSV order) -> Temporal Columns
+    /// TEMPORAL TABLE: System-versioned temporal table với Columnstore Indexes
+    /// Structure: NGAY_DL -> 79 Business Columns (CSV order) -> Temporal System Columns
+    /// Import policy: Chỉ cho phép files có chứa "ln01" trong filename
+    /// Đặc biệt: NGAY_DL lấy từ filename extraction (không có trong CSV)
+    /// DATE columns: datetime2 format (dd/MM/yyyy)
+    /// AMOUNT columns: decimal(18,2) format #,###.00
     /// </summary>
     [Table("LN01")]
-    public class LN01
+    public class LN01 : ITemporalEntity
     {
         // Auto-increment ID
         /// <summary>
@@ -64,7 +70,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
         /// <summary>
         /// Dư nợ
         /// </summary>
-        [Column("DU_NO")]
+        [Column("DU_NO", TypeName = "decimal(18,2)")]
         public decimal? DU_NO { get; set; }
 
         /// <summary>
@@ -96,7 +102,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
         /// <summary>
         /// Số tiền giải ngân
         /// </summary>
-        [Column("DISBURSEMENT_AMOUNT")]
+        [Column("DISBURSEMENT_AMOUNT", TypeName = "decimal(18,2)")]
         public decimal? DISBURSEMENT_AMOUNT { get; set; }
 
         /// <summary>
@@ -115,7 +121,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
         /// <summary>
         /// Lãi suất
         /// </summary>
-        [Column("INTEREST_RATE")]
+        [Column("INTEREST_RATE", TypeName = "decimal(18,2)")]
         public decimal? INTEREST_RATE { get; set; }
 
         /// <summary>
@@ -141,7 +147,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
         /// <summary>
         /// Số tiền phê duyệt
         /// </summary>
-        [Column("APPRAMT")]
+        [Column("APPRAMT", TypeName = "decimal(18,2)")]
         public decimal? APPRAMT { get; set; }
 
         /// <summary>
@@ -174,7 +180,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
         /// <summary>
         /// Số tiền trả
         /// </summary>
-        [Column("REPAYMENT_AMOUNT")]
+        [Column("REPAYMENT_AMOUNT", TypeName = "decimal(18,2)")]
         public decimal? REPAYMENT_AMOUNT { get; set; }
 
         /// <summary>
@@ -186,7 +192,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
         /// <summary>
         /// Số tiền trả tiếp theo
         /// </summary>
-        [Column("NEXT_REPAY_AMOUNT")]
+        [Column("NEXT_REPAY_AMOUNT", TypeName = "decimal(18,2)")]
         public decimal? NEXT_REPAY_AMOUNT { get; set; }
 
         /// <summary>
@@ -212,19 +218,19 @@ namespace TinhKhoanApp.Api.Models.DataTables
         /// <summary>
         /// Số tiền lãi
         /// </summary>
-        [Column("INTEREST_AMOUNT")]
+        [Column("INTEREST_AMOUNT", TypeName = "decimal(18,2)")]
         public decimal? INTEREST_AMOUNT { get; set; }
 
         /// <summary>
         /// Số tiền lãi quá hạn
         /// </summary>
-        [Column("PASTDUE_INTEREST_AMOUNT")]
+        [Column("PASTDUE_INTEREST_AMOUNT", TypeName = "decimal(18,2)")]
         public decimal? PASTDUE_INTEREST_AMOUNT { get; set; }
 
         /// <summary>
         /// Tổng số tiền lãi trả
         /// </summary>
-        [Column("TOTAL_INTEREST_REPAY_AMOUNT")]
+        [Column("TOTAL_INTEREST_REPAY_AMOUNT", TypeName = "decimal(18,2)")]
         public decimal? TOTAL_INTEREST_REPAY_AMOUNT { get; set; }
 
         /// <summary>
@@ -347,7 +353,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
         /// <summary>
         /// Số tiền miễn lãi
         /// </summary>
-        [Column("EXEMPTINTAMT")]
+        [Column("EXEMPTINTAMT", TypeName = "decimal(18,2)")]
         public decimal? EXEMPTINTAMT { get; set; }
 
         /// <summary>
@@ -381,13 +387,13 @@ namespace TinhKhoanApp.Api.Models.DataTables
         /// <summary>
         /// Số tiền dồn tích
         /// </summary>
-        [Column("ACCRUAL_AMOUNT")]
+        [Column("ACCRUAL_AMOUNT", TypeName = "decimal(18,2)")]
         public decimal? ACCRUAL_AMOUNT { get; set; }
 
         /// <summary>
         /// Số tiền dồn tích cuối tháng
         /// </summary>
-        [Column("ACCRUAL_AMOUNT_END_OF_MONTH")]
+        [Column("ACCRUAL_AMOUNT_END_OF_MONTH", TypeName = "decimal(18,2)")]
         public decimal? ACCRUAL_AMOUNT_END_OF_MONTH { get; set; }
 
         /// <summary>
@@ -491,7 +497,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
         /// <summary>
         /// Số tiền giải ngân 1
         /// </summary>
-        [Column("SO_TIEN_GIAI_NGAN_1")]
+        [Column("SO_TIEN_GIAI_NGAN_1", TypeName = "decimal(18,2)")]
         public decimal? SO_TIEN_GIAI_NGAN_1 { get; set; }
 
         /// <summary>
@@ -511,7 +517,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
         /// <summary>
         /// Số tiền giải ngân 2
         /// </summary>
-        [Column("SO_TIEN_GIAI_NGAN_2")]
+        [Column("SO_TIEN_GIAI_NGAN_2", TypeName = "decimal(18,2)")]
         public decimal? SO_TIEN_GIAI_NGAN_2 { get; set; }
 
         /// <summary>
@@ -544,7 +550,7 @@ namespace TinhKhoanApp.Api.Models.DataTables
         /// <summary>
         /// Tỷ giá
         /// </summary>
-        [Column("TY_GIA")]
+        [Column("TY_GIA", TypeName = "decimal(18,2)")]
         public decimal? TY_GIA { get; set; }
 
         /// <summary>
@@ -562,16 +568,30 @@ namespace TinhKhoanApp.Api.Models.DataTables
         [StringLength(500)]
         public string? FILE_NAME { get; set; }
 
+        // === SYSTEM COLUMNS (IEntity interface) ===
         /// <summary>
         /// Ngày tạo bản ghi
         /// </summary>
         [Column("CREATED_DATE")]
-        public DateTime CREATED_DATE { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         /// <summary>
         /// Ngày cập nhật bản ghi
         /// </summary>
         [Column("UPDATED_DATE")]
-        public DateTime? UPDATED_DATE { get; set; }
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        // === TEMPORAL COLUMNS (cuối cùng - ITemporalEntity interface) ===
+        /// <summary>
+        /// Temporal table start time - System generated (ITemporalEntity interface)
+        /// </summary>
+        [Column("SysStartTime")]
+        public DateTime SysStartTime { get; set; }
+
+        /// <summary>
+        /// Temporal table end time - System generated (ITemporalEntity interface)
+        /// </summary>
+        [Column("SysEndTime")]
+        public DateTime SysEndTime { get; set; }
     }
 }

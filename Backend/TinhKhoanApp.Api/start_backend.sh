@@ -32,8 +32,13 @@ if [[ ! -f "bin/Debug/net8.0/TinhKhoanApp.Api.dll" ]]; then
     dotnet build -q >> "$LOG_FILE" 2>&1
 fi
 
-log "▶️ Starting API with timeout..."
-timeout 30s dotnet run --urls=http://localhost:$PORT >> "$LOG_FILE" 2>&1 &
+log "▶️ Starting API..."
+if command -v timeout >/dev/null 2>&1; then
+    timeout 30s dotnet run --urls=http://localhost:$PORT >> "$LOG_FILE" 2>&1 &
+else
+    # macOS doesn't have GNU timeout by default; run without timeout
+    dotnet run --urls=http://localhost:$PORT >> "$LOG_FILE" 2>&1 &
+fi
 API_PID=$!
 
 # Quick health check loop
@@ -42,12 +47,12 @@ for i in {1..15}; do
         log "✅ API started successfully!"
         exit 0
     fi
-    
+
     if ! kill -0 $API_PID 2>/dev/null; then
         log "❌ API process died"
         exit 1
     fi
-    
+
     sleep 2
 done
 

@@ -1,5 +1,4 @@
 using TinhKhoanApp.Api.Models.Dtos.DPDA;
-using TinhKhoanApp.Api.Models.Entities;
 using TinhKhoanApp.Api.Models.Common;
 using TinhKhoanApp.Api.Models.DataTables;
 using TinhKhoanApp.Api.Repositories.Interfaces;
@@ -134,8 +133,8 @@ namespace TinhKhoanApp.Api.Services
             try
             {
                 var entity = MapFromCreateDto(createDto);
-                entity.CreatedAt = DateTime.UtcNow;
-                entity.UpdatedAt = DateTime.UtcNow;
+                entity.CREATED_DATE = DateTime.UtcNow;
+                entity.UPDATED_DATE = DateTime.UtcNow;
 
                 var createdEntity = await _dpdaRepository.CreateAsync(entity);
                 var detailsDto = MapToDetailsDto(createdEntity);
@@ -162,7 +161,7 @@ namespace TinhKhoanApp.Api.Services
                     return ApiResponse<DPDADetailsDto>.Error("Không tìm thấy DPDA để cập nhật");
 
                 UpdateFromDto(existingEntity, updateDto);
-                existingEntity.UpdatedAt = DateTime.UtcNow;
+                existingEntity.UPDATED_DATE = DateTime.UtcNow;
 
                 var updatedEntity = await _dpdaRepository.UpdateAsync(existingEntity);
                 var detailsDto = MapToDetailsDto(updatedEntity);
@@ -380,7 +379,7 @@ namespace TinhKhoanApp.Api.Services
         /// Map Entity to PreviewDto
         /// Chỉ các fields cần thiết cho list view
         /// </summary>
-        private DPDAPreviewDto MapToPreviewDto(DPDAEntity entity)
+        private DPDAPreviewDto MapToPreviewDto(DPDA entity)
         {
             return new DPDAPreviewDto
             {
@@ -393,7 +392,7 @@ namespace TinhKhoanApp.Api.Services
                 SO_THE = entity.SO_THE,
                 NGAY_PHAT_HANH = entity.NGAY_PHAT_HANH,
                 TRANG_THAI = entity.TRANG_THAI,
-                UpdatedAt = entity.UpdatedAt
+                UpdatedAt = entity.UPDATED_DATE
             };
         }
 
@@ -401,7 +400,7 @@ namespace TinhKhoanApp.Api.Services
         /// Map Entity to DetailsDto
         /// Đầy đủ tất cả 13 business columns + metadata
         /// </summary>
-        private DPDADetailsDto MapToDetailsDto(DPDAEntity entity)
+        private DPDADetailsDto MapToDetailsDto(DPDA entity)
         {
             return new DPDADetailsDto
             {
@@ -421,8 +420,8 @@ namespace TinhKhoanApp.Api.Services
                 GIAO_THE = entity.GIAO_THE,
                 LOAI_PHAT_HANH = entity.LOAI_PHAT_HANH,
                 // System columns từ ITemporalEntity
-                CreatedAt = entity.CreatedAt,
-                UpdatedAt = entity.UpdatedAt,
+                CreatedAt = entity.CREATED_DATE,
+                UpdatedAt = entity.UPDATED_DATE,
                 // Import tracking metadata - sẽ implement later trong DirectImport
                 FileName = $"dpda_{entity.NGAY_DL:yyyyMMdd}.csv", // Derived từ NGAY_DL
                 ImportId = Guid.NewGuid(), // Temporary - sẽ implement trong DirectImport
@@ -434,9 +433,9 @@ namespace TinhKhoanApp.Api.Services
         /// Map CreateDto to Entity
         /// 13 business columns theo CSV structure
         /// </summary>
-        private DPDAEntity MapFromCreateDto(DPDACreateDto createDto)
+        private DPDA MapFromCreateDto(DPDACreateDto createDto)
         {
-            return new DPDAEntity
+            return new DPDA
             {
                 // 13 Business Columns - CSV structure preserved
                 MA_CHI_NHANH = createDto.MA_CHI_NHANH,
@@ -459,7 +458,7 @@ namespace TinhKhoanApp.Api.Services
         /// Update Entity from UpdateDto
         /// Selective update - chỉ update các field không null
         /// </summary>
-        private void UpdateFromDto(DPDAEntity entity, DPDAUpdateDto updateDto)
+        private void UpdateFromDto(DPDA entity, DPDAUpdateDto updateDto)
         {
             // Chỉ update các field optional (không phải business keys)
             if (updateDto.TEN_KHACH_HANG != null) entity.TEN_KHACH_HANG = updateDto.TEN_KHACH_HANG;

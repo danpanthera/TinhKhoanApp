@@ -49,7 +49,7 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         // ✅ CLEANED: Removed legacy ImportedDataItem - Using DirectImportService workflow only
 
         // 🚀 DbSets cho 8 bảng dữ liệu thô chính (DirectImport với Temporal Tables + Columnstore)
-        public DbSet<DP01Entity> DP01 { get; set; } // ✅ Modern Entity với 63 business columns
+        public DbSet<DataTables.DP01> DP01 { get; set; } // ✅ Temporal Table với 63 business columns + system/temporal columns
         public DbSet<DataTables.LN01> LN01 { get; set; }
         public DbSet<DataTables.LN03> LN03 { get; set; }
         public DbSet<DataTables.GL01> GL01 { get; set; }
@@ -58,7 +58,7 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<DataTables.DPDA> DPDA { get; set; }
         // ✅ Use Modern Entity for EI01 to ensure CSV-first consistency across layers
         public DbSet<EI01Entity> EI01 { get; set; }
-        // public DbSet<DataTables.RR01> RR01 { get; set; } // Temporary disabled - needs entity/DTO alignment
+        public DbSet<DataTables.RR01> RR01 { get; set; } // ✅ Re-enabled for DirectImport support
 
         // 🔄 DbSets with plural names for backward compatibility
         // Note: DP01s removed - using DP01 directly
@@ -452,6 +452,37 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
             });
 
             // 🚀 === TEMPORAL TABLES + COLUMNSTORE INDEXES CONFIGURATION ===
+
+            // === DP01 TEMPORAL TABLE CONFIGURATION ===
+            // Cấu hình Temporal Table cho DP01 - Tiền gửi có kỳ hạn (63 business columns)
+            modelBuilder.Entity<DataTables.DP01>(entity =>
+            {
+                entity.ToTable("DP01", tb =>
+                {
+                    tb.IsTemporal(ttb =>
+                    {
+                        ttb.UseHistoryTable("DP01_History");
+                        ttb.HasPeriodStart("SysStartTime");
+                        ttb.HasPeriodEnd("SysEndTime");
+                    });
+                });
+
+                // Cấu hình indexes cho performance
+                entity.HasIndex(e => e.NGAY_DL).HasDatabaseName("IX_DP01_NGAY_DL");
+                entity.HasIndex(e => e.MA_CN).HasDatabaseName("IX_DP01_MA_CN");
+                entity.HasIndex(e => e.MA_KH).HasDatabaseName("IX_DP01_MA_KH");
+                entity.HasIndex(e => e.SO_TAI_KHOAN).HasDatabaseName("IX_DP01_SO_TAI_KHOAN");
+
+                // Cấu hình decimal precision cho các trường tiền tệ
+                entity.Property(e => e.CURRENT_BALANCE).HasPrecision(18, 2);
+                entity.Property(e => e.RATE).HasPrecision(18, 6);
+                entity.Property(e => e.ACRUAL_AMOUNT).HasPrecision(18, 2);
+                entity.Property(e => e.ACRUAL_AMOUNT_END).HasPrecision(18, 2);
+                entity.Property(e => e.DRAMT).HasPrecision(18, 2);
+                entity.Property(e => e.CRAMT).HasPrecision(18, 2);
+                entity.Property(e => e.SPECIAL_RATE).HasPrecision(18, 6);
+                entity.Property(e => e.TYGIA).HasPrecision(18, 6);
+            });
 
             // 📊 Cấu hình Temporal Tables cho ImportedDataRecords với history tracking
             // ✅ Đã fix các vấn đề compression columns, bật lại temporal tables

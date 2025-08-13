@@ -31,7 +31,7 @@ namespace TinhKhoanApp.Api.Repositories
         {
             return await _context.LN01s
                 .OrderByDescending(x => x.NGAY_DL)
-                .ThenByDescending(x => x.CREATED_DATE)
+                .ThenByDescending(x => x.CreatedAt)
                 .Take(count)
                 .ToListAsync();
         }
@@ -41,7 +41,7 @@ namespace TinhKhoanApp.Api.Repositories
         {
             return await _context.LN01s
                 .Where(x => x.NGAY_DL != null && x.NGAY_DL.Value.Date == date.Date)
-                .OrderByDescending(x => x.CREATED_DATE)
+                .OrderByDescending(x => x.CreatedAt)
                 .Take(maxResults)
                 .ToListAsync();
         }
@@ -52,7 +52,7 @@ namespace TinhKhoanApp.Api.Repositories
             return await _context.LN01s
                 .Where(x => x.BRCD == branchCode)
                 .OrderByDescending(x => x.NGAY_DL)
-                .ThenByDescending(x => x.CREATED_DATE)
+                .ThenByDescending(x => x.CreatedAt)
                 .Take(maxResults)
                 .ToListAsync();
         }
@@ -63,7 +63,7 @@ namespace TinhKhoanApp.Api.Repositories
             return await _context.LN01s
                 .Where(x => x.CUSTSEQ == customerCode)
                 .OrderByDescending(x => x.NGAY_DL)
-                .ThenByDescending(x => x.CREATED_DATE)
+                .ThenByDescending(x => x.CreatedAt)
                 .Take(maxResults)
                 .ToListAsync();
         }
@@ -74,7 +74,7 @@ namespace TinhKhoanApp.Api.Repositories
             return await _context.LN01s
                 .Where(x => x.TAI_KHOAN == accountNumber)
                 .OrderByDescending(x => x.NGAY_DL)
-                .ThenByDescending(x => x.CREATED_DATE)
+                .ThenByDescending(x => x.CreatedAt)
                 .Take(maxResults)
                 .ToListAsync();
         }
@@ -139,7 +139,7 @@ namespace TinhKhoanApp.Api.Repositories
             return await _context.LN01s
                 .Where(x => x.NHOM_NO == debtGroup)
                 .OrderByDescending(x => x.NGAY_DL)
-                .ThenByDescending(x => x.CREATED_DATE)
+                .ThenByDescending(x => x.CreatedAt)
                 .Take(maxResults)
                 .ToListAsync();
         }
@@ -150,7 +150,7 @@ namespace TinhKhoanApp.Api.Repositories
             return await _context.LN01s
                 .Where(x => x.NGAY_DL != null && x.NGAY_DL.Value.Date >= fromDate.Date && x.NGAY_DL.Value.Date <= toDate.Date)
                 .OrderByDescending(x => x.NGAY_DL)
-                .ThenByDescending(x => x.CREATED_DATE)
+                .ThenByDescending(x => x.CreatedAt)
                 .Take(maxResults)
                 .ToListAsync();
         }

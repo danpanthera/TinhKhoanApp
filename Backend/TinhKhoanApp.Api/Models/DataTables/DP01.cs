@@ -253,6 +253,10 @@ namespace TinhKhoanApp.Api.Models.DataTables
         public decimal? TYGIA { get; set; }
 
         // System Audit Fields
+        [Column("FILE_NAME")]
+        [StringLength(500)]
+        public string? FILE_NAME { get; set; }
+
         [Column("DataSource")]
         [StringLength(500)]
         public string? DataSource { get; set; }
@@ -273,5 +277,12 @@ namespace TinhKhoanApp.Api.Models.DataTables
         [Column("UpdatedBy")]
         [StringLength(100)]
         public string? UpdatedBy { get; set; }
+
+        // Temporal Table Columns
+        [Column("SysStartTime", TypeName = "datetime2")]
+        public DateTime SysStartTime { get; set; }
+
+        [Column("SysEndTime", TypeName = "datetime2")]
+        public DateTime SysEndTime { get; set; }
     }
 }

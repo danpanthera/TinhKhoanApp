@@ -18,10 +18,10 @@ public class RR01
     public int Id { get; set; }
 
     /// <summary>
-    /// Ngày dữ liệu - Lấy từ filename (format: yyyymmdd)
+    /// Ngày dữ liệu - Lấy từ filename (format: yyyymmdd -> dd/mm/yyyy)
     /// </summary>
     [Required]
-    [Column(TypeName = "date")]
+    [Column(Order = 1, TypeName = "datetime2")]
     public DateTime NGAY_DL { get; set; }
 
     // === 25 BUSINESS COLUMNS FROM CSV ===
@@ -29,151 +29,151 @@ public class RR01
     /// <summary>
     /// CN_LOAI_I - Chi nhánh loại I
     /// </summary>
-    [Column(TypeName = "nvarchar(200)")]
+    [Column(Order = 2, TypeName = "nvarchar(200)")]
     public string? CN_LOAI_I { get; set; }
 
     /// <summary>
     /// BRCD - Branch Code
     /// </summary>
-    [Column(TypeName = "nvarchar(200)")]
+    [Column(Order = 3, TypeName = "nvarchar(200)")]
     public string? BRCD { get; set; }
 
     /// <summary>
     /// MA_KH - Mã khách hàng
     /// </summary>
-    [Column(TypeName = "nvarchar(200)")]
+    [Column(Order = 4, TypeName = "nvarchar(200)")]
     public string? MA_KH { get; set; }
 
     /// <summary>
     /// TEN_KH - Tên khách hàng
     /// </summary>
-    [Column(TypeName = "nvarchar(200)")]
+    [Column(Order = 5, TypeName = "nvarchar(200)")]
     public string? TEN_KH { get; set; }
 
     /// <summary>
     /// SO_LDS - Số LDS
     /// </summary>
-    [Column(TypeName = "nvarchar(200)")]
+    [Column(Order = 6, TypeName = "nvarchar(200)")]
     public string? SO_LDS { get; set; }
 
     /// <summary>
     /// CCY - Currency
     /// </summary>
-    [Column(TypeName = "nvarchar(200)")]
+    [Column(Order = 7, TypeName = "nvarchar(200)")]
     public string? CCY { get; set; }
 
     /// <summary>
     /// SO_LAV - Số LAV
     /// </summary>
-    [Column(TypeName = "nvarchar(200)")]
+    [Column(Order = 8, TypeName = "nvarchar(200)")]
     public string? SO_LAV { get; set; }
 
     /// <summary>
     /// LOAI_KH - Loại khách hàng
     /// </summary>
-    [Column(TypeName = "nvarchar(200)")]
+    [Column(Order = 9, TypeName = "nvarchar(200)")]
     public string? LOAI_KH { get; set; }
 
     /// <summary>
     /// NGAY_GIAI_NGAN - Ngày giải ngân
     /// </summary>
-    [Column(TypeName = "date")]
+    [Column(Order = 10, TypeName = "datetime2")]
     public DateTime? NGAY_GIAI_NGAN { get; set; }
 
     /// <summary>
     /// NGAY_DEN_HAN - Ngày đến hạn
     /// </summary>
-    [Column(TypeName = "date")]
+    [Column(Order = 11, TypeName = "datetime2")]
     public DateTime? NGAY_DEN_HAN { get; set; }
 
     /// <summary>
     /// VAMC_FLG - VAMC Flag
     /// </summary>
-    [Column(TypeName = "nvarchar(200)")]
+    [Column(Order = 12, TypeName = "nvarchar(200)")]
     public string? VAMC_FLG { get; set; }
 
     /// <summary>
     /// NGAY_XLRR - Ngày xử lý rủi ro
     /// </summary>
-    [Column(TypeName = "date")]
+    [Column(Order = 13, TypeName = "datetime2")]
     public DateTime? NGAY_XLRR { get; set; }
 
     /// <summary>
     /// DUNO_GOC_BAN_DAU - Dư nợ gốc ban đầu
     /// </summary>
-    [Column(TypeName = "decimal(18,2)")]
+    [Column(Order = 14, TypeName = "decimal(18,2)")]
     public decimal? DUNO_GOC_BAN_DAU { get; set; }
 
     /// <summary>
     /// DUNO_LAI_TICHLUY_BD - Dư nợ lãi tích lũy ban đầu
     /// </summary>
-    [Column(TypeName = "decimal(18,2)")]
+    [Column(Order = 15, TypeName = "decimal(18,2)")]
     public decimal? DUNO_LAI_TICHLUY_BD { get; set; }
 
     /// <summary>
     /// DOC_DAUKY_DA_THU_HT - Đòi đầu kỳ đã thu hết
     /// </summary>
-    [Column(TypeName = "decimal(18,2)")]
+    [Column(Order = 16, TypeName = "decimal(18,2)")]
     public decimal? DOC_DAUKY_DA_THU_HT { get; set; }
 
     /// <summary>
     /// DUNO_GOC_HIENTAI - Dư nợ gốc hiện tại
     /// </summary>
-    [Column(TypeName = "decimal(18,2)")]
+    [Column(Order = 17, TypeName = "decimal(18,2)")]
     public decimal? DUNO_GOC_HIENTAI { get; set; }
 
     /// <summary>
     /// DUNO_LAI_HIENTAI - Dư nợ lãi hiện tại
     /// </summary>
-    [Column(TypeName = "decimal(18,2)")]
+    [Column(Order = 18, TypeName = "decimal(18,2)")]
     public decimal? DUNO_LAI_HIENTAI { get; set; }
 
     /// <summary>
     /// DUNO_NGAN_HAN - Dư nợ ngắn hạn
     /// </summary>
-    [Column(TypeName = "decimal(18,2)")]
+    [Column(Order = 19, TypeName = "decimal(18,2)")]
     public decimal? DUNO_NGAN_HAN { get; set; }
 
     /// <summary>
     /// DUNO_TRUNG_HAN - Dư nợ trung hạn
     /// </summary>
-    [Column(TypeName = "decimal(18,2)")]
+    [Column(Order = 20, TypeName = "decimal(18,2)")]
     public decimal? DUNO_TRUNG_HAN { get; set; }
 
     /// <summary>
     /// DUNO_DAI_HAN - Dư nợ dài hạn
     /// </summary>
-    [Column(TypeName = "decimal(18,2)")]
+    [Column(Order = 21, TypeName = "decimal(18,2)")]
     public decimal? DUNO_DAI_HAN { get; set; }
 
     /// <summary>
     /// THU_GOC - Thu gốc
     /// </summary>
-    [Column(TypeName = "decimal(18,2)")]
+    [Column(Order = 22, TypeName = "decimal(18,2)")]
     public decimal? THU_GOC { get; set; }
 
     /// <summary>
     /// THU_LAI - Thu lãi
     /// </summary>
-    [Column(TypeName = "decimal(18,2)")]
+    [Column(Order = 23, TypeName = "decimal(18,2)")]
     public decimal? THU_LAI { get; set; }
 
     /// <summary>
     /// BDS - Bất động sản
     /// </summary>
-    [Column(TypeName = "decimal(18,2)")]
+    [Column(Order = 24, TypeName = "decimal(18,2)")]
     public decimal? BDS { get; set; }
 
     /// <summary>
     /// DS - Động sản
     /// </summary>
-    [Column(TypeName = "decimal(18,2)")]
+    [Column(Order = 25, TypeName = "decimal(18,2)")]
     public decimal? DS { get; set; }
 
     /// <summary>
     /// TSK - Tài sản khác
     /// </summary>
-    [Column(TypeName = "decimal(18,2)")]
+    [Column(Order = 26, TypeName = "decimal(18,2)")]
     public decimal? TSK { get; set; }
 
     // === SYSTEM COLUMNS ===

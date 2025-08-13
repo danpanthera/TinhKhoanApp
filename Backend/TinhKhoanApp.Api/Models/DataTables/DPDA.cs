@@ -71,11 +71,22 @@ namespace TinhKhoanApp.Api.Models.DataTables
         [StringLength(200)]
         public string LOAI_PHAT_HANH { get; set; } = "";
 
-        // System Columns for compatibility
+        // System Columns (Order 15-17)
         [Column("CREATED_DATE", Order = 15)]
         public DateTime CREATED_DATE { get; set; } = DateTime.Now;
 
         [Column("UPDATED_DATE", Order = 16)]
         public DateTime UPDATED_DATE { get; set; } = DateTime.Now;
+
+        [Column("FILE_NAME", Order = 17)]
+        [StringLength(255)]
+        public string FILE_NAME { get; set; } = "";
+
+        // Temporal Columns - GENERATED ALWAYS (Order 18-19)
+        [Column("SysStartTime", Order = 18)]
+        public DateTime SysStartTime { get; set; }
+
+        [Column("SysEndTime", Order = 19)]
+        public DateTime SysEndTime { get; set; }
     }
 }
