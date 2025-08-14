@@ -1,6 +1,11 @@
 #!/bin/bash
 
 # Improved Frontend Startup Script - fixed to use port 3000
+
+# UTF-8 Configuration
+export LANG=vi_VN.UTF-8
+export LC_ALL=vi_VN.UTF-8
+
 LOG_FILE="frontend.log"
 PORT=3000
 MAX_RETRIES=3
