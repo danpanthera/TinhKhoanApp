@@ -56,7 +56,7 @@ namespace TinhKhoanApp.Api.Services.Startup
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("🔄 LN03 Index Initializer stopped.");
+            _logger.LogInformation("✅ LN03 Index Initializer completed successfully.");
             return Task.CompletedTask;
         }
     }

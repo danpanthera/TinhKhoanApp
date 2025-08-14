@@ -60,10 +60,10 @@ namespace TinhKhoanApp.Api.Services.Startup
             }
         }
 
-        public async Task StopAsync(CancellationToken cancellationToken)
+        public Task StopAsync(CancellationToken cancellationToken)
         {
-            _logger.LogInformation("🔄 GL41 Index Initializer stopped.");
-            await Task.CompletedTask;
+            _logger.LogInformation("✅ GL41 Index Initializer completed successfully.");
+            return Task.CompletedTask;
         }
     }
 }

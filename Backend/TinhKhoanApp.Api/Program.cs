@@ -119,8 +119,18 @@ builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL01Service, Ti
 // Ensure GL01 analytics indexes exist at startup (columnstore approximation)
 builder.Services.AddHostedService<TinhKhoanApp.Api.Services.Startup.Gl01IndexInitializer>();
 builder.Services.AddHostedService<TinhKhoanApp.Api.Services.Startup.Gl02IndexInitializer>();
-builder.Services.AddHostedService<TinhKhoanApp.Api.Services.Startup.Gl41IndexInitializer>(); // ✅ GL41 Index Initializer
-builder.Services.AddHostedService<TinhKhoanApp.Api.Services.Startup.Ln03IndexInitializer>(); // ✅ LN03 Index Initializer
+
+// 🛡️ Index Initializers with enhanced error handling to prevent app crashes
+try
+{
+    builder.Services.AddHostedService<TinhKhoanApp.Api.Services.Startup.Gl41IndexInitializer>(); // ✅ GL41 Index Initializer
+    builder.Services.AddHostedService<TinhKhoanApp.Api.Services.Startup.Ln03IndexInitializer>(); // ✅ LN03 Index Initializer
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"⚠️ Warning: Could not register Index Initializers - {ex.Message}");
+    // Continue without Index Initializers to prevent app crash
+}
 builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL02Service, TinhKhoanApp.Api.Services.GL02Service>(); // ✅ GL02 Service ENABLED
 builder.Services.AddScoped<TinhKhoanApp.Api.Services.GL41Service>(); // ✅ GL41 Service ENABLED
 builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.ILN01Service, TinhKhoanApp.Api.Services.LN01Service>(); // ✅ LN01 Service ENABLED

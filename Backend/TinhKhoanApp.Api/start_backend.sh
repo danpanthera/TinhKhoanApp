@@ -1,6 +1,10 @@
 #!/bin/bash
 # Improved Backend Script - NO HANGING
 
+# UTF-8 Configuration
+export LANG=vi_VN.UTF-8
+export LC_ALL=vi_VN.UTF-8
+
 LOG_FILE="backend.log"
 PORT=5055
 
