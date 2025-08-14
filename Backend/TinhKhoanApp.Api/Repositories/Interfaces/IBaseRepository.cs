@@ -2,7 +2,6 @@ using TinhKhoanApp.Api.Models.Common;
 using TinhKhoanApp.Api.Models.Dtos;
 using TinhKhoanApp.Api.Models.Entities;
 using TinhKhoanApp.Api.Models.DataTables;
-using TinhKhoanApp.Api.Models.Common;
 
 namespace TinhKhoanApp.Api.Repositories.Interfaces
 {
