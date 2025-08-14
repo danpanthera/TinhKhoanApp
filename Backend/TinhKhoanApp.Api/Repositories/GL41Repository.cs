@@ -1,50 +1,51 @@
 using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models.DataTables;
+using TinhKhoanApp.Api.Models.Entities;
 
 namespace TinhKhoanApp.Api.Repositories
 {
     /// <summary>
-    /// GL41 Repository - triển khai IGL41Repository
+    /// GL41 Repository - Modern Entity implementation (Partitioned Columnstore)
     /// </summary>
-    public class GL41Repository : Repository<GL41>, IGL41Repository
+    public class GL41Repository : Repository<GL41Entity>, IGL41Repository
     {
         public GL41Repository(ApplicationDbContext context) : base(context)
         {
         }
 
         /// <summary>
-        /// Lấy dữ liệu GL41 gần đây nhất, sắp xếp theo CREATED_DATE
+        /// Lấy dữ liệu GL41 gần đây nhất, sắp xếp theo CreatedAt
         /// </summary>
-        public new async Task<IEnumerable<GL41>> GetRecentAsync(int count = 10)
+        public new async Task<IEnumerable<GL41Entity>> GetRecentAsync(int count = 10)
         {
             return await _dbSet
-                .OrderByDescending(gl41 => gl41.CREATED_DATE)
+                .OrderByDescending(gl41 => gl41.CreatedAt)
                 .Take(count)
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<GL41>> GetByDateAsync(DateTime date)
+        public async Task<IEnumerable<GL41Entity>> GetByDateAsync(DateTime date)
         {
             return await _dbSet
                 .Where(gl41 => gl41.NGAY_DL.Date == date.Date)
+                .OrderByDescending(gl41 => gl41.CreatedAt)
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<GL41>> GetByUnitCodeAsync(string unitCode, int maxResults = 100)
+        public async Task<IEnumerable<GL41Entity>> GetByUnitCodeAsync(string unitCode, int maxResults = 100)
         {
             return await _dbSet
                 .Where(gl41 => gl41.MA_CN == unitCode)
-                .OrderByDescending(gl41 => gl41.CREATED_DATE)
+                .OrderByDescending(gl41 => gl41.CreatedAt)
                 .Take(maxResults)
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<GL41>> GetByAccountCodeAsync(string accountCode, int maxResults = 100)
+        public async Task<IEnumerable<GL41Entity>> GetByAccountCodeAsync(string accountCode, int maxResults = 100)
         {
             return await _dbSet
                 .Where(gl41 => gl41.MA_TK == accountCode)
-                .OrderByDescending(gl41 => gl41.CREATED_DATE)
+                .OrderByDescending(gl41 => gl41.CreatedAt)
                 .Take(maxResults)
                 .ToListAsync();
         }
@@ -100,9 +101,9 @@ namespace TinhKhoanApp.Api.Repositories
         }
 
         /// <summary>
-        /// Cập nhật nhiều GL41
+        /// Cập nhật nhiều GL41Entity
         /// </summary>
-        public void UpdateRange(IEnumerable<GL41> entities)
+        public void UpdateRange(IEnumerable<GL41Entity> entities)
         {
             _dbSet.UpdateRange(entities);
         }

@@ -54,7 +54,7 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<DataTables.LN03> LN03 { get; set; }
         public DbSet<DataTables.GL01> GL01 { get; set; }
         public DbSet<DataTables.GL02> GL02 { get; set; }
-        public DbSet<DataTables.GL41> GL41 { get; set; }
+        public DbSet<GL41Entity> GL41 { get; set; } // ✅ Modern Entity - Partitioned Columnstore (NO temporal)
         public DbSet<DataTables.DPDA> DPDA { get; set; }
         // ✅ Use Modern Entity for EI01 to ensure CSV-first consistency across layers
         public DbSet<EI01Entity> EI01 { get; set; }
@@ -66,7 +66,7 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<DataTables.LN03> LN03s { get; set; }
         public DbSet<DataTables.GL01> GL01s { get; set; }
         public DbSet<DataTables.GL02> GL02s { get; set; }
-        public DbSet<DataTables.GL41> GL41s { get; set; }
+        public DbSet<GL41Entity> GL41s { get; set; } // ✅ Modern Entity compatibility
         public DbSet<DataTables.DPDA> DPDAs { get; set; }
         // Removed plural DbSet for DataTables.EI01 to avoid table mapping conflicts
         // public DbSet<DataTables.RR01> RR01s { get; set; } // Temporary disabled - needs entity/DTO alignment
@@ -374,7 +374,10 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
             // === DECIMAL PRECISION CONFIGURATION FOR DATA TABLES ===
             // Fix specific decimal property precision warnings for the 12 data tables
 
-            // DP01 decimal properties + Temporal Table - ✅ MODERN ENTITY
+            // 🚫 DP01Entity Legacy Configuration - DISABLED to avoid conflict with DataTables.DP01
+            // The temporal configuration conflicts with DataTables.DP01 that uses SysStartTime/SysEndTime
+            // while DP01Entity uses ValidFrom/ValidTo
+            /*
             modelBuilder.Entity<DP01Entity>(entity =>
             {
                 // Decimal precision for AMOUNT/BALANCE columns
@@ -400,6 +403,7 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
                     .HasDatabaseName("NCCI_DP01_Analytics")
                     .IsUnique(false);
             });
+            */
 
             // EI01 Temporal Table configuration - ✅ MODERN ENTITY
             modelBuilder.Entity<EI01Entity>(entity =>
@@ -438,9 +442,10 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
                 entity.Property(e => e.CRAMOUNT).HasPrecision(18, 2);
             });
 
-            // GL41 decimal properties - Updated for new 13-column structure
-            modelBuilder.Entity<DataTables.GL41>(entity =>
+            // GL41 Partitioned Columnstore - Modern Entity (13 business columns)
+            modelBuilder.Entity<GL41Entity>(entity =>
             {
+                // Decimal precision for AMOUNT/BALANCE columns
                 entity.Property(e => e.DN_DAUKY).HasPrecision(18, 2);
                 entity.Property(e => e.DC_DAUKY).HasPrecision(18, 2);
                 entity.Property(e => e.SBT_NO).HasPrecision(18, 2);
@@ -449,6 +454,11 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
                 entity.Property(e => e.ST_GHICO).HasPrecision(18, 2);
                 entity.Property(e => e.DN_CUOIKY).HasPrecision(18, 2);
                 entity.Property(e => e.DC_CUOIKY).HasPrecision(18, 2);
+
+                // Partitioned Columnstore Index for analytics (NO temporal)
+                entity.HasIndex(e => new { e.NGAY_DL, e.MA_CN, e.MA_TK })
+                    .HasDatabaseName("NCCI_GL41_Analytics")
+                    .IsUnique(false);
             });
 
             // 🚀 === TEMPORAL TABLES + COLUMNSTORE INDEXES CONFIGURATION ===
@@ -570,8 +580,8 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         /// </summary>
         private void ConfigureMainTableWithOriginalColumns(ModelBuilder modelBuilder)
         {
-            // Cấu hình bảng DP01 với cấu trúc temporal table + columnstore - ✅ MODERN ENTITY
-            ConfigureDataTableWithTemporal<DP01Entity>(modelBuilder, "DP01");
+            // 🚫 DP01Entity Legacy Configuration - DISABLED to avoid conflict with DataTables.DP01
+            // ConfigureDataTableWithTemporal<DP01Entity>(modelBuilder, "DP01");
         }
 
         /// <summary>
@@ -591,8 +601,8 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
             // � Cấu hình bảng GL02 - Giao dịch sổ cái (Partitioned Columnstore - NOT Temporal)
             ConfigureDataTableBasic<DataTables.GL02>(modelBuilder, "GL02");
 
-            // �📊 Cấu hình bảng GL41 - Số dư sổ cái
-            ConfigureDataTableWithTemporal<DataTables.GL41>(modelBuilder, "GL41");
+            // 📊 Cấu hình bảng GL41 - Số dư sổ cái (Partitioned Columnstore - NOT Temporal) - MODERN ENTITY
+            // GL41Entity already configured above with Partitioned Columnstore index
 
             // 🏷️ Cấu hình bảng LN01 - Cho vay
             ConfigureDataTableWithTemporal<DataTables.LN01>(modelBuilder, "LN01");
@@ -646,11 +656,11 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         {
             modelBuilder.Entity<T>(entity =>
             {
-                // Cấu hình bảng thành Temporal Table với explicit ValidFrom/ValidTo columns
+                // Cấu hình bảng thành Temporal Table với explicit SysStartTime/SysEndTime columns
                 entity.ToTable(tableName, tb => tb.IsTemporal(ttb =>
                 {
-                    ttb.HasPeriodStart("ValidFrom").HasColumnName("ValidFrom");
-                    ttb.HasPeriodEnd("ValidTo").HasColumnName("ValidTo");
+                    ttb.HasPeriodStart("SysStartTime").HasColumnName("SysStartTime");
+                    ttb.HasPeriodEnd("SysEndTime").HasColumnName("SysEndTime");
                     ttb.UseHistoryTable($"{tableName}_History");
                 }));
 

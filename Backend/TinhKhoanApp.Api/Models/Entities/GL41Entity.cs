@@ -1,141 +1,90 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using Microsoft.EntityFrameworkCore;
 
 namespace TinhKhoanApp.Api.Models.Entities
 {
     /// <summary>
-    /// GL41 Entity - General Ledger Balance Table
-    /// 13 business columns + system columns
-    /// CSV Source: GL41 balance data
+    /// GL41 Entity - Bảng cân đối kế toán (13 business columns)
+    /// Represents GL41 table structure with Partitioned Columnstore (NO temporal)
+    /// CSV Source: 7800_gl41_yyyymmdd.csv (DuLieuMau folder)
+    /// Structure: NGAY_DL -> Business Columns (1-13) -> System Columns
     /// </summary>
     [Table("GL41")]
-    [Index(nameof(MA_CN), Name = "IX_GL41_MA_CN")]
-    [Index(nameof(LOAI_TIEN), Name = "IX_GL41_LOAI_TIEN")]
-    [Index(nameof(MA_TK), Name = "IX_GL41_MA_TK")]
-    [Index(nameof(LOAI_BT), Name = "IX_GL41_LOAI_BT")]
-    public class GL41Entity : ITemporalEntity
+    public class GL41Entity : IEntity
     {
-        // === SYSTEM COLUMNS (từ ITemporalEntity) ===
+        // === NGAY_DL - FIRST COLUMN ===
+        // NGAY_DL - Ngày dữ liệu (lấy từ filename dd/mm/yyyy) - ALWAYS FIRST
+        [Required]
+        public DateTime NGAY_DL { get; set; }
+
+        // === BUSINESS COLUMNS (13 columns from CSV - EXACT ORDER) ===
+
+        // Column 1: MA_CN - Mã chi nhánh
+        [StringLength(200)]
+        public string? MA_CN { get; set; }
+
+        // Column 2: LOAI_TIEN - Loại tiền
+        [StringLength(200)]
+        public string? LOAI_TIEN { get; set; }
+
+        // Column 3: MA_TK - Mã tài khoản
+        [StringLength(200)]
+        public string? MA_TK { get; set; }
+
+        // Column 4: TEN_TK - Tên tài khoản
+        [StringLength(200)]
+        public string? TEN_TK { get; set; }
+
+        // Column 5: LOAI_BT - Loại bút toán
+        [StringLength(200)]
+        public string? LOAI_BT { get; set; }
+
+        // Column 6: DN_DAUKY - Dư nợ đầu kỳ
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? DN_DAUKY { get; set; }
+
+        // Column 7: DC_DAUKY - Dư có đầu kỳ
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? DC_DAUKY { get; set; }
+
+        // Column 8: SBT_NO - Số bút toán nợ
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? SBT_NO { get; set; }
+
+        // Column 9: ST_GHINO - Số tiền ghi nợ
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? ST_GHINO { get; set; }
+
+        // Column 10: SBT_CO - Số bút toán có
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? SBT_CO { get; set; }
+
+        // Column 11: ST_GHICO - Số tiền ghi có
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? ST_GHICO { get; set; }
+
+        // Column 12: DN_CUOIKY - Dư nợ cuối kỳ
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? DN_CUOIKY { get; set; }
+
+        // Column 13: DC_CUOIKY - Dư có cuối kỳ
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? DC_CUOIKY { get; set; }
+
+        // === SYSTEM COLUMNS (cuối cùng) ===
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Id { get; set; }
 
         [Required]
-        [Column(TypeName = "datetime2(3)")]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; }
 
-        [Column(TypeName = "datetime2(3)")]
+        [Required]
         public DateTime UpdatedAt { get; set; }
 
-        // Temporal table support
-        [Column(TypeName = "datetime2(3)")]
-        public DateTime SysStartTime { get; set; }
+        [StringLength(255)]
+        public string? FILE_NAME { get; set; }
 
-        [Column(TypeName = "datetime2(3)")]
-        public DateTime SysEndTime { get; set; }
-
-        // === BUSINESS COLUMNS (13 columns theo CSV structure) ===
-
-        /// <summary>
-        /// Mã chi nhánh - BUSINESS KEY
-        /// </summary>
-        [Required]
-        [Column(TypeName = "nvarchar(10)")]
-        public string MA_CN { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Loại tiền - BUSINESS KEY
-        /// </summary>
-        [Required]
-        [Column(TypeName = "nvarchar(10)")]
-        public string LOAI_TIEN { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Mã tài khoản - BUSINESS KEY
-        /// </summary>
-        [Required]
-        [Column(TypeName = "nvarchar(50)")]
-        public string MA_TK { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Tên tài khoản
-        /// </summary>
-        [Column(TypeName = "nvarchar(255)")]
-        public string? TEN_TK { get; set; }
-
-        /// <summary>
-        /// Loại bút toán - BUSINESS KEY
-        /// </summary>
-        [Column(TypeName = "nvarchar(50)")]
-        public string? LOAI_BT { get; set; }
-
-        /// <summary>
-        /// Dư nợ đầu kỳ
-        /// </summary>
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal DN_DAUKY { get; set; }
-
-        /// <summary>
-        /// Dư có đầu kỳ
-        /// </summary>
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal DC_DAUKY { get; set; }
-
-        /// <summary>
-        /// Số bút toán nợ trong kỳ
-        /// </summary>
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal SBT_NO { get; set; }
-
-        /// <summary>
-        /// Số tiền ghi nợ trong kỳ
-        /// </summary>
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal ST_GHINO { get; set; }
-
-        /// <summary>
-        /// Số bút toán có trong kỳ
-        /// </summary>
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal SBT_CO { get; set; }
-
-        /// <summary>
-        /// Số tiền ghi có trong kỳ
-        /// </summary>
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal ST_GHICO { get; set; }
-
-        /// <summary>
-        /// Dư nợ cuối kỳ - BUSINESS VALUE
-        /// </summary>
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal DN_CUOIKY { get; set; }
-
-        /// <summary>
-        /// Dư có cuối kỳ - BUSINESS VALUE
-        /// </summary>
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal DC_CUOIKY { get; set; }
-
-        // === METADATA COLUMNS ===
-
-        /// <summary>
-        /// Tên file import
-        /// </summary>
-        [Column(TypeName = "nvarchar(500)")]
-        public string? FileName { get; set; }
-
-        /// <summary>
-        /// Import batch ID để tracking
-        /// </summary>
-        [Column(TypeName = "uniqueidentifier")]
-        public Guid? ImportId { get; set; }
-
-        /// <summary>
-        /// Additional metadata về import process
-        /// </summary>
-        [Column(TypeName = "nvarchar(1000)")]
-        public string? ImportMetadata { get; set; }
+        // NO TEMPORAL COLUMNS - GL41 is Partitioned Columnstore only
     }
 }

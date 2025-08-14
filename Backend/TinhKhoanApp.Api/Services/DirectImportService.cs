@@ -11,6 +11,7 @@ using TinhKhoanApp.Api.Models;
 using TinhKhoanApp.Api.Models.Configuration;
 using TinhKhoanApp.Api.Models.Entities;
 using TinhKhoanApp.Api.Models.DataTables;
+using TinhKhoanApp.Api.Models.CsvModels;
 using TinhKhoanApp.Api.Services.Interfaces;
 
 namespace TinhKhoanApp.Api.Services
@@ -1116,9 +1117,9 @@ namespace TinhKhoanApp.Api.Services
         /// <summary>
         /// Parse GL41 CSV: NGAY_DL từ filename; 13 business columns; temporal table
         /// </summary>
-        private async Task<List<GL41>> ParseGL41CsvAsync(IFormFile file)
+        private async Task<List<GL41Entity>> ParseGL41CsvAsync(IFormFile file)
         {
-            var records = new List<GL41>();
+            var records = new List<GL41Entity>();
 
             using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
             using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -1136,16 +1137,30 @@ namespace TinhKhoanApp.Api.Services
             var ngayDlString = ExtractNgayDLFromFileName(file.FileName);
             var ngayDlDateTime = DateTime.ParseExact(ngayDlString, "yyyy-MM-dd", CultureInfo.InvariantCulture);
 
-            await foreach (var record in csv.GetRecordsAsync<GL41>())
+            await foreach (var record in csv.GetRecordsAsync<GL41CsvRow>())
             {
-                // Set NGAY_DL từ filename (không có trong CSV)
-                record.NGAY_DL = ngayDlDateTime;
+                var entity = new GL41Entity
+                {
+                    NGAY_DL = ngayDlDateTime,
+                    MA_CN = record.MA_CN,
+                    LOAI_TIEN = record.LOAI_TIEN,
+                    MA_TK = record.MA_TK,
+                    TEN_TK = record.TEN_TK,
+                    LOAI_BT = record.LOAI_BT,
+                    DN_DAUKY = ParseDecimalSafely(record.DN_DAUKY),
+                    DC_DAUKY = ParseDecimalSafely(record.DC_DAUKY),
+                    SBT_NO = ParseDecimalSafely(record.SBT_NO),
+                    ST_GHINO = ParseDecimalSafely(record.ST_GHINO),
+                    SBT_CO = ParseDecimalSafely(record.SBT_CO),
+                    ST_GHICO = ParseDecimalSafely(record.ST_GHICO),
+                    DN_CUOIKY = ParseDecimalSafely(record.DN_CUOIKY),
+                    DC_CUOIKY = ParseDecimalSafely(record.DC_CUOIKY),
+                    FILE_NAME = file.FileName,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
 
-                // Normalize audit fields
-                record.CREATED_DATE = DateTime.UtcNow;
-                record.FILE_NAME = file.FileName;
-
-                records.Add(record);
+                records.Add(entity);
             }
 
             return records;

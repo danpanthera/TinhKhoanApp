@@ -11,21 +11,16 @@ namespace TinhKhoanApp.Api.Models.DataTables
     [Table("DPDA")]
     public class DPDA
     {
-        // Primary Key
-        [Key]
-        [Column("Id", Order = 0)]
-        public int Id { get; set; }
-
-        // System Column - NGAY_DL first (Order 1) - extracted from filename
-        [Column("NGAY_DL", Order = 1)]
+        // NGAY_DL Column - FIRST as per requirement - extracted from filename
+        [Column("NGAY_DL")]
         public DateTime NGAY_DL { get; set; }
 
         // 13 Business Columns - Exact CSV order with proper data types
-        [Column("MA_CHI_NHANH", Order = 2)]
+        [Column("MA_CHI_NHANH")]
         [StringLength(200)]
         public string MA_CHI_NHANH { get; set; } = "";
 
-        [Column("MA_KHACH_HANG", Order = 3)]
+        [Column("MA_KHACH_HANG")]
         [StringLength(200)]
         public string MA_KHACH_HANG { get; set; } = "";
 
@@ -78,15 +73,16 @@ namespace TinhKhoanApp.Api.Models.DataTables
         [Column("UPDATED_DATE", Order = 16)]
         public DateTime UPDATED_DATE { get; set; } = DateTime.Now;
 
-        [Column("FILE_NAME", Order = 17)]
+        // System Columns
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int Id { get; set; }
+
+        [Column("FILE_NAME")]
         [StringLength(255)]
         public string FILE_NAME { get; set; } = "";
 
-        // Temporal Columns - GENERATED ALWAYS (Order 18-19)
-        [Column("SysStartTime", Order = 18)]
-        public DateTime SysStartTime { get; set; }
-
-        [Column("SysEndTime", Order = 19)]
-        public DateTime SysEndTime { get; set; }
+        // Note: SysStartTime and SysEndTime are shadow properties managed by EF Core temporal tables
+        // They should not be declared as regular properties to avoid conflicts
     }
 }

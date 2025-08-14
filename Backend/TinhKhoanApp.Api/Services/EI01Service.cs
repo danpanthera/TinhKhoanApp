@@ -457,9 +457,8 @@ namespace TinhKhoanApp.Api.Services
 
                 // System columns
                 CreatedAt = entity.CreatedAt,
-                UpdatedAt = entity.UpdatedAt,
-                SysStartTime = entity.SysStartTime,
-                SysEndTime = entity.SysEndTime
+                UpdatedAt = entity.UpdatedAt
+                // Note: SysStartTime and SysEndTime are temporal shadow properties managed by EF Core
             };
         }
 

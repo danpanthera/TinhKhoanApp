@@ -754,7 +754,7 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 
 # 6. Bảng GL41 (Quan trọng)
 + Thống nhất cấu trúc dữ liệu Bảng GL41 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
-+ Theo chuẩn Temporal Table + Columnstore Indexes
++ Theo chuẩn Partitioned Columnstore
 + Business Column tham chiếu theo file csv *gl41* (thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/)
 + Số lượng Cột busiess column = 13
 + Cho phép các trường, cột có giá trị NULL

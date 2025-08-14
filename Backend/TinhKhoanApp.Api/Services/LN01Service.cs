@@ -434,9 +434,8 @@ namespace TinhKhoanApp.Api.Services
                 OFFICER_IPCAS = entity.OFFICER_IPCAS,
                 FILE_NAME = entity.FILE_NAME,
                 CreatedAt = entity.CreatedAt,
-                UpdatedAt = entity.UpdatedAt,
-                SysStartTime = entity.SysStartTime,
-                SysEndTime = entity.SysEndTime
+                UpdatedAt = entity.UpdatedAt
+                // Note: SysStartTime and SysEndTime are temporal shadow properties managed by EF Core
             };
         }
 

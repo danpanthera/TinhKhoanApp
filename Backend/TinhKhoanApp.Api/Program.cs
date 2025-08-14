@@ -122,7 +122,7 @@ builder.Services.AddHostedService<TinhKhoanApp.Api.Services.Startup.Gl02IndexIni
 builder.Services.AddHostedService<TinhKhoanApp.Api.Services.Startup.Gl41IndexInitializer>(); // ✅ GL41 Index Initializer
 builder.Services.AddHostedService<TinhKhoanApp.Api.Services.Startup.Ln03IndexInitializer>(); // ✅ LN03 Index Initializer
 builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL02Service, TinhKhoanApp.Api.Services.GL02Service>(); // ✅ GL02 Service ENABLED
-builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.IGL41Service, TinhKhoanApp.Api.Services.GL41Service>(); // ✅ GL41 Service ENABLED
+builder.Services.AddScoped<TinhKhoanApp.Api.Services.GL41Service>(); // ✅ GL41 Service ENABLED
 builder.Services.AddScoped<TinhKhoanApp.Api.Services.Interfaces.ILN01Service, TinhKhoanApp.Api.Services.LN01Service>(); // ✅ LN01 Service ENABLED
 // 🆕 LN03 wiring (CSV-first DataTables model)
 builder.Services.AddScoped<TinhKhoanApp.Api.Repositories.ILN03DataRepository, TinhKhoanApp.Api.Repositories.LN03Repository>();

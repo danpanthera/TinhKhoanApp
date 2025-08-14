@@ -196,17 +196,6 @@ public class RR01
     [Column(TypeName = "datetime2(3)")]
     public DateTime? UPDATED_DATE { get; set; }
 
-    // === TEMPORAL COLUMNS ===
-
-    /// <summary>
-    /// Temporal table start time
-    /// </summary>
-    [Column(TypeName = "datetime2(3)")]
-    public DateTime SysStartTime { get; set; }
-
-    /// <summary>
-    /// Temporal table end time
-    /// </summary>
-    [Column(TypeName = "datetime2(3)")]
-    public DateTime SysEndTime { get; set; }
+    // Note: SysStartTime and SysEndTime are shadow properties managed by EF Core temporal tables
+    // They should not be declared as regular properties to avoid conflicts
 }

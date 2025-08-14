@@ -15,6 +15,9 @@ namespace TinhKhoanApp.Api.Models.DTOs.GL02
     {
         public long Id { get; set; }
         public DateTime NGAY_DL { get; set; }
+
+        // 17 Business Columns theo CSV structure
+        public DateTime? TRDATE { get; set; }
         public string? TRBRCD { get; set; }
         public string? USERID { get; set; }
         public string? JOURSEQ { get; set; }
@@ -31,14 +34,23 @@ namespace TinhKhoanApp.Api.Models.DTOs.GL02
         public decimal? DRAMOUNT { get; set; }
         public decimal? CRAMOUNT { get; set; }
         public DateTime? CRTDTM { get; set; }
-        public DateTime CREATED_DATE { get; set; }
-        public DateTime? UPDATED_DATE { get; set; }
-        public string? FILE_NAME { get; set; }
+
+        // System columns
+        public DateTime CreatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
+
+        // Import metadata
+        public string? FileName { get; set; }
+        public Guid? ImportId { get; set; }
+        public string? ImportMetadata { get; set; }
     }
 
     public class GL02CreateDto
     {
         public DateTime NGAY_DL { get; set; }
+
+        // 17 Business Columns theo CSV structure
+        public DateTime? TRDATE { get; set; }
         public string? TRBRCD { get; set; }
         public string? USERID { get; set; }
         public string? JOURSEQ { get; set; }
