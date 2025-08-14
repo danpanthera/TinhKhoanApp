@@ -848,11 +848,11 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Cho phép các trường, cột có giá trị NULL
 + Cột NGAY_DL trong bảng LN01 lấy từ filename của file csv *ln03*, sau đó định dạng datetime2 (dd/mm/yyyy)
 + Define (Model, Database, EF, BulkCopy) đảm bảo thống nhất:
-- Các cột có chứa "DATE", "NGAY", "DSBSDT", "DSBSMATDT", "APPRDT", "APPRMATDT"  đưa về format datetime2 (dd/mm/yyyy); 
+- *Các cột có chứa *DATE*, *NGAY*, "DSBSDT", "DSBSMATDT", "APPRDT", *APPRMATDT*  đưa về format datetime2 (dd/mm/yyyy); 
 - Các cột có chứa "AMT", "THUNO" "AMOUNT", "BALANCE", "CONLAINGOAIBANG", "SOTIEN", "DUNONOIBANG", "CUOIKY", "GHINO", "GHICO", "ST", và cột cuối cùng (cột T) ở dạng number #,###.00 (vd: 250,000.89) (có thể phải tạo proper conversion; có thể phải kiểm tra ở ParseGenericCSVAsync; ImportGenericCSVAsync; BulkInsertGenericAsync)
 + Các cột còn lại dạng String/Nvachar: Tất cả có độ dài 200 ký tự, riêng cột "REMARK" (nếu có) dài 1000 ký tự
 + Cấu trúc bảng dữ liệu: NGAY_DL -> Business Column -> Temporal/system column (nếu có)
-+ Chỉ cho phép import các file có filename chứa ký tự "ln03"
++ Chỉ cho phép import các file có filename chứa ký tự *ln03*
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
 + Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này.
