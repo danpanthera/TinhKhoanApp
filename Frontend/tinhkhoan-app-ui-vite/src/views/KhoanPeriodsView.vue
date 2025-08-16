@@ -9,46 +9,48 @@
     >
       <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 16px">
         <button
-          @click="toggleSelectionMode"
           class="action-button"
           :style="{
             backgroundColor: isSelectionMode ? '#e74c3c' : '#2ecc71',
             borderColor: isSelectionMode ? '#c0392b' : '#27ae60',
           }"
+          @click="toggleSelectionMode"
         >
           {{ isSelectionMode ? '✕ Thoát chế độ chọn' : '☑ Chọn Kỳ khoán' }}
         </button>
 
         <button
           v-if="isSelectionMode && selectedPeriods.size > 0"
-          @click="selectAllVisible"
           class="action-button"
           style="background-color: #3498db; border-color: #2980b9"
+          @click="selectAllVisible"
         >
           Chọn tất cả hiển thị
         </button>
 
         <button
           v-if="isSelectionMode && selectedPeriods.size > 0"
-          @click="clearSelection"
           class="action-button"
           style="background-color: #95a5a6; border-color: #7f8c8d"
+          @click="clearSelection"
         >
           Bỏ chọn tất cả
         </button>
 
         <button
           v-if="selectedPeriods.size > 0"
-          @click="deleteSelectedPeriods"
           class="action-button"
           style="background-color: #e74c3c; border-color: #c0392b"
+          @click="deleteSelectedPeriods"
         >
           🗑 Xóa đã chọn ({{ selectedPeriods.size }})
         </button>
       </div>
 
       <div v-if="selectedPeriods.size > 0" class="selected-periods-display">
-        <h4 style="margin: 0 0 12px 0; color: #2c3e50">Kỳ khoán đã chọn ({{ selectedPeriods.size }}):</h4>
+        <h4 style="margin: 0 0 12px 0; color: #2c3e50">
+          Kỳ khoán đã chọn ({{ selectedPeriods.size }}):
+        </h4>
         <div style="display: flex; flex-wrap: wrap; gap: 8px">
           <span
             v-for="periodId in Array.from(selectedPeriods)"
@@ -61,7 +63,7 @@
       </div>
     </div>
 
-    <button @click="loadKhoanPeriods" :disabled="khoanPeriodStore.isLoading" class="action-button">
+    <button :disabled="khoanPeriodStore.isLoading" class="action-button" @click="loadKhoanPeriods">
       {{ khoanPeriodStore.isLoading ? 'Đang tải...' : 'Tải lại Danh sách Kỳ Khoán' }}
     </button>
 
@@ -81,9 +83,9 @@
             v-if="isSelectionMode"
             type="checkbox"
             :checked="selectedPeriods.has(getId(period))"
-            @change="togglePeriodSelection(getId(period))"
             style="transform: scale(1.2)"
-          />
+            @change="togglePeriodSelection(getId(period))"
+          >
           <div class="item-info" style="flex-grow: 1">
             <strong>{{ period.Name }}</strong>
             <span class="item-details">
@@ -102,54 +104,97 @@
               </div>
             </span>
           </div>
-          <div class="actions" v-if="!isSelectionMode">
-            <button @click="startEditKhoanPeriod(period)" class="edit-btn">Sửa</button>
-            <button @click="confirmDeleteKhoanPeriod(period.Id)" class="delete-btn">Xóa</button>
+          <div v-if="!isSelectionMode" class="actions">
+            <button class="edit-btn" @click="startEditKhoanPeriod(period)">
+              Sửa
+            </button>
+            <button class="delete-btn" @click="confirmDeleteKhoanPeriod(period.Id)">
+              Xóa
+            </button>
           </div>
         </div>
       </li>
     </ul>
-    <p v-else-if="!khoanPeriodStore.isLoading && !displayError">Không có Kỳ Khoán nào để hiển thị.</p>
+    <p v-else-if="!khoanPeriodStore.isLoading && !displayError">
+      Không có Kỳ Khoán nào để hiển thị.
+    </p>
     <p v-if="khoanPeriodStore.isLoading && khoanPeriodStore.khoanPeriods.length === 0">
       Đang tải danh sách Kỳ Khoán...
     </p>
 
-    <hr class="separator" />
+    <hr class="separator">
 
     <div class="form-container">
       <h2>{{ isEditing ? 'Cập nhật Kỳ Khoán' : 'Thêm Kỳ Khoán Mới' }}</h2>
       <form @submit.prevent="handleSubmitKhoanPeriod">
         <div class="form-group">
           <label for="periodName">Tên Kỳ Khoán:</label>
-          <input type="text" id="periodName" v-model.trim="currentKhoanPeriod.name" required />
+          <input
+            id="periodName"
+            v-model.trim="currentKhoanPeriod.name"
+            type="text"
+            required
+          >
         </div>
         <div class="form-group">
           <label for="periodType">Loại Kỳ:</label>
           <select id="periodType" v-model="currentKhoanPeriod.type" required>
-            <option :value="null" disabled>-- Chọn Loại Kỳ --</option>
-            <option value="MONTHLY">Tháng</option>
-            <option value="QUARTERLY">Quý</option>
-            <option value="ANNUAL">Năm</option>
+            <option :value="null" disabled>
+              -- Chọn Loại Kỳ --
+            </option>
+            <option value="MONTHLY">
+              Tháng
+            </option>
+            <option value="QUARTERLY">
+              Quý
+            </option>
+            <option value="ANNUAL">
+              Năm
+            </option>
           </select>
         </div>
         <div class="form-group">
           <label for="startDate">Ngày Bắt đầu:</label>
-          <input type="date" id="startDate" v-model="currentKhoanPeriod.startDate" required />
+          <input
+            id="startDate"
+            v-model="currentKhoanPeriod.startDate"
+            type="date"
+            required
+          >
         </div>
         <div class="form-group">
           <label for="endDate">Ngày Kết thúc:</label>
-          <input type="date" id="endDate" v-model="currentKhoanPeriod.endDate" required />
+          <input
+            id="endDate"
+            v-model="currentKhoanPeriod.endDate"
+            type="date"
+            required
+          >
         </div>
         <div class="form-group">
           <label for="periodStatus">Trạng thái:</label>
           <select id="periodStatus" v-model="currentKhoanPeriod.status" required>
-            <option :value="null" disabled>-- Chọn Trạng thái --</option>
-            <option value="DRAFT">Nháp (Draft)</option>
-            <option value="OPEN">Mở (Open)</option>
-            <option value="PROCESSING">Đang xử lý (Processing)</option>
-            <option value="PENDINGAPPROVAL">Chờ duyệt (Pending Approval)</option>
-            <option value="CLOSED">Đã đóng (Closed)</option>
-            <option value="ARCHIVED">Lưu trữ (Archived)</option>
+            <option :value="null" disabled>
+              -- Chọn Trạng thái --
+            </option>
+            <option value="DRAFT">
+              Nháp (Draft)
+            </option>
+            <option value="OPEN">
+              Mở (Open)
+            </option>
+            <option value="PROCESSING">
+              Đang xử lý (Processing)
+            </option>
+            <option value="PENDINGAPPROVAL">
+              Chờ duyệt (Pending Approval)
+            </option>
+            <option value="CLOSED">
+              Đã đóng (Closed)
+            </option>
+            <option value="ARCHIVED">
+              Lưu trữ (Archived)
+            </option>
           </select>
         </div>
         <div class="form-actions">
@@ -164,7 +209,14 @@
                   : 'Thêm Kỳ Khoán'
             }}
           </button>
-          <button type="button" @click="cancelEdit" v-if="isEditing" class="cancel-btn action-button">Hủy</button>
+          <button
+            v-if="isEditing"
+            type="button"
+            class="cancel-btn action-button"
+            @click="cancelEdit"
+          >
+            Hủy
+          </button>
         </div>
       </form>
     </div>
@@ -259,7 +311,7 @@ const handleSubmitKhoanPeriod = async () => {
   formError.value = null
   khoanPeriodStore.error = null
 
-  let dataToSubmit = { ...currentKhoanPeriod.value }
+  const dataToSubmit = { ...currentKhoanPeriod.value }
 
   // Client-side Validation
   if (!dataToSubmit.name?.trim()) {
@@ -282,10 +334,12 @@ const handleSubmitKhoanPeriod = async () => {
     formError.value = 'Ngày Kết thúc phải sau Ngày Bắt đầu.'
     return
   }
-  if (!dataToSubmit.Status) {
+  if (!dataToSubmit.status) {
     formError.value = 'Vui lòng chọn Trạng thái.'
     return
-  } // Convert camelCase to PascalCase cho backend API
+  }
+
+  // Convert camelCase to PascalCase cho backend API
   dataToSubmit.Name = dataToSubmit.name
 
   // Convert enum strings to integers for backend
