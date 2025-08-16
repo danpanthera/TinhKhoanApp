@@ -116,5 +116,24 @@ namespace TinhKhoanApp.Api.Controllers
             // Không match filename pattern nào
             return null;
         }
+
+        /// <summary>
+        /// Lấy số lượng records trong các bảng dữ liệu
+        /// </summary>
+        [HttpGet("table-counts")]
+        public async Task<IActionResult> GetTableCounts()
+        {
+            try
+            {
+                var counts = await _directImportService.GetTableRecordCountsAsync();
+                _logger.LogInformation("✅ Retrieved table record counts successfully");
+                return Ok(ApiResponse<Dictionary<string, long>>.Ok(counts, "Table record counts retrieved successfully"));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error retrieving table record counts");
+                return StatusCode(500, ApiResponse<object>.Error("Error retrieving table record counts", "TABLE_COUNTS_ERROR"));
+            }
+        }
     }
 }

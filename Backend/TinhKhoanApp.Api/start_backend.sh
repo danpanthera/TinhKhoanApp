@@ -37,18 +37,18 @@ if [[ ! -f "bin/Debug/net8.0/TinhKhoanApp.Api.dll" ]]; then
 fi
 
 log "▶️ Starting API..."
-if command -v timeout >/dev/null 2>&1; then
-    timeout 30s dotnet run --urls=http://localhost:$PORT >> "$LOG_FILE" 2>&1 &
-else
-    # macOS doesn't have GNU timeout by default; run without timeout
-    dotnet run --urls=http://localhost:$PORT >> "$LOG_FILE" 2>&1 &
-fi
+# Start API in background without timeout to keep it persistent
+nohup dotnet run --urls=http://localhost:$PORT >> "$LOG_FILE" 2>&1 &
 API_PID=$!
+echo $API_PID > "$LOG_FILE.pid"
 
 # Quick health check loop
 for i in {1..15}; do
     if curl -s --max-time 2 http://localhost:$PORT/health > /dev/null 2>&1; then
-        log "✅ API started successfully!"
+        log "✅ API started successfully! PID: $API_PID"
+        log "🔗 Backend is running at: http://localhost:$PORT"
+        log "📝 Logs: $LOG_FILE"
+        log "🆔 PID file: $LOG_FILE.pid"
         exit 0
     fi
 
@@ -62,4 +62,5 @@ done
 
 log "❌ API timeout"
 kill -9 $API_PID 2>/dev/null
+rm -f "$LOG_FILE.pid"
 exit 1

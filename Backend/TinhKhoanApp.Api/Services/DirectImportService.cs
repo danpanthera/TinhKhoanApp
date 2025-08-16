@@ -733,6 +733,36 @@ namespace TinhKhoanApp.Api.Services
             };
         }
 
+        /// <summary>
+        /// Lấy số lượng records trong tất cả các bảng dữ liệu
+        /// </summary>
+        public async Task<Dictionary<string, long>> GetTableRecordCountsAsync()
+        {
+            try
+            {
+                var counts = new Dictionary<string, long>();
+
+                // Count records in each data table
+                counts["DP01"] = await _context.DP01.CountAsync();
+                counts["DPDA"] = await _context.DPDA.CountAsync();
+                counts["EI01"] = await _context.EI01.CountAsync();
+                counts["GL01"] = await _context.GL01.CountAsync();
+                counts["GL02"] = await _context.GL02.CountAsync();
+                counts["GL41"] = await _context.GL41.CountAsync();
+                counts["LN01"] = await _context.LN01.CountAsync();
+                counts["LN03"] = await _context.LN03.CountAsync();
+                counts["RR01"] = await _context.RR01.CountAsync();
+
+                _logger.LogInformation("✅ Successfully retrieved record counts for all tables");
+                return counts;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ Error retrieving table record counts");
+                throw;
+            }
+        }
+
         #endregion
 
         #region Private CSV Parsing Methods
