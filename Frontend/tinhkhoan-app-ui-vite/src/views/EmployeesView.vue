@@ -432,6 +432,7 @@ const isEditing = ref(false)
 const emailInputRef = ref(null)
 const phoneNumberInputRef = ref(null)
 const originalPasswordHash = ref('')
+const isRoleDropdownOpen = ref(false)
 
 // Biến cho tính năng chọn nhiều nhân viên
 const selectedEmployeeIds = ref([])

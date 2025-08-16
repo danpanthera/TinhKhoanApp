@@ -12,9 +12,9 @@ export default defineConfig({
     assetsInlineLimit: 0,
     rollupOptions: {
       output: {
-        manualChunks: undefined
-      }
-    }
+        manualChunks: undefined,
+      },
+    },
   },
   plugins: [
     vue(),
@@ -23,7 +23,7 @@ export default defineConfig({
       workbox: {
         clientsClaim: true,
         skipWaiting: true,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,json,vue,txt,woff2}']
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,json,vue,txt,woff2}'],
       },
       includeAssets: ['favicon.svg', 'Logo-Agribank-2.png', 'agribank-logo.svg'],
       manifest: {
@@ -42,31 +42,32 @@ export default defineConfig({
           {
             src: 'pwa-64x64.png',
             sizes: '64x64',
-            type: 'image/png'
+            type: 'image/png',
           },
           {
             src: 'pwa-192x192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
           },
           {
             src: 'pwa-512x512.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any'
+            purpose: 'any',
           },
           {
             src: 'maskable-icon-512x512.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'maskable'
-          }
-        ]
+            purpose: 'maskable',
+          },
+        ],
       },
       devOptions: {
-        enabled: true
-      }
-    })
+        enabled: false, // Disable PWA in development to avoid service worker errors
+        type: 'module',
+      },
+    }),
   ],
   resolve: {
     alias: {
@@ -79,25 +80,21 @@ export default defineConfig({
     strictPort: false, // Tự động chọn cổng khác nếu 3000 bị chiếm
     open: true,
     hmr: {
-      // Cấu hình WebSocket cho Hot Module Replacement
+      // Fix WebSocket connection issues
+      port: 3001, // Use different port for HMR
       host: 'localhost',
-      protocol: 'ws',
-      port: 3000,
-      timeout: 30000,
-      overlay: true,
-      clientPort: 3000
     },
     watch: {
       usePolling: true,
-      interval: 1000 // Kiểm tra thay đổi mỗi giây
+      interval: 1000, // Kiểm tra thay đổi mỗi giây
     },
     proxy: {
       '/api': {
         target: 'http://localhost:5055',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path // Không rewrite để giữ nguyên path đã có /api
-      }
-    }
+        rewrite: (path) => path, // Không rewrite để giữ nguyên path đã có /api
+      },
+    },
   },
 })
