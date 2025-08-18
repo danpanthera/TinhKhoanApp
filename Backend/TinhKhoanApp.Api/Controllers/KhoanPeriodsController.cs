@@ -82,19 +82,48 @@ namespace TinhKhoanApp.Api.Controllers
         {
             try
             {
+                _logger.LogInformation($"🔍 CreateKhoanPeriod called with: {System.Text.Json.JsonSerializer.Serialize(period)}");
+
+                // Check model state validation
+                if (!ModelState.IsValid)
+                {
+                    var errors = ModelState
+                        .Where(x => x.Value.Errors.Count > 0)
+                        .Select(x => new { Field = x.Key, Errors = x.Value.Errors.Select(e => e.ErrorMessage) })
+                        .ToList();
+
+                    var errorMessage = $"Dữ liệu Kỳ Khoán nhận được không đúng định dạng: {string.Join(", ", errors.SelectMany(e => e.Errors))}";
+                    _logger.LogError($"❌ Model validation failed: {System.Text.Json.JsonSerializer.Serialize(errors)}");
+                    return BadRequest(ApiResponse<object>.Error(errorMessage, "VALIDATION_ERROR"));
+                }
+
+                // Validate input data
+                if (period == null)
+                {
+                    return BadRequest(ApiResponse<object>.Error("Dữ liệu Kỳ Khoán không được để trống", "NULL_DATA"));
+                }
+
+                if (string.IsNullOrWhiteSpace(period.Name))
+                {
+                    return BadRequest(ApiResponse<object>.Error("Tên Kỳ Khoán không được để trống", "EMPTY_NAME"));
+                }
+
                 // Validate dates
                 if (period.StartDate >= period.EndDate)
                 {
-                    return BadRequest(ApiResponse<object>.Error("Start date must be before end date", "INVALID_DATE_RANGE"));
+                    return BadRequest(ApiResponse<object>.Error("Ngày bắt đầu phải nhỏ hơn ngày kết thúc", "INVALID_DATE_RANGE"));
                 }
 
-                // Set default status
-                period.Status = PeriodStatus.DRAFT;
+                // Set default status if not provided
+                if (period.Status == 0)
+                {
+                    period.Status = PeriodStatus.DRAFT;
+                }
 
                 _context.KhoanPeriods.Add(period);
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation($"✅ Created khoan period: {period.Name}");
+                _logger.LogInformation($"✅ Created khoan period: {period.Name} (ID: {period.Id})");
                 return CreatedAtAction(nameof(GetKhoanPeriod), new { id = period.Id }, ApiResponse<KhoanPeriod>.Ok(period, "Khoan period created successfully"));
             }
             catch (Exception ex)

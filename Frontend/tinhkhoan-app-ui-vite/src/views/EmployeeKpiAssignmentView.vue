@@ -1,11 +1,15 @@
 <template>
   <div class="employee-kpi-assignment">
-    <h1 class="text-primary">🎯 Giao khoán KPI cho Cán bộ</h1>
+    <h1 class="text-primary">
+      🎯 Giao khoán KPI cho Cán bộ
+    </h1>
 
-    <div v-if="errorMessage" class="alert-agribank alert-danger"><strong>❌ Lỗi:</strong> {{ errorMessage }}</div>
+    <div v-if="errorMessage" class="alert-agribank alert-danger">
+      <strong>❌ Lỗi:</strong> {{ errorMessage }}
+    </div>
 
     <div v-if="loading" class="loading-agribank">
-      <div class="spinner-agribank"></div>
+      <div class="spinner-agribank" />
       <p>Đang tải dữ liệu...</p>
     </div>
 
@@ -13,13 +17,17 @@
       <!-- Period Selection -->
       <div class="card-agribank">
         <div class="card-header">
-          <h3 class="card-title">📅 Chọn kỳ khoán</h3>
+          <h3 class="card-title">
+            📅 Chọn kỳ khoán
+          </h3>
         </div>
         <div class="card-body">
           <div class="form-group">
             <label class="form-label">Kỳ khoán:</label>
             <select v-model="selectedPeriodId" class="form-control">
-              <option value="">-- Chọn kỳ khoán --</option>
+              <option value="">
+                -- Chọn kỳ khoán --
+              </option>
               <option v-for="period in khoanPeriods" :key="getId(period)" :value="getId(period)">
                 {{ getName(period) }} ({{ formatDate(safeGet(period, 'StartDate')) }} -
                 {{ formatDate(safeGet(period, 'EndDate')) }})
@@ -30,17 +38,21 @@
       </div>
 
       <!-- Branch and Department Filter for Employees -->
-      <div class="card-agribank" v-if="selectedPeriodId">
+      <div v-if="selectedPeriodId" class="card-agribank">
         <div class="card-header">
-          <h3 class="card-title">🔍 Lọc cán bộ theo đơn vị</h3>
+          <h3 class="card-title">
+            🔍 Lọc cán bộ theo đơn vị
+          </h3>
         </div>
         <div class="card-body">
           <div class="row">
             <div class="col">
               <div class="form-group">
                 <label class="form-label">🏢 Chi nhánh:</label>
-                <select v-model="selectedBranchId" @change="onBranchChange" class="form-control">
-                  <option value="">-- Tất cả chi nhánh --</option>
+                <select v-model="selectedBranchId" class="form-control" @change="onBranchChange">
+                  <option value="">
+                    -- Tất cả chi nhánh --
+                  </option>
                   <option v-for="branch in branchOptions" :key="branch.Id" :value="branch.Id">
                     🏢 {{ branch.Name }} ({{ branch.Code }})
                   </option>
@@ -48,11 +60,13 @@
               </div>
             </div>
 
-            <div class="col" v-if="selectedBranchId">
+            <div v-if="selectedBranchId" class="col">
               <div class="form-group">
                 <label class="form-label">🏬 Phòng ban:</label>
-                <select v-model="selectedDepartmentId" @change="onDepartmentChange" class="form-control">
-                  <option value="">-- Tất cả phòng ban --</option>
+                <select v-model="selectedDepartmentId" class="form-control" @change="onDepartmentChange">
+                  <option value="">
+                    -- Tất cả phòng ban --
+                  </option>
                   <option v-for="dept in departmentOptions" :key="dept.Id" :value="dept.Id">
                     🏬 {{ dept.Name }} ({{ dept.Code }})
                   </option>
@@ -61,7 +75,7 @@
             </div>
           </div>
 
-          <div class="alert-agribank alert-info" v-if="selectedBranchId || selectedDepartmentId">
+          <div v-if="selectedBranchId || selectedDepartmentId" class="alert-agribank alert-info">
             <strong>📊 Đang lọc:</strong>
             <span v-if="selectedBranchId">Chi nhánh "{{ getBranchName() }}"</span>
             <span v-if="selectedDepartmentId"> → Phòng ban "{{ getDepartmentName() }}"</span>
@@ -73,12 +87,12 @@
       <!-- Employee Table (moved up to show right after filtering) -->
       <div v-if="selectedBranchId || selectedDepartmentId" class="card-agribank">
         <div class="card-header">
-          <h3 class="card-title">👥 Danh sách Cán bộ ({{ filteredEmployeesCount }} người)</h3>
+          <h3 class="card-title">
+            👥 Danh sách Cán bộ ({{ filteredEmployeesCount }} người)
+          </h3>
           <div>
             <span class="badge-agribank badge-primary">🏢 {{ getBranchName() || 'Tất cả chi nhánh' }}</span>
-            <span class="badge-agribank badge-secondary" v-if="selectedDepartmentId" style="margin-left: 8px"
-              >🏬 {{ getDepartmentName() }}</span
-            >
+            <span v-if="selectedDepartmentId" class="badge-agribank badge-secondary" style="margin-left: 8px">🏬 {{ getDepartmentName() }}</span>
           </div>
         </div>
 
@@ -89,30 +103,40 @@
                 <th style="width: 50px; text-align: center">
                   <input
                     type="checkbox"
-                    @change="toggleAllEmployees"
                     :checked="areAllEmployeesSelected"
                     :indeterminate="areSomeEmployeesSelected"
-                  />
+                    @change="toggleAllEmployees"
+                  >
                 </th>
-                <th style="width: 30%">👤 Họ và tên</th>
-                <th style="width: 20%">🏷️ Vai trò</th>
-                <th style="width: 25%">🏢 Đơn vị</th>
-                <th style="width: 20%">💼 Chức vụ</th>
+                <th style="width: 30%">
+                  👤 Họ và tên
+                </th>
+                <th style="width: 20%">
+                  🏷️ Vai trò
+                </th>
+                <th style="width: 25%">
+                  🏢 Đơn vị
+                </th>
+                <th style="width: 20%">
+                  💼 Chức vụ
+                </th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="employee in filteredEmployees" :key="employee.Id">
                 <td style="text-align: center">
                   <input
+                    v-model="selectedEmployeeIds"
                     type="checkbox"
                     :value="employee.Id"
-                    v-model="selectedEmployeeIds"
                     @change="validateEmployeeRoles"
-                  />
+                  >
                 </td>
                 <td>
                   <div>
-                    <div class="font-weight-semibold">{{ safeGet(employee, 'FullName') }}</div>
+                    <div class="font-weight-semibold">
+                      {{ safeGet(employee, 'FullName') }}
+                    </div>
                     <small class="text-muted">{{ safeGet(employee, 'EmployeeCode') }}</small>
                   </div>
                 </td>
@@ -130,14 +154,14 @@
           </table>
         </div>
 
-        <div class="card-body" v-if="selectedEmployeeIds.length > 0" style="padding-top: 0">
+        <div v-if="selectedEmployeeIds.length > 0" class="card-body" style="padding-top: 0">
           <div class="alert-agribank alert-success">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px">
               <strong>✅ Đã chọn {{ selectedEmployeeIds.length }} cán bộ</strong>
               <button
-                @click="clearSelectedEmployees"
                 class="btn-agribank btn-outline"
                 style="padding: 4px 8px; font-size: 0.75rem"
+                @click="clearSelectedEmployees"
               >
                 🗑️ Xóa tất cả
               </button>
@@ -151,8 +175,8 @@
               >
                 {{ getEmployeeShortName(empId) }}
                 <button
-                  @click="removeEmployee(empId)"
                   style="background: none; border: none; color: inherit; cursor: pointer; font-weight: bold"
+                  @click="removeEmployee(empId)"
                 >
                   ×
                 </button>
@@ -163,15 +187,19 @@
       </div>
 
       <!-- KPI Table Selection (appears after selecting employees) -->
-      <div class="card-agribank" v-if="selectedEmployeeIds.length > 0">
+      <div v-if="selectedEmployeeIds.length > 0" class="card-agribank">
         <div class="card-header">
-          <h3 class="card-title">📊 Chọn bảng KPI cho Cán bộ</h3>
+          <h3 class="card-title">
+            📊 Chọn bảng KPI cho Cán bộ
+          </h3>
         </div>
         <div class="card-body">
           <div class="form-group">
             <label class="form-label">📋 Bảng KPI:</label>
-            <select v-model="selectedTableId" @change="onTableChange" class="form-control">
-              <option value="">-- Chọn bảng KPI --</option>
+            <select v-model="selectedTableId" class="form-control" @change="onTableChange">
+              <option value="">
+                -- Chọn bảng KPI --
+              </option>
               <option v-for="table in staffKpiTables" :key="getId(table)" :value="getId(table)">
                 📊 {{ cleanTableDescription(safeGet(table, 'Description') || safeGet(table, 'TableName')) }} ({{
                   safeGet(table, 'IndicatorCount')
@@ -181,7 +209,7 @@
             </select>
           </div>
 
-          <div class="alert-agribank alert-info" v-if="selectedTableId && selectedKpiTable">
+          <div v-if="selectedTableId && selectedKpiTable" class="alert-agribank alert-info">
             <strong>📊 Đã chọn:</strong>
             "{{
               cleanTableDescription(safeGet(selectedKpiTable, 'Description') || safeGet(selectedKpiTable, 'TableName'))
@@ -193,7 +221,9 @@
       <!-- KPI Indicators Table -->
       <div v-if="selectedTableId && indicators.length > 0" class="card-agribank">
         <div class="card-header">
-          <h3 class="card-title">📊 {{ getKpiTableTitle() }}</h3>
+          <h3 class="card-title">
+            📊 {{ getKpiTableTitle() }}
+          </h3>
           <div>
             <span class="badge-agribank badge-info" style="margin-right: 8px">{{ indicators.length }} chỉ tiêu</span>
             <span class="badge-agribank badge-success">{{ selectedEmployeeIds.length }} cán bộ được chọn</span>
@@ -204,11 +234,21 @@
           <table class="table-agribank">
             <thead>
               <tr>
-                <th style="width: 40%">📊 Chỉ tiêu KPI</th>
-                <th style="width: 10%">⭐ Điểm</th>
-                <th style="width: 20%">🎯 Mục tiêu</th>
-                <th style="width: 15%">📏 Đơn vị</th>
-                <th style="width: 15%">⚡ Thao tác</th>
+                <th style="width: 40%">
+                  📊 Chỉ tiêu KPI
+                </th>
+                <th style="width: 10%">
+                  ⭐ Điểm
+                </th>
+                <th style="width: 20%">
+                  🎯 Mục tiêu
+                </th>
+                <th style="width: 15%">
+                  📏 Đơn vị
+                </th>
+                <th style="width: 15%">
+                  ⚡ Thao tác
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -226,13 +266,13 @@
                   <input
                     type="text"
                     :value="formatTargetValue(indicator, targetValues[indicator.Id])"
-                    @input="e => handleTargetInput(e, indicator.Id)"
-                    @blur="e => handleTargetBlur(e, indicator.Id)"
                     placeholder="Nhập mục tiêu"
                     class="form-control"
                     style="font-size: 0.85rem; padding: 8px 12px"
                     :class="{ error: targetErrors[indicator.Id] }"
-                  />
+                    @input="e => handleTargetInput(e, indicator.Id)"
+                    @blur="e => handleTargetBlur(e, indicator.Id)"
+                  >
                   <div
                     v-if="targetErrors[indicator.Id]"
                     class="text-danger"
@@ -247,33 +287,32 @@
                 <td>
                   <div style="display: flex; gap: 4px; justify-content: center">
                     <button
-                      @click="moveIndicatorUp(index)"
                       :disabled="index === 0"
                       class="btn-agribank btn-outline"
                       style="padding: 4px 8px; font-size: 0.75rem"
                       title="Di chuyển lên"
+                      @click="moveIndicatorUp(index)"
                     >
                       ↑
                     </button>
                     <button
-                      @click="moveIndicatorDown(index)"
                       :disabled="index === indicators.length - 1"
                       class="btn-agribank btn-outline"
                       style="padding: 4px 8px; font-size: 0.75rem"
                       title="Di chuyển xuống"
+                      @click="moveIndicatorDown(index)"
                     >
                       ↓
                     </button>
                     <button
-                      @click="editIndicator(indicator)"
                       class="btn-agribank btn-outline"
                       style="padding: 4px 8px; font-size: 0.75rem"
                       title="Chỉnh sửa"
+                      @click="editIndicator(indicator)"
                     >
                       ✏️
                     </button>
                     <button
-                      @click="clearIndicatorTarget(indicator.Id)"
                       class="btn-agribank btn-outline"
                       style="
                         padding: 4px 8px;
@@ -282,6 +321,7 @@
                         border-color: var(--danger-color);
                       "
                       title="Xóa mục tiêu"
+                      @click="clearIndicatorTarget(indicator.Id)"
                     >
                       🗑️
                     </button>
@@ -305,7 +345,7 @@
                 <td style="text-align: center">
                   <strong class="badge-agribank badge-success">{{ getTotalScore() }}</strong>
                 </td>
-                <td></td>
+                <td />
               </tr>
             </tbody>
           </table>
@@ -313,10 +353,10 @@
 
         <div class="card-body" style="text-align: center; padding-top: 0">
           <button
-            @click="assignKPI"
             :disabled="saving"
             class="btn-agribank btn-primary"
             style="font-size: 1rem; padding: 16px 32px"
+            @click="assignKPI"
           >
             <span>{{ saving ? '⏳' : '📋' }}</span>
             <span style="margin-left: 8px">{{ saving ? 'Đang giao khoán...' : 'Giao khoán KPI' }}</span>
@@ -364,7 +404,7 @@ const handleTargetInput = (event, indicatorId) => {
   const indicator = indicators.value.find(ind => ind.Id === indicatorId)
   const unit = getIndicatorUnit(indicator)
 
-  let inputValue = event.target.value
+  const inputValue = event.target.value
 
   // Remove all non-numeric characters except decimal point for initial processing
   let numericValue = inputValue.replace(/[^\d.,]/g, '')
@@ -447,7 +487,7 @@ const handleTargetBlur = (event, indicatorId) => {
   }
 
   // Parse the final value
-  let numericValue = inputValue.replace(/[^\d.,]/g, '').replace(',', '.')
+  const numericValue = inputValue.replace(/[^\d.,]/g, '').replace(',', '.')
   const numValue = parseFloat(numericValue)
 
   if (isNaN(numValue)) {
@@ -737,10 +777,10 @@ async function loadTableDetails() {
 
   try {
     console.log('🔄 Fetching KPI indicators from new API...')
-    const response = await api.get(`/KpiIndicators/table/${selectedTableId.value}`)
+    const response = await api.get(`/KpiIndicators/by-table/${selectedTableId.value}`)
 
     // Use helper function to log API response
-    logApiResponse(`/KpiIndicators/table/${selectedTableId.value}`, response, 'indicators')
+    logApiResponse(`/KpiIndicators/by-table/${selectedTableId.value}`, response, 'indicators')
 
     if (response.data && Array.isArray(response.data)) {
       // API trả về trực tiếp array indicators
@@ -757,7 +797,7 @@ async function loadTableDetails() {
         console.log('📋 Sample indicators:')
         indicators.value.slice(0, 3).forEach((ind, idx) => {
           console.log(
-            `   ${idx + 1}. ${ind.IndicatorName || ind.indicatorName} (${ind.MaxScore || ind.maxScore} points, ${ind.Unit || ind.unit || 'N/A'})`
+            `   ${idx + 1}. ${ind.IndicatorName || ind.indicatorName} (${ind.MaxScore || ind.maxScore} points, ${ind.Unit || ind.unit || 'N/A'})`,
           )
         })
       } else {
@@ -869,7 +909,7 @@ function autoSelectKpiTable() {
   console.log('🎯 Auto-selecting KPI table...')
   console.log(
     'Available KPI tables:',
-    kpiTables.value.map(t => ({ id: t.Id, name: t.tableName, category: t.category, type: t.tableType }))
+    kpiTables.value.map(t => ({ id: t.Id, name: t.tableName, category: t.category, type: t.tableType })),
   )
 
   // Get first selected employee to determine role
@@ -894,7 +934,7 @@ function autoSelectKpiTable() {
     t =>
       t.category === 'Dành cho Cán bộ' ||
       t.category?.toLowerCase().includes('cán bộ') ||
-      t.category?.toLowerCase().includes('employee')
+      t.category?.toLowerCase().includes('employee'),
   )
 
   console.log('� Employee KPI tables found:', employeeTables.length)
@@ -979,7 +1019,7 @@ function autoSelectKpiTable() {
     console.log('❌ No suitable KPI table found')
     console.log(
       'Available tables:',
-      kpiTables.value.map(t => ({ id: t.Id, name: t.tableName, category: t.category }))
+      kpiTables.value.map(t => ({ id: t.Id, name: t.tableName, category: t.category })),
     )
 
     // Show user message
@@ -1223,7 +1263,7 @@ watch(
       // autoSelectKpiTable()
     }
   },
-  { immediate: false }
+  { immediate: false },
 )
 
 // Watcher để auto-load KPI khi chọn period

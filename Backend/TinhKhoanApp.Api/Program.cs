@@ -71,6 +71,8 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new VietnamDateTimeConverter());
         options.JsonSerializerOptions.PropertyNamingPolicy = null;
         options.JsonSerializerOptions.WriteIndented = true;
+        // Ensure UTF-8 encoding for Vietnamese characters
+        options.JsonSerializerOptions.Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
     });
 
 // CORS Configuration

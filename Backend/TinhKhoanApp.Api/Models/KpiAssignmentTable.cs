@@ -31,7 +31,7 @@ namespace TinhKhoanApp.Api.Models
         PhophongKtnqCnl2 = 23,
         // Chi nhánh - sắp xếp theo mã 7800-7808
         HoiSo = 200,           // 7800
-        CnTamDuong = 201,      // 7801
+        CnBinhLu = 201,        // 7801 - Corrected from CnTamDuong
         CnPhongTho = 202,      // 7802
         CnSinHo = 203,         // 7803
         CnMuongTe = 204,       // 7804
@@ -68,6 +68,10 @@ namespace TinhKhoanApp.Api.Models
 
         // Navigation property - danh sách các chỉ tiêu trong bảng
         public virtual ICollection<KpiIndicator> Indicators { get; set; } = new List<KpiIndicator>();
+
+        // Computed property for indicator count
+        [NotMapped]
+        public int IndicatorCount => Indicators?.Count(i => i.IsActive) ?? 0;
     }
 
     // Model định nghĩa các chỉ tiêu KPI trong từng bảng

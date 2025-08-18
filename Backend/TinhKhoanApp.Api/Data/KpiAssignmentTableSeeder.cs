@@ -39,7 +39,7 @@ namespace TinhKhoanApp.Api.Data
             { KpiTableType.PhophongKtnqCnl2, "PhophongKtnqCnl2" },
             // Chi nhánh (9 chi nhánh) - sẽ có logic riêng
             { KpiTableType.HoiSo, "HoiSo" },
-            { KpiTableType.CnTamDuong, "CnBinhLu" },
+            { KpiTableType.CnBinhLu, "CnBinhLu" },
             { KpiTableType.CnPhongTho, "CnPhongTho" },
             { KpiTableType.CnSinHo, "CnSinHo" },
             { KpiTableType.CnMuongTe, "CnBumTo" },
@@ -78,7 +78,7 @@ namespace TinhKhoanApp.Api.Data
             { KpiTableType.PhophongKtnqCnl2, "Phó phòng Kế toán & Ngân quỹ CNL2" },
             // Chi nhánh (cập nhật tên mới)
             { KpiTableType.HoiSo, "Hội sở" },
-            { KpiTableType.CnTamDuong, "Chi nhánh Bình Lư" },
+            { KpiTableType.CnBinhLu, "Chi nhánh Bình Lư" },
             { KpiTableType.CnPhongTho, "Chi nhánh Phong Thổ" },
             { KpiTableType.CnSinHo, "Chi nhánh Sin Hồ" },
             { KpiTableType.CnMuongTe, "Chi nhánh Bum Tở" },

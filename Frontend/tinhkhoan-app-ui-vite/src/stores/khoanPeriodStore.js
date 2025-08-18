@@ -16,7 +16,7 @@ export const useKhoanPeriodStore = defineStore('khoanPeriod', {
     // Sắp xếp theo ngày bắt đầu giảm dần để kỳ mới nhất lên đầu
     sortedKhoanPeriods: state => {
       return [...state.khoanPeriods].sort(
-        (a, b) => new Date(b.StartDate || b.startDate) - new Date(a.StartDate || a.startDate)
+        (a, b) => new Date(b.StartDate || b.startDate) - new Date(a.StartDate || a.startDate),
       )
     },
     khoanPeriodCount: state => state.khoanPeriods.length,
@@ -138,17 +138,39 @@ export const useKhoanPeriodStore = defineStore('khoanPeriod', {
       this.isLoading = true
       this.error = null
       try {
+        console.log('🚀 Store - Creating KhoanPeriod with:', periodData)
         const response = await apiClient.post('/KhoanPeriods', periodData)
-        // Thay vì push, mình fetch lại để đảm bảo thứ tự và dữ liệu đầy đủ từ server
-        await this.fetchKhoanPeriods()
-        return response.data
+        console.log('🚀 Store - Backend response:', response)
+
+        // Check if response indicates success
+        if (response.data && (response.data.success !== false)) {
+          // Thay vì push, mình fetch lại để đảm bảo thứ tự và dữ liệu đầy đủ từ server
+          await this.fetchKhoanPeriods()
+          return { success: true, data: response.data, message: 'Tạo kỳ khoán thành công' }
+        } else {
+          // Backend returned data but with error flag
+          return {
+            success: false,
+            message: response.data?.message || response.data?.errors || 'Backend trả về lỗi không xác định',
+            errors: response.data?.errors,
+          }
+        }
       } catch (err) {
-        this.error =
-          'Không thể tạo Kỳ Khoán. Lỗi: ' +
+        console.error('🔥 Store - Error creating KhoanPeriod:', err)
+
+        const errorMessage = 'Không thể tạo Kỳ Khoán. Lỗi: ' +
           (err.response?.data?.message ||
             err.response?.data?.title ||
             (err.response?.data?.errors ? JSON.stringify(err.response.data.errors) : err.message))
-        throw err
+
+        this.error = errorMessage
+
+        return {
+          success: false,
+          message: errorMessage,
+          errors: err.response?.data?.errors,
+          originalError: err,
+        }
       } finally {
         this.isLoading = false
       }

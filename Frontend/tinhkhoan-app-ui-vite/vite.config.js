@@ -80,8 +80,8 @@ export default defineConfig({
     strictPort: false, // Tự động chọn cổng khác nếu 3000 bị chiếm
     open: true,
     hmr: {
-      // Fix WebSocket connection issues
-      port: 3001, // Use different port for HMR
+      // Fix WebSocket connection issues - let Vite auto-select port
+      port: undefined, // Auto-select available port
       host: 'localhost',
     },
     watch: {

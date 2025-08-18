@@ -1,9 +1,13 @@
 <template>
   <div class="unit-kpi-assignment">
-    <h1 class="text-primary">🏢 Giao khoán KPI Chi nhánh</h1>
+    <h1 class="text-primary">
+      🏢 Giao khoán KPI Chi nhánh
+    </h1>
 
     <!-- Thông báo lỗi -->
-    <div v-if="errorMessage" class="alert-agribank alert-danger"><strong>❌ Lỗi:</strong> {{ errorMessage }}</div>
+    <div v-if="errorMessage" class="alert-agribank alert-danger">
+      <strong>❌ Lỗi:</strong> {{ errorMessage }}
+    </div>
 
     <!-- Thông báo thành công -->
     <div v-if="successMessage" class="alert-agribank alert-success">
@@ -12,7 +16,7 @@
 
     <!-- Trạng thái loading -->
     <div v-if="loading" class="loading-agribank">
-      <div class="spinner-agribank"></div>
+      <div class="spinner-agribank" />
       <p>Đang tải dữ liệu...</p>
     </div>
 
@@ -21,13 +25,17 @@
       <!-- Period Selection -->
       <div class="card-agribank">
         <div class="card-header">
-          <h3 class="card-title">📅 Chọn kỳ khoán</h3>
+          <h3 class="card-title">
+            📅 Chọn kỳ khoán
+          </h3>
         </div>
         <div class="card-body">
           <div class="form-group">
             <label class="form-label">Kỳ khoán:</label>
-            <select v-model="selectedPeriodId" @change="onPeriodChange" class="form-control">
-              <option value="">-- Chọn kỳ khoán --</option>
+            <select v-model="selectedPeriodId" class="form-control" @change="onPeriodChange">
+              <option value="">
+                -- Chọn kỳ khoán --
+              </option>
               <option v-for="period in khoanPeriods" :key="period.Id || period.Id" :value="period.Id || period.Id">
                 {{ period.Name || period.Name }} ({{ formatDate(period.StartDate || period.startDate) }} -
                 {{ formatDate(period.EndDate || period.endDate) }})
@@ -38,21 +46,25 @@
       </div>
 
       <!-- Branch Selection -->
-      <div class="card-agribank" v-if="selectedPeriodId">
+      <div v-if="selectedPeriodId" class="card-agribank">
         <div class="card-header">
-          <h3 class="card-title">🔍 Lọc chi nhánh</h3>
+          <h3 class="card-title">
+            🔍 Lọc chi nhánh
+          </h3>
         </div>
         <div class="card-body">
           <div class="form-group">
             <label class="form-label">🏢 Chi nhánh:</label>
-            <select v-model="selectedBranchId" @change="onBranchChange" class="form-control">
-              <option value="">-- Chọn chi nhánh --</option>
+            <select v-model="selectedBranchId" class="form-control" @change="onBranchChange">
+              <option value="">
+                -- Chọn chi nhánh --
+              </option>
               <optgroup label="Chi nhánh CNL1">
                 <option v-for="unit in cnl1Units" :key="unit.Id" :value="unit.Id">
                   🏢 {{ unit.Name }} ({{ unit.Code }})
                 </option>
               </optgroup>
-              <optgroup label="Chi nhánh CNL2" v-if="cnl2Units.length > 0">
+              <optgroup v-if="cnl2Units.length > 0" label="Chi nhánh CNL2">
                 <option v-for="unit in cnl2Units" :key="unit.Id" :value="unit.Id">
                   🏢 {{ unit.Name }} ({{ unit.Code }}) - {{ getParentUnitCode(unit.ParentUnitId || unit.parentUnitId) }}
                 </option>
@@ -60,7 +72,7 @@
             </select>
           </div>
 
-          <div class="alert-agribank alert-info" v-if="selectedBranch">
+          <div v-if="selectedBranch" class="alert-agribank alert-info">
             <strong>📊 Đã chọn:</strong>
             Chi nhánh "{{ selectedBranch.Name }}" ({{ selectedBranch.Code }}) →
             <strong>{{ availableKpiIndicators.length }}</strong> chỉ tiêu KPI
@@ -71,11 +83,14 @@
       <!-- KPI Assignment Section -->
       <div v-if="selectedBranchId" class="card-agribank">
         <div class="card-header">
-          <h3 class="card-title">📊 Giao khoán KPI chi nhánh</h3>
+          <h3 class="card-title">
+            📊 Giao khoán KPI chi nhánh
+          </h3>
           <div v-if="availableKpiIndicators.length > 0">
-            <span class="badge-agribank badge-info" style="margin-right: 8px"
-              >{{ availableKpiIndicators.length }} chỉ tiêu</span
-            >
+            <span
+              class="badge-agribank badge-info"
+              style="margin-right: 8px"
+            >{{ availableKpiIndicators.length }} chỉ tiêu</span>
             <span class="badge-agribank badge-accent">{{ totalMaxScore }} điểm tối đa</span>
           </div>
         </div>
@@ -85,12 +100,11 @@
           <div v-if="availableKpiIndicators.length === 0" class="alert-agribank alert-info">
             <strong>ℹ️ Thông tin:</strong>
             <span v-if="loading">Đang tải danh sách chỉ tiêu KPI cho chi nhánh...</span>
-            <span v-else
-              >Chưa có chỉ tiêu KPI nào được tải. Vui lòng chọn chi nhánh để xem danh sách KPI.
+            <span v-else>Chưa có chỉ tiêu KPI nào được tải. Vui lòng chọn chi nhánh để xem danh sách KPI.
               <button
-                @click="onBranchChange"
                 class="btn-agribank btn-outline"
                 style="margin-left: 8px; padding: 4px 8px; font-size: 0.75rem"
+                @click="onBranchChange"
               >
                 🔄 Thử lại
               </button>
@@ -101,11 +115,21 @@
           <table v-if="availableKpiIndicators.length > 0" class="table-agribank">
             <thead>
               <tr>
-                <th style="width: 40%">📊 Chỉ tiêu KPI</th>
-                <th style="width: 10%">⭐ Điểm</th>
-                <th style="width: 20%">🎯 Mục tiêu</th>
-                <th style="width: 15%">📏 Đơn vị</th>
-                <th style="width: 15%">⚡ Thao tác</th>
+                <th style="width: 40%">
+                  📊 Chỉ tiêu KPI
+                </th>
+                <th style="width: 10%">
+                  ⭐ Điểm
+                </th>
+                <th style="width: 20%">
+                  🎯 Mục tiêu
+                </th>
+                <th style="width: 15%">
+                  📏 Đơn vị
+                </th>
+                <th style="width: 15%">
+                  ⚡ Thao tác
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -129,7 +153,7 @@
                     :class="{ error: kpiTargetErrors[indicator.Id] }"
                     @input="e => handleKpiTargetInput(e, indicator.Id)"
                     @blur="e => handleKpiTargetBlur(e, indicator.Id)"
-                  />
+                  >
                   <div
                     v-if="kpiTargetErrors[indicator.Id]"
                     class="text-danger"
@@ -144,33 +168,32 @@
                 <td>
                   <div style="display: flex; gap: 4px; justify-content: center">
                     <button
-                      @click="moveIndicatorUp(index)"
                       :disabled="index === 0"
                       class="btn-agribank btn-outline"
                       style="padding: 4px 8px; font-size: 0.75rem"
                       title="Di chuyển lên"
+                      @click="moveIndicatorUp(index)"
                     >
                       ↑
                     </button>
                     <button
-                      @click="moveIndicatorDown(index)"
                       :disabled="index === availableKpiIndicators.length - 1"
                       class="btn-agribank btn-outline"
                       style="padding: 4px 8px; font-size: 0.75rem"
                       title="Di chuyển xuống"
+                      @click="moveIndicatorDown(index)"
                     >
                       ↓
                     </button>
                     <button
-                      @click="editIndicator(indicator)"
                       class="btn-agribank btn-outline"
                       style="padding: 4px 8px; font-size: 0.75rem"
                       title="Chỉnh sửa"
+                      @click="editIndicator(indicator)"
                     >
                       ✏️
                     </button>
                     <button
-                      @click="clearIndicatorTarget(indicator.Id)"
                       class="btn-agribank btn-outline"
                       style="
                         padding: 4px 8px;
@@ -179,6 +202,7 @@
                         border-color: var(--danger-color);
                       "
                       title="Xóa mục tiêu"
+                      @click="clearIndicatorTarget(indicator.Id)"
                     >
                       🗑️
                     </button>
@@ -202,7 +226,7 @@
                 <td style="text-align: center">
                   <strong class="badge-agribank badge-success">{{ totalScore }}</strong>
                 </td>
-                <td></td>
+                <td />
               </tr>
             </tbody>
           </table>
@@ -210,10 +234,10 @@
 
         <div v-if="availableKpiIndicators.length > 0" class="card-body" style="text-align: center; padding-top: 0">
           <button
-            @click="assignKPI"
             :disabled="isAssigning"
             class="btn-agribank btn-primary"
             style="font-size: 1rem; padding: 16px 32px"
+            @click="assignKPI"
           >
             <span>{{ isAssigning ? '⏳' : '📋' }}</span>
             <span style="margin-left: 8px">{{ isAssigning ? 'Đang giao khoán...' : 'Giao KPI cho chi nhánh' }}</span>
@@ -224,7 +248,9 @@
       <!-- Current Assignments Display -->
       <div v-if="currentAssignments.length > 0" class="card-agribank">
         <div class="card-header">
-          <h3 class="card-title">📋 Giao khoán hiện tại</h3>
+          <h3 class="card-title">
+            📋 Giao khoán hiện tại
+          </h3>
           <span class="badge-agribank badge-success">{{ currentAssignments.length }} bản ghi</span>
         </div>
 
@@ -232,11 +258,21 @@
           <table class="table-agribank">
             <thead>
               <tr>
-                <th style="width: 40%">📊 Chỉ tiêu KPI</th>
-                <th style="width: 15%">🎯 Mục tiêu</th>
-                <th style="width: 15%">📈 Thực tế</th>
-                <th style="width: 15%">⭐ Điểm</th>
-                <th style="width: 15%">📅 Ngày giao</th>
+                <th style="width: 40%">
+                  📊 Chỉ tiêu KPI
+                </th>
+                <th style="width: 15%">
+                  🎯 Mục tiêu
+                </th>
+                <th style="width: 15%">
+                  📈 Thực tế
+                </th>
+                <th style="width: 15%">
+                  ⭐ Điểm
+                </th>
+                <th style="width: 15%">
+                  📅 Ngày giao
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -322,7 +358,7 @@ const cnl1Units = computed(() => {
   console.log(
     '🏢 CNL1 Units:',
     filtered.length,
-    filtered.map(u => u.Name)
+    filtered.map(u => u.Name),
   )
   return filtered
 })
@@ -358,7 +394,7 @@ const cnl2Units = computed(() => {
   console.log(
     '🏢 CNL2 Units:',
     filtered.length,
-    filtered.map(u => u.Name)
+    filtered.map(u => u.Name),
   )
   return filtered
 })
@@ -400,7 +436,7 @@ async function loadInitialData() {
     console.log('   Units:', units.value.length)
     console.log(
       '   Units detail:',
-      units.value.map(u => `${u.Name} (${u.Type})`)
+      units.value.map(u => `${u.Name} (${u.Type})`),
     )
   } catch (error) {
     console.error('❌ Error loading initial data:', error)
@@ -467,7 +503,7 @@ async function onBranchChange() {
     console.log('🏢 Branch KPI tables found:', branchTables.length)
     branchTables.forEach(table => {
       console.log(
-        `   📊 ${table.TableName} (ID: ${table.Id}, Description: ${table.Description}, Category: ${table.Category})`
+        `   📊 ${table.TableName} (ID: ${table.Id}, Description: ${table.Description}, Category: ${table.Category})`,
       )
     })
 
@@ -517,10 +553,10 @@ async function onBranchChange() {
       })
 
       console.log('🔄 Loading KPI indicators...')
-      const response = await api.get(`/KpiAssignment/tables/${kpiTable.Id}`)
+      const response = await api.get(`/KpiAssignmentTables/${kpiTable.Id}`)
 
       // Use helper function to log API response
-      logApiResponse(`/KpiAssignment/tables/${kpiTable.Id}`, response, 'indicators')
+      logApiResponse(`/KpiAssignmentTables/${kpiTable.Id}`, response, 'indicators')
 
       // Handle both 'indicators' (lowercase) and 'Indicators' (PascalCase) from API
       const indicatorsData = response.data?.indicators || response.data?.Indicators
@@ -538,7 +574,7 @@ async function onBranchChange() {
           console.log('📋 Sample indicators:')
           availableKpiIndicators.value.slice(0, 3).forEach((ind, idx) => {
             console.log(
-              `   ${idx + 1}. ${ind.indicatorName || ind.IndicatorName} (${ind.maxScore || ind.MaxScore} points, ${ind.unit || ind.Unit || 'N/A'})`
+              `   ${idx + 1}. ${ind.indicatorName || ind.IndicatorName} (${ind.maxScore || ind.MaxScore} points, ${ind.unit || ind.Unit || 'N/A'})`,
             )
           })
         } else {
@@ -553,7 +589,7 @@ async function onBranchChange() {
       console.log('❌ No suitable KPI table found for branch:', branchName)
       console.log(
         'Available branch tables:',
-        branchTables.map(t => ({ id: t.Id, name: t.TableName, description: t.Description }))
+        branchTables.map(t => ({ id: t.Id, name: t.TableName, description: t.Description })),
       )
       errorMessage.value = `Không tìm thấy bảng KPI phù hợp cho chi nhánh "${branchName}". Có ${branchTables.length} bảng KPI chi nhánh.`
     }
@@ -683,7 +719,7 @@ const handleKpiTargetInput = (event, indicatorId) => {
   const indicator = availableKpiIndicators.value.find(ind => ind.Id === indicatorId)
   const unit = safeGet(indicator, 'Unit') || 'N/A'
 
-  let inputValue = event.target.value
+  const inputValue = event.target.value
 
   // Remove all non-numeric characters except decimal point for initial processing
   let numericValue = inputValue.replace(/[^\d.,]/g, '')
@@ -766,7 +802,7 @@ const handleKpiTargetBlur = (event, indicatorId) => {
   }
 
   // Parse the final value
-  let numericValue = inputValue.replace(/[^\d.,]/g, '').replace(',', '.')
+  const numericValue = inputValue.replace(/[^\d.,]/g, '').replace(',', '.')
   const numValue = parseFloat(numericValue)
 
   if (isNaN(numValue)) {
@@ -848,7 +884,7 @@ watch(
       }, 100)
     }
   },
-  { immediate: false }
+  { immediate: false },
 )
 </script>
 

@@ -362,12 +362,18 @@ const handleSubmitKhoanPeriod = async () => {
   dataToSubmit.StartDate = dataToSubmit.startDate || dataToSubmit.StartDate
   dataToSubmit.EndDate = dataToSubmit.endDate || dataToSubmit.EndDate
 
-  // Đảm bảo format đúng cho API
+  // Đảm bảo format đúng cho API - ISO format cho backend
   if (dataToSubmit.StartDate) {
-    dataToSubmit.StartDate = toDateInputValue(dataToSubmit.StartDate)
+    // Convert to ISO string format for backend
+    const startDate = new Date(dataToSubmit.StartDate)
+    dataToSubmit.StartDate = startDate.toISOString()
   }
   if (dataToSubmit.EndDate) {
-    dataToSubmit.EndDate = toDateInputValue(dataToSubmit.EndDate)
+    // Convert to ISO string format for backend
+    const endDate = new Date(dataToSubmit.EndDate)
+    // Set end date to end of day
+    endDate.setHours(23, 59, 59, 999)
+    dataToSubmit.EndDate = endDate.toISOString()
   }
 
   // Remove camelCase fields để tránh conflict
@@ -397,11 +403,23 @@ const handleSubmitKhoanPeriod = async () => {
       delete newPeriodData.id
 
       console.log('🔄 Calling createKhoanPeriod with:', newPeriodData)
-      await khoanPeriodStore.createKhoanPeriod(newPeriodData)
-      alert('Thêm Kỳ Khoán thành công!')
-      resetForm()
+      const result = await khoanPeriodStore.createKhoanPeriod(newPeriodData)
+
+      if (result && result.success) {
+        alert('Thêm Kỳ Khoán thành công!')
+        resetForm()
+      } else {
+        const errorMsg = result?.message || result?.errors || 'Lỗi không xác định từ backend'
+        alert(`Lỗi tạo kỳ khoán: ${errorMsg}`)
+        console.error('Backend error:', result)
+      }
     } catch (error) {
       console.error('Lỗi khi thêm Kỳ Khoán:', error)
+      const errorMessage = error?.response?.data?.message ||
+                          error?.response?.data?.errors ||
+                          error?.message ||
+                          'Có lỗi xảy ra khi tạo kỳ khoán'
+      alert(`Lỗi: ${errorMessage}`)
     }
   }
 }

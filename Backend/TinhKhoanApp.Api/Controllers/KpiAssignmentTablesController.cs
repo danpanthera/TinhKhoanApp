@@ -24,16 +24,58 @@ namespace TinhKhoanApp.Api.Controllers
         /// CHINHANH: Sắp xếp theo thứ tự units (Hội Sở, Bình Lư, Phong Thổ, Sìn Hồ, Bum Tở, Than Uyên, Đoàn Kết, Tân Uyên, Nậm Hàng)
         /// </summary>
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<KpiAssignmentTable>>> GetKpiAssignmentTables()
+        public async Task<ActionResult> GetKpiAssignmentTables()
         {
             try
             {
                 var tables = await _context.KpiAssignmentTables.ToListAsync();
 
-                // Sắp xếp theo logic tùy chỉnh
-                var sortedTables = tables.OrderBy(t => GetSortKey(t)).ToList();
+                var result = new List<object>();
 
-                _logger.LogInformation("Retrieved {Count} KPI assignment tables with custom sorting", sortedTables.Count);
+                // Manually load indicators for all tables as DTOs to avoid circular reference
+                foreach (var table in tables)
+                {
+                    var indicators = await _context.KpiIndicators
+                        .Where(i => i.TableId == table.Id)
+                        .Select(i => new
+                        {
+                            i.Id,
+                            i.TableId,
+                            Name = i.IndicatorName,
+                            i.MaxScore,
+                            i.Unit,
+                            i.OrderIndex,
+                            ValueType = i.ValueType.ToString(),
+                            i.IsActive
+                        })
+                        .ToListAsync();
+
+                    result.Add(new
+                    {
+                        table.Id,
+                        table.TableType,
+                        table.TableName,
+                        table.Description,
+                        table.Category,
+                        table.IsActive,
+                        table.CreatedDate,
+                        Indicators = indicators,
+                        IndicatorCount = indicators.Count
+                    });
+                }
+
+                // Sắp xếp theo logic tùy chỉnh
+                var sortedTables = result.OrderBy(t =>
+                {
+                    var tableObj = (dynamic)t;
+                    return GetSortKey(new KpiAssignmentTable
+                    {
+                        Category = (string)tableObj.Category,
+                        TableName = (string)tableObj.TableName
+                    });
+                }).ToList();
+
+                _logger.LogInformation("Retrieved {Count} KPI assignment tables with manually loaded indicators as DTOs", sortedTables.Count);
                 return Ok(sortedTables);
             }
             catch (Exception ex)
@@ -52,6 +94,7 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 var tables = await _context.KpiAssignmentTables
+                    .Include(t => t.Indicators)
                     .Where(t => t.Category.ToUpper() == category.ToUpper())
                     .ToListAsync();
 
@@ -141,29 +184,59 @@ namespace TinhKhoanApp.Api.Controllers
         /// Lấy KPI Assignment Table theo ID
         /// </summary>
         [HttpGet("{id}")]
-        public async Task<ActionResult<KpiAssignmentTable>> GetKpiAssignmentTable(int id)
+        public async Task<ActionResult> GetKpiAssignmentTable(int id)
         {
             try
             {
-                var kpiAssignmentTable = await _context.KpiAssignmentTables.FindAsync(id);
+                var kpiAssignmentTable = await _context.KpiAssignmentTables
+                    .FirstOrDefaultAsync(t => t.Id == id);
 
                 if (kpiAssignmentTable == null)
                 {
                     return NotFound();
                 }
 
-                return Ok(kpiAssignmentTable);
+                // Manually load indicators for this table as anonymous objects to avoid circular reference
+                var indicators = await _context.KpiIndicators
+                    .Where(i => i.TableId == id)
+                    .Select(i => new
+                    {
+                        i.Id,
+                        i.TableId,
+                        Name = i.IndicatorName,
+                        i.MaxScore,
+                        i.Unit,
+                        i.OrderIndex,
+                        ValueType = i.ValueType.ToString(),
+                        i.IsActive
+                    })
+                    .ToListAsync();
+
+                var result = new
+                {
+                    kpiAssignmentTable.Id,
+                    kpiAssignmentTable.TableType,
+                    kpiAssignmentTable.TableName,
+                    kpiAssignmentTable.Description,
+                    kpiAssignmentTable.Category,
+                    kpiAssignmentTable.IsActive,
+                    kpiAssignmentTable.CreatedDate,
+                    Indicators = indicators,
+                    IndicatorCount = indicators.Count
+                };
+
+                _logger.LogInformation($"✅ Table {id} loaded with {indicators.Count} indicators as DTO");
+
+                return Ok(result);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving KPI assignment table with ID {Id}", id);
                 return StatusCode(500, "Internal server error");
             }
-        }
-
-        /// <summary>
-        /// Cập nhật KPI Assignment Table
-        /// </summary>
+        }        /// <summary>
+                 /// Cập nhật KPI Assignment Table
+                 /// </summary>
         [HttpPut("{id}")]
         public async Task<IActionResult> PutKpiAssignmentTable(int id, KpiAssignmentTable kpiAssignmentTable)
         {

@@ -149,7 +149,7 @@ class UnitKpiAssignmentService {
   // Get KPI tables for units
   async getKpiTables() {
     try {
-      const response = await apiClient.get('/KpiAssignment/tables')
+      const response = await apiClient.get('/KpiAssignmentTables')
       let tables = response.data
 
       // Handle .NET JSON serialization format with $values
@@ -167,8 +167,8 @@ class UnitKpiAssignmentService {
   // Get KPI indicators for a table
   async getKpiIndicators(tableId) {
     try {
-      const response = await apiClient.get(`/KpiAssignment/tables/${tableId}`)
-      let data = response.data
+      const response = await apiClient.get(`/KpiAssignmentTables/${tableId}`)
+      const data = response.data
 
       // Handle .NET JSON serialization format with $values for indicators
       if (data.indicators && data.indicators.$values) {
@@ -185,7 +185,7 @@ class UnitKpiAssignmentService {
   // Get KPI tables specifically for branches (CNL1, CNL2)
   async getBranchKpiTables() {
     try {
-      const response = await apiClient.get('/KpiAssignment/tables')
+      const response = await apiClient.get('/KpiAssignmentTables')
       let tables = response.data
 
       // Handle .NET JSON serialization format with $values
@@ -195,7 +195,7 @@ class UnitKpiAssignmentService {
 
       // Filter for branch-specific tables
       const branchTables = tables.filter(
-        table => table.tableType.includes('Cnl') || table.tableType.includes('CNL') || table.tableName.includes('CNL')
+        table => table.tableType.includes('Cnl') || table.tableType.includes('CNL') || table.tableName.includes('CNL'),
       )
 
       return branchTables
@@ -231,7 +231,7 @@ class UnitKpiAssignmentService {
   async getKpiIndicatorsByTableType(tableType) {
     try {
       const response = await apiClient.get(`/KpiAssignment/table/${tableType}`)
-      let data = response.data
+      const data = response.data
 
       console.log(`📊 Raw API response for ${tableType}:`, data)
 

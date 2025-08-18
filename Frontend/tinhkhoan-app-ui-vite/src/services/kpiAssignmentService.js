@@ -156,7 +156,7 @@ export const kpiAssignmentService = {
   async getTableDetails(tableId) {
     console.log('🔄 getTableDetails called with tableId:', tableId)
     try {
-      const response = await api.get(`/KpiAssignment/tables/${tableId}`)
+      const response = await api.get(`/KpiAssignmentTables/${tableId}`)
       const tableData = response.data
       console.log('📨 getTableDetails API response:', tableData)
 
@@ -180,7 +180,7 @@ export const kpiAssignmentService = {
 
         // Sort by OrderIndex (PascalCase) or orderIndex (camelCase)
         tableData.indicators = indicatorsData.sort(
-          (a, b) => (a.OrderIndex || a.orderIndex || 0) - (b.OrderIndex || b.orderIndex || 0)
+          (a, b) => (a.OrderIndex || a.orderIndex || 0) - (b.OrderIndex || b.orderIndex || 0),
         )
         console.log('📊 Final processed indicators count:', tableData.indicators.length)
         console.log('📊 First 2 indicators:', tableData.indicators.slice(0, 2))
