@@ -112,9 +112,13 @@ rm -f build_test.log
 
 # Step 4: Start the development server
 log "▶️ Starting Frontend Development Server..."
-npm run dev -- --port $PORT >> "$LOG_FILE" 2>&1 &
+# Use nohup so the dev server is not killed by SIGHUP when this startup script exits.
+# (Without nohup the background child receives SIGHUP at script end on some systems, causing the
+# Vite process to terminate immediately – leading to curl connection refused / WebSocket failures.)
+nohup npm run dev -- --port $PORT >> "$LOG_FILE" 2>&1 &
 DEV_PID=$!
 echo $DEV_PID > "frontend.log.pid"
+log "🔗 Dev process detached with nohup (will survive script exit)"
 
 log "🆔 Frontend PID: $DEV_PID"
 
