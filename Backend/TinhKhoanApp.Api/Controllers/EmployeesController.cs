@@ -244,6 +244,111 @@ public class EmployeesController : ControllerBase
             return StatusCode(500, new { message = "Lỗi khi xóa nhân viên", details = ex.Message });
         }
     }
+
+    // PUT: api/Employees/5
+    [HttpPut("{id}")]
+    public async Task<ActionResult<object>> UpdateEmployee(int id, EmployeeUpdateDto dto)
+    {
+        try
+        {
+            var employee = await _context.Employees
+                .Include(e => e.EmployeeRoles)
+                .FirstOrDefaultAsync(e => e.Id == id);
+            if (employee == null)
+            {
+                return NotFound(new { message = "Không tìm thấy nhân viên" });
+            }
+
+            // Username uniqueness check if changed
+            if (!string.IsNullOrWhiteSpace(dto.Username) && dto.Username != employee.Username)
+            {
+                var exists = await _context.Employees.AnyAsync(e => e.Username.ToLower() == dto.Username.ToLower() && e.Id != id);
+                if (exists)
+                {
+                    return BadRequest(new { message = "Username đã tồn tại" });
+                }
+                employee.Username = dto.Username;
+            }
+
+            // Update simple scalar fields (only if provided / not null for nullable types)
+            if (!string.IsNullOrWhiteSpace(dto.FullName)) employee.FullName = dto.FullName;
+            if (!string.IsNullOrWhiteSpace(dto.EmployeeCode)) employee.EmployeeCode = dto.EmployeeCode;
+            if (!string.IsNullOrWhiteSpace(dto.CBCode)) employee.CBCode = dto.CBCode;
+            if (!string.IsNullOrWhiteSpace(dto.Email)) employee.Email = dto.Email; else if (dto.Email == string.Empty) employee.Email = null;
+            if (!string.IsNullOrWhiteSpace(dto.PhoneNumber)) employee.PhoneNumber = dto.PhoneNumber; else if (dto.PhoneNumber == string.Empty) employee.PhoneNumber = null;
+            if (dto.IsActive.HasValue) employee.IsActive = dto.IsActive.Value;
+            if (dto.UnitId.HasValue) employee.UnitId = dto.UnitId.Value;
+            if (dto.PositionId.HasValue) employee.PositionId = dto.PositionId.Value;
+
+            // Password change: treat incoming PasswordHash field as plain text password like create path
+            if (!string.IsNullOrWhiteSpace(dto.PasswordHash))
+            {
+                employee.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.PasswordHash);
+            }
+
+            // Role update: allow single role id
+            if (dto.RoleId.HasValue)
+            {
+                // Remove existing roles if different
+                var currentRoleId = employee.EmployeeRoles.FirstOrDefault()?.RoleId;
+                if (currentRoleId != dto.RoleId.Value)
+                {
+                    if (employee.EmployeeRoles.Any())
+                    {
+                        _context.EmployeeRoles.RemoveRange(employee.EmployeeRoles);
+                        employee.EmployeeRoles.Clear();
+                    }
+                    var roleExists = await _context.Roles.AnyAsync(r => r.Id == dto.RoleId.Value);
+                    if (!roleExists)
+                    {
+                        return BadRequest(new { message = "Role không tồn tại" });
+                    }
+                    _context.EmployeeRoles.Add(new EmployeeRole { EmployeeId = employee.Id, RoleId = dto.RoleId.Value });
+                }
+            }
+            else if (dto.RoleId == null && dto.ClearRole == true)
+            {
+                if (employee.EmployeeRoles.Any())
+                {
+                    _context.EmployeeRoles.RemoveRange(employee.EmployeeRoles);
+                    employee.EmployeeRoles.Clear();
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Return updated employee shape (reuse Get style)
+            var updated = await _context.Employees
+                .Include(e => e.Unit)
+                .Include(e => e.Position)
+                .Include(e => e.EmployeeRoles).ThenInclude(er => er.Role)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            var result = new
+            {
+                Id = updated!.Id,
+                EmployeeCode = updated.EmployeeCode,
+                CBCode = updated.CBCode,
+                FullName = updated.FullName,
+                Username = updated.Username,
+                Email = updated.Email,
+                PhoneNumber = updated.PhoneNumber,
+                IsActive = updated.IsActive,
+                UnitId = updated.UnitId,
+                UnitName = updated.Unit?.Name,
+                PositionId = updated.PositionId,
+                PositionName = updated.Position?.Name,
+                RoleId = updated.EmployeeRoles.FirstOrDefault()?.RoleId,
+                RoleName = updated.EmployeeRoles.FirstOrDefault()?.Role?.Name
+            };
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating employee {Id}", id);
+            return StatusCode(500, new { message = "Lỗi khi cập nhật nhân viên", details = ex.Message });
+        }
+    }
 }
 
 // DTO for creating employees
@@ -260,4 +365,21 @@ public class EmployeeCreateDto
     public int UnitId { get; set; }
     public int PositionId { get; set; }
     public int? RoleId { get; set; }
+}
+
+// DTO for updating employees (all optional except at least one field)
+public class EmployeeUpdateDto
+{
+    public string? EmployeeCode { get; set; }
+    public string? CBCode { get; set; }
+    public string? FullName { get; set; }
+    public string? Username { get; set; }
+    public string? PasswordHash { get; set; } // treated as raw password input
+    public string? Email { get; set; }
+    public string? PhoneNumber { get; set; }
+    public bool? IsActive { get; set; }
+    public int? UnitId { get; set; }
+    public int? PositionId { get; set; }
+    public int? RoleId { get; set; }
+    public bool? ClearRole { get; set; } // when true and RoleId null -> remove role
 }
