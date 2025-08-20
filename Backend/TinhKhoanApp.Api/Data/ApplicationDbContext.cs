@@ -28,6 +28,8 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<TransactionAdjustmentFactor> TransactionAdjustmentFactors { get; set; }
         public DbSet<SalaryParameter> SalaryParameters { get; set; }
         public DbSet<FinalPayout> FinalPayouts { get; set; }
+    // Audit logs
+    public DbSet<EmployeeAuditLog> EmployeeAuditLogs { get; set; }
 
         // DbSets cho hệ thống KPI mới
         public DbSet<KpiAssignmentTable> KpiAssignmentTables { get; set; }

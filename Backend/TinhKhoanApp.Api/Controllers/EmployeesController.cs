@@ -205,6 +205,17 @@ public class EmployeesController : ControllerBase
             };
 
             _logger.LogInformation("Employee created successfully with Id: {Id}", employee.Id);
+            // Audit log (CREATE)
+            _context.EmployeeAuditLogs.Add(new EmployeeAuditLog
+            {
+                EmployeeId = employee.Id,
+                Action = "CREATE",
+                PerformedBy = employeeDto.CreatedBy ?? "system",
+                FieldChanged = null,
+                OldValue = null,
+                NewValue = $"Username={employee.Username};FullName={employee.FullName};RoleId={createdEmployee.EmployeeRoles?.FirstOrDefault()?.RoleId}"
+            });
+            await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetEmployee), new { id = employee.Id }, result);
         }
         catch (Exception ex)
@@ -259,6 +270,8 @@ public class EmployeesController : ControllerBase
                 return NotFound(new { message = "Không tìm thấy nhân viên" });
             }
 
+            var changes = new List<EmployeeAuditLog>();
+
             // Username uniqueness check if changed
             if (!string.IsNullOrWhiteSpace(dto.Username) && dto.Username != employee.Username)
             {
@@ -267,22 +280,58 @@ public class EmployeesController : ControllerBase
                 {
                     return BadRequest(new { message = "Username đã tồn tại" });
                 }
+                changes.Add(new EmployeeAuditLog { EmployeeId = id, Action = "UPDATE", FieldChanged = "Username", OldValue = employee.Username, NewValue = dto.Username, PerformedBy = dto.UpdatedBy ?? "system" });
                 employee.Username = dto.Username;
             }
 
             // Update simple scalar fields (only if provided / not null for nullable types)
-            if (!string.IsNullOrWhiteSpace(dto.FullName)) employee.FullName = dto.FullName;
+            if (!string.IsNullOrWhiteSpace(dto.FullName) && dto.FullName != employee.FullName)
+            {
+                changes.Add(new EmployeeAuditLog { EmployeeId = id, Action = "UPDATE", FieldChanged = "FullName", OldValue = employee.FullName, NewValue = dto.FullName, PerformedBy = dto.UpdatedBy ?? "system" });
+                employee.FullName = dto.FullName;
+            }
             if (!string.IsNullOrWhiteSpace(dto.EmployeeCode)) employee.EmployeeCode = dto.EmployeeCode;
             if (!string.IsNullOrWhiteSpace(dto.CBCode)) employee.CBCode = dto.CBCode;
-            if (!string.IsNullOrWhiteSpace(dto.Email)) employee.Email = dto.Email; else if (dto.Email == string.Empty) employee.Email = null;
-            if (!string.IsNullOrWhiteSpace(dto.PhoneNumber)) employee.PhoneNumber = dto.PhoneNumber; else if (dto.PhoneNumber == string.Empty) employee.PhoneNumber = null;
-            if (dto.IsActive.HasValue) employee.IsActive = dto.IsActive.Value;
-            if (dto.UnitId.HasValue) employee.UnitId = dto.UnitId.Value;
-            if (dto.PositionId.HasValue) employee.PositionId = dto.PositionId.Value;
+            if (!string.IsNullOrWhiteSpace(dto.Email) && dto.Email != employee.Email)
+            {
+                changes.Add(new EmployeeAuditLog { EmployeeId = id, Action = "UPDATE", FieldChanged = "Email", OldValue = employee.Email, NewValue = dto.Email, PerformedBy = dto.UpdatedBy ?? "system" });
+                employee.Email = dto.Email;
+            }
+            else if (dto.Email == string.Empty && employee.Email != null)
+            {
+                changes.Add(new EmployeeAuditLog { EmployeeId = id, Action = "UPDATE", FieldChanged = "Email", OldValue = employee.Email, NewValue = null, PerformedBy = dto.UpdatedBy ?? "system" });
+                employee.Email = null;
+            }
+            if (!string.IsNullOrWhiteSpace(dto.PhoneNumber) && dto.PhoneNumber != employee.PhoneNumber)
+            {
+                changes.Add(new EmployeeAuditLog { EmployeeId = id, Action = "UPDATE", FieldChanged = "PhoneNumber", OldValue = employee.PhoneNumber, NewValue = dto.PhoneNumber, PerformedBy = dto.UpdatedBy ?? "system" });
+                employee.PhoneNumber = dto.PhoneNumber;
+            }
+            else if (dto.PhoneNumber == string.Empty && employee.PhoneNumber != null)
+            {
+                changes.Add(new EmployeeAuditLog { EmployeeId = id, Action = "UPDATE", FieldChanged = "PhoneNumber", OldValue = employee.PhoneNumber, NewValue = null, PerformedBy = dto.UpdatedBy ?? "system" });
+                employee.PhoneNumber = null;
+            }
+            if (dto.IsActive.HasValue && dto.IsActive.Value != employee.IsActive)
+            {
+                changes.Add(new EmployeeAuditLog { EmployeeId = id, Action = "UPDATE", FieldChanged = "IsActive", OldValue = employee.IsActive.ToString(), NewValue = dto.IsActive.Value.ToString(), PerformedBy = dto.UpdatedBy ?? "system" });
+                employee.IsActive = dto.IsActive.Value;
+            }
+            if (dto.UnitId.HasValue && dto.UnitId.Value != employee.UnitId)
+            {
+                changes.Add(new EmployeeAuditLog { EmployeeId = id, Action = "UPDATE", FieldChanged = "UnitId", OldValue = employee.UnitId.ToString(), NewValue = dto.UnitId.Value.ToString(), PerformedBy = dto.UpdatedBy ?? "system" });
+                employee.UnitId = dto.UnitId.Value;
+            }
+            if (dto.PositionId.HasValue && dto.PositionId.Value != employee.PositionId)
+            {
+                changes.Add(new EmployeeAuditLog { EmployeeId = id, Action = "UPDATE", FieldChanged = "PositionId", OldValue = employee.PositionId.ToString(), NewValue = dto.PositionId.Value.ToString(), PerformedBy = dto.UpdatedBy ?? "system" });
+                employee.PositionId = dto.PositionId.Value;
+            }
 
             // Password change: treat incoming PasswordHash field as plain text password like create path
             if (!string.IsNullOrWhiteSpace(dto.PasswordHash))
             {
+                changes.Add(new EmployeeAuditLog { EmployeeId = id, Action = "UPDATE", FieldChanged = "PasswordHash", OldValue = "***", NewValue = "***", PerformedBy = dto.UpdatedBy ?? "system" });
                 employee.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.PasswordHash);
             }
 
@@ -304,6 +353,7 @@ public class EmployeesController : ControllerBase
                         return BadRequest(new { message = "Role không tồn tại" });
                     }
                     _context.EmployeeRoles.Add(new EmployeeRole { EmployeeId = employee.Id, RoleId = dto.RoleId.Value });
+                    changes.Add(new EmployeeAuditLog { EmployeeId = id, Action = "UPDATE", FieldChanged = "RoleId", OldValue = currentRoleId?.ToString(), NewValue = dto.RoleId.Value.ToString(), PerformedBy = dto.UpdatedBy ?? "system" });
                 }
             }
             else if (dto.RoleId == null && dto.ClearRole == true)
@@ -312,10 +362,17 @@ public class EmployeesController : ControllerBase
                 {
                     _context.EmployeeRoles.RemoveRange(employee.EmployeeRoles);
                     employee.EmployeeRoles.Clear();
+                    changes.Add(new EmployeeAuditLog { EmployeeId = id, Action = "UPDATE", FieldChanged = "RoleId", OldValue = "(removed)", NewValue = null, PerformedBy = dto.UpdatedBy ?? "system" });
                 }
             }
 
             await _context.SaveChangesAsync();
+
+            if (changes.Any())
+            {
+                _context.EmployeeAuditLogs.AddRange(changes);
+                await _context.SaveChangesAsync();
+            }
 
             // Return updated employee shape (reuse Get style)
             var updated = await _context.Employees
@@ -365,6 +422,7 @@ public class EmployeeCreateDto
     public int UnitId { get; set; }
     public int PositionId { get; set; }
     public int? RoleId { get; set; }
+    public string? CreatedBy { get; set; }
 }
 
 // DTO for updating employees (all optional except at least one field)
@@ -382,4 +440,5 @@ public class EmployeeUpdateDto
     public int? PositionId { get; set; }
     public int? RoleId { get; set; }
     public bool? ClearRole { get; set; } // when true and RoleId null -> remove role
+    public string? UpdatedBy { get; set; }
 }
