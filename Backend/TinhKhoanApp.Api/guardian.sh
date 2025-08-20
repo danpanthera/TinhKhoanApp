@@ -19,8 +19,12 @@ log() {
     echo -e "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$GUARDIAN_LOG"
 }
 
+BACKEND_HEALTH_PATH="http://localhost:5055/api/health" # Correct health endpoint
+FRONTEND_HEALTH_PATH="http://localhost:3000"           # Root is fine for frontend
+CHECK_INTERVAL=${CHECK_INTERVAL:-30}                    # Allow override via env var
+
 check_backend() {
-    if curl -s --max-time 3 http://localhost:5055/health > /dev/null 2>&1; then
+    if curl -s --max-time 3 "$BACKEND_HEALTH_PATH" > /dev/null 2>&1; then
         return 0  # Backend is healthy
     else
         return 1  # Backend is not responding
@@ -28,7 +32,7 @@ check_backend() {
 }
 
 check_frontend() {
-    if curl -s --max-time 3 http://localhost:3000 > /dev/null 2>&1; then
+    if curl -s --max-time 3 "$FRONTEND_HEALTH_PATH" > /dev/null 2>&1; then
         return 0  # Frontend is healthy
     else
         return 1  # Frontend is not responding
@@ -52,8 +56,9 @@ start_frontend() {
 # Initial cleanup
 > "$GUARDIAN_LOG"
 log "${BLUE}🛡️ TinhKhoan Guardian Started${NC}"
-log "${BLUE}📍 Monitoring Backend: http://localhost:5055${NC}"
-log "${BLUE}📍 Monitoring Frontend: http://localhost:3000${NC}"
+log "${BLUE}📍 Monitoring Backend: $BACKEND_HEALTH_PATH${NC}"
+log "${BLUE}📍 Monitoring Frontend: $FRONTEND_HEALTH_PATH${NC}"
+log "${BLUE}⏱️  Interval: ${CHECK_INTERVAL}s (override with CHECK_INTERVAL env var)${NC}"
 
 # Start services initially
 if ! check_backend; then
@@ -85,5 +90,5 @@ while true; do
     fi
 
     # Wait before next check
-    sleep 30
+    sleep "$CHECK_INTERVAL"
 done

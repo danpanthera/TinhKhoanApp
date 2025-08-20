@@ -48,7 +48,8 @@ start_backend_safe() {
     echo -e "${YELLOW}⚙️ Starting backend...${NC}"
     pkill -f "dotnet.*TinhKhoanApp" 2>/dev/null
     sleep 2
-    ./start_backend_improved.sh > /dev/null 2>&1 &
+    # Use existing start_backend.sh (previously referenced a non-existent start_backend_improved.sh)
+    ./start_backend.sh > /dev/null 2>&1 &
     sleep 15
     check_backend
 }
