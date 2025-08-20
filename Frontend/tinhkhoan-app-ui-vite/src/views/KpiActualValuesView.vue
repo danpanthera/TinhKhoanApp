@@ -1040,11 +1040,9 @@ const searchUnitAssignments = async () => {
       periodId: selectedUnitPeriodId.value,
     })
 
-    // For now, use the same search endpoint as employee tab
-    // TODO: Backend team needs to implement proper Unit KPI search endpoint
-    console.log('⚠️ Using employee search endpoint temporarily for unit search')
+    // Use dedicated backend endpoint for unit assignments
     const response = await api.get(
-      `/KpiAssignment/search?unitId=${selectedUnitBranchId.value}&periodId=${selectedUnitPeriodId.value}`,
+      `/UnitKhoanAssignments/search?unitId=${selectedUnitBranchId.value}&periodId=${selectedUnitPeriodId.value}`,
     )
 
     let assignmentsData = []
@@ -1096,13 +1094,13 @@ const saveUnitActualValue = async assignment => {
     clearMessages()
 
     const updateData = {
-      assignmentId: assignment.Id,
+      assignmentDetailId: assignment.Id, // backend expects detail id
       actualValue: editingUnitActualValue.value ? parseFloat(editingUnitActualValue.value) : null,
     }
 
     console.log('💾 Saving unit actual value:', updateData)
 
-    const response = await api.put('/UnitKhoanAssignments/update-actual', updateData)
+  const response = await api.put('/UnitKhoanAssignments/update-actual', updateData)
 
     // Update local data
     const index = unitAssignments.value.findIndex(a => a.Id === assignment.Id)

@@ -17,6 +17,144 @@ namespace TinhKhoanApp.Api.Controllers
             _context = context;
             _logger = logger;
         }
+        /// <summary>
+        /// Tìm kiếm (search) các giao khoán KPI của nhân viên với các tiêu chí tùy chọn
+        /// </summary>
+        /// <param name="employeeId">Lọc theo EmployeeId</param>
+        /// <param name="periodId">Lọc theo KhoanPeriodId</param>
+        /// <param name="unitId">Lọc theo UnitId của nhân viên</param>
+        [HttpGet("search")]
+        public async Task<IActionResult> SearchEmployeeAssignments([FromQuery] int? employeeId, [FromQuery] int? periodId, [FromQuery] int? unitId)
+        {
+            try
+            {
+                var query = _context.EmployeeKpiAssignments
+                    .Include(a => a.Employee).ThenInclude(e => e.Position)
+                    .Include(a => a.KpiDefinition)
+                    .Include(a => a.KhoanPeriod)
+                    .AsQueryable();
+
+                if (employeeId.HasValue)
+                {
+                    query = query.Where(a => a.EmployeeId == employeeId.Value);
+                }
+
+                if (periodId.HasValue)
+                {
+                    query = query.Where(a => a.KhoanPeriodId == periodId.Value);
+                }
+
+                if (unitId.HasValue)
+                {
+                    // Join qua bảng Employees để lọc theo đơn vị
+                    query = query.Where(a => a.Employee.UnitId == unitId.Value);
+                }
+
+                var assignments = await query.ToListAsync();
+
+                if (!assignments.Any())
+                {
+                    return NotFound(new { Message = "No KPI assignments found" });
+                }
+
+                // Chuẩn hóa dữ liệu theo hình dạng mà frontend (KpiActualValuesView.vue) đang mong đợi
+                var result = assignments.Select(a => new
+                {
+                    a.Id,
+                    employeeId = a.EmployeeId,
+                    // Frontend dùng assignment.employee?.fullName => trả về object employee với fullName
+                    employee = new
+                    {
+                        id = a.Employee.Id,
+                        fullName = a.Employee.FullName,
+                        unitId = a.Employee.UnitId,
+                        positionName = a.Employee.Position != null ? a.Employee.Position.Name : null
+                    },
+                    khoanPeriodId = a.KhoanPeriodId,
+                    khoanPeriod = a.KhoanPeriod == null ? null : new
+                    {
+                        id = a.KhoanPeriod.Id,
+                        periodName = a.KhoanPeriod.Name, // Frontend dùng periodName
+                        startDate = a.KhoanPeriod.StartDate,
+                        endDate = a.KhoanPeriod.EndDate
+                    },
+                    // Frontend dùng assignment.indicator?.indicatorName / maxScore / unit
+                    indicator = new
+                    {
+                        id = a.KpiDefinition.Id,
+                        indicatorName = a.KpiDefinition.KpiName,
+                        maxScore = a.KpiDefinition.MaxScore,
+                        unit = a.KpiDefinition.UnitOfMeasure
+                    },
+                    targetValue = a.TargetValue,
+                    actualValue = a.ActualValue,
+                    score = a.Score,
+                    a.Notes,
+                    createdDate = a.CreatedDate,
+                    updatedDate = a.UpdatedDate
+                }).ToList();
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching KPI assignments (employeeId={EmployeeId}, periodId={PeriodId}, unitId={UnitId})", employeeId, periodId, unitId);
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Cập nhật giá trị thực hiện (ActualValue) cho một giao khoán KPI của nhân viên
+        /// </summary>
+        [HttpPut("update-single-actual")]
+        public async Task<IActionResult> UpdateSingleActual([FromBody] UpdateEmployeeActualRequest request)
+        {
+            if (request == null || request.AssignmentId <= 0)
+            {
+                return BadRequest(new { Message = "Invalid request" });
+            }
+
+            try
+            {
+                var assignment = await _context.EmployeeKpiAssignments
+                    .Include(a => a.KpiDefinition)
+                    .FirstOrDefaultAsync(a => a.Id == request.AssignmentId);
+
+                if (assignment == null)
+                {
+                    return NotFound(new { Message = "Assignment not found" });
+                }
+
+                assignment.ActualValue = request.ActualValue;
+                assignment.UpdatedDate = DateTime.UtcNow;
+
+                // Tính điểm đơn giản: (Actual / Target) * MaxScore (cắt ngưỡng)
+                if (assignment.TargetValue > 0 && assignment.ActualValue.HasValue)
+                {
+                    var rawScore = assignment.TargetValue == 0 ? 0 : (assignment.ActualValue.Value / assignment.TargetValue) * assignment.KpiDefinition.MaxScore;
+                    if (rawScore > assignment.KpiDefinition.MaxScore) rawScore = assignment.KpiDefinition.MaxScore;
+                    assignment.Score = Math.Round(rawScore, 2);
+                }
+                else
+                {
+                    assignment.Score = null; // Không tính được
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    assignment.Id,
+                    assignment.ActualValue,
+                    assignment.Score
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating actual value for assignment {AssignmentId}", request.AssignmentId);
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
 
         /// <summary>
         /// Assign KPI targets to an employee for a specific period
@@ -183,5 +321,14 @@ namespace TinhKhoanApp.Api.Controllers
         public int IndicatorId { get; set; }
         public decimal TargetValue { get; set; }
         public string? Notes { get; set; }
+    }
+
+    /// <summary>
+    /// Request model để cập nhật giá trị thực hiện của một KPI Assignment
+    /// </summary>
+    public class UpdateEmployeeActualRequest
+    {
+        public int AssignmentId { get; set; }
+        public decimal? ActualValue { get; set; }
     }
 }
