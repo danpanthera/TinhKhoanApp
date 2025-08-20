@@ -107,11 +107,16 @@ export const useKhoanPeriodStore = defineStore('khoanPeriod', {
       try {
         const response = await apiClient.get('/KhoanPeriods')
         let rawData = []
-        if (response.data && Array.isArray(response.data.$values)) {
+
+        // Check for the new API response format: { Success: true, Data: [...] }
+        if (response.data && response.data.Success && Array.isArray(response.data.Data)) {
+          rawData = response.data.Data
+        } else if (response.data && Array.isArray(response.data.$values)) {
           rawData = response.data.$values
         } else if (Array.isArray(response.data)) {
           rawData = response.data
         } else {
+          console.error('🚨 Unexpected API response format:', response.data)
           this.khoanPeriods = []
           this.error = 'Dữ liệu Kỳ Khoán nhận được không đúng định dạng.'
           return
@@ -142,17 +147,25 @@ export const useKhoanPeriodStore = defineStore('khoanPeriod', {
         const response = await apiClient.post('/KhoanPeriods', periodData)
         console.log('🚀 Store - Backend response:', response)
 
-        // Check if response indicates success
-        if (response.data && (response.data.success !== false)) {
+        // Check for new API response format: { Success: true, Data: {...} }
+        if (response.data && response.data.Success) {
           // Thay vì push, mình fetch lại để đảm bảo thứ tự và dữ liệu đầy đủ từ server
+          await this.fetchKhoanPeriods()
+          return {
+            success: true,
+            data: response.data.Data,
+            message: response.data.Message || 'Tạo kỳ khoán thành công',
+          }
+        } else if (response.data && (response.data.success !== false)) {
+          // Legacy format - keep for backward compatibility
           await this.fetchKhoanPeriods()
           return { success: true, data: response.data, message: 'Tạo kỳ khoán thành công' }
         } else {
           // Backend returned data but with error flag
           return {
             success: false,
-            message: response.data?.message || response.data?.errors || 'Backend trả về lỗi không xác định',
-            errors: response.data?.errors,
+            message: response.data?.Message || response.data?.message || response.data?.errors || 'Backend trả về lỗi không xác định',
+            errors: response.data?.Errors || response.data?.errors,
           }
         }
       } catch (err) {
@@ -196,12 +209,24 @@ export const useKhoanPeriodStore = defineStore('khoanPeriod', {
         console.log('🔄 updateKhoanPeriod - mapped data:', updateData)
         console.log('🔄 updateKhoanPeriod - periodId:', periodId, 'type:', typeof periodId)
 
-        await apiClient.put(`/KhoanPeriods/${periodId}`, updateData)
-        await this.fetchKhoanPeriods() // Fetch lại để cập nhật
+        const response = await apiClient.put(`/KhoanPeriods/${periodId}`, updateData)
+
+        // Check for new API response format
+        if (response.data && response.data.Success) {
+          await this.fetchKhoanPeriods() // Fetch lại để cập nhật
+          return {
+            success: true,
+            data: response.data.Data,
+            message: response.data.Message || 'Cập nhật kỳ khoán thành công',
+          }
+        } else {
+          await this.fetchKhoanPeriods() // Legacy compatibility
+        }
       } catch (err) {
         this.error =
           'Không thể cập nhật Kỳ Khoán. Lỗi: ' +
-          (err.response?.data?.message ||
+          (err.response?.data?.Message ||
+            err.response?.data?.message ||
             err.response?.data?.title ||
             (err.response?.data?.errors ? JSON.stringify(err.response.data.errors) : err.message))
         throw err

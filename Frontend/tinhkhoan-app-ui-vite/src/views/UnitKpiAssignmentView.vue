@@ -36,9 +36,9 @@
               <option value="">
                 -- Chọn kỳ khoán --
               </option>
-              <option v-for="period in khoanPeriods" :key="period.Id || period.Id" :value="period.Id || period.Id">
-                {{ period.Name || period.Name }} ({{ formatDate(period.StartDate || period.startDate) }} -
-                {{ formatDate(period.EndDate || period.endDate) }})
+              <option v-for="period in validKhoanPeriods" :key="period.Id" :value="period.Id">
+                {{ period.Name }} ({{ formatDate(period.StartDate) }} -
+                {{ formatDate(period.EndDate) }})
               </option>
             </select>
           </div>
@@ -137,7 +137,7 @@
                 <td>
                   <div style="display: flex; align-items: center; gap: 8px">
                     <span class="badge-agribank badge-primary">{{ index + 1 }}</span>
-                    <span class="font-weight-semibold">{{ safeGet(indicator, 'IndicatorName') }}</span>
+                    <span class="font-weight-semibold">{{ safeGet(indicator, 'Name') || safeGet(indicator, 'IndicatorName') }}</span>
                   </div>
                 </td>
                 <td style="text-align: center">
@@ -334,6 +334,11 @@ const kpiTargetErrors = ref({})
 const currentAssignments = ref([])
 
 // Computed properties
+// Filter out null/undefined periods
+const validKhoanPeriods = computed(() => {
+  return khoanPeriods.value.filter(period => period && period.Id && period.Name)
+})
+
 // CNL1: Hội Sở và Lai Châu với custom ordering
 const cnl1Units = computed(() => {
   const filtered = units.value
@@ -424,7 +429,15 @@ async function loadInitialData() {
       api.get('/units'),
     ])
 
-    khoanPeriods.value = periodsResponse.data || []
+    // Handle new API response format for KhoanPeriods
+    if (periodsResponse.data && periodsResponse.data.Success && Array.isArray(periodsResponse.data.Data)) {
+      khoanPeriods.value = periodsResponse.data.Data
+    } else if (Array.isArray(periodsResponse.data)) {
+      khoanPeriods.value = periodsResponse.data
+    } else {
+      khoanPeriods.value = []
+    }
+
     kpiTables.value = tablesResponse.data || []
 
     // Load real units from API instead of hardcoded
@@ -754,7 +767,8 @@ const handleKpiTargetInput = (event, indicatorId) => {
     const numValue = parseFloat(cleanNumber)
     if (!isNaN(numValue) && cleanNumber !== '') {
       // ✅ Format with formatNumber chuẩn US: 1,000,000 thay vì vi-VN: 1.000.000
-      const formatted = formatNumber(numValue)
+      // For Triệu VND, use 0 decimal places to avoid unnecessary .00
+      const formatted = formatNumber(numValue, 0)
       event.target.value = formatted
       kpiTargets.value[indicatorId] = numValue
       return
@@ -858,7 +872,8 @@ function formatUnitTargetValue(indicator, value) {
   // Format based on unit type
   if (unit === 'Triệu VND') {
     // ✅ Sử dụng formatNumber chuẩn US: 1,000,000 thay vì vi-VN: 1.000.000
-    return formatNumber(numValue)
+    // For Triệu VND, use 0 decimal places to avoid unnecessary .00
+    return formatNumber(numValue, 0)
   } else if (unit === '%') {
     return numValue.toString()
   } else {

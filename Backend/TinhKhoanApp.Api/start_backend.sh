@@ -1,5 +1,5 @@
 #!/bin/bash
-# Improved Backend Script - NO HANGING
+# Enhanced Backend Startup Script - Full Process Management
 
 # UTF-8 Configuration
 export LANG=vi_VN.UTF-8
@@ -9,58 +9,92 @@ LOG_FILE="backend.log"
 PORT=5055
 
 log() {
-    echo "$(date '+%H:%M:%S') - $1" | tee -a "$LOG_FILE"
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_FILE"
 }
 
-# Clear log
+# Clear log file
 > "$LOG_FILE"
 
-log "🚀 Starting Backend API..."
+log "🚀 Starting TinhKhoan Backend API Service..."
+log "📊 Target Port: $PORT"
 
-# Quick health check
-if curl -s --max-time 2 http://localhost:$PORT/health > /dev/null 2>&1; then
-    log "✅ API already running!"
-    exit 0
+# Step 1: Aggressive cleanup of all backend services
+log "🧹 Stopping all existing backend services..."
+
+# Kill any dotnet processes related to this project
+pkill -f "dotnet.*run.*TinhKhoanApp" 2>/dev/null
+pkill -f "dotnet.*TinhKhoanApp.Api" 2>/dev/null
+pkill -f "dotnet run" 2>/dev/null
+
+# Force kill processes using port 5055
+if lsof -ti:$PORT >/dev/null 2>&1; then
+    log "🔴 Port $PORT is in use, killing processes..."
+    lsof -ti:$PORT | xargs kill -9 2>/dev/null || true
+    sleep 2
 fi
 
-# Aggressive cleanup
-log "🧹 Cleaning up..."
-pkill -f "dotnet.*run" 2>/dev/null
-pkill -f "dotnet.*TinhKhoanApp" 2>/dev/null
-lsof -ti:$PORT | xargs kill -9 2>/dev/null || true
-sleep 3
+# Clean up old PID files
+rm -f "$LOG_FILE.pid" backend_startup.log backend_new.log
 
-# Quick build check
-if [[ ! -f "bin/Debug/net8.0/TinhKhoanApp.Api.dll" ]]; then
-    log "🔨 Building..."
-    dotnet build -q >> "$LOG_FILE" 2>&1
+log "✅ Cleanup completed"
+
+# Step 2: Test build before starting
+log "🔨 Testing build process..."
+dotnet clean --verbosity quiet > /dev/null 2>&1
+if ! dotnet build --verbosity quiet > build_test.log 2>&1; then
+    log "❌ BUILD FAILED! Check build_test.log for errors:"
+    cat build_test.log | tail -20
+    exit 1
 fi
 
-log "▶️ Starting API..."
-# Start API in background without timeout to keep it persistent
-nohup dotnet run --urls=http://localhost:$PORT >> "$LOG_FILE" 2>&1 &
+log "✅ Build test successful"
+rm -f build_test.log
+
+# Step 3: Start the API service
+log "▶️ Starting Backend API..."
+nohup dotnet run --urls="http://localhost:$PORT" >> "$LOG_FILE" 2>&1 &
 API_PID=$!
 echo $API_PID > "$LOG_FILE.pid"
 
-# Quick health check loop
-for i in {1..15}; do
-    if curl -s --max-time 2 http://localhost:$PORT/health > /dev/null 2>&1; then
-        log "✅ API started successfully! PID: $API_PID"
-        log "🔗 Backend is running at: http://localhost:$PORT"
+log "🆔 Backend PID: $API_PID"
+
+# Step 4: Health check with detailed feedback
+log "🔍 Testing API health..."
+for i in {1..20}; do
+    if curl -s --connect-timeout 3 --max-time 5 http://localhost:$PORT/api/health >/dev/null 2>&1; then
+        log "✅ Backend API is healthy and responding!"
+        log "🔗 API Base URL: http://localhost:$PORT"
+        log "🔗 Health Check: http://localhost:$PORT/api/health"
         log "📝 Logs: $LOG_FILE"
-        log "🆔 PID file: $LOG_FILE.pid"
+        log "🆔 PID File: $LOG_FILE.pid"
+        log ""
+        log "🎉 Backend startup completed successfully!"
         exit 0
     fi
 
+    # Check if process is still running
     if ! kill -0 $API_PID 2>/dev/null; then
-        log "❌ API process died"
+        log "❌ Backend process died unexpectedly!"
+        log "� Recent log entries:"
+        tail -10 "$LOG_FILE"
         exit 1
     fi
 
+    log "⏳ Waiting for API to respond... ($i/20)"
     sleep 2
 done
+# Step 5: Failure handling
+log "❌ Backend API failed to respond within timeout!"
+log "📋 Recent log entries:"
+tail -20 "$LOG_FILE"
+log ""
+log "🔧 Troubleshooting suggestions:"
+log "   1. Check for port conflicts: lsof -i:$PORT"
+log "   2. Review full logs: cat $LOG_FILE"
+log "   3. Check build errors: dotnet build"
+log "   4. Verify database connection"
 
-log "❌ API timeout"
-kill -9 $API_PID 2>/dev/null
+# Kill the failed process
+kill -9 $API_PID 2>/dev/null || true
 rm -f "$LOG_FILE.pid"
 exit 1

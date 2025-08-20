@@ -256,7 +256,7 @@
                 <td>
                   <div style="display: flex; align-items: center; gap: 8px">
                     <span class="badge-agribank badge-primary">{{ index + 1 }}</span>
-                    <span class="font-weight-semibold">{{ safeGet(indicator, 'IndicatorName') }}</span>
+                    <span class="font-weight-semibold">{{ safeGet(indicator, 'Name') || safeGet(indicator, 'IndicatorName') }}</span>
                   </div>
                 </td>
                 <td style="text-align: center">
@@ -343,7 +343,7 @@
                   <strong class="text-secondary">{{ getTotalTargets() }} mục tiêu</strong>
                 </td>
                 <td style="text-align: center">
-                  <strong class="badge-agribank badge-success">{{ getTotalScore() }}</strong>
+                  <span class="text-muted">—</span>
                 </td>
                 <td />
               </tr>
@@ -438,8 +438,8 @@ const handleTargetInput = (event, indicatorId) => {
 
     const numValue = parseFloat(cleanNumber)
     if (!isNaN(numValue) && cleanNumber !== '') {
-      // Format with thousand separators using US format (#,###.00)
-      const formatted = new Intl.NumberFormat('en-US').format(numValue)
+      // Format with thousand separators using US format - consistent with UnitKpiAssignmentView
+      const formatted = formatNumber(numValue, 0)  // 0 decimal places for Triệu VND
       event.target.value = formatted
       targetValues.value[indicatorId] = numValue
       return
@@ -542,7 +542,8 @@ function formatTargetValue(indicator, value) {
   // Format based on unit type
   if (unit === 'Triệu VND') {
     // ✅ Sử dụng formatNumber chuẩn US: 1,000,000 thay vì vi-VN: 1.000.000
-    return formatNumber(numValue)
+    // For Triệu VND, use 0 decimal places to avoid unnecessary .00
+    return formatNumber(numValue, 0)
   } else if (unit === '%') {
     return numValue.toString()
   } else {
@@ -752,7 +753,15 @@ async function loadInitialData() {
     kpiTables.value = tablesResponse.data || []
     employees.value = employeesResponse.data || []
     units.value = unitsResponse.data || []
-    khoanPeriods.value = periodsResponse.data || []
+
+    // Handle new API response format for KhoanPeriods
+    if (periodsResponse.data && periodsResponse.data.Success && Array.isArray(periodsResponse.data.Data)) {
+      khoanPeriods.value = periodsResponse.data.Data
+    } else if (Array.isArray(periodsResponse.data)) {
+      khoanPeriods.value = periodsResponse.data
+    } else {
+      khoanPeriods.value = []
+    }
 
     console.log('KPI Tables loaded:', kpiTables.value.length)
     console.log('Employees loaded:', employees.value.length)
@@ -782,31 +791,37 @@ async function loadTableDetails() {
     // Use helper function to log API response
     logApiResponse(`/KpiIndicators/by-table/${selectedTableId.value}`, response, 'indicators')
 
-    if (response.data && Array.isArray(response.data)) {
-      // API trả về trực tiếp array indicators
-      const indicatorsData = response.data
-      console.log('🔄 Raw indicators data:', indicatorsData)
-      console.log('🔄 Indicators count:', indicatorsData.length)
-
-      indicators.value = indicatorsData
-      console.log('✅ Loaded KPI indicators:', indicators.value.length)
-      console.log('✅ Indicators array:', indicators.value)
-
-      // Log first few indicators for debugging
-      if (indicators.value.length > 0) {
-        console.log('📋 Sample indicators:')
-        indicators.value.slice(0, 3).forEach((ind, idx) => {
-          console.log(
-            `   ${idx + 1}. ${ind.IndicatorName || ind.indicatorName} (${ind.MaxScore || ind.maxScore} points, ${ind.Unit || ind.unit || 'N/A'})`,
-          )
-        })
-      } else {
-        console.log('⚠️ Indicators array is empty')
-      }
+    // Handle new API response format: { Success: true, Data: [...] }
+    let indicatorsData = []
+    if (response.data && response.data.Success && Array.isArray(response.data.Data)) {
+      indicatorsData = response.data.Data
+    } else if (response.data && Array.isArray(response.data)) {
+      // Fallback for old format
+      indicatorsData = response.data
     } else {
       console.log('⚠️ API response missing indicators array')
       console.log('🔍 Response data keys:', Object.keys(response.data || {}))
       indicators.value = []
+      return
+    }
+
+    console.log('🔄 Raw indicators data:', indicatorsData)
+    console.log('🔄 Indicators count:', indicatorsData.length)
+
+    indicators.value = indicatorsData
+    console.log('✅ Loaded KPI indicators:', indicators.value.length)
+    console.log('✅ Indicators array:', indicators.value)
+
+    // Log first few indicators for debugging
+    if (indicators.value.length > 0) {
+      console.log('📋 Sample indicators:')
+      indicators.value.slice(0, 3).forEach((ind, idx) => {
+        console.log(
+          `   ${idx + 1}. ${ind.Name || ind.IndicatorName || ind.indicatorName} (${ind.MaxScore || ind.maxScore} points, ${ind.Unit || ind.unit || 'N/A'})`,
+        )
+      })
+    } else {
+      console.log('⚠️ Indicators array is empty')
     }
 
     // Clear previous target values
@@ -1175,10 +1190,6 @@ function clearIndicatorTarget(indicatorId) {
 
 function getTotalMaxScore() {
   return indicators.value.reduce((sum, ind) => sum + (safeGet(ind, 'MaxScore') || 0), 0)
-}
-
-function getTotalScore() {
-  return Object.values(targetValues.value).reduce((sum, score) => sum + (parseFloat(score) || 0), 0)
 }
 
 function getTotalTargets() {

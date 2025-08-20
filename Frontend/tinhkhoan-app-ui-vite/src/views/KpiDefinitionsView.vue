@@ -2,7 +2,9 @@
   <div class="kpi-definitions kpi-definitions-view b2-screen">
     <div class="header-section">
       <h1>⚙️ Cấu hình KPI</h1>
-      <p class="subtitle">Quản lý các bảng giao khoán KPI và chỉ tiêu tương ứng</p>
+      <p class="subtitle">
+        Quản lý các bảng giao khoán KPI và chỉ tiêu tương ứng
+      </p>
     </div>
 
     <!-- Error Message -->
@@ -17,7 +19,7 @@
 
     <!-- Loading State -->
     <div v-if="loading" class="loading-section">
-      <div class="loading-spinner"></div>
+      <div class="loading-spinner" />
       <p>Đang tải dữ liệu...</p>
     </div>
 
@@ -41,20 +43,35 @@
       <!-- Left Panel - Dropdown chọn bảng KPI -->
       <div class="left-panel">
         <div class="table-selector-container">
-          <h2 v-if="activeTab === 'employee'">📋 Chọn Bảng KPI Cán bộ</h2>
-          <h2 v-if="activeTab === 'branch'">🏢 Chọn Bảng KPI Chi nhánh</h2>
+          <h2 v-if="activeTab === 'employee'">
+            📋 Chọn Bảng KPI Cán bộ
+          </h2>
+          <h2 v-if="activeTab === 'branch'">
+            🏢 Chọn Bảng KPI Chi nhánh
+          </h2>
 
           <div v-if="filteredKpiTables.length === 0" class="no-data">
-            <p v-if="activeTab === 'employee'">Chưa có bảng giao khoán KPI nào cho cán bộ.</p>
-            <p v-if="activeTab === 'branch'">Chưa có bảng giao khoán KPI nào cho chi nhánh.</p>
+            <p v-if="activeTab === 'employee'">
+              Chưa có bảng giao khoán KPI nào cho cán bộ.
+            </p>
+            <p v-if="activeTab === 'branch'">
+              Chưa có bảng giao khoán KPI nào cho chi nhánh.
+            </p>
           </div>
 
           <div v-else class="table-dropdown-section">
             <!-- Dropdown chọn bảng -->
             <div class="dropdown-group">
               <label for="tableSelect">Bảng giao khoán KPI:</label>
-              <select id="tableSelect" v-model="selectedTableId" @change="onTableChange" class="table-dropdown">
-                <option value="">-- Chọn bảng KPI --</option>
+              <select
+                id="tableSelect"
+                v-model="selectedTableId"
+                class="table-dropdown"
+                @change="onTableChange"
+              >
+                <option value="">
+                  -- Chọn bảng KPI --
+                </option>
                 <option
                   v-for="table in filteredKpiTables"
                   :key="table.Id !== undefined ? table.Id : table.id"
@@ -131,7 +148,7 @@
               </div>
 
               <!-- Nút refresh -->
-              <button @click="loadTableDetails" :disabled="loadingDetails" class="refresh-button">
+              <button :disabled="loadingDetails" class="refresh-button" @click="loadTableDetails">
                 {{ loadingDetails ? '🔄 Đang tải...' : '🔄 Refresh' }}
               </button>
             </div>
@@ -143,7 +160,9 @@
       <div class="right-panel">
         <div v-if="!selectedTable" class="no-selection">
           <div class="empty-state">
-            <div class="empty-icon">📊</div>
+            <div class="empty-icon">
+              📊
+            </div>
             <h3>Chọn bảng KPI để bắt đầu</h3>
             <p>Vui lòng chọn một bảng giao khoán KPI từ dropdown bên trái để xem và chỉnh sửa các chỉ tiêu.</p>
           </div>
@@ -155,14 +174,18 @@
               ⚡ Chỉ tiêu KPI -
               {{
                 selectedTable.Description ||
-                selectedTable.description ||
-                selectedTable.TableName ||
-                selectedTable.tableName
+                  selectedTable.description ||
+                  selectedTable.TableName ||
+                  selectedTable.tableName
               }}
             </h2>
             <!-- DEBUG: Force computed trigger -->
-            <div style="font-size: 12px; color: #666">Debug: {{ debugIndicators }} indicators loaded</div>
-            <button @click="openAddIndicatorModal" class="action-button add-btn">➕ Thêm chỉ tiêu</button>
+            <div style="font-size: 12px; color: #666">
+              Debug: {{ debugIndicators }} indicators loaded
+            </div>
+            <button class="action-button add-btn" @click="openAddIndicatorModal">
+              ➕ Thêm chỉ tiêu
+            </button>
           </div>
 
           <!-- Có chỉ tiêu -->
@@ -183,10 +206,18 @@
                 <tbody>
                   <tr v-for="(indicator, index) in indicators" :key="getId(indicator)">
                     <td>{{ index + 1 }}</td>
-                    <td class="indicator-name kpi-name">{{ safeGet(indicator, 'IndicatorName') }}</td>
-                    <td class="max-score kpi-score">{{ safeGet(indicator, 'MaxScore') }}</td>
-                    <td class="unit kpi-unit">{{ safeGet(indicator, 'Unit') }}</td>
-                    <td class="order kpi-number">{{ safeGet(indicator, 'OrderIndex') }}</td>
+                    <td class="indicator-name kpi-name">
+                      {{ safeGet(indicator, 'Name') || safeGet(indicator, 'IndicatorName') }}
+                    </td>
+                    <td class="max-score kpi-score">
+                      {{ safeGet(indicator, 'MaxScore') }}
+                    </td>
+                    <td class="unit kpi-unit">
+                      {{ safeGet(indicator, 'Unit') }}
+                    </td>
+                    <td class="order kpi-number">
+                      {{ safeGet(indicator, 'OrderIndex') }}
+                    </td>
                     <td class="status">
                       <span
                         :class="{ active: safeGet(indicator, 'IsActive'), inactive: !safeGet(indicator, 'IsActive') }"
@@ -195,23 +226,25 @@
                       </span>
                     </td>
                     <td class="actions">
-                      <button @click="openEditIndicatorModal(indicator)" class="action-btn edit-btn" title="Chỉnh sửa">
+                      <button class="action-btn edit-btn" title="Chỉnh sửa" @click="openEditIndicatorModal(indicator)">
                         ✏️
                       </button>
-                      <button @click="deleteIndicator(indicator)" class="action-btn delete-btn" title="Xóa">🗑️</button>
+                      <button class="action-btn delete-btn" title="Xóa" @click="deleteIndicator(indicator)">
+                        🗑️
+                      </button>
                       <button
-                        @click="moveIndicatorUp(indicator)"
                         :disabled="indicator.orderIndex === 1"
                         class="action-btn move-btn"
                         title="Lên trên"
+                        @click="moveIndicatorUp(indicator)"
                       >
                         ⬆️
                       </button>
                       <button
-                        @click="moveIndicatorDown(indicator)"
                         :disabled="indicator.orderIndex === indicators.length"
                         class="action-btn move-btn"
                         title="Xuống dưới"
+                        @click="moveIndicatorDown(indicator)"
                       >
                         ⬇️
                       </button>
@@ -264,16 +297,20 @@
           <!-- Chưa có chỉ tiêu -->
           <div v-else-if="!loadingDetails" class="no-indicators">
             <div class="empty-state">
-              <div class="empty-icon">📊</div>
+              <div class="empty-icon">
+                📊
+              </div>
               <h3>Chưa có chỉ tiêu KPI</h3>
               <p>Bảng này chưa có chỉ tiêu KPI nào được định nghĩa.</p>
-              <button @click="openAddIndicatorModal" class="action-button add-btn">➕ Thêm chỉ tiêu đầu tiên</button>
+              <button class="action-button add-btn" @click="openAddIndicatorModal">
+                ➕ Thêm chỉ tiêu đầu tiên
+              </button>
             </div>
           </div>
 
           <!-- Loading state -->
           <div v-else class="loading-indicators">
-            <div class="loading-spinner"></div>
+            <div class="loading-spinner" />
             <p>Đang tải chỉ tiêu...</p>
           </div>
         </div>
@@ -284,17 +321,23 @@
     <div v-if="!loading && activeTab === 'scoring'" class="scoring-rules-content">
       <div class="scoring-rules-header">
         <h2>⚡ Cấu hình Điểm tăng giảm Chỉ tiêu Chi nhánh</h2>
-        <p class="subtitle">Quản lý quy tắc tính điểm dựa trên tỷ lệ hoàn thành chỉ tiêu</p>
+        <p class="subtitle">
+          Quản lý quy tắc tính điểm dựa trên tỷ lệ hoàn thành chỉ tiêu
+        </p>
 
         <div class="scoring-actions">
-          <button @click="openAddScoringRuleModal" class="action-button add-btn">➕ Thêm quy tắc tính điểm</button>
-          <button @click="loadScoringRules" class="action-button refresh-btn">🔄 Làm mới</button>
+          <button class="action-button add-btn" @click="openAddScoringRuleModal">
+            ➕ Thêm quy tắc tính điểm
+          </button>
+          <button class="action-button refresh-btn" @click="loadScoringRules">
+            🔄 Làm mới
+          </button>
         </div>
       </div>
 
       <!-- Loading State -->
       <div v-if="loadingScoringRules" class="loading-section">
-        <div class="loading-spinner"></div>
+        <div class="loading-spinner" />
         <p>Đang tải quy tắc tính điểm...</p>
       </div>
 
@@ -318,20 +361,36 @@
             <tbody>
               <tr v-for="(rule, index) in scoringRules" :key="rule.Id">
                 <td>{{ index + 1 }}</td>
-                <td class="indicator-name kpi-name">{{ rule.kpiIndicatorName }}</td>
+                <td class="indicator-name kpi-name">
+                  {{ rule.kpiIndicatorName }}
+                </td>
                 <td>
                   <span class="scoring-method" :class="rule.scoringMethod.toLowerCase()">
                     {{ getScoringMethodLabel(rule.scoringMethod) }}
                   </span>
                 </td>
-                <td class="percentage-step kpi-percentage">{{ rule.percentageStep }}%</td>
-                <td class="score-per-step kpi-score">{{ rule.scorePerStep }}</td>
-                <td class="max-score kpi-score">{{ rule.maxScore || 'Không giới hạn' }}</td>
-                <td class="min-score kpi-score">{{ rule.minScore || 'Không giới hạn' }}</td>
-                <td class="unit-type">{{ getUnitTypeLabel(rule.applicableUnitType) }}</td>
+                <td class="percentage-step kpi-percentage">
+                  {{ rule.percentageStep }}%
+                </td>
+                <td class="score-per-step kpi-score">
+                  {{ rule.scorePerStep }}
+                </td>
+                <td class="max-score kpi-score">
+                  {{ rule.maxScore || 'Không giới hạn' }}
+                </td>
+                <td class="min-score kpi-score">
+                  {{ rule.minScore || 'Không giới hạn' }}
+                </td>
+                <td class="unit-type">
+                  {{ getUnitTypeLabel(rule.applicableUnitType) }}
+                </td>
                 <td class="actions">
-                  <button @click="editScoringRule(rule)" class="action-btn edit-btn">✏️</button>
-                  <button @click="deleteScoringRule(rule.Id)" class="action-btn delete-btn">🗑️</button>
+                  <button class="action-btn edit-btn" @click="editScoringRule(rule)">
+                    ✏️
+                  </button>
+                  <button class="action-btn delete-btn" @click="deleteScoringRule(rule.Id)">
+                    🗑️
+                  </button>
                 </td>
               </tr>
             </tbody>
@@ -362,10 +421,14 @@
       <!-- Empty State -->
       <div v-else-if="!loadingScoringRules" class="no-scoring-rules">
         <div class="empty-state">
-          <div class="empty-icon">⚡</div>
+          <div class="empty-icon">
+            ⚡
+          </div>
           <h3>Chưa có quy tắc tính điểm</h3>
           <p>Chưa có quy tắc tính điểm nào được cấu hình. Hãy tạo quy tắc đầu tiên.</p>
-          <button @click="openAddScoringRuleModal" class="action-button add-btn">➕ Tạo quy tắc đầu tiên</button>
+          <button class="action-button add-btn" @click="openAddScoringRuleModal">
+            ➕ Tạo quy tắc đầu tiên
+          </button>
         </div>
       </div>
     </div>
@@ -376,47 +439,49 @@
         >
         <div class="modal-header">
           <h3>{{ isEditMode ? 'Chỉnh sửa chỉ tiêu KPI' : 'Thêm chỉ tiêu KPI mới' }}</h3>
-          <button @click="closeIndicatorModal" class="close-btn">✕</button>
+          <button class="close-btn" @click="closeIndicatorModal">
+            ✕
+          </button>
         </div>
 
-        <form @submit.prevent="saveIndicator" class="modal-form">
+        <form class="modal-form" @submit.prevent="saveIndicator">
           <div class="form-group">
             <label for="indicatorName">Tên chỉ tiêu *</label>
             <input
-              type="text"
               id="indicatorName"
               v-model="indicatorForm.indicatorName"
+              type="text"
               required
               placeholder="Nhập tên chỉ tiêu KPI"
               class="form-input"
-            />
+            >
           </div>
 
           <div class="form-row">
             <div class="form-group">
               <label for="maxScore">Điểm tối đa *</label>
               <input
-                type="number"
                 id="maxScore"
                 v-model.number="indicatorForm.maxScore"
+                type="number"
                 required
                 min="0"
                 step="0.01"
                 placeholder="0"
                 class="form-input"
-              />
+              >
             </div>
 
             <div class="form-group">
               <label for="unit">Đơn vị tính *</label>
               <input
-                type="text"
                 id="unit"
                 v-model="indicatorForm.unit"
+                type="text"
                 required
                 placeholder="%, Triệu VND, BT, cái..."
                 class="form-input"
-              />
+              >
             </div>
           </div>
 
@@ -424,24 +489,38 @@
             <div class="form-group">
               <label for="valueType">Loại dữ liệu</label>
               <select id="valueType" v-model="indicatorForm.valueTypeString" class="form-input">
-                <option value="NUMBER">Số</option>
-                <option value="PERCENTAGE">Phần trăm</option>
-                <option value="CURRENCY">Tiền</option>
-                <option value="POINTS">Điểm</option>
+                <option value="NUMBER">
+                  Số
+                </option>
+                <option value="PERCENTAGE">
+                  Phần trăm
+                </option>
+                <option value="CURRENCY">
+                  Tiền
+                </option>
+                <option value="POINTS">
+                  Điểm
+                </option>
               </select>
             </div>
 
-            <div class="form-group" v-if="isEditMode">
+            <div v-if="isEditMode" class="form-group">
               <label for="isActive">Trạng thái</label>
               <select id="isActive" v-model="indicatorForm.isActive" class="form-input">
-                <option :value="true">Hoạt động</option>
-                <option :value="false">Không hoạt động</option>
+                <option :value="true">
+                  Hoạt động
+                </option>
+                <option :value="false">
+                  Không hoạt động
+                </option>
               </select>
             </div>
           </div>
 
           <div class="modal-footer">
-            <button type="button" @click="closeIndicatorModal" class="btn-secondary">Hủy</button>
+            <button type="button" class="btn-secondary" @click="closeIndicatorModal">
+              Hủy
+            </button>
             <button type="submit" :disabled="savingIndicator" class="btn-primary">
               {{ savingIndicator ? 'Đang lưu...' : isEditMode ? 'Cập nhật' : 'Thêm mới' }}
             </button>
@@ -460,16 +539,25 @@
       <div class="modal-content scoring-rule-modal">
         <div class="modal-header">
           <h3>{{ isEditScoringRuleMode ? '✏️ Chỉnh sửa quy tắc tính điểm' : '➕ Thêm quy tắc tính điểm' }}</h3>
-          <button type="button" @click="closeScoringRuleModal" class="close-button">✕</button>
+          <button type="button" class="close-button" @click="closeScoringRuleModal">
+            ✕
+          </button>
         </div>
 
-        <form @submit.prevent="saveScoringRule" class="scoring-rule-form">
+        <form class="scoring-rule-form" @submit.prevent="saveScoringRule">
           <div class="modal-body">
             <div class="form-row">
               <div class="form-group">
                 <label for="kpiIndicatorName">Tên chỉ tiêu KPI <span class="required">*</span></label>
-                <select id="kpiIndicatorName" v-model="scoringRuleForm.kpiIndicatorName" class="form-input" required>
-                  <option value="">-- Chọn chỉ tiêu KPI --</option>
+                <select
+                  id="kpiIndicatorName"
+                  v-model="scoringRuleForm.kpiIndicatorName"
+                  class="form-input"
+                  required
+                >
+                  <option value="">
+                    -- Chọn chỉ tiêu KPI --
+                  </option>
                   <option v-for="indicator in branchKpiIndicators" :key="indicator.Name" :value="indicator.Name">
                     {{ indicator.Name }}
                     <span v-if="indicator.Code"> ({{ indicator.Code }})</span>
@@ -480,12 +568,27 @@
 
               <div class="form-group">
                 <label for="scoringMethod">Phương pháp tính điểm <span class="required">*</span></label>
-                <select id="scoringMethod" v-model="scoringRuleForm.scoringMethod" class="form-input" required>
-                  <option value="">-- Chọn phương pháp --</option>
-                  <option value="LINEAR">Linear - Điểm tăng theo hiệu suất</option>
-                  <option value="REVERSE_LINEAR">Reverse Linear - Điểm giảm theo hiệu suất</option>
-                  <option value="THRESHOLD">Threshold - Ngưỡng</option>
-                  <option value="CUSTOM">Custom - Tùy chỉnh</option>
+                <select
+                  id="scoringMethod"
+                  v-model="scoringRuleForm.scoringMethod"
+                  class="form-input"
+                  required
+                >
+                  <option value="">
+                    -- Chọn phương pháp --
+                  </option>
+                  <option value="LINEAR">
+                    Linear - Điểm tăng theo hiệu suất
+                  </option>
+                  <option value="REVERSE_LINEAR">
+                    Reverse Linear - Điểm giảm theo hiệu suất
+                  </option>
+                  <option value="THRESHOLD">
+                    Threshold - Ngưỡng
+                  </option>
+                  <option value="CUSTOM">
+                    Custom - Tùy chỉnh
+                  </option>
                 </select>
               </div>
             </div>
@@ -495,15 +598,15 @@
                 <label for="percentageStep">Bước % thay đổi <span class="required">*</span></label>
                 <input
                   id="percentageStep"
+                  v-model.number="scoringRuleForm.percentageStep"
                   type="number"
                   step="0.1"
                   min="0.1"
                   max="100"
-                  v-model.number="scoringRuleForm.percentageStep"
                   class="form-input"
                   placeholder="5"
                   required
-                />
+                >
                 <small class="form-help">Mỗi bước tăng/giảm bao nhiêu % so với chỉ tiêu</small>
               </div>
 
@@ -511,14 +614,14 @@
                 <label for="scorePerStep">Điểm mỗi bước <span class="required">*</span></label>
                 <input
                   id="scorePerStep"
+                  v-model.number="scoringRuleForm.scorePerStep"
                   type="number"
                   step="0.1"
                   min="0.1"
-                  v-model.number="scoringRuleForm.scorePerStep"
                   class="form-input"
                   placeholder="1.5"
                   required
-                />
+                >
                 <small class="form-help">Điểm được cộng/trừ cho mỗi bước thay đổi</small>
               </div>
             </div>
@@ -528,33 +631,39 @@
                 <label for="maxScore">Điểm tối đa</label>
                 <input
                   id="maxScore"
+                  v-model.number="scoringRuleForm.maxScore"
                   type="number"
                   step="0.1"
-                  v-model.number="scoringRuleForm.maxScore"
                   class="form-input"
                   placeholder="Để trống nếu không giới hạn"
-                />
+                >
               </div>
 
               <div class="form-group">
                 <label for="minScore">Điểm tối thiểu</label>
                 <input
                   id="minScore"
+                  v-model.number="scoringRuleForm.minScore"
                   type="number"
                   step="0.1"
-                  v-model.number="scoringRuleForm.minScore"
                   class="form-input"
                   placeholder="Để trống nếu không giới hạn"
-                />
+                >
               </div>
             </div>
 
             <div class="form-group">
               <label for="applicableUnitType">Áp dụng cho loại chi nhánh</label>
               <select id="applicableUnitType" v-model="scoringRuleForm.applicableUnitType" class="form-input">
-                <option value="ALL">Tất cả chi nhánh</option>
-                <option value="CNL1">Chi nhánh cấp 1</option>
-                <option value="CNL2">Chi nhánh cấp 2</option>
+                <option value="ALL">
+                  Tất cả chi nhánh
+                </option>
+                <option value="CNL1">
+                  Chi nhánh cấp 1
+                </option>
+                <option value="CNL2">
+                  Chi nhánh cấp 2
+                </option>
               </select>
             </div>
 
@@ -566,7 +675,7 @@
                 class="form-input"
                 rows="3"
                 placeholder="Mô tả chi tiết quy tắc tính điểm..."
-              ></textarea>
+              />
             </div>
 
             <!-- Example Preview -->
@@ -583,17 +692,17 @@
                 </div>
                 <div class="example-item">
                   <span class="example-label">Hoàn thành {{ 100 - scoringRuleForm.percentageStep }}%:</span>
-                  <span class="example-value negative"
-                    >{{ scoringRuleForm.scoringMethod === 'REVERSE_LINEAR' ? '+' : '-'
-                    }}{{ scoringRuleForm.scorePerStep }} điểm</span
-                  >
+                  <span class="example-value negative">{{ scoringRuleForm.scoringMethod === 'REVERSE_LINEAR' ? '+' : '-'
+                  }}{{ scoringRuleForm.scorePerStep }} điểm</span>
                 </div>
               </div>
             </div>
           </div>
 
           <div class="modal-footer">
-            <button type="button" @click="closeScoringRuleModal" class="btn-secondary">Hủy bỏ</button>
+            <button type="button" class="btn-secondary" @click="closeScoringRuleModal">
+              Hủy bỏ
+            </button>
             <button type="submit" :disabled="savingScoringRule" class="btn-primary">
               {{ savingScoringRule ? 'Đang lưu...' : isEditScoringRuleMode ? 'Cập nhật quy tắc' : 'Tạo quy tắc mới' }}
             </button>
@@ -1349,7 +1458,7 @@ const saveScoringRule = async () => {
     }
 
     showSuccess(
-      isEditScoringRuleMode.value ? 'Cập nhật quy tắc tính điểm thành công.' : 'Thêm quy tắc tính điểm mới thành công.'
+      isEditScoringRuleMode.value ? 'Cập nhật quy tắc tính điểm thành công.' : 'Thêm quy tắc tính điểm mới thành công.',
     )
     closeScoringRuleModal()
     await loadScoringRules() // Reload to get updated list
