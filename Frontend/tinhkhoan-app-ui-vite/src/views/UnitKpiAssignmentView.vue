@@ -734,29 +734,32 @@ const handleKpiTargetInput = (event, indicatorId) => {
 
   const inputValue = event.target.value
 
-  // Remove all non-numeric characters except decimal point for initial processing
-  let numericValue = inputValue.replace(/[^\d.,]/g, '')
-
-  // Handle comma as decimal separator (Vietnamese style)
-  numericValue = numericValue.replace(',', '.')
-
-  // For percentage, limit to 100
   if (unit === '%') {
+    // Handle percentage input - NO decimal places for cleaner display
+    // Remove all non-numeric characters
+    let numericValue = inputValue.replace(/[^\d]/g, '')
+
+    // Limit percentage to 100
     const numValue = parseFloat(numericValue)
     if (!isNaN(numValue) && numValue > 100) {
       numericValue = '100'
-      kpiTargetErrors.value[indicatorId] = 'Giá trị tối đa là 100%'
+      kpiTargetErrors.value[indicatorId] = 'Tỷ lệ % không được vượt quá 100%'
     } else {
       delete kpiTargetErrors.value[indicatorId]
     }
+
+    // Format as whole numbers for percentages (e.g., 15%, 85%)
+    event.target.value = numericValue
+    kpiTargets.value[indicatorId] = parseFloat(numericValue) || null
+    return
   }
 
-  // For "Triệu VND", format with thousand separators and limit to 8 digits
   if (unit === 'Triệu VND') {
-    // Remove formatting first to get clean number
-    let cleanNumber = numericValue.replace(/[,.\s]/g, '')
+    // Handle Triệu VND input with thousand separators - NO decimal places
+    // Remove all non-numeric characters
+    let cleanNumber = inputValue.replace(/[^\d]/g, '')
 
-    // Limit to 8 digits maximum
+    // Validate không quá 8 chữ số (99,999,999 triệu VND = 99 nghìn tỷ VND)
     if (cleanNumber.length > 8) {
       cleanNumber = cleanNumber.substring(0, 8)
       kpiTargetErrors.value[indicatorId] = 'Giá trị tối đa là 8 chữ số (99,999,999 triệu VND)'
@@ -766,8 +769,7 @@ const handleKpiTargetInput = (event, indicatorId) => {
 
     const numValue = parseFloat(cleanNumber)
     if (!isNaN(numValue) && cleanNumber !== '') {
-      // ✅ Format with formatNumber chuẩn US: 1,000,000 thay vì vi-VN: 1.000.000
-      // For Triệu VND, use 0 decimal places to avoid unnecessary .00
+      // ✅ Format with no decimal places for whole numbers: 1,000,000 (not 1,000,000.00)
       const formatted = formatNumber(numValue, 0)
       event.target.value = formatted
       kpiTargets.value[indicatorId] = numValue
@@ -780,23 +782,16 @@ const handleKpiTargetInput = (event, indicatorId) => {
     }
   }
 
-  // For percentage, keep as decimal
-  if (unit === '%') {
-    const numValue = parseFloat(numericValue)
-    if (!isNaN(numValue)) {
-      event.target.value = numValue.toString()
-      kpiTargets.value[indicatorId] = numValue
-    }
-    return
-  }
-
-  // Default handling for other units
+  // Handle other units - allow decimal input
+  const numericValue = inputValue.replace(/[^\d.,]/g, '').replace(',', '.')
   const numValue = parseFloat(numericValue)
+
   if (!isNaN(numValue)) {
-    event.target.value = numValue.toString()
+    event.target.value = numericValue
     kpiTargets.value[indicatorId] = numValue
     delete kpiTargetErrors.value[indicatorId]
-  } else if (inputValue.trim() === '') {
+  } else if (numericValue === '') {
+    event.target.value = ''
     kpiTargets.value[indicatorId] = null
     delete kpiTargetErrors.value[indicatorId]
   } else {

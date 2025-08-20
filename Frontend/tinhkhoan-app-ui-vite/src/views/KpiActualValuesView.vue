@@ -1,17 +1,19 @@
 <template>
   <div class="kpi-actual-values">
     <div class="header-section">
-      <h1>📊 Cập nhật Giá trị thực hiện KPI</h1>
-      <p class="subtitle">Nhập và cập nhật giá trị thực hiện cho các chỉ tiêu KPI đã giao khoán</p>
+      <h1>📊 B5 - Tình hình thực hiện</h1>
+      <p class="subtitle">
+        Nhập và cập nhật giá trị thực hiện cho các chỉ tiêu KPI đã giao khoán
+      </p>
     </div>
 
-    <!-- Tab Navigation -->
+    <!-- Tab Navigation with Clear Categories -->
     <div class="tab-navigation">
       <button class="tab-button" :class="{ active: activeTab === 'employee' }" @click="switchTab('employee')">
-        👤 Cán bộ
+        👤 CANBO - Cập nhật KPI Cán bộ
       </button>
       <button class="tab-button" :class="{ active: activeTab === 'unit' }" @click="switchTab('unit')">
-        🏢 Chi nhánh
+        🏢 CHINHANH - Cập nhật KPI Chi nhánh
       </button>
     </div>
 
@@ -39,7 +41,9 @@
                 <div class="form-group">
                   <label for="branchFilter">🏢 Chi nhánh:</label>
                   <select id="branchFilter" v-model="selectedBranchId" @change="onBranchChange">
-                    <option value="">-- Tất cả chi nhánh --</option>
+                    <option value="">
+                      -- Tất cả chi nhánh --
+                    </option>
                     <option v-for="branch in branchOptions" :key="branch.Id" :value="branch.Id">
                       🏢 {{ branch.Name }} ({{ branch.Code }})
                     </option>
@@ -49,7 +53,9 @@
                 <div class="form-group">
                   <label for="departmentFilter">🏬 Phòng ban:</label>
                   <select id="departmentFilter" v-model="selectedDepartmentId" @change="onDepartmentChange">
-                    <option value="">-- Tất cả phòng ban --</option>
+                    <option value="">
+                      -- Tất cả phòng ban --
+                    </option>
                     <option v-for="dept in departmentOptions" :key="dept.Id" :value="dept.Id">
                       🏬 {{ dept.Name }} ({{ dept.Code }})
                     </option>
@@ -59,7 +65,9 @@
                 <div class="form-group">
                   <label for="employeeFilter">Nhân viên:</label>
                   <select id="employeeFilter" v-model="selectedEmployeeId" @change="onFilterChange">
-                    <option value="">-- Tất cả nhân viên --</option>
+                    <option value="">
+                      -- Tất cả nhân viên --
+                    </option>
                     <option v-for="employee in filteredEmployees" :key="employee.Id" :value="employee.Id">
                       {{ employee.fullName }} - {{ employee.unit?.Name }}
                     </option>
@@ -71,7 +79,9 @@
                 <div class="form-group">
                   <label for="periodFilter">Kỳ khoán:</label>
                   <select id="periodFilter" v-model="selectedPeriodId" @change="onFilterChange">
-                    <option value="">-- Tất cả kỳ khoán --</option>
+                    <option value="">
+                      -- Tất cả kỳ khoán --
+                    </option>
                     <option v-for="period in khoanPeriods" :key="period.Id" :value="period.Id">
                       {{ period.Name }} ({{ formatDate(period.startDate) }} - {{ formatDate(period.endDate) }})
                     </option>
@@ -80,9 +90,9 @@
 
                 <div class="form-group">
                   <button
-                    @click="searchAssignments"
                     :disabled="!canSearch || searching"
                     class="action-button search-btn"
+                    @click="searchAssignments"
                   >
                     {{ searching ? 'Đang tìm...' : '🔍 Tìm kiếm' }}
                   </button>
@@ -103,7 +113,7 @@
 
         <!-- Loading State -->
         <div v-if="searching" class="loading-section">
-          <div class="loading-spinner"></div>
+          <div class="loading-spinner" />
           <p>Đang tìm kiếm giao khoán...</p>
         </div>
 
@@ -142,18 +152,26 @@
                 <tbody>
                   <tr v-for="assignment in assignments" :key="assignment.Id" class="assignment-row">
                     <td class="employee-info">
-                      <div class="employee-name">{{ assignment.employee?.fullName }}</div>
-                      <div class="employee-unit">{{ assignment.employee?.unit?.Name }}</div>
+                      <div class="employee-name">
+                        {{ assignment.employee?.fullName }}
+                      </div>
+                      <div class="employee-unit">
+                        {{ assignment.employee?.unit?.Name }}
+                      </div>
                     </td>
                     <td class="period-info">
-                      <div class="period-name">{{ assignment.khoanPeriod?.periodName }}</div>
+                      <div class="period-name">
+                        {{ assignment.khoanPeriod?.periodName }}
+                      </div>
                       <div class="period-dates">
                         {{ formatDate(assignment.khoanPeriod?.startDate) }} -
                         {{ formatDate(assignment.khoanPeriod?.endDate) }}
                       </div>
                     </td>
                     <td class="indicator-info">
-                      <div class="indicator-name">{{ assignment.indicator?.indicatorName }}</div>
+                      <div class="indicator-name">
+                        {{ assignment.indicator?.indicatorName }}
+                      </div>
                       <div class="indicator-details">
                         Tối đa: {{ assignment.indicator?.maxScore }} điểm ({{ assignment.indicator?.unit }})
                       </div>
@@ -165,15 +183,15 @@
                     <td class="actual-value">
                       <div v-if="editingAssignment === assignment.Id" class="edit-mode">
                         <input
-                          type="text"
                           v-model="editingActualValueFormatted"
-                          @input="e => handleActualValueInput(e)"
-                          @blur="e => handleActualValueBlur(e)"
+                          type="text"
                           :placeholder="`Nhập giá trị (${assignment.indicator?.unit})`"
                           class="actual-input"
+                          @input="e => handleActualValueInput(e)"
+                          @blur="e => handleActualValueBlur(e)"
                           @keyup.enter="saveActualValue(assignment)"
                           @keyup.escape="cancelEdit"
-                        />
+                        >
                       </div>
                       <div v-else class="view-mode">
                         <span v-if="assignment.actualValue != null" class="value">
@@ -197,21 +215,37 @@
                     <td class="actions">
                       <div v-if="editingAssignment === assignment.Id" class="edit-actions">
                         <button
-                          @click="saveActualValue(assignment)"
                           :disabled="savingActual"
                           class="action-btn save-btn"
+                          title="Lưu giá trị"
+                          @click="saveActualValue(assignment)"
                         >
-                          ✓
+                          ✅ Lưu
                         </button>
-                        <button @click="cancelEdit" :disabled="savingActual" class="action-btn cancel-btn">✕</button>
+                        <button
+                          :disabled="savingActual"
+                          class="action-btn cancel-btn"
+                          title="Hủy chỉnh sửa"
+                          @click="cancelEdit"
+                        >
+                          ❌ Hủy
+                        </button>
                       </div>
                       <div v-else class="view-actions">
                         <button
+                          class="action-btn execute-btn"
+                          title="Cập nhật tình hình thực hiện chỉ tiêu này"
                           @click="startEdit(assignment)"
-                          class="action-btn edit-btn"
-                          title="Chỉnh sửa giá trị thực hiện"
                         >
-                          ✏️
+                          🎯 Thực hiện
+                        </button>
+                        <button
+                          v-if="assignment.actualValue != null"
+                          class="action-btn details-btn"
+                          title="Xem chi tiết tính điểm"
+                          @click="viewCalculationDetails(assignment)"
+                        >
+                          📊 Chi tiết
                         </button>
                       </div>
                     </td>
@@ -226,14 +260,16 @@
         <div
           v-if="
             !searching &&
-            assignments.length === 0 &&
-            (selectedEmployeeId || selectedPeriodId || selectedBranchId || selectedDepartmentId)
+              assignments.length === 0 &&
+              (selectedEmployeeId || selectedPeriodId || selectedBranchId || selectedDepartmentId)
           "
           class="empty-state"
         >
           <div class="form-container">
             <div class="empty-content">
-              <div class="empty-icon">📋</div>
+              <div class="empty-icon">
+                📋
+              </div>
               <h3>Không tìm thấy giao khoán</h3>
               <p>Không có giao khoán KPI nào phù hợp với tiêu chí tìm kiếm.</p>
             </div>
@@ -244,17 +280,19 @@
         <div
           v-if="
             !searching &&
-            assignments.length === 0 &&
-            !selectedEmployeeId &&
-            !selectedPeriodId &&
-            !selectedBranchId &&
-            !selectedDepartmentId
+              assignments.length === 0 &&
+              !selectedEmployeeId &&
+              !selectedPeriodId &&
+              !selectedBranchId &&
+              !selectedDepartmentId
           "
           class="initial-state"
         >
           <div class="form-container">
             <div class="initial-content">
-              <div class="initial-icon">🎯</div>
+              <div class="initial-icon">
+                🎯
+              </div>
               <h3>Chọn tiêu chí tìm kiếm</h3>
               <p>Vui lòng chọn nhân viên hoặc kỳ khoán để hiển thị các giao khoán KPI.</p>
             </div>
@@ -275,7 +313,9 @@
                 <div class="form-group">
                   <label for="unitBranchFilter">🏢 Chi nhánh:</label>
                   <select id="unitBranchFilter" v-model="selectedUnitBranchId" @change="onUnitBranchChange">
-                    <option value="">-- Chọn chi nhánh --</option>
+                    <option value="">
+                      -- Chọn chi nhánh --
+                    </option>
                     <option v-for="branch in branchOptions" :key="branch.Id" :value="branch.Id">
                       🏢 {{ branch.Name }} ({{ branch.Code }})
                     </option>
@@ -285,7 +325,9 @@
                 <div class="form-group">
                   <label for="unitPeriodFilter">📅 Kỳ khoán:</label>
                   <select id="unitPeriodFilter" v-model="selectedUnitPeriodId" @change="onUnitFilterChange">
-                    <option value="">-- Chọn kỳ khoán --</option>
+                    <option value="">
+                      -- Chọn kỳ khoán --
+                    </option>
                     <option v-for="period in khoanPeriods" :key="period.Id" :value="period.Id">
                       {{ period.Name }} ({{ formatDate(period.startDate) }} - {{ formatDate(period.endDate) }})
                     </option>
@@ -294,9 +336,9 @@
 
                 <div class="form-group">
                   <button
-                    @click="searchUnitAssignments"
                     :disabled="!canSearchUnit || searchingUnit"
                     class="action-button search-btn"
+                    @click="searchUnitAssignments"
                   >
                     {{ searchingUnit ? 'Đang tìm...' : '🔍 Tìm kiếm' }}
                   </button>
@@ -316,7 +358,7 @@
 
         <!-- Unit Loading State -->
         <div v-if="searchingUnit" class="loading-section">
-          <div class="loading-spinner"></div>
+          <div class="loading-spinner" />
           <p>Đang tìm kiếm giao khoán chi nhánh...</p>
         </div>
 
@@ -369,14 +411,14 @@
                     <td class="actual-cell">
                       <div v-if="editingUnitAssignment === assignment.Id" class="edit-actual">
                         <input
-                          type="text"
                           v-model="editingUnitActualValueFormatted"
+                          type="text"
+                          class="actual-input"
                           @input="e => handleUnitActualValueInput(e)"
                           @blur="e => handleUnitActualValueBlur(e)"
-                          class="actual-input"
                           @keyup.enter="saveUnitActualValue(assignment)"
                           @keyup.escape="cancelUnitEdit"
-                        />
+                        >
                       </div>
                       <div v-else class="view-actual">
                         <span class="actual-value">{{ assignment.actualValue || 'Chưa nhập' }}</span>
@@ -395,23 +437,37 @@
                     <td class="action-cell">
                       <div v-if="editingUnitAssignment === assignment.Id" class="edit-actions">
                         <button
-                          @click="saveUnitActualValue(assignment)"
                           :disabled="savingUnitActual"
                           class="action-btn save-btn"
+                          title="Lưu giá trị"
+                          @click="saveUnitActualValue(assignment)"
                         >
-                          ✓
+                          ✅ Lưu
                         </button>
-                        <button @click="cancelUnitEdit" :disabled="savingUnitActual" class="action-btn cancel-btn">
-                          ✕
+                        <button
+                          :disabled="savingUnitActual"
+                          class="action-btn cancel-btn"
+                          title="Hủy chỉnh sửa"
+                          @click="cancelUnitEdit"
+                        >
+                          ❌ Hủy
                         </button>
                       </div>
                       <div v-else class="view-actions">
                         <button
+                          class="action-btn execute-btn"
+                          title="Cập nhật tình hình thực hiện chỉ tiêu này"
                           @click="startUnitEdit(assignment)"
-                          class="action-btn edit-btn"
-                          title="Chỉnh sửa giá trị thực hiện"
                         >
-                          ✏️
+                          🎯 Thực hiện
+                        </button>
+                        <button
+                          v-if="assignment.actualValue != null"
+                          class="action-btn details-btn"
+                          title="Xem chi tiết tính điểm"
+                          @click="viewUnitCalculationDetails(assignment)"
+                        >
+                          📊 Chi tiết
                         </button>
                       </div>
                     </td>
@@ -429,7 +485,9 @@
         >
           <div class="form-container">
             <div class="empty-content">
-              <div class="empty-icon">📋</div>
+              <div class="empty-icon">
+                📋
+              </div>
               <h3>Không tìm thấy giao khoán</h3>
               <p>Không có giao khoán KPI nào cho chi nhánh này trong kỳ được chọn.</p>
             </div>
@@ -443,7 +501,9 @@
         >
           <div class="form-container">
             <div class="initial-content">
-              <div class="initial-icon">🏢</div>
+              <div class="initial-icon">
+                🏢
+              </div>
               <h3>Chọn chi nhánh và kỳ khoán</h3>
               <p>Vui lòng chọn chi nhánh và kỳ khoán để hiển thị các giao khoán KPI.</p>
             </div>
@@ -463,7 +523,7 @@ import api from '../services/api'
 import { isAuthenticated } from '../services/auth'
 import { useNumberInput } from '../utils/numberFormat'
 
-const router = useRouter()
+const _router = useRouter()
 
 // Reactive data
 const searching = ref(false)
@@ -507,11 +567,12 @@ const { handleInput, handleBlur, formatNumber, parseFormattedNumber } = useNumbe
 // Computed properties
 // Updated branchOptions: Custom ordering as requested
 const branchOptions = computed(() => {
-  if (!units.Value || units.Value.length === 0) return []
+  if (!units.value || units.value.length === 0) return []
 
-  // Định nghĩa thứ tự theo yêu cầu (cập nhật tên mới): CnLaiChau, CnBinhLu, CnPhongTho, CnSinHo, CnBumTo, CnThanUyen, CnDoanKet, CnTanUyen, CnNamHang
+  // Định nghĩa thứ tự theo yêu cầu mới: Lai Châu -> Hội Sở -> Bình Lư -> Phong Thổ -> Sìn Hồ -> Bum Tở -> Than Uyên -> Đoàn Kết -> Tân Uyên -> Nậm Hàng
   const customOrder = [
     'CnLaiChau', // Chi nhánh tỉnh Lai Châu
+    'HoiSo', // Hội Sở
     'CnBinhLu', // Chi nhánh Bình Lư
     'CnPhongTho', // Chi nhánh Phong Thổ
     'CnSinHo', // Chi nhánh Sìn Hồ
@@ -546,13 +607,13 @@ const branchOptions = computed(() => {
 })
 
 const departmentOptions = computed(() => {
-  if (!selectedBranchId.Value || !units.Value || units.Value.length === 0) return []
+  if (!selectedBranchId.value || !units.value || units.value.length === 0) return []
 
-  const branchId = parseInt(selectedBranchId.Value)
-  const branch = units.Value.find(u => u.Id === branchId)
+  const branchId = parseInt(selectedBranchId.value)
+  const branch = units.value.find(u => u.Id === branchId)
   if (!branch) return []
 
-  const children = units.Value.filter(u => u.parentUnitId === branchId)
+  const children = units.value.filter(u => u.parentUnitId === branchId)
 
   // Lọc chỉ lấy các phòng nghiệp vụ (PNVL1, PNVL2) và phòng giao dịch (PGD), loại bỏ các chi nhánh con (CNL2)
   const departments = children.filter(u => {
@@ -574,15 +635,15 @@ const departmentOptions = computed(() => {
 })
 
 const filteredEmployees = computed(() => {
-  if (!employees.Value || employees.Value.length === 0) return []
+  if (!employees.value || employees.value.length === 0) return []
 
-  let filtered = [...employees.Value]
+  let filtered = [...employees.value]
 
-  if (selectedDepartmentId.Value) {
-    const deptId = parseInt(selectedDepartmentId.Value)
+  if (selectedDepartmentId.value) {
+    const deptId = parseInt(selectedDepartmentId.value)
     filtered = filtered.filter(emp => emp.unitId === deptId)
-  } else if (selectedBranchId.Value) {
-    const branchDepartments = departmentOptions.Value.map(dept => dept.Id)
+  } else if (selectedBranchId.value) {
+    const branchDepartments = departmentOptions.value.map(dept => dept.Id)
     filtered = filtered.filter(emp => branchDepartments.includes(emp.unitId))
   }
 
@@ -590,50 +651,50 @@ const filteredEmployees = computed(() => {
 })
 
 const canSearch = computed(() => {
-  return selectedEmployeeId.Value || selectedPeriodId.Value || selectedBranchId.Value || selectedDepartmentId.Value
+  return selectedEmployeeId.value || selectedPeriodId.value || selectedBranchId.value || selectedDepartmentId.value
 })
 
 const pendingCount = computed(() => {
-  return assignments.Value.filter(a => a.actualValue == null).length
+  return assignments.value.filter(a => a.actualValue == null).length
 })
 
 const completedCount = computed(() => {
-  return assignments.Value.filter(a => a.actualValue != null).length
+  return assignments.value.filter(a => a.actualValue != null).length
 })
 
 // Unit tab computed properties
 const unitPendingCount = computed(() => {
-  return unitAssignments.Value.filter(a => a.actualValue == null).length
+  return unitAssignments.value.filter(a => a.actualValue == null).length
 })
 
 const unitCompletedCount = computed(() => {
-  return unitAssignments.Value.filter(a => a.actualValue != null).length
+  return unitAssignments.value.filter(a => a.actualValue != null).length
 })
 
 const canSearchUnit = computed(() => {
-  return selectedUnitBranchId.Value && selectedUnitPeriodId.Value
+  return selectedUnitBranchId.value && selectedUnitPeriodId.value
 })
 
 // Methods
 
 const clearMessages = () => {
-  errorMessage.Value = ''
-  successMessage.Value = ''
+  errorMessage.value = ''
+  successMessage.value = ''
 }
 
 const showError = message => {
-  errorMessage.Value = message
-  successMessage.Value = ''
+  errorMessage.value = message
+  successMessage.value = ''
   setTimeout(() => {
-    errorMessage.Value = ''
+    errorMessage.value = ''
   }, 5000)
 }
 
 const showSuccess = message => {
-  successMessage.Value = message
-  errorMessage.Value = ''
+  successMessage.value = message
+  errorMessage.value = ''
   setTimeout(() => {
-    successMessage.Value = ''
+    successMessage.value = ''
   }, 3000)
 }
 
@@ -644,27 +705,27 @@ const formatDate = dateString => {
 }
 
 const getBranchName = () => {
-  if (!selectedBranchId.Value) return ''
-  const branch = units.Value.find(u => u.Id === parseInt(selectedBranchId.Value))
+  if (!selectedBranchId.value) return ''
+  const branch = units.value.find(u => u.Id === parseInt(selectedBranchId.value))
   return branch ? branch.Name : ''
 }
 
 const getDepartmentName = () => {
-  if (!selectedDepartmentId.Value) return ''
-  const dept = units.Value.find(u => u.Id === parseInt(selectedDepartmentId.Value))
+  if (!selectedDepartmentId.value) return ''
+  const dept = units.value.find(u => u.Id === parseInt(selectedDepartmentId.value))
   return dept ? dept.Name : ''
 }
 
 const onBranchChange = () => {
-  selectedDepartmentId.Value = ''
-  selectedEmployeeId.Value = ''
-  assignments.Value = []
+  selectedDepartmentId.value = ''
+  selectedEmployeeId.value = ''
+  assignments.value = []
   clearMessages()
 }
 
 const onDepartmentChange = () => {
-  selectedEmployeeId.Value = ''
-  assignments.Value = []
+  selectedEmployeeId.value = ''
+  assignments.value = []
   clearMessages()
 }
 
@@ -696,14 +757,18 @@ const fetchEmployees = async () => {
     const response = await api.get('/Employees')
     let employeesData = []
 
-    if (response.data && Array.isArray(response.data.$values)) {
+    if (response.data && response.data.Data && Array.isArray(response.data.Data)) {
+      employeesData = response.data.Data
+    } else if (response.data && response.data.Data && Array.isArray(response.data.Data)) {
+      assignmentsData = response.data.Data
+    } else if (response.data && Array.isArray(response.data.$values)) {
       employeesData = response.data.$values
     } else if (Array.isArray(response.data)) {
       employeesData = response.data
     }
 
-    employees.Value = employeesData.filter(emp => emp.isActive)
-    console.log('✅ Employees loaded:', employees.Value.length)
+    employees.value = employeesData.filter(emp => emp.isActive)
+    console.log('✅ Employees loaded:', employees.value.length)
   } catch (error) {
     console.error('❌ Error loading employees:', error)
     showError('Không thể tải danh sách nhân viên. Vui lòng thử lại.')
@@ -717,16 +782,20 @@ const fetchKhoanPeriods = async () => {
     const response = await api.get('/KhoanPeriods')
     let periodsData = []
 
-    if (response.data && Array.isArray(response.data.$values)) {
+    if (response.data && response.data.Data && Array.isArray(response.data.Data)) {
+      periodsData = response.data.Data
+    } else if (response.data && response.data.Data && Array.isArray(response.data.Data)) {
+      assignmentsData = response.data.Data
+    } else if (response.data && Array.isArray(response.data.$values)) {
       periodsData = response.data.$values
     } else if (Array.isArray(response.data)) {
       periodsData = response.data
     }
 
-    khoanPeriods.Value = periodsData.filter(
-      period => period.Status === 'OPEN' || period.Status === 'PROCESSING' || period.Status === 'PENDINGAPPROVAL'
+    khoanPeriods.value = periodsData.filter(
+      period => period.Status === 'OPEN' || period.Status === 'PROCESSING' || period.Status === 'PENDINGAPPROVAL' || period.Status === 'DRAFT',
     )
-    console.log('✅ Khoan Periods loaded:', khoanPeriods.Value.length)
+    console.log('✅ Khoan Periods loaded:', khoanPeriods.value.length)
   } catch (error) {
     console.error('❌ Error loading khoan periods:', error)
     showError('Không thể tải danh sách kỳ khoán. Vui lòng thử lại.')
@@ -740,14 +809,18 @@ const fetchUnits = async () => {
     const response = await api.get('/Units')
     let unitsData = []
 
-    if (response.data && Array.isArray(response.data.$values)) {
+    if (response.data && response.data.Data && Array.isArray(response.data.Data)) {
+      unitsData = response.data.Data
+    } else if (response.data && response.data.Data && Array.isArray(response.data.Data)) {
+      assignmentsData = response.data.Data
+    } else if (response.data && Array.isArray(response.data.$values)) {
       unitsData = response.data.$values
     } else if (Array.isArray(response.data)) {
       unitsData = response.data
     }
 
-    units.Value = unitsData
-    console.log('✅ Units loaded:', units.Value.length)
+    units.value = unitsData
+    console.log('✅ Units loaded:', units.value.length)
   } catch (error) {
     console.error('❌ Error loading units:', error)
     showError('Không thể tải danh sách đơn vị. Vui lòng thử lại.')
@@ -756,38 +829,38 @@ const fetchUnits = async () => {
 }
 
 const onFilterChange = () => {
-  assignments.Value = []
+  assignments.value = []
   clearMessages()
 }
 
 const searchAssignments = async () => {
-  if (!canSearch.Value) {
+  if (!canSearch.value) {
     showError('Vui lòng chọn ít nhất một tiêu chí tìm kiếm.')
     return
   }
 
   try {
-    searching.Value = true
+    searching.value = true
     clearMessages()
 
     // Build search URL based on filters
     let url = '/KpiAssignment/search?'
     const params = []
 
-    if (selectedEmployeeId.Value) {
-      params.push(`employeeId=${selectedEmployeeId.Value}`)
+    if (selectedEmployeeId.value) {
+      params.push(`employeeId=${selectedEmployeeId.value}`)
     }
 
-    if (selectedPeriodId.Value) {
-      params.push(`periodId=${selectedPeriodId.Value}`)
+    if (selectedPeriodId.value) {
+      params.push(`periodId=${selectedPeriodId.value}`)
     }
 
     // Add unit-based filtering
-    if (selectedDepartmentId.Value) {
-      params.push(`unitId=${selectedDepartmentId.Value}`)
-    } else if (selectedBranchId.Value && !selectedEmployeeId.Value) {
+    if (selectedDepartmentId.value) {
+      params.push(`unitId=${selectedDepartmentId.value}`)
+    } else if (selectedBranchId.value && !selectedEmployeeId.value) {
       // If branch selected but no specific department/employee, get all departments under the branch
-      const branchDepartments = departmentOptions.Value.map(dept => dept.Id)
+      const branchDepartments = departmentOptions.value.map(dept => dept.Id)
       if (branchDepartments.length > 0) {
         // For simplicity, we'll use the first department or handle multiple department search differently
         // Note: This is a limitation of the current API that only accepts single unitId
@@ -801,64 +874,66 @@ const searchAssignments = async () => {
     const response = await api.get(url)
     let assignmentsData = []
 
-    if (response.data && Array.isArray(response.data.$values)) {
+    if (response.data && response.data.Data && Array.isArray(response.data.Data)) {
+      assignmentsData = response.data.Data
+    } else if (response.data && Array.isArray(response.data.$values)) {
       assignmentsData = response.data.$values
     } else if (Array.isArray(response.data)) {
       assignmentsData = response.data
     }
 
-    assignments.Value = assignmentsData
+    assignments.value = assignmentsData
 
-    console.log('Assignments loaded:', assignments.Value.length)
+    console.log('Assignments loaded:', assignments.value.length)
 
-    if (assignments.Value.length > 0) {
-      showSuccess(`Tìm thấy ${assignments.Value.length} giao khoán KPI.`)
+    if (assignments.value.length > 0) {
+      showSuccess(`Tìm thấy ${assignments.value.length} giao khoán KPI.`)
     }
   } catch (error) {
     console.error('Error searching assignments:', error)
     if (error.response && error.response.Status === 404) {
-      assignments.Value = []
+      assignments.value = []
       showError('Không tìm thấy giao khoán KPI nào phù hợp.')
     } else {
       showError('Có lỗi xảy ra khi tìm kiếm. Vui lòng thử lại.')
     }
   } finally {
-    searching.Value = false
+    searching.value = false
   }
 }
 
 const startEdit = assignment => {
-  editingAssignment.Value = assignment.Id
-  editingActualValue.Value = assignment.actualValue || ''
-  editingActualValueFormatted.Value = assignment.actualValue ? formatNumber(assignment.actualValue) : ''
+  editingAssignment.value = assignment.Id
+  editingActualValue.value = assignment.actualValue || ''
+  editingActualValueFormatted.value = assignment.actualValue ? formatNumber(assignment.actualValue) : ''
 }
 
 const cancelEdit = () => {
-  editingAssignment.Value = null
-  editingActualValue.Value = ''
-  editingActualValueFormatted.Value = ''
+  editingAssignment.value = null
+  editingActualValue.value = ''
+  editingActualValueFormatted.value = ''
 }
 
 const saveActualValue = async assignment => {
   try {
-    savingActual.Value = true
+    savingActual.value = true
     clearMessages()
 
     const updateData = {
       assignmentId: assignment.Id,
-      actualValue: editingActualValue.Value ? parseFloat(editingActualValue.Value) : null,
+      actualValue: editingActualValue.value ? parseFloat(editingActualValue.value) : null,
     }
 
     const response = await api.put('/KpiAssignment/update-single-actual', updateData)
 
     // Update local data
-    const index = assignments.Value.findIndex(a => a.Id === assignment.Id)
+    const index = assignments.value.findIndex(a => a.Id === assignment.Id)
     if (index !== -1) {
-      assignments.Value[index].actualValue = updateData.actualValue
+      assignments.value[index].actualValue = updateData.actualValue
 
       // Update score if returned from API
       if (response.data && response.data.score != null) {
-        assignments.Value[index].score = response.data.score
+        assignments.value[index].score = response.data.score
       }
     }
 
@@ -874,92 +949,94 @@ const saveActualValue = async assignment => {
       showError('Có lỗi xảy ra khi cập nhật giá trị. Vui lòng thử lại.')
     }
   } finally {
-    savingActual.Value = false
+    savingActual.value = false
   }
 }
 
 // Number input handlers for employee actual values
 const handleActualValueInput = event => {
   const formattedValue = handleInput(event)
-  editingActualValueFormatted.Value = formattedValue
-  editingActualValue.Value = parseFormattedNumber(formattedValue)
+  editingActualValueFormatted.value = formattedValue
+  editingActualValue.value = parseFormattedNumber(formattedValue)
 }
 
 const handleActualValueBlur = event => {
   const formattedValue = handleBlur(event)
-  editingActualValueFormatted.Value = formattedValue
-  editingActualValue.Value = parseFormattedNumber(formattedValue)
+  editingActualValueFormatted.value = formattedValue
+  editingActualValue.value = parseFormattedNumber(formattedValue)
 }
 
 // Unit tab methods
 const searchUnitAssignments = async () => {
-  if (!canSearchUnit.Value) {
+  if (!canSearchUnit.value) {
     showError('Vui lòng chọn chi nhánh và kỳ khoán.')
     return
   }
 
   try {
-    searchingUnit.Value = true
+    searchingUnit.value = true
     clearMessages()
 
     console.log('🔍 Searching unit assignments...', {
-      unitId: selectedUnitBranchId.Value,
+      unitId: selectedUnitBranchId.value,
       periodId: selectedUnitPeriodId.value,
     })
 
     const response = await api.get(
-      `/UnitKhoanAssignments/search?unitId=${selectedUnitBranchId.Value}&periodId=${selectedUnitPeriodId.Value}`
+      `/UnitKhoanAssignments/search?unitId=${selectedUnitBranchId.value}&periodId=${selectedUnitPeriodId.value}`,
     )
 
     let assignmentsData = []
-    if (response.data && Array.isArray(response.data.$values)) {
+    if (response.data && response.data.Data && Array.isArray(response.data.Data)) {
+      assignmentsData = response.data.Data
+    } else if (response.data && Array.isArray(response.data.$values)) {
       assignmentsData = response.data.$values
     } else if (Array.isArray(response.data)) {
       assignmentsData = response.data
     }
 
-    unitAssignments.Value = assignmentsData
+    unitAssignments.value = assignmentsData
 
-    console.log('✅ Unit assignments loaded:', unitAssignments.Value.length)
+    console.log('✅ Unit assignments loaded:', unitAssignments.value.length)
 
-    if (unitAssignments.Value.length > 0) {
-      showSuccess(`Tìm thấy ${unitAssignments.Value.length} giao khoán KPI cho chi nhánh.`)
+    if (unitAssignments.value.length > 0) {
+      showSuccess(`Tìm thấy ${unitAssignments.value.length} giao khoán KPI cho chi nhánh.`)
     } else {
       showError('Không tìm thấy giao khoán KPI nào cho chi nhánh này.')
     }
   } catch (error) {
     console.error('❌ Error searching unit assignments:', error)
     if (error.response && error.response.Status === 404) {
-      unitAssignments.Value = []
+      unitAssignments.value = []
       showError('Không tìm thấy giao khoán KPI nào cho chi nhánh này.')
     } else {
       showError('Có lỗi xảy ra khi tìm kiếm. Vui lòng thử lại.')
     }
   } finally {
-    searchingUnit.Value = false
+    searchingUnit.value = false
   }
 }
 
 const startUnitEdit = assignment => {
-  editingUnitAssignment.Value = assignment.Id
-  editingUnitActualValue.Value = assignment.actualValue || ''
-  editingUnitActualValueFormatted.Value = assignment.actualValue ? formatNumber(assignment.actualValue) : ''
+  editingUnitAssignment.value = assignment.Id
+  editingUnitActualValue.value = assignment.actualValue || ''
+  editingUnitActualValueFormatted.value = assignment.actualValue ? formatNumber(assignment.actualValue) : ''
 }
 
 const cancelUnitEdit = () => {
-  editingUnitAssignment.Value = null
-  editingUnitActualValue.Value = ''
-  editingUnitActualValueFormatted.Value = ''
+  editingUnitAssignment.value = null
+  editingUnitActualValue.value = ''
+  editingUnitActualValueFormatted.value = ''
 }
 
 const saveUnitActualValue = async assignment => {
   try {
-    savingUnitActual.Value = true
+    savingUnitActual.value = true
     clearMessages()
 
     const updateData = {
       assignmentId: assignment.Id,
-      actualValue: editingUnitActualValue.Value ? parseFloat(editingUnitActualValue.Value) : null,
+      actualValue: editingUnitActualValue.value ? parseFloat(editingUnitActualValue.value) : null,
     }
 
     console.log('💾 Saving unit actual value:', updateData)
@@ -967,13 +1044,13 @@ const saveUnitActualValue = async assignment => {
     const response = await api.put('/UnitKhoanAssignments/update-actual', updateData)
 
     // Update local data
-    const index = unitAssignments.Value.findIndex(a => a.Id === assignment.Id)
+    const index = unitAssignments.value.findIndex(a => a.Id === assignment.Id)
     if (index !== -1) {
-      unitAssignments.Value[index].actualValue = updateData.actualValue
+      unitAssignments.value[index].actualValue = updateData.actualValue
 
       // Update score if returned from API
       if (response.data && response.data.score != null) {
-        unitAssignments.Value[index].score = response.data.score
+        unitAssignments.value[index].score = response.data.score
       }
     }
 
@@ -989,62 +1066,169 @@ const saveUnitActualValue = async assignment => {
       showError('Có lỗi xảy ra khi cập nhật giá trị cho chi nhánh. Vui lòng thử lại.')
     }
   } finally {
-    savingUnitActual.Value = false
+    savingUnitActual.value = false
   }
 }
 
 // Number input handlers for unit actual values
 const handleUnitActualValueInput = event => {
   const formattedValue = handleInput(event)
-  editingUnitActualValueFormatted.Value = formattedValue
-  editingUnitActualValue.Value = parseFormattedNumber(formattedValue)
+  editingUnitActualValueFormatted.value = formattedValue
+  editingUnitActualValue.value = parseFormattedNumber(formattedValue)
 }
 
 const handleUnitActualValueBlur = event => {
   const formattedValue = handleBlur(event)
-  editingUnitActualValueFormatted.Value = formattedValue
-  editingUnitActualValue.Value = parseFormattedNumber(formattedValue)
+  editingUnitActualValueFormatted.value = formattedValue
+  editingUnitActualValue.value = parseFormattedNumber(formattedValue)
 }
 
 const onUnitFilterChange = () => {
-  unitAssignments.Value = []
+  unitAssignments.value = []
   clearMessages()
 }
 
 const onUnitBranchChange = () => {
-  unitAssignments.Value = []
+  unitAssignments.value = []
   clearMessages()
 }
 
 const getUnitBranchName = () => {
-  if (!selectedUnitBranchId.Value) return ''
-  const branch = units.Value.find(u => u.Id === parseInt(selectedUnitBranchId.Value))
+  if (!selectedUnitBranchId.value) return ''
+  const branch = units.value.find(u => u.Id === parseInt(selectedUnitBranchId.value))
   return branch ? branch.Name : ''
 }
 
 const getUnitPeriodName = () => {
-  if (!selectedUnitPeriodId.Value) return ''
-  const period = khoanPeriods.Value.find(p => p.Id === parseInt(selectedUnitPeriodId.Value))
+  if (!selectedUnitPeriodId.value) return ''
+  const period = khoanPeriods.value.find(p => p.Id === parseInt(selectedUnitPeriodId.value))
   return period ? period.Name : ''
 }
 
 // Tab management methods
 const switchTab = tabName => {
-  activeTab.Value = tabName
+  activeTab.value = tabName
   clearMessages()
 
   // Clear data when switching tabs
   if (tabName === 'employee') {
-    unitAssignments.Value = []
-    selectedUnitBranchId.Value = ''
-    selectedUnitPeriodId.Value = ''
+    unitAssignments.value = []
+    selectedUnitBranchId.value = ''
+    selectedUnitPeriodId.value = ''
   } else if (tabName === 'unit') {
-    assignments.Value = []
-    selectedEmployeeId.Value = ''
-    selectedPeriodId.Value = ''
-    selectedBranchId.Value = ''
-    selectedDepartmentId.Value = ''
+    assignments.value = []
+    selectedEmployeeId.value = ''
+    selectedPeriodId.value = ''
+    selectedBranchId.value = ''
+    selectedDepartmentId.value = ''
   }
+}
+
+// View calculation details
+const viewCalculationDetails = (assignment) => {
+  clearMessages()
+
+  const unit = assignment.indicator?.unit || 'N/A'
+  const targetValue = assignment.targetValue || 0
+  const actualValue = assignment.actualValue || 0
+  const score = assignment.score || 0
+  const maxScore = assignment.indicator?.maxScore || 0
+
+  // Calculate completion percentage
+  const completionRate = targetValue > 0 ? (actualValue / targetValue * 100).toFixed(2) : 0
+
+  // Determine performance status
+  let performanceStatus = ''
+  let _statusClass = ''
+
+  if (completionRate >= 100) {
+    performanceStatus = '✅ Đạt chỉ tiêu'
+    _statusClass = 'success'
+  } else if (completionRate >= 80) {
+    performanceStatus = '⚠️ Gần đạt chỉ tiêu'
+    _statusClass = 'warning'
+  } else {
+    performanceStatus = '❌ Chưa đạt chỉ tiêu'
+    _statusClass = 'danger'
+  }
+
+  const detailsMessage = `
+📊 CHI TIẾT TÍNH ĐIỂM KPI
+
+👤 Cán bộ: ${assignment.employee?.fullName}
+📋 Chỉ tiêu: ${assignment.indicator?.indicatorName}
+📅 Kỳ khoán: ${assignment.khoanPeriod?.periodName}
+
+🎯 MỤC TIÊU VÀ THỰC HIỆN:
+• Chỉ tiêu giao: ${formatNumber(targetValue)} ${unit}
+• Giá trị thực hiện: ${formatNumber(actualValue)} ${unit}
+• Tỷ lệ hoàn thành: ${completionRate}%
+
+⭐ ĐIỂM SỐ:
+• Điểm đạt được: ${score.toFixed(2)}/${maxScore} điểm
+• Trạng thái: ${performanceStatus}
+
+💡 Ghi chú: Cách tính điểm chi tiết sẽ được cập nhật theo quy chế của từng chỉ tiêu.
+  `.trim()
+
+  showSuccess(detailsMessage)
+}
+
+// View calculation details for Unit KPI
+const viewUnitCalculationDetails = (assignment) => {
+  clearMessages()
+
+  const targetValue = assignment.targetValue || 0
+  const actualValue = assignment.actualValue || 0
+  const score = assignment.score || 0
+
+  // Calculate completion percentage
+  const completionRate = targetValue > 0 ? (actualValue / targetValue * 100).toFixed(2) : 0
+
+  // Determine performance status
+  let performanceStatus = ''
+
+  if (completionRate >= 100) {
+    performanceStatus = '✅ Đạt chỉ tiêu'
+  } else if (completionRate >= 80) {
+    performanceStatus = '⚠️ Gần đạt chỉ tiêu'
+  } else {
+    performanceStatus = '❌ Chưa đạt chỉ tiêu'
+  }
+
+  const detailsMessage = `
+📊 CHI TIẾT TÍNH ĐIỂM KPI CHI NHÁNH
+
+🏢 Chi nhánh: ${getSelectedBranchName()}
+📋 Chỉ tiêu: ${assignment.legacyKPIName || 'Chỉ tiêu KPI'}
+📅 Kỳ khoán: ${getSelectedPeriodName()}
+
+🎯 MỤC TIÊU VÀ THỰC HIỆN:
+• Chỉ tiêu giao: ${formatNumber(targetValue)} VND
+• Giá trị thực hiện: ${formatNumber(actualValue)} VND
+• Tỷ lệ hoàn thành: ${completionRate}%
+
+⭐ ĐIỂM SỐ:
+• Điểm đạt được: ${score.toFixed(2)} điểm
+• Trạng thái: ${performanceStatus}
+
+💡 Ghi chú: Cách tính điểm chi tiết sẽ được cập nhật theo quy chế của từng chỉ tiêu chi nhánh.
+  `.trim()
+
+  showSuccess(detailsMessage)
+}
+
+// Helper functions for Unit tab
+const getSelectedBranchName = () => {
+  if (!selectedUnitBranchId.value || !units.value) return 'N/A'
+  const branch = units.value.find(u => u.Id === parseInt(selectedUnitBranchId.value))
+  return branch ? branch.Name : 'N/A'
+}
+
+const getSelectedPeriodName = () => {
+  if (!selectedUnitPeriodId.value || !khoanPeriods.value) return 'N/A'
+  const period = khoanPeriods.value.find(p => p.Id === parseInt(selectedUnitPeriodId.value))
+  return period ? period.Name : 'N/A'
 }
 
 // Lifecycle
@@ -1069,7 +1253,7 @@ onMounted(async () => {
 
     console.log('✅ KpiActualValuesView: All data loaded successfully')
     console.log(
-      `📊 Loaded: ${employees.Value.length} employees, ${units.Value.length} units, ${khoanPeriods.Value.length} periods`
+      `📊 Loaded: ${employees.value.length} employees, ${units.value.length} units, ${khoanPeriods.value.length} periods`,
     )
   } catch (error) {
     console.error('❌ KpiActualValuesView: Error loading initial data:', error)
@@ -1445,12 +1629,14 @@ onMounted(async () => {
 }
 
 .action-btn {
-  padding: 6px 8px;
+  padding: 6px 12px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
+  font-weight: 500;
   transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
 .action-btn:disabled {
@@ -1465,6 +1651,27 @@ onMounted(async () => {
 
 .edit-btn:hover:not(:disabled) {
   background: #e0a800;
+}
+
+.execute-btn {
+  background: #8b1538;
+  color: white;
+  font-weight: 600;
+}
+
+.execute-btn:hover:not(:disabled) {
+  background: #a01a42;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(139, 21, 56, 0.3);
+}
+
+.details-btn {
+  background: #17a2b8;
+  color: white;
+}
+
+.details-btn:hover:not(:disabled) {
+  background: #138496;
 }
 
 .save-btn {
