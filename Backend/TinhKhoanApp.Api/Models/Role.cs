@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace TinhKhoanApp.Api.Models
 {
@@ -20,6 +21,7 @@ namespace TinhKhoanApp.Api.Models
 
         // Navigation property cho bảng trung gian EmployeeRole
         // Một Role có thể được gán cho nhiều Employee (thông qua EmployeeRole)
+        [JsonIgnore] // Tránh circular reference với EmployeeRole.Role
         public virtual ICollection<EmployeeRole> EmployeeRoles { get; set; }
 
         public Role()

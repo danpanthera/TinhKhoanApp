@@ -894,7 +894,9 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 3. Tạo DTO/View Models cho API responses (VD: DP01PreviewDto, DP01CreateDto, etc.)
 4. Viết unit tests để verify structure và functionality
 5. Tạo Controller endpoints rõ ràng sử dụng services (VD: DP01Controller)
-6. Tách biệt concerns: Controller chỉ xử lý HTTP requests, services xử lý business logic, repositories xử lý data access
+6. Tách biệt concerns: Controller chỉ xử lý HTTP requests, services xử client:1035 WebSocket connection to 'ws://localhost:3000/' failed: 
+
+lý business logic, repositories xử lý data access
 
 **✅ VERIFICATION CHO MỖI BẢNG:**
 **kiểm tra sự thống nhất giữa tất cả các thành phần của từng bảng: Migration ↔ Database ↔ Model ↔ EF ↔ BulkCopy ↔ Direct Import ↔ Services ↔ Repository ↔ DTO ↔ Controller ↔ giống với actual CSV file structure/columns**

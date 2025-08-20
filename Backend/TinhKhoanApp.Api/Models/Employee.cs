@@ -56,6 +56,7 @@ namespace TinhKhoanApp.Api.Models
         // 1. Đã XÓA thuộc tính: public string? SystemRole { get; set; }
 
         // 2. THÊM navigation property cho mối quan hệ nhiều-nhiều với Role thông qua EmployeeRole
+        [JsonIgnore] // Tránh circular reference với EmployeeRole.Employee
         public virtual ICollection<EmployeeRole> EmployeeRoles { get; set; }
         // --- KẾT THÚC THAY ĐỔI ---
 

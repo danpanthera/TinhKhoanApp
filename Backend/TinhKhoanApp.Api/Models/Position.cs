@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace TinhKhoanApp.Api.Models
 {
@@ -19,6 +20,7 @@ namespace TinhKhoanApp.Api.Models
 
         // Navigation property: Một Chức vụ có thể có nhiều Cán bộ (Employees)
         // Lỗi "Employee not found" ở đây là bình thường vì mình chưa tạo model Employee
+        [JsonIgnore] // Tránh circular reference với Employee.Position
         public virtual ICollection<Employee> Employees { get; set; }
 
         public Position()
