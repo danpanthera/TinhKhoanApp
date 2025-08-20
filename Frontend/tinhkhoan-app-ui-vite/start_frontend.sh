@@ -6,6 +6,38 @@ export LANG=vi_VN.UTF-8
 export LC_ALL=vi_VN.UTF-8
 
 LOG_FILE="frontend.log"
+MAX_LOG_SIZE=${FRONTEND_MAX_LOG_SIZE:-5M}
+LOG_BACKUPS=${FRONTEND_LOG_BACKUPS:-5}
+
+parse_size_bytes() {
+    local size=$1
+    if [[ $size =~ ^([0-9]+)[Kk]$ ]]; then
+        echo $(( BASH_REMATCH[1] * 1024 ))
+    elif [[ $size =~ ^([0-9]+)[Mm]$ ]]; then
+        echo $(( BASH_REMATCH[1] * 1024 * 1024 ))
+    elif [[ $size =~ ^[0-9]+$ ]]; then
+        echo $size
+    else
+        echo $((5*1024*1024))
+    fi
+}
+
+rotate_log_if_needed() {
+    local file=$1
+    [ ! -f "$file" ] && return 0
+    local max_bytes=$(parse_size_bytes "$MAX_LOG_SIZE")
+    local current_size=$(wc -c < "$file" 2>/dev/null || echo 0)
+    if [ "$current_size" -ge "$max_bytes" ]; then
+        for (( i=LOG_BACKUPS-1; i>=1; i-- )); do
+            if [ -f "${file}.${i}" ]; then
+                mv "${file}.${i}" "${file}.$((i+1))" 2>/dev/null || true
+            fi
+        done
+        mv "$file" "${file}.1" 2>/dev/null || true
+        touch "$file"
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - 🔄 Rotated $file" >> "$file"
+    fi
+}
 PORT=3000
 MAX_STARTUP_TIME=60
 
@@ -48,10 +80,11 @@ cleanup_all() {
     log "✅ Cleanup completed"
 }
 
-# Clear log file at start
-> "$LOG_FILE"
+# Rotate instead of truncating
+rotate_log_if_needed "$LOG_FILE"
+touch "$LOG_FILE"
 
-log "🚀 Starting TinhKhoan Frontend Development Server"
+log "🚀 Starting TinhKhoan Frontend Development Server (rotation: size>$MAX_LOG_SIZE keep $LOG_BACKUPS)"
 log "📊 Target Port: $PORT"
 
 # Step 1: Cleanup existing services

@@ -7,6 +7,36 @@ PROJECT_NAME="TinhKhoanApp"
 BACKEND_DIR="/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api"
 FRONTEND_DIR="/Users/nguyendat/Documents/Projects/TinhKhoanApp/Frontend/tinhkhoan-app-ui-vite"
 GUARDIAN_LOG="guardian.log"
+GUARDIAN_MAX_LOG_SIZE=${GUARDIAN_MAX_LOG_SIZE:-2M}
+GUARDIAN_LOG_BACKUPS=${GUARDIAN_LOG_BACKUPS:-4}
+
+g_parse_size_bytes() {
+    local size=$1
+    if [[ $size =~ ^([0-9]+)[Kk]$ ]]; then
+        echo $(( BASH_REMATCH[1] * 1024 ))
+    elif [[ $size =~ ^([0-9]+)[Mm]$ ]]; then
+        echo $(( BASH_REMATCH[1] * 1024 * 1024 ))
+    elif [[ $size =~ ^[0-9]+$ ]]; then
+        echo $size
+    else
+        echo $((2*1024*1024))
+    fi
+}
+
+rotate_guardian_log() {
+    local file="$GUARDIAN_LOG"
+    [ ! -f "$file" ] && return 0
+    local max_bytes=$(g_parse_size_bytes "$GUARDIAN_MAX_LOG_SIZE")
+    local current_size=$(wc -c < "$file" 2>/dev/null || echo 0)
+    if [ "$current_size" -ge "$max_bytes" ]; then
+        for (( i=GUARDIAN_LOG_BACKUPS-1; i>=1; i-- )); do
+            if [ -f "${file}.${i}" ]; then mv "${file}.${i}" "${file}.$((i+1))" 2>/dev/null || true; fi
+        done
+        mv "$file" "${file}.1" 2>/dev/null || true
+        touch "$file"
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - 🔄 Rotated guardian log (size=${current_size})" >> "$file"
+    fi
+}
 
 # ---- Configuration (override via env vars) ----
 CHECK_INTERVAL=${CHECK_INTERVAL:-30}          # seconds between health checks
@@ -97,6 +127,7 @@ maybe_log_heartbeat() {
 
 # Initial cleanup
 > "$GUARDIAN_LOG"
+rotate_guardian_log
 log "${BLUE}🛡️ TinhKhoan Guardian Started${NC}"
 log "${BLUE}📍 Monitoring Backend: $BACKEND_HEALTH_PATH${NC}"
 log "${BLUE}📍 Monitoring Frontend: $FRONTEND_HEALTH_PATH${NC}"
@@ -159,6 +190,7 @@ while true; do
     frontend_prev_state="$new_state"
 
     maybe_log_heartbeat
+    rotate_guardian_log
 
     sleep "$CHECK_INTERVAL"
 done

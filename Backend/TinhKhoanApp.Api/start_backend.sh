@@ -6,16 +6,51 @@ export LANG=vi_VN.UTF-8
 export LC_ALL=vi_VN.UTF-8
 
 LOG_FILE="backend.log"
+MAX_LOG_SIZE=${BACKEND_MAX_LOG_SIZE:-5M}   # Allowed suffix: K/M (simple parser)
+LOG_BACKUPS=${BACKEND_LOG_BACKUPS:-5}
+
+parse_size_bytes() {
+    local size=$1
+    if [[ $size =~ ^([0-9]+)[Kk]$ ]]; then
+        echo $(( BASH_REMATCH[1] * 1024 ))
+    elif [[ $size =~ ^([0-9]+)[Mm]$ ]]; then
+        echo $(( BASH_REMATCH[1] * 1024 * 1024 ))
+    elif [[ $size =~ ^[0-9]+$ ]]; then
+        echo $size
+    else
+        # default fallback 5M
+        echo $((5*1024*1024))
+    fi
+}
+
+rotate_log_if_needed() {
+    local file=$1
+    [ ! -f "$file" ] && return 0
+    local max_bytes=$(parse_size_bytes "$MAX_LOG_SIZE")
+    local current_size=$(wc -c < "$file" 2>/dev/null || echo 0)
+    if [ "$current_size" -ge "$max_bytes" ]; then
+        # Rotate oldest first
+        for (( i=LOG_BACKUPS-1; i>=1; i-- )); do
+            if [ -f "${file}.${i}" ]; then
+                mv "${file}.${i}" "${file}.$((i+1))" 2>/dev/null || true
+            fi
+        done
+        mv "$file" "${file}.1" 2>/dev/null || true
+        touch "$file"
+        echo "$(date '+%Y-%m-%d %H:%M:%S') - 🔄 Rotated $file (size=${current_size} bytes, max=${max_bytes})" >> "$file"
+    fi
+}
 PORT=5055
 
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_FILE"
 }
 
-# Clear log file
-> "$LOG_FILE"
+# Rotate instead of truncating to retain history
+rotate_log_if_needed "$LOG_FILE"
+touch "$LOG_FILE"
 
-log "🚀 Starting TinhKhoan Backend API Service..."
+log "🚀 Starting TinhKhoan Backend API Service... (rotation: size>$MAX_LOG_SIZE keep $LOG_BACKUPS)"
 log "📊 Target Port: $PORT"
 
 # Step 1: Aggressive cleanup of all backend services
