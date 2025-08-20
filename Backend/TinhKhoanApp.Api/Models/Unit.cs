@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace TinhKhoanApp.Api.Models
 {
@@ -39,6 +40,7 @@ namespace TinhKhoanApp.Api.Models
         public virtual Unit? ParentUnit { get; set; } // Đã sửa: Thêm dấu ? để cho phép null
 
         public virtual ICollection<Unit> ChildUnits { get; set; }
+        [JsonIgnore] // Tránh circular reference với Employee.Unit
         public virtual ICollection<Employee> Employees { get; set; }
 
         public Unit()

@@ -2,23 +2,39 @@
   <div class="kpi-scoring-container">
     <!-- 📊 Header với thống kê -->
     <div class="scoring-header">
-      <h2>🎯 Hệ Thống Chấm Điểm KPI</h2>
+      <h2>🎯 B6 - Chấm điểm KPI</h2>
       <div class="stats-cards">
         <div class="stat-card">
-          <div class="stat-number">{{ totalKPIs }}</div>
-          <div class="stat-label">Tổng KPI</div>
+          <div class="stat-number">
+            {{ totalKPIs }}
+          </div>
+          <div class="stat-label">
+            Tổng KPI
+          </div>
         </div>
         <div class="stat-card">
-          <div class="stat-number">{{ scoredKPIs }}</div>
-          <div class="stat-label">Đã chấm</div>
+          <div class="stat-number">
+            {{ scoredKPIs }}
+          </div>
+          <div class="stat-label">
+            Đã chấm
+          </div>
         </div>
         <div class="stat-card">
-          <div class="stat-number">{{ pendingKPIs }}</div>
-          <div class="stat-label">Chờ chấm</div>
+          <div class="stat-number">
+            {{ pendingKPIs }}
+          </div>
+          <div class="stat-label">
+            Chờ chấm
+          </div>
         </div>
         <div class="stat-card">
-          <div class="stat-number">{{ averageScore }}%</div>
-          <div class="stat-label">Điểm TB</div>
+          <div class="stat-number">
+            {{ averageScore }}%
+          </div>
+          <div class="stat-label">
+            Điểm TB
+          </div>
         </div>
       </div>
     </div>
@@ -31,11 +47,21 @@
         <div class="method-selection">
           <div class="radio-group">
             <label class="radio-option">
-              <input type="radio" v-model="scoringMethod" value="employee" @change="onScoringMethodChange" />
+              <input
+                v-model="scoringMethod"
+                type="radio"
+                value="employee"
+                @change="onScoringMethodChange"
+              >
               <span class="radio-label">👤 Chấm theo Cán bộ</span>
             </label>
             <label class="radio-option">
-              <input type="radio" v-model="scoringMethod" value="unit" @change="onScoringMethodChange" />
+              <input
+                v-model="scoringMethod"
+                type="radio"
+                value="unit"
+                @change="onScoringMethodChange"
+              >
               <span class="radio-label">🏢 Chấm theo Chi nhánh</span>
             </label>
           </div>
@@ -47,47 +73,72 @@
         <select
           v-if="scoringMethod === 'employee'"
           v-model="selectedEmployee"
-          @change="loadEmployeeKPIs"
           class="filter-select"
+          @change="loadEmployeeKPIs"
         >
-          <option value="">-- Chọn nhân viên --</option>
+          <option value="">
+            -- Chọn nhân viên --
+          </option>
           <option v-for="emp in employees" :key="emp.id" :value="emp.id">
             {{ emp.fullName }} - {{ emp.positionName || 'Chưa có chức vụ' }}
           </option>
         </select>
 
         <!-- Unit Selection (when unit method selected) -->
-        <select v-if="scoringMethod === 'unit'" v-model="selectedUnit" @change="loadUnitKPIs" class="filter-select">
-          <option value="">-- Chọn chi nhánh --</option>
+        <select
+          v-if="scoringMethod === 'unit'"
+          v-model="selectedUnit"
+          class="filter-select"
+          @change="loadUnitKPIs"
+        >
+          <option value="">
+            -- Chọn chi nhánh --
+          </option>
           <optgroup label="Chi nhánh CNL1">
-            <option v-for="unit in cnl1Units" :key="unit.id" :value="unit.id">{{ unit.name }} ({{ unit.code }})</option>
+            <option v-for="unit in cnl1Units" :key="unit?.id || unit.Id" :value="unit?.id || unit.Id">
+              {{ unit?.name || unit.Name }} ({{ unit?.code || unit.Code }})
+            </option>
           </optgroup>
-          <optgroup label="Chi nhánh CNL2" v-if="cnl2Units.length > 0">
-            <option v-for="unit in cnl2Units" :key="unit.id" :value="unit.id">{{ unit.name }} ({{ unit.code }})</option>
+          <optgroup v-if="cnl2Units.length > 0" label="Chi nhánh CNL2">
+            <option v-for="unit in cnl2Units" :key="unit?.id || unit.Id" :value="unit?.id || unit.Id">
+              {{ unit?.name || unit.Name }} ({{ unit?.code || unit.Code }})
+            </option>
           </optgroup>
         </select>
 
-        <select v-model="selectedPeriod" @change="loadKPIData" class="filter-select">
-          <option value="">-- Chọn kỳ khoán --</option>
-          <option v-for="period in periods" :key="period.id" :value="period.id">
-            {{ period.name }}
+        <select v-model="selectedPeriod" class="filter-select" @change="loadKPIData">
+          <option value="">
+            -- Chọn kỳ khoán --
+          </option>
+          <option v-for="period in periods" :key="period?.id || period.Id" :value="period?.id || period.Id">
+            {{ period?.name || period.Name }}
           </option>
         </select>
 
-        <select v-model="filterType" @change="filterKPIs" class="filter-select">
-          <option value="ALL">Tất cả KPI</option>
-          <option value="QUALITATIVE">Định tính (Chấm tay)</option>
-          <option value="QUANTITATIVE_RATIO">Định lượng tỷ lệ</option>
-          <option value="QUANTITATIVE_ABSOLUTE">Định lượng tuyệt đối</option>
-          <option value="PENDING">Chưa chấm điểm</option>
+        <select v-model="filterType" class="filter-select" @change="filterKPIs">
+          <option value="ALL">
+            Tất cả KPI
+          </option>
+          <option value="QUALITATIVE">
+            Định tính (Chấm tay)
+          </option>
+          <option value="QUANTITATIVE_RATIO">
+            Định lượng tỷ lệ
+          </option>
+          <option value="QUANTITATIVE_ABSOLUTE">
+            Định lượng tuyệt đối
+          </option>
+          <option value="PENDING">
+            Chưa chấm điểm
+          </option>
         </select>
       </div>
     </div>
 
     <!-- 📋 Danh sách KPI theo loại -->
-    <div class="scoring-sections" v-if="(selectedEmployee || selectedUnit) && selectedPeriod">
+    <div v-if="(selectedEmployee || selectedUnit) && selectedPeriod" class="scoring-sections">
       <!-- 📝 PHẦN 1: KPI Định Tính - Chấm Tay -->
-      <div class="scoring-section" v-if="qualitativeKPIs.length > 0">
+      <div v-if="qualitativeKPIs.length > 0" class="scoring-section">
         <h3>📝 Chỉ Tiêu Định Tính - Chấm Điểm Thủ Công</h3>
         <div class="kpi-grid">
           <div v-for="kpi in qualitativeKPIs" :key="kpi.id" class="kpi-card qualitative">
@@ -102,13 +153,15 @@
                 <input
                   type="text"
                   :value="formatNumber(kpi.actualValue || 0)"
+                  :class="{ error: kpi.error }"
                   @input="e => handleActualValueInput(e, kpi)"
                   @blur="e => handleActualValueBlur(e, kpi)"
-                  :class="{ error: kpi.error }"
-                />
+                >
                 <span class="unit">%</span>
               </div>
-              <div v-if="kpi.error" class="error-message">{{ kpi.error }}</div>
+              <div v-if="kpi.error" class="error-message">
+                {{ kpi.error }}
+              </div>
             </div>
 
             <div class="score-display">
@@ -120,14 +173,16 @@
                 <span>Điểm đạt:</span>
                 <strong class="score-value">{{ kpi.score || 0 }}/{{ kpi.maxScore }}</strong>
               </div>
-              <div v-if="kpi.updatedDate" class="update-time">Cập nhật: {{ formatDate(kpi.updatedDate) }}</div>
+              <div v-if="kpi.updatedDate" class="update-time">
+                Cập nhật: {{ formatDate(kpi.updatedDate) }}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       <!-- 🧮 PHẦN 2: KPI Định Lượng Tỷ Lệ - Tính Toán -->
-      <div class="scoring-section" v-if="ratioKPIs.length > 0">
+      <div v-if="ratioKPIs.length > 0" class="scoring-section">
         <h3>🧮 Chỉ Tiêu Định Lượng Tỷ Lệ - Tính Toán</h3>
         <div class="kpi-grid">
           <div v-for="kpi in ratioKPIs" :key="kpi.id" class="kpi-card ratio">
@@ -144,7 +199,7 @@
                   :value="formatNumber(kpi.numerator || 0)"
                   @input="e => handleNumeratorInput(e, kpi)"
                   @blur="e => handleNumeratorBlur(e, kpi)"
-                />
+                >
               </div>
               <div class="input-row">
                 <label>Mẫu số:</label>
@@ -153,16 +208,16 @@
                   :value="formatNumber(kpi.denominator || 0)"
                   @input="e => handleDenominatorInput(e, kpi)"
                   @blur="e => handleDenominatorBlur(e, kpi)"
-                />
+                >
               </div>
               <div class="calculation-result">
                 <span>Kết quả:</span>
                 <strong>{{ kpi.calculatedRatio || 0 }}%</strong>
               </div>
               <button
-                @click="saveRatioCalculation(kpi)"
                 :disabled="!kpi.numerator || !kpi.denominator"
                 class="btn-calculate"
+                @click="saveRatioCalculation(kpi)"
               >
                 💾 Lưu Kết Quả
               </button>
@@ -190,14 +245,22 @@
       </div>
 
       <!-- 📊 PHẦN 3: KPI Định Lượng Tuyệt Đối - Import -->
-      <div class="scoring-section" v-if="absoluteKPIs.length > 0">
+      <div v-if="absoluteKPIs.length > 0" class="scoring-section">
         <h3>📊 Chỉ Tiêu Định Lượng Tuyệt Đối - Import Dữ Liệu</h3>
 
         <!-- File Upload Section -->
         <div class="import-section">
           <div class="upload-area">
-            <input type="file" ref="fileInput" @change="handleFileUpload" accept=".xlsx,.csv" style="display: none" />
-            <button @click="$refs.fileInput.click()" class="btn-upload">📂 Chọn File Excel/CSV</button>
+            <input
+              ref="fileInput"
+              type="file"
+              accept=".xlsx,.csv"
+              style="display: none"
+              @change="handleFileUpload"
+            >
+            <button class="btn-upload" @click="$refs.fileInput.click()">
+              📂 Chọn File Excel/CSV
+            </button>
             <span class="upload-info">Hỗ trợ: .xlsx, .csv</span>
           </div>
 
@@ -219,7 +282,9 @@
                   <td>{{ row.kpiName }}</td>
                   <td>{{ formatNumber(row.targetValue) }} {{ row.unit }}</td>
                   <td>{{ formatNumber(row.actualValue) }} {{ row.unit }}</td>
-                  <td class="score">{{ row.calculatedScore }}/{{ row.maxScore }}</td>
+                  <td class="score">
+                    {{ row.calculatedScore }}/{{ row.maxScore }}
+                  </td>
                   <td>
                     <span :class="'status ' + row.status">{{ getStatusText(row.status) }}</span>
                   </td>
@@ -227,8 +292,12 @@
               </tbody>
             </table>
             <div class="import-actions">
-              <button @click="confirmImport" class="btn-confirm">✅ Xác Nhận Import</button>
-              <button @click="cancelImport" class="btn-cancel">❌ Hủy</button>
+              <button class="btn-confirm" @click="confirmImport">
+                ✅ Xác Nhận Import
+              </button>
+              <button class="btn-cancel" @click="cancelImport">
+                ❌ Hủy
+              </button>
             </div>
           </div>
         </div>
@@ -270,26 +339,38 @@
       <div class="summary-grid">
         <div class="summary-card">
           <h4>Định tính</h4>
-          <div class="summary-score">{{ qualitativeScore }}/{{ qualitativeMaxScore }}</div>
+          <div class="summary-score">
+            {{ qualitativeScore }}/{{ qualitativeMaxScore }}
+          </div>
         </div>
         <div class="summary-card">
           <h4>Định lượng tỷ lệ</h4>
-          <div class="summary-score">{{ ratioScore }}/{{ ratioMaxScore }}</div>
+          <div class="summary-score">
+            {{ ratioScore }}/{{ ratioMaxScore }}
+          </div>
         </div>
         <div class="summary-card">
           <h4>Định lượng tuyệt đối</h4>
-          <div class="summary-score">{{ absoluteScore }}/{{ absoluteMaxScore }}</div>
+          <div class="summary-score">
+            {{ absoluteScore }}/{{ absoluteMaxScore }}
+          </div>
         </div>
         <div class="summary-card total">
           <h4>🏆 Tổng cộng</h4>
-          <div class="summary-score total-score">{{ totalScore }}/{{ totalMaxScore }}</div>
+          <div class="summary-score total-score">
+            {{ totalScore }}/{{ totalMaxScore }}
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Loading và Error States -->
-    <div v-if="loading" class="loading-state">⏳ Đang tải dữ liệu...</div>
-    <div v-if="error" class="error-state">❌ {{ error }}</div>
+    <div v-if="loading" class="loading-state">
+      ⏳ Đang tải dữ liệu...
+    </div>
+    <div v-if="error" class="error-state">
+      ❌ {{ error }}
+    </div>
   </div>
 </template>
 
@@ -423,7 +504,7 @@ const loadUnitKPIs = async () => {
 
     // Filter by unit and period
     const filteredData = data.filter(
-      assignment => assignment.unitId == selectedUnit.value && assignment.khoanPeriodId == selectedPeriod.value
+      assignment => assignment.unitId == selectedUnit.value && assignment.khoanPeriodId == selectedPeriod.value,
     )
 
     // Transform unit assignments to KPI format

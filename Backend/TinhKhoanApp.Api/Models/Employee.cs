@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace TinhKhoanApp.Api.Models
 {
@@ -43,6 +44,7 @@ namespace TinhKhoanApp.Api.Models
         [Required]
         public int UnitId { get; set; }
         [ForeignKey("UnitId")]
+        [JsonIgnore] // Tránh circular reference với Unit.Employees
         public virtual Unit? Unit { get; set; }
 
         [Required]

@@ -7,8 +7,8 @@
         :key="index"
         :class="['background-slide', { active: currentImageIndex === index }]"
         :style="{ backgroundImage: `url(${image})` }"
-      ></div>
-      <div class="background-overlay"></div>
+      />
+      <div class="background-overlay" />
 
       <!-- Background indicators -->
       <div class="background-indicators">
@@ -16,9 +16,9 @@
           v-for="(image, index) in backgroundImages"
           :key="`indicator-${index}`"
           :class="['indicator', { active: currentImageIndex === index }]"
-          @click="currentImageIndex = index"
           :title="backgroundNames[index]"
-        ></div>
+          @click="currentImageIndex = index"
+        />
       </div>
 
       <!-- Background name display - HIDDEN -->
@@ -31,14 +31,20 @@
     <div class="main-content">
       <nav class="main-nav">
         <router-link to="/" class="nav-logo">
-          <img src="/Logo-Agribank-2.png" alt="Agribank Logo" class="nav-logo-img" />
+          <img src="/Logo-Agribank-2.png" alt="Agribank Logo" class="nav-logo-img">
         </router-link>
 
         <!-- HR Information Dropdown Menu -->
         <div class="nav-dropdown" @mouseenter="handleHRMouseEnter" @mouseleave="handleHRMouseLeave">
           <a href="#" class="nav-dropdown-trigger" :class="{ active: isHRSectionActive }">
             <span>🏢 Chi nhánh/Nhân sự</span>
-            <svg class="dropdown-arrow" :class="{ rotated: showHRMenu }" viewBox="0 0 24 24" width="16" height="16">
+            <svg
+              class="dropdown-arrow"
+              :class="{ rotated: showHRMenu }"
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+            >
               <path fill="currentColor" d="M7 10l5 5 5-5z" />
             </svg>
           </a>
@@ -66,7 +72,13 @@
         <div class="nav-dropdown" @mouseenter="handleKPIMouseEnter" @mouseleave="handleKPIMouseLeave">
           <a href="#" class="nav-dropdown-trigger" :class="{ active: isKPISectionActive }">
             <span>📊 Quản lý KPI</span>
-            <svg class="dropdown-arrow" :class="{ rotated: showKPIMenu }" viewBox="0 0 24 24" width="16" height="16">
+            <svg
+              class="dropdown-arrow"
+              :class="{ rotated: showKPIMenu }"
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+            >
               <path fill="currentColor" d="M7 10l5 5 5-5z" />
             </svg>
           </a>
@@ -93,11 +105,11 @@
             </router-link>
             <router-link to="/kpi-scoring" class="dropdown-item">
               <span class="item-icon">🎯</span>
-              <span>Chấm điểm KPI</span>
+              <span>B6 - Chấm điểm KPI</span>
             </router-link>
             <router-link to="/unit-kpi-scoring" class="dropdown-item">
               <span class="item-icon">🏢</span>
-              <span>Chấm điểm KPI Chi nhánh</span>
+              <span>B7 - Chấm điểm KPI Chi nhánh</span>
             </router-link>
             <router-link to="/kpi-scoring" class="dropdown-item">
               <span class="item-icon">🎮</span>
@@ -152,7 +164,13 @@
         <div class="nav-dropdown" @mouseenter="handleAboutMouseEnter" @mouseleave="handleAboutMouseLeave">
           <a href="#" class="nav-dropdown-trigger" :class="{ active: isAboutSectionActive }">
             <span>ℹ️ Giới thiệu</span>
-            <svg class="dropdown-arrow" :class="{ rotated: showAboutMenu }" viewBox="0 0 24 24" width="16" height="16">
+            <svg
+              class="dropdown-arrow"
+              :class="{ rotated: showAboutMenu }"
+              viewBox="0 0 24 24"
+              width="16"
+              height="16"
+            >
               <path fill="currentColor" d="M7 10l5 5 5-5z" />
             </svg>
           </a>
@@ -172,12 +190,12 @@
           </div>
         </div>
 
-        <span class="nav-spacer"></span>
+        <span class="nav-spacer" />
         <!-- Compact controls -->
         <div class="nav-compact-controls">
           <!-- Theme Switcher -->
           <ThemeSwitcher />
-          <a href="#" @click.prevent="handleLogout" class="logout-btn">
+          <a href="#" class="logout-btn" @click.prevent="handleLogout">
             <span class="logout-icon">🚪</span>
             <span class="logout-text">Đăng xuất</span>
           </a>

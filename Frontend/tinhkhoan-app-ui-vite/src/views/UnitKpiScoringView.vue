@@ -2,26 +2,46 @@
   <div class="unit-kpi-scoring-container">
     <!-- 📊 Header with Statistics -->
     <div class="scoring-header">
-      <h2>🏢 Chấm Điểm KPI Chi Nhánh</h2>
+      <h2>🏢 B7 - Chấm điểm KPI Chi nhánh</h2>
 
       <div class="stats-cards">
         <div class="stat-card">
-          <div class="stat-number">{{ totalUnits }}</div>
-          <div class="stat-label">Tổng Chi nhánh</div>
+          <div class="stat-number">
+            {{ totalUnits }}
+          </div>
+          <div class="stat-label">
+            Tổng Chi nhánh
+          </div>
         </div>
         <div class="stat-card clickable" @click="showScoredUnitsDetail">
-          <div class="stat-number">{{ scoredUnits }}</div>
-          <div class="stat-label">Đã chấm</div>
-          <div class="stat-hint">👆 Nhấp để xem chi tiết</div>
+          <div class="stat-number">
+            {{ scoredUnits }}
+          </div>
+          <div class="stat-label">
+            Đã chấm
+          </div>
+          <div class="stat-hint">
+            👆 Nhấp để xem chi tiết
+          </div>
         </div>
         <div class="stat-card clickable" @click="showPendingUnitsDetail">
-          <div class="stat-number">{{ pendingUnits }}</div>
-          <div class="stat-label">Chờ chấm</div>
-          <div class="stat-hint">👆 Nhấp để xem chi tiết</div>
+          <div class="stat-number">
+            {{ pendingUnits }}
+          </div>
+          <div class="stat-label">
+            Chờ chấm
+          </div>
+          <div class="stat-hint">
+            👆 Nhấp để xem chi tiết
+          </div>
         </div>
         <div class="stat-card">
-          <div class="stat-number">{{ averageScore.toFixed(1) }}</div>
-          <div class="stat-label">Điểm TB</div>
+          <div class="stat-number">
+            {{ averageScore.toFixed(1) }}
+          </div>
+          <div class="stat-label">
+            Điểm TB
+          </div>
         </div>
       </div>
     </div>
@@ -31,7 +51,9 @@
       <div class="control-group">
         <label>📅 Kỳ tính khoán:</label>
         <select v-model="selectedPeriodId" @change="loadScorings">
-          <option value="">Chọn kỳ tính khoán</option>
+          <option value="">
+            Chọn kỳ tính khoán
+          </option>
           <option v-for="period in periods" :key="period.id" :value="period.id">
             {{ period.name }} ({{ formatDate(period.startDate) }} - {{ formatDate(period.endDate) }})
           </option>
@@ -41,7 +63,9 @@
       <div class="control-group">
         <label>🏢 Chi nhánh:</label>
         <select v-model="selectedUnitId" @change="loadUnitScoring">
-          <option value="">Tất cả chi nhánh</option>
+          <option value="">
+            Tất cả chi nhánh
+          </option>
           <option v-for="unit in sortedUnits" :key="unit.id" :value="unit.id">
             {{ unit.name }}
           </option>
@@ -49,10 +73,12 @@
       </div>
 
       <div class="action-buttons">
-        <button class="btn btn-primary" @click="createNewScoring" :disabled="!selectedPeriodId">
+        <button class="btn btn-primary" :disabled="!selectedPeriodId" @click="createNewScoring">
           ➕ Tạo chấm điểm mới
         </button>
-        <button class="btn btn-info" @click="loadScorings">🔄 Làm mới</button>
+        <button class="btn btn-info" @click="loadScorings">
+          🔄 Làm mới
+        </button>
       </div>
     </div>
 
@@ -82,7 +108,9 @@
             >
               <td>{{ index + 1 }}</td>
               <td>{{ summary.unitName }}</td>
-              <td class="score-cell">{{ summary.baseScore.toFixed(1) }}</td>
+              <td class="score-cell">
+                {{ summary.baseScore.toFixed(1) }}
+              </td>
               <td
                 class="score-cell"
                 :class="{
@@ -92,12 +120,20 @@
               >
                 {{ summary.adjustmentScore > 0 ? '+' : '' }}{{ summary.adjustmentScore.toFixed(1) }}
               </td>
-              <td class="total-score-cell">{{ summary.totalScore.toFixed(1) }}</td>
-              <td class="violation-cell">{{ summary.processViolationCount }}</td>
-              <td class="violation-cell">{{ summary.cultureViolationCount }}</td>
+              <td class="total-score-cell">
+                {{ summary.totalScore.toFixed(1) }}
+              </td>
+              <td class="violation-cell">
+                {{ summary.processViolationCount }}
+              </td>
+              <td class="violation-cell">
+                {{ summary.cultureViolationCount }}
+              </td>
               <td>{{ formatDateTime(summary.lastUpdated) }}</td>
               <td>
-                <button class="btn btn-sm btn-primary" @click="editUnitScoring(summary.unitId)">✏️ Chi tiết</button>
+                <button class="btn btn-sm btn-primary" @click="editUnitScoring(summary.unitId)">
+                  ✏️ Chi tiết
+                </button>
               </td>
             </tr>
           </tbody>
@@ -134,9 +170,9 @@
               <h5>
                 {{
                   detail.indicatorName ||
-                  detail.kpiIndicator?.indicatorName ||
-                  detail.kpiDefinition?.name ||
-                  'Chỉ tiêu KPI'
+                    detail.kpiIndicator?.indicatorName ||
+                    detail.kpiDefinition?.name ||
+                    'Chỉ tiêu KPI'
                 }}
               </h5>
               <span class="kpi-rule">{{
@@ -153,10 +189,10 @@
                 <input
                   type="text"
                   :value="formatNumber(detail.actualValue || 0)"
+                  class="actual-input"
                   @input="e => handleActualValueInput(e, detail)"
                   @blur="e => handleActualValueBlur(e, detail)"
-                  class="actual-input"
-                />
+                >
               </div>
               <div class="value-group">
                 <label>Điểm:</label>
@@ -208,7 +244,7 @@
                   :value="formatNumber(processViolations.minor || 0)"
                   @input="e => handleViolationInput(e, 'processViolations', 'minor')"
                   @blur="e => handleViolationBlur(e, 'processViolations', 'minor')"
-                />
+                >
               </div>
               <div class="violation-type">
                 <label>Khiển trách bằng văn bản (-4 điểm/lần):</label>
@@ -217,7 +253,7 @@
                   :value="formatNumber(processViolations.written || 0)"
                   @input="e => handleViolationInput(e, 'processViolations', 'written')"
                   @blur="e => handleViolationBlur(e, 'processViolations', 'written')"
-                />
+                >
               </div>
               <div class="violation-type">
                 <label>Kỷ luật (0 điểm):</label>
@@ -226,7 +262,7 @@
                   :value="formatNumber(processViolations.disciplinary || 0)"
                   @input="e => handleViolationInput(e, 'processViolations', 'disciplinary')"
                   @blur="e => handleViolationBlur(e, 'processViolations', 'disciplinary')"
-                />
+                >
               </div>
             </div>
           </div>
@@ -241,7 +277,7 @@
                   :value="formatNumber(cultureViolations.minor || 0)"
                   @input="e => handleViolationInput(e, 'cultureViolations', 'minor')"
                   @blur="e => handleViolationBlur(e, 'cultureViolations', 'minor')"
-                />
+                >
               </div>
               <div class="violation-type">
                 <label>Khiển trách bằng văn bản (-4 điểm/lần):</label>
@@ -250,7 +286,7 @@
                   :value="formatNumber(cultureViolations.written || 0)"
                   @input="e => handleViolationInput(e, 'cultureViolations', 'written')"
                   @blur="e => handleViolationBlur(e, 'cultureViolations', 'written')"
-                />
+                >
               </div>
               <div class="violation-type">
                 <label>Kỷ luật (0 điểm):</label>
@@ -259,7 +295,7 @@
                   :value="formatNumber(cultureViolations.disciplinary || 0)"
                   @input="e => handleViolationInput(e, 'cultureViolations', 'disciplinary')"
                   @blur="e => handleViolationBlur(e, 'cultureViolations', 'disciplinary')"
-                />
+                >
               </div>
             </div>
           </div>
@@ -269,15 +305,17 @@
       <!-- Notes Section -->
       <div class="notes-section">
         <h4>📝 Ghi chú</h4>
-        <textarea v-model="currentScoring.note" placeholder="Nhập ghi chú về việc chấm điểm..." rows="3"></textarea>
+        <textarea v-model="currentScoring.note" placeholder="Nhập ghi chú về việc chấm điểm..." rows="3" />
       </div>
 
       <!-- Action Buttons -->
       <div class="form-actions">
-        <button class="btn btn-success" @click="saveScoring" :disabled="isSaving">
+        <button class="btn btn-success" :disabled="isSaving" @click="saveScoring">
           {{ isSaving ? '💾 Đang lưu...' : '💾 Lưu chấm điểm' }}
         </button>
-        <button class="btn btn-secondary" @click="cancelEdit">❌ Hủy</button>
+        <button class="btn btn-secondary" @click="cancelEdit">
+          ❌ Hủy
+        </button>
       </div>
     </div>
 
@@ -288,15 +326,21 @@
         <div class="form-group">
           <label>Chi nhánh:</label>
           <select v-model="newScoring.unitId" required>
-            <option value="">Chọn chi nhánh</option>
+            <option value="">
+              Chọn chi nhánh
+            </option>
             <option v-for="unit in availableUnits" :key="unit.id" :value="unit.id">
               {{ unit.name }}
             </option>
           </select>
         </div>
         <div class="modal-actions">
-          <button class="btn btn-primary" @click="createScoring" :disabled="!newScoring.unitId">✅ Tạo</button>
-          <button class="btn btn-secondary" @click="closeCreateModal">❌ Hủy</button>
+          <button class="btn btn-primary" :disabled="!newScoring.unitId" @click="createScoring">
+            ✅ Tạo
+          </button>
+          <button class="btn btn-secondary" @click="closeCreateModal">
+            ❌ Hủy
+          </button>
         </div>
       </div>
     </div>
@@ -306,7 +350,9 @@
       <div class="modal-content units-detail-modal" @click.stop>
         <div class="modal-header">
           <h3>{{ unitsDetailTitle }}</h3>
-          <button class="close-btn" @click="closeUnitsDetailModal">✕</button>
+          <button class="close-btn" @click="closeUnitsDetailModal">
+            ✕
+          </button>
         </div>
         <div class="modal-body">
           <div v-if="unitsDetailList.length === 0" class="empty-state">
@@ -335,15 +381,15 @@
               <div class="unit-actions">
                 <button
                   v-if="unitsDetailType === 'scored'"
-                  @click="editUnitFromDetail(unit.id)"
                   class="btn btn-sm btn-primary"
+                  @click="editUnitFromDetail(unit.id)"
                 >
                   ✏️ Xem chi tiết
                 </button>
                 <button
                   v-if="unitsDetailType === 'pending'"
-                  @click="createScoringForUnit(unit.id)"
                   class="btn btn-sm btn-success"
+                  @click="createScoringForUnit(unit.id)"
                 >
                   ➕ Tạo chấm điểm
                 </button>
@@ -352,14 +398,16 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" @click="closeUnitsDetailModal">Đóng</button>
+          <button class="btn btn-secondary" @click="closeUnitsDetailModal">
+            Đóng
+          </button>
         </div>
       </div>
     </div>
 
     <!-- Loading State -->
     <div v-if="isLoading" class="loading-state">
-      <div class="spinner"></div>
+      <div class="spinner" />
       <p>Đang tải dữ liệu...</p>
     </div>
   </div>
@@ -692,7 +740,7 @@ export default {
       if (currentScoring.value.scoringDetails) {
         currentScoring.value.baseScore = currentScoring.value.scoringDetails.reduce(
           (sum, detail) => sum + (detail.score || 0),
-          0
+          0,
         )
       }
 

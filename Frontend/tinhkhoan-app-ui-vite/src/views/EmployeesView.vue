@@ -635,9 +635,10 @@ const startEditEmployee = async employee => {
   // Fetch chi tiết nhân viên để lấy passwordHash gốc
   try {
     const detail = await employeeStore.fetchEmployeeDetail(employee.Id)
-    // Chỉ merge các trường primitive, loại bỏ object reference
+    // Merge các trường từ employee và detail
     currentEmployee.value = extractEmployeePrimitives({ ...employee, ...detail })
     originalPasswordHash.value = detail.passwordHash || ''
+    console.log('✅ fetchEmployeeDetail thành công - đã sửa JSON cycle với JsonIgnore')
   } catch (err) {
     // Nếu lỗi, fallback về dữ liệu cũ
     currentEmployee.value = extractEmployeePrimitives(employee)

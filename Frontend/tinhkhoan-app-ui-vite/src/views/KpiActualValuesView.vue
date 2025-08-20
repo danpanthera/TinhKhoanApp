@@ -517,7 +517,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../services/api'
 import { isAuthenticated } from '../services/auth'
@@ -613,7 +613,7 @@ const departmentOptions = computed(() => {
   const branch = units.value.find(u => u.Id === branchId)
   if (!branch) return []
 
-  const children = units.value.filter(u => u.parentUnitId === branchId)
+  const children = units.value.filter(u => (u.parentUnitId || u.ParentUnitId) === branchId)
 
   // Lọc chỉ lấy các phòng nghiệp vụ (PNVL1, PNVL2) và phòng giao dịch (PGD), loại bỏ các chi nhánh con (CNL2)
   const departments = children.filter(u => {
@@ -635,16 +635,33 @@ const departmentOptions = computed(() => {
 })
 
 const filteredEmployees = computed(() => {
-  if (!employees.value || employees.value.length === 0) return []
+  if (!employees.value || employees.value.length === 0) {
+    console.log('🤵 No employees loaded yet')
+    return []
+  }
 
   let filtered = [...employees.value]
+  console.log('🤵 Total employees:', filtered.length)
 
   if (selectedDepartmentId.value) {
     const deptId = parseInt(selectedDepartmentId.value)
-    filtered = filtered.filter(emp => emp.unitId === deptId)
+    filtered = filtered.filter(emp => {
+      const empUnitId = emp.unitId || emp.UnitId
+      return empUnitId === deptId
+    })
+    console.log(`🤵 Filtered by department ${deptId}:`, filtered.length)
+    console.log(`🤵 Sample filtered employees:`, filtered.slice(0, 2).map(e => ({
+      name: e.fullName,
+      unitId: e.unitId || e.UnitId,
+    })))
   } else if (selectedBranchId.value) {
     const branchDepartments = departmentOptions.value.map(dept => dept.Id)
-    filtered = filtered.filter(emp => branchDepartments.includes(emp.unitId))
+    console.log('🏢 Branch departments:', branchDepartments)
+    filtered = filtered.filter(emp => {
+      const empUnitId = emp.unitId || emp.UnitId
+      return branchDepartments.includes(empUnitId)
+    })
+    console.log(`🤵 Filtered by branch:`, filtered.length)
   }
 
   return filtered
@@ -717,16 +734,31 @@ const getDepartmentName = () => {
 }
 
 const onBranchChange = () => {
+  console.log('🔄 Branch changed to:', selectedBranchId.value)
   selectedDepartmentId.value = ''
   selectedEmployeeId.value = ''
   assignments.value = []
   clearMessages()
+
+  // Force reactivity update
+  nextTick(() => {
+    console.log('📊 Available departments for branch:', departmentOptions.value.length)
+    console.log('📊 Department options:', departmentOptions.value.map(d => ({ id: d.Id, name: d.Name })))
+    console.log('🤵 Available employees for branch:', filteredEmployees.value.length)
+  })
 }
 
 const onDepartmentChange = () => {
+  console.log('🔄 Department changed to:', selectedDepartmentId.value)
   selectedEmployeeId.value = ''
   assignments.value = []
   clearMessages()
+
+  // Force reactivity update
+  nextTick(() => {
+    console.log('🤵 Available employees for department:', filteredEmployees.value.length)
+    console.log('🤵 Employee options:', filteredEmployees.value.map(e => ({ id: e.Id, name: e.fullName, unitId: e.unitId || e.UnitId })))
+  })
 }
 
 const getStatusClass = assignment => {
@@ -759,8 +791,6 @@ const fetchEmployees = async () => {
 
     if (response.data && response.data.Data && Array.isArray(response.data.Data)) {
       employeesData = response.data.Data
-    } else if (response.data && response.data.Data && Array.isArray(response.data.Data)) {
-      assignmentsData = response.data.Data
     } else if (response.data && Array.isArray(response.data.$values)) {
       employeesData = response.data.$values
     } else if (Array.isArray(response.data)) {
@@ -769,6 +799,27 @@ const fetchEmployees = async () => {
 
     employees.value = employeesData.filter(emp => emp.isActive)
     console.log('✅ Employees loaded:', employees.value.length)
+
+    // Debug: Log sample employee structure
+    if (employees.value.length > 0) {
+      console.log('📊 Sample employee structure:', {
+        id: employees.value[0].Id,
+        name: employees.value[0].fullName,
+        unitId: employees.value[0].unitId,
+        UnitId: employees.value[0].UnitId,
+        unit: employees.value[0].unit,
+      })
+
+      // Debug: Log first few employees with unit mapping
+      console.log('📊 First 3 employees with unit mapping:')
+      employees.value.slice(0, 3).forEach((emp, idx) => {
+        console.log(`${idx + 1}.`, {
+          name: emp.fullName,
+          unitId: emp.unitId || emp.UnitId,
+          hasUnit: !!emp.unit,
+        })
+      })
+    }
   } catch (error) {
     console.error('❌ Error loading employees:', error)
     showError('Không thể tải danh sách nhân viên. Vui lòng thử lại.')
@@ -784,8 +835,6 @@ const fetchKhoanPeriods = async () => {
 
     if (response.data && response.data.Data && Array.isArray(response.data.Data)) {
       periodsData = response.data.Data
-    } else if (response.data && response.data.Data && Array.isArray(response.data.Data)) {
-      assignmentsData = response.data.Data
     } else if (response.data && Array.isArray(response.data.$values)) {
       periodsData = response.data.$values
     } else if (Array.isArray(response.data)) {
@@ -811,8 +860,6 @@ const fetchUnits = async () => {
 
     if (response.data && response.data.Data && Array.isArray(response.data.Data)) {
       unitsData = response.data.Data
-    } else if (response.data && response.data.Data && Array.isArray(response.data.Data)) {
-      assignmentsData = response.data.Data
     } else if (response.data && Array.isArray(response.data.$values)) {
       unitsData = response.data.$values
     } else if (Array.isArray(response.data)) {
@@ -821,6 +868,17 @@ const fetchUnits = async () => {
 
     units.value = unitsData
     console.log('✅ Units loaded:', units.value.length)
+
+    // Debug: Log sample unit structure
+    if (units.value.length > 0) {
+      console.log('📊 Sample unit structure:', {
+        id: units.value[0].Id,
+        name: units.value[0].Name,
+        parentUnitId: units.value[0].parentUnitId,
+        ParentUnitId: units.value[0].ParentUnitId,
+        type: units.value[0].Type,
+      })
+    }
   } catch (error) {
     console.error('❌ Error loading units:', error)
     showError('Không thể tải danh sách đơn vị. Vui lòng thử lại.')
@@ -982,8 +1040,11 @@ const searchUnitAssignments = async () => {
       periodId: selectedUnitPeriodId.value,
     })
 
+    // For now, use the same search endpoint as employee tab
+    // TODO: Backend team needs to implement proper Unit KPI search endpoint
+    console.log('⚠️ Using employee search endpoint temporarily for unit search')
     const response = await api.get(
-      `/UnitKhoanAssignments/search?unitId=${selectedUnitBranchId.value}&periodId=${selectedUnitPeriodId.value}`,
+      `/KpiAssignment/search?unitId=${selectedUnitBranchId.value}&periodId=${selectedUnitPeriodId.value}`,
     )
 
     let assignmentsData = []
@@ -1260,6 +1321,15 @@ onMounted(async () => {
     showError('Không thể tải dữ liệu ban đầu. Vui lòng tải lại trang.')
   }
 })
+
+// Watch for debugging filtered employees
+watch(filteredEmployees, (newVal) => {
+  console.log('👁️ filteredEmployees changed:', newVal.length, 'employees')
+}, { immediate: true })
+
+watch(selectedDepartmentId, (newVal) => {
+  console.log('👁️ selectedDepartmentId changed to:', newVal)
+}, { immediate: true })
 </script>
 
 <style scoped>
