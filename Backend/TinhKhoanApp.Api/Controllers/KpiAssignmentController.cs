@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Data;
 using TinhKhoanApp.Api.Models;
+using TinhKhoanApp.Api.Services;
+using TinhKhoanApp.Api.Contracts.KpiAssignments;
 
 namespace TinhKhoanApp.Api.Controllers
 {
@@ -54,15 +56,40 @@ namespace TinhKhoanApp.Api.Controllers
 
                 if (!assignments.Any())
                 {
-                    return NotFound(new { Message = "No KPI assignments found" });
+                    // Khi chưa có assignment nào: trả về danh sách nhân viên (theo unitId filter nếu có)
+                    var employeeQuery = _context.Employees
+                        .Include(e => e.Position)
+                        .AsQueryable();
+
+                    if (unitId.HasValue)
+                    {
+                        employeeQuery = employeeQuery.Where(e => e.UnitId == unitId.Value);
+                    }
+
+                    var employees = await employeeQuery
+                        .OrderBy(e => e.FullName)
+                        .Select(e => new
+                        {
+                            id = e.Id,
+                            fullName = e.FullName,
+                            unitId = e.UnitId,
+                            positionName = e.Position != null ? e.Position.Name : null
+                        })
+                        .ToListAsync();
+
+                    return Ok(new
+                    {
+                        assignments = new List<object>(),
+                        employees,
+                        message = "No KPI assignments yet"
+                    });
                 }
 
-                // Chuẩn hóa dữ liệu theo hình dạng mà frontend (KpiActualValuesView.vue) đang mong đợi
+                // Có assignment: trả về danh sách chuẩn hoá
                 var result = assignments.Select(a => new
                 {
                     a.Id,
                     employeeId = a.EmployeeId,
-                    // Frontend dùng assignment.employee?.fullName => trả về object employee với fullName
                     employee = new
                     {
                         id = a.Employee.Id,
@@ -74,11 +101,10 @@ namespace TinhKhoanApp.Api.Controllers
                     khoanPeriod = a.KhoanPeriod == null ? null : new
                     {
                         id = a.KhoanPeriod.Id,
-                        periodName = a.KhoanPeriod.Name, // Frontend dùng periodName
+                        periodName = a.KhoanPeriod.Name,
                         startDate = a.KhoanPeriod.StartDate,
                         endDate = a.KhoanPeriod.EndDate
                     },
-                    // Frontend dùng assignment.indicator?.indicatorName / maxScore / unit
                     indicator = new
                     {
                         id = a.KpiDefinition.Id,
@@ -94,7 +120,7 @@ namespace TinhKhoanApp.Api.Controllers
                     updatedDate = a.UpdatedDate
                 }).ToList();
 
-                return Ok(result);
+                return Ok(new { assignments = result });
             }
             catch (Exception ex)
             {
@@ -129,16 +155,7 @@ namespace TinhKhoanApp.Api.Controllers
                 assignment.UpdatedDate = DateTime.UtcNow;
 
                 // Tính điểm đơn giản: (Actual / Target) * MaxScore (cắt ngưỡng)
-                if (assignment.TargetValue > 0 && assignment.ActualValue.HasValue)
-                {
-                    var rawScore = assignment.TargetValue == 0 ? 0 : (assignment.ActualValue.Value / assignment.TargetValue) * assignment.KpiDefinition.MaxScore;
-                    if (rawScore > assignment.KpiDefinition.MaxScore) rawScore = assignment.KpiDefinition.MaxScore;
-                    assignment.Score = Math.Round(rawScore, 2);
-                }
-                else
-                {
-                    assignment.Score = null; // Không tính được
-                }
+                assignment.Score = KpiScoring.CalculateScore(assignment.TargetValue, assignment.ActualValue, assignment.KpiDefinition.MaxScore);
 
                 await _context.SaveChangesAsync();
 
@@ -303,32 +320,4 @@ namespace TinhKhoanApp.Api.Controllers
         }
     }
 
-    /// <summary>
-    /// Request model for assigning KPI targets
-    /// </summary>
-    public class AssignKpiRequest
-    {
-        public int EmployeeId { get; set; }
-        public int KhoanPeriodId { get; set; }
-        public List<KpiTargetRequest> Targets { get; set; } = new List<KpiTargetRequest>();
-    }
-
-    /// <summary>
-    /// Individual KPI target in the assignment request
-    /// </summary>
-    public class KpiTargetRequest
-    {
-        public int IndicatorId { get; set; }
-        public decimal TargetValue { get; set; }
-        public string? Notes { get; set; }
-    }
-
-    /// <summary>
-    /// Request model để cập nhật giá trị thực hiện của một KPI Assignment
-    /// </summary>
-    public class UpdateEmployeeActualRequest
-    {
-        public int AssignmentId { get; set; }
-        public decimal? ActualValue { get; set; }
-    }
 }

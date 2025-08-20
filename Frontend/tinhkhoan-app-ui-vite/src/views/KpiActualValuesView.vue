@@ -931,30 +931,48 @@ const searchAssignments = async () => {
 
     const response = await api.get(url)
     let assignmentsData = []
+    let employeesFromResponse = []
 
-    if (response.data && response.data.Data && Array.isArray(response.data.Data)) {
-      assignmentsData = response.data.Data
-    } else if (response.data && Array.isArray(response.data.$values)) {
-      assignmentsData = response.data.$values
-    } else if (Array.isArray(response.data)) {
-      assignmentsData = response.data
+    // New backend wrapper: { assignments: [...], employees: [...] }
+    const data = response.data
+    if (data && data.assignments) {
+      assignmentsData = Array.isArray(data.assignments) ? data.assignments : []
+      if (Array.isArray(data.employees)) {
+        // Merge employees if current employees list empty or filtered context requires
+        if (!employees.value || employees.value.length === 0) {
+          employees.value = data.employees.map(e => ({
+            Id: e.id || e.Id,
+            fullName: e.fullName || e.FullName,
+            unitId: e.unitId || e.UnitId,
+            positionName: e.positionName || e.PositionName,
+            isActive: true,
+          }))
+        }
+        employeesFromResponse = data.employees
+      }
+    } else if (data && data.Data && Array.isArray(data.Data)) {
+      assignmentsData = data.Data
+    } else if (data && Array.isArray(data.$values)) {
+      assignmentsData = data.$values
+    } else if (Array.isArray(data)) {
+      assignmentsData = data
     }
 
     assignments.value = assignmentsData
 
-    console.log('Assignments loaded:', assignments.value.length)
+    console.log('Assignments loaded:', assignments.value.length, 'employeesFromResponse:', employeesFromResponse.length)
 
     if (assignments.value.length > 0) {
       showSuccess(`Tìm thấy ${assignments.value.length} giao khoán KPI.`)
+    } else if (employeesFromResponse.length > 0) {
+      // No assignments yet, but employees exist => guide user
+      successMessage.value = `Chưa có giao khoán KPI cho kỳ đã chọn. Có ${employeesFromResponse.length} cán bộ trong đơn vị này. Chọn cán bộ và tiến hành giao hoặc cập nhật khi có dữ liệu.`
+    } else if (assignments.value.length === 0 && !searching.value) {
+      successMessage.value = 'Không có giao khoán hoặc danh sách cán bộ cho tiêu chí tìm kiếm hiện tại.'
     }
   } catch (error) {
     console.error('Error searching assignments:', error)
-    if (error.response && error.response.Status === 404) {
-      assignments.value = []
-      showError('Không tìm thấy giao khoán KPI nào phù hợp.')
-    } else {
-      showError('Có lỗi xảy ra khi tìm kiếm. Vui lòng thử lại.')
-    }
+    showError('Có lỗi xảy ra khi tìm kiếm. Vui lòng thử lại.')
   } finally {
     searching.value = false
   }

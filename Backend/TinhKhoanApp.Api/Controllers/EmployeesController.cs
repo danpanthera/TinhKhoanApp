@@ -18,19 +18,32 @@ public class EmployeesController : ControllerBase
         _logger = logger;
     }
 
-    // GET: api/Employees
+    // GET: api/Employees (optional filter by unitId, isActive)
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<object>>> GetEmployees()
+    public async Task<ActionResult<IEnumerable<object>>> GetEmployees([FromQuery] int? unitId, [FromQuery] bool? isActive)
     {
         try
         {
-            _logger.LogInformation("Fetching all employees");
-            var employees = await _context.Employees
+            _logger.LogInformation("Fetching employees. unitId={UnitId}, isActive={IsActive}", unitId, isActive);
+            var query = _context.Employees
                 .Include(e => e.Unit)
                 .Include(e => e.Position)
                 .Include(e => e.EmployeeRoles)
                     .ThenInclude(er => er.Role)
+                .AsQueryable();
+
+            if (unitId.HasValue)
+            {
+                query = query.Where(e => e.UnitId == unitId.Value);
+            }
+            if (isActive.HasValue)
+            {
+                query = query.Where(e => e.IsActive == isActive.Value);
+            }
+
+            var employees = await query
                 .OrderBy(e => e.EmployeeCode)
+                .ThenBy(e => e.FullName)
                 .ToListAsync();
 
             // Transform to include role info properly
