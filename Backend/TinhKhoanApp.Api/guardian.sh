@@ -8,6 +8,24 @@ BACKEND_DIR="/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanA
 FRONTEND_DIR="/Users/nguyendat/Documents/Projects/TinhKhoanApp/Frontend/tinhkhoan-app-ui-vite"
 GUARDIAN_LOG="guardian.log"
 
+# ---- Configuration (override via env vars) ----
+CHECK_INTERVAL=${CHECK_INTERVAL:-30}          # seconds between health checks
+BACKEND_HEALTH_PATH="http://localhost:5055/api/health"
+FRONTEND_HEALTH_PATH="http://localhost:3000"  # simple root probe
+BUILD_CHECK=${BUILD_CHECK:-true}              # run dotnet build before backend restart
+VERBOSE_HEALTH=${VERBOSE_HEALTH:-true}        # true -> log every cycle (or on change), false -> only on state change / restart
+LOG_EVERY_N=${LOG_EVERY_N:-10}                # if VERBOSE_HEALTH=false, still force a periodic heartbeat every N cycles
+MAX_BACKEND_RESTARTS=${MAX_BACKEND_RESTARTS:-20}
+BACKOFF_BASE=${BACKOFF_BASE:-2}               # exponential backoff base seconds
+BACKEND_FAIL_RESET_WINDOW=${BACKEND_FAIL_RESET_WINDOW:-600} # seconds to reset failure counters
+
+# Internal state
+cycle_counter=0
+backend_prev_state="unknown"
+frontend_prev_state="unknown"
+backend_restart_count=0
+backend_last_fail_ts=0
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -18,10 +36,6 @@ NC='\033[0m' # No Color
 log() {
     echo -e "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$GUARDIAN_LOG"
 }
-
-BACKEND_HEALTH_PATH="http://localhost:5055/api/health" # Correct health endpoint
-FRONTEND_HEALTH_PATH="http://localhost:3000"           # Root is fine for frontend
-CHECK_INTERVAL=${CHECK_INTERVAL:-30}                    # Allow override via env var
 
 check_backend() {
     if curl -s --max-time 3 "$BACKEND_HEALTH_PATH" > /dev/null 2>&1; then
@@ -42,8 +56,17 @@ check_frontend() {
 start_backend() {
     log "${YELLOW}🔄 Starting Backend...${NC}"
     cd "$BACKEND_DIR"
+    if [ "$BUILD_CHECK" = "true" ]; then
+        log "${YELLOW}🧪 Running dotnet build pre-check...${NC}"
+        if ! dotnet build --configuration Debug --verbosity quiet > /dev/null 2>&1; then
+            log "${RED}❌ Build failed – skipping backend restart (will retry later).${NC}"
+            backend_last_fail_ts=$(date +%s)
+            return 1
+        fi
+        log "${GREEN}✅ Build OK – proceeding to run backend.${NC}"
+    fi
     ./start_backend.sh &
-    sleep 10  # Give it time to start
+    sleep 12  # Give it time to start
 }
 
 start_frontend() {
@@ -53,12 +76,32 @@ start_frontend() {
     sleep 8  # Give it time to start
 }
 
+log_state_change() {
+    local service=$1
+    local old=$2
+    local new=$3
+    if [ "$old" != "$new" ]; then
+        log "${BLUE}ℹ️  State change: ${service}: ${old} -> ${new}${NC}"
+    fi
+}
+
+maybe_log_heartbeat() {
+    if [ "$VERBOSE_HEALTH" = "true" ]; then
+        return 0
+    fi
+    # VERBOSE_HEALTH=false => only log every LOG_EVERY_N cycles
+    if [ $((cycle_counter % LOG_EVERY_N)) -eq 0 ]; then
+        log "⏱️  Heartbeat cycle=${cycle_counter} backend=${backend_prev_state} frontend=${frontend_prev_state}"
+    fi
+}
+
 # Initial cleanup
 > "$GUARDIAN_LOG"
 log "${BLUE}🛡️ TinhKhoan Guardian Started${NC}"
 log "${BLUE}📍 Monitoring Backend: $BACKEND_HEALTH_PATH${NC}"
 log "${BLUE}📍 Monitoring Frontend: $FRONTEND_HEALTH_PATH${NC}"
-log "${BLUE}⏱️  Interval: ${CHECK_INTERVAL}s (override with CHECK_INTERVAL env var)${NC}"
+log "${BLUE}⏱️  Interval: ${CHECK_INTERVAL}s (override with CHECK_INTERVAL)${NC}"
+log "${BLUE}🔧 Build pre-check: ${BUILD_CHECK} | Verbose health: ${VERBOSE_HEALTH} | Backoff base: ${BACKOFF_BASE}s${NC}"
 
 # Start services initially
 if ! check_backend; then
@@ -73,22 +116,49 @@ fi
 
 # Monitoring loop
 while true; do
-    # Check backend
-    if ! check_backend; then
-        log "${RED}⚠️ Backend down! Restarting...${NC}"
-        start_backend
-    else
-        log "${GREEN}✅ Backend healthy${NC}"
+    cycle_counter=$((cycle_counter + 1))
+    now_ts=$(date +%s)
+
+    # Reset failure counters if window passed
+    if [ $((now_ts - backend_last_fail_ts)) -gt $BACKEND_FAIL_RESET_WINDOW ]; then
+        backend_restart_count=0
     fi
 
-    # Check frontend
-    if ! check_frontend; then
-        log "${RED}⚠️ Frontend down! Restarting...${NC}"
-        start_frontend
+    # BACKEND
+    if check_backend; then
+        new_state="healthy"
+        backend_restart_count=0
     else
-        log "${GREEN}✅ Frontend healthy${NC}"
+        new_state="down"
+        log "${RED}⚠️ Backend DOWN (cycle=${cycle_counter})${NC}"
+        if [ $backend_restart_count -ge $MAX_BACKEND_RESTARTS ]; then
+            log "${RED}🛑 Max backend restart attempts (${MAX_BACKEND_RESTARTS}) reached – pausing restarts.${NC}"
+        else
+            # Exponential backoff delay before restart attempt based on restart count
+            delay=$((BACKOFF_BASE ** backend_restart_count))
+            if [ $delay -gt 120 ]; then delay=120; fi
+            log "${YELLOW}⏳ Backoff ${delay}s before restart attempt (#$((backend_restart_count+1))).${NC}"
+            sleep $delay
+            start_backend || true
+            backend_restart_count=$((backend_restart_count + 1))
+            backend_last_fail_ts=$(date +%s)
+        fi
     fi
+    log_state_change "Backend" "$backend_prev_state" "$new_state"
+    backend_prev_state="$new_state"
 
-    # Wait before next check
+    # FRONTEND
+    if check_frontend; then
+        new_state="healthy"
+    else
+        new_state="down"
+        log "${RED}⚠️ Frontend DOWN (cycle=${cycle_counter}) – restarting...${NC}"
+        start_frontend || true
+    fi
+    log_state_change "Frontend" "$frontend_prev_state" "$new_state"
+    frontend_prev_state="$new_state"
+
+    maybe_log_heartbeat
+
     sleep "$CHECK_INTERVAL"
 done
