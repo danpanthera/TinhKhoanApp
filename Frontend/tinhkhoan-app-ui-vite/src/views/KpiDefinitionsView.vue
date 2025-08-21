@@ -204,7 +204,11 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="(indicator, index) in indicators" :key="getId(indicator)">
+                  <tr
+                    v-for="(indicator, index) in indicators"
+                    :key="getId(indicator)"
+                    class="kpi-row"
+                  >
                     <td>{{ index + 1 }}</td>
                     <td class="indicator-name kpi-name">
                       {{ safeGet(indicator, 'Name') || safeGet(indicator, 'IndicatorName') }}
@@ -220,7 +224,8 @@
                     </td>
                     <td class="status">
                       <span
-                        :class="{ active: safeGet(indicator, 'IsActive'), inactive: !safeGet(indicator, 'IsActive') }"
+                        class="status-badge"
+                        :class="safeGet(indicator, 'IsActive') ? 'active' : 'inactive'"
                       >
                         {{ safeGet(indicator, 'IsActive') ? 'Hoạt động' : 'Không hoạt động' }}
                       </span>
@@ -721,10 +726,10 @@ import { kpiAssignmentService } from '../services/kpiAssignmentService'
 import { getId, safeGet } from '../utils/casingSafeAccess.js'
 import { useNumberInput } from '../utils/numberFormat'
 
-const router = useRouter()
+const _router = useRouter()
 
 // 🔢 Initialize number input utility
-const { handleInput, handleBlur, formatNumber, parseFormattedNumber } = useNumberInput({
+const { handleInput: _handleInput, handleBlur: _handleBlur, formatNumber: _formatNumber, parseFormattedNumber: _parseFormattedNumber } = useNumberInput({
   maxDecimalPlaces: 2,
   allowNegative: false,
 })
@@ -938,7 +943,7 @@ const switchTab = tab => {
   }
 }
 
-const getIndicatorCount = tableId => {
+const _getIndicatorCount = tableId => {
   if (tableId === null || tableId === undefined) return 0
 
   // Try to get count from cached data first
@@ -1027,7 +1032,7 @@ const fetchKpiTables = async () => {
   }
 }
 
-const selectTable = tableId => {
+const _selectTable = tableId => {
   selectedTableId.value = tableId
   loadTableDetails()
 }
@@ -1321,7 +1326,7 @@ const moveIndicatorDown = async indicator => {
   }
 }
 
-const lockBodyScroll = () => {
+const _lockBodyScroll = () => {
   // Store current scroll position
   const scrollY = window.scrollY
   document.body.style.position = 'fixed'
@@ -1330,7 +1335,7 @@ const lockBodyScroll = () => {
   document.body.setAttribute('data-scroll-lock', scrollY.toString())
 }
 
-const unlockBodyScroll = () => {
+const _unlockBodyScroll = () => {
   // Restore scroll position
   const scrollY = document.body.getAttribute('data-scroll-lock')
   document.body.style.position = ''
@@ -1343,7 +1348,7 @@ const unlockBodyScroll = () => {
 }
 
 // Enhanced modal management with keyboard support
-const handleEscapeKey = event => {
+const _handleEscapeKey = event => {
   if (event.key === 'Escape') {
     if (showIndicatorModal.value) {
       closeIndicatorModal()
@@ -1922,6 +1927,58 @@ const cleanTableDescription = description => {
   color: #2c3e50; /* Black color for individual indicators */
   font-weight: 500;
   font-size: 1rem;
+}
+
+/* Unified KPI table styling (align with B3/B4) */
+.indicators-table table.kpi-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.indicators-table table.kpi-table thead tr {
+  background: #f8f9fa;
+}
+
+.indicators-table table.kpi-table th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #f8f9fa;
+  padding: 12px 10px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.indicators-table table.kpi-table td {
+  padding: 10px 10px;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.9rem;
+}
+
+.indicators-table table.kpi-table tr.kpi-row:hover {
+  background: #f8f9fb;
+}
+
+.indicators-table .status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.indicators-table .status-badge.active {
+  background: #d4edda;
+  color: #155724;
+}
+
+.indicators-table .status-badge.inactive {
+  background: #f8d7da;
+  color: #721c24;
 }
 
 .indicators-table td {

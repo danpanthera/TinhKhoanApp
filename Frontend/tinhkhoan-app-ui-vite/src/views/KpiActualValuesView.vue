@@ -171,6 +171,7 @@
                     <td class="indicator-info">
                       <div class="indicator-name">
                         {{ assignment.indicator?.indicatorName }}
+                        <span v-if="requiresManualInput(assignment)" class="manual-badge" title="Chỉ tiêu này yêu cầu nhập tay">Nhập tay</span>
                       </div>
                       <div class="indicator-details">
                         Tối đa: {{ assignment.indicator?.maxScore }} điểm ({{ assignment.indicator?.unit }})
@@ -559,11 +560,36 @@ const editingUnitActualValue = ref('')
 const editingUnitActualValueFormatted = ref('')
 const savingUnitActual = ref(false)
 
-// 🔢 Initialize number input utility
-const { handleInput, handleBlur, formatNumber, parseFormattedNumber } = useNumberInput({
-  maxDecimalPlaces: 2,
-  allowNegative: false,
-})
+// 🔢 Initialize number input utility (updated API)
+// Current useNumberInput returns helpers: formatInput, parseInput, ...
+// We wrap previous handlers (handleInput/handleBlur) usage to avoid runtime errors.
+const { formatInput, parseInput, formatNumber } = useNumberInput()
+
+// Manual input KPI pattern list (case-insensitive substring match) – from user spec:
+// Các chỉ tiêu chứa một trong các cụm sau sẽ phải nhập tay, còn lại tính tự động.
+const manualIndicatorPatterns = [
+  'thực hiện nhiệm vụ',
+  'theo chương trình công tác',
+  'chấp hành quy chế',
+  'quy trình nghiệp vụ',
+  'văn hóa agribank',
+  'hoàn thành chỉ tiêu giao khoán spdv',
+  'giao khoán spdv',
+  'thực hiện chức năng',
+  'nhiệm vụ được giao',
+  'điều hành theo chương trình công tác',
+  'chức năng nhiệm vụ của phòng',
+  'kết quả thực hiện bq',
+  'mình phụ trách',
+  'trong phòng',
+  'bq kết quả',
+]
+
+const requiresManualInput = assignment => {
+  const name = (assignment?.indicator?.indicatorName || '').toLowerCase().trim()
+  if (!name) return false
+  return manualIndicatorPatterns.some(p => p && name.includes(p))
+}
 
 // Computed properties
 // Updated branchOptions: Custom ordering as requested
@@ -975,8 +1001,11 @@ const searchAssignments = async () => {
 
 const startEdit = assignment => {
   editingAssignment.value = assignment.Id
+  // For manual input KPIs we still allow formatting but keep raw value editable.
   editingActualValue.value = assignment.actualValue || ''
-  editingActualValueFormatted.value = assignment.actualValue ? formatNumber(assignment.actualValue) : ''
+  editingActualValueFormatted.value = assignment.actualValue !== undefined && assignment.actualValue !== null
+    ? formatNumber(assignment.actualValue)
+    : ''
 }
 
 const cancelEdit = () => {
@@ -1024,17 +1053,28 @@ const saveActualValue = async assignment => {
   }
 }
 
-// Number input handlers for employee actual values
+// Number input handlers for employee actual values (updated to new API)
 const handleActualValueInput = event => {
-  const formattedValue = handleInput(event)
-  editingActualValueFormatted.value = formattedValue
-  editingActualValue.value = parseFormattedNumber(formattedValue)
+  const el = event?.target
+  if (!el) return
+  const raw = el.value.replace(/,/g, '')
+  if (raw === '') {
+    editingActualValueFormatted.value = ''
+    editingActualValue.value = ''
+    return
+  }
+  const formatted = formatInput(raw)
+  editingActualValueFormatted.value = formatted
+  editingActualValue.value = parseInput(formatted)
 }
 
-const handleActualValueBlur = event => {
-  const formattedValue = handleBlur(event)
-  editingActualValueFormatted.value = formattedValue
-  editingActualValue.value = parseFormattedNumber(formattedValue)
+const handleActualValueBlur = _event => {
+  // Re-format to standard #,###.00 on blur
+  if (editingActualValue.value === '' || editingActualValue.value === null || editingActualValue.value === undefined) {
+    editingActualValueFormatted.value = ''
+    return
+  }
+  editingActualValueFormatted.value = formatNumber(editingActualValue.value)
 }
 
 // Unit tab methods
@@ -1138,17 +1178,27 @@ const saveUnitActualValue = async assignment => {
   }
 }
 
-// Number input handlers for unit actual values
+// Number input handlers for unit actual values (updated to new API)
 const handleUnitActualValueInput = event => {
-  const formattedValue = handleInput(event)
-  editingUnitActualValueFormatted.value = formattedValue
-  editingUnitActualValue.value = parseFormattedNumber(formattedValue)
+  const el = event?.target
+  if (!el) return
+  const raw = el.value.replace(/,/g, '')
+  if (raw === '') {
+    editingUnitActualValueFormatted.value = ''
+    editingUnitActualValue.value = ''
+    return
+  }
+  const formatted = formatInput(raw)
+  editingUnitActualValueFormatted.value = formatted
+  editingUnitActualValue.value = parseInput(formatted)
 }
 
-const handleUnitActualValueBlur = event => {
-  const formattedValue = handleBlur(event)
-  editingUnitActualValueFormatted.value = formattedValue
-  editingUnitActualValue.value = parseFormattedNumber(formattedValue)
+const handleUnitActualValueBlur = _event => {
+  if (editingUnitActualValue.value === '' || editingUnitActualValue.value === null || editingUnitActualValue.value === undefined) {
+    editingUnitActualValueFormatted.value = ''
+    return
+  }
+  editingUnitActualValueFormatted.value = formatNumber(editingUnitActualValue.value)
 }
 
 const onUnitFilterChange = () => {
@@ -1637,6 +1687,8 @@ watch(selectedDepartmentId, (newVal) => {
   font-weight: 600;
   color: #2c3e50;
   margin-bottom: 4px;
+  font-size: 1.05rem;
+  line-height: 1.25rem;
 }
 
 .employee-unit,
@@ -1656,6 +1708,26 @@ watch(selectedDepartmentId, (newVal) => {
 .value {
   font-weight: 600;
   color: #2c3e50;
+}
+
+/* Manual input badge */
+.manual-badge {
+  display: inline-block;
+  background: #ffe08a;
+  color: #8b1538;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  margin-left: 6px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Optional: highlight edit input for manual indicators */
+.edit-mode .actual-input.manual-required {
+  background: #fff9e6;
+  border-color: #d69e2e;
 }
 
 .unit {
