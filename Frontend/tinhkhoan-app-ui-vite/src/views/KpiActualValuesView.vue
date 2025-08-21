@@ -517,6 +517,7 @@
 </template>
 
 <script setup>
+import messages from '@/i18n/messages'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../services/api'
@@ -1079,16 +1080,12 @@ const searchUnitAssignments = async () => {
     if (unitAssignments.value.length > 0) {
       showSuccess(`Tìm thấy ${unitAssignments.value.length} giao khoán KPI cho chi nhánh.`)
     } else {
-      showError('Không tìm thấy giao khoán KPI nào cho chi nhánh này.')
+      // Gọi empty-info để lấy metadata
+      await fetchUnitEmptyInfo()
     }
   } catch (error) {
     console.error('❌ Error searching unit assignments:', error)
-    if (error.response && error.response.Status === 404) {
-      unitAssignments.value = []
-      showError('Không tìm thấy giao khoán KPI nào cho chi nhánh này.')
-    } else {
-      showError('Có lỗi xảy ra khi tìm kiếm. Vui lòng thử lại.')
-    }
+    showError('Có lỗi xảy ra khi tìm kiếm. Vui lòng thử lại.')
   } finally {
     searchingUnit.value = false
   }
@@ -1131,7 +1128,7 @@ const saveUnitActualValue = async assignment => {
       }
     }
 
-    showSuccess('Cập nhật giá trị thực hiện cho chi nhánh thành công!')
+  showSuccess(messages.unitUpdateSuccess)
 
     // Exit edit mode
     cancelUnitEdit()
@@ -1168,6 +1165,29 @@ const onUnitFilterChange = () => {
 const onUnitBranchChange = () => {
   unitAssignments.value = []
   clearMessages()
+}
+
+// Lấy empty info khi không có assignment
+const unitEmptyInfo = ref(null)
+const fetchingEmptyInfo = ref(false)
+const fetchUnitEmptyInfo = async () => {
+  if (!selectedUnitBranchId.value || !selectedUnitPeriodId.value) return
+  try {
+    fetchingEmptyInfo.value = true
+    successMessage.value = messages.loadingUnitEmptyInfo
+    const response = await api.get(`/UnitKhoanAssignments/empty-info?unitId=${selectedUnitBranchId.value}&periodId=${selectedUnitPeriodId.value}`)
+    unitEmptyInfo.value = response.data
+    if (unitEmptyInfo.value) {
+      successMessage.value = `${messages.emptyUnitAssignments(unitEmptyInfo.value.unitName, unitEmptyInfo.value.periodName)} ${messages.noAssignmentsHint}`
+    } else {
+      successMessage.value = messages.emptyEmployeeAssignments
+    }
+  } catch (err) {
+    console.error('empty-info error', err)
+    showError(messages.unitEmptyInfoError)
+  } finally {
+    fetchingEmptyInfo.value = false
+  }
 }
 
 const getUnitBranchName = () => {

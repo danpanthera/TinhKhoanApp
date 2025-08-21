@@ -18,6 +18,9 @@ namespace TinhKhoanApp.Api.Controllers
             _logger = logger;
         }
 
+        [HttpGet("ping")]
+        public IActionResult Ping() => Ok(new { service = "UnitKhoanAssignments", status = "ok" });
+
         /// <summary>
         /// Search unit KPI assignments by unit and period
         /// </summary>
@@ -63,7 +66,8 @@ namespace TinhKhoanApp.Api.Controllers
 
                 if (!data.Any())
                 {
-                    return NotFound(new { Message = "No unit KPI assignments found" });
+                    // Trả về 200 với mảng rỗng để frontend xử lý hiển thị thân thiện
+                    return Ok(new List<object>());
                 }
 
                 return Ok(data);
@@ -72,6 +76,43 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 _logger.LogError(ex, "Error searching unit KPI assignments (unitId={UnitId}, periodId={PeriodId})", unitId, periodId);
                 return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Trả về thông tin meta khi chưa có Unit KPI Assignments (unitName, periodName, count=0)
+        /// </summary>
+        [HttpGet("empty-info")]
+        public async Task<IActionResult> GetEmptyInfo([FromQuery] int unitId, [FromQuery] int periodId)
+        {
+            try
+            {
+                var unit = await _context.Units.FirstOrDefaultAsync(u => u.Id == unitId);
+                var period = await _context.KhoanPeriods.FirstOrDefaultAsync(p => p.Id == periodId);
+                if (unit == null || period == null)
+                {
+                    return NotFound(new { Message = "Unit hoặc Period không tồn tại" });
+                }
+
+                // Đếm nhanh (dù thường là 0 lúc gọi hàm này)
+                var count = await _context.UnitKhoanAssignments
+                    .Where(x => x.UnitId == unitId && x.KhoanPeriodId == periodId)
+                    .SelectMany(a => a.AssignmentDetails)
+                    .CountAsync();
+
+                return Ok(new
+                {
+                    unitId,
+                    unitName = unit.Name,
+                    periodId,
+                    periodName = period.Name,
+                    count
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting empty info for unit assignments (unitId={UnitId}, periodId={PeriodId})", unitId, periodId);
+                return StatusCode(500, new { Message = ex.Message });
             }
         }
 

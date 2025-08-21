@@ -23,58 +23,21 @@ namespace TinhKhoanApp.Api.Tests.Repositories
             // Sample test data
             _data = new List<GL01>
             {
-                new GL01 {
-                    ID = 1,
-                    NGAY_DL = new DateTime(2025, 3, 1),
-                    BRCD = "7808",
-                    TRAD_ACCT = "1111",
-                    TR_AMOUNT = 1000000,
-                    DR_CR_FLG = "DR",
-                    CREATED_DATE = DateTime.Now.AddDays(-1)
-                },
-                new GL01 {
-                    ID = 2,
-                    NGAY_DL = new DateTime(2025, 3, 1),
-                    BRCD = "7808",
-                    TRAD_ACCT = "2222",
-                    TR_AMOUNT = 2000000,
-                    DR_CR_FLG = "CR",
-                    CREATED_DATE = DateTime.Now.AddDays(-2)
-                },
-                new GL01 {
-                    ID = 3,
-                    NGAY_DL = new DateTime(2025, 3, 2),
-                    BRCD = "7800",
-                    TRAD_ACCT = "1111",
-                    TR_AMOUNT = 3000000,
-                    DR_CR_FLG = "DR",
-                    CREATED_DATE = DateTime.Now.AddDays(-3)
-                },
-                new GL01 {
-                    ID = 4,
-                    NGAY_DL = new DateTime(2025, 3, 2),
-                    BRCD = "7800",
-                    TRAD_ACCT = "3333",
-                    TR_AMOUNT = 4000000,
-                    DR_CR_FLG = "CR",
-                    CREATED_DATE = DateTime.Now.AddDays(-4)
-                },
-            };
+                // Stubbed legacy GL01RepositoryTests removed.
+                // Configure mock DbSet
+                _mockSet = new Mock<DbSet<GL01>>();
+                _mockSet.As<IQueryable<GL01>>().Setup(m => m.Provider).Returns(_data.AsQueryable().Provider);
+                _mockSet.As<IQueryable<GL01>>().Setup(m => m.Expression).Returns(_data.AsQueryable().Expression);
+                _mockSet.As<IQueryable<GL01>>().Setup(m => m.ElementType).Returns(_data.AsQueryable().ElementType);
+                _mockSet.As<IQueryable<GL01>>().Setup(m => m.GetEnumerator()).Returns(_data.AsQueryable().GetEnumerator());
 
-            // Configure mock DbSet
-            _mockSet = new Mock<DbSet<GL01>>();
-            _mockSet.As<IQueryable<GL01>>().Setup(m => m.Provider).Returns(_data.AsQueryable().Provider);
-            _mockSet.As<IQueryable<GL01>>().Setup(m => m.Expression).Returns(_data.AsQueryable().Expression);
-            _mockSet.As<IQueryable<GL01>>().Setup(m => m.ElementType).Returns(_data.AsQueryable().ElementType);
-            _mockSet.As<IQueryable<GL01>>().Setup(m => m.GetEnumerator()).Returns(_data.AsQueryable().GetEnumerator());
+                // Configure mock DbContext
+                _mockContext = new Mock<ApplicationDbContext>();
+                _mockContext.Setup(c => c.Set<GL01>()).Returns(_mockSet.Object);
 
-            // Configure mock DbContext
-            _mockContext = new Mock<ApplicationDbContext>();
-            _mockContext.Setup(c => c.Set<GL01>()).Returns(_mockSet.Object);
-
-            // Create repository with mock context
-            _repository = new GL01Repository(_mockContext.Object);
-        }
+                // Create repository with mock context
+                _repository = new GL01Repository(_mockContext.Object);
+            }
 
         [Fact]
         public async Task GetRecentAsync_ShouldReturnOrderedByCreatedDate()

@@ -1,7 +1,7 @@
 using Xunit;
 using TinhKhoanApp.Api.Services;
 
-namespace TinhKhoanApp.Api.Tests;
+namespace TinhKhoanApp.Tests;
 
 public class KpiScoringTests
 {

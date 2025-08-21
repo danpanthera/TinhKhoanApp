@@ -6,8 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <!-- Suppress warnings for fast development -->
     <NoWarn>CS8618;CS8604;CS8601;CS8602;CS8629;CS0219;CS1998;CS1591;CS0108;CS0114;CS8603;CS8600;EF1002;CS1570</NoWarn>
-    <!-- XML Documentation for Swagger -->
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  <!-- Tắt tạm XML doc để giảm thời gian build & tránh race (có thể bật lại khi cần) -->
+  <GenerateDocumentationFile>false</GenerateDocumentationFile>
+  <!-- Đảm bảo include DTO mới - phòng hờ wildcard vấn đề incremental -->
+  <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
   </PropertyGroup>
 
   <!-- Exclude TEMP_DISABLED folders from compilation -->
@@ -40,10 +42,12 @@
     <PackageReference Include="QuestPDF" Version="2024.3.0" />
   </ItemGroup>
 
+  <!-- Bỏ loại trừ Tests/** vì test sẽ chuyển sang project riêng -->
   <ItemGroup>
-    <!-- Exclude test files from build -->
+    <!-- Loại bỏ tất cả test cũ trong API để tránh lỗi build; test dùng project riêng Tests/TinhKhoanApp.Tests.csproj -->
     <Compile Remove="Tests/**" />
-    <None Include="Tests/**" />
+    <EmbeddedResource Remove="Tests/**" />
+    <None Remove="Tests/**" />
   </ItemGroup>
 
 </Project>

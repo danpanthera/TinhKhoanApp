@@ -12,7 +12,18 @@ export default defineConfig({
     assetsInlineLimit: 0,
     rollupOptions: {
       output: {
-        manualChunks: undefined,
+        manualChunks: {
+          dashboard: [
+            'src/views/BusinessPlanDashboard.vue',
+            'src/views/CalculationDashboard.vue',
+            'src/views/PerformanceDashboard.vue',
+          ],
+          kpi: [
+            'src/views/KpiDefinitionsView.vue',
+            'src/views/KpiScoringView.vue',
+            'src/views/UnitKpiScoringView.vue',
+          ],
+        },
       },
     },
   },

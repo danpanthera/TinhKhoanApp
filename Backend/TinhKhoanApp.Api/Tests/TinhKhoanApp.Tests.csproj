@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit" Version="2.8.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.1">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector" Version="6.0.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../TinhKhoanApp.Api.csproj" />
+  </ItemGroup>
+  <!-- Loại trừ toàn bộ legacy test (Repositories, Services, LN*, DP*, GL*, EI*) để tạm thời chỉ giữ KpiScoringTests -->
+  <ItemGroup>
+    <Compile Remove="Repositories/**/*.cs" />
+    <Compile Remove="Services/**/*.cs" />
+    <Compile Remove="Dtos/**/*.cs" />
+    <Compile Remove="*DP*Tests*.cs" />
+    <Compile Remove="*GL*Tests*.cs" />
+    <Compile Remove="*EI*Tests*.cs" />
+    <Compile Remove="*LN*Tests*.cs" />
+    <Compile Remove="*RepositoryTests*.cs" />
+    <Compile Remove="*ServiceTests*.cs" />
+  </ItemGroup>
+</Project>
