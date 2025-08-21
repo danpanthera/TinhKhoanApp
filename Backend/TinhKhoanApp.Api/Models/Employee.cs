@@ -39,6 +39,16 @@ namespace TinhKhoanApp.Api.Models
         [StringLength(20)]
         public string? PhoneNumber { get; set; }
 
+        // 🆕 Thông tin bổ sung từ GAHR26 / yêu cầu import
+        [StringLength(100)]
+        public string? UserAD { get; set; }
+
+        [StringLength(100)]
+        public string? UserIPCAS { get; set; }
+
+        [StringLength(50)]
+        public string? MaCBTD { get; set; }
+
         public bool IsActive { get; set; } = true;
 
         [Required]
