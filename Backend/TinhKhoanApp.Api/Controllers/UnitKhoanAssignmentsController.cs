@@ -89,12 +89,22 @@ namespace TinhKhoanApp.Api.Controllers
             {
                 var unit = await _context.Units.FirstOrDefaultAsync(u => u.Id == unitId);
                 var period = await _context.KhoanPeriods.FirstOrDefaultAsync(p => p.Id == periodId);
+                // Luôn trả về 200 để frontend chủ động hiển thị trạng thái trống
                 if (unit == null || period == null)
                 {
-                    return NotFound(new { Message = "Unit hoặc Period không tồn tại" });
+                    return Ok(new
+                    {
+                        unitId,
+                        periodId,
+                        unitName = unit?.Name,
+                        periodName = period?.Name,
+                        count = 0,
+                        exists = false,
+                        message = "Unit hoặc Period không tồn tại"
+                    });
                 }
 
-                // Đếm nhanh (dù thường là 0 lúc gọi hàm này)
+                // Đếm nhanh (thường sẽ là 0 khi chưa có giao khoán)
                 var count = await _context.UnitKhoanAssignments
                     .Where(x => x.UnitId == unitId && x.KhoanPeriodId == periodId)
                     .SelectMany(a => a.AssignmentDetails)
@@ -106,7 +116,9 @@ namespace TinhKhoanApp.Api.Controllers
                     unitName = unit.Name,
                     periodId,
                     periodName = period.Name,
-                    count
+                    count,
+                    exists = true,
+                    hasAssignments = count > 0
                 });
             }
             catch (Exception ex)
