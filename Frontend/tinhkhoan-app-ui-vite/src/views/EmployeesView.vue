@@ -8,6 +8,27 @@
       <button class="action-button add-employee-btn" style="background-color: #28a745" @click="scrollToAddEmployeeForm">
         + Thêm nhân viên
       </button>
+      <button
+        class="action-button"
+        style="background-color:#8e44ad"
+        @click="triggerFileSelect"
+      >
+        Import Excel
+      </button>
+      <button
+        class="action-button"
+        style="background-color:#16a085"
+        @click="downloadTemplate"
+      >
+        Tải mẫu Excel
+      </button>
+      <input
+        ref="fileInputRef"
+        type="file"
+        accept=".xls,.xlsx"
+        style="display:none"
+        @change="handleFileChange"
+      >
 
       <!-- Các nút cho tính năng chọn nhiều -->
       <template v-if="pagedEmployees.length > 0">
@@ -87,6 +108,15 @@
               Tên ĐN
             </th>
             <th style="width: 110px">
+              User AD
+            </th>
+            <th style="width: 120px">
+              User IPCAS
+            </th>
+            <th style="width: 110px">
+              Mã CBTD
+            </th>
+            <th style="width: 110px">
               Chi nhánh
             </th>
             <th style="width: 110px">
@@ -141,6 +171,9 @@
             <td>{{ employee.CBCode || 'Chưa có mã CB' }}</td>
             <td>{{ employee.FullName }}</td>
             <td>{{ employee.Username }}</td>
+            <td>{{ employee.UserAD || employee.userAd || '—' }}</td>
+            <td>{{ employee.UserIPCAS || employee.userIpcas || '—' }}</td>
+            <td>{{ employee.MaCBTD || employee.maCbtd || '—' }}</td>
             <td>
               {{
                 unitStore.allUnits.find(
@@ -199,6 +232,68 @@
     </div>
 
     <hr class="separator">
+
+    <!-- Import Preview Section -->
+    <div v-if="importPreview.length > 0" class="form-container" style="border:2px dashed #8e44ad; background:#faf6ff">
+      <h2>Preview Import ({{ importStats.total }} dòng)</h2>
+      <p>
+        Sẽ tạo mới: <strong>{{ importStats.new }}</strong> | Cập nhật: <strong>{{ importStats.update }}</strong>
+      </p>
+      <div v-if="importErrors.length > 0" style="color:#c0392b; font-size:13px; margin-bottom:8px">
+        <div
+          v-for="e in importErrors"
+          :key="e"
+        >
+          ⚠️ {{ e }}
+        </div>
+      </div>
+      <div style="max-height:260px; overflow:auto; border:1px solid #ddd; background:#fff">
+        <table class="employee-detail-table compact-table">
+          <thead>
+            <tr>
+              <th>Mã NV</th><th>Mã CB</th><th>Họ tên</th><th>Tên ĐN</th><th>User AD</th><th>Email</th><th>User IPCAS</th><th>Mã CBTD</th><th>SĐT</th><th>Trạng thái</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="r in importPreview.slice(0,50)" :key="r._row">
+              <td>{{ r.employeeCode }}</td>
+              <td>{{ r.cbCode }}</td>
+              <td>{{ r.fullName }}</td>
+              <td>{{ r.username }}</td>
+              <td>{{ r.userAd }}</td>
+              <td>{{ r.email }}</td>
+              <td>{{ r.userIpcas }}</td>
+              <td>{{ r.maCbtd }}</td>
+              <td>{{ r.phoneNumber }}</td>
+              <td>{{ r.isActive ? 'Hoạt động' : 'Không' }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <p
+          v-if="importPreview.length > 50"
+          style="font-size:12px; padding:4px 8px; color:#555"
+        >
+          (Hiển thị 50 dòng đầu)
+        </p>
+      </div>
+      <div class="form-actions" style="margin-top:15px">
+        <button
+          type="button"
+          class="action-button success"
+          :disabled="isImporting || importErrors.length > 0"
+          @click="_performImport"
+        >
+          {{ isImporting ? 'Đang xử lý...' : 'Thực hiện Import (nháp)' }}
+        </button>
+        <button
+          type="button"
+          class="action-button secondary"
+          @click="clearImport"
+        >
+          Hủy Import
+        </button>
+      </div>
+    </div>
 
     <div class="form-container">
       <h2>
@@ -285,6 +380,35 @@
               pattern="[0-9]*"
               inputmode="numeric"
               @input="onInputNumberOnly('phoneNumber', $event)"
+            >
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="userAd">User AD:</label>
+            <input
+              id="userAd"
+              v-model="currentEmployee.userAd"
+              type="text"
+              placeholder="Nhập User AD (nếu có)"
+            >
+          </div>
+          <div class="form-group">
+            <label for="userIpcas">User IPCAS:</label>
+            <input
+              id="userIpcas"
+              v-model="currentEmployee.userIpcas"
+              type="text"
+              placeholder="Nhập User IPCAS"
+            >
+          </div>
+          <div class="form-group">
+            <label for="maCbtd">Mã CBTD:</label>
+            <input
+              id="maCbtd"
+              v-model="currentEmployee.maCbtd"
+              type="text"
+              placeholder="Nhập Mã CBTD"
             >
           </div>
         </div>
@@ -420,6 +544,9 @@ const initialEmployeeData = () => ({
   passwordHash: '',
   email: '',
   phoneNumber: '',
+  userAd: '',
+  userIpcas: '',
+  maCbtd: '',
   isActive: true,
   unitId: null,
   positionId: null,
@@ -428,6 +555,12 @@ const initialEmployeeData = () => ({
 
 // Core reactive variables
 const currentEmployee = ref(initialEmployeeData())
+const fileInputRef = ref(null)
+// Import Excel state
+const importPreview = ref([]) // parsed rows
+const importErrors = ref([])
+const isImporting = ref(false)
+const importStats = ref({ total: 0, new: 0, update: 0, processed: 0 })
 const isEditing = ref(false)
 const emailInputRef = ref(null)
 const phoneNumberInputRef = ref(null)
@@ -502,7 +635,7 @@ const branchOptions = computed(() => {
   if (!unitStore.allUnits || !Array.isArray(unitStore.allUnits)) return []
 
   // Định nghĩa thứ tự theo yêu cầu: Hội Sở → Bình Lư → Phong Thổ → Sìn Hồ → Bum Tở → Than Uyên → Đoàn Kết → Tân Uyên → Nậm Hàng
-  const customOrder = [
+  const _customOrder = [
     'HoiSo', // Hội Sở (ID=2)
     'BinhLu', // Chi nhánh Bình Lư (ID=10)
     'PhongTho', // Chi nhánh Phong Thổ (ID=11)
@@ -593,7 +726,7 @@ const departmentOptions = computed(() => {
 const selectedBranchId = ref(null) // Sửa từ undefined thành null
 
 // Lấy danh sách phòng nghiệp vụ con của branch đã chọn (debug)
-const branchChildren = computed(() => {
+const _branchChildren = computed(() => {
   if (!selectedBranchId.value && selectedBranchId.value !== 0) return []
   const branch = unitStore.allUnits.find(u => (u.Id || u.Id) === Number(selectedBranchId.value))
   if (!branch) return []
@@ -601,7 +734,7 @@ const branchChildren = computed(() => {
 })
 
 // Đảm bảo selectedBranchId luôn là kiểu number hoặc null
-watch(selectedBranchId, (val, oldVal) => {
+watch(selectedBranchId, (val, _oldVal) => {
   if (val !== null && typeof val !== 'number') {
     const numVal = Number(val)
     selectedBranchId.value = isNaN(numVal) ? null : numVal
@@ -619,7 +752,7 @@ function syncSelectedBranchWithEmployeeUnit() {
 }
 
 // Sửa lại prepareAddEmployee để reset selectedBranchId về null khi thêm mới
-function prepareAddEmployee() {
+function _prepareAddEmployee() {
   isEditing.value = false
   currentEmployee.value = initialEmployeeData()
   currentEmployee.value.employeeCode = getNextEmployeeCode()
@@ -639,7 +772,7 @@ const startEditEmployee = async employee => {
     currentEmployee.value = extractEmployeePrimitives({ ...employee, ...detail })
     originalPasswordHash.value = detail.passwordHash || ''
     console.log('✅ fetchEmployeeDetail thành công - đã sửa JSON cycle với JsonIgnore')
-  } catch (err) {
+  } catch {
     // Nếu lỗi, fallback về dữ liệu cũ
     currentEmployee.value = extractEmployeePrimitives(employee)
     originalPasswordHash.value = employee.passwordHash || ''
@@ -746,6 +879,9 @@ function extractEmployeePrimitives(employee) {
     passwordHash: safeGet(employee, 'PasswordHash'),
     email: safeGet(employee, 'Email'),
     phoneNumber: safeGet(employee, 'PhoneNumber'),
+  userAd: safeGet(employee, 'UserAD') || safeGet(employee, 'UserAd') || safeGet(employee, 'userAd') || '',
+  userIpcas: safeGet(employee, 'UserIPCAS') || safeGet(employee, 'UserIpcas') || safeGet(employee, 'userIpcas') || '',
+  maCbtd: safeGet(employee, 'MaCBTD') || safeGet(employee, 'MACBTD') || safeGet(employee, 'maCbtd') || '',
     isActive:
       typeof employee.IsActive === 'boolean'
         ? employee.IsActive
@@ -881,7 +1017,7 @@ const handleSubmitEmployee = async () => {
   } else {
     try {
       // eslint-disable-next-line no-unused-vars
-      const { id, ...newEmployeeData } = dataToProcess
+  const { id: _discardId, ...newEmployeeData } = dataToProcess
       // Remove passwordHash if empty string or undefined
       if (!newEmployeeData.passwordHash) {
         delete newEmployeeData.passwordHash
@@ -1083,6 +1219,151 @@ function getRoleNames(employee) {
   }
 
   return roleNames.length > 0 ? roleNames.join(', ') : 'Chưa có vai trò'
+}
+
+// ========================================
+// EXCEL IMPORT FUNCTIONS
+// ========================================
+function triggerFileSelect() {
+  if (fileInputRef.value) fileInputRef.value.click()
+}
+
+function downloadTemplate() {
+  // Simple CSV template generation (Excel can open)
+  const headers = [
+    'Mã NV','Mã CB','Họ tên','Tên ĐN','User AD','Email','User IPCAS','Mã CBTD','SĐT','Trạng thái',
+  ]
+  const blob = new Blob([headers.join(',') + '\n'], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'mau_import_nhan_vien.csv'
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+async function handleFileChange(e) {
+  const file = e.target.files[0]
+  if (!file) return
+  importErrors.value = []
+  importPreview.value = []
+  try {
+    const XLSX = await import('xlsx')
+    const data = await file.arrayBuffer()
+    const workbook = XLSX.read(data, { type: 'array' })
+    const sheetName = workbook.SheetNames[0]
+    const worksheet = workbook.Sheets[sheetName]
+    const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' })
+    // Normalize keys
+    const mapped = rows.map((r, idx) => {
+      const obj = {
+        employeeCode: r['Mã NV'] || r['Ma NV'] || r['MANV'] || r['ma nv'] || '',
+        cbCode: r['Mã CB'] || r['Ma CB'] || r['MACB'] || '',
+        fullName: r['Họ tên'] || r['Ho ten'] || r['HOTEN'] || '',
+        username: r['Tên ĐN'] || r['Ten DN'] || r['TENDN'] || r['Username'] || '',
+        userAd: r['User AD'] || r['USER AD'] || r['UserAD'] || '',
+        email: r['Email'] || r['EMAIL'] || '',
+        userIpcas: r['User IPCAS'] || r['USER IPCAS'] || r['UserIPCAS'] || '',
+        maCbtd: r['Mã CBTD'] || r['Ma CBTD'] || r['MACBTD'] || '',
+        phoneNumber: r['SĐT'] || r['SDT'] || r['Phone'] || '',
+        isActive: ('' + (r['Trạng thái'] || r['Trang thai'] || r['STATUS'] || 'Hoạt động')).toLowerCase().includes('không') ? false : true,
+        _row: idx + 2,
+      }
+      return obj
+    })
+    // Basic validation
+    mapped.forEach(m => {
+      if (!m.employeeCode) {
+        importErrors.value.push(`Dòng ${m._row}: Thiếu Mã NV`)
+      }
+      if (m.cbCode && m.cbCode.length !== 9) {
+        importErrors.value.push(`Dòng ${m._row}: Mã CB phải 9 ký tự`)        
+      }
+      if (m.email && !m.email.includes('@')) {
+        importErrors.value.push(`Dòng ${m._row}: Email không hợp lệ`)
+      }
+    })
+    importPreview.value = mapped
+    const existingCodes = new Set(employeeStore.allEmployees.map(e => e.EmployeeCode || e.employeeCode))
+    let update = 0; let create = 0
+    mapped.forEach(m => {
+      if (existingCodes.has(m.employeeCode)) update++
+      else create++
+    })
+    importStats.value = { total: mapped.length, new: create, update, processed: 0 }
+  } catch (err) {
+    importErrors.value.push('Không thể đọc file: ' + err.message)
+    console.error(err)
+  } finally {
+    // reset input so same file can be selected again
+    e.target.value = ''
+  }
+}
+
+async function _performImport() {
+  if (importPreview.value.length === 0 || isImporting.value) return
+  isImporting.value = true
+  importErrors.value = []
+  importStats.value.processed = 0
+  const existingByCode = {}
+  employeeStore.allEmployees.forEach(e => { existingByCode[e.EmployeeCode || e.employeeCode] = e })
+  for (const row of importPreview.value) {
+    try {
+      const existing = existingByCode[row.employeeCode]
+      if (existing) {
+        // update
+        const payload = {
+          Id: existing.Id,
+          employeeCode: existing.EmployeeCode || existing.employeeCode,
+          cbCode: row.cbCode || existing.CBCode,
+          fullName: row.fullName || existing.FullName,
+            username: existing.Username,
+          email: row.email || existing.Email,
+          phoneNumber: row.phoneNumber || existing.PhoneNumber,
+          userAd: row.userAd || existing.UserAD || existing.userAd,
+          userIpcas: row.userIpcas || existing.UserIPCAS || existing.userIpcas,
+          maCbtd: row.maCbtd || existing.MaCBTD || existing.maCbtd,
+          isActive: row.isActive,
+          unitId: existing.UnitId,
+          positionId: existing.PositionId,
+          roleId: existing.roles?.$values?.[0]?.Id || existing.roleId || null,
+          passwordHash: existing.PasswordHash || existing.passwordHash || '',
+        }
+        // For now, just log. TODO: call updateEmployee when backend supports new fields.
+        console.log('Would update employee', payload)
+      } else {
+        const payload = {
+          employeeCode: row.employeeCode,
+          cbCode: row.cbCode,
+          fullName: row.fullName,
+          username: row.username || row.employeeCode.toLowerCase(),
+          email: row.email || (row.username ? row.username + '@agribank.com.vn' : ''),
+          phoneNumber: row.phoneNumber,
+          userAd: row.userAd,
+          userIpcas: row.userIpcas,
+          maCbtd: row.maCbtd,
+          isActive: row.isActive,
+          unitId: null,
+          positionId: null,
+          roleId: null,
+          passwordHash: '123456', // default placeholder
+        }
+        console.log('Would create employee', payload)
+      }
+    } catch (err) {
+      importErrors.value.push(`Lỗi dòng có Mã NV ${row.employeeCode}: ${err.message}`)
+    } finally {
+      importStats.value.processed++
+    }
+  }
+  isImporting.value = false
+  alert('Hoàn tất xử lý nháp import (chưa gọi API do thiếu backend mở rộng).')
+}
+
+function clearImport() {
+  importPreview.value = []
+  importErrors.value = []
+  importStats.value = { total: 0, new: 0, update: 0, processed: 0 }
 }
 
 // Initialize employee code when mounting
