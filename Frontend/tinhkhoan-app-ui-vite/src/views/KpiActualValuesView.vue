@@ -69,7 +69,7 @@
                       -- Tất cả nhân viên --
                     </option>
                     <option v-for="employee in filteredEmployees" :key="employee.Id" :value="employee.Id">
-                      {{ employee.fullName }} - {{ employee.unit?.Name }}
+                      {{ employee.FullName }} - {{ employee.UnitName || employee.UnitId }}
                     </option>
                   </select>
                 </div>
@@ -637,32 +637,31 @@ const departmentOptions = computed(() => {
 
 const filteredEmployees = computed(() => {
   if (!employees.value || employees.value.length === 0) {
-    console.log('🤵 No employees loaded yet')
     return []
   }
 
-  let filtered = [...employees.value]
-  console.log('🤵 Total employees:', filtered.length)
+  // Chuẩn hoá dữ liệu employee: đảm bảo field thống nhất (Id, FullName, UnitId)
+  const normalized = employees.value.map(e => ({
+    Id: e.Id || e.id,
+    FullName: e.FullName || e.fullName,
+    UnitId: e.UnitId || e.unitId,
+    UnitName: e.UnitName || e.unit?.Name || e.unitName,
+    PositionName: e.PositionName || e.positionName,
+  }))
+
+  let filtered = [...normalized]
 
   if (selectedDepartmentId.value) {
     const deptId = parseInt(selectedDepartmentId.value)
-    filtered = filtered.filter(emp => {
-      const empUnitId = emp.unitId || emp.UnitId
-      return empUnitId === deptId
-    })
-    console.log(`🤵 Filtered by department ${deptId}:`, filtered.length)
-    console.log(`🤵 Sample filtered employees:`, filtered.slice(0, 2).map(e => ({
-      name: e.fullName,
-      unitId: e.unitId || e.UnitId,
-    })))
+    filtered = filtered.filter(emp => emp.UnitId === deptId)
   } else if (selectedBranchId.value) {
+    // Lấy toàn bộ phòng ban con của chi nhánh (departmentOptions đã lọc)
     const branchDepartments = departmentOptions.value.map(dept => dept.Id)
-    console.log('🏢 Branch departments:', branchDepartments)
-    filtered = filtered.filter(emp => {
-      const empUnitId = emp.unitId || emp.UnitId
-      return branchDepartments.includes(empUnitId)
-    })
-    console.log(`🤵 Filtered by branch:`, filtered.length)
+    if (branchDepartments.length > 0) {
+      filtered = filtered.filter(emp => branchDepartments.includes(emp.UnitId))
+    } else {
+      // Trường hợp chưa load được departmentOptions kịp thời => fallback: giữ nguyên danh sách
+    }
   }
 
   return filtered
@@ -798,18 +797,13 @@ const fetchEmployees = async () => {
       employeesData = response.data
     }
 
-    employees.value = employeesData.filter(emp => emp.isActive)
-    console.log('✅ Employees loaded:', employees.value.length)
+  // API trả về PascalCase (FullName, UnitId, UnitName). Giữ nguyên rồi normalize ở computed.
+  employees.value = employeesData.filter(emp => (emp.IsActive ?? emp.isActive))
+  console.log('✅ Employees loaded:', employees.value.length)
 
     // Debug: Log sample employee structure
     if (employees.value.length > 0) {
-      console.log('📊 Sample employee structure:', {
-        id: employees.value[0].Id,
-        name: employees.value[0].fullName,
-        unitId: employees.value[0].unitId,
-        UnitId: employees.value[0].UnitId,
-        unit: employees.value[0].unit,
-      })
+  console.log('📊 Sample employee structure (raw):', employees.value[0])
 
       // Debug: Log first few employees with unit mapping
       console.log('📊 First 3 employees with unit mapping:')
