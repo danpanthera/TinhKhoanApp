@@ -907,3 +907,15 @@ lý business logic, repositories xử lý data access
 - Việc tổ chức lại code theo cách này sẽ giúp cấu trúc dự án rõ ràng, dễ bảo trì và theo đúng các best practices trong phát triển phần mềm
 - Liên tục update trạng thái qua file ARCHITECTURE_RESTRUCTURING_PLAN.md sau khi hoàn thành mỗi bảng
 + Đảm bảo cấu trúc bảng (ngoài các cột NGAY_DL, System Column và Temporal Column) phải đồng nhất business column từ CSV <- Database <- Model <- EF <- BulkCopy <- Direct Import <- DTO <- Services <- Repository <- Entity <- Controller (business Column của CSV là chuẩn là tham chiếu) Cấu trúc cuối cùng là NGAY_DL-> Business Column -> Temporal/System Column
+
+**Quy ước cách tính các chỉ tiêu**
+
+B. Các trường khi ấn nút thực hiện sẽ phải nhập tay thủ công gồm:
+
+các chỉ tiêu có chứa "Thực hiện nhiệm vụ", "theo chương trình công tác"
+các chỉ tiêu có chứa "Chấp hành quy chế", "quy trình nghiệp vụ", "văn hóa Agribank"
+"Hoàn thành chỉ tiêu giao khoán SPDV", "giao khoán SPDV"
+Các chỉ tiêu có chứa "Thực hiện chức năng", "nhiệm vụ được giao"
+các chỉ tiêu có chứa "điều hành theo chương trình công tác", "nhiệm vụ được giao"
+Các chỉ tiêu có chứa "chức năng nhiệm vụ của phòng"
+Các chỉ tiêu có chứa: "Kết quả thực hiện BQ", "mình phụ trách", "trong phòng", "BQ kết quả"

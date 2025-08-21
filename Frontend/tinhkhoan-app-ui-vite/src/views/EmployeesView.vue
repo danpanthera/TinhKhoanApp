@@ -1277,7 +1277,7 @@ async function handleFileChange(e) {
         importErrors.value.push(`Dòng ${m._row}: Thiếu Mã NV`)
       }
       if (m.cbCode && m.cbCode.length !== 9) {
-        importErrors.value.push(`Dòng ${m._row}: Mã CB phải 9 ký tự`)        
+        importErrors.value.push(`Dòng ${m._row}: Mã CB phải 9 ký tự`)
       }
       if (m.email && !m.email.includes('@')) {
         importErrors.value.push(`Dòng ${m._row}: Email không hợp lệ`)
