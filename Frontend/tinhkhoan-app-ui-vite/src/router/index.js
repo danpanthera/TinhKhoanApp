@@ -130,6 +130,12 @@ const routes = [
     component: () => import(/* webpackChunkName: "admin" */ '../components/PerformanceDashboard.vue'),
     meta: { requiresAuth: true },
   },
+  {
+    path: '/gahr26-grid',
+    name: 'gahr26-grid',
+    component: () => import(/* webpackChunkName: "gahr26" */ '../views/Gahr26GridView.vue'),
+    meta: { requiresAuth: true },
+  },
   // === DASHBOARD ROUTES ===
   {
     path: '/dashboard',
