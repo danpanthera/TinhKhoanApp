@@ -15,6 +15,23 @@
       >
         Chọn File GAHR26
       </button>
+      <input
+        v-model="globalSearch"
+        class="global-search"
+        type="text"
+        placeholder="Tìm nhanh..."
+      >
+      <label class="freeze-label">
+        Freeze:
+        <select v-model.number="freezeCount">
+          <option :value="0">0</option>
+          <option :value="1">1</option>
+          <option :value="2">2</option>
+          <option :value="3">3</option>
+          <option :value="4">4</option>
+          <option :value="5">5</option>
+        </select>
+      </label>
       <button
         class="action-button"
         :disabled="rows.length===0"
@@ -35,7 +52,22 @@
       >
         Xóa dòng đã chọn
       </button>
+      <button
+        class="action-button success"
+        :disabled="!canSave || saving"
+        @click="saveAll"
+      >
+        {{ saving? 'Đang lưu...' : 'Lưu vào hệ thống' }}
+      </button>
       <span v-if="parseErrors.length" class="errors">{{ parseErrors.length }} lỗi</span>
+    </div>
+    <div v-if="validationErrors.length" class="warn-box">
+      <div
+        v-for="e in validationErrors"
+        :key="e"
+      >
+        ❗ {{ e }}
+      </div>
     </div>
     <div v-if="parseErrors.length" class="error-box">
       <div
@@ -56,9 +88,10 @@
               <input type="checkbox" :checked="allSelected" @change="toggleSelectAll">
             </th>
             <th
-              v-for="col in columns"
+              v-for="(col, cIdx) in columns"
               :key="col.key"
-              :class="['col-header', appendedKeys.includes(col.key)?'appended':'']"
+              :class="['col-header', appendedKeys.includes(col.key)?'appended':'', isFrozen(cIdx)?'frozen-col':'']"
+              :style="frozenStyle(cIdx)"
             >
               <div class="col-title">
                 {{ col.label }}
@@ -71,10 +104,25 @@
               </button>
             </th>
           </tr>
+          <tr class="filter-row">
+            <th class="sticky-col sel-col" />
+            <th
+              v-for="(col, cIdx) in columns"
+              :key="col.key + '_flt'"
+              :class="['col-header filter-cell', isFrozen(cIdx)?'frozen-col':'']"
+              :style="frozenStyle(cIdx)"
+            >
+              <input
+                v-model="columnFilters[col.key]"
+                class="col-filter"
+                :placeholder="'Lọc ' + col.label"
+              >
+            </th>
+          </tr>
         </thead>
         <tbody>
           <tr
-            v-for="row in rows"
+            v-for="row in filteredRows"
             :key="row.__id"
             :class="{ 'selected-row': selectedRows.has(row.__id) }"
           >
@@ -86,15 +134,16 @@
               >
             </td>
             <td
-              v-for="col in columns"
+              v-for="(col, cIdx) in columns"
               :key="col.key"
-              :class="['cell', appendedKeys.includes(col.key)?'appended':'']"
+              :class="['cell', appendedKeys.includes(col.key)?'appended':'', isFrozen(cIdx)?'frozen-col':'', invalidCell(row, col.key)?'invalid':'' ]"
+              :style="frozenStyle(cIdx)"
             >
               <input
                 v-model="row[col.key]"
                 :class="{ dirty: row.__dirty }"
                 :placeholder="col.label"
-                @input="markDirty(row)"
+                @input="onCellInput(row, col.key)"
               >
             </td>
           </tr>
@@ -111,7 +160,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 
 const BASE_COLUMNS = [
   'BRCD','BRNM','DEPTNM','EMPNM','EMPNO','POSITION','TITLE','GRPTITLE','NEWOCCP','SEX','BIRTHDT','BPPROV','BPADDR','NPPROV','NPADDR','PRPROV','PRADDR','TRPROV','TRADDR','NATLITY','RACE','RELIGION','FMLYBG','FMLYPRTY','SLFPRTY','SNIRDT','BKINDSDT','AGBKDT','AGBKEMPDT','CURWKDT','J_JOINDT','J_JOINORG','J_PTYDT','J_PTYOFDT','D_EDULVL','D_MPRLVL','D_MPOLVL','D_MFOLVL','D_MFOLVL_1','D_EFTDT','D_EXPDT','D_MARK','D_MCOLVL','STRNPT','LONGJOB','IDNO','ISSUDT','ISSUEPL','ACADEMIC','V1_SCALE','V1_LVL','V1_FACTOR','POS_AMT','V1_EFTDT','V1_RAISEDT','V2_SCALE','V2_LVL','V2_FACTOR','V2_EFTDT','V2_RAISEDT','PO','AR','HO','HA','RE','OT','AD','RD','MT','HSDCV1','HSDCV2','A_EFTDT','A_NXTPROMDT','A_DCSNNO','A_SGNDT','L_CTRTKND','L_CTRTNO','L_EFTDT','L_SGNDT','J_INSURNO','J_INSISSUDT','J_CUSTCD','J_ACCTNO','J_BANKNM','HOMETEL','MOBILE','OFITEL','R_ARMYRNK','R_POS','R_OFFICE',
@@ -125,6 +174,12 @@ const parseErrors = ref([])
 const isLoading = ref(false)
 const selectedRows = reactive(new Set())
 const sortState = reactive({ key: null, dir: 1 })
+const saving = ref(false)
+const globalSearch = ref('')
+const columnFilters = reactive({})
+const freezeCount = ref(1)
+const validationErrors = ref([])
+let validateTimer = null
 
 const appendedKeys = APPENDED
 
@@ -137,6 +192,9 @@ function buildColumns(keys){
   keys.forEach(k=>{ if(!final.includes(k) && !APPENDED.includes(k)) final.push(k) })
   APPENDED.forEach(k=> final.push(k))
   columns.value = final.map(k=>({ key: k, label: k }))
+  // init column filters
+  final.forEach(k=>{ if(!(k in columnFilters)) columnFilters[k] = '' })
+  nextTick(()=> recomputeFrozenOffsets())
 }
 
 function normalizeRow(obj){
@@ -184,6 +242,7 @@ function addRow(){
   blank.__id = crypto.randomUUID()
   blank.__dirty = true
   rows.push(blank)
+  triggerValidation()
 }
 
 const selectionProxy = computed({
@@ -203,6 +262,7 @@ function toggleSelectAll(){
 function deleteSelected(){
   for(let i=rows.length-1;i>=0;i--){ if(selectedRows.has(rows[i].__id)) rows.splice(i,1) }
   selectedRows.clear()
+  triggerValidation()
 }
 
 function sortBy(key){
@@ -226,6 +286,147 @@ async function exportXlsx(){
   XLSX.utils.book_append_sheet(wb, ws, 'GAHR26')
   XLSX.writeFile(wb, 'gahr26_export.xlsx')
 }
+
+// Filtering
+const filteredRows = computed(()=>{
+  const g = globalSearch.value.trim().toLowerCase()
+  return rows.filter(r=>{
+    if(g){
+      const joined = columns.value.map(c=> (r[c.key]??'').toString().toLowerCase()).join('\u0001')
+      if(!joined.includes(g)) return false
+    }
+    for(const c of columns.value){
+      const fv = (columnFilters[c.key]||'').trim().toLowerCase()
+      if(fv){
+        const cell = (r[c.key]??'').toString().toLowerCase()
+        if(!cell.includes(fv)) return false
+      }
+    }
+    return true
+  })
+})
+
+// Validation
+function validate(){
+  validationErrors.value = []
+  const cbSeen = new Set()
+  rows.forEach((r, idx)=>{
+    const empCode = (r.EMPNO || r.EmployeeCode || '').toString().trim()
+    if(!empCode){ validationErrors.value.push(`Dòng ${idx+1}: Thiếu EMPNO (Mã NV)`); }
+    const cb = (r.CBCODE || r.CBCode || r.J_CUSTCD || '').toString().trim()
+    if(cb){
+      if(!/^\d{9}$/.test(cb)) validationErrors.value.push(`Dòng ${idx+1}: CBCode phải 9 chữ số`)
+      if(cbSeen.has(cb)) validationErrors.value.push(`Dòng ${idx+1}: Trùng CBCode ${cb}`)
+      cbSeen.add(cb)
+    }
+    const email = (r.Email || '').toString().trim()
+    if(email && !/.+@.+\..+/.test(email)) validationErrors.value.push(`Dòng ${idx+1}: Email không hợp lệ`)
+  })
+}
+function triggerValidation(){
+  if(validateTimer) clearTimeout(validateTimer)
+  validateTimer = setTimeout(()=> validate(), 300)
+}
+function onCellInput(row, _key){
+  markDirty(row)
+  triggerValidation()
+}
+function invalidCell(row, key){
+  if(key==='Email'){ const v=(row[key]||'').trim(); return v && !/.+@.+\..+/.test(v) }
+  if(key==='CBCode' || key==='CBCODE' || key==='J_CUSTCD'){ const v=(row[key]||'').trim(); return v && !/^\d{9}$/.test(v) }
+  return false
+}
+
+// Freeze columns logic
+const frozenOffsets = ref([]) // px offsets for first N columns
+function recomputeFrozenOffsets(){
+  frozenOffsets.value = []
+  const table = document.querySelector('.excel-grid')
+  if(!table) return
+  const ths = table.querySelectorAll('thead tr:first-child th')
+  let acc = 32 // width of selection col
+  for(let i=0;i<freezeCount.value;i++){
+    const th = ths[i+1] // +1 skip selection
+    if(!th) break
+    frozenOffsets.value[i] = acc
+    acc += th.offsetWidth
+  }
+}
+function isFrozen(idx){ return idx < freezeCount.value }
+function frozenStyle(idx){
+  if(!isFrozen(idx)) return null
+  const left = frozenOffsets.value[idx] || 32 * (idx+1)
+  return { left: left + 'px', position:'sticky', zIndex: 2 }
+}
+watch(freezeCount, ()=> nextTick(()=> recomputeFrozenOffsets()))
+window.addEventListener('resize', ()=> recomputeFrozenOffsets())
+
+// Save (bulk import)
+const canSave = computed(()=> rows.length>0 && validationErrors.value.length===0)
+function mapRowToDto(r){
+  const employeeCode = (r.EMPNO || r.EmployeeCode || '').toString().trim()
+  const cbCode = (r.CBCODE || r.CBCode || r.J_CUSTCD || '').toString().trim() || null
+  const fullName = (r.EMPNM || r.FullName || '').toString().trim() || null
+  const username = (r.Username || employeeCode).toString().trim() || null
+  const email = (r.Email || '').toString().trim() || null
+  const phone = (r.MOBILE || r.HOMETEL || r.OFITEL || r.PhoneNumber || '').toString().trim() || null
+  return {
+    employeeCode,
+    cbCode: cbCode || null,
+    fullName,
+    username,
+    email,
+    phoneNumber: phone || null,
+    userAD: (r.UserAD||'').trim()||null,
+    userIPCAS: (r.UserIPCAS||'').trim()||null,
+    maCBTD: (r.MaCBTD||'').trim()||null,
+  }
+}
+async function saveAll(){
+  triggerValidation(); validate();
+  if(validationErrors.value.length){ return }
+  saving.value = true
+  try{
+    const payload = {
+      rows: rows.map(r=>{
+        const dto = mapRowToDto(r)
+        return {
+          EmployeeCode: dto.employeeCode,
+            CBCode: dto.cbCode,
+            FullName: dto.fullName,
+            Username: dto.username,
+            Email: dto.email,
+            PhoneNumber: dto.phoneNumber,
+            UserAD: dto.userAD,
+            UserIPCAS: dto.userIPCAS,
+            MaCBTD: dto.maCBTD,
+        }
+      }),
+      overwriteExisting: true,
+      autoGenerateMissingUsernames: true,
+    }
+    const res = await fetch('/api/Gahr26Import/bulk-employees', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify(payload),
+    })
+    if(!res.ok){
+      const txt = await res.text()
+      alert('Lưu thất bại: '+ txt)
+      return
+    }
+    const data = await res.json()
+    alert(`Lưu thành công. Thêm mới: ${data.inserted}, Cập nhật: ${data.updated}, Bỏ qua: ${data.skipped}`)
+    rows.forEach(r=> r.__dirty=false)
+  }catch(err){
+    console.error(err)
+    alert('Lỗi khi lưu: '+ err.message)
+  }finally{
+    saving.value = false
+  }
+}
+// Initial validation after first load
+watch(rows, ()=> triggerValidation())
 </script>
 
 <style scoped>
@@ -236,6 +437,8 @@ h1 { margin: 4px 0 16px; font-size: 20px; }
 .action-button:hover { background:#2176b5; }
 .action-button.danger { background:#e74c3c; }
 .action-button.danger:hover { background:#c0392b; }
+.action-button.success { background:#27ae60; }
+.action-button.success:hover { background:#1e8c4c; }
 .grid-wrapper { overflow:auto; border:1px solid #d0d7de; max-height: 70vh; }
 table.excel-grid { border-collapse: separate; border-spacing:0; min-width:1600px; font-size:12px; }
 table.excel-grid thead th { position: sticky; top:0; background:#f3f6fa; z-index:2; border-bottom:1px solid #b6c2cd; padding:4px 6px; text-align:left; font-weight:600; white-space:nowrap; }
@@ -250,6 +453,7 @@ td.cell { padding:0; min-width:120px; }
 td.cell input { width:100%; border:none; padding:4px 6px; font-size:12px; background:transparent; outline:none; }
 td.cell input:focus { background:#fffceb; box-shadow: inset 0 0 0 1px #f1c40f; }
 td.cell input.dirty { background:#fdf7e3; }
+.invalid input { background:#ffecec !important; }
 .col-header .col-title { display:inline-block; margin-right:4px; }
 .mini-btn { font-size:10px; padding:2px 4px; border:1px solid #ccd2d8; background:#fff; cursor:pointer; border-radius:3px; }
 .mini-btn:hover { background:#eef2f6; }
@@ -257,4 +461,10 @@ td.cell input.dirty { background:#fdf7e3; }
 .errors { color:#c0392b; font-weight:600; }
 .error-box { background:#fff5f5; border:1px solid #f5b7b1; padding:8px 10px; margin-bottom:10px; font-size:12px; max-height:140px; overflow:auto; }
 .hint { color:#555; font-style:italic; }
+.global-search { padding:4px 8px; border:1px solid #ccd2d8; border-radius:4px; font-size:13px; }
+.col-filter { width:100%; border:1px solid #dde2e6; padding:2px 4px; font-size:11px; }
+.filter-row th { top:32px; background:#fafbfd; z-index:2; }
+.frozen-col { background:#fffbe9; box-shadow: 2px 0 2px -1px rgba(0,0,0,0.08); }
+.warn-box { background:#fffaf0; border:1px solid #f9d29d; padding:6px 8px; margin:8px 0; font-size:12px; max-height:120px; overflow:auto; }
+.freeze-label { display:flex; align-items:center; gap:4px; font-size:12px; }
 </style>
