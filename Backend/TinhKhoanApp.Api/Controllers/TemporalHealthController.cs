@@ -33,6 +33,64 @@ namespace TinhKhoanApp.Api.Controllers
             public string ColumnstoreType { get; set; } = "NONE"; // NONE | CLUSTERED | NONCLUSTERED
         }
 
+        [HttpGet("database-info")]
+        public async Task<IActionResult> GetDatabaseInfo()
+        {
+            try
+            {
+                await using var conn = _context.Database.GetDbConnection();
+                if (conn.State != ConnectionState.Open)
+                    await conn.OpenAsync();
+
+                await using var cmd = conn.CreateCommand();
+                cmd.CommandText = @"
+                    SELECT
+                        @@VERSION as DatabaseVersion,
+                        SERVERPROPERTY('Edition') as Edition,
+                        SERVERPROPERTY('ProductLevel') as ProductLevel,
+                        SERVERPROPERTY('EngineEdition') as EngineEdition,
+                        CASE
+                            WHEN SERVERPROPERTY('Edition') LIKE '%Azure SQL Edge%' THEN 1
+                            ELSE 0
+                        END as IsAzureSQLEdge
+                ";
+
+                await using var reader = await cmd.ExecuteReaderAsync();
+                if (await reader.ReadAsync())
+                {
+                    var info = new
+                    {
+                        DatabaseVersion = reader["DatabaseVersion"].ToString(),
+                        Edition = reader["Edition"].ToString(),
+                        ProductLevel = reader["ProductLevel"].ToString(),
+                        EngineEdition = reader["EngineEdition"].ToString(),
+                        IsAzureSQLEdge = Convert.ToBoolean(reader["IsAzureSQLEdge"])
+                    };
+
+                    return Ok(new ApiResponse<object>
+                    {
+                        Success = true,
+                        Data = info,
+                        Message = "Database info retrieved"
+                    });
+                }
+                return BadRequest(new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Could not retrieve database info"
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving database info");
+                return StatusCode(500, new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Error retrieving database info"
+                });
+            }
+        }
+
         [HttpGet("status")]
         public async Task<IActionResult> GetStatus([FromQuery] string table = "GL41")
         {
