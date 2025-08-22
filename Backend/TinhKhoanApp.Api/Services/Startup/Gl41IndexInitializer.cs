@@ -30,21 +30,46 @@ namespace TinhKhoanApp.Api.Services.Startup
                 // GL41 có 13 business columns: MA_CN, LOAI_TIEN, MA_TK, TEN_TK, LOAI_BT + 8 amount columns
                 var statements = new[]
                 {
-                    @"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_GL41_NGAY_DL' AND object_id = OBJECT_ID('dbo.GL41'))
-                       BEGIN CREATE NONCLUSTERED INDEX IX_GL41_NGAY_DL ON dbo.GL41 (NGAY_DL); END",
-                    @"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_GL41_MA_CN' AND object_id = OBJECT_ID('dbo.GL41'))
-                       BEGIN CREATE NONCLUSTERED INDEX IX_GL41_MA_CN ON dbo.GL41 (MA_CN); END",
-                    @"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_GL41_LOAI_TIEN' AND object_id = OBJECT_ID('dbo.GL41'))
-                       BEGIN CREATE NONCLUSTERED INDEX IX_GL41_LOAI_TIEN ON dbo.GL41 (LOAI_TIEN); END",
-                    @"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_GL41_MA_TK' AND object_id = OBJECT_ID('dbo.GL41'))
-                       BEGIN CREATE NONCLUSTERED INDEX IX_GL41_MA_TK ON dbo.GL41 (MA_TK); END",
-                    @"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_GL41_LOAI_BT' AND object_id = OBJECT_ID('dbo.GL41'))
-                       BEGIN CREATE NONCLUSTERED INDEX IX_GL41_LOAI_BT ON dbo.GL41 (LOAI_BT); END",
-                    @"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'NCCI_GL41_Analytics' AND object_id = OBJECT_ID('dbo.GL41'))
-                       BEGIN CREATE NONCLUSTERED INDEX NCCI_GL41_Analytics ON dbo.GL41 (NGAY_DL, MA_CN, LOAI_TIEN, MA_TK, LOAI_BT); END",
-                    @"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'NCCI_GL41_Amounts' AND object_id = OBJECT_ID('dbo.GL41'))
-                       BEGIN CREATE NONCLUSTERED INDEX NCCI_GL41_Amounts ON dbo.GL41 (MA_TK, DN_DAUKY, DC_DAUKY, SBT_NO, SBT_CO); END"
-                };
+                          // Basic analytics rowstore indexes (always safe)
+                          @"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_GL41_NGAY_DL' AND object_id = OBJECT_ID('dbo.GL41'))
+                              BEGIN CREATE NONCLUSTERED INDEX IX_GL41_NGAY_DL ON dbo.GL41 (NGAY_DL); END",
+                          @"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_GL41_MA_CN' AND object_id = OBJECT_ID('dbo.GL41'))
+                              BEGIN CREATE NONCLUSTERED INDEX IX_GL41_MA_CN ON dbo.GL41 (MA_CN); END",
+                          @"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_GL41_LOAI_TIEN' AND object_id = OBJECT_ID('dbo.GL41'))
+                              BEGIN CREATE NONCLUSTERED INDEX IX_GL41_LOAI_TIEN ON dbo.GL41 (LOAI_TIEN); END",
+                          @"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_GL41_MA_TK' AND object_id = OBJECT_ID('dbo.GL41'))
+                              BEGIN CREATE NONCLUSTERED INDEX IX_GL41_MA_TK ON dbo.GL41 (MA_TK); END",
+                          @"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_GL41_LOAI_BT' AND object_id = OBJECT_ID('dbo.GL41'))
+                              BEGIN CREATE NONCLUSTERED INDEX IX_GL41_LOAI_BT ON dbo.GL41 (LOAI_BT); END",
+                          @"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'NCCI_GL41_Analytics' AND object_id = OBJECT_ID('dbo.GL41'))
+                              BEGIN CREATE NONCLUSTERED INDEX NCCI_GL41_Analytics ON dbo.GL41 (NGAY_DL, MA_CN, LOAI_TIEN, MA_TK, LOAI_BT); END",
+                          @"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'NCCI_GL41_Amounts' AND object_id = OBJECT_ID('dbo.GL41'))
+                              BEGIN CREATE NONCLUSTERED INDEX NCCI_GL41_Amounts ON dbo.GL41 (MA_TK, DN_DAUKY, DC_DAUKY, SBT_NO, SBT_CO); END",
+
+                          // Attempt columnstore index when supported (skips on Azure SQL Edge)
+                          @"DECLARE @edition NVARCHAR(128) = CAST(SERVERPROPERTY('Edition') AS NVARCHAR(128));
+                              IF (@edition NOT LIKE '%Azure SQL Edge%')
+                              BEGIN
+                                    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_GL41_Columnstore' AND object_id = OBJECT_ID('dbo.GL41'))
+                                    BEGIN
+                                         BEGIN TRY
+                                              CREATE NONCLUSTERED COLUMNSTORE INDEX IX_GL41_Columnstore ON dbo.GL41
+                                              (
+                                                    NGAY_DL, MA_CN, LOAI_TIEN, MA_TK, TEN_TK,
+                                                    DN_DAUKY, DC_DAUKY, SBT_NO, ST_GHINO, SBT_CO, ST_GHICO, DN_CUOIKY, DC_CUOIKY
+                                              );
+                                              PRINT '✅ Created columnstore index IX_GL41_Columnstore';
+                                         END TRY
+                                         BEGIN CATCH
+                                              PRINT '⚠️ Could not create columnstore index IX_GL41_Columnstore: ' + ERROR_MESSAGE();
+                                         END CATCH
+                                    END
+                              END
+                              ELSE
+                              BEGIN
+                                    PRINT 'ℹ️ Azure SQL Edge detected – skipping columnstore index creation for GL41.';
+                              END"
+                     };
 
                 foreach (var sql in statements)
                 {

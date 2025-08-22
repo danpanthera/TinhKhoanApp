@@ -3,13 +3,17 @@
   <div class="data-tables-view">
     <!-- Header -->
     <div class="view-header">
-      <h1 class="title">🗄️ DataTables Management</h1>
-      <p class="subtitle">Direct Import & Preview cho 8 bảng dữ liệu chính</p>
+      <h1 class="title">
+        🗄️ DataTables Management
+      </h1>
+      <p class="subtitle">
+        Direct Import & Preview cho 8 bảng dữ liệu chính
+      </p>
     </div>
 
     <!-- Summary Cards -->
     <div class="summary-cards">
-      <div class="card" v-for="table in dataTablesSummary" :key="table.tableName">
+      <div v-for="table in dataTablesSummary" :key="table.tableName" class="card">
         <div class="card-header">
           <h3>{{ table.tableName }}</h3>
           <span :class="['storage-badge', table.storageType.toLowerCase()]">
@@ -29,8 +33,12 @@
           </div>
         </div>
         <div class="card-actions">
-          <button @click="previewTable(table.tableName)" class="btn btn-preview">👁️ Preview</button>
-          <button @click="openImportDialog(table.tableName)" class="btn btn-import">📥 Import</button>
+          <button class="btn btn-preview" @click="previewTable(table.tableName)">
+            👁️ Preview
+          </button>
+          <button class="btn btn-import" @click="openImportDialog(table.tableName)">
+            📥 Import
+          </button>
         </div>
       </div>
     </div>
@@ -40,8 +48,12 @@
       <div class="section-header">
         <h2>{{ activeTable.toUpperCase() }} - {{ getStorageType(activeTable) }}</h2>
         <div class="section-actions">
-          <button @click="refreshPreview" class="btn btn-refresh">🔄 Refresh</button>
-          <button @click="clearActiveTable" class="btn btn-close">❌ Close</button>
+          <button class="btn btn-refresh" @click="refreshPreview">
+            🔄 Refresh
+          </button>
+          <button class="btn btn-close" @click="clearActiveTable">
+            ❌ Close
+          </button>
         </div>
       </div>
 
@@ -74,7 +86,9 @@
       <!-- No Data -->
       <div v-else class="no-data">
         <p>📋 Chưa có dữ liệu trong bảng {{ activeTable.toUpperCase() }}</p>
-        <button @click="openImportDialog(activeTable)" class="btn btn-import">📥 Import Data</button>
+        <button class="btn btn-import" @click="openImportDialog(activeTable)">
+          📥 Import Data
+        </button>
       </div>
     </div>
 
@@ -83,7 +97,9 @@
       <div class="modal-dialog" @click.stop>
         <div class="modal-header">
           <h3>📥 Import Data - {{ importTableName.toUpperCase() }}</h3>
-          <button @click="closeImportDialog" class="btn btn-close">❌</button>
+          <button class="btn btn-close" @click="closeImportDialog">
+            ❌
+          </button>
         </div>
 
         <div class="modal-body">
@@ -93,8 +109,16 @@
               <p>Upload CSV file để import trực tiếp vào bảng {{ importTableName.toUpperCase() }}</p>
 
               <div class="file-upload">
-                <input type="file" ref="fileInput" @change="handleFileSelect" accept=".csv" class="file-input" />
-                <button @click="$refs.fileInput.click()" class="btn btn-upload">📁 Choose CSV File</button>
+                <input
+                  ref="fileInput"
+                  type="file"
+                  accept=".csv"
+                  class="file-input"
+                  @change="handleFileSelect"
+                >
+                <button class="btn btn-upload" @click="$refs.fileInput.click()">
+                  📁 Choose CSV File
+                </button>
                 <span v-if="selectedFile" class="file-name">
                   {{ selectedFile.name }}
                 </span>
@@ -106,7 +130,9 @@
                   <table>
                     <thead>
                       <tr>
-                        <th v-for="header in csvHeaders" :key="header">{{ header }}</th>
+                        <th v-for="header in csvHeaders" :key="header">
+                          {{ header }}
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -118,15 +144,19 @@
                     </tbody>
                   </table>
                 </div>
-                <p class="preview-info">Showing 5 of {{ csvPreview.length }} rows</p>
+                <p class="preview-info">
+                  Showing 5 of {{ csvPreview.length }} rows
+                </p>
               </div>
             </div>
           </div>
         </div>
 
         <div class="modal-footer">
-          <button @click="closeImportDialog" class="btn btn-cancel">Cancel</button>
-          <button @click="executeImport" :disabled="!selectedFile || importing" class="btn btn-primary">
+          <button class="btn btn-cancel" @click="closeImportDialog">
+            Cancel
+          </button>
+          <button :disabled="!selectedFile || importing" class="btn btn-primary" @click="executeImport">
             <span v-if="importing">⏳ Importing...</span>
             <span v-else>📥 Import Data</span>
           </button>
@@ -137,7 +167,7 @@
     <!-- Loading Overlay -->
     <div v-if="loading" class="loading-overlay">
       <div class="loading-content">
-        <div class="spinner"></div>
+        <div class="spinner" />
         <p>{{ loadingMessage }}</p>
       </div>
     </div>
@@ -145,6 +175,7 @@
 </template>
 
 <script>
+import { formatNgayDL } from '@/utils/date'
 import { useNumberInput } from '@/utils/numberFormat'
 import { onMounted, ref } from 'vue'
 
@@ -335,6 +366,11 @@ export default {
     const formatCellValue = (value, column) => {
       if (value === null || value === undefined) return ''
 
+      // Special-case NGAY_DL formatting
+      if (column && column.toString().toLowerCase() === 'ngay_dl') {
+        return formatNgayDL(value)
+      }
+
       // Format numeric columns
       if (getColumnClass(column) === 'numeric') {
         return formatCurrency(value)
@@ -381,6 +417,7 @@ export default {
       formatCellValue,
       formatNumber,
       formatCurrency,
+  formatNgayDL,
     }
   },
 }
