@@ -1186,8 +1186,7 @@ namespace TinhKhoanApp.Api.Services
                     DN_CUOIKY = ParseDecimalSafely(record.DN_CUOIKY),
                     DC_CUOIKY = ParseDecimalSafely(record.DC_CUOIKY),
                     FILE_NAME = file.FileName,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow
                 };
 
                 records.Add(entity);

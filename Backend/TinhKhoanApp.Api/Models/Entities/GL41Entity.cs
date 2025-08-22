@@ -74,15 +74,18 @@ namespace TinhKhoanApp.Api.Models.Entities
         // === SYSTEM COLUMNS (cuối cùng) ===
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Column("ID")]
         public long Id { get; set; }
 
         [Required]
+        [Column("CREATED_DATE")]
         public DateTime CreatedAt { get; set; }
 
-        [Required]
+        [NotMapped]
         public DateTime UpdatedAt { get; set; }
 
-        [StringLength(255)]
+        [StringLength(1000)]
+        [Column("FILE_NAME")]
         public string? FILE_NAME { get; set; }
 
         // NO TEMPORAL COLUMNS - GL41 is Partitioned Columnstore only
