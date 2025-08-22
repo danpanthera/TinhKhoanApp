@@ -1219,7 +1219,35 @@ const fetchUnitEmptyInfo = async () => {
   try {
     fetchingEmptyInfo.value = true
     successMessage.value = messages.loadingUnitEmptyInfo
-    const response = await api.get(`/UnitKhoanAssignments/empty-info?unitId=${selectedUnitBranchId.value}&periodId=${selectedUnitPeriodId.value}`)
+    // 🛡️ Thêm cơ chế retry 1 lần nếu gặp 404 tạm thời (backend vừa restart / swagger chưa warmup)
+    const fetchWithRetry = async (url, maxRetries = 1, delayMs = 700) => {
+      let lastErr
+      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+          const res = await api.get(url)
+          if (attempt > 0) {
+            console.warn(`✅ empty-info thành công ở lần thử lại #${attempt}`)
+          }
+          return res
+        } catch (err) {
+          const status = err?.response?.status
+          lastErr = err
+          console.warn(
+            `⚠️ empty-info thất bại (attempt=${attempt}, status=${status}, time=${new Date().toISOString()})`,
+          )
+          // Chỉ retry nếu là 404 hoặc 503 (dịch vụ warming) và còn lượt retry
+            if ((status === 404 || status === 503) && attempt < maxRetries) {
+            await new Promise(r => setTimeout(r, delayMs))
+            continue
+          }
+          throw err
+        }
+      }
+      throw lastErr
+    }
+
+    const url = `/UnitKhoanAssignments/empty-info?unitId=${selectedUnitBranchId.value}&periodId=${selectedUnitPeriodId.value}`
+    const response = await fetchWithRetry(url, 1, 800)
     unitEmptyInfo.value = response.data
     if (unitEmptyInfo.value) {
       successMessage.value = `${messages.emptyUnitAssignments(unitEmptyInfo.value.unitName, unitEmptyInfo.value.periodName)} ${messages.noAssignmentsHint}`

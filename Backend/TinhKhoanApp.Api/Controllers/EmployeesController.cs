@@ -55,6 +55,9 @@ public class EmployeesController : ControllerBase
                 FullName = e.FullName,
                 Username = e.Username,
                 Email = e.Email,
+                UserAD = e.UserAD,
+                UserIPCAS = e.UserIPCAS,
+                MaCBTD = e.MaCBTD,
                 PhoneNumber = e.PhoneNumber,
                 IsActive = e.IsActive,
                 UnitId = e.UnitId,
@@ -101,6 +104,9 @@ public class EmployeesController : ControllerBase
                 FullName = employee.FullName,
                 Username = employee.Username,
                 Email = employee.Email,
+                UserAD = employee.UserAD,
+                UserIPCAS = employee.UserIPCAS,
+                MaCBTD = employee.MaCBTD,
                 PhoneNumber = employee.PhoneNumber,
                 IsActive = employee.IsActive,
                 UnitId = employee.UnitId,
@@ -156,6 +162,9 @@ public class EmployeesController : ControllerBase
                 FullName = employeeDto.FullName,
                 Username = employeeDto.Username,
                 Email = employeeDto.Email,
+                UserAD = employeeDto.UserAD,
+                UserIPCAS = employeeDto.UserIPCAS,
+                MaCBTD = employeeDto.MaCBTD,
                 PhoneNumber = employeeDto.PhoneNumber,
                 IsActive = employeeDto.IsActive ?? true,
                 UnitId = employeeDto.UnitId,
@@ -325,6 +334,37 @@ public class EmployeesController : ControllerBase
                 changes.Add(new EmployeeAuditLog { EmployeeId = id, Action = "UPDATE", FieldChanged = "PhoneNumber", OldValue = employee.PhoneNumber, NewValue = null, PerformedBy = dto.UpdatedBy ?? "system" });
                 employee.PhoneNumber = null;
             }
+            // GAHR26 business columns: UserAD, UserIPCAS, MaCBTD
+            if (!string.IsNullOrWhiteSpace(dto.UserAD) && dto.UserAD != employee.UserAD)
+            {
+                changes.Add(new EmployeeAuditLog { EmployeeId = id, Action = "UPDATE", FieldChanged = "UserAD", OldValue = employee.UserAD, NewValue = dto.UserAD, PerformedBy = dto.UpdatedBy ?? "system" });
+                employee.UserAD = dto.UserAD;
+            }
+            else if (dto.UserAD == string.Empty && employee.UserAD != null)
+            {
+                changes.Add(new EmployeeAuditLog { EmployeeId = id, Action = "UPDATE", FieldChanged = "UserAD", OldValue = employee.UserAD, NewValue = null, PerformedBy = dto.UpdatedBy ?? "system" });
+                employee.UserAD = null;
+            }
+            if (!string.IsNullOrWhiteSpace(dto.UserIPCAS) && dto.UserIPCAS != employee.UserIPCAS)
+            {
+                changes.Add(new EmployeeAuditLog { EmployeeId = id, Action = "UPDATE", FieldChanged = "UserIPCAS", OldValue = employee.UserIPCAS, NewValue = dto.UserIPCAS, PerformedBy = dto.UpdatedBy ?? "system" });
+                employee.UserIPCAS = dto.UserIPCAS;
+            }
+            else if (dto.UserIPCAS == string.Empty && employee.UserIPCAS != null)
+            {
+                changes.Add(new EmployeeAuditLog { EmployeeId = id, Action = "UPDATE", FieldChanged = "UserIPCAS", OldValue = employee.UserIPCAS, NewValue = null, PerformedBy = dto.UpdatedBy ?? "system" });
+                employee.UserIPCAS = null;
+            }
+            if (!string.IsNullOrWhiteSpace(dto.MaCBTD) && dto.MaCBTD != employee.MaCBTD)
+            {
+                changes.Add(new EmployeeAuditLog { EmployeeId = id, Action = "UPDATE", FieldChanged = "MaCBTD", OldValue = employee.MaCBTD, NewValue = dto.MaCBTD, PerformedBy = dto.UpdatedBy ?? "system" });
+                employee.MaCBTD = dto.MaCBTD;
+            }
+            else if (dto.MaCBTD == string.Empty && employee.MaCBTD != null)
+            {
+                changes.Add(new EmployeeAuditLog { EmployeeId = id, Action = "UPDATE", FieldChanged = "MaCBTD", OldValue = employee.MaCBTD, NewValue = null, PerformedBy = dto.UpdatedBy ?? "system" });
+                employee.MaCBTD = null;
+            }
             if (dto.IsActive.HasValue && dto.IsActive.Value != employee.IsActive)
             {
                 changes.Add(new EmployeeAuditLog { EmployeeId = id, Action = "UPDATE", FieldChanged = "IsActive", OldValue = employee.IsActive.ToString(), NewValue = dto.IsActive.Value.ToString(), PerformedBy = dto.UpdatedBy ?? "system" });
@@ -430,6 +470,9 @@ public class EmployeeCreateDto
     public required string Username { get; set; }
     public string? PasswordHash { get; set; }
     public string? Email { get; set; }
+    public string? UserAD { get; set; }
+    public string? UserIPCAS { get; set; }
+    public string? MaCBTD { get; set; }
     public string? PhoneNumber { get; set; }
     public bool? IsActive { get; set; }
     public int UnitId { get; set; }
@@ -447,6 +490,9 @@ public class EmployeeUpdateDto
     public string? Username { get; set; }
     public string? PasswordHash { get; set; } // treated as raw password input
     public string? Email { get; set; }
+    public string? UserAD { get; set; }
+    public string? UserIPCAS { get; set; }
+    public string? MaCBTD { get; set; }
     public string? PhoneNumber { get; set; }
     public bool? IsActive { get; set; }
     public int? UnitId { get; set; }
