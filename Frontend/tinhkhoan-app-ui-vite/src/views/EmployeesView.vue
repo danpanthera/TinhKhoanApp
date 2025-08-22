@@ -95,9 +95,6 @@
             <th style="width: 80px; min-width: 80px">
               Thao tác
             </th>
-            <th style="width: 70px">
-              Mã NV
-            </th>
             <th style="width: 90px">
               Mã CB
             </th>
@@ -167,7 +164,6 @@
                 Xóa
               </button>
             </td>
-            <td>{{ employee.EmployeeCode }}</td>
             <td>{{ employee.CBCode || 'Chưa có mã CB' }}</td>
             <td>{{ employee.FullName }}</td>
             <td>{{ employee.Username }}</td>
@@ -251,12 +247,11 @@
         <table class="employee-detail-table compact-table">
           <thead>
             <tr>
-              <th>Mã NV</th><th>Mã CB</th><th>Họ tên</th><th>Tên ĐN</th><th>User AD</th><th>Email</th><th>User IPCAS</th><th>Mã CBTD</th><th>SĐT</th><th>Trạng thái</th>
+              <th>Mã CB</th><th>Họ tên</th><th>Tên ĐN</th><th>User AD</th><th>Email</th><th>User IPCAS</th><th>Mã CBTD</th><th>SĐT</th><th>Trạng thái</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="r in importPreview.slice(0,50)" :key="r._row">
-              <td>{{ r.employeeCode }}</td>
               <td>{{ r.cbCode }}</td>
               <td>{{ r.fullName }}</td>
               <td>{{ r.username }}</td>
@@ -301,16 +296,6 @@
       </h2>
       <form @submit.prevent="handleSubmitEmployee">
         <div class="form-row">
-          <div class="form-group">
-            <label for="employeeCode">Mã Nhân viên:</label>
-            <input
-              id="employeeCode"
-              type="text"
-              :value="currentEmployee.employeeCode"
-              disabled
-              required
-            >
-          </div>
           <div class="form-group">
             <label for="cbCode">Mã CB:</label>
             <input
@@ -537,7 +522,6 @@ const roleStore = useRoleStore()
 // Initial employee data function
 const initialEmployeeData = () => ({
   id: null,
-  employeeCode: '',
   cbCode: '',
   fullName: '',
   username: '',
@@ -755,7 +739,6 @@ function syncSelectedBranchWithEmployeeUnit() {
 function _prepareAddEmployee() {
   isEditing.value = false
   currentEmployee.value = initialEmployeeData()
-  currentEmployee.value.employeeCode = getNextEmployeeCode()
   selectedBranchId.value = null
 }
 
@@ -813,19 +796,6 @@ const loadInitialData = async () => {
   ])
 }
 
-// Function to get next employee code
-function getNextEmployeeCode() {
-  // Lấy NVxxx lớn nhất, tăng lên 1
-  const codes = employeeStore.allEmployees.map(e => e.employeeCode).filter(code => /^NV\d{3}$/.test(code))
-  let max = 0
-  codes.forEach(code => {
-    const num = parseInt(code.slice(2), 10)
-    if (!isNaN(num) && num > max) max = num
-  })
-  const next = (max + 1).toString().padStart(3, '0')
-  return `NV${next}`
-}
-
 // Function to extract only primitive fields from employee object
 function extractEmployeePrimitives(employee) {
   if (!employee) return {}
@@ -872,7 +842,6 @@ function extractEmployeePrimitives(employee) {
   return {
     id: extractedId,
     Id: extractedId, // Compatibility - include both cases
-    employeeCode: safeGet(employee, 'EmployeeCode'),
     cbCode: safeGet(employee, 'CBCode') || safeGet(employee, 'cbCode') || '',
     fullName: safeGet(employee, 'FullName'),
     username: safeGet(employee, 'Username'),
@@ -959,10 +928,6 @@ const handleSubmitEmployee = async () => {
   }
 
   // Basic field validation
-  if (!dataToProcess.employeeCode) {
-    formError.value = 'Mã nhân viên không được để trống!'
-    return
-  }
   if (!dataToProcess.fullName) {
     formError.value = 'Họ và tên không được để trống!'
     return
@@ -1066,7 +1031,6 @@ const cancelEdit = () => {
 // Reset form to initial state
 const resetForm = () => {
   currentEmployee.value = initialEmployeeData()
-  currentEmployee.value.employeeCode = getNextEmployeeCode()
   selectedBranchId.value = null
 }
 
@@ -1257,7 +1221,6 @@ async function handleFileChange(e) {
     // Normalize keys
     const mapped = rows.map((r, idx) => {
       const obj = {
-        employeeCode: r['Mã NV'] || r['Ma NV'] || r['MANV'] || r['ma nv'] || '',
         cbCode: r['Mã CB'] || r['Ma CB'] || r['MACB'] || '',
         fullName: r['Họ tên'] || r['Ho ten'] || r['HOTEN'] || '',
         username: r['Tên ĐN'] || r['Ten DN'] || r['TENDN'] || r['Username'] || '',
@@ -1273,9 +1236,6 @@ async function handleFileChange(e) {
     })
     // Basic validation
     mapped.forEach(m => {
-      if (!m.employeeCode) {
-        importErrors.value.push(`Dòng ${m._row}: Thiếu Mã NV`)
-      }
       if (m.cbCode && m.cbCode.length !== 9) {
         importErrors.value.push(`Dòng ${m._row}: Mã CB phải 9 ký tự`)
       }
@@ -1284,10 +1244,10 @@ async function handleFileChange(e) {
       }
     })
     importPreview.value = mapped
-    const existingCodes = new Set(employeeStore.allEmployees.map(e => e.EmployeeCode || e.employeeCode))
+    const existingCBCodes = new Set(employeeStore.allEmployees.map(e => e.CBCode || e.cbCode).filter(code => code))
     let update = 0; let create = 0
     mapped.forEach(m => {
-      if (existingCodes.has(m.employeeCode)) update++
+      if (m.cbCode && existingCBCodes.has(m.cbCode)) update++
       else create++
     })
     importStats.value = { total: mapped.length, new: create, update, processed: 0 }
@@ -1305,16 +1265,18 @@ async function _performImport() {
   isImporting.value = true
   importErrors.value = []
   importStats.value.processed = 0
-  const existingByCode = {}
-  employeeStore.allEmployees.forEach(e => { existingByCode[e.EmployeeCode || e.employeeCode] = e })
+  const existingByCBCode = {}
+  employeeStore.allEmployees.forEach(e => {
+    const cbCode = e.CBCode || e.cbCode;
+    if (cbCode) existingByCBCode[cbCode] = e;
+  })
   for (const row of importPreview.value) {
     try {
-      const existing = existingByCode[row.employeeCode]
+      const existing = row.cbCode ? existingByCBCode[row.cbCode] : null
       if (existing) {
         // update
         const payload = {
           Id: existing.Id,
-          employeeCode: existing.EmployeeCode || existing.employeeCode,
           cbCode: row.cbCode || existing.CBCode,
           fullName: row.fullName || existing.FullName,
             username: existing.Username,
@@ -1333,10 +1295,9 @@ async function _performImport() {
         console.log('Would update employee', payload)
       } else {
         const payload = {
-          employeeCode: row.employeeCode,
           cbCode: row.cbCode,
           fullName: row.fullName,
-          username: row.username || row.employeeCode.toLowerCase(),
+          username: row.username || row.cbCode.toLowerCase(),
           email: row.email || (row.username ? row.username + '@agribank.com.vn' : ''),
           phoneNumber: row.phoneNumber,
           userAd: row.userAd,
