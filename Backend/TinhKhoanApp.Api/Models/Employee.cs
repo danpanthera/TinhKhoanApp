@@ -12,9 +12,7 @@ namespace TinhKhoanApp.Api.Models
         [Key]
         public int Id { get; set; }
 
-        [Required]
-        [StringLength(20)]
-        public string EmployeeCode { get; set; } = string.Empty;
+        // Removed EmployeeCode per CBCode-first migration
 
         [Required]
         [StringLength(9, MinimumLength = 9)]

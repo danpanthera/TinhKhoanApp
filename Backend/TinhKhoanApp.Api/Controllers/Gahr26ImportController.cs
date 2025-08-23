@@ -25,34 +25,31 @@ public class Gahr26ImportController : ControllerBase
         }
 
         var existing = await _db.Employees.AsNoTracking().ToListAsync(ct);
-        var map = existing.ToDictionary(e => e.EmployeeCode, StringComparer.OrdinalIgnoreCase);
+        var map = existing.ToDictionary(e => e.CBCode, StringComparer.OrdinalIgnoreCase);
 
         foreach (var row in request.Rows)
         {
-            if (string.IsNullOrWhiteSpace(row.EmployeeCode))
+            if (string.IsNullOrWhiteSpace(row.CBCode))
             {
-                result.Errors.Add("Thiếu Mã NV ở một dòng");
+                result.Errors.Add("Thiếu Mã CB ở một dòng");
                 result.Skipped++;
                 continue;
             }
-            if (!string.IsNullOrWhiteSpace(row.CBCode))
+            if (!Regex.IsMatch(row.CBCode!, "^\\d{9}$"))
             {
-                if (!Regex.IsMatch(row.CBCode, "^\\d{9}$"))
-                {
-                    result.Errors.Add($"Mã CB không hợp lệ (phải 9 chữ số): {row.CBCode}");
-                    result.Skipped++;
-                    continue;
-                }
+                result.Errors.Add($"Mã CB không hợp lệ (phải 9 chữ số): {row.CBCode}");
+                result.Skipped++;
+                continue;
             }
 
-            if (map.TryGetValue(row.EmployeeCode, out var existingEmp))
+            if (map.TryGetValue(row.CBCode, out var existingEmp))
             {
                 if (!request.OverwriteExisting)
                 {
                     result.Skipped++;
                     continue;
                 }
-                existingEmp.CBCode = row.CBCode ?? existingEmp.CBCode;
+                existingEmp.CBCode = row.CBCode;
                 existingEmp.FullName = row.FullName ?? existingEmp.FullName;
                 existingEmp.Username = row.Username ?? existingEmp.Username;
                 existingEmp.Email = row.Email ?? existingEmp.Email;
@@ -77,25 +74,24 @@ public class Gahr26ImportController : ControllerBase
                 var username = row.Username;
                 if (string.IsNullOrWhiteSpace(username) && request.AutoGenerateMissingUsernames)
                 {
-                    username = row.EmployeeCode.ToLowerInvariant();
+                    username = row.CBCode.ToLowerInvariant();
                 }
                 if (string.IsNullOrWhiteSpace(username))
                 {
-                    result.Errors.Add($"Không thể tạo nhân viên vì thiếu Username cho mã {row.EmployeeCode}");
+                    result.Errors.Add($"Không thể tạo nhân viên vì thiếu Username cho mã CB {row.CBCode}");
                     result.Skipped++;
                     continue;
                 }
                 if (string.IsNullOrWhiteSpace(row.FullName))
                 {
-                    row.FullName = row.EmployeeCode;
+                    row.FullName = row.CBCode;
                 }
                 var unitId = row.UnitId ?? existing.FirstOrDefault()?.UnitId ?? 1;
                 var positionId = row.PositionId ?? existing.FirstOrDefault()?.PositionId ?? 1;
                 var passwordHash = BCrypt.Net.BCrypt.HashPassword("123456");
                 var emp = new Employee
                 {
-                    EmployeeCode = row.EmployeeCode,
-                    CBCode = row.CBCode ?? new string('0', 9),
+                    CBCode = row.CBCode,
                     FullName = row.FullName!,
                     Username = username,
                     PasswordHash = passwordHash,
@@ -114,7 +110,7 @@ public class Gahr26ImportController : ControllerBase
                 {
                     _db.EmployeeRoles.Add(new EmployeeRole { EmployeeId = emp.Id, RoleId = row.RoleId.Value });
                 }
-                map[row.EmployeeCode] = emp;
+                map[row.CBCode] = emp;
                 result.Inserted++;
             }
         }

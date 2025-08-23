@@ -42,7 +42,7 @@ public class EmployeesController : ControllerBase
             }
 
             var employees = await query
-                .OrderBy(e => e.EmployeeCode)
+                .OrderBy(e => e.CBCode)
                 .ThenBy(e => e.FullName)
                 .ToListAsync();
 
@@ -50,7 +50,7 @@ public class EmployeesController : ControllerBase
             var result = employees.Select(e => new
             {
                 Id = e.Id,
-                EmployeeCode = e.EmployeeCode,
+                EmployeeCode = (string?)null,
                 CBCode = e.CBCode,
                 FullName = e.FullName,
                 Username = e.Username,
@@ -78,6 +78,139 @@ public class EmployeesController : ControllerBase
         }
     }
 
+    // POST: api/Employees/import-cbcode
+    // Bulk import/upsert employees using CBCode as the unique business key.
+    [HttpPost("import-cbcode")]
+    public async Task<ActionResult<object>> ImportEmployeesByCBCode([FromBody] BulkImportByCBCodeRequest request)
+    {
+        if (request == null || request.Rows == null || request.Rows.Count == 0)
+        {
+            return BadRequest(new { message = "Dữ liệu import rỗng" });
+        }
+
+        var inserted = 0;
+        var updated = 0;
+        var skipped = 0;
+        var errors = new List<string>();
+
+        // Cache lookups to reduce DB roundtrips
+        var cbCodes = request.Rows.Where(r => !string.IsNullOrWhiteSpace(r.CBCode)).Select(r => r.CBCode!.Trim()).Distinct().ToList();
+        var existingEmployees = await _context.Employees
+            .Where(e => cbCodes.Contains(e.CBCode))
+            .ToDictionaryAsync(e => e.CBCode, e => e);
+
+        foreach (var (row, idx) in request.Rows.Select((r, i) => (r, i + 1)))
+        {
+            try
+            {
+                var cb = row.CBCode?.Trim();
+                if (string.IsNullOrWhiteSpace(cb))
+                {
+                    skipped++;
+                    errors.Add($"Dòng {idx}: Thiếu Mã CB");
+                    continue;
+                }
+                if (cb.Length != 9 || !cb.All(char.IsDigit))
+                {
+                    skipped++;
+                    errors.Add($"Dòng {idx}: Mã CB phải gồm đúng 9 chữ số");
+                    continue;
+                }
+
+                existingEmployees.TryGetValue(cb, out var emp);
+
+                var username = string.IsNullOrWhiteSpace(row.Username)
+                    ? cb.ToLowerInvariant()
+                    : row.Username!.Trim();
+
+                if (emp == null)
+                {
+                    // Require UnitId & PositionId for new rows to satisfy FK constraints
+                    if (!row.UnitId.HasValue || !row.PositionId.HasValue)
+                    {
+                        skipped++;
+                        errors.Add($"Dòng {idx}: Thiếu UnitId/PositionId cho nhân viên mới {cb}");
+                        continue;
+                    }
+
+                    // Ensure username uniqueness
+                    var baseUsername = username;
+                    var candidate = baseUsername;
+                    var suffix = 1;
+                    while (await _context.Employees.AnyAsync(e => e.Username.ToLower() == candidate.ToLower()))
+                    {
+                        candidate = $"{baseUsername}{suffix}";
+                        suffix++;
+                    }
+                    username = candidate;
+
+                    // Create new employee
+                    var newEmp = new Employee
+                    {
+                        CBCode = cb,
+                        FullName = row.FullName?.Trim() ?? username,
+                        Username = username,
+                        Email = string.IsNullOrWhiteSpace(row.Email) ? null : row.Email!.Trim(),
+                        PhoneNumber = string.IsNullOrWhiteSpace(row.PhoneNumber) ? null : row.PhoneNumber!.Trim(),
+                        UserAD = string.IsNullOrWhiteSpace(row.UserAD) ? null : row.UserAD!.Trim(),
+                        UserIPCAS = string.IsNullOrWhiteSpace(row.UserIPCAS) ? null : row.UserIPCAS!.Trim(),
+                        MaCBTD = string.IsNullOrWhiteSpace(row.MaCBTD) ? null : row.MaCBTD!.Trim(),
+                        IsActive = true,
+                        UnitId = row.UnitId!.Value,
+                        PositionId = row.PositionId!.Value,
+                        PasswordHash = !string.IsNullOrWhiteSpace(row.Password)
+                            ? BCrypt.Net.BCrypt.HashPassword(row.Password)
+                            : BCrypt.Net.BCrypt.HashPassword("123456")
+                    };
+
+                    _context.Employees.Add(newEmp);
+                    existingEmployees[cb] = newEmp;
+                    inserted++;
+
+                    // Bỏ gán vai trò trong import
+                }
+                else
+                {
+                    if (!request.OverwriteExisting)
+                    {
+                        skipped++;
+                        continue;
+                    }
+
+                    // Update existing fields if provided
+                    if (!string.IsNullOrWhiteSpace(row.FullName) && row.FullName!.Trim() != emp.FullName)
+                        emp.FullName = row.FullName!.Trim();
+                    if (!string.IsNullOrWhiteSpace(username) && username != emp.Username)
+                    {
+                        // Unique username check
+                        var exists = await _context.Employees.AnyAsync(e => e.Username.ToLower() == username.ToLower() && e.Id != emp.Id);
+                        if (!exists) emp.Username = username;
+                    }
+                    emp.Email = string.IsNullOrWhiteSpace(row.Email) ? emp.Email : row.Email!.Trim();
+                    emp.PhoneNumber = string.IsNullOrWhiteSpace(row.PhoneNumber) ? emp.PhoneNumber : row.PhoneNumber!.Trim();
+                    emp.UserAD = string.IsNullOrWhiteSpace(row.UserAD) ? emp.UserAD : row.UserAD!.Trim();
+                    emp.UserIPCAS = string.IsNullOrWhiteSpace(row.UserIPCAS) ? emp.UserIPCAS : row.UserIPCAS!.Trim();
+                    emp.MaCBTD = string.IsNullOrWhiteSpace(row.MaCBTD) ? emp.MaCBTD : row.MaCBTD!.Trim();
+                    // Bỏ cập nhật trạng thái từ file import
+                    if (row.UnitId.HasValue) emp.UnitId = row.UnitId.Value;
+                    if (row.PositionId.HasValue) emp.PositionId = row.PositionId.Value;
+                    // Bỏ cập nhật vai trò từ file import
+
+                    updated++;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Import error at row {Row}", idx);
+                errors.Add($"Dòng {idx}: {ex.Message}");
+            }
+        }
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new { inserted, updated, skipped, errors });
+    }
+
     // GET: api/Employees/5
     [HttpGet("{id}")]
     public async Task<ActionResult<object>> GetEmployee(int id)
@@ -99,7 +232,7 @@ public class EmployeesController : ControllerBase
             var result = new
             {
                 Id = employee.Id,
-                EmployeeCode = employee.EmployeeCode,
+                EmployeeCode = (string?)null,
                 CBCode = employee.CBCode,
                 FullName = employee.FullName,
                 Username = employee.Username,
@@ -157,7 +290,6 @@ public class EmployeesController : ControllerBase
             // Create employee
             var employee = new Employee
             {
-                EmployeeCode = employeeDto.EmployeeCode ?? string.Empty,
                 CBCode = employeeDto.CBCode ?? string.Empty,
                 FullName = employeeDto.FullName,
                 Username = employeeDto.Username,
@@ -211,7 +343,7 @@ public class EmployeesController : ControllerBase
             var result = new
             {
                 Id = createdEmployee!.Id,
-                EmployeeCode = createdEmployee.EmployeeCode,
+                EmployeeCode = (string?)null,
                 CBCode = createdEmployee.CBCode,
                 FullName = createdEmployee.FullName,
                 Username = createdEmployee.Username,
@@ -312,7 +444,6 @@ public class EmployeesController : ControllerBase
                 changes.Add(new EmployeeAuditLog { EmployeeId = id, Action = "UPDATE", FieldChanged = "FullName", OldValue = employee.FullName, NewValue = dto.FullName, PerformedBy = dto.UpdatedBy ?? "system" });
                 employee.FullName = dto.FullName;
             }
-            if (!string.IsNullOrWhiteSpace(dto.EmployeeCode)) employee.EmployeeCode = dto.EmployeeCode;
             if (!string.IsNullOrWhiteSpace(dto.CBCode)) employee.CBCode = dto.CBCode;
             if (!string.IsNullOrWhiteSpace(dto.Email) && dto.Email != employee.Email)
             {
@@ -437,7 +568,7 @@ public class EmployeesController : ControllerBase
             var result = new
             {
                 Id = updated!.Id,
-                EmployeeCode = updated.EmployeeCode,
+                EmployeeCode = (string?)null,
                 CBCode = updated.CBCode,
                 FullName = updated.FullName,
                 Username = updated.Username,
@@ -464,7 +595,6 @@ public class EmployeesController : ControllerBase
 // DTO for creating employees
 public class EmployeeCreateDto
 {
-    public string? EmployeeCode { get; set; }
     public string? CBCode { get; set; }
     public required string FullName { get; set; }
     public required string Username { get; set; }
@@ -484,7 +614,6 @@ public class EmployeeCreateDto
 // DTO for updating employees (all optional except at least one field)
 public class EmployeeUpdateDto
 {
-    public string? EmployeeCode { get; set; }
     public string? CBCode { get; set; }
     public string? FullName { get; set; }
     public string? Username { get; set; }
@@ -500,4 +629,27 @@ public class EmployeeUpdateDto
     public int? RoleId { get; set; }
     public bool? ClearRole { get; set; } // when true and RoleId null -> remove role
     public string? UpdatedBy { get; set; }
+}
+
+// === Bulk Import by CBCode DTOs ===
+public class BulkImportByCBCodeRequest
+{
+    public List<BulkImportByCBCodeRow> Rows { get; set; } = new();
+    public bool OverwriteExisting { get; set; } = true;
+    public bool AutoGenerateMissingUsernames { get; set; } = true;
+}
+
+public class BulkImportByCBCodeRow
+{
+    public string? CBCode { get; set; }
+    public string? FullName { get; set; }
+    public string? Username { get; set; }
+    public string? Password { get; set; }
+    public string? UserAD { get; set; }
+    public string? Email { get; set; }
+    public string? UserIPCAS { get; set; }
+    public string? MaCBTD { get; set; }
+    public string? PhoneNumber { get; set; }
+    public int? UnitId { get; set; }
+    public int? PositionId { get; set; }
 }

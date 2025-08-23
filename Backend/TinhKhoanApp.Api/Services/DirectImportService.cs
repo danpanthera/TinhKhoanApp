@@ -145,11 +145,22 @@ namespace TinhKhoanApp.Api.Services
 
                 if (records.Any())
                 {
+                    // Ensure NGAY_DL for all records from filename
+                    if (DateTime.TryParse(result.NgayDL, out var ngayDlDate))
+                    {
+                        foreach (var r in records)
+                        {
+                            r.NGAY_DL = ngayDlDate;
+                            r.FILE_NAME = file.FileName;
+                        }
+                    }
                     // Bulk insert DP01
                     var insertedCount = await BulkInsertGenericAsync(records, "DP01");
                     result.ProcessedRecords = insertedCount;
                     result.Success = true;
                     _logger.LogInformation("✅ [DP01] Import thành công {Count} records", insertedCount);
+                    // Log metadata for history
+                    await LogImportMetadataAsync(result);
                 }
                 else
                 {
@@ -209,6 +220,7 @@ namespace TinhKhoanApp.Api.Services
                     result.ProcessedRecords = insertedCount;
                     result.Success = true;
                     _logger.LogInformation("✅ [DPDA] Import thành công {Count} records", insertedCount);
+                    await LogImportMetadataAsync(result);
                 }
                 else
                 {
@@ -283,6 +295,7 @@ namespace TinhKhoanApp.Api.Services
                     result.ProcessedRecords = insertedCount;
                     result.Success = true;
                     _logger.LogInformation("✅ [EI01] Import thành công {Count} records", insertedCount);
+                    await LogImportMetadataAsync(result);
                 }
                 else
                 {
@@ -362,6 +375,7 @@ namespace TinhKhoanApp.Api.Services
                     result.ProcessedRecords = insertedCount;
                     result.Success = true;
                     _logger.LogInformation("✅ [LN01] Import thành công {Count} records", insertedCount);
+                    await LogImportMetadataAsync(result);
                 }
                 else
                 {
@@ -448,6 +462,7 @@ namespace TinhKhoanApp.Api.Services
                         result.ProcessedRecords = insertedCount;
                         result.Success = true;
                         _logger.LogInformation("✅ [LN03_ENHANCED] Import thành công {Count} records", insertedCount);
+                        await LogImportMetadataAsync(result);
                     }
                     catch
                     {
@@ -515,6 +530,7 @@ namespace TinhKhoanApp.Api.Services
                     result.ProcessedRecords = insertedCount;
                     result.Success = true;
                     _logger.LogInformation("✅ [GL02] Import thành công {Count} records", insertedCount);
+                    await LogImportMetadataAsync(result);
                 }
                 else
                 {
@@ -576,6 +592,9 @@ namespace TinhKhoanApp.Api.Services
                     result.ProcessedRecords = insertedCount;
                     result.Success = true;
                     _logger.LogInformation("✅ [GL41] Import thành công {Count} records", insertedCount);
+                    // Extract NGAY_DL for metadata
+                    result.NgayDL = ExtractNgayDLFromFileName(file.FileName);
+                    await LogImportMetadataAsync(result);
                 }
                 else
                 {
@@ -637,6 +656,7 @@ namespace TinhKhoanApp.Api.Services
                     result.ProcessedRecords = insertedCount;
                     result.Success = true;
                     _logger.LogInformation("✅ [GL01] Import thành công {Count} records", insertedCount);
+                    await LogImportMetadataAsync(result);
                 }
                 else
                 {
@@ -862,8 +882,6 @@ namespace TinhKhoanApp.Api.Services
                 };
 
                 records.Add(dpda);
-
-                records.Add(record);
             }
 
             return records;
@@ -1343,6 +1361,7 @@ namespace TinhKhoanApp.Api.Services
                         result.ProcessedRecords = insertedCount;
                         result.Success = true;
                         _logger.LogInformation("✅ [RR01] Import thành công {Count} records for date {Date}", insertedCount, ngayDlDate.ToString("yyyy-MM-dd"));
+                        await LogImportMetadataAsync(result);
                     }
                     catch
                     {
@@ -1477,6 +1496,34 @@ namespace TinhKhoanApp.Api.Services
         }
 
         #endregion
+
+        /// <summary>
+        /// Persist an import metadata record for UI history purposes.
+        /// </summary>
+        private async Task LogImportMetadataAsync(DirectImportResult result)
+        {
+            try
+            {
+                var meta = new ImportedDataRecord
+                {
+                    FileName = result.FileName,
+                    FileType = "csv",
+                    Category = result.DataType,
+                    ImportDate = DateTime.UtcNow,
+                    StatementDate = DateTime.TryParse(result.NgayDL, out var d) ? d : null,
+                    ImportedBy = "system",
+                    Status = result.Success ? "Completed" : "Failed",
+                    RecordsCount = result.ProcessedRecords,
+                    Notes = $"Imported into {result.TargetTable} in {result.ProcessingTimeMs} ms"
+                };
+                _context.ImportedDataRecords.Add(meta);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to log import metadata for {File}", result.FileName);
+            }
+        }
 
         #endregion
     }

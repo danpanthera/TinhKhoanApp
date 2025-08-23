@@ -78,12 +78,14 @@ export default defineConfig({
   server: {
     host: '0.0.0.0', // Cho phép truy cập từ external network
     port: 3000,
-    strictPort: false, // Tự động chọn cổng khác nếu 3000 bị chiếm
+    strictPort: true, // Bắt buộc chạy đúng cổng 3000 để HMR đúng host/port
     open: true,
     hmr: {
-      // Fix WebSocket connection issues - let Vite auto-select port
-      port: undefined, // Auto-select available port
+      // Pin HMR to the same origin/port the page uses
       host: 'localhost',
+      port: 3000,
+      clientPort: 3000,
+      protocol: 'ws',
     },
     watch: {
       usePolling: true,

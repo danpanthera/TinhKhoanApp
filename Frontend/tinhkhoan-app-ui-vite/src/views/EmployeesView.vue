@@ -1,4 +1,8 @@
-<template>
+next steps (for full DB removal of “Mã NV”)
+Plan and apply an EF Core migration to drop EmployeeCode and related constraints/usages.
+Update models/DTOs/controllers/tests to be CBCode-first.
+Verify all downstream analytics/scripts that reference EmployeeCode.
+Roll out with a DB backup and clear release notes.<template>
   <div class="employees-view">
     <h1>Quản lý Nhân viên</h1>
     <div style="display: flex; gap: 10px; margin-bottom: 20px">
@@ -117,13 +121,10 @@
               Chi nhánh
             </th>
             <th style="width: 110px">
-              Phòng nghiệp vụ
+              Phòng ban
             </th>
             <th style="width: 110px">
               Chức vụ
-            </th>
-            <th style="width: 110px">
-              Vai trò
             </th>
             <th style="width: 120px">
               Email
@@ -131,9 +132,7 @@
             <th style="width: 100px">
               SĐT
             </th>
-            <th style="width: 80px">
-              Trạng thái
-            </th>
+            <!-- Bỏ cột Vai trò và Trạng thái theo yêu cầu -->
           </tr>
         </thead>
         <tbody>
@@ -185,10 +184,10 @@
                   'N/A'
               }}
             </td>
-            <td>{{ getRoleNames(employee) }}</td>
+            <!-- Vai trò đã bỏ khỏi bảng nhân viên -->
             <td>{{ employee.Email }}</td>
             <td>{{ employee.PhoneNumber }}</td>
-            <td>{{ employee.IsActive ? 'Hoạt động' : 'Không hoạt động' }}</td>
+            <!-- Bỏ hiển thị trạng thái -->
           </tr>
         </tbody>
       </table>
@@ -410,7 +409,7 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="departmentId">Phòng nghiệp vụ:</label>
+            <label for="departmentId">Phòng ban:</label>
             <select
               id="departmentId"
               v-model.number="currentEmployee.unitId"
@@ -418,7 +417,7 @@
               required
             >
               <option :value="null" disabled>
-                -- Chọn Phòng nghiệp vụ --
+                -- Chọn Phòng ban --
               </option>
               <option v-for="dept in departmentOptions" :key="dept.Id || dept.Id" :value="dept.Id || dept.Id">
                 {{ dept.Name || dept.Name }} ({{ dept.Code || dept.Code }})
@@ -447,33 +446,9 @@
               </option>
             </select>
           </div>
-          <div class="form-group">
-            <label for="roleId">Vai trò:</label>
-            <select id="roleId" v-model.number="currentEmployee.roleId" required>
-              <option :value="null" disabled>
-                -- Chọn Vai trò --
-              </option>
-              <option v-for="role in sortedRoles" :key="role.Id || role.Id" :value="role.Id || role.Id">
-                {{ role.Name || role.Name }}
-                <span v-if="role.Description" style="color: #666">- {{ role.Description }}</span>
-              </option>
-            </select>
-            <small style="color: #666; font-size: 0.8em">Chọn một vai trò cho nhân viên</small>
-          </div>
+          <!-- Bỏ vai trò khỏi form theo yêu cầu -->
         </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="isActive">Trạng thái hoạt động:</label>
-            <select id="isActive" v-model="currentEmployee.isActive">
-              <option :value="true">
-                Hoạt động
-              </option>
-              <option :value="false">
-                Không hoạt động
-              </option>
-            </select>
-          </div>
-        </div>
+        <!-- Bỏ trường Trạng thái; mặc định nhân viên là hoạt động -->
 
         <div class="form-actions">
           <button type="submit" :disabled="employeeStore.isLoading" class="action-button success">
@@ -508,16 +483,15 @@
 
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import apiClient from '../services/api.js'
 import { useEmployeeStore } from '../stores/employeeStore.js'
 import { usePositionStore } from '../stores/positionStore.js'
-import { useRoleStore } from '../stores/roleStore.js'
 import { useUnitStore } from '../stores/unitStore.js'
 import { getId, safeGet } from '../utils/casingSafeAccess.js'
 
 const employeeStore = useEmployeeStore()
 const unitStore = useUnitStore()
 const positionStore = usePositionStore()
-const roleStore = useRoleStore()
 
 // Initial employee data function
 const initialEmployeeData = () => ({
@@ -534,7 +508,7 @@ const initialEmployeeData = () => ({
   isActive: true,
   unitId: null,
   positionId: null,
-  roleId: null, // Changed from roleIds to roleId
+  // roleId removed per requirement
 })
 
 // Core reactive variables
@@ -594,22 +568,15 @@ const isAllSelected = computed(() => {
 })
 
 const isOverallLoading = computed(() => {
-  return employeeStore.isLoading || unitStore.isLoading || positionStore.isLoading || roleStore.isLoading
+  return employeeStore.isLoading || unitStore.isLoading || positionStore.isLoading
 })
 
 // Computed để sắp xếp roles theo ABC
-const sortedRoles = computed(() => {
-  if (!roleStore.allRoles || !Array.isArray(roleStore.allRoles)) return []
-  return [...roleStore.allRoles].sort((a, b) => {
-    const nameA = (a.Name || a.name || '').toLowerCase()
-    const nameB = (b.Name || b.name || '').toLowerCase()
-    return nameA.localeCompare(nameB, 'vi')
-  })
-})
+// Roles removed from this screen per requirement
 
 const formError = ref(null)
 const displayError = computed(() => {
-  return formError.value || employeeStore.error || unitStore.error || positionStore.error || roleStore.error
+  return formError.value || employeeStore.error || unitStore.error || positionStore.error
 })
 
 // Updated branchOptions: Custom ordering theo yêu cầu Hội Sở → Nậm Hàng
@@ -786,13 +753,11 @@ const loadInitialData = async () => {
   employeeStore.error = null
   unitStore.error = null
   positionStore.error = null
-  roleStore.error = null
 
   await Promise.all([
     employeeStore.fetchEmployees(),
     unitStore.units.length === 0 ? unitStore.fetchUnits() : Promise.resolve(),
-    positionStore.positions.length === 0 ? positionStore.fetchPositions() : Promise.resolve(),
-    roleStore.roles.length === 0 ? roleStore.fetchRoles() : Promise.resolve(),
+  positionStore.positions.length === 0 ? positionStore.fetchPositions() : Promise.resolve(),
   ])
 }
 
@@ -800,41 +765,7 @@ const loadInitialData = async () => {
 function extractEmployeePrimitives(employee) {
   if (!employee) return {}
 
-  // Extract single role ID from different possible structures
-  let roleId = null
-  if (employee.employeeRoles && Array.isArray(employee.employeeRoles) && employee.employeeRoles.length > 0) {
-    // Take first role if multiple exist (for backward compatibility)
-    const firstRole = employee.employeeRoles[0]
-    roleId = firstRole.RoleId || firstRole.roleId || firstRole.role?.id
-  } else if (employee.roleId && !isNaN(Number(employee.roleId))) {
-    roleId = Number(employee.roleId)
-  } else if (employee.roleIds && Array.isArray(employee.roleIds) && employee.roleIds.length > 0) {
-    // Take first role if multiple exist (for backward compatibility)
-    roleId = employee.roleIds[0]
-  } else if (
-    employee.roles &&
-    employee.roles.$values &&
-    Array.isArray(employee.roles.$values) &&
-    employee.roles.$values.length > 0
-  ) {
-    // Handle case where roles is an object with $values array (current API format)
-    const firstRole = employee.roles.$values[0]
-    roleId = firstRole.Id || firstRole.id
-  } else if (employee.roles && Array.isArray(employee.roles) && employee.roles.length > 0) {
-    // Handle case where roles array contains role objects directly
-    const firstRole = employee.roles[0]
-    roleId = getId(firstRole)
-  }
-
-  // Ensure roleId is a valid number or null
-  if (roleId && !isNaN(Number(roleId))) {
-    roleId = Number(roleId)
-  } else {
-    roleId = null
-  }
-
   console.log('🔍 extractEmployeePrimitives - employee:', employee)
-  console.log('🔍 extractEmployeePrimitives - extracted roleId:', roleId)
 
   const extractedId = getId(employee)
   console.log('🔍 extractEmployeePrimitives - extracted ID:', extractedId)
@@ -859,7 +790,6 @@ function extractEmployeePrimitives(employee) {
           : true,
     unitId: safeGet(employee, 'UnitId'),
     positionId: safeGet(employee, 'PositionId'),
-    roleId: roleId,
   }
 }
 
@@ -871,10 +801,7 @@ const handleSubmitEmployee = async () => {
   // Extract and clean data for submission
   const dataToProcess = extractEmployeePrimitives(currentEmployee.value)
 
-  // Override roleId with current form value to ensure latest selection is used
-  if (currentEmployee.value.roleId && !isNaN(Number(currentEmployee.value.roleId))) {
-    dataToProcess.roleId = Number(currentEmployee.value.roleId)
-  }
+  // Vai trò đã bỏ khỏi form
 
   console.log('🔍 handleSubmitEmployee - dataToProcess before trim:', dataToProcess)
 
@@ -882,8 +809,7 @@ const handleSubmitEmployee = async () => {
     if (
       key !== 'unitId' &&
       key !== 'positionId' &&
-      key !== 'isActive' &&
-      key !== 'roleId' &&
+  key !== 'isActive' &&
       typeof dataToProcess[key] === 'string'
     ) {
       dataToProcess[key] = dataToProcess[key].trim()
@@ -1166,24 +1092,7 @@ function scrollToAddEmployeeForm() {
   }
 }
 
-// Get role names for display in table
-function getRoleNames(employee) {
-  // Handle different role structures
-  let roleNames = []
-
-  if (employee.roles && employee.roles.$values && Array.isArray(employee.roles.$values)) {
-    // Handle roles.$values structure (current API format)
-    roleNames = employee.roles.$values.map(role => role.Name).filter(name => name)
-  } else if (employee.roles && Array.isArray(employee.roles)) {
-    // Handle direct roles array
-    roleNames = employee.roles.map(role => role.Name).filter(name => name)
-  } else if (employee.employeeRoles && Array.isArray(employee.employeeRoles)) {
-    // Handle employeeRoles structure (legacy)
-    roleNames = employee.employeeRoles.map(er => er.role?.Name).filter(name => name)
-  }
-
-  return roleNames.length > 0 ? roleNames.join(', ') : 'Chưa có vai trò'
-}
+// Vai trò không còn hiển thị nên bỏ helper getRoleNames
 
 // ========================================
 // EXCEL IMPORT FUNCTIONS
@@ -1193,17 +1102,32 @@ function triggerFileSelect() {
 }
 
 function downloadTemplate() {
-  // Simple CSV template generation (Excel can open)
-  const headers = [
-    'Mã NV','Mã CB','Họ tên','Tên ĐN','User AD','Email','User IPCAS','Mã CBTD','SĐT','Trạng thái',
-  ]
-  const blob = new Blob([headers.join(',') + '\n'], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = 'mau_import_nhan_vien.csv'
-  a.click()
-  URL.revokeObjectURL(url)
+  // Tạo file Excel .xlsx đúng chuẩn theo yêu cầu mới, KHÔNG chứa cột "Mã NV"
+  // Cột mẫu:
+  // - Mã CB
+  // - Họ và tên
+  // - User (thay cho Tên đăng nhập)
+  // - Password (thay cho Mật khẩu)
+  // - Email
+  // - Số điện thoại
+  // - User AD
+  // - User IPCAS
+  // - Mã CBTD
+  // - Chi nhánh
+  // - Phòng ban (thay cho Phòng nghiệp vụ)
+  // - Chức vụ
+  import('xlsx').then(mod => {
+    const XLSX = mod.default || mod
+    const wsData = [
+      ['Mã CB', 'Họ và tên', 'User', 'Password', 'Email', 'Số điện thoại', 'User AD', 'User IPCAS', 'Mã CBTD', 'Chi nhánh', 'Phòng ban', 'Chức vụ'],
+      // Dòng ví dụ (có thể chỉnh sửa hoặc xóa):
+      ['123456789', 'Nguyễn Văn A', 'nva', '123456', 'nva@agribank.com.vn', '0987654321', 'NVA', 'IPCAS001', 'CBTD01', 'Chi nhánh Lai Châu', 'Phòng KHCN', 'Nhân viên'],
+    ]
+    const ws = XLSX.utils.aoa_to_sheet(wsData)
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Mau_Import')
+    XLSX.writeFile(wb, 'mau_import_nhan_vien.xlsx')
+  })
 }
 
 async function handleFileChange(e) {
@@ -1219,28 +1143,84 @@ async function handleFileChange(e) {
     const worksheet = workbook.Sheets[sheetName]
     const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' })
     // Normalize keys
+    const normalize = s => ('' + (s ?? '')).trim().toLowerCase()
     const mapped = rows.map((r, idx) => {
+      const rowIndex = idx + 2 // excel header at row 1
+      const cbCode = (r['Mã CB'] || r['Ma CB'] || r['MACB'] || '').toString().trim()
+      const branchName = r['Chi nhánh'] || r['Chi nhanh'] || r['Chi Nhanh'] || r['Branch'] || ''
+      const deptName = r['Phòng ban'] || r['Phong ban'] || r['Phong Ban'] || r['Department'] || ''
+      const positionName = r['Chức vụ'] || r['Chuc vu'] || r['Chuc Vu'] || r['Position'] || ''
+
+      // Map Chi nhánh/Phòng ban/Chức vụ sang ID
+      let unitId = null
+      let positionId = null
+
+      // Tìm chi nhánh theo Name hoặc Code (không phân biệt hoa thường)
+      const branch = (unitStore.allUnits || []).find(u => {
+        const n = normalize(u.Name || u.name)
+        const c = normalize(u.Code || u.code)
+        const target = normalize(branchName)
+        return target && (n === target || c === target)
+      })
+      // Tìm phòng ban theo Name trong phạm vi chi nhánh (nếu có) hoặc toàn cục
+      if (deptName) {
+        const targetDept = normalize(deptName)
+        const candidates = (unitStore.allUnits || []).filter(u => {
+          const n = normalize(u.Name || u.name)
+          // Ưu tiên cùng chi nhánh
+          if (branch && (u.ParentUnitId || u.parentUnitId) !== (branch.Id || branch.id)) return false
+          return n === targetDept
+        })
+        if (candidates.length > 0) {
+          unitId = candidates[0].Id || candidates[0].id
+        }
+      }
+      if (!unitId && branch) {
+        // Nếu không có phòng ban, fallback dùng chi nhánh như đơn vị làm việc
+        unitId = branch.Id || branch.id
+      }
+
+      if (positionName) {
+        const targetPos = normalize(positionName)
+        const pos = (positionStore.allPositions || positionStore.positions || []).find(p =>
+          normalize(p.Name || p.name) === targetPos,
+        )
+        if (pos) positionId = pos.Id || pos.id
+      }
+
       const obj = {
-        cbCode: r['Mã CB'] || r['Ma CB'] || r['MACB'] || '',
-        fullName: r['Họ tên'] || r['Ho ten'] || r['HOTEN'] || '',
-        username: r['Tên ĐN'] || r['Ten DN'] || r['TENDN'] || r['Username'] || '',
-        userAd: r['User AD'] || r['USER AD'] || r['UserAD'] || '',
+        cbCode,
+        fullName: r['Họ và tên'] || r['Ho va ten'] || r['Họ tên'] || r['Ho ten'] || r['HOTEN'] || '',
+        username: r['User'] || r['USER'] || r['Username'] || r['Tên ĐN'] || r['Ten DN'] || r['TENDN'] || '',
+        password: r['Password'] || r['PASSWORD'] || '',
         email: r['Email'] || r['EMAIL'] || '',
+        phoneNumber:
+          r['Số điện thoại'] || r['So dien thoai'] || r['SĐT'] || r['SDT'] || r['Phone'] || '',
+        userAd: r['User AD'] || r['USER AD'] || r['UserAD'] || '',
         userIpcas: r['User IPCAS'] || r['USER IPCAS'] || r['UserIPCAS'] || '',
         maCbtd: r['Mã CBTD'] || r['Ma CBTD'] || r['MACBTD'] || '',
-        phoneNumber: r['SĐT'] || r['SDT'] || r['Phone'] || '',
-        isActive: ('' + (r['Trạng thái'] || r['Trang thai'] || r['STATUS'] || 'Hoạt động')).toLowerCase().includes('không') ? false : true,
-        _row: idx + 2,
+        branchName: branchName || '',
+        departmentName: deptName || '',
+        positionName: positionName || '',
+        unitId,
+        positionId,
+        _row: rowIndex,
       }
       return obj
     })
-    // Basic validation
+  // Basic validation
     mapped.forEach(m => {
       if (m.cbCode && m.cbCode.length !== 9) {
         importErrors.value.push(`Dòng ${m._row}: Mã CB phải 9 ký tự`)
       }
       if (m.email && !m.email.includes('@')) {
         importErrors.value.push(`Dòng ${m._row}: Email không hợp lệ`)
+      }
+      if (!m.unitId) {
+        importErrors.value.push(`Dòng ${m._row}: Không xác định được Đơn vị từ "Chi nhánh/Phòng ban"`)
+      }
+      if (!m.positionId) {
+        importErrors.value.push(`Dòng ${m._row}: Không xác định được Chức vụ`)
       }
     })
     importPreview.value = mapped
@@ -1270,55 +1250,39 @@ async function _performImport() {
     const cbCode = e.CBCode || e.cbCode;
     if (cbCode) existingByCBCode[cbCode] = e;
   })
-  for (const row of importPreview.value) {
-    try {
-      const existing = row.cbCode ? existingByCBCode[row.cbCode] : null
-      if (existing) {
-        // update
-        const payload = {
-          Id: existing.Id,
-          cbCode: row.cbCode || existing.CBCode,
-          fullName: row.fullName || existing.FullName,
-            username: existing.Username,
-          email: row.email || existing.Email,
-          phoneNumber: row.phoneNumber || existing.PhoneNumber,
-          userAd: row.userAd || existing.UserAD || existing.userAd,
-          userIpcas: row.userIpcas || existing.UserIPCAS || existing.userIpcas,
-          maCbtd: row.maCbtd || existing.MaCBTD || existing.maCbtd,
-          isActive: row.isActive,
-          unitId: existing.UnitId,
-          positionId: existing.PositionId,
-          roleId: existing.roles?.$values?.[0]?.Id || existing.roleId || null,
-          passwordHash: existing.PasswordHash || existing.passwordHash || '',
-        }
-        // For now, just log. TODO: call updateEmployee when backend supports new fields.
-        console.log('Would update employee', payload)
-      } else {
-        const payload = {
-          cbCode: row.cbCode,
-          fullName: row.fullName,
-          username: row.username || row.cbCode.toLowerCase(),
-          email: row.email || (row.username ? row.username + '@agribank.com.vn' : ''),
-          phoneNumber: row.phoneNumber,
-          userAd: row.userAd,
-          userIpcas: row.userIpcas,
-          maCbtd: row.maCbtd,
-          isActive: row.isActive,
-          unitId: null,
-          positionId: null,
-          roleId: null,
-          passwordHash: '123456', // default placeholder
-        }
-        console.log('Would create employee', payload)
-      }
-    } catch (err) {
-      importErrors.value.push(`Lỗi dòng có Mã NV ${row.employeeCode}: ${err.message}`)
-    } finally {
-      importStats.value.processed++
+  try {
+    // Gọi API backend bulk import theo CBCode
+  const requestPayload = {
+      rows: importPreview.value.map(r => ({
+        CBCode: r.cbCode || null,
+        FullName: r.fullName || null,
+        Username: r.username || (r.cbCode ? String(r.cbCode).toLowerCase() : null),
+        Password: r.password || null,
+        UserAD: r.userAd || null,
+        Email: r.email || null,
+        UserIPCAS: r.userIpcas || null,
+        MaCBTD: r.maCbtd || null,
+        PhoneNumber: r.phoneNumber || null,
+        // Dùng Unit/Position được map theo từng dòng
+        UnitId: r.unitId || null,
+        PositionId: r.positionId || null,
+      })),
+      overwriteExisting: true,
+      autoGenerateMissingUsernames: true,
     }
+    const resp = await apiClient.post('/Employees/import-cbcode', requestPayload)
+    const data = resp.data || {}
+    alert(`✅ Import hoàn tất. Tạo mới: ${data.inserted || 0}, Cập nhật: ${data.updated || 0}, Bỏ qua: ${data.skipped || 0}`)
+    // Reload employees
+    await employeeStore.fetchEmployees()
+    clearImport()
+  } catch (err) {
+    console.error('Import lỗi:', err)
+    const msg = err.response?.data?.message || err.response?.data || err.message
+    importErrors.value.push('Import thất bại: ' + msg)
+  } finally {
+    isImporting.value = false
   }
-  isImporting.value = false
-  alert('Hoàn tất xử lý nháp import (chưa gọi API do thiếu backend mở rộng).')
 }
 
 function clearImport() {
@@ -1331,9 +1295,6 @@ function clearImport() {
 onMounted(() => {
   loadInitialData()
   syncSelectedBranchWithEmployeeUnit()
-  if (!isEditing.value) {
-    currentEmployee.value.employeeCode = getNextEmployeeCode()
-  }
 
   // Add click outside listener for role dropdown
   document.addEventListener('click', handleClickOutside)

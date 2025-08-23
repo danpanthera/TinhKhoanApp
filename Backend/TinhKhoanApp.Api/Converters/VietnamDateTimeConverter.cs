@@ -73,10 +73,24 @@ namespace TinhKhoanApp.Api.Converters
                 // Local time - chuyển về Vietnam time
                 vietnamTime = TimeZoneInfo.ConvertTime(value, VietnamTimeZone);
             }
+            // Guard invalid min values and out-of-range offsets
+            if (vietnamTime.Year <= 1)
+            {
+                writer.WriteNullValue();
+                return;
+            }
 
-            // Serialize với format ISO 8601 + timezone offset
-            var vietnamTimeWithOffset = new DateTimeOffset(vietnamTime, VietnamTimeZone.GetUtcOffset(vietnamTime));
-            writer.WriteStringValue(vietnamTimeWithOffset.ToString("yyyy-MM-ddTHH:mm:ss.fffzzz"));
+            try
+            {
+                // Serialize với format ISO 8601 + timezone offset
+                var vietnamTimeWithOffset = new DateTimeOffset(vietnamTime, VietnamTimeZone.GetUtcOffset(vietnamTime));
+                writer.WriteStringValue(vietnamTimeWithOffset.ToString("yyyy-MM-ddTHH:mm:ss.fffzzz"));
+            }
+            catch
+            {
+                // Fallback: write without offset if offset application would be out of range
+                writer.WriteStringValue(vietnamTime.ToString("yyyy-MM-ddTHH:mm:ss.fff"));
+            }
         }
     }
 

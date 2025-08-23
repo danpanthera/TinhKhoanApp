@@ -2,8 +2,7 @@ namespace TinhKhoanApp.Api.Models.DTO;
 
 public class Gahr26ImportRowDto
 {
-    public string EmployeeCode { get; set; } = string.Empty; // Mã NV
-    public string? CBCode { get; set; } // Mã CB (9 digits)
+    public string CBCode { get; set; } = string.Empty; // Mã CB (9 digits)
     public string? FullName { get; set; }
     public string? Username { get; set; }
     public string? UserAD { get; set; }

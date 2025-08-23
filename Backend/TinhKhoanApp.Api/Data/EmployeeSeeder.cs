@@ -31,7 +31,6 @@ namespace TinhKhoanApp.Api.Data
                 // CNL1 - Agribank CN Lai Châu
                 new Employee
                 {
-                    EmployeeCode = "GD001",
                     CBCode = "123456001",
                     FullName = "Nguyễn Văn An",
                     Username = "giamdoc.laichau",
@@ -45,7 +44,6 @@ namespace TinhKhoanApp.Api.Data
                 // Phòng KHDN
                 new Employee
                 {
-                    EmployeeCode = "TP001",
                     CBCode = "123456002",
                     FullName = "Trần Thị Bình",
                     Username = "tp.khdn",
@@ -58,7 +56,6 @@ namespace TinhKhoanApp.Api.Data
 
                 new Employee
                 {
-                    EmployeeCode = "PP001",
                     CBCode = "123456003",
                     FullName = "Lê Văn Cường",
                     Username = "pp.khdn",
@@ -71,7 +68,6 @@ namespace TinhKhoanApp.Api.Data
 
                 new Employee
                 {
-                    EmployeeCode = "CB001",
                     CBCode = "123456004",
                     FullName = "Phạm Thị Dung",
                     Username = "cb.khdn1",
@@ -85,7 +81,6 @@ namespace TinhKhoanApp.Api.Data
                 // Phòng KHCN
                 new Employee
                 {
-                    EmployeeCode = "TP002",
                     CBCode = "123456005",
                     FullName = "Hoàng Văn Đức",
                     Username = "tp.khcn",
@@ -98,7 +93,6 @@ namespace TinhKhoanApp.Api.Data
 
                 new Employee
                 {
-                    EmployeeCode = "PP002",
                     CBCode = "123456006",
                     FullName = "Vũ Thị Hoa",
                     Username = "pp.khcn",
@@ -112,7 +106,6 @@ namespace TinhKhoanApp.Api.Data
                 // Phòng KHQLRR
                 new Employee
                 {
-                    EmployeeCode = "TP003",
                     CBCode = "123456007",
                     FullName = "Đặng Văn Hùng",
                     Username = "tp.khqlrr",
@@ -125,7 +118,6 @@ namespace TinhKhoanApp.Api.Data
 
                 new Employee
                 {
-                    EmployeeCode = "CB002",
                     CBCode = "123456008",
                     FullName = "Bùi Thị Lan",
                     Username = "cb.khqlrr",
@@ -139,7 +131,6 @@ namespace TinhKhoanApp.Api.Data
                 // Phòng KTNQ
                 new Employee
                 {
-                    EmployeeCode = "TP004",
                     CBCode = "123456009",
                     FullName = "Ngô Văn Long",
                     Username = "tp.ktnq",
@@ -152,7 +143,6 @@ namespace TinhKhoanApp.Api.Data
 
                 new Employee
                 {
-                    EmployeeCode = "KT001",
                     CBCode = "123456010",
                     FullName = "Lý Thị Mai",
                     Username = "kt.ktnq",
@@ -165,7 +155,6 @@ namespace TinhKhoanApp.Api.Data
 
                 new Employee
                 {
-                    EmployeeCode = "TQ001",
                     CBCode = "123456011",
                     FullName = "Trịnh Văn Nam",
                     Username = "tq.ktnq",
@@ -179,7 +168,6 @@ namespace TinhKhoanApp.Api.Data
                 // Phòng KTGS
                 new Employee
                 {
-                    EmployeeCode = "TP005",
                     CBCode = "123456012",
                     FullName = "Đinh Thị Oanh",
                     Username = "tp.ktgs",
@@ -193,7 +181,6 @@ namespace TinhKhoanApp.Api.Data
                 // Phòng Tổng hợp
                 new Employee
                 {
-                    EmployeeCode = "TP006",
                     CBCode = "123456013",
                     FullName = "Cao Văn Phong",
                     Username = "tp.tonghop",

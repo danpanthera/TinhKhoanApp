@@ -83,6 +83,8 @@ cleanup_all() {
 # Rotate instead of truncating
 rotate_log_if_needed "$LOG_FILE"
 touch "$LOG_FILE"
+# Start each run with a fresh log to avoid stale readiness matches
+: > "$LOG_FILE"
 
 log "🚀 Starting TinhKhoan Frontend Development Server (rotation: size>$MAX_LOG_SIZE keep $LOG_BACKUPS)"
 log "📊 Target Port: $PORT"
@@ -167,16 +169,22 @@ while true; do
     if ! kill -0 $DEV_PID 2>/dev/null; then
         log "❌ Frontend process died unexpectedly!"
         log "📋 Recent log entries:"
-        tail -20 "$LOG_FILE"
+        tail -40 "$LOG_FILE"
         exit 1
     fi
 
-    # Check for successful startup indicators
-    if grep -q "Local:.*http://localhost:$PORT" "$LOG_FILE" 2>/dev/null; then
-        server_url=$(grep "Local:" "$LOG_FILE" | tail -1 | awk '{print $2}')
+    # Consider server ready when either port is listening or HTTP responds
+    if lsof -nP -iTCP:$PORT -sTCP:LISTEN >/dev/null 2>&1; then
         log "✅ Frontend server started successfully!"
-        log "🔗 Local URL: $server_url"
         log "🔗 Dev Server: http://localhost:$PORT"
+        log "📝 Logs: $LOG_FILE"
+        log "🆔 PID File: frontend.log.pid"
+        log ""
+        log "🎉 Frontend startup completed successfully!"
+        exit 0
+    fi
+    if curl -s -I http://localhost:$PORT/ >/dev/null 2>&1; then
+        log "✅ Frontend server responded on http://localhost:$PORT"
         log "📝 Logs: $LOG_FILE"
         log "🆔 PID File: frontend.log.pid"
         log ""
@@ -188,7 +196,7 @@ while true; do
     if grep -qi "error\|failed\|cannot" "$LOG_FILE" 2>/dev/null; then
         log "❌ Error detected during startup!"
         log "📋 Recent error logs:"
-        grep -i "error\|failed\|cannot" "$LOG_FILE" | tail -5
+        grep -i "error\|failed\|cannot" "$LOG_FILE" | tail -10
         kill -9 $DEV_PID 2>/dev/null || true
         rm -f "frontend.log.pid"
         exit 1
@@ -198,7 +206,7 @@ while true; do
     if [ $elapsed -ge $MAX_STARTUP_TIME ]; then
         log "❌ Frontend startup timeout after ${MAX_STARTUP_TIME}s!"
         log "📋 Recent log entries:"
-        tail -20 "$LOG_FILE"
+        tail -50 "$LOG_FILE"
         log ""
         log "🔧 Troubleshooting suggestions:"
         log "   1. Check for port conflicts: lsof -i:$PORT"
