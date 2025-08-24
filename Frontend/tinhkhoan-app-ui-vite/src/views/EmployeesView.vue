@@ -589,21 +589,80 @@ const isRoleDropdownOpen = ref(false)
 const selectedEmployeeIds = ref([])
 const isDeleting = ref(false)
 
-// PHÂN TRANG: Chỉ giữ lại một bộ duy nhất
+// PHÂN TRANG: Chỉ giữ lại một bộ duy nhất với sắp xếp theo thứ tự ưu tiên
 const page = ref(1)
 const pageSize = ref(20)
-const pagedEmployees = computed(() => {
+
+// Computed để sắp xếp nhân viên theo thứ tự ưu tiên
+const sortedEmployees = computed(() => {
   if (!employeeStore.allEmployees || !Array.isArray(employeeStore.allEmployees)) {
     return []
   }
+
+  return [...employeeStore.allEmployees].sort((a, b) => {
+    // 1. Sắp xếp theo thứ tự chi nhánh
+    const getBranchOrder = (employee) => {
+      const unit = unitStore.allUnits?.find(u => u.Id === employee.UnitId)
+      if (!unit) return 999
+      
+      const parentUnit = unitStore.allUnits?.find(u => u.Id === unit.ParentUnitId)
+      const branchName = (parentUnit?.Name || '').toLowerCase()
+      
+      if (branchName.includes('hội sở')) return 0
+      if (branchName.includes('bình lư')) return 1
+      if (branchName.includes('phong thổ')) return 2
+      if (branchName.includes('sìn hồ')) return 3
+      if (branchName.includes('bum tở')) return 4
+      if (branchName.includes('than uyên')) return 5
+      if (branchName.includes('đoàn kết')) return 6
+      if (branchName.includes('tân uyên')) return 7
+      if (branchName.includes('nậm hàng')) return 8
+      return 999
+    }
+
+    const branchOrderA = getBranchOrder(a)
+    const branchOrderB = getBranchOrder(b)
+    
+    if (branchOrderA !== branchOrderB) {
+      return branchOrderA - branchOrderB
+    }
+
+    // 2. Sắp xếp theo thứ tự phòng ban trong chi nhánh
+    const getDeptOrder = (employee) => {
+      const unit = unitStore.allUnits?.find(u => u.Id === employee.UnitId)
+      if (!unit) return 999
+      
+      const deptName = (unit.Name || '').toLowerCase()
+      
+      if (deptName.includes('kế toán') && deptName.includes('ngân quỹ')) return 0
+      if (deptName.includes('kế toán')) return 1
+      if (deptName.includes('ngân quỹ')) return 2
+      if (deptName.includes('khách hàng')) return 3
+      if (deptName.includes('giao dịch')) return 4
+      return 999
+    }
+
+    const deptOrderA = getDeptOrder(a)
+    const deptOrderB = getDeptOrder(b)
+    
+    if (deptOrderA !== deptOrderB) {
+      return deptOrderA - deptOrderB
+    }
+
+    // 3. Sắp xếp theo họ và tên (ưu tiên theo họ) theo ABC
+    const fullNameA = (a.FullName || '').trim()
+    const fullNameB = (b.FullName || '').trim()
+    
+    return fullNameA.localeCompare(fullNameB, 'vi', { sensitivity: 'base' })
+  })
+})
+
+const pagedEmployees = computed(() => {
   const start = (page.value - 1) * pageSize.value
-  return employeeStore.allEmployees.slice(start, start + pageSize.value)
+  return sortedEmployees.value.slice(start, start + pageSize.value)
 })
 const totalPages = computed(() => {
-  if (!employeeStore.allEmployees || !Array.isArray(employeeStore.allEmployees)) {
-    return 0
-  }
-  return Math.ceil(employeeStore.allEmployees.length / pageSize.value)
+  return Math.ceil(sortedEmployees.value.length / pageSize.value)
 })
 function prevPage() {
   if (page.value > 1) page.value--
