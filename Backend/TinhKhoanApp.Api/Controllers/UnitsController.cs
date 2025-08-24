@@ -24,7 +24,7 @@ namespace TinhKhoanApp.Api.Controllers
             try
             {
                 _logger.LogInformation("📋 [Units] Lấy tất cả units");
-                
+
                 var units = await _context.Units
                     .Where(u => !u.IsDeleted)
                     .Include(u => u.ParentUnit)
@@ -60,7 +60,7 @@ namespace TinhKhoanApp.Api.Controllers
 
                 var existingUnit = await _context.Units
                     .FirstOrDefaultAsync(u => u.Code == dto.Code && !u.IsDeleted);
-                
+
                 if (existingUnit != null)
                 {
                     return BadRequest(new { error = "Mã unit đã tồn tại" });

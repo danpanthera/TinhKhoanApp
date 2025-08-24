@@ -229,20 +229,49 @@ Roll out with a DB backup and clear release notes.<template>
     <hr class="separator">
 
     <!-- Import Preview Section -->
-    <div v-if="importPreview.length > 0" class="form-container" style="border:2px dashed #8e44ad; background:#faf6ff">
-      <h2>Preview Import ({{ importStats.total }} dòng)</h2>
-      <p>
-        Sẽ tạo mới: <strong>{{ importStats.new }}</strong> | Cập nhật: <strong>{{ importStats.update }}</strong>
-      </p>
-      <div v-if="importErrors.length > 0" style="color:#c0392b; font-size:13px; margin-bottom:8px">
+    <div v-if="importPreview.length > 0 || importErrors.length > 0" class="form-container" style="border:2px dashed #8e44ad; background:#faf6ff">
+      <h2>Preview Import</h2>
+      <div v-if="importStats.total > 0" class="import-stats" style="margin-bottom: 15px; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+        <div style="font-weight: bold; margin-bottom: 5px;">
+          📊 Thống kê dữ liệu:
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 10px; font-size: 14px;">
+          <div>Tổng số: <strong>{{ importStats.total }}</strong></div>
+          <div style="color: #27ae60;">
+            Hợp lệ: <strong>{{ importStats.valid || importPreview.length }}</strong>
+          </div>
+          <div style="color: #e74c3c;">
+            Lỗi: <strong>{{ importStats.invalid || importErrors.length }}</strong>
+          </div>
+          <div>Sẽ import: <strong>{{ importPreview.length }}</strong></div>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; font-size: 14px;">
+          <div style="color: #3498db;">
+            Tạo mới: <strong>{{ importStats.new || 0 }}</strong>
+          </div>
+          <div style="color: #f39c12;">
+            Cập nhật: <strong>{{ importStats.update || 0 }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="importErrors.length > 0" style="color:#c0392b; font-size:13px; margin-bottom:8px; max-height: 150px; overflow-y: auto; border: 1px solid #e74c3c; border-radius: 3px; padding: 8px; background: #fdf2f2;">
+        <div style="font-weight: bold; margin-bottom: 5px;">
+          ⚠️ Lỗi validation ({{ importErrors.length }} lỗi):
+        </div>
         <div
           v-for="e in importErrors"
           :key="e"
+          style="margin-bottom: 2px;"
         >
-          ⚠️ {{ e }}
+          • {{ e }}
         </div>
       </div>
-      <div style="max-height:260px; overflow:auto; border:1px solid #ddd; background:#fff">
+
+      <div v-if="importPreview.length > 0" style="max-height:260px; overflow:auto; border:1px solid #ddd; background:#fff">
+        <div style="font-weight: bold; padding: 8px; background: #f8f9fa; border-bottom: 1px solid #ddd;">
+          📋 Dữ liệu sẽ được import ({{ importPreview.length }} records):
+        </div>
         <table class="employee-detail-table compact-table">
           <thead>
             <tr>
@@ -1135,6 +1164,11 @@ async function handleFileChange(e) {
   if (!file) return
   importErrors.value = []
   importPreview.value = []
+
+  console.log('🔍 Debug mapping data:')
+  console.log('Available Units:', (unitStore.allUnits || []).map(u => ({ id: u.Id || u.id, name: u.Name || u.name, code: u.Code || u.code })))
+  console.log('Available Positions:', (positionStore.allPositions || positionStore.positions || []).map(p => ({ id: p.Id || p.id, name: p.Name || p.name })))
+
   try {
     const XLSX = await import('xlsx')
     const data = await file.arrayBuffer()
@@ -1142,6 +1176,12 @@ async function handleFileChange(e) {
     const sheetName = workbook.SheetNames[0]
     const worksheet = workbook.Sheets[sheetName]
     const rows = XLSX.utils.sheet_to_json(worksheet, { defval: '' })
+
+    console.log(`📊 Excel data: ${rows.length} rows`)
+    if (rows.length > 0) {
+      console.log('Sample row:', rows[0])
+    }
+
     // Normalize keys
     const normalize = s => ('' + (s ?? '')).trim().toLowerCase()
     const mapped = rows.map((r, idx) => {
@@ -1151,41 +1191,94 @@ async function handleFileChange(e) {
       const deptName = r['Phòng ban'] || r['Phong ban'] || r['Phong Ban'] || r['Department'] || ''
       const positionName = r['Chức vụ'] || r['Chuc vu'] || r['Chuc Vu'] || r['Position'] || ''
 
-      // Map Chi nhánh/Phòng ban/Chức vụ sang ID
+      // Map Chi nhánh/Phòng ban/Chức vụ sang ID với logic cải thiện
       let unitId = null
       let positionId = null
 
-      // Tìm chi nhánh theo Name hoặc Code (không phân biệt hoa thường)
-      const branch = (unitStore.allUnits || []).find(u => {
-        const n = normalize(u.Name || u.name)
-        const c = normalize(u.Code || u.code)
-        const target = normalize(branchName)
-        return target && (n === target || c === target)
-      })
-      // Tìm phòng ban theo Name trong phạm vi chi nhánh (nếu có) hoặc toàn cục
-      if (deptName) {
-        const targetDept = normalize(deptName)
-        const candidates = (unitStore.allUnits || []).filter(u => {
-          const n = normalize(u.Name || u.name)
-          // Ưu tiên cùng chi nhánh
-          if (branch && (u.ParentUnitId || u.parentUnitId) !== (branch.Id || branch.id)) return false
-          return n === targetDept
-        })
-        if (candidates.length > 0) {
-          unitId = candidates[0].Id || candidates[0].id
+      // Tìm đơn vị (Unit) dựa trên Chi nhánh hoặc Phòng ban
+      if (branchName || deptName) {
+        const allUnits = unitStore.allUnits || []
+
+        // Thử tìm theo tên chính xác trước
+        let matchedUnit = null
+
+        // 1. Tìm theo tên Phòng ban nếu có
+        if (deptName) {
+          const targetDept = normalize(deptName)
+          matchedUnit = allUnits.find(u => normalize(u.Name || u.name) === targetDept)
+          if (matchedUnit) {
+            console.log(`✅ Found department match: "${deptName}" -> ${matchedUnit.Name} (${matchedUnit.Id})`)
+          }
+        }
+
+        // 2. Nếu không tìm thấy phòng ban, tìm theo Chi nhánh
+        if (!matchedUnit && branchName) {
+          const targetBranch = normalize(branchName)
+          matchedUnit = allUnits.find(u => {
+            const unitName = normalize(u.Name || u.name)
+            const unitCode = normalize(u.Code || u.code)
+            return unitName === targetBranch || unitCode === targetBranch
+          })
+          if (matchedUnit) {
+            console.log(`✅ Found branch match: "${branchName}" -> ${matchedUnit.Name} (${matchedUnit.Id})`)
+          }
+        }
+
+        // 3. Tìm kiếm mờ (fuzzy search) nếu không tìm thấy chính xác
+        if (!matchedUnit) {
+          // Thử tìm theo từ khóa có chứa trong tên
+          const searchTerms = [branchName, deptName].filter(Boolean)
+          for (const term of searchTerms) {
+            if (term) {
+              const normalizedTerm = normalize(term)
+              matchedUnit = allUnits.find(u => {
+                const unitName = normalize(u.Name || u.name)
+                const unitCode = normalize(u.Code || u.code)
+                return unitName.includes(normalizedTerm) || normalizedTerm.includes(unitName) ||
+                       unitCode.includes(normalizedTerm) || normalizedTerm.includes(unitCode)
+              })
+              if (matchedUnit) {
+                console.log(`🔍 Fuzzy match found: "${term}" -> ${matchedUnit.Name} (${matchedUnit.Id})`)
+                break
+              }
+            }
+          }
+        }
+
+        if (matchedUnit) {
+          unitId = matchedUnit.Id || matchedUnit.id
         }
       }
-      if (!unitId && branch) {
-        // Nếu không có phòng ban, fallback dùng chi nhánh như đơn vị làm việc
-        unitId = branch.Id || branch.id
+
+      // Map Chức vụ sang PositionId
+      if (positionName) {
+        const allPositions = positionStore.allPositions || positionStore.positions || []
+        const targetPos = normalize(positionName)
+
+        // Tìm chính xác trước
+        let matchedPosition = allPositions.find(p => normalize(p.Name || p.name) === targetPos)
+
+        // Tìm kiếm mờ nếu không tìm thấy chính xác
+        if (!matchedPosition) {
+          matchedPosition = allPositions.find(p => {
+            const posName = normalize(p.Name || p.name)
+            return posName.includes(targetPos) || targetPos.includes(posName)
+          })
+        }
+
+        if (matchedPosition) {
+          positionId = matchedPosition.Id || matchedPosition.id
+          console.log(`✅ Position match: "${positionName}" -> ${matchedPosition.Name} (${positionId})`)
+        }
       }
 
-      if (positionName) {
-        const targetPos = normalize(positionName)
-        const pos = (positionStore.allPositions || positionStore.positions || []).find(p =>
-          normalize(p.Name || p.name) === targetPos,
-        )
-        if (pos) positionId = pos.Id || pos.id
+      // Debug logging for mapping với thông tin chi tiết
+      if (rowIndex <= 5) { // Log first 5 rows để không spam
+        console.log(`\n=== Row ${rowIndex} Mapping Debug ===`)
+        console.log(`Excel data: Chi nhánh="${branchName}", Phòng ban="${deptName}", Chức vụ="${positionName}"`)
+        console.log(`Mapped IDs: UnitId=${unitId}, PositionId=${positionId}`)
+        console.log(`Status: ${unitId ? '✅' : '❌'} Unit, ${positionId ? '✅' : '❌'} Position`)
+        console.log('================================\n')
       }
 
       const obj = {
@@ -1208,29 +1301,70 @@ async function handleFileChange(e) {
       }
       return obj
     })
-  // Basic validation
+    // Improved validation với detailed error messages
+    const validRecords = []
     mapped.forEach(m => {
-      if (m.cbCode && m.cbCode.length !== 9) {
-        importErrors.value.push(`Dòng ${m._row}: Mã CB phải 9 ký tự`)
+      const recordErrors = []
+
+      // CBCode validation
+      if (!m.cbCode) {
+        recordErrors.push('Thiếu Mã CB')
+      } else if (m.cbCode.length !== 9 || !/^\d{9}$/.test(m.cbCode)) {
+        recordErrors.push(`Mã CB "${m.cbCode}" phải gồm đúng 9 chữ số`)
       }
+
+      // Email validation
       if (m.email && !m.email.includes('@')) {
-        importErrors.value.push(`Dòng ${m._row}: Email không hợp lệ`)
+        recordErrors.push('Email không hợp lệ')
       }
+
+      // UnitId validation với chi tiết mapping
       if (!m.unitId) {
-        importErrors.value.push(`Dòng ${m._row}: Không xác định được Đơn vị từ "Chi nhánh/Phòng ban"`)
+        if (m.branchName || m.departmentName) {
+          recordErrors.push(`Không tìm thấy đơn vị cho Chi nhánh: "${m.branchName}", Phòng ban: "${m.departmentName}"`)
+        } else {
+          recordErrors.push('Thiếu thông tin Chi nhánh/Phòng ban')
+        }
       }
+
+      // PositionId validation
       if (!m.positionId) {
-        importErrors.value.push(`Dòng ${m._row}: Không xác định được Chức vụ`)
+        if (m.positionName) {
+          recordErrors.push(`Không tìm thấy chức vụ cho "${m.positionName}"`)
+        } else {
+          recordErrors.push('Thiếu thông tin Chức vụ')
+        }
+      }
+
+      // Add errors to global error list
+      recordErrors.forEach(err => {
+        importErrors.value.push(`Dòng ${m._row}: ${err}`)
+      })
+
+      // Chỉ add vào validRecords nếu không có lỗi
+      if (recordErrors.length === 0) {
+        validRecords.push(m)
       }
     })
-    importPreview.value = mapped
+
+    console.log(`📋 Total records: ${mapped.length}, Valid records: ${validRecords.length}, Errors: ${importErrors.value.length}`)
+    importPreview.value = validRecords // Chỉ show records hợp lệ
+
+    // Tính toán import statistics với validRecords
     const existingCBCodes = new Set(employeeStore.allEmployees.map(e => e.CBCode || e.cbCode).filter(code => code))
     let update = 0; let create = 0
-    mapped.forEach(m => {
+    validRecords.forEach(m => {
       if (m.cbCode && existingCBCodes.has(m.cbCode)) update++
       else create++
     })
-    importStats.value = { total: mapped.length, new: create, update, processed: 0 }
+    importStats.value = { total: mapped.length, new: create, update, processed: 0, valid: validRecords.length, invalid: mapped.length - validRecords.length }
+
+    // Hiển thị summary
+    if (importErrors.value.length > 0) {
+      console.warn(`⚠️ Import validation: ${validRecords.length} valid records, ${importErrors.value.length} errors`)
+    } else {
+      console.log(`✅ All ${validRecords.length} records are valid for import`)
+    }
   } catch (err) {
     importErrors.value.push('Không thể đọc file: ' + err.message)
     console.error(err)
