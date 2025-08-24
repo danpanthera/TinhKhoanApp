@@ -606,10 +606,10 @@ const sortedEmployees = computed(() => {
     const getBranchOrder = (employee) => {
       const unit = unitStore.allUnits?.find(u => u.Id === employee.UnitId)
       if (!unit) return 999
-      
+
       const parentUnit = unitStore.allUnits?.find(u => u.Id === unit.ParentUnitId)
       const branchName = (parentUnit?.Name || '').toLowerCase()
-      
+
       if (branchName.includes('hội sở')) return 0
       if (branchName.includes('bình lư')) return 1
       if (branchName.includes('phong thổ')) return 2
@@ -624,7 +624,7 @@ const sortedEmployees = computed(() => {
 
     const branchOrderA = getBranchOrder(a)
     const branchOrderB = getBranchOrder(b)
-    
+
     if (branchOrderA !== branchOrderB) {
       return branchOrderA - branchOrderB
     }
@@ -633,9 +633,9 @@ const sortedEmployees = computed(() => {
     const getDeptOrder = (employee) => {
       const unit = unitStore.allUnits?.find(u => u.Id === employee.UnitId)
       if (!unit) return 999
-      
+
       const deptName = (unit.Name || '').toLowerCase()
-      
+
       // Ưu tiên: Kế toán & Ngân quỹ → Khách hàng → Giao dịch
       if (deptName.includes('kế toán') || deptName.includes('ngân quỹ')) {
         if (deptName.includes('kế toán') && deptName.includes('ngân quỹ')) return 0 // Phòng Kế toán & Ngân quỹ
@@ -649,7 +649,7 @@ const sortedEmployees = computed(() => {
 
     const deptOrderA = getDeptOrder(a)
     const deptOrderB = getDeptOrder(b)
-    
+
     if (deptOrderA !== deptOrderB) {
       return deptOrderA - deptOrderB
     }
@@ -657,7 +657,7 @@ const sortedEmployees = computed(() => {
     // 3. Sắp xếp theo họ và tên (ưu tiên theo họ) theo ABC
     const fullNameA = (a.FullName || '').trim()
     const fullNameB = (b.FullName || '').trim()
-    
+
     return fullNameA.localeCompare(fullNameB, 'vi', { sensitivity: 'base' })
   })
 })
@@ -1286,63 +1286,61 @@ async function handleFileChange(e) {
       const deptName = r['Phòng ban'] || r['Phong ban'] || r['Phong Ban'] || r['Department'] || ''
       const positionName = r['Chức vụ'] || r['Chuc vu'] || r['Chuc Vu'] || r['Position'] || ''
 
-      // Map Chi nhánh/Phòng ban/Chức vụ sang ID với logic cải thiện
+      // Map Chi nhánh/Phòng ban/Chức vụ sang ID với logic cải thiện - FIX: Lọc theo Chi nhánh + Phòng ban
       let unitId = null
       let positionId = null
 
-      // Tìm đơn vị (Unit) dựa trên Chi nhánh hoặc Phòng ban
-      if (branchName || deptName) {
+      // Tìm đơn vị (Unit) dựa trên Chi nhánh và Phòng ban - PHẢI CÓ CẢ 2 THÔNG TIN
+      if (branchName && deptName) {
         const allUnits = unitStore.allUnits || []
 
-        // Thử tìm theo tên chính xác trước
-        let matchedUnit = null
+        // BƯỚC 1: Tìm chi nhánh trước
+        const targetBranch = normalize(branchName)
+        const matchedBranches = allUnits.filter(u => {
+          const unitName = normalize(u.Name || u.name)
+          const unitCode = normalize(u.Code || u.code)
+          // Chi nhánh thường có Type = 'CNL1' hoặc 'CNL2'
+          const unitType = (u.Type || '').toUpperCase()
+          return (unitName.includes(targetBranch) || targetBranch.includes(unitName) || 
+                  unitCode.includes(targetBranch) || targetBranch.includes(unitCode)) &&
+                 (unitType === 'CNL1' || unitType === 'CNL2' || unitName.includes('hội sở'))
+        })
 
-        // 1. Tìm theo tên Phòng ban nếu có
-        if (deptName) {
+        if (matchedBranches.length > 0) {
+          console.log(`🏢 Found ${matchedBranches.length} matching branches for "${branchName}":`, matchedBranches.map(b => b.Name))
+          
+          // BƯỚC 2: Trong các chi nhánh tìm được, tìm phòng ban thuộc chi nhánh đó
           const targetDept = normalize(deptName)
-          matchedUnit = allUnits.find(u => normalize(u.Name || u.name) === targetDept)
-          if (matchedUnit) {
-            console.log(`✅ Found department match: "${deptName}" -> ${matchedUnit.Name} (${matchedUnit.Id})`)
-          }
-        }
+          let matchedUnit = null
 
-        // 2. Nếu không tìm thấy phòng ban, tìm theo Chi nhánh
-        if (!matchedUnit && branchName) {
-          const targetBranch = normalize(branchName)
-          matchedUnit = allUnits.find(u => {
-            const unitName = normalize(u.Name || u.name)
-            const unitCode = normalize(u.Code || u.code)
-            return unitName === targetBranch || unitCode === targetBranch
-          })
-          if (matchedUnit) {
-            console.log(`✅ Found branch match: "${branchName}" -> ${matchedUnit.Name} (${matchedUnit.Id})`)
-          }
-        }
-
-        // 3. Tìm kiếm mờ (fuzzy search) nếu không tìm thấy chính xác
-        if (!matchedUnit) {
-          // Thử tìm theo từ khóa có chứa trong tên
-          const searchTerms = [branchName, deptName].filter(Boolean)
-          for (const term of searchTerms) {
-            if (term) {
-              const normalizedTerm = normalize(term)
-              matchedUnit = allUnits.find(u => {
-                const unitName = normalize(u.Name || u.name)
-                const unitCode = normalize(u.Code || u.code)
-                return unitName.includes(normalizedTerm) || normalizedTerm.includes(unitName) ||
-                       unitCode.includes(normalizedTerm) || normalizedTerm.includes(unitCode)
-              })
-              if (matchedUnit) {
-                console.log(`🔍 Fuzzy match found: "${term}" -> ${matchedUnit.Name} (${matchedUnit.Id})`)
-                break
-              }
+          for (const branch of matchedBranches) {
+            // Tìm phòng ban có ParentUnitId = branch.Id
+            const deptInBranch = allUnits.find(u => 
+              (u.ParentUnitId === branch.Id) && 
+              (normalize(u.Name || u.name).includes(targetDept) || targetDept.includes(normalize(u.Name || u.name))),
+            )
+            
+            if (deptInBranch) {
+              matchedUnit = deptInBranch
+              console.log(`✅ Found department "${deptName}" in branch "${branch.Name}": ${deptInBranch.Name} (${deptInBranch.Id})`)
+              break
             }
           }
-        }
 
-        if (matchedUnit) {
-          unitId = matchedUnit.Id || matchedUnit.id
+          if (matchedUnit) {
+            unitId = matchedUnit.Id || matchedUnit.id
+          } else {
+            console.log(`❌ Department "${deptName}" not found in any branch matching "${branchName}"`)
+            importErrors.value.push(`Dòng ${rowIndex}: Không tìm thấy phòng ban "${deptName}" trong chi nhánh "${branchName}"`)
+          }
+        } else {
+          console.log(`❌ Branch "${branchName}" not found`)
+          importErrors.value.push(`Dòng ${rowIndex}: Không tìm thấy chi nhánh "${branchName}"`)
         }
+      } else {
+        // Fallback: Nếu thiếu thông tin chi nhánh hoặc phòng ban
+        if (!branchName) importErrors.value.push(`Dòng ${rowIndex}: Thiếu thông tin Chi nhánh`)
+        if (!deptName) importErrors.value.push(`Dòng ${rowIndex}: Thiếu thông tin Phòng ban`)
       }
 
       // Map Chức vụ sang PositionId
@@ -1367,12 +1365,17 @@ async function handleFileChange(e) {
         }
       }
 
-      // Debug logging for mapping với thông tin chi tiết
+      // Debug logging for mapping với thông tin chi tiết - Updated for new logic
       if (rowIndex <= 5) { // Log first 5 rows để không spam
-        console.log(`\n=== Row ${rowIndex} Mapping Debug ===`)
+        console.log(`\n=== Row ${rowIndex} Enhanced Mapping Debug ===`)
         console.log(`Excel data: Chi nhánh="${branchName}", Phòng ban="${deptName}", Chức vụ="${positionName}"`)
         console.log(`Mapped IDs: UnitId=${unitId}, PositionId=${positionId}`)
-        console.log(`Status: ${unitId ? '✅' : '❌'} Unit, ${positionId ? '✅' : '❌'} Position`)
+        console.log(`Status: ${unitId ? '✅' : '❌'} Unit (Branch+Dept), ${positionId ? '✅' : '❌'} Position`)
+        if (unitId) {
+          const matchedUnit = (unitStore.allUnits || []).find(u => u.Id === unitId)
+          const parentUnit = (unitStore.allUnits || []).find(u => u.Id === matchedUnit?.ParentUnitId)
+          console.log(`Final mapping: ${parentUnit?.Name || 'N/A'} -> ${matchedUnit?.Name || 'N/A'}`)
+        }
         console.log('================================\n')
       }
 
