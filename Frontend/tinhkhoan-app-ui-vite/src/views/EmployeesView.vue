@@ -1404,6 +1404,13 @@ async function _performImport() {
       overwriteExisting: true,
       autoGenerateMissingUsernames: true,
     }
+    console.log('🚀 Sending import request with payload:', {
+      rowsCount: requestPayload.rows.length,
+      sampleRow: requestPayload.rows[0], // Log first row for debugging
+      overwriteExisting: requestPayload.overwriteExisting,
+      autoGenerateMissingUsernames: requestPayload.autoGenerateMissingUsernames,
+    })
+
     const resp = await apiClient.post('/Employees/import-cbcode', requestPayload)
     const data = resp.data || {}
     alert(`✅ Import hoàn tất. Tạo mới: ${data.inserted || 0}, Cập nhật: ${data.updated || 0}, Bỏ qua: ${data.skipped || 0}`)
@@ -1412,8 +1419,42 @@ async function _performImport() {
     clearImport()
   } catch (err) {
     console.error('Import lỗi:', err)
-    const msg = err.response?.data?.message || err.response?.data || err.message
-    importErrors.value.push('Import thất bại: ' + msg)
+
+    // Detailed error logging
+    if (err.response?.data) {
+      console.error('📋 Backend validation errors:', err.response.data)
+
+      // Parse validation errors from ASP.NET format
+      const errorData = err.response.data
+      let errorMessage = 'Import thất bại: '
+
+      if (errorData.errors) {
+        // ASP.NET validation errors format
+        const validationErrors = []
+        Object.keys(errorData.errors).forEach(field => {
+          const fieldErrors = errorData.errors[field]
+          if (Array.isArray(fieldErrors)) {
+            fieldErrors.forEach(error => {
+              validationErrors.push(`${field}: ${error}`)
+            })
+          } else {
+            validationErrors.push(`${field}: ${fieldErrors}`)
+          }
+        })
+        errorMessage += validationErrors.join(', ')
+      } else if (errorData.title) {
+        errorMessage += errorData.title
+      } else if (errorData.message) {
+        errorMessage += errorData.message
+      } else {
+        errorMessage += JSON.stringify(errorData)
+      }
+
+      importErrors.value.push(errorMessage)
+    } else {
+      const msg = err.response?.data?.message || err.response?.data || err.message
+      importErrors.value.push('Import thất bại: ' + msg)
+    }
   } finally {
     isImporting.value = false
   }
