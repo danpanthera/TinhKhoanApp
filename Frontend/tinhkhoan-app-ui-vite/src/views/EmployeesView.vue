@@ -629,21 +629,22 @@ const sortedEmployees = computed(() => {
       return branchOrderA - branchOrderB
     }
 
-    // 2. Sắp xếp theo thứ tự phòng ban trong chi nhánh
+    // 2. Sắp xếp theo thứ tự phòng ban trong chi nhánh - Updated theo yêu cầu mới
     const getDeptOrder = (employee) => {
       const unit = unitStore.allUnits?.find(u => u.Id === employee.UnitId)
       if (!unit) return 999
 
       const deptName = (unit.Name || '').toLowerCase()
 
-      // Ưu tiên: Kế toán & Ngân quỹ → Khách hàng → Giao dịch
+      // Thứ tự ưu tiên mới: Ban Giám đốc → Phòng Kế toán & Ngân quỹ → Phòng Khách hàng → Phòng Giao dịch
+      if (deptName.includes('ban giám đốc') || deptName.includes('giám đốc')) return 0 // Ban Giám đốc
       if (deptName.includes('kế toán') || deptName.includes('ngân quỹ')) {
-        if (deptName.includes('kế toán') && deptName.includes('ngân quỹ')) return 0 // Phòng Kế toán & Ngân quỹ
-        if (deptName.includes('kế toán')) return 1 // Phòng Kế toán
-        if (deptName.includes('ngân quỹ')) return 2 // Phòng Ngân quỹ
+        if (deptName.includes('kế toán') && deptName.includes('ngân quỹ')) return 1 // Phòng Kế toán & Ngân quỹ
+        if (deptName.includes('kế toán')) return 2 // Phòng Kế toán
+        if (deptName.includes('ngân quỹ')) return 3 // Phòng Ngân quỹ
       }
-      if (deptName.includes('khách hàng')) return 3
-      if (deptName.includes('giao dịch')) return 4
+      if (deptName.includes('khách hàng')) return 4
+      if (deptName.includes('giao dịch')) return 5
       return 999 // Các phòng khác
     }
 
@@ -654,7 +655,33 @@ const sortedEmployees = computed(() => {
       return deptOrderA - deptOrderB
     }
 
-    // 3. Sắp xếp theo họ và tên (ưu tiên theo họ) theo ABC
+    // 3. Sắp xếp theo chức vụ từ cao xuống thấp trong cùng phòng ban
+    const getPositionOrder = (employee) => {
+      const positionName = (
+        employee.PositionName || 
+        positionStore.allPositions?.find(p => p.Id === employee.PositionId)?.Name ||
+        ''
+      ).toLowerCase()
+
+      // Thứ tự chức vụ: Giám đốc → Phó Giám đốc → Trưởng phòng → Phó phòng → Nhân viên
+      if (positionName.includes('giám đốc')) {
+        if (positionName.includes('phó')) return 1 // Phó Giám đốc
+        return 0 // Giám đốc
+      }
+      if (positionName.includes('trưởng phòng') || positionName.includes('trưởng bộ phận')) return 2
+      if (positionName.includes('phó phòng') || positionName.includes('phó bộ phận')) return 3
+      if (positionName.includes('nhân viên') || positionName.includes('cán bộ')) return 4
+      return 999 // Các chức vụ khác
+    }
+
+    const positionOrderA = getPositionOrder(a)
+    const positionOrderB = getPositionOrder(b)
+
+    if (positionOrderA !== positionOrderB) {
+      return positionOrderA - positionOrderB
+    }
+
+    // 4. Cuối cùng sắp xếp theo họ và tên (ưu tiên theo họ) theo ABC
     const fullNameA = (a.FullName || '').trim()
     const fullNameB = (b.FullName || '').trim()
 
@@ -1301,25 +1328,25 @@ async function handleFileChange(e) {
           const unitCode = normalize(u.Code || u.code)
           // Chi nhánh thường có Type = 'CNL1' hoặc 'CNL2'
           const unitType = (u.Type || '').toUpperCase()
-          return (unitName.includes(targetBranch) || targetBranch.includes(unitName) || 
+          return (unitName.includes(targetBranch) || targetBranch.includes(unitName) ||
                   unitCode.includes(targetBranch) || targetBranch.includes(unitCode)) &&
                  (unitType === 'CNL1' || unitType === 'CNL2' || unitName.includes('hội sở'))
         })
 
         if (matchedBranches.length > 0) {
           console.log(`🏢 Found ${matchedBranches.length} matching branches for "${branchName}":`, matchedBranches.map(b => b.Name))
-          
+
           // BƯỚC 2: Trong các chi nhánh tìm được, tìm phòng ban thuộc chi nhánh đó
           const targetDept = normalize(deptName)
           let matchedUnit = null
 
           for (const branch of matchedBranches) {
             // Tìm phòng ban có ParentUnitId = branch.Id
-            const deptInBranch = allUnits.find(u => 
-              (u.ParentUnitId === branch.Id) && 
+            const deptInBranch = allUnits.find(u =>
+              (u.ParentUnitId === branch.Id) &&
               (normalize(u.Name || u.name).includes(targetDept) || targetDept.includes(normalize(u.Name || u.name))),
             )
-            
+
             if (deptInBranch) {
               matchedUnit = deptInBranch
               console.log(`✅ Found department "${deptName}" in branch "${branch.Name}": ${deptInBranch.Name} (${deptInBranch.Id})`)
