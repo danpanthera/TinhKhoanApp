@@ -110,9 +110,67 @@ namespace TinhKhoanApp.Api.Controllers
                 return StatusCode(500, new { error = "Lỗi server nội bộ", details = ex.Message });
             }
         }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUnit(int id, [FromBody] UpdateUnitDto dto)
+        {
+            try
+            {
+                _logger.LogInformation("🔄 [Units] Cập nhật unit ID: {Id}, Code: {Code}", id, dto.Code);
+
+                // Tìm unit cần cập nhật
+                var existingUnit = await _context.Units
+                    .Where(u => u.Id == id && !u.IsDeleted)
+                    .FirstOrDefaultAsync();
+
+                if (existingUnit == null)
+                {
+                    _logger.LogWarning("⚠️ [Units] Unit ID {Id} không tồn tại", id);
+                    return NotFound(new { error = "Không tìm thấy unit để cập nhật" });
+                }
+
+                // Kiểm tra trùng lặp Code (nếu thay đổi Code)
+                if (dto.Code != existingUnit.Code)
+                {
+                    var duplicateUnit = await _context.Units
+                        .Where(u => u.Code == dto.Code && u.Id != id && !u.IsDeleted)
+                        .FirstOrDefaultAsync();
+
+                    if (duplicateUnit != null)
+                    {
+                        _logger.LogWarning("⚠️ [Units] Mã unit {Code} đã tồn tại (ID: {ExistingId})", dto.Code, duplicateUnit.Id);
+                        return BadRequest(new { error = "Mã unit đã tồn tại" });
+                    }
+                }
+
+                // Cập nhật thông tin
+                existingUnit.Code = dto.Code;
+                existingUnit.Name = dto.Name;
+                existingUnit.Type = dto.Type;
+                existingUnit.ParentUnitId = dto.ParentUnitId;
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation("✅ [Units] Unit cập nhật thành công: {Code} (ID: {Id})", existingUnit.Code, existingUnit.Id);
+                return Ok(existingUnit);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [Units] Lỗi khi cập nhật unit ID: {Id}", id);
+                return StatusCode(500, new { error = "Lỗi server nội bộ", details = ex.Message });
+            }
+        }
     }
 
     public class CreateUnitDto
+    {
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string? Type { get; set; }
+        public int? ParentUnitId { get; set; }
+    }
+
+    public class UpdateUnitDto
     {
         public string Code { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;

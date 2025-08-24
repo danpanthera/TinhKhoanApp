@@ -510,13 +510,12 @@
 import { computed, defineComponent, h, nextTick, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUnitStore } from '../stores/unitStore.js'
-import { getId } from '../utils/casingSafeAccess.js'
 import { useNumberInput } from '../utils/numberFormat'
 
-const router = useRouter()
+const _router = useRouter()
 
 // 🔢 Initialize number input utility
-const { handleInput, handleBlur, formatNumber, parseFormattedNumber } = useNumberInput({
+const { handleInput: _handleInput, handleBlur: _handleBlur, formatNumber, parseFormattedNumber: _parseFormattedNumber } = useNumberInput({
   maxDecimalPlaces: 0,
   allowNegative: false,
 })
@@ -892,19 +891,35 @@ const handleSubmitUnit = async () => {
   }
 
   console.log('VALIDATION PASS (Client-side): Dữ liệu hợp lệ, tiến hành submit.')
+  console.log('isEditing.value:', isEditing.value)
+  console.log('unitDataForSubmission.id:', unitDataForSubmission.id)
+  console.log('currentUnit.value.id:', currentUnit.value?.id)
 
-  if (isEditing.value && unitDataForSubmission.id !== null && getId(unitDataForSubmission) !== null) {
+  // Sửa logic điều kiện: Chỉ cần kiểm tra isEditing.value và có ID
+  if (isEditing.value && (unitDataForSubmission.id || currentUnit.value?.id)) {
     try {
+      // Đảm bảo có ID cho việc update
+      if (!unitDataForSubmission.id && currentUnit.value?.id) {
+        unitDataForSubmission.id = currentUnit.value.id
+      }
+      console.log('Executing updateUnit với dữ liệu:', unitDataForSubmission)
       await unitStore.updateUnit(unitDataForSubmission)
       alert('Cập nhật đơn vị thành công!')
       cancelEdit()
     } catch (error) {
       console.error('Lỗi khi cập nhật đơn vị:', error)
+      // Hiển thị chi tiết lỗi cho người dùng
+      if (error && error.response) {
+        formError.value = error.response.data?.message || error.response.data?.error || error.response.data || error.message || 'Lỗi không xác định từ backend.'
+      } else {
+        formError.value = error.message || 'Lỗi không xác định.'
+      }
     }
   } else {
     try {
+      console.log('Executing createUnit với dữ liệu:', unitDataForSubmission)
       // eslint-disable-next-line no-unused-vars
-      const { id, ...newUnitData } = unitDataForSubmission
+      const { id: _id, ...newUnitData } = unitDataForSubmission
       await unitStore.createUnit(newUnitData)
       alert('Thêm đơn vị thành công!')
       resetForm()
@@ -913,7 +928,7 @@ const handleSubmitUnit = async () => {
       if (error && error.response) {
         console.error('Lỗi khi thêm đơn vị (backend):', error.response.data || error.response)
         formError.value =
-          error.response.data?.message || error.response.data || error.message || 'Lỗi không xác định từ backend.'
+          error.response.data?.message || error.response.data?.error || error.response.data || error.message || 'Lỗi không xác định từ backend.'
       } else {
         console.error('Lỗi khi thêm đơn vị:', error)
         formError.value = error.message || 'Lỗi không xác định.'
