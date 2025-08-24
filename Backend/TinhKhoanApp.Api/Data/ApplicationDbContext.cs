@@ -58,8 +58,8 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
         public DbSet<DataTables.GL02> GL02 { get; set; }
         public DbSet<GL41Entity> GL41 { get; set; } // ✅ Modern Entity - Partitioned Columnstore (NO temporal)
         public DbSet<DataTables.DPDA> DPDA { get; set; }
-        // ✅ Use Modern Entity for EI01 to ensure CSV-first consistency across layers
-        public DbSet<EI01Entity> EI01 { get; set; }
+        // ✅ Use DataTables.EI01 to match existing table schema (CREATED_DATE/UPDATED_DATE columns)
+        public DbSet<DataTables.EI01> EI01 { get; set; }
         public DbSet<DataTables.RR01> RR01 { get; set; } // ✅ Re-enabled for DirectImport support
 
         // 🔄 DbSets with plural names for backward compatibility
@@ -407,28 +407,7 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
             });
             */
 
-            // EI01 Temporal Table configuration - ✅ MODERN ENTITY
-            modelBuilder.Entity<EI01Entity>(entity =>
-            {
-                // Temporal Table configuration
-                entity.ToTable(tb => tb.IsTemporal(ttb =>
-                {
-                    ttb.UseHistoryTable("EI01_History");
-                    ttb.HasPeriodStart("ValidFrom");
-                    ttb.HasPeriodEnd("ValidTo");
-                }));
-
-                // Indexes for query performance
-                entity.HasIndex(e => e.NGAY_DL)
-                    .HasDatabaseName("IX_EI01_NGAY_DL");
-                entity.HasIndex(e => e.MA_CN)
-                    .HasDatabaseName("IX_EI01_MA_CN");
-
-                // Columnstore-like analytics index (regular index due to provider limits)
-                entity.HasIndex(e => new { e.NGAY_DL, e.MA_CN })
-                    .HasDatabaseName("NCCI_EI01_Analytics")
-                    .IsUnique(false);
-            });
+            // EI01Entity mapping disabled (use DataTables.EI01). Keeping Entity class only for reference.
 
             // GL01 decimal properties
             modelBuilder.Entity<DataTables.GL01>(entity =>

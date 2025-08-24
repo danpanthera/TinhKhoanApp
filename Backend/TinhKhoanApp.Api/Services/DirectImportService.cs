@@ -278,6 +278,10 @@ namespace TinhKhoanApp.Api.Services
                 // Parse EI01 CSV
                 var records = await ParseEI01CsvAsync(file);
                 _logger.LogInformation("📊 [EI01] Đã parse {Count} records từ CSV", records.Count);
+                if (records.Count == 0)
+                {
+                    _logger.LogWarning("⚠️ [EI01] Parse trả về 0 record. Kiểm tra header CSV có khớp với entity không và định dạng ngày (yyyyMMdd/dd/MM/yyyy)");
+                }
 
                 if (records.Any())
                 {
@@ -287,15 +291,23 @@ namespace TinhKhoanApp.Api.Services
                         foreach (var r in records)
                         {
                             r.NGAY_DL = ngayDlDate;
+                            r.FILE_NAME = file.FileName;
                         }
                     }
 
                     // Bulk insert EI01
                     var insertedCount = await BulkInsertGenericAsync(records, "EI01");
                     result.ProcessedRecords = insertedCount;
-                    result.Success = true;
-                    _logger.LogInformation("✅ [EI01] Import thành công {Count} records", insertedCount);
-                    await LogImportMetadataAsync(result);
+                    result.Success = insertedCount > 0;
+                    if (insertedCount > 0)
+                    {
+                        _logger.LogInformation("✅ [EI01] Import thành công {Count} records", insertedCount);
+                        await LogImportMetadataAsync(result);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("⚠️ [EI01] Import không chèn được bản ghi nào");
+                    }
                 }
                 else
                 {
@@ -890,9 +902,9 @@ namespace TinhKhoanApp.Api.Services
         /// <summary>
         /// Parse EI01 CSV với 24 business columns
         /// </summary>
-        private async Task<List<EI01Entity>> ParseEI01CsvAsync(IFormFile file)
+        private async Task<List<Models.DataTables.EI01>> ParseEI01CsvAsync(IFormFile file)
         {
-            var records = new List<EI01Entity>();
+            var records = new List<Models.DataTables.EI01>();
 
             using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
             using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -904,18 +916,18 @@ namespace TinhKhoanApp.Api.Services
 
             // Ensure DateTime parsing uses dd/MM/yyyy as primary format
             var dtOptions = csv.Context.TypeConverterOptionsCache.GetOptions<DateTime>();
-            dtOptions.Formats = new[] { "dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "d/M/yyyy" };
+            dtOptions.Formats = new[] { "dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "d/M/yyyy", "yyyyMMdd" };
+            // Treat common blank placeholders as nulls in CSV exports
+            dtOptions.NullValues.AddRange(new[] { string.Empty, " ", "  ", "\t", "\r", "\n", "        " });
             var ndtOptions = csv.Context.TypeConverterOptionsCache.GetOptions<DateTime?>();
             ndtOptions.Formats = dtOptions.Formats;
+            ndtOptions.NullValues.AddRange(dtOptions.NullValues);
 
-            await foreach (var record in csv.GetRecordsAsync<EI01Entity>())
+            await foreach (var record in csv.GetRecordsAsync<Models.DataTables.EI01>())
             {
                 // Set audit fields
-                record.CreatedAt = DateTime.UtcNow;
-                record.UpdatedAt = DateTime.UtcNow;
-
-                // Normalize date fields to datetime2 (dd/MM/yyyy)
-                // CsvHelper already maps to DateTime? when possible; extra normalization hooks can be added if needed
+                record.CREATED_DATE = DateTime.UtcNow;
+                record.UPDATED_DATE = DateTime.UtcNow;
 
                 records.Add(record);
             }
@@ -946,13 +958,6 @@ namespace TinhKhoanApp.Api.Services
 
             await foreach (var record in csv.GetRecordsAsync<LN01>())
             {
-                // Set audit fields
-                record.CreatedAt = DateTime.UtcNow;
-                record.UpdatedAt = DateTime.UtcNow;
-
-                // Normalize date fields to datetime2 (dd/MM/yyyy)
-                // CsvHelper already maps to DateTime? when possible; extra normalization hooks can be added if needed
-
                 records.Add(record);
             }
 

@@ -59,6 +59,14 @@ namespace TinhKhoanApp.Api.Controllers
                 // Import với dataType đã detect
                 var result = await _directImportService.ImportGenericAsync(file, dataType, statementDate);
 
+                if (result == null || !result.Success || result.ProcessedRecords <= 0)
+                {
+                    var message = result == null
+                        ? "Import failed"
+                        : (result.Errors?.Any() == true ? string.Join("; ", result.Errors) : "No records imported");
+                    return BadRequest(ApiResponse<object>.Error(message, "IMPORT_FAILED"));
+                }
+
                 return Ok(ApiResponse<object>.Ok(result, "Import completed successfully"));
             }
             catch (Exception ex)

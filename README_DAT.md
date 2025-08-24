@@ -726,6 +726,7 @@ Sửa lại hết database, model, EF, BulkCopy, migration của các bảng d�
 + CẤM transformation Tên cột sang Vietnamese column. 
 + Tên cột trong file CSV là chuẩn, là tham chiếu.
 
+#region 9 bảng core data table
 **Chi tiết cấu trúc các bảng dữ liệu:** (RẤT QUAN TRỌNG)
 # 1. Bảng DP01 (Quan trọng)
 + Thống nhất cấu trúc dữ liệu Bảng DP01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -907,6 +908,7 @@ lý business logic, repositories xử lý data access
 - Việc tổ chức lại code theo cách này sẽ giúp cấu trúc dự án rõ ràng, dễ bảo trì và theo đúng các best practices trong phát triển phần mềm
 - Liên tục update trạng thái qua file ARCHITECTURE_RESTRUCTURING_PLAN.md sau khi hoàn thành mỗi bảng
 + Đảm bảo cấu trúc bảng (ngoài các cột NGAY_DL, System Column và Temporal Column) phải đồng nhất business column từ CSV <- Database <- Model <- EF <- BulkCopy <- Direct Import <- DTO <- Services <- Repository <- Entity <- Controller (business Column của CSV là chuẩn là tham chiếu) Cấu trúc cuối cùng là NGAY_DL-> Business Column -> Temporal/System Column
+#endregion
 
 **Quy ước cách tính các chỉ tiêu**
 

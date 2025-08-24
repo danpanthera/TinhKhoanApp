@@ -10,6 +10,7 @@ namespace TinhKhoanApp.Api.Models.Entities
     /// CSV Source: 7800_ei01_20241231.csv
     /// Business Columns: MA_CN,MA_KH,TEN_KH,LOAI_KH,SDT_EMB,TRANG_THAI_EMB,NGAY_DK_EMB,SDT_OTT,TRANG_THAI_OTT,NGAY_DK_OTT,SDT_SMS,TRANG_THAI_SMS,NGAY_DK_SMS,SDT_SAV,TRANG_THAI_SAV,NGAY_DK_SAV,SDT_LN,TRANG_THAI_LN,NGAY_DK_LN,USER_EMB,USER_OTT,USER_SMS,USER_SAV,USER_LN
     /// </summary>
+    [NotMapped]
     [Table("EI01")]
     [Index(nameof(MA_CN), Name = "IX_EI01_MA_CN")]
     [Index(nameof(MA_KH), Name = "IX_EI01_MA_KH")]
