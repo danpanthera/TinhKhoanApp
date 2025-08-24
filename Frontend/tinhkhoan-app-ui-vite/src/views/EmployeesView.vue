@@ -599,6 +599,8 @@ const sortedEmployees = computed(() => {
     return []
   }
 
+  console.log('🔍 sortedEmployees: Bắt đầu sắp xếp', employeeStore.allEmployees.length, 'nhân viên')
+
   return [...employeeStore.allEmployees].sort((a, b) => {
     // 1. Sắp xếp theo thứ tự chi nhánh
     const getBranchOrder = (employee) => {
@@ -634,12 +636,15 @@ const sortedEmployees = computed(() => {
       
       const deptName = (unit.Name || '').toLowerCase()
       
-      if (deptName.includes('kế toán') && deptName.includes('ngân quỹ')) return 0
-      if (deptName.includes('kế toán')) return 1
-      if (deptName.includes('ngân quỹ')) return 2
+      // Ưu tiên: Kế toán & Ngân quỹ → Khách hàng → Giao dịch
+      if (deptName.includes('kế toán') || deptName.includes('ngân quỹ')) {
+        if (deptName.includes('kế toán') && deptName.includes('ngân quỹ')) return 0 // Phòng Kế toán & Ngân quỹ
+        if (deptName.includes('kế toán')) return 1 // Phòng Kế toán
+        if (deptName.includes('ngân quỹ')) return 2 // Phòng Ngân quỹ
+      }
       if (deptName.includes('khách hàng')) return 3
       if (deptName.includes('giao dịch')) return 4
-      return 999
+      return 999 // Các phòng khác
     }
 
     const deptOrderA = getDeptOrder(a)
