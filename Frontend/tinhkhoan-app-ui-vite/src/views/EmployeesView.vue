@@ -85,112 +85,143 @@ Roll out with a DB backup and clear release notes.<template>
     </div>
 
     <template v-if="pagedEmployees.length > 0">
-      <table class="employee-detail-table compact-table">
-        <thead>
-          <tr>
-            <th style="width: 50px; min-width: 50px">
-              <input
-                type="checkbox"
-                :checked="isAllSelected"
-                title="Chọn/Bỏ chọn tất cả"
-                @change="toggleSelectAll"
-              >
-            </th>
-            <th style="width: 80px; min-width: 80px">
-              Thao tác
-            </th>
-            <th style="width: 90px">
-              Mã CB
-            </th>
-            <th style="width: 140px">
-              Họ tên
-            </th>
-            <th style="width: 100px">
-              Tên ĐN
-            </th>
-            <th style="width: 110px">
-              User AD
-            </th>
-            <th style="width: 120px">
-              User IPCAS
-            </th>
-            <th style="width: 110px">
-              Mã CBTD
-            </th>
-            <th style="width: 110px">
-              Chi nhánh
-            </th>
-            <th style="width: 110px">
-              Phòng ban
-            </th>
-            <th style="width: 110px">
-              Chức vụ
-            </th>
-            <th style="width: 120px">
-              Email
-            </th>
-            <th style="width: 100px">
-              SĐT
-            </th>
-            <!-- Bỏ cột Vai trò và Trạng thái theo yêu cầu -->
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="employee in pagedEmployees"
-            :key="employee.Id"
-            :class="{ 'selected-row': selectedEmployeeIds.includes(employee.Id) }"
-          >
-            <td class="checkbox-cell">
-              <input
-                v-model="selectedEmployeeIds"
-                type="checkbox"
-                :value="employee.Id"
-                :disabled="employee.Username === 'admin'"
-                :title="employee.Username === 'admin' ? 'Không thể chọn tài khoản admin' : 'Chọn nhân viên này'"
-              >
-            </td>
-            <td class="action-cell">
-              <button class="edit-btn" @click="startEditEmployee(employee)">
-                Sửa
-              </button>
-              <button
-                class="delete-btn"
-                :disabled="employee.Username === 'admin'"
-                :title="employee.Username === 'admin' ? 'Không thể xóa tài khoản admin' : 'Xóa nhân viên'"
-                @click="confirmDeleteEmployee(employee.Id)"
-              >
-                Xóa
-              </button>
-            </td>
-            <td>{{ employee.CBCode || 'Chưa có mã CB' }}</td>
-            <td>{{ employee.FullName }}</td>
-            <td>{{ employee.Username }}</td>
-            <td>{{ employee.UserAD || employee.userAd || '—' }}</td>
-            <td>{{ employee.UserIPCAS || employee.userIpcas || '—' }}</td>
-            <td>{{ employee.MaCBTD || employee.maCbtd || '—' }}</td>
-            <td>
-              {{
+      <!-- Container có thể cuộn ngang cho bảng rộng -->
+      <div class="table-container">
+        <table class="employee-detail-table compact-table">
+          <thead>
+            <tr>
+              <th style="width: 50px; min-width: 50px">
+                <input
+                  type="checkbox"
+                  :checked="isAllSelected"
+                  title="Chọn/Bỏ chọn tất cả"
+                  @change="toggleSelectAll"
+                >
+              </th>
+              <th style="width: 100px; min-width: 100px">
+                Thao tác
+              </th>
+              <th style="width: 110px; min-width: 110px">
+                Mã CB
+              </th>
+              <th style="width: 180px; min-width: 180px">
+                Họ tên
+              </th>
+              <th style="width: 120px; min-width: 120px">
+                Tên ĐN
+              </th>
+              <th style="width: 140px; min-width: 140px">
+                User AD
+              </th>
+              <th style="width: 140px; min-width: 140px">
+                User IPCAS
+              </th>
+              <th style="width: 120px; min-width: 120px">
+                Mã CBTD
+              </th>
+              <th style="width: 150px; min-width: 150px">
+                Chi nhánh
+              </th>
+              <th style="width: 150px; min-width: 150px">
+                Phòng ban
+              </th>
+              <th style="width: 130px; min-width: 130px">
+                Chức vụ
+              </th>
+              <th style="width: 200px; min-width: 200px">
+                Email
+              </th>
+              <th style="width: 120px; min-width: 120px">
+                SĐT
+              </th>
+              <!-- Bỏ cột Vai trò và Trạng thái theo yêu cầu -->
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              v-for="employee in pagedEmployees"
+              :key="employee.Id"
+              :class="{ 'selected-row': selectedEmployeeIds.includes(employee.Id) }"
+            >
+              <td class="checkbox-cell">
+                <input
+                  v-model="selectedEmployeeIds"
+                  type="checkbox"
+                  :value="employee.Id"
+                  :disabled="employee.Username === 'admin'"
+                  :title="employee.Username === 'admin' ? 'Không thể chọn tài khoản admin' : 'Chọn nhân viên này'"
+                >
+              </td>
+              <td class="action-cell">
+                <button class="edit-btn" @click="startEditEmployee(employee)">
+                  Sửa
+                </button>
+                <button
+                  class="delete-btn"
+                  :disabled="employee.Username === 'admin'"
+                  :title="employee.Username === 'admin' ? 'Không thể xóa tài khoản admin' : 'Xóa nhân viên'"
+                  @click="confirmDeleteEmployee(employee.Id)"
+                >
+                  Xóa
+                </button>
+              </td>
+              <td>{{ employee.CBCode || 'Chưa có mã CB' }}</td>
+              <td title="{{ employee.FullName }}">
+                {{ employee.FullName }}
+              </td>
+              <td title="{{ employee.Username }}">
+                {{ employee.Username }}
+              </td>
+              <td title="{{ employee.UserAD || employee.userAd || '—' }}">
+                {{ employee.UserAD || employee.userAd || '—' }}
+              </td>
+              <td title="{{ employee.UserIPCAS || employee.userIpcas || '—' }}">
+                {{ employee.UserIPCAS || employee.userIpcas || '—' }}
+              </td>
+              <td title="{{ employee.MaCBTD || employee.maCbtd || '—' }}">
+                {{ employee.MaCBTD || employee.maCbtd || '—' }}
+              </td>
+              <td
+                title="{{
                 unitStore.allUnits.find(
                   u => u.Id === unitStore.allUnits.find(x => x.Id === employee.UnitId)?.ParentUnitId
                 )?.Name || 'N/A'
-              }}
-            </td>
-            <td>{{ unitStore.allUnits.find(u => u.Id === employee.UnitId)?.Name || 'N/A' }}</td>
-            <td>
-              {{
+              }}"
+              >
+                {{
+                  unitStore.allUnits.find(
+                    u => u.Id === unitStore.allUnits.find(x => x.Id === employee.UnitId)?.ParentUnitId
+                  )?.Name || 'N/A'
+                }}
+              </td>
+              <td title="{{ unitStore.allUnits.find(u => u.Id === employee.UnitId)?.Name || 'N/A' }}">
+                {{ unitStore.allUnits.find(u => u.Id === employee.UnitId)?.Name || 'N/A' }}
+              </td>
+              <td
+                title="{{
                 employee.PositionName ||
                   positionStore.allPositions.find(p => p.Id === employee.PositionId)?.Name ||
                   'N/A'
-              }}
-            </td>
-            <!-- Vai trò đã bỏ khỏi bảng nhân viên -->
-            <td>{{ employee.Email }}</td>
-            <td>{{ employee.PhoneNumber }}</td>
+              }}"
+              >
+                {{
+                  employee.PositionName ||
+                    positionStore.allPositions.find(p => p.Id === employee.PositionId)?.Name ||
+                    'N/A'
+                }}
+              </td>
+              <!-- Vai trò đã bỏ khỏi bảng nhân viên -->
+              <td title="{{ employee.Email || '' }}">
+                {{ employee.Email || '—' }}
+              </td>
+              <td title="{{ employee.PhoneNumber || '' }}">
+                {{ employee.PhoneNumber || '—' }}
+              </td>
             <!-- Bỏ hiển thị trạng thái -->
-          </tr>
-        </tbody>
-      </table>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </template>
     <template v-else>
       <p v-if="employeeStore.isLoading">
@@ -1532,7 +1563,8 @@ watch(selectedBranchId, newVal => {
 <style scoped>
 /* Phần CSS giữ nguyên như Sếp đã yêu cầu ở các file View trước */
 .employees-view {
-  max-width: 900px;
+  max-width: 100%;
+  width: 95%;
   margin: 20px auto;
   padding: 20px;
   /* 🇻🇳 Sử dụng font tiếng Việt tối ưu */
@@ -2044,5 +2076,64 @@ ul {
   justify-content: center;
   font-size: 12px;
   font-weight: bold;
+}
+
+/* Bảng nhân viên rộng với cuộn ngang */
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+}
+
+.employee-detail-table {
+  width: 100%;
+  min-width: 1600px; /* Đảm bảo bảng có độ rộng tối thiểu */
+  border-collapse: collapse;
+  font-size: 14px;
+  table-layout: fixed; /* Cố định layout để control width tốt hơn */
+}
+
+.employee-detail-table th,
+.employee-detail-table td {
+  padding: 12px 8px;
+  text-align: left;
+  border-bottom: 1px solid #dee2e6;
+  vertical-align: middle;
+  white-space: nowrap; /* Không wrap text */
+  overflow: hidden;
+  text-overflow: ellipsis; /* Hiển thị ... khi text quá dài */
+}
+
+.employee-detail-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #495057;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.employee-detail-table tbody tr:hover {
+  background-color: #f5f5f5;
+}
+
+.employee-detail-table tbody tr:nth-child(even) {
+  background-color: #fafafa;
+}
+
+/* Responsive cho bảng */
+@media (max-width: 1200px) {
+  .table-container {
+    margin: 0 -20px; /* Mở rộng ra ngoài container */
+  }
+
+  .employees-view {
+    padding: 20px 10px;
+  }
 }
 </style>
