@@ -6,7 +6,7 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
     Accept: 'application/json',
   },
-  timeout: 15000, // Increased timeout to 15 seconds
+  timeout: 60000, // Increased timeout to 60 seconds for large Excel imports
   validateStatus: function (status) {
     return status >= 200 && status < 300 // chỉ chấp nhận status 2xx
   },
@@ -24,7 +24,7 @@ apiClient.interceptors.request.use(
   },
   error => {
     return Promise.reject(error)
-  }
+  },
 )
 
 // Add response interceptor - Thêm interceptor cho response
@@ -70,7 +70,7 @@ apiClient.interceptors.response.use(
       console.error('[API Setup Error]', error.message)
     }
     return Promise.reject(error)
-  }
+  },
 )
 
 export default apiClient
@@ -82,10 +82,10 @@ export const kpiDefinitionsApi = {
 
   /*
   // CÁC API CŨ ĐÃ ĐƯỢC DỌN SẠCH:
-  // - getCBTypes: Lấy danh sách các loại cán bộ (CB Types) 
+  // - getCBTypes: Lấy danh sách các loại cán bộ (CB Types)
   // - getKPIsByCBType: Lấy KPI definitions theo CB type
   // - resetKPIsByCBType: Reset KPI theo CB type
-  // 
+  //
   // Sẽ được thay thế bằng:
   // - getStandardRoles: Lấy danh sách 23 vai trò chuẩn
   // - getKPIsByRole: Lấy KPI theo vai trò mới

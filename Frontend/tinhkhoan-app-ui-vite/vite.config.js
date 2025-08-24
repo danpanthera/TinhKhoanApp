@@ -76,28 +76,9 @@ export default defineConfig({
     },
   },
   server: {
-    host: '0.0.0.0', // Cho phép truy cập từ external network
-    port: 3000,
-    strictPort: true, // Bắt buộc chạy đúng cổng 3000 để HMR đúng host/port
-    open: true,
-    hmr: {
-      // Pin HMR to the same origin/port the page uses
-      host: 'localhost',
-      port: 3000,
-      clientPort: 3000,
-      protocol: 'ws',
-    },
-    watch: {
-      usePolling: true,
-      interval: 1000, // Kiểm tra thay đổi mỗi giây
-    },
+    port: 3001,
     proxy: {
-      '/api': {
-        target: 'http://localhost:5055',
-        changeOrigin: true,
-        secure: false,
-        rewrite: (path) => path, // Không rewrite để giữ nguyên path đã có /api
-      },
+      '/api': 'http://localhost:5055',
     },
   },
 })

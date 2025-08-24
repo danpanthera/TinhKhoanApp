@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TinhKhoanApp.Api.Data;
+using System.ComponentModel.DataAnnotations;
 using TinhKhoanApp.Api.Models;
 
 namespace TinhKhoanApp.Api.Controllers;
@@ -83,10 +84,47 @@ public class EmployeesController : ControllerBase
     [HttpPost("import-cbcode")]
     public async Task<ActionResult<object>> ImportEmployeesByCBCode([FromBody] BulkImportByCBCodeRequest request)
     {
-        if (request == null || request.Rows == null || request.Rows.Count == 0)
+        // Log model state errors for debugging
+        if (!ModelState.IsValid)
         {
+            _logger.LogWarning("❌ Model binding failed");
+            foreach (var error in ModelState)
+            {
+                _logger.LogWarning("🚨 Field '{Field}' has errors: {Errors}",
+                    error.Key, string.Join(", ", error.Value.Errors.Select(e => e.ErrorMessage)));
+            }
+            return BadRequest(ModelState);
+        }
+
+        _logger.LogInformation("📦 Import request received with {Count} rows", request?.Rows?.Count ?? 0);
+
+        // Log complete request payload for debugging
+        if (request?.Rows != null)
+        {
+            _logger.LogInformation("🔍 Request details: OverwriteExisting={Overwrite}, AutoGenerate={AutoGen}",
+                request.OverwriteExisting, request.AutoGenerateMissingUsernames);
+
+            for (int i = 0; i < Math.Min(request.Rows.Count, 3); i++)
+            {
+                var row = request.Rows[i];
+                _logger.LogInformation("📋 Row {Index}: CBCode='{CBCode}', FullName='{FullName}', MaCBTD='{MaCBTD}', UnitId={UnitId}, PositionId={PositionId}",
+                    i, row.CBCode, row.FullName, row.MaCBTD, row.UnitId, row.PositionId);
+            }
+        }
+
+        if (request == null)
+        {
+            _logger.LogWarning("❌ Import request is null");
+            return BadRequest(new { message = "Request không hợp lệ" });
+        }
+
+        if (request.Rows == null || request.Rows.Count == 0)
+        {
+            _logger.LogWarning("❌ Import rows is null or empty");
             return BadRequest(new { message = "Dữ liệu import rỗng" });
         }
+
+        _logger.LogInformation("📋 Processing {Count} import rows", request.Rows.Count);
 
         var inserted = 0;
         var updated = 0;
@@ -98,6 +136,12 @@ public class EmployeesController : ControllerBase
         var existingEmployees = await _context.Employees
             .Where(e => cbCodes.Contains(e.CBCode))
             .ToDictionaryAsync(e => e.CBCode, e => e);
+
+        // Cache all existing usernames to avoid repeated database queries during updates
+        var existingUsernamesList = await _context.Employees
+            .Select(e => e.Username.ToLower())
+            .ToListAsync();
+        var allUsernames = new HashSet<string>(existingUsernamesList);
 
         foreach (var (row, idx) in request.Rows.Select((r, i) => (r, i + 1)))
         {
@@ -133,16 +177,29 @@ public class EmployeesController : ControllerBase
                         continue;
                     }
 
-                    // Ensure username uniqueness
+                    // Ensure username uniqueness using cached data
                     var baseUsername = username;
                     var candidate = baseUsername;
                     var suffix = 1;
-                    while (await _context.Employees.AnyAsync(e => e.Username.ToLower() == candidate.ToLower()))
+                    while (allUsernames.Contains(candidate.ToLower()))
                     {
                         candidate = $"{baseUsername}{suffix}";
                         suffix++;
+                        // Prevent infinite loops
+                        if (suffix > 1000)
+                        {
+                            skipped++;
+                            errors.Add($"Dòng {idx}: Không thể tạo username duy nhất cho {cb}");
+                            break;
+                        }
                     }
+
+                    // Skip this row if username generation failed
+                    if (suffix > 1000) continue;
+
                     username = candidate;
+                    // Add new username to cache
+                    allUsernames.Add(username.ToLower());
 
                     // Create new employee
                     var newEmp = new Employee
@@ -182,9 +239,14 @@ public class EmployeesController : ControllerBase
                         emp.FullName = row.FullName!.Trim();
                     if (!string.IsNullOrWhiteSpace(username) && username != emp.Username)
                     {
-                        // Unique username check
-                        var exists = await _context.Employees.AnyAsync(e => e.Username.ToLower() == username.ToLower() && e.Id != emp.Id);
-                        if (!exists) emp.Username = username;
+                        // Use cached usernames instead of expensive database query
+                        var lowerUsername = username.ToLower();
+                        if (!allUsernames.Contains(lowerUsername))
+                        {
+                            emp.Username = username;
+                            // Update cache with new username
+                            allUsernames.Add(lowerUsername);
+                        }
                     }
                     emp.Email = string.IsNullOrWhiteSpace(row.Email) ? emp.Email : row.Email!.Trim();
                     emp.PhoneNumber = string.IsNullOrWhiteSpace(row.PhoneNumber) ? emp.PhoneNumber : row.PhoneNumber!.Trim();
@@ -376,6 +438,53 @@ public class EmployeesController : ControllerBase
         {
             _logger.LogError(ex, "Error creating employee");
             return StatusCode(500, new { message = "Lỗi khi tạo nhân viên", details = ex.Message });
+        }
+    }
+
+    // DELETE: api/Employees/bulk
+    [HttpDelete("bulk")]
+    public async Task<IActionResult> BulkDeleteEmployees([FromBody] BulkDeleteRequest request)
+    {
+        try
+        {
+            if (request == null || request.Ids == null || request.Ids.Count == 0)
+            {
+                return BadRequest(new { message = "Danh sách ID không hợp lệ" });
+            }
+
+            // Get employees to delete
+            var employees = await _context.Employees
+                .Where(e => request.Ids.Contains(e.Id))
+                .ToListAsync();
+
+            if (employees.Count == 0)
+            {
+                return NotFound(new { message = "Không tìm thấy nhân viên nào để xóa" });
+            }
+
+            // Check for admin users
+            var adminEmployees = employees.Where(e => e.Username?.ToLower() == "admin").ToList();
+            if (adminEmployees.Any())
+            {
+                return BadRequest(new { message = "Không thể xóa tài khoản admin" });
+            }
+
+            // Remove employees
+            _context.Employees.RemoveRange(employees);
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Bulk deleted {Count} employees", employees.Count);
+            return Ok(new
+            {
+                message = $"Đã xóa {employees.Count} nhân viên",
+                deletedCount = employees.Count,
+                deletedIds = employees.Select(e => e.Id).ToList()
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error in bulk delete employees");
+            return StatusCode(500, new { message = "Lỗi khi xóa nhân viên", details = ex.Message });
         }
     }
 
@@ -634,6 +743,8 @@ public class EmployeeUpdateDto
 // === Bulk Import by CBCode DTOs ===
 public class BulkImportByCBCodeRequest
 {
+    [Required(ErrorMessage = "Danh sách nhân viên không được rỗng")]
+    [MinLength(1, ErrorMessage = "Cần có ít nhất 1 nhân viên")]
     public List<BulkImportByCBCodeRow> Rows { get; set; } = new();
     public bool OverwriteExisting { get; set; } = true;
     public bool AutoGenerateMissingUsernames { get; set; } = true;
@@ -641,15 +752,45 @@ public class BulkImportByCBCodeRequest
 
 public class BulkImportByCBCodeRow
 {
+    [Required(ErrorMessage = "Mã CB là bắt buộc")]
+    [StringLength(9, MinimumLength = 9, ErrorMessage = "Mã CB phải có đúng 9 ký tự")]
+    [RegularExpression(@"^\d{9}$", ErrorMessage = "Mã CB phải gồm 9 chữ số")]
     public string? CBCode { get; set; }
+
+    [StringLength(255, ErrorMessage = "Họ tên không được quá 255 ký tự")]
     public string? FullName { get; set; }
+
+    [StringLength(50, ErrorMessage = "Username không được quá 50 ký tự")]
     public string? Username { get; set; }
+
+    [StringLength(100, ErrorMessage = "Password không được quá 100 ký tự")]
     public string? Password { get; set; }
+
+    [StringLength(100, ErrorMessage = "UserAD không được quá 100 ký tự")]
     public string? UserAD { get; set; }
+
+    [EmailAddress(ErrorMessage = "Email không hợp lệ")]
+    [StringLength(255, ErrorMessage = "Email không được quá 255 ký tự")]
     public string? Email { get; set; }
+
+    [StringLength(100, ErrorMessage = "UserIPCAS không được quá 100 ký tự")]
     public string? UserIPCAS { get; set; }
+
+    [StringLength(50, ErrorMessage = "Mã CBTD không được quá 50 ký tự")]
     public string? MaCBTD { get; set; }
+
+    [StringLength(20, ErrorMessage = "Số điện thoại không được quá 20 ký tự")]
     public string? PhoneNumber { get; set; }
+
+    [Range(1, int.MaxValue, ErrorMessage = "UnitId phải lớn hơn 0")]
     public int? UnitId { get; set; }
+
+    [Range(1, int.MaxValue, ErrorMessage = "PositionId phải lớn hơn 0")]
     public int? PositionId { get; set; }
+}
+
+// === Bulk Delete DTO ===
+public class BulkDeleteRequest
+{
+    public List<int> Ids { get; set; } = new();
 }

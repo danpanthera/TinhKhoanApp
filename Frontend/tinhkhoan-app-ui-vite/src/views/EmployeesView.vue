@@ -1281,17 +1281,31 @@ async function handleFileChange(e) {
         console.log('================================\n')
       }
 
+      // Safe value extraction with type conversion
+      const safeGetString = (row, keys) => {
+        for (const key of keys) {
+          const val = row[key]
+          if (val !== undefined && val !== null) {
+            // Convert to string and trim, handle numbers/formulas
+            if (typeof val === 'number') return val.toString().trim()
+            if (typeof val === 'string') return val.trim()
+            if (typeof val === 'object' && val.v !== undefined) return String(val.v).trim() // Excel formula result
+            return String(val).trim()
+          }
+        }
+        return ''
+      }
+
       const obj = {
         cbCode,
-        fullName: r['Họ và tên'] || r['Ho va ten'] || r['Họ tên'] || r['Ho ten'] || r['HOTEN'] || '',
-        username: r['User'] || r['USER'] || r['Username'] || r['Tên ĐN'] || r['Ten DN'] || r['TENDN'] || '',
-        password: r['Password'] || r['PASSWORD'] || '',
-        email: r['Email'] || r['EMAIL'] || '',
-        phoneNumber:
-          r['Số điện thoại'] || r['So dien thoai'] || r['SĐT'] || r['SDT'] || r['Phone'] || '',
-        userAd: r['User AD'] || r['USER AD'] || r['UserAD'] || '',
-        userIpcas: r['User IPCAS'] || r['USER IPCAS'] || r['UserIPCAS'] || '',
-        maCbtd: r['Mã CBTD'] || r['Ma CBTD'] || r['MACBTD'] || '',
+        fullName: safeGetString(r, ['Họ và tên', 'Ho va ten', 'Họ tên', 'Ho ten', 'HOTEN']),
+        username: safeGetString(r, ['User', 'USER', 'Username', 'Tên ĐN', 'Ten DN', 'TENDN']),
+        password: safeGetString(r, ['Password', 'PASSWORD']),
+        email: safeGetString(r, ['Email', 'EMAIL']),
+        phoneNumber: safeGetString(r, ['Số điện thoại', 'So dien thoai', 'SĐT', 'SDT', 'Phone']),
+        userAd: safeGetString(r, ['User AD', 'USER AD', 'UserAD']),
+        userIpcas: safeGetString(r, ['User IPCAS', 'USER IPCAS', 'UserIPCAS']),
+        maCbtd: safeGetString(r, ['Mã CBTD', 'Ma CBTD', 'MACBTD']),
         branchName: branchName || '',
         departmentName: deptName || '',
         positionName: positionName || '',
@@ -1407,8 +1421,16 @@ async function _performImport() {
     console.log('🚀 Sending import request with payload:', {
       rowsCount: requestPayload.rows.length,
       sampleRow: requestPayload.rows[0], // Log first row for debugging
+      problemRow: requestPayload.rows[1], // Log second row that's causing issues
       overwriteExisting: requestPayload.overwriteExisting,
       autoGenerateMissingUsernames: requestPayload.autoGenerateMissingUsernames,
+    })
+
+    // Additional debug logging for MaCBTD
+    requestPayload.rows.forEach((row, index) => {
+      if (index < 3) { // Log first 3 rows
+        console.log(`🔍 Row ${index}: MaCBTD type=${typeof row.MaCBTD}, value=`, row.MaCBTD)
+      }
     })
 
     const resp = await apiClient.post('/Employees/import-cbcode', requestPayload)
@@ -1423,6 +1445,12 @@ async function _performImport() {
     // Detailed error logging
     if (err.response?.data) {
       console.error('📋 Backend validation errors:', err.response.data)
+
+      // Log specific errors object for debugging
+      if (err.response.data.errors) {
+        console.error('🔍 Detailed errors:', err.response.data.errors)
+        console.table(err.response.data.errors)
+      }
 
       // Parse validation errors from ASP.NET format
       const errorData = err.response.data
