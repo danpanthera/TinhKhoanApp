@@ -159,7 +159,7 @@ export const useEmployeeStore = defineStore('employee', {
       this.error = null
       try {
         const response = await apiClient.delete('/Employees/bulk', {
-          data: employeeIds, // Gửi array IDs trong body
+          data: { Ids: employeeIds }, // Gửi object với Ids property theo format backend
         })
 
         // Cập nhật state local bằng cách loại bỏ các nhân viên đã xóa
