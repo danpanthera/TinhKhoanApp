@@ -658,7 +658,7 @@ const sortedEmployees = computed(() => {
     // 3. Sắp xếp theo chức vụ từ cao xuống thấp trong cùng phòng ban
     const getPositionOrder = (employee) => {
       const positionName = (
-        employee.PositionName || 
+        employee.PositionName ||
         positionStore.allPositions?.find(p => p.Id === employee.PositionId)?.Name ||
         ''
       ).toLowerCase()
