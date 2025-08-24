@@ -13,7 +13,7 @@ NC='\033[0m' # No Color
 
 CONTAINER_NAME="azure_sql_edge_tinhkhoan"
 IMAGE_NAME="mcr.microsoft.com/azure-sql-edge:1.0.5"
-DB_PASSWORD="YourStrong@Password123"
+DB_PASSWORD="Dientoan@303"
 
 echo -e "${BLUE}🐳 TinhKhoanApp - Database Startup Script${NC}"
 echo -e "${BLUE}======================================${NC}"
