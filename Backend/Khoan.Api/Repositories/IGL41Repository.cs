@@ -1,6 +1,6 @@
-using TinhKhoanApp.Api.Models.Entities;
+using Khoan.Api.Models.Entities;
 
-namespace TinhKhoanApp.Api.Repositories
+namespace Khoan.Api.Repositories
 {
     /// <summary>
     /// Interface cho GL41 Repository - Modern Entity (13 business columns, Partitioned Columnstore)

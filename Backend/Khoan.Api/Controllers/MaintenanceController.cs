@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Data;
+using Khoan.Api.Data;
 
-namespace TinhKhoanApp.Api.Controllers
+namespace Khoan.Api.Controllers
 {
     /// <summary>
     /// Maintenance controller for fixing data issues

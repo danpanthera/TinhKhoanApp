@@ -1,7 +1,7 @@
-using TinhKhoanApp.Api.Models.Entities;
-using TinhKhoanApp.Api.Models.Common;
+using Khoan.Api.Models.Entities;
+using Khoan.Api.Models.Common;
 
-namespace TinhKhoanApp.Api.Repositories.Interfaces
+namespace Khoan.Api.Repositories.Interfaces
 {
     /// <summary>
     /// DPDA Repository Interface - Data access layer cho bảng DPDA

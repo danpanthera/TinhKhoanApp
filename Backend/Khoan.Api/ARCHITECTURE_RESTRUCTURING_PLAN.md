@@ -1,6 +1,6 @@
 # 🏗️ COMPREHENSIVE CODE ARCHITECTURE RESTRUCTURING PLAN
 
-## Áp dụng Clean Architecture cho TinhKhoanApp - August 10, 2025
+## Áp dụng Clean Architecture cho KhoanApp - August 10, 2025
 
 ## 📊 **9-TABLE SEQUENTIAL DEVELOPMENT PROGRESS**
 
@@ -60,7 +60,7 @@ Position 15-22: DataSource, ImportDateTime, CreatedAt, UpdatedAt, CreatedBy, Upd
 -   **Repository Pattern**: IDPDARepository with paging, search, analytics methods
 -   **Service Pattern**: Manual DTO mapping following DP01 proven approach
 -   **CSV-First Architecture**: Business columns preserved as single source of truth
--   **Namespace Structure**: TinhKhoanApp.Api.Models.Dtos.DPDA (consistent with DP01)
+-   **Namespace Structure**: KhoanApp.Api.Models.Dtos.DPDA (consistent with DP01)
 -   **Business Key Indexing**: MA_CHI_NHANH, SO_TAI_KHOAN for efficient querying
 -   **Temporal Table Support**: Historical data tracking maintained
 

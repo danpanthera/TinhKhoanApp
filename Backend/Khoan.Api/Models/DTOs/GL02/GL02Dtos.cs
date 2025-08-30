@@ -1,4 +1,4 @@
-namespace TinhKhoanApp.Api.Models.DTOs.GL02
+namespace Khoan.Api.Models.DTOs.GL02
 {
     public class GL02PreviewDto
     {

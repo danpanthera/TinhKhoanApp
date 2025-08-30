@@ -13,7 +13,7 @@ log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_FILE"
 }
 
-log "🛑 Stopping TinhKhoan Frontend Development Server..."
+log "🛑 Stopping Khoan Frontend Development Server..."
 
 # Check if PID file exists
 if [ -f "$PID_FILE" ]; then

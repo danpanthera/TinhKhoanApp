@@ -13,7 +13,7 @@ backup_table() {
     local table_name=$1
     echo "💾 Backing up $table_name..."
 
-    sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d TinhKhoanDB -Q "
+    sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d KhoanDB -Q "
     -- Backup current data
     SELECT * INTO ${table_name}_BACKUP_$(date +%Y%m%d_%H%M%S) FROM $table_name;
     SELECT 'Backup completed for $table_name' as Status;
@@ -493,7 +493,7 @@ EOF
     esac
 
     # Execute the SQL file
-    sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d TinhKhoanDB -i "$sql_file"
+    sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d KhoanDB -i "$sql_file"
 
     if [ $? -eq 0 ]; then
         echo "✅ Successfully created $table_name with real column names"
@@ -518,7 +518,7 @@ echo "🔍 STEP 3: VERIFY NEW STRUCTURE"
 echo "==============================="
 
 # Verify the new structures
-sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d TinhKhoanDB -Q "
+sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d KhoanDB -Q "
 SELECT
     t.TABLE_NAME,
     COUNT(*) as TotalColumns,

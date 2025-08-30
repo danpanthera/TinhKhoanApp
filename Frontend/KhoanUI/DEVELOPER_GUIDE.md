@@ -1,10 +1,10 @@
-# TinhKhoanApp - Hướng dẫn cho nhà phát triển
+# Khoan App - Hướng dẫn cho nhà phát triển
 
-Đây là tài liệu hướng dẫn toàn diện cho các nhà phát triển làm việc với dự án TinhKhoanApp. Tài liệu cung cấp thông tin về cấu trúc dự án, quy trình phát triển, và các best practices.
+Đây là tài liệu hướng dẫn toàn diện cho các nhà phát triển làm việc với dự án Khoan App. Tài liệu cung cấp thông tin về cấu trúc dự án, quy trình phát triển, và các best practices.
 
 ## Cấu trúc dự án
 
-Dự án TinhKhoanApp được chia thành hai phần chính:
+Dự án Khoan App được chia thành hai phần chính:
 
 ### 1. Frontend (KhoanUI)
 
@@ -60,7 +60,7 @@ Khoan.Api/
 git clone <repository-url>
 
 # Di chuyển vào thư mục frontend
-cd TinhKhoanApp/Frontend/KhoanUI
+cd KhoanApp/Frontend/KhoanUI
 
 # Cài đặt dependencies
 npm install
@@ -75,7 +75,7 @@ npm run dev
 
 ```bash
 # Di chuyển vào thư mục backend
-cd TinhKhoanApp/Backend/Khoan.Api
+cd KhoanApp/Backend/Khoan.Api
 
 # Restore packages
 dotnet restore

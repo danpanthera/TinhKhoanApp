@@ -101,7 +101,7 @@ if (cleanNumber.length > 8) {
 
 ## 🧪 Manual Testing Instructions
 
-1. **Open TinhKhoanApp**: http://localhost:3000
+1. **Open KhoanApp**: http://localhost:3000
 2. **Navigate to**: Employee KPI Assignment or Unit KPI Assignment
 3. **Find "Triệu VND" input field**
 4. **Test each scenario above**

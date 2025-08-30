@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace TinhKhoanApp.Api.Models.DTOs.GL41
+namespace Khoan.Api.Models.DTOs.GL41
 {
     /// <summary>
     /// GL41 DTOs - 13 business columns từ CSV GL41

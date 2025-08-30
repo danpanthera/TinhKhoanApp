@@ -5513,11 +5513,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api.Tests/TinhKhoanApp.Api.Tests/TinhKhoanApp.Api.Tests.csproj",
-      "projectName": "TinhKhoanApp.Api.Tests",
-      "projectPath": "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api.Tests/TinhKhoanApp.Api.Tests/TinhKhoanApp.Api.Tests.csproj",
+      "projectUniqueName": "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/Khoan.Api.Tests/Khoan.Api.Tests/Khoan.Api.Tests.csproj",
+      "projectName": "Khoan.Api.Tests",
+      "projectPath": "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/Khoan.Api.Tests/Khoan.Api.Tests/Khoan.Api.Tests.csproj",
       "packagesPath": "/Users/nguyendat/.nuget/packages/",
-      "outputPath": "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api.Tests/TinhKhoanApp.Api.Tests/obj/",
+      "outputPath": "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/Khoan.Api.Tests/Khoan.Api.Tests/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/Users/nguyendat/.nuget/NuGet/NuGet.Config"

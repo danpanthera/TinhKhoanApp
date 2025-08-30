@@ -15,7 +15,7 @@ log() {
 
 # Function to stop all services
 stop_all_services() {
-    log "🛑 Stopping all TinhKhoan services..."
+    log "🛑 Stopping all Khoan services..."
 
     # Stop frontend first
     if [ -f "$FRONTEND_DIR/stop_frontend.sh" ]; then
@@ -36,7 +36,7 @@ stop_all_services() {
 
 # Function to start all services
 start_all_services() {
-    log "🚀 Starting all TinhKhoan services..."
+    log "🚀 Starting all Khoan services..."
 
     # Start backend first
     if [ -f "$BACKEND_DIR/start_backend.sh" ]; then
@@ -65,7 +65,7 @@ start_all_services() {
 
 # Function to restart all services
 restart_all_services() {
-    log "🔄 Restarting all TinhKhoan services..."
+    log "🔄 Restarting all Khoan services..."
     stop_all_services
     sleep 5
     start_all_services
@@ -105,7 +105,7 @@ case "${1:-start}" in
         check_status
         ;;
     "help"|"-h"|"--help")
-        echo "TinhKhoan Service Manager"
+        echo "Khoan Service Manager"
         echo "Usage: $0 [start|stop|restart|status|help]"
         echo ""
         echo "Commands:"

@@ -1,14 +1,14 @@
-# 🇻🇳 BÁO CÁO KIỂM TRA UTF-8 UNICODE TIẾNG VIỆT - TINHKHOAN BANKING APP
+# 🇻🇳 BÁO CÁO KIỂM TRA UTF-8 UNICODE TIẾNG VIỆT - KHOAN BANKING APP
 
 **Ngày kiểm tra:** 18/08/2025
 **Người thực hiện:** GitHub Copilot Assistant
-**Dự án:** TinhKhoan Banking Application (Agribank Lai Châu)
+**Dự án:** Khoan Banking Application (Agribank Lai Châu)
 
 ---
 
 ## 📋 TỔNG QUAN KIỂM TRA
 
-Đã thực hiện kiểm tra toàn diện hệ thống encoding UTF-8 cho tiếng Việt trên toàn bộ dự án banking TinhKhoan App.
+Đã thực hiện kiểm tra toàn diện hệ thống encoding UTF-8 cho tiếng Việt trên toàn bộ dự án banking Khoan App.
 
 ---
 
@@ -111,4 +111,4 @@
 - ✅ **Terminal:** Hiển thị tiếng Việt đúng trong development
 - ✅ **API Integration:** Communication giữa frontend-backend không có lỗi encoding
 
-**Dự án TinhKhoan Banking App đã sẵn sàng cho production với full UTF-8 Unicode support!** 🇻🇳
+**Dự án Khoan Banking App đã sẵn sàng cho production với full UTF-8 Unicode support!** 🇻🇳

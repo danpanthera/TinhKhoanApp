@@ -46,7 +46,7 @@ if sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -Q "SELECT @@VE
     echo -e "✅ ${GREEN}SQL Server: Connected${NC}"
 
     # Database info
-    DB_INFO=$(sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -d TinhKhoanDB -C -Q "
+    DB_INFO=$(sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -d KhoanDB -C -Q "
         SELECT
             (SELECT COUNT(*) FROM sys.tables WHERE name NOT LIKE '%History%') as MainTables,
             (SELECT COUNT(*) FROM sys.tables WHERE name LIKE '%History%') as HistoryTables
@@ -61,11 +61,11 @@ if sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -Q "SELECT @@VE
     echo "   🗂️  Core Data Tables:"
     for table in DP01 DPDA EI01 GL01 GL41 LN01 LN03 RR01; do
         # Simple count query
-        RESULT=$(sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -d TinhKhoanDB -C -Q "SELECT COUNT(*) FROM ${table}" -h -1 2>/dev/null | tr -d '\r\n ' | sed 's/.*affected)//' | grep -E '^[0-9]+$' | head -1)
+        RESULT=$(sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -d KhoanDB -C -Q "SELECT COUNT(*) FROM ${table}" -h -1 2>/dev/null | tr -d '\r\n ' | sed 's/.*affected)//' | grep -E '^[0-9]+$' | head -1)
 
         if [ -z "$RESULT" ]; then
             # Fallback: just get the number before "(X rows affected)"
-            RESULT=$(sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -d TinhKhoanDB -C -Q "SELECT COUNT(*) FROM ${table}" -h -1 2>/dev/null | grep -oE '[0-9]+' | head -1)
+            RESULT=$(sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -d KhoanDB -C -Q "SELECT COUNT(*) FROM ${table}" -h -1 2>/dev/null | grep -oE '[0-9]+' | head -1)
         fi
 
         if [ -z "$RESULT" ]; then

@@ -2,7 +2,7 @@
 
 ## 🎯 Tóm Tắt Thành Công
 
-Đã **hoàn thành việc chuyển đổi toàn bộ dự án TinhKhoanApp** sang sử dụng **SQL Server Temporal Tables + Columnstore Indexes**. Hệ thống hiện đã:
+Đã **hoàn thành việc chuyển đổi toàn bộ dự án KhoanApp** sang sử dụng **SQL Server Temporal Tables + Columnstore Indexes**. Hệ thống hiện đã:
 
 - ✅ **Loại bỏ hoàn toàn mock data**
 - ✅ **Tất cả CRUD operations sử dụng database thực**
@@ -100,7 +100,7 @@ GET http://localhost:5055/api/temporal/analytics?startDate=2025-06-22&endDate=20
 
 ### Database Connection & Temporal Status
 - ✅ SQL Server container running và accessible
-- ✅ Database: TinhKhoanDB connected
+- ✅ Database: KhoanDB connected
 - ✅ Temporal tables active với system versioning
 - ✅ History tables có dữ liệu temporal
 - ✅ Columnstore indexes created và functional
@@ -160,7 +160,7 @@ Cần sửa casting trong các stored procedures:
 ### For Development
 ```bash
 # Database đã ready, chỉ cần start API:
-cd /Backend/TinhKhoanApp.Api
+cd /Backend/KhoanApp.Api
 dotnet run
 
 # Test endpoints:

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace TinhKhoanApp.Api.Models.Common
+namespace Khoan.Api.Models.Common
 {
     public class PagedResult<T>
     {

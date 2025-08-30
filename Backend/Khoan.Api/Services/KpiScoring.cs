@@ -1,6 +1,6 @@
 using System;
 
-namespace TinhKhoanApp.Api.Services;
+namespace Khoan.Api.Services;
 
 /// <summary>
 /// Helper tính điểm KPI (Score) dựa trên Target, Actual và MaxScore.

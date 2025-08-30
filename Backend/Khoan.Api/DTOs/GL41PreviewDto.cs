@@ -1,4 +1,4 @@
-namespace TinhKhoanApp.Api.DTOs
+namespace Khoan.Api.DTOs
 {
     public class GL41PreviewDto
     {

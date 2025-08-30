@@ -1,8 +1,8 @@
 #!/bin/bash
-# 🚀 TinhKhoan App - Backend Startup Script (Universal)
+# 🚀 Khoan App - Backend Startup Script (Universal)
 # Usage: ./start_backend.sh (from anywhere)
 
-echo "🚀 Starting TinhKhoan Backend API..."
+echo "🚀 Starting Khoan Backend API..."
 
 # Get the absolute path of the script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

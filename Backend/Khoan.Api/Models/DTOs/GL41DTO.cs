@@ -1,4 +1,4 @@
-namespace TinhKhoanApp.Api.Models.DTOs
+namespace Khoan.Api.Models.DTOs
 {
     /// <summary>
     /// GL41 DTO - Bảng cân đối tài khoản (Partitioned Columnstore)

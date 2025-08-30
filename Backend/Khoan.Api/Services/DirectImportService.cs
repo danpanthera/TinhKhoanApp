@@ -6,15 +6,15 @@ using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models;
-using TinhKhoanApp.Api.Models.Configuration;
-using TinhKhoanApp.Api.Models.Entities;
-using TinhKhoanApp.Api.Models.DataTables;
-using TinhKhoanApp.Api.Models.CsvModels;
-using TinhKhoanApp.Api.Services.Interfaces;
+using Khoan.Api.Data;
+using Khoan.Api.Models;
+using Khoan.Api.Models.Configuration;
+using Khoan.Api.Models.Entities;
+using Khoan.Api.Models.DataTables;
+using Khoan.Api.Models.CsvModels;
+using Khoan.Api.Services.Interfaces;
 
-namespace TinhKhoanApp.Api.Services
+namespace Khoan.Api.Services
 {
     /// <summary>
     /// DirectImportService - Handles CSV direct import cho DP01, DPDA, LN03

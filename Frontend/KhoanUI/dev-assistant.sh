@@ -7,7 +7,7 @@ RED='\033[0;31m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}=== TIỆN ÍCH HỖ TRỢ PHÁT TRIỂN TINHKHOANAPP ===${NC}"
+echo -e "${BLUE}=== TIỆN ÍCH HỖ TRỢ PHÁT TRIỂN KHOAN APP ===${NC}"
 
 show_menu() {
     echo -e "\n${GREEN}Chọn một tùy chọn:${NC}"

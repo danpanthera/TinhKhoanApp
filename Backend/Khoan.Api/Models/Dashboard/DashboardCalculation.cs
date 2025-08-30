@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TinhKhoanApp.Api.Models.Dashboard
+namespace Khoan.Api.Models.Dashboard
 {
     /// <summary>
     /// Kết quả tính toán chỉ tiêu từ dữ liệu thô DP01, LN01, GL41

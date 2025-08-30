@@ -82,21 +82,21 @@ done
 
 if [ "$CONNECTION_SUCCESS" = true ]; then
   # Kiểm tra database và tables
-  echo "🗄️ [DATABASE] Kiểm tra database TinhKhoanDB..."
-  DB_CHECK=$(sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -Q "SELECT COUNT(*) FROM sys.databases WHERE name = 'TinhKhoanDB'" -h -1 -W 2>/dev/null || echo "0")
+  echo "🗄️ [DATABASE] Kiểm tra database KhoanDB..."
+  DB_CHECK=$(sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -Q "SELECT COUNT(*) FROM sys.databases WHERE name = 'KhoanDB'" -h -1 -W 2>/dev/null || echo "0")
   
   if [ "$DB_CHECK" -gt 0 ]; then
-    echo "   ✅ Database TinhKhoanDB tồn tại"
+    echo "   ✅ Database KhoanDB tồn tại"
     
     # Check tables
-    TABLE_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d TinhKhoanDB -Q "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'" -h -1 -W 2>/dev/null || echo "0")
+    TABLE_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d KhoanDB -Q "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'" -h -1 -W 2>/dev/null || echo "0")
     echo "   📊 Tổng số tables: $TABLE_COUNT"
     
     # Check core tables
     echo "🎯 [CORE TABLES] Kiểm tra 8 bảng core data..."
-    sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d TinhKhoanDB -Q "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME IN ('DP01', 'DPDA', 'EI01', 'GL01', 'GL41', 'LN01', 'LN03', 'RR01') ORDER BY TABLE_NAME" -t 10 2>/dev/null
+    sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d KhoanDB -Q "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME IN ('DP01', 'DPDA', 'EI01', 'GL01', 'GL41', 'LN01', 'LN03', 'RR01') ORDER BY TABLE_NAME" -t 10 2>/dev/null
   else
-    echo "   ⚠️ Database TinhKhoanDB chưa tồn tại"
+    echo "   ⚠️ Database KhoanDB chưa tồn tại"
   fi
   
   # Performance check

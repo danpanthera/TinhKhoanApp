@@ -17,7 +17,7 @@ enable_system_versioning() {
     echo "🔄 Enabling system versioning for $table_name..."
 
     # Check current status
-    current_status=$(sqlcmd -S localhost,1433 -U SA -P YourStrong@Password123 -d TinhKhoanDB -C -Q "
+    current_status=$(sqlcmd -S localhost,1433 -U SA -P YourStrong@Password123 -d KhoanDB -C -Q "
         SELECT temporal_type_desc FROM sys.tables WHERE name = '$table_name'
     " -h -1 2>/dev/null | tr -d ' \n\r')
 
@@ -27,7 +27,7 @@ enable_system_versioning() {
     fi
 
     # Try to enable system versioning
-    result=$(sqlcmd -S localhost,1433 -U SA -P YourStrong@Password123 -d TinhKhoanDB -C -Q "
+    result=$(sqlcmd -S localhost,1433 -U SA -P YourStrong@Password123 -d KhoanDB -C -Q "
         ALTER TABLE $table_name SET (SYSTEM_VERSIONING = ON (HISTORY_TABLE = dbo.${table_name}_History))
     " 2>&1)
 
@@ -39,7 +39,7 @@ enable_system_versioning() {
             echo -e "    🔧 ${YELLOW}Trying to fix IDENTITY issue...${NC}"
 
             # Drop and recreate history table without IDENTITY
-            sqlcmd -S localhost,1433 -U SA -P YourStrong@Password123 -d TinhKhoanDB -C -Q "
+            sqlcmd -S localhost,1433 -U SA -P YourStrong@Password123 -d KhoanDB -C -Q "
                 DROP TABLE ${table_name}_History;
                 SELECT * INTO ${table_name}_History FROM $table_name WHERE 1=0;
 
@@ -57,7 +57,7 @@ enable_system_versioning() {
             " > /dev/null 2>&1
 
             # Try again
-            result2=$(sqlcmd -S localhost,1433 -U SA -P YourStrong@Password123 -d TinhKhoanDB -C -Q "
+            result2=$(sqlcmd -S localhost,1433 -U SA -P YourStrong@Password123 -d KhoanDB -C -Q "
                 ALTER TABLE $table_name SET (SYSTEM_VERSIONING = ON (HISTORY_TABLE = dbo.${table_name}_History))
             " 2>&1)
 
@@ -95,7 +95,7 @@ echo ""
 echo "🎯 FINAL VERIFICATION:"
 echo "======================"
 
-sqlcmd -S localhost,1433 -U SA -P YourStrong@Password123 -d TinhKhoanDB -C -Q "
+sqlcmd -S localhost,1433 -U SA -P YourStrong@Password123 -d KhoanDB -C -Q "
     SELECT
         t.name as TableName,
         t.temporal_type_desc as TemporalType,
@@ -121,7 +121,7 @@ if [ $success_count -eq 8 ]; then
     echo "🧪 Final functionality test..."
 
     # Test with a temporal table
-    temporal_tables=$(sqlcmd -S localhost,1433 -U SA -P YourStrong@Password123 -d TinhKhoanDB -C -Q "
+    temporal_tables=$(sqlcmd -S localhost,1433 -U SA -P YourStrong@Password123 -d KhoanDB -C -Q "
         SELECT name FROM sys.tables
         WHERE temporal_type_desc = 'SYSTEM_VERSIONED_TEMPORAL_TABLE'
         AND name IN ('DP01', 'DPDA', 'EI01', 'GL01', 'GL41', 'LN01', 'LN03', 'RR01')
@@ -130,11 +130,11 @@ if [ $success_count -eq 8 ]; then
     if [ ! -z "$temporal_tables" ]; then
         echo "Testing temporal functionality with: $temporal_tables"
 
-        main_count=$(sqlcmd -S localhost,1433 -U SA -P YourStrong@Password123 -d TinhKhoanDB -C -Q "
+        main_count=$(sqlcmd -S localhost,1433 -U SA -P YourStrong@Password123 -d KhoanDB -C -Q "
             SELECT COUNT(*) FROM $temporal_tables
         " -h -1 2>/dev/null | sed 's/[^0-9]*//g')
 
-        history_count=$(sqlcmd -S localhost,1433 -U SA -P YourStrong@Password123 -d TinhKhoanDB -C -Q "
+        history_count=$(sqlcmd -S localhost,1433 -U SA -P YourStrong@Password123 -d KhoanDB -C -Q "
             SELECT COUNT(*) FROM ${temporal_tables}_History
         " -h -1 2>/dev/null | sed 's/[^0-9]*//g')
 
@@ -156,7 +156,7 @@ elif [ $success_count -gt 0 ]; then
     # Show which ones are working
     echo ""
     echo "Working temporal tables:"
-    sqlcmd -S localhost,1433 -U SA -P YourStrong@Password123 -d TinhKhoanDB -C -Q "
+    sqlcmd -S localhost,1433 -U SA -P YourStrong@Password123 -d KhoanDB -C -Q "
         SELECT '  ✅ ' + name as WorkingTables
         FROM sys.tables
         WHERE temporal_type_desc = 'SYSTEM_VERSIONED_TEMPORAL_TABLE'

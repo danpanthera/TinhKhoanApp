@@ -9,15 +9,15 @@ echo "🎯 DATABASE RESTORE COMPLETION - August 12, 2025"
 echo "================================================"
 
 # Kiểm tra database đã tồn tại - simplified approach
-if sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -Q "SELECT name FROM sys.databases WHERE name = 'TinhKhoanDB'" -h-1 | grep -q "TinhKhoanDB"; then
-    echo "✅ TinhKhoanDB found"
+if sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -Q "SELECT name FROM sys.databases WHERE name = 'KhoanDB'" -h-1 | grep -q "KhoanDB"; then
+    echo "✅ KhoanDB found"
 else
-    echo "❌ TinhKhoanDB not found"
+    echo "❌ KhoanDB not found"
     exit 1
 fi
 
 # Kiểm tra cấu trúc bảng
-TABLE_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'" -h-1 -W | tr -d ' \r\n')
+TABLE_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'" -h-1 -W | tr -d ' \r\n')
 echo "📊 Total tables: $TABLE_COUNT"
 
 # Populate dữ liệu cơ bản cho Units
@@ -26,7 +26,7 @@ echo "📝 Populating basic data..."
 
 # Units data
 echo "   • Adding Units..."
-sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "
+sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "
 IF (SELECT COUNT(*) FROM Units) = 0
 BEGIN
     SET IDENTITY_INSERT Units ON;
@@ -46,7 +46,7 @@ ELSE
 
 # Roles data
 echo "   • Adding Roles..."
-sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "
+sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "
 IF (SELECT COUNT(*) FROM Roles) = 0
 BEGIN
     SET IDENTITY_INSERT Roles ON;
@@ -67,7 +67,7 @@ ELSE
 
 # Employees data
 echo "   • Adding Employees..."
-sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "
+sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "
 IF (SELECT COUNT(*) FROM Employees) = 0
 BEGIN
     SET IDENTITY_INSERT Employees ON;
@@ -88,19 +88,19 @@ ELSE
 echo ""
 echo "🔍 Final verification..."
 
-UNITS_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "SELECT COUNT(*) FROM Units" -h-1 -W | tr -d ' \r\n')
-ROLES_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "SELECT COUNT(*) FROM Roles" -h-1 -W | tr -d ' \r\n')
-EMP_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "SELECT COUNT(*) FROM Employees" -h-1 -W | tr -d ' \r\n')
+UNITS_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "SELECT COUNT(*) FROM Units" -h-1 -W | tr -d ' \r\n')
+ROLES_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "SELECT COUNT(*) FROM Roles" -h-1 -W | tr -d ' \r\n')
+EMP_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "SELECT COUNT(*) FROM Employees" -h-1 -W | tr -d ' \r\n')
 
 # Check core data tables
 echo "📋 Core data tables status:"
 CORE_TABLES=("DP01" "DPDA" "EI01" "GL01" "GL02" "GL41" "LN01" "LN03" "RR01")
 
 for table in "${CORE_TABLES[@]}"; do
-    TABLE_EXISTS=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '$table'" -h-1 -W 2>/dev/null | tr -d ' \r\n')
+    TABLE_EXISTS=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '$table'" -h-1 -W 2>/dev/null | tr -d ' \r\n')
 
     if [ "${TABLE_EXISTS:-0}" = "1" ]; then
-        RECORD_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "SELECT COUNT(*) FROM [$table]" -h-1 -W 2>/dev/null | tr -d ' \r\n')
+        RECORD_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "SELECT COUNT(*) FROM [$table]" -h-1 -W 2>/dev/null | tr -d ' \r\n')
         echo "   • $table: ✅ (${RECORD_COUNT:-0} records)"
     else
         echo "   • $table: ❌ (missing)"
@@ -108,12 +108,12 @@ for table in "${CORE_TABLES[@]}"; do
 done
 
 # Check temporal tables
-TEMPORAL_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "SELECT COUNT(*) FROM sys.tables WHERE temporal_type = 2" -h-1 -W 2>/dev/null | tr -d ' \r\n')
+TEMPORAL_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "SELECT COUNT(*) FROM sys.tables WHERE temporal_type = 2" -h-1 -W 2>/dev/null | tr -d ' \r\n')
 
 echo ""
 echo "🎯 RESTORE SUMMARY - August 12, 2025"
 echo "===================================="
-echo "✅ Database: TinhKhoanDB (restored from backup)"
+echo "✅ Database: KhoanDB (restored from backup)"
 echo "📊 Total tables: ${TABLE_COUNT:-0}"
 echo "🕒 Temporal tables: ${TEMPORAL_COUNT:-0}"
 echo "👥 Basic data:"
@@ -127,7 +127,7 @@ echo ""
 echo "🚀 Database is ready for development!"
 echo "   • Backend: dotnet run"
 echo "   • Connection: localhost:1433"
-echo "   • Database: TinhKhoanDB"
+echo "   • Database: KhoanDB"
 echo "   • Password: Dientoan@303"
 echo ""
 echo "📋 Next steps:"

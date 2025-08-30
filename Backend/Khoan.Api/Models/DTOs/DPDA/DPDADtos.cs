@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace TinhKhoanApp.Api.Models.Dtos.DPDA
+namespace Khoan.Api.Models.Dtos.DPDA
 {
     /// <summary>
     /// DPDA Preview DTO - Để hiển thị danh sách thẻ nộp đơn gửi tiết kiệm

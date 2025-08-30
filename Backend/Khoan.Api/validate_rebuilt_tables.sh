@@ -8,7 +8,7 @@ echo ""
 echo "📊 STEP 1: COLUMN COUNT VALIDATION"
 echo "=================================="
 
-sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d TinhKhoanDB -Q "
+sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d KhoanDB -Q "
 -- Column count comparison with CSV expected
 SELECT
     'COLUMN COUNT VALIDATION' as ReportSection,
@@ -53,7 +53,7 @@ echo ""
 echo "📊 STEP 2: COLUMN NAMING VALIDATION"
 echo "==================================="
 
-sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d TinhKhoanDB -Q "
+sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d KhoanDB -Q "
 -- Check for generic vs real column names
 SELECT
     'COLUMN NAMING VALIDATION' as ReportSection,
@@ -76,7 +76,7 @@ echo ""
 echo "📊 STEP 3: TEMPORAL & COLUMNSTORE VALIDATION"
 echo "============================================"
 
-sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d TinhKhoanDB -Q "
+sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d KhoanDB -Q "
 -- Check temporal tables and columnstore indexes
 SELECT
     'TEMPORAL & COLUMNSTORE VALIDATION' as ReportSection,
@@ -98,7 +98,7 @@ echo "📊 STEP 4: SAMPLE COLUMN NAMES CHECK"
 echo "===================================="
 
 echo "🔍 DP01 - First 5 business columns:"
-sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d TinhKhoanDB -Q "
+sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d KhoanDB -Q "
 SELECT TOP 5 COLUMN_NAME, ORDINAL_POSITION
 FROM INFORMATION_SCHEMA.COLUMNS
 WHERE TABLE_NAME = 'DP01'
@@ -108,7 +108,7 @@ ORDER BY ORDINAL_POSITION;
 
 echo ""
 echo "🔍 LN01 - First 5 business columns:"
-sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d TinhKhoanDB -Q "
+sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d KhoanDB -Q "
 SELECT TOP 5 COLUMN_NAME, ORDINAL_POSITION
 FROM INFORMATION_SCHEMA.COLUMNS
 WHERE TABLE_NAME = 'LN01'
@@ -118,7 +118,7 @@ ORDER BY ORDINAL_POSITION;
 
 echo ""
 echo "🔍 RR01 - First 5 business columns:"
-sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d TinhKhoanDB -Q "
+sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d KhoanDB -Q "
 SELECT TOP 5 COLUMN_NAME, ORDINAL_POSITION
 FROM INFORMATION_SCHEMA.COLUMNS
 WHERE TABLE_NAME = 'RR01'
@@ -131,7 +131,7 @@ echo "📋 SUMMARY REPORT"
 echo "================="
 
 # Generate final summary
-sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d TinhKhoanDB -Q "
+sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d KhoanDB -Q "
 -- Final Summary Report
 SELECT
     'FINAL SUMMARY' as ReportSection,

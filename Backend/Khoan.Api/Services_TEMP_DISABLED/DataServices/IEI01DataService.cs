@@ -1,8 +1,8 @@
-using TinhKhoanApp.Api.Models.Dtos;
-using TinhKhoanApp.Api.Models.Dtos.EI01;
-using TinhKhoanApp.Api.Models.Common;
+using Khoan.Api.Models.Dtos;
+using Khoan.Api.Models.Dtos.EI01;
+using Khoan.Api.Models.Common;
 
-namespace TinhKhoanApp.Api.Services.DataServices
+namespace Khoan.Api.Services.DataServices
 {
     /// <summary>
     /// Interface cho EI01 Data Service - xử lý business logic liên quan đến dữ liệu EI01 (Thông tin dịch vụ ngân hàng điện tử)

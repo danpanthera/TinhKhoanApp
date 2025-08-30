@@ -9,7 +9,7 @@
 
 ## 📋 Overview
 
-This migration systematically replaces all instances of interest collection rate KPI indicators with customer development indicators across the entire TinhKhoan application.
+This migration systematically replaces all instances of interest collection rate KPI indicators with customer development indicators across the entire Khoan application.
 
 ### **Changes Made:**
 
@@ -33,43 +33,43 @@ This migration systematically replaces all instances of interest collection rate
 ### **Backend Files:**
 
 #### **1. SQL Migration Scripts:**
-- `/Backend/TinhKhoanApp.Api/create_kpi_indicators_part1.sql`
+- `/Backend/Khoan.Api/create_kpi_indicators_part1.sql`
   - Updated records 1, 2, 3, 4, 7 to use new indicator name and unit
-- `/Backend/TinhKhoanApp.Api/create_kpi_indicators_part3.sql`
+- `/Backend/Khoan.Api/create_kpi_indicators_part3.sql`
   - Updated records 16, 18, 20, 21 to use new indicator name and unit
-- `/Backend/TinhKhoanApp.Api/add_lai_chau_kpi_table.sql`
+- `/Backend/Khoan.Api/add_lai_chau_kpi_table.sql`
   - Updated Lai Chau KPI table indicator definition
-- `/Backend/TinhKhoanApp.Api/khoi_phuc_kpi_indicators.sql`
+- `/Backend/Khoan.Api/khoi_phuc_kpi_indicators.sql`
   - Updated recovery script for indicators 1 and 2
 
 #### **2. Service Classes:**
-- `/Backend/TinhKhoanApp.Api/Services/KpiScoringService.cs`
+- `/Backend/Khoan.Api/Services/KpiScoringService.cs`
   - Updated `calculatedRatioKpis` array: `TYLETHUCTHULAI` → `PHATTRIENKHACHHANG`
   - Updated KPI name mapping dictionary
 
 #### **3. Data Seed Files:**
-- `/Backend/TinhKhoanApp.Api/Data/SeedKpiScoringRules.old`
+- `/Backend/Khoan.Api/Data/SeedKpiScoringRules.old`
   - Updated KPI indicator name in seeding rules
 
 ### **Frontend Files:**
 
 #### **1. Vue Components:**
-- `/Frontend/tinhkhoan-app-ui-vite/src/views/KpiScoringView.vue`
+- `/Frontend/KhoanUI/src/views/KpiScoringView.vue`
   - Updated condition logic for KPI name checking
 
 #### **2. Service Files:**
-- `/Frontend/tinhkhoan-app-ui-vite/src/services/kpiScoringService.js`
+- `/Frontend/KhoanUI/src/services/kpiScoringService.js`
   - Updated KPI name in service configuration
 
 ### **Documentation Files:**
-- `/Frontend/tinhkhoan-app-ui-vite/KPI_RECOVERY_COMPLETION_REPORT.md`
-- `/Frontend/tinhkhoan-app-ui-vite/KPI_INDICATORS_FIX_REPORT.md`
+- `/Frontend/KhoanUI/KPI_RECOVERY_COMPLETION_REPORT.md`
+- `/Frontend/KhoanUI/KPI_INDICATORS_FIX_REPORT.md`
 
 ---
 
 ## 📊 Database Migration Script
 
-**Created:** `/Backend/TinhKhoanApp.Api/migrate_kpi_indicators_to_customer_development.sql`
+**Created:** `/Backend/Khoan.Api/migrate_kpi_indicators_to_customer_development.sql`
 
 This comprehensive script:
 - ✅ Creates backup of existing KPI indicators
@@ -151,7 +151,7 @@ SELECT DISTINCT UnitOfMeasure FROM KpiIndicators WHERE KpiIndicatorName = 'Phát
 
 2. **Run Migration Script:**
    ```bash
-   cd Backend/TinhKhoanApp.Api
+   cd Backend/KhoanApp.Api
    # Execute migrate_kpi_indicators_to_customer_development.sql
    ```
 

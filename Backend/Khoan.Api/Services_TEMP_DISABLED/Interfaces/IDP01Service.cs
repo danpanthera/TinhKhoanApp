@@ -1,7 +1,7 @@
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.Dtos.DP01;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Models.Dtos.DP01;
 
-namespace TinhKhoanApp.Api.Services.Interfaces
+namespace Khoan.Api.Services.Interfaces
 {
     /// <summary>
     /// Interface cho DP01 Service - Business logic layer

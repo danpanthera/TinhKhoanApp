@@ -1,4 +1,4 @@
-namespace TinhKhoanApp.Api.Models.DTO;
+namespace Khoan.Api.Models.DTO;
 
 public class Gahr26ImportRowDto
 {

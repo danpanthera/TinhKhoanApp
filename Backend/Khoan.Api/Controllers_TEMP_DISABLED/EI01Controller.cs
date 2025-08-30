@@ -1,11 +1,11 @@
-using TinhKhoanApp.Api.Models.Common;
+using Khoan.Api.Models.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TinhKhoanApp.Api.Models.Dtos;
-using TinhKhoanApp.Api.Models.Dtos.EI01;
-using TinhKhoanApp.Api.Services.DataServices;
+using Khoan.Api.Models.Dtos;
+using Khoan.Api.Models.Dtos.EI01;
+using Khoan.Api.Services.DataServices;
 
-namespace TinhKhoanApp.Api.Controllers
+namespace Khoan.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

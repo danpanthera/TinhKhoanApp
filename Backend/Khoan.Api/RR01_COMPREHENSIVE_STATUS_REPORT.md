@@ -3,7 +3,7 @@
 ## ✨ **100% IMPLEMENTATION STATUS: ACHIEVED** ✨
 
 **Date:** August 14, 2025
-**System:** TinhKhoanApp - RR01 Risk Report Data Table
+**System:** KhoanApp - RR01 Risk Report Data Table
 **Compliance:** Full adherence to user specifications
 
 ---
@@ -182,7 +182,7 @@
 
 ```bash
 # Start backend service
-cd Backend/TinhKhoanApp.Api && dotnet run
+cd Backend/KhoanApp.Api && dotnet run
 
 # Test import (81 records)
 curl -X POST 'http://localhost:5055/api/DirectImport/smart' \
@@ -191,7 +191,7 @@ curl -X POST 'http://localhost:5055/api/DirectImport/smart' \
   -F 'dataType=RR01'
 
 # Verify results
-sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q \
+sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q \
   "SELECT COUNT(*) as TotalRecords FROM RR01;"
 ```
 
@@ -275,7 +275,7 @@ sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q \
 ### **Technical Specifications:**
 
 -   **Backend Port:** 5055
--   **Database:** TinhKhoanDB on localhost:1433
+-   **Database:** KhoanDB on localhost:1433
 -   **Import Endpoint:** POST /api/DirectImport/smart
 -   **API Documentation:** GET /api/RR01/dev/self-test
 
@@ -292,4 +292,4 @@ sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q \
 
 ---
 
-_Generated on August 14, 2025 by TinhKhoanApp Development System_
+_Generated on August 14, 2025 by KhoanApp Development System_

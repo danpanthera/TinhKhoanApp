@@ -1,9 +1,9 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using TinhKhoanApp.Api.Data;
+using Khoan.Api.Data;
 
-namespace TinhKhoanApp.Api.HealthChecks
+namespace Khoan.Api.HealthChecks
 {
     public class DatabaseHealthCheck : IHealthCheck
     {

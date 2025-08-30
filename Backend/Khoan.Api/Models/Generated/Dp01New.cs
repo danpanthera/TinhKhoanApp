@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace TinhKhoanApp.Api.Models.Generated;
+namespace Khoan.Api.Models.Generated;
 
 public partial class Dp01New
 {

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 🐳 Script khởi động nhanh Azure SQL Edge Container
-# Tác giả: TinhKhoanApp Team
+# Tác giả: KhoanApp Team
 # Ngày tạo: July 14, 2025
 
 # Màu sắc cho output
@@ -15,7 +15,7 @@ CONTAINER_NAME="azure_sql_edge_tinhkhoan"
 IMAGE_NAME="mcr.microsoft.com/azure-sql-edge:1.0.5"
 DB_PASSWORD="Dientoan@303"
 
-echo -e "${BLUE}🐳 TinhKhoanApp - Database Startup Script${NC}"
+echo -e "${BLUE}🐳 KhoanApp - Database Startup Script${NC}"
 echo -e "${BLUE}======================================${NC}"
 
 # Hàm kiểm tra container có tồn tại không
@@ -83,7 +83,7 @@ test_connection() {
             fi
 
             echo -e "${GREEN}✅ Database đã sẵn sàng kết nối!${NC}"
-            echo -e "${GREEN}📊 Connection String: Server=localhost,1433;Database=TinhKhoanDB;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=true${NC}"
+            echo -e "${GREEN}📊 Connection String: Server=localhost,1433;Database=KhoanDB;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=true${NC}"
             return 0
         fi
         echo -e "${YELLOW}⏳ Đang đợi database khởi động... (${i}/30)${NC}"

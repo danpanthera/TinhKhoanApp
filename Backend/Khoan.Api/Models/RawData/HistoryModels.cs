@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TinhKhoanApp.Api.Models.RawData
+namespace Khoan.Api.Models.RawData
 {
     /// <summary>
     /// Base class cho tất cả các History tables với SCD Type 2

@@ -1,7 +1,6 @@
 // Store quản lý theme cho ứng dụng
-import { normalizeArray, getId, getName, getType, getStatus } from '../utils/casingSafeAccess.js'
 import { defineStore } from 'pinia'
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 
 export const useThemeStore = defineStore('theme', () => {
   // State
@@ -10,7 +9,7 @@ export const useThemeStore = defineStore('theme', () => {
 
   // Khởi tạo theme từ localStorage hoặc system preference
   const initTheme = () => {
-    const savedTheme = localStorage.getItem('tinhkhoan-theme')
+    const savedTheme = localStorage.getItem('khoan-theme')
 
     if (savedTheme) {
       // Sử dụng theme đã lưu
@@ -51,7 +50,7 @@ export const useThemeStore = defineStore('theme', () => {
     currentTheme.value = isDarkMode.value ? 'dark' : 'light'
 
     // Lưu vào localStorage
-    localStorage.setItem('tinhkhoan-theme', currentTheme.value)
+    localStorage.setItem('khoan-theme', currentTheme.value)
 
     applyTheme()
   }
@@ -61,7 +60,7 @@ export const useThemeStore = defineStore('theme', () => {
     if (theme === 'dark' || theme === 'light') {
       currentTheme.value = theme
       isDarkMode.value = theme === 'dark'
-      localStorage.setItem('tinhkhoan-theme', theme)
+      localStorage.setItem('khoan-theme', theme)
       applyTheme()
     }
   }
@@ -72,7 +71,7 @@ export const useThemeStore = defineStore('theme', () => {
 
     mediaQuery.addEventListener('change', e => {
       // Chỉ tự động thay đổi nếu user chưa set theme riêng
-      const savedTheme = localStorage.getItem('tinhkhoan-theme')
+      const savedTheme = localStorage.getItem('khoan-theme')
       if (!savedTheme) {
         isDarkMode.value = e.matches
         currentTheme.value = e.matches ? 'dark' : 'light'

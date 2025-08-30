@@ -1,9 +1,9 @@
-using TinhKhoanApp.Api.Repositories;
-// using TinhKhoanApp.Api.Services.DataServices; // TEMP DISABLED
-using TinhKhoanApp.Api.Services;
-using TinhKhoanApp.Api.Services.Interfaces;
+using Khoan.Api.Repositories;
+// using Khoan.Api.Services.DataServices; // TEMP DISABLED
+using Khoan.Api.Services;
+using Khoan.Api.Services.Interfaces;
 
-namespace TinhKhoanApp.Api.Extensions
+namespace Khoan.Api.Extensions
 {
     /// <summary>
     /// Extension methods to register all repositories and services

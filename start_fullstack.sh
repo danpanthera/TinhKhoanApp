@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# TinhKhoan App - Fullstack Startup Script
+# Khoan App - Fullstack Startup Script
 # Khởi động theo thứ tự: Database -> Backend -> Frontend
 
 set -e
 
-echo "🚀 Starting TinhKhoan Fullstack Application..."
+echo "🚀 Starting Khoan Fullstack Application..."
 echo "================================================"
 
 # Màu sắc cho output

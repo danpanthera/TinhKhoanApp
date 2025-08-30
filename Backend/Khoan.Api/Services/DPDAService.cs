@@ -1,12 +1,12 @@
-using TinhKhoanApp.Api.Models.Dtos.DPDA;
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.Entities;
-using TinhKhoanApp.Api.Repositories.Interfaces;
-using TinhKhoanApp.Api.Services.Interfaces;
+using Khoan.Api.Models.Dtos.DPDA;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Models.Entities;
+using Khoan.Api.Repositories.Interfaces;
+using Khoan.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using System.Globalization;
 
-namespace TinhKhoanApp.Api.Services
+namespace Khoan.Api.Services
 {
     /// <summary>
     /// DPDA Service Implementation - Business logic cho thẻ nộp đơn gửi tiết kiệm

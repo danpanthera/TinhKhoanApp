@@ -1,4 +1,4 @@
-namespace TinhKhoanApp.Api.Utils
+namespace Khoan.Api.Utils
 {
     /// <summary>
     /// Utility class để xử lý DateTime với timezone Vietnam (UTC+7)

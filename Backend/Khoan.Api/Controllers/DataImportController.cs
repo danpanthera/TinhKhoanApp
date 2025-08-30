@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models;
+using Khoan.Api.Data;
+using Khoan.Api.Models;
 
-namespace TinhKhoanApp.Api.Controllers
+namespace Khoan.Api.Controllers
 {
     /// <summary>
     /// Provides import history and simple preview/cleanup endpoints to support the B9 UI.

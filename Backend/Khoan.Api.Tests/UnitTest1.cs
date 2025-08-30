@@ -1,4 +1,4 @@
-namespace TinhKhoanApp.Api.Tests;
+namespace Khoan.Api.Tests;
 
 public class UnitTest1
 {

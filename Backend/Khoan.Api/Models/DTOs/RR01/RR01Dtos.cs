@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace TinhKhoanApp.Api.Models.DTOs.RR01;
+namespace Khoan.Api.Models.DTOs.RR01;
 
 /// <summary>
 /// RR01 Preview DTO - Hiển thị tóm tắt cho danh sách

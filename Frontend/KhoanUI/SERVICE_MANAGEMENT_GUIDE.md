@@ -1,10 +1,10 @@
-# TinhKhoan Service Management Documentation
+# Khoan Service Management Documentation
 
 ## Enhanced Service Management Scripts
 
 ### Overview
 
-The TinhKhoan Banking Application now has a comprehensive service management system with enhanced startup and shutdown scripts for both backend (.NET Core 8.0) and frontend (Vue.js 3) services.
+The Khoan Banking Application now has a comprehensive service management system with enhanced startup and shutdown scripts for both backend (.NET Core 8.0) and frontend (Vue.js 3) services.
 
 ### Service Architecture
 

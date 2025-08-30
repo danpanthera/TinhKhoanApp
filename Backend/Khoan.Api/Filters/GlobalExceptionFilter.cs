@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using System.Net;
 
-namespace TinhKhoanApp.Api.Filters
+namespace Khoan.Api.Filters
 {
     public class GlobalExceptionFilter : IExceptionFilter
     {

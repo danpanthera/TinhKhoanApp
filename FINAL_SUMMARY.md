@@ -125,7 +125,7 @@ git undo         # Undo commit cuối
 - Documentation rõ ràng
 - Zero technical debt
 
-🎉 **Workspace TinhKhoanApp giờ đây là môi trường phát triển tối ưu nhất!**
+🎉 **Workspace KhoanApp giờ đây là môi trường phát triển tối ưu nhất!**
 - **Siêu sạch**: 97.7% problems được giải quyết
 - **Siêu tiện**: Automation và hotkeys
 - **Siêu an toàn**: Security vulnerabilities fixed

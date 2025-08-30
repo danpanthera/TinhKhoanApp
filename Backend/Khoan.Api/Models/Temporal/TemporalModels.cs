@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TinhKhoanApp.Api.Models.Temporal
+namespace Khoan.Api.Models.Temporal
 {
     /// <summary>
     /// Main temporal table for raw data imports with system versioning

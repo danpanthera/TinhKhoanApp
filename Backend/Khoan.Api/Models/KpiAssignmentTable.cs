@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TinhKhoanApp.Api.Models
+namespace Khoan.Api.Models
 {
     // Enum định nghĩa 23 loại bảng giao khoán KPI
     public enum KpiTableType

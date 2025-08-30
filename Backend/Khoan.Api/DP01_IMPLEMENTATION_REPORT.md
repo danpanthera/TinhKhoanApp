@@ -26,7 +26,7 @@ The DP01 (Sổ tiết kiệm) table implementation is **SUBSTANTIALLY COMPLETE**
 
 ### 2️⃣ DATABASE STRUCTURE VERIFICATION ✅ EXCELLENT
 
--   **Table Exists**: ✅ DP01 table confirmed in TinhKhoanDB
+-   **Table Exists**: ✅ DP01 table confirmed in KhoanDB
 -   **Temporal Tables**: ✅ SYSTEM_VERSIONED_TEMPORAL_TABLE enabled
 -   **History Table**: ✅ DP01_History automatically created
 -   **Columnstore Index**: ✅ NCCI_DP01_Analytics for performance

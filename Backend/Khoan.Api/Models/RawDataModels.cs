@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TinhKhoanApp.Api.Models
+namespace Khoan.Api.Models
 {
     // 📊 Model chính cho dữ liệu thô
     public class RawDataImport

@@ -22,7 +22,7 @@
 ### **SQL Migration Script:**
 - **File:** `migrate_kpi_indicators_to_customer_development.sql`
 - **Execution:** Successful via sqlcmd
-- **Database:** TinhKhoanDB on SQL Server localhost:1433
+- **Database:** KhoanDB on SQL Server localhost:1433
 
 ### **Backup Strategy:**
 ```sql
@@ -69,18 +69,18 @@ WHERE IndicatorName = N'Tỷ lệ thực thu lãi';
 ## 📁 FILES UPDATED
 
 ### **Backend Files:**
-- `Backend/TinhKhoanApp.Api/Services/KpiScoringService.cs`
-- `Backend/TinhKhoanApp.Api/create_kpi_indicators_part1.sql`
-- `Backend/TinhKhoanApp.Api/create_kpi_indicators_part3.sql`
-- `Backend/TinhKhoanApp.Api/add_lai_chau_kpi_table.sql`
-- `Backend/TinhKhoanApp.Api/khoi_phuc_kpi_indicators.sql`
+- `Backend/Khoan.Api/Services/KpiScoringService.cs`
+- `Backend/Khoan.Api/create_kpi_indicators_part1.sql`
+- `Backend/Khoan.Api/create_kpi_indicators_part3.sql`
+- `Backend/Khoan.Api/add_lai_chau_kpi_table.sql`
+- `Backend/Khoan.Api/khoi_phuc_kpi_indicators.sql`
 
 ### **Frontend Files:**
-- `Frontend/tinhkhoan-app-ui-vite/src/views/KpiScoringView.vue`
-- `Frontend/tinhkhoan-app-ui-vite/src/services/kpiScoringService.js`
+- `Frontend/KhoanUI/src/views/KpiScoringView.vue`
+- `Frontend/KhoanUI/src/services/kpiScoringService.js`
 
 ### **New Migration Files:**
-- `Backend/TinhKhoanApp.Api/migrate_kpi_indicators_to_customer_development.sql`
+- `Backend/Khoan.Api/migrate_kpi_indicators_to_customer_development.sql`
 - `verify_kpi_migration.sh`
 - `KPI_INDICATOR_MIGRATION_COMPLETION_REPORT.md`
 

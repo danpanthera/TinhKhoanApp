@@ -1,9 +1,9 @@
-using TinhKhoanApp.Api.Models.Dtos.DPDA;
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.DataTables;
+using Khoan.Api.Models.Dtos.DPDA;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Models.DataTables;
 using Microsoft.AspNetCore.Http;
 
-namespace TinhKhoanApp.Api.Services.Interfaces
+namespace Khoan.Api.Services.Interfaces
 {
     /// <summary>
     /// DPDA Service Interface - Business logic layer cho bảng DPDA

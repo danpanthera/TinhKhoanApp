@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace TinhKhoanApp.Api.Models.Entities
+namespace Khoan.Api.Models.Entities
 {
     /// <summary>
     /// GL01 Entity - General Ledger Detail Table (UNIFIED STRUCTURE - HEAVY FILE OPTIMIZED)

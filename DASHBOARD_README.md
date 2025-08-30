@@ -72,7 +72,7 @@ open dashboard-demo.html
 ## 🛠️ Cấu Trúc Dự Án
 
 ```
-📦 TinhKhoanApp
+📦 KhoanApp
 ├── 🎨 Frontend/tinhkhoan-app-ui-vite
 │   ├── src/views/dashboard/
 │   │   ├── BusinessPlanDashboard.vue    # 📊 Dashboard chính
@@ -85,7 +85,7 @@ open dashboard-demo.html
 │   │   ├── IndicatorDetail.vue          # 🔍 Chi tiết chỉ tiêu
 │   │   └── ComparisonView.vue           # ⚖️ Chế độ so sánh
 │   └── src/services/dashboardService.js # 🔌 API service
-├── 🏗️ Backend/TinhKhoanApp.Api
+├── 🏗️ Backend/KhoanApp.Api
 │   ├── Controllers/
 │   │   ├── BusinessPlanTargetController.cs
 │   │   └── DashboardController.cs
@@ -242,7 +242,7 @@ npm run dev
 
 #### Backend Database Issues
 ```bash
-cd Backend/TinhKhoanApp.Api
+cd Backend/KhoanApp.Api
 dotnet ef database drop
 dotnet ef database update
 ```

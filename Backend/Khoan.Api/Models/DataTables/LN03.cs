@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace TinhKhoanApp.Api.Models.DataTables;
+namespace Khoan.Api.Models.DataTables;
 
 /// <summary>
 /// LN03 - Loan data với 20 business columns (17 có header + 3 không header)

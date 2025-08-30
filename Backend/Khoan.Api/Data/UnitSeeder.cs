@@ -1,7 +1,7 @@
-using TinhKhoanApp.Api.Models;
+using Khoan.Api.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace TinhKhoanApp.Api.Data
+namespace Khoan.Api.Data
 {
     public static class UnitSeeder
     {

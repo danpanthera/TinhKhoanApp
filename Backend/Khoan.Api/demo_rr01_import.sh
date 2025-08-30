@@ -19,7 +19,7 @@ fi
 # Check database connection
 echo ""
 echo "📊 Database Connection Check:"
-sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "SELECT COUNT(*) as CurrentRecords FROM RR01;" 2>/dev/null >/dev/null
+sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "SELECT COUNT(*) as CurrentRecords FROM RR01;" 2>/dev/null >/dev/null
 if [ $? -eq 0 ]; then
     echo "✅ Database Connection: OK"
 else
@@ -28,7 +28,7 @@ else
 fi
 
 # Check current record count
-CURRENT_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "SELECT COUNT(*) FROM RR01;" 2>/dev/null | grep -E '^[0-9]+$' | head -1)
+CURRENT_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "SELECT COUNT(*) FROM RR01;" 2>/dev/null | grep -E '^[0-9]+$' | head -1)
 echo "📊 Current RR01 Records: ${CURRENT_COUNT:-0}"
 
 echo ""
@@ -97,17 +97,17 @@ echo "📊 POST-IMPORT VERIFICATION COMMANDS:"
 echo ""
 
 echo "3. Check Record Count After Import:"
-echo "sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q \\"
+echo "sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q \\"
 echo "  \"SELECT COUNT(*) as TotalRecords FROM RR01;\""
 
 echo ""
 echo "4. Preview Imported Data:"
-echo "sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q \\"
+echo "sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q \\"
 echo "  \"SELECT TOP 5 NGAY_DL, CN_LOAI_I, BRCD, MA_KH, TEN_KH, FILE_NAME FROM RR01 ORDER BY CREATED_DATE DESC;\""
 
 echo ""
 echo "5. Verify Date Processing (NGAY_DL from filename):"
-echo "sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q \\"
+echo "sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q \\"
 echo "  \"SELECT DISTINCT NGAY_DL, COUNT(*) as Records FROM RR01 GROUP BY NGAY_DL ORDER BY NGAY_DL DESC;\""
 
 echo ""

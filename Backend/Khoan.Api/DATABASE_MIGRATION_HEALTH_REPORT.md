@@ -158,7 +158,7 @@ curl http://localhost:5055/health           # API health check
 # Database backup before major changes:
 docker exec azure_sql_edge_tinhkhoan /opt/mssql-tools/bin/sqlcmd \
   -S localhost -U sa -P 'YourStrong@Passw0rd' \
-  -Q "BACKUP DATABASE [TinhKhoanApp] TO DISK = '/var/backups/tinhkhoan_$(date +%Y%m%d).bak'"
+  -Q "BACKUP DATABASE [KhoanApp] TO DISK = '/var/backups/tinhkhoan_$(date +%Y%m%d).bak'"
 ```
 
 ---

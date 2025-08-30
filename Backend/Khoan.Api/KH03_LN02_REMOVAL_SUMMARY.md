@@ -2,7 +2,7 @@
 
 ## 📋 Overview
 
-Đã hoàn thành việc xóa bảng dữ liệu **KH03** (Khách hàng pháp nhân) và **LN02** (Biến động nhóm nợ) khỏi toàn bộ hệ thống TinhKhoan App theo yêu cầu.
+Đã hoàn thành việc xóa bảng dữ liệu **KH03** (Khách hàng pháp nhân) và **LN02** (Biến động nhóm nợ) khỏi toàn bộ hệ thống Khoan App theo yêu cầu.
 
 ## ✅ Completed Tasks
 

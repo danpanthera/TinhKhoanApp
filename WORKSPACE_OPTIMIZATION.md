@@ -1,7 +1,7 @@
-# TinhKhoanApp - Workspace Optimization Summary
+# KhoanApp - Workspace Optimization Summary
 
 ## 🎯 Overview
-This document summarizes the comprehensive workspace optimization performed for the TinhKhoanApp project, a full-stack application with .NET Core backend and Vue.js frontend.
+This document summarizes the comprehensive workspace optimization performed for the KhoanApp project, a full-stack application with .NET Core backend and Vue.js frontend.
 
 ## ✅ Completed Optimizations
 
@@ -29,7 +29,7 @@ This document summarizes the comprehensive workspace optimization performed for 
 - ✅ **Removed redundant extensions**: Moved non-essential extensions to unwanted list
 
 ### 3. Workspace Configuration
-- ✅ **Created comprehensive workspace file**: `TinhKhoanApp.code-workspace`
+- ✅ **Created comprehensive workspace file**: `KhoanApp.code-workspace`
 - ✅ **Optimized VS Code settings**:
   - File exclusions for better performance
   - Search exclusions for faster searching
@@ -121,26 +121,26 @@ humao.rest-client,ritwickdey.liveserver,formulahendry.auto-rename-tag,bradlc.vsc
 
 ## 📁 Project Structure
 ```
-TinhKhoanApp/
-├── Backend/TinhKhoanApp.Api/          # .NET Core API
+KhoanApp/
+├── Backend/Khoan.Api/          # .NET Core API
 │   ├── Controllers/                    # API Controllers
 │   ├── Models/                        # Data Models
 │   ├── Services/                      # Business Logic
 │   ├── Database/                      # DB Scripts & Migrations
 │   │   └── Archive/                   # Historical SQL files
 │   └── .vscode/                       # Backend-specific VS Code config
-├── Frontend/tinhkhoan-app-ui-vite/    # Vue.js Frontend
+├── Frontend/KhoanUI/    # Vue.js Frontend
 │   ├── src/                           # Source code
 │   ├── public/                        # Static assets
 │   └── .vscode/                       # Frontend-specific VS Code config
-├── TinhKhoanApp.code-workspace        # Workspace configuration
+├── KhoanApp.code-workspace        # Workspace configuration
 └── .gitignore                         # Git exclusions
 ```
 
 ## 🔧 Configuration Files Summary
 
 ### Workspace Level
-- `TinhKhoanApp.code-workspace` - Main workspace configuration
+- `KhoanApp.code-workspace` - Main workspace configuration
 - `.gitignore` - Git exclusions for entire project
 
 ### Frontend Configuration
@@ -151,7 +151,7 @@ TinhKhoanApp/
 - `.vscode/vue.code-snippets` - Vue.js code snippets
 
 ### Backend Configuration  
-- `TinhKhoanApp.Api.csproj` - Project dependencies
+- `KhoanApp.Api.csproj` - Project dependencies
 - `appsettings.json` - Application configuration
 - `appsettings.Development.json` - Development overrides
 - `.vscode/csharp.code-snippets` - C# code snippets
@@ -192,4 +192,4 @@ TinhKhoanApp/
 ---
 
 *Last updated: June 25, 2025*
-*TinhKhoanApp - Agribank Lai Châu Center*
+*KhoanApp - Agribank Lai Châu Center*

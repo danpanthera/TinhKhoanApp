@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models.Entities;
+using Khoan.Api.Data;
+using Khoan.Api.Models.Entities;
 
-namespace TinhKhoanApp.Api.Repositories
+namespace Khoan.Api.Repositories
 {
     /// <summary>
     /// GL41 Repository - Modern Entity implementation (Partitioned Columnstore)

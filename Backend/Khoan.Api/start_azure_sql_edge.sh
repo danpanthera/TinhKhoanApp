@@ -49,6 +49,6 @@ docker stats azure_sql_edge_tinhkhoan --no-stream --format "table {{.Name}}\t{{.
 echo ""
 echo "🔥 READY FOR DEVELOPMENT!"
 echo "========================="
-echo "🚀 Database: TinhKhoanDB ready trên port 1433"
+echo "🚀 Database: KhoanDB ready trên port 1433"
 echo "⚡ Native ARM64 performance trên M3"
-echo "🎯 Connection: Server=localhost,1433;Database=TinhKhoanDB;User Id=sa;Password=Dientoan@303;TrustServerCertificate=true"
+echo "🎯 Connection: Server=localhost,1433;Database=KhoanDB;User Id=sa;Password=Dientoan@303;TrustServerCertificate=true"

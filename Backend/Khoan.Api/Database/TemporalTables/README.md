@@ -2,7 +2,7 @@
 
 ## Overview
 
-This folder contains SQL scripts to fully implement SQL Server Temporal Tables for the Agribank Lai Châu TinhKhoan application. Temporal tables provide automatic historical data tracking with built-in time-based querying capabilities.
+This folder contains SQL scripts to fully implement SQL Server Temporal Tables for the Agribank Lai Châu Khoan application. Temporal tables provide automatic historical data tracking with built-in time-based querying capabilities.
 
 ## Files
 

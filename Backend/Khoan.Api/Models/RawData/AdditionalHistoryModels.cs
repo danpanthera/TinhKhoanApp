@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TinhKhoanApp.Api.Models.RawData
+namespace Khoan.Api.Models.RawData
 {
     // =======================================
     // 📊 LN03 - Dữ liệu Nợ XLRR History Model

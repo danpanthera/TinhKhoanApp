@@ -1,4 +1,4 @@
-# TinhKhoanApp - Báo cáo hoàn thành yêu cầu
+# KhoanApp - Báo cáo hoàn thành yêu cầu
 
 ## 📋 Tóm tắt công việc đã hoàn thành
 

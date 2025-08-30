@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace TinhKhoanApp.Api.Models.DTOs.LN03
+namespace Khoan.Api.Models.DTOs.LN03
 {
     // Preview DTO for listing LN03
     public class LN03PreviewDto

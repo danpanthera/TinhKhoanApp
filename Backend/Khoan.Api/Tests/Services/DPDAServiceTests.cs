@@ -2,16 +2,16 @@ using Xunit;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Services;
-using TinhKhoanApp.Api.Services.Interfaces;
-using TinhKhoanApp.Api.Repositories.Interfaces;
-using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models.Dtos;
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.DataTables;
+using Khoan.Api.Services;
+using Khoan.Api.Services.Interfaces;
+using Khoan.Api.Repositories.Interfaces;
+using Khoan.Api.Data;
+using Khoan.Api.Models.Dtos;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Models.DataTables;
 using Moq;
 
-namespace TinhKhoanApp.Api.Tests.Services
+namespace Khoan.Api.Tests.Services
 {
     /// <summary>
     /// Unit tests for DPDAService - Architecture validation

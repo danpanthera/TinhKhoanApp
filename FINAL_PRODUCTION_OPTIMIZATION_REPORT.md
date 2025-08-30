@@ -157,7 +157,7 @@ Tất cả các mục tiêu tối ưu hóa đã được hoàn thành thành cô
 
 ## 👨‍💻 **Ghi chú từ SIÊU Lập trình viên:**
 
-Anh ơi, em đã hoàn thành tất cả các tối ưu hóa theo yêu cầu! Workspace TinhKhoan giờ đây:
+Anh ơi, em đã hoàn thành tất cả các tối ưu hóa theo yêu cầu! Workspace Khoan giờ đây:
 - 🧹 **Clean**: Không còn debug code
 - 📦 **Updated**: Packages mới nhất
 - 🚀 **Optimized**: Performance tốt nhất

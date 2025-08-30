@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using TinhKhoanApp.Api.Models.DTOs.RR01;
-using TinhKhoanApp.Api.Services.Interfaces;
+using Khoan.Api.Models.DTOs.RR01;
+using Khoan.Api.Services.Interfaces;
 
-namespace TinhKhoanApp.Api.Controllers;
+namespace Khoan.Api.Controllers;
 
 /// <summary>
 /// RR01 Controller - Risk Report API endpoints

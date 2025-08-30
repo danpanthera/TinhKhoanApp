@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using TinhKhoanApp.Api.Models.Dtos.GL01;
-using TinhKhoanApp.Api.Services.Interfaces;
+using Khoan.Api.Models.Dtos.GL01;
+using Khoan.Api.Services.Interfaces;
 
-namespace TinhKhoanApp.Api.Controllers
+namespace Khoan.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

@@ -71,7 +71,7 @@ NGAY_DL (Order 1) -> Business Columns (Order 2-14) -> System Columns (Order 15-1
 -   ✅ **System Columns** - Id, NGAY_DL, CREATED_DATE, UPDATED_DATE, FILE_NAME
 -   ✅ **Temporal Columns** - SysStartTime, SysEndTime
 -   ✅ **Data Types** - String(200), DateTime/DateTime?, Column Orders
--   ✅ **Namespace** - TinhKhoanApp.Api.Models.DataTables
+-   ✅ **Namespace** - KhoanApp.Api.Models.DataTables
 
 ### 2. Database Configuration - ApplicationDbContext.cs
 
@@ -96,7 +96,7 @@ NGAY_DL (Order 1) -> Business Columns (Order 2-14) -> System Columns (Order 15-1
 -   ✅ **DTO Mapping** - DPDA to DTOs conversion
 -   ✅ **CRUD Operations** - Full business logic layer
 -   ✅ **Error Handling** - Comprehensive logging
--   ✅ **Namespace** - TinhKhoanApp.Api.Models.DataTables (không Entities)
+-   ✅ **Namespace** - KhoanApp.Api.Models.DataTables (không Entities)
 
 ### 5. DirectImport Support - DirectImportService.cs
 

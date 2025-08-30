@@ -2,7 +2,7 @@
 
 ## Giới thiệu
 
-Tài liệu này cung cấp hướng dẫn để duy trì chất lượng code trong dự án TinhKhoanApp. Bằng cách tuân thủ các quy tắc và thực hành này, chúng ta có thể giảm thiểu lỗi, nâng cao khả năng bảo trì và đảm bảo sự nhất quán trong toàn bộ codebase.
+Tài liệu này cung cấp hướng dẫn để duy trì chất lượng code trong dự án Khoan App. Bằng cách tuân thủ các quy tắc và thực hành này, chúng ta có thể giảm thiểu lỗi, nâng cao khả năng bảo trì và đảm bảo sự nhất quán trong toàn bộ codebase.
 
 ## Các công cụ kiểm soát chất lượng
 

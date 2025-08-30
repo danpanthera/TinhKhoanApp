@@ -56,7 +56,7 @@ ALTER TABLE RR01 ADD SysEndTime datetime2 NOT NULL DEFAULT ('9999-12-31T23:59:59
 
 ```bash
 # Check if columns exist in database
-sqlcmd -S localhost -U sa -P 'YourStrong@Passw0rd' -d TinhKhoanDb -Q "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'RR01' AND COLUMN_NAME IN ('SysStartTime', 'SysEndTime');"
+sqlcmd -S localhost -U sa -P 'YourStrong@Passw0rd' -d KhoanDb -Q "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'RR01' AND COLUMN_NAME IN ('SysStartTime', 'SysEndTime');"
 
 # Test RR01 API endpoint
 curl -s "http://localhost:5055/api/rr01/stats"

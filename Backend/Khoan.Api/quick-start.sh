@@ -1,7 +1,7 @@
 #!/bin/bash
 # 🚀 Quick Start Script - Khởi động toàn bộ hệ thống
 
-echo "🚀 Quick Start Script - Khởi động hệ thống TinhKhoan App..."
+echo "🚀 Quick Start Script - Khởi động hệ thống Khoan App..."
 
 # Màu sắc
 RED='\033[0;31m'

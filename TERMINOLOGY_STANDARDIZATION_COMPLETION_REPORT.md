@@ -1,7 +1,7 @@
 # 🎯 BÁO CÁO HOÀN THÀNH CẬP NHẬT TERMINOLOGY CUỐI CÙNG
 
 ## 📋 Tổng quan
-Hoàn thành việc chuẩn hóa terminology trong toàn bộ dự án TinhKhoanApp theo yêu cầu của anh.
+Hoàn thành việc chuẩn hóa terminology trong toàn bộ dự án KhoanApp theo yêu cầu của anh.
 
 ---
 
@@ -48,7 +48,7 @@ Hoàn thành việc chuẩn hóa terminology trong toàn bộ dự án TinhKhoan
 
 ### 📄 **Backend Files**
 ```
-Backend/TinhKhoanApp.Api/Controllers/KpiAssignmentController.cs
+Backend/Khoan.Api/Controllers/KpiAssignmentController.cs
 ├── Line 483: Comment về Kinh tế Nội vụ → Kế toán & Ngân quỹ
 ├── Line 490-491: Database search patterns
 ├── Line 497: Error message content
@@ -64,30 +64,30 @@ Backend/TinhKhoanApp.Api/Controllers/KpiAssignmentController.cs
 ├── Line 597, 604, 613: Related search patterns
 └── Line 696, 703, 709, 718: CNL2 Kế toán references
 
-Backend/TinhKhoanApp.Api/Data/SeedKPIDefinitionMaxScore.cs
+Backend/Khoan.Api/Data/SeedKPIDefinitionMaxScore.cs
 ├── Line 49: Comment cập nhật Phụ trách Kế toán
 ├── Line 485: Comment title update
 └── Line 490: Variable description update
 
-Backend/TinhKhoanApp.Api/Data/RoleSeeder.cs
+Backend/Khoan.Api/Data/RoleSeeder.cs
 └── Line 77: Display name mapping update
 
-Backend/TinhKhoanApp.Api/Data/KpiAssignmentTableSeeder.cs
+Backend/Khoan.Api/Data/KpiAssignmentTableSeeder.cs
 └── Line 74: Table mapping consistency (đã có sẵn)
 ```
 
 ### 📄 **SQL Files**
 ```
-Backend/TinhKhoanApp.Api/create_standard_roles_new.sql
+Backend/Khoan.Api/create_standard_roles_new.sql
 └── Line 30: Role definition for PhogiamdocCnl2Kt
 
-Backend/TinhKhoanApp.Api/create_standard_roles.sql  
+Backend/Khoan.Api/create_standard_roles.sql  
 └── Line 66: SQLite role definition update
 
-Backend/TinhKhoanApp.Api/verify_roles_match_seed_definition.sql
+Backend/Khoan.Api/verify_roles_match_seed_definition.sql
 └── Line 36: Verification script update
 
-Backend/TinhKhoanApp.Api/update_final_terminology.sql (NEW)
+Backend/Khoan.Api/update_final_terminology.sql (NEW)
 └── Complete database migration script for all terminology
 ```
 

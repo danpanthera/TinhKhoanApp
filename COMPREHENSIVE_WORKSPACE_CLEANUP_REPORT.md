@@ -1,7 +1,7 @@
 # 🎉 COMPREHENSIVE WORKSPACE CLEANUP REPORT
 
 ## 📅 Date: June 9, 2025
-## 🎯 Project: TinhKhoan (Performance Evaluation) Application
+## 🎯 Project: Khoan (Performance Evaluation) Application
 
 ---
 
@@ -126,7 +126,7 @@ npm run build
 
 ### **Backend Build**
 ```bash
-cd Backend/TinhKhoanApp.Api  
+cd Backend/KhoanApp.Api  
 dotnet build
 ```
 **Result**: ✅ SUCCESS
@@ -202,7 +202,7 @@ dotnet build
 
 ## 🎊 CONCLUSION
 
-The comprehensive workspace cleanup has been **SUCCESSFULLY COMPLETED**. The TinhKhoan application is now:
+The comprehensive workspace cleanup has been **SUCCESSFULLY COMPLETED**. The Khoan application is now:
 
 - 🎯 **Production-ready** with clean, optimized code
 - 🚀 **Performance-optimized** with reduced bundle size

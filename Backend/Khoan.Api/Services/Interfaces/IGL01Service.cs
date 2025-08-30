@@ -1,7 +1,7 @@
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.Dtos.GL01;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Models.Dtos.GL01;
 
-namespace TinhKhoanApp.Api.Services.Interfaces
+namespace Khoan.Api.Services.Interfaces
 {
     public interface IGL01Service
     {

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace TinhKhoanApp.Api.Models.DataTables
+namespace Khoan.Api.Models.DataTables
 {
     /// <summary>
     /// Import model cho GL01 - chỉ cần các field cần thiết cho import

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace TinhKhoanApp.Api.Models.Dtos.GL01
+namespace Khoan.Api.Models.Dtos.GL01
 {
     // Preview DTO for list views
     public class GL01PreviewDto

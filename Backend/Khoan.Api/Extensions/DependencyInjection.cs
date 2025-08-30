@@ -2,13 +2,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration; // For IConfiguration
 using Microsoft.Extensions.DependencyInjection; // For IServiceCollection
 using System;
-using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Repositories;
-// using TinhKhoanApp.Api.Repositories.Cached; // TEMP DISABLED
-// using TinhKhoanApp.Api.Services.DataServices; // TEMP DISABLED
+using Khoan.Api.Data;
+using Khoan.Api.Repositories;
+// using Khoan.Api.Repositories.Cached; // TEMP DISABLED
+// using Khoan.Api.Services.DataServices; // TEMP DISABLED
 using Scrutor; // For the Decorate extension method
 
-namespace TinhKhoanApp.Api.Extensions
+namespace Khoan.Api.Extensions
 {
     /// <summary>
     /// Extension methods for dependency injection configuration
@@ -36,7 +36,7 @@ namespace TinhKhoanApp.Api.Extensions
 
             // Register repositories
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
-            services.AddScoped(typeof(TinhKhoanApp.Api.Repositories.Interfaces.IBaseRepository<>), typeof(TinhKhoanApp.Api.Repositories.GenericRepository<>));
+            services.AddScoped(typeof(Khoan.Api.Repositories.Interfaces.IBaseRepository<>), typeof(Khoan.Api.Repositories.GenericRepository<>));
             // All specific repositories are temporarily disabled for clean build
 
             // Register cached repositories (for production environments) - TEMP DISABLED

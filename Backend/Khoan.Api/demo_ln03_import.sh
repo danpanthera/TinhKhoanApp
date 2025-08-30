@@ -21,14 +21,14 @@ fi
 echo ""
 echo "🗄️  2. PRE-IMPORT DATABASE STATUS:"
 if command -v sqlcmd > /dev/null; then
-    pre_count=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "SELECT COUNT(*) FROM LN03" 2>/dev/null | grep -E '^[0-9]+$' || echo "0")
+    pre_count=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "SELECT COUNT(*) FROM LN03" 2>/dev/null | grep -E '^[0-9]+$' || echo "0")
     echo "📍 Current LN03 records: $pre_count"
 
     # Sample current data if exists
     if [[ $pre_count -gt 0 ]]; then
         echo ""
         echo "📄 Sample existing data:"
-        sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "SELECT TOP 3 NGAY_DL, MACHINHANH, TENKH, SOTIENXLRR FROM LN03 ORDER BY CREATED_DATE DESC" 2>/dev/null || echo "Query failed"
+        sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "SELECT TOP 3 NGAY_DL, MACHINHANH, TENKH, SOTIENXLRR FROM LN03 ORDER BY CREATED_DATE DESC" 2>/dev/null || echo "Query failed"
     fi
 else
     echo "❌ sqlcmd not available"
@@ -96,7 +96,7 @@ if [[ "$backend_check" == "200" ]]; then
             # Check post-import database
             echo ""
             echo "🗄️  POST-IMPORT VERIFICATION:"
-            post_count=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "SELECT COUNT(*) FROM LN03" 2>/dev/null | grep -E '^[0-9]+$' || echo "0")
+            post_count=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "SELECT COUNT(*) FROM LN03" 2>/dev/null | grep -E '^[0-9]+$' || echo "0")
             echo "📍 LN03 records after import: $post_count"
 
             imported_count=$((post_count - pre_count))

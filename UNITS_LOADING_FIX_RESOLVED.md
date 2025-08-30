@@ -67,7 +67,7 @@ VITE_API_BASE_URL=http://localhost:5000/api
 - **CORS**: Properly configured with "AllowAll" policy
 
 ### Files Modified
-1. `/Frontend/tinhkhoan-app-ui-vite/.env` - Updated API base URL
+1. `/Frontend/KhoanUI/.env` - Updated API base URL
 
 ### Files Analyzed (No Changes Required)
 - `src/views/UnitsView.vue` - Loading logic works correctly

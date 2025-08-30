@@ -120,10 +120,10 @@ echo "🔄 Thử chạy SQL qua container..."
 # Thử 1: sqlcmd qua docker exec (nếu có)
 if docker exec azure_sql_edge_tinhkhoan which sqlcmd >/dev/null 2>&1; then
     echo "✅ Tìm thấy sqlcmd, chạy script..."
-    docker exec -i azure_sql_edge_tinhkhoan sqlcmd -S localhost -U sa -P "YourStrongPassword123" -d TinhKhoanDB < /tmp/populate_indicators.sql
+    docker exec -i azure_sql_edge_tinhkhoan sqlcmd -S localhost -U sa -P "YourStrongPassword123" -d KhoanDB < /tmp/populate_indicators.sql
 elif docker exec azure_sql_edge_tinhkhoan which /opt/mssql-tools/bin/sqlcmd >/dev/null 2>&1; then
     echo "✅ Tìm thấy sqlcmd tại /opt/mssql-tools/bin/, chạy script..."
-    docker exec -i azure_sql_edge_tinhkhoan /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "YourStrongPassword123" -d TinhKhoanDB < /tmp/populate_indicators.sql
+    docker exec -i azure_sql_edge_tinhkhoan /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P "YourStrongPassword123" -d KhoanDB < /tmp/populate_indicators.sql
 else
     echo "❌ Không tìm thấy sqlcmd trong container"
     echo "🔄 Thử sử dụng API .NET để thực thi SQL..."

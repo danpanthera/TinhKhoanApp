@@ -100,4 +100,4 @@
 
 ---
 
-_This cleanup ensures the TinhKhoan App focuses on core banking data types and removes unused business planning features._
+_This cleanup ensures the Khoan App focuses on core banking data types and removes unused business planning features._

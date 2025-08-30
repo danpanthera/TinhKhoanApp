@@ -86,7 +86,7 @@ touch "$LOG_FILE"
 # Start each run with a fresh log to avoid stale readiness matches
 : > "$LOG_FILE"
 
-log "🚀 Starting TinhKhoan Frontend Development Server (rotation: size>$MAX_LOG_SIZE keep $LOG_BACKUPS)"
+log "🚀 Starting Khoan Frontend Development Server (rotation: size>$MAX_LOG_SIZE keep $LOG_BACKUPS)"
 log "📊 Target Port: $PORT"
 
 # Step 1: Cleanup existing services

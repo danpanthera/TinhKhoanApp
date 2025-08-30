@@ -22,7 +22,7 @@ FRONTEND_PATH="/opt/Projects/Khoan/Frontend/KhoanUI"
 # Hàm cleanup khi script bị interrupt
 cleanup() {
     echo -e "${YELLOW}🛑 Cleaning up processes...${NC}"
-    pkill -f "dotnet.*TinhKhoan" 2>/dev/null
+    pkill -f "dotnet.*Khoan" 2>/dev/null
     pkill -f "npm.*dev" 2>/dev/null
     exit 0
 }
@@ -90,7 +90,7 @@ fi
 # Summary
 echo -e "${PURPLE}🎉 KhoanApp Fullstack Started!${NC}"
 echo -e "${PURPLE}=================================${NC}"
-echo -e "${GREEN}🗄️  Database: TinhKhoanDB (sa/Dientoan@303)${NC}"
+echo -e "${GREEN}🗄️  Database: KhoanDB (sa/Dientoan@303)${NC}"
 echo -e "${GREEN}⚙️  Backend API: http://localhost:5055${NC}"
 echo -e "${GREEN}🎨 Frontend: http://localhost:3000${NC}"
 echo -e "${BLUE}📝 Logs:${NC}"

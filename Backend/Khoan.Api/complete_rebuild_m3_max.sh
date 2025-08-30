@@ -80,7 +80,7 @@ echo -e "${PURPLE}📥 Pull Microsoft SQL Server 2022 for ARM64...${NC}"
 # Thử pull Azure SQL Edge trước
 docker pull --platform linux/arm64 mcr.microsoft.com/azure-sql-edge:latest
 
-# Create optimized network for TinhKhoan app
+# Create optimized network for Khoan app
 echo -e "${PURPLE}🌐 Tạo network tối ưu...${NC}"
 docker network create \
   --driver bridge \
@@ -272,17 +272,17 @@ if [ "$CONNECTION_SUCCESS" = true ]; then
     echo -e "${BLUE}📊 Thống kê hiệu suất:${NC}"
     docker stats azure_sql_edge_tinhkhoan --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}\t{{.NetIO}}\t{{.BlockIO}}"
 
-    # Create TinhKhoanDB database
-    echo -e "${PURPLE}🗄️  Tạo database TinhKhoanDB...${NC}"
+    # Create KhoanDB database
+    echo -e "${PURPLE}🗄️  Tạo database KhoanDB...${NC}"
     sqlcmd -S localhost,1433 -U sa -P "Dientoan@303" -Q "
-    IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'TinhKhoanDB')
+    IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'KhoanDB')
     BEGIN
-        CREATE DATABASE TinhKhoanDB
+        CREATE DATABASE KhoanDB
         COLLATE SQL_Latin1_General_CP1_CI_AS
     END
     " -C
 
-    echo -e "${GREEN}✅ Database TinhKhoanDB đã sẵn sàng${NC}"
+    echo -e "${GREEN}✅ Database KhoanDB đã sẵn sàng${NC}"
 
     echo ""
     echo -e "${WHITE}🚀 ENVIRONMENT ĐÃ SẴNG SÀNG CHO DEVELOPMENT!${NC}"
@@ -290,7 +290,7 @@ if [ "$CONNECTION_SUCCESS" = true ]; then
     echo "   Server: localhost,1433"
     echo "   Username: sa"
     echo "   Password: Dientoan@303"
-    echo "   Database: TinhKhoanDB"
+    echo "   Database: KhoanDB"
     echo ""
     echo -e "${YELLOW}📝 Các bước tiếp theo:${NC}"
     echo "   1. Chạy backend: cd Backend/KhoanApp.Api && ./start_backend.sh"

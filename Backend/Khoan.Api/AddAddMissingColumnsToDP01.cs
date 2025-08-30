@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace TinhKhoanApp.Api.Migrations
+namespace Khoan.Api.Migrations
 {
     /// <inheritdoc />
     public partial class AddMissingColumnsToDP01 : Migration

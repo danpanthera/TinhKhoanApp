@@ -20,7 +20,7 @@
 ## 📁 ARCHITECTURE STRUCTURE - 9 CORE TABLES
 
 ```
-TinhKhoanApp.Api/
+Khoan.Api/
 ├── Controllers/
 │   ├── ProductionDataController.cs          # ✅ Clean HTTP handling - 9 tables endpoints
 │   └── TestDataController.cs                # 🔄 To be deprecated

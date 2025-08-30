@@ -5,9 +5,9 @@
 ### 1.1. Tạo bản backup cơ sở dữ liệu
 ```sql
 -- Tạo bản backup đầy đủ trước khi thực hiện thay đổi
-BACKUP DATABASE TinhKhoanApp 
-TO DISK = 'D:\Backups\TinhKhoanApp_BeforeRR01TypeFix.bak' 
-WITH FORMAT, INIT, NAME = 'TinhKhoanApp-Full Database Backup before RR01 data type changes';
+BACKUP DATABASE KhoanApp 
+TO DISK = 'D:\Backups\KhoanApp_BeforeRR01TypeFix.bak' 
+WITH FORMAT, INIT, NAME = 'KhoanApp-Full Database Backup before RR01 data type changes';
 ```
 
 ### 1.2. Kiểm tra dữ liệu hiện tại
@@ -179,8 +179,8 @@ Nếu có vấn đề, có thể khôi phục từ bản backup:
 
 ```sql
 -- Quay về cấu trúc cũ từ bản backup
-RESTORE DATABASE TinhKhoanApp 
-FROM DISK = 'D:\Backups\TinhKhoanApp_BeforeRR01TypeFix.bak' 
+RESTORE DATABASE KhoanApp 
+FROM DISK = 'D:\Backups\KhoanApp_BeforeRR01TypeFix.bak' 
 WITH REPLACE;
 ```
 

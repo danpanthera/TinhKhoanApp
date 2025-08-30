@@ -156,7 +156,7 @@ show_status() {
     echo ""
     log_info "📊 Trạng thái ứng dụng:"
     echo "   🐳 Docker:    azure_sql_edge_tinhkhoan"
-    echo "   🗄️  Database:  TinhKhoanDB (localhost:1433)"
+    echo "   🗄️  Database:  KhoanDB (localhost:1433)"
     echo "   🔧 Backend:   http://localhost:5055"
     echo "   🎨 Frontend:  http://localhost:3000"
     echo ""

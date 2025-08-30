@@ -1,5 +1,5 @@
 #!/bin/bash
-# TinhKhoan Application Master Startup Script
+# Khoan Application Master Startup Script
 # Starts both Backend and Frontend services
 
 # UTF-8 Configuration
@@ -10,7 +10,7 @@ log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1"
 }
 
-log "🚀 Starting TinhKhoan Application Services..."
+log "🚀 Starting Khoan Application Services..."
 log "========================================"
 
 # Get project root (parent of Backend directory)
@@ -41,7 +41,7 @@ else
 fi
 
 log ""
-log "🎉 TinhKhoan Application Services Started Successfully!"
+log "🎉 Khoan Application Services Started Successfully!"
 log "========================================"
 log "🔗 Backend API: http://localhost:5055"
 log "🔗 Frontend UI: http://localhost:3000"

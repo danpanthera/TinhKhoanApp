@@ -45,7 +45,7 @@
 
 ### Database Verification:
 
--   ✅ **Total Tables**: 9/9 exist in TinhKhoanDB
+-   ✅ **Total Tables**: 9/9 exist in KhoanDB
 -   ✅ **GL41 Columns**: 19 columns in database (13 business + 6 system)
 -   ✅ **GL41 Temporal**: NO ValidFrom/ValidTo columns found (standard table)
 
@@ -71,4 +71,4 @@
 ---
 
 _Fixes applied: 25/08/2025 22:15_
-_Verified against: TinhKhoanDB, Model files, CSV samples_
+_Verified against: KhoanDB, Model files, CSV samples_

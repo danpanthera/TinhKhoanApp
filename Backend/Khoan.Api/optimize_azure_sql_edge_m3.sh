@@ -49,15 +49,15 @@ for i in {1..6}; do
 done
 
 # Tạo database nếu chưa có
-echo "🏗️ Đảm bảo database TinhKhoanDB tồn tại..."
+echo "🏗️ Đảm bảo database KhoanDB tồn tại..."
 sqlcmd -S localhost,1433 -U sa -P "Dientoan@303" -C -Q "
-IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'TinhKhoanDB')
+IF NOT EXISTS (SELECT * FROM sys.databases WHERE name = 'KhoanDB')
 BEGIN
-    CREATE DATABASE TinhKhoanDB COLLATE SQL_Latin1_General_CP1_CI_AS;
-    PRINT 'Database TinhKhoanDB created!'
+    CREATE DATABASE KhoanDB COLLATE SQL_Latin1_General_CP1_CI_AS;
+    PRINT 'Database KhoanDB created!'
 END
 ELSE
-    PRINT 'Database TinhKhoanDB already exists!'
+    PRINT 'Database KhoanDB already exists!'
 "
 
 echo ""
@@ -73,6 +73,6 @@ docker stats azure_sql_edge_tinhkhoan --no-stream --format "table {{.Name}}\t{{.
 echo ""
 echo "🔥 M3 OPTIMIZED & READY!"
 echo "========================"
-echo "🚀 Database: TinhKhoanDB ready"
+echo "🚀 Database: KhoanDB ready"
 echo "⚡ M3 Performance: 6 cores, 4GB RAM"
-echo "🎯 Connection: Server=localhost,1433;Database=TinhKhoanDB;User Id=sa;Password=Dientoan@303;TrustServerCertificate=true"
+echo "🎯 Connection: Server=localhost,1433;Database=KhoanDB;User Id=sa;Password=Dientoan@303;TrustServerCertificate=true"

@@ -18,23 +18,23 @@ fi
 
 echo "✅ Database connection successful"
 
-# Kiểm tra database TinhKhoanDB
+# Kiểm tra database KhoanDB
 echo ""
-echo "🗄️  Checking TinhKhoanDB..."
-DB_EXISTS=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -Q "SELECT COUNT(*) FROM sys.databases WHERE name = 'TinhKhoanDB'" -h-1 -W | tr -d ' \r\n')
+echo "🗄️  Checking KhoanDB..."
+DB_EXISTS=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -Q "SELECT COUNT(*) FROM sys.databases WHERE name = 'KhoanDB'" -h-1 -W | tr -d ' \r\n')
 
 if [ "$DB_EXISTS" = "0" ]; then
-    echo "📝 Creating TinhKhoanDB database..."
-    sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -Q "CREATE DATABASE TinhKhoanDB"
-    echo "✅ TinhKhoanDB created successfully"
+    echo "📝 Creating KhoanDB database..."
+    sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -Q "CREATE DATABASE KhoanDB"
+    echo "✅ KhoanDB created successfully"
 else
-    echo "✅ TinhKhoanDB already exists"
+    echo "✅ KhoanDB already exists"
 fi
 
-# Chuyển sang TinhKhoanDB và kiểm tra bảng
+# Chuyển sang KhoanDB và kiểm tra bảng
 echo ""
 echo "📊 Checking current table structure..."
-TABLE_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'" -h-1 -W | tr -d ' \r\n')
+TABLE_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'" -h-1 -W | tr -d ' \r\n')
 
 echo "Current tables in database: $TABLE_COUNT"
 
@@ -49,7 +49,7 @@ if [ "$TABLE_COUNT" -lt "47" ]; then
         echo "✅ Entity Framework migrations completed successfully"
 
         # Kiểm tra lại số bảng sau migration
-        NEW_TABLE_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'" -h-1 -W | tr -d ' \r\n')
+        NEW_TABLE_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'" -h-1 -W | tr -d ' \r\n')
         echo "Tables after migration: $NEW_TABLE_COUNT"
 
     else
@@ -60,7 +60,7 @@ if [ "$TABLE_COUNT" -lt "47" ]; then
         echo "🔧 Creating basic database structure..."
 
         # Tạo các bảng cơ bản
-        sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "
+        sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "
         -- Create basic system tables if not exists
         IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Units')
         CREATE TABLE Units (
@@ -114,11 +114,11 @@ echo "📋 Checking core data tables (8 tables)..."
 CORE_TABLES=("DP01" "DPDA" "EI01" "GL01" "GL02" "GL41" "LN01" "LN03" "RR01")
 
 for table in "${CORE_TABLES[@]}"; do
-    TABLE_EXISTS=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '$table'" -h-1 -W | tr -d ' \r\n')
+    TABLE_EXISTS=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '$table'" -h-1 -W | tr -d ' \r\n')
 
     if [ "$TABLE_EXISTS" = "1" ]; then
         # Đếm records trong bảng
-        RECORD_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "SELECT COUNT(*) FROM [$table]" -h-1 -W 2>/dev/null | tr -d ' \r\n')
+        RECORD_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "SELECT COUNT(*) FROM [$table]" -h-1 -W 2>/dev/null | tr -d ' \r\n')
         echo "  ✅ $table: EXISTS (${RECORD_COUNT:-0} records)"
     else
         echo "  ❌ $table: MISSING"
@@ -128,7 +128,7 @@ done
 # Kiểm tra temporal tables
 echo ""
 echo "🕒 Checking temporal tables..."
-TEMPORAL_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "SELECT COUNT(*) FROM sys.tables WHERE temporal_type = 2" -h-1 -W | tr -d ' \r\n')
+TEMPORAL_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "SELECT COUNT(*) FROM sys.tables WHERE temporal_type = 2" -h-1 -W | tr -d ' \r\n')
 echo "Temporal tables found: $TEMPORAL_COUNT"
 
 # Populate cơ bản nếu cần
@@ -136,10 +136,10 @@ echo ""
 echo "📦 Checking basic data..."
 
 # Kiểm tra Units
-UNITS_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "SELECT COUNT(*) FROM Units" -h-1 -W 2>/dev/null | tr -d ' \r\n')
+UNITS_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "SELECT COUNT(*) FROM Units" -h-1 -W 2>/dev/null | tr -d ' \r\n')
 if [ "${UNITS_COUNT:-0}" -lt "5" ]; then
     echo "📝 Populating basic Units..."
-    sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "
+    sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "
     INSERT INTO Units (UnitCode, UnitName, UnitType) VALUES
     ('CNL1', 'Lai Châu', 'CNL1'),
     ('HOISO', 'Hội Sở', 'CNL1'),
@@ -151,10 +151,10 @@ if [ "${UNITS_COUNT:-0}" -lt "5" ]; then
 fi
 
 # Kiểm tra Roles
-ROLES_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "SELECT COUNT(*) FROM Roles" -h-1 -W 2>/dev/null | tr -d ' \r\n')
+ROLES_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "SELECT COUNT(*) FROM Roles" -h-1 -W 2>/dev/null | tr -d ' \r\n')
 if [ "${ROLES_COUNT:-0}" -lt "5" ]; then
     echo "📝 Populating basic Roles..."
-    sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "
+    sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "
     INSERT INTO Roles (RoleCode, RoleName, Description) VALUES
     ('GiamdocCnl2', 'Giám đốc CNL2', 'Giám đốc chi nhánh cấp 2'),
     ('TruongphongKhdn', 'Trưởng phòng KHDN', 'Trưởng phòng Khách hàng doanh nghiệp'),
@@ -170,15 +170,15 @@ echo ""
 echo "🎯 FINAL DATABASE STATUS"
 echo "========================"
 
-FINAL_TABLE_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'" -h-1 -W | tr -d ' \r\n')
-FINAL_UNITS_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "SELECT COUNT(*) FROM Units" -h-1 -W 2>/dev/null | tr -d ' \r\n')
-FINAL_ROLES_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB -Q "SELECT COUNT(*) FROM Roles" -h-1 -W 2>/dev/null | tr -d ' \r\n')
+FINAL_TABLE_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'" -h-1 -W | tr -d ' \r\n')
+FINAL_UNITS_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "SELECT COUNT(*) FROM Units" -h-1 -W 2>/dev/null | tr -d ' \r\n')
+FINAL_ROLES_COUNT=$(sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB -Q "SELECT COUNT(*) FROM Roles" -h-1 -W 2>/dev/null | tr -d ' \r\n')
 
 echo "📊 Database Statistics:"
 echo "   • Total Tables: ${FINAL_TABLE_COUNT:-0}"
 echo "   • Units: ${FINAL_UNITS_COUNT:-0}"
 echo "   • Roles: ${FINAL_ROLES_COUNT:-0}"
-echo "   • Database: TinhKhoanDB"
+echo "   • Database: KhoanDB"
 echo "   • Server: Azure SQL Edge 1.0.7"
 echo "   • Connection: localhost:1433"
 

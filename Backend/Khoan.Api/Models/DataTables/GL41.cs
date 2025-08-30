@@ -1,4 +1,4 @@
-namespace TinhKhoanApp.Api.Models.DataTables
+namespace Khoan.Api.Models.DataTables
 {
     /// <summary>
     /// GL41 DataTable model - 100% CSV Business Columns Compliance

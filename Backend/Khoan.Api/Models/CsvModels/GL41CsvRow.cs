@@ -1,4 +1,4 @@
-namespace TinhKhoanApp.Api.Models.CsvModels
+namespace Khoan.Api.Models.CsvModels
 {
     /// <summary>
     /// GL41 CSV Row - for parsing CSV data (13 business columns)

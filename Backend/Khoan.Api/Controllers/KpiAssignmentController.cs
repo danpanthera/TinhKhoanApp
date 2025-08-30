@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models;
-using TinhKhoanApp.Api.Services;
-using TinhKhoanApp.Api.Contracts.KpiAssignments;
+using Khoan.Api.Data;
+using Khoan.Api.Models;
+using Khoan.Api.Services;
+using Khoan.Api.Contracts.KpiAssignments;
 
-namespace TinhKhoanApp.Api.Controllers
+namespace Khoan.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

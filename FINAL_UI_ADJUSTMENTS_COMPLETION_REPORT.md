@@ -1,7 +1,7 @@
 # 🎯 BÁO CÁO HOÀN THÀNH CÁC ĐIỀU CHỈNH UI CUỐI CÙNG
 
 ## 📋 Tổng quan
-Hoàn thành các yêu cầu điều chỉnh UI và chuẩn hóa dữ liệu cuối cùng cho hệ thống TinhKhoanApp.
+Hoàn thành các yêu cầu điều chỉnh UI và chuẩn hóa dữ liệu cuối cùng cho hệ thống KhoanApp.
 
 ---
 
@@ -46,15 +46,15 @@ Hoàn thành các yêu cầu điều chỉnh UI và chuẩn hóa dữ liệu cu�
 
 #### 1. **Documentation Updates**
 ```
-Frontend/tinhkhoan-app-ui-vite/KPI_DEFINITION_UPDATES_COMPLETION_REPORT.md
-Backend/TinhKhoanApp.Api/KHOI_PHUC_DU_LIEU_HOAN_TAT.md
+Frontend/KhoanUI/KPI_DEFINITION_UPDATES_COMPLETION_REPORT.md
+Backend/Khoan.Api/KHOI_PHUC_DU_LIEU_HOAN_TAT.md
 ```
 - Cập nhật tất cả references từ "KTNV" → "KTNQ"
 - Chuẩn hóa terminology trong documentation
 
 #### 2. **Frontend Code Updates**  
 ```
-Frontend/tinhkhoan-app-ui-vite/src/views/EmployeeKpiAssignmentView.vue
+Frontend/KhoanUI/src/views/EmployeeKpiAssignmentView.vue
 ```
 - Xóa nút "Update" (lines 253-261)
 - Xóa function `updateIndicatorValue()` (19 lines)
@@ -134,7 +134,7 @@ Tất cả 4 yêu cầu điều chỉnh đã được thực hiện thành công
 3. ✅ **Relocate Update button** to correct screen only
 4. ✅ **Standardize branch ordering** across all dropdowns
 
-Hệ thống TinhKhoanApp đã hoàn chỉnh và sẵn sàng sử dụng! 🎯
+Hệ thống KhoanApp đã hoàn chỉnh và sẵn sàng sử dụng! 🎯
 
 ---
 

@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using TinhKhoanApp.Api.Services.Interfaces;
-using TinhKhoanApp.Api.Models.Common;
+using Khoan.Api.Services.Interfaces;
+using Khoan.Api.Models.Common;
 
-namespace TinhKhoanApp.Api.Controllers
+namespace Khoan.Api.Controllers
 {
     /// <summary>
     /// Controller cho Direct Import - chỉ cho phép import file đúng format

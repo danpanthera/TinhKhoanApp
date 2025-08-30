@@ -1,8 +1,8 @@
-using TinhKhoanApp.Api.Models;
-using TinhKhoanApp.Api.Data;
+using Khoan.Api.Models;
+using Khoan.Api.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace TinhKhoanApp.Api.Data
+namespace Khoan.Api.Data
 {
     /// <summary>
     /// Seeder tạo 23 bảng KPI chuẩn cho các vai trò cán bộ + 9 bảng cho chi nhánh

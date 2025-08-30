@@ -1,4 +1,4 @@
-# 🚀 TinhKhoanApp - Performance Dashboard & Streaming Export Final Report
+# 🚀 KhoanApp - Performance Dashboard & Streaming Export Final Report
 
 ## ✅ HOÀN THÀNH THÀNH CÔNG (17/06/2025)
 
@@ -99,7 +99,7 @@
 
 ### Backend Files:
 ```
-TinhKhoanApp.Api/
+Khoan.Api/
 ├── Controllers/PerformanceDashboardController.cs     ✅ NEW
 ├── Services/CacheService.cs                         ✅ NEW  
 ├── Services/StreamingExportService.cs               ✅ ENHANCED
@@ -112,7 +112,7 @@ TinhKhoanApp.Api/
 
 ### Frontend Files:
 ```
-tinhkhoan-app-ui-vite/
+KhoanUI/
 ├── src/components/PerformanceDashboard.vue          ✅ NEW
 ├── src/components/StreamingExportDemo.vue           ✅ EXISTING
 └── src/router/index.js                              ✅ OPTIMIZED

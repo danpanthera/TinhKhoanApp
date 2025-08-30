@@ -49,7 +49,7 @@ Nếu gặp vấn đề sau khi triển khai:
 
 1. Khôi phục cơ sở dữ liệu từ bản sao lưu:
 ```sql
-RESTORE DATABASE [TinhKhoanAppDb] FROM DISK = N'/path/to/backup.bak' WITH REPLACE
+RESTORE DATABASE [KhoanAppDb] FROM DISK = N'/path/to/backup.bak' WITH REPLACE
 ```
 
 2. Triển khai lại phiên bản code trước đó

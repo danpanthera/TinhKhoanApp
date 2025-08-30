@@ -61,7 +61,7 @@
 3. Triển khai temporal table migration khi ready cho production
 
 ## File thay đổi
-- `Backend/TinhKhoanApp.Api/Controllers/RawDataController.cs` - Sửa toàn bộ endpoint
-- `Frontend/tinhkhoan-app-ui-vite/src/services/api.js` - Cập nhật port backend
+- `Backend/Khoan.Api/Controllers/RawDataController.cs` - Sửa toàn bộ endpoint
+- `Frontend/KhoanUI/src/services/api.js` - Cập nhật port backend
 
 Thời gian hoàn thành: 22/06/2025

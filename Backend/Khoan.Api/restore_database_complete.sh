@@ -24,7 +24,7 @@ echo "=================================================="
 SERVER="localhost,1433"
 USERNAME="sa"
 PASSWORD="Dientoan@303"
-DATABASE="TinhKhoanDB"
+DATABASE="KhoanDB"
 
 # Check SQL Server connection
 echo -e "${PURPLE}🔌 Kiểm tra kết nối SQL Server...${NC}"
@@ -36,20 +36,20 @@ fi
 
 echo -e "${GREEN}✅ Kết nối SQL Server thành công${NC}"
 
-# Create/Use TinhKhoanDB database
-echo -e "${PURPLE}🗄️  Tạo/Sử dụng database TinhKhoanDB...${NC}"
+# Create/Use KhoanDB database
+echo -e "${PURPLE}🗄️  Tạo/Sử dụng database KhoanDB...${NC}"
 sqlcmd -S "$SERVER" -U "$USERNAME" -P "$PASSWORD" -Q "
 IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = '$DATABASE')
 BEGIN
     CREATE DATABASE $DATABASE
     COLLATE SQL_Latin1_General_CP1_CI_AS
-    PRINT 'Database TinhKhoanDB đã được tạo'
+    PRINT 'Database KhoanDB đã được tạo'
 END
 ELSE
-    PRINT 'Database TinhKhoanDB đã tồn tại'
+    PRINT 'Database KhoanDB đã tồn tại'
 " -C
 
-echo -e "${GREEN}✅ Database TinhKhoanDB đã sẵn sàng${NC}"
+echo -e "${GREEN}✅ Database KhoanDB đã sẵn sàng${NC}"
 
 # Create comprehensive table structure
 echo -e "${PURPLE}📋 Tạo cấu trúc bảng hoàn chỉnh...${NC}"
@@ -388,7 +388,7 @@ PRINT '📊 SUMMARY:'
 PRINT '- GL01: NO Temporal + YES Columnstore ✅'
 PRINT '- 7 Other Tables: YES Temporal + YES Columnstore ✅'
 PRINT '- All Performance Indexes Created ✅'
-PRINT '- Database TinhKhoanDB Ready for Import ✅'
+PRINT '- Database KhoanDB Ready for Import ✅'
 " -C
 
 echo ""

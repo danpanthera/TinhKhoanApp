@@ -44,11 +44,11 @@ fi
 echo ""
 echo "🗄️ DATABASE STATUS:"
 echo "------------------"
-if sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -d TinhKhoanDB -C -Q "SELECT 1 as Connected" -h -1 > /dev/null 2>&1; then
-    echo "✅ Database: Connected to TinhKhoanDB"
+if sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -d KhoanDB -C -Q "SELECT 1 as Connected" -h -1 > /dev/null 2>&1; then
+    echo "✅ Database: Connected to KhoanDB"
 
     echo "📋 Core Tables Status:"
-    sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -d TinhKhoanDB -C -Q "
+    sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -d KhoanDB -C -Q "
     SELECT
         TABLE_NAME as TableName,
         (SELECT COUNT(*) FROM sys.columns WHERE table_name = t.TABLE_NAME) as ColumnCount,
@@ -60,7 +60,7 @@ if sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -d TinhKhoanDB -C 
     ORDER BY t.TABLE_NAME;
     " -h -1 2>/dev/null
 else
-    echo "❌ Database: Cannot connect to TinhKhoanDB"
+    echo "❌ Database: Cannot connect to KhoanDB"
 fi
 
 # 4. Key Fix Verification

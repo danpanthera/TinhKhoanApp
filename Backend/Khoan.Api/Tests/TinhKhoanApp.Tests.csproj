@@ -19,7 +19,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../TinhKhoanApp.Api.csproj" />
+    <ProjectReference Include="../Khoan.Api.csproj" />
   </ItemGroup>
   <!-- Loại trừ toàn bộ legacy test (Repositories, Services, LN*, DP*, GL*, EI*) để tạm thời chỉ giữ KpiScoringTests -->
   <ItemGroup>

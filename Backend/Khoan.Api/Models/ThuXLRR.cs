@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TinhKhoanApp.Api.Models
+namespace Khoan.Api.Models
 {
     /// <summary>
     /// 💰 Bảng dữ liệu Thu nợ đã XLRR - Hỗ trợ Temporal Tables cho audit trail

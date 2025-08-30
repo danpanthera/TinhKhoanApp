@@ -1,6 +1,6 @@
 #!/bin/bash
-# 🔄 TinhKhoan App - Backend Restart Script
-echo "🔄 Restarting TinhKhoan Backend API..."
+# 🔄 Khoan App - Backend Restart Script
+echo "🔄 Restarting Khoan Backend API..."
 cd Backend/KhoanApp.Api
 echo "🔨 Building backend..."
 dotnet build --configuration Debug --verbosity minimal

@@ -50,7 +50,7 @@ log() {
 rotate_log_if_needed "$LOG_FILE"
 touch "$LOG_FILE"
 
-log "🚀 Starting TinhKhoan Backend API Service... (rotation: size>$MAX_LOG_SIZE keep $LOG_BACKUPS)"
+log "🚀 Starting Khoan Backend API Service... (rotation: size>$MAX_LOG_SIZE keep $LOG_BACKUPS)"
 log "📊 Target Port: $PORT"
 
 # Step 1: Aggressive cleanup of all backend services

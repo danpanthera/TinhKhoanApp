@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
-namespace TinhKhoanApp.Api.Models
+namespace Khoan.Api.Models
 {
     [Table("Employees")]
     public class Employee

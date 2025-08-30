@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 🛡️ TinhKhoan Project Guardian - Keeps backend/frontend running continuously
+# 🛡️ Khoan Project Guardian - Keeps backend/frontend running continuously
 # This script monitors and restarts services if they die
 
 PROJECT_NAME="KhoanApp"
@@ -128,7 +128,7 @@ maybe_log_heartbeat() {
 # Initial cleanup
 > "$GUARDIAN_LOG"
 rotate_guardian_log
-log "${BLUE}🛡️ TinhKhoan Guardian Started${NC}"
+log "${BLUE}🛡️ Khoan Guardian Started${NC}"
 log "${BLUE}📍 Monitoring Backend: $BACKEND_HEALTH_PATH${NC}"
 log "${BLUE}📍 Monitoring Frontend: $FRONTEND_HEALTH_PATH${NC}"
 log "${BLUE}⏱️  Interval: ${CHECK_INTERVAL}s (override with CHECK_INTERVAL)${NC}"

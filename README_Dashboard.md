@@ -75,7 +75,7 @@ Dạ vâng anh! Em sẽ thiết kế lại toàn bộ module Dashboard theo yêu
 ### 1. **Cập nhật Menu Navigation**
 
 ```vue
-<!-- filepath: Frontend/tinhkhoan-app-ui-vite/src/layout/components/Sidebar/menuConfig.js -->
+<!-- filepath: Frontend/KhoanUI/src/layout/components/Sidebar/menuConfig.js -->
 export const menuItems = [
   // ...existing menus...
   
@@ -115,7 +115,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TinhKhoanApp.Api.Models.Dashboard
+namespace KhoanApp.Api.Models.Dashboard
 {
     /// <summary>
     /// Kế hoạch giao chỉ tiêu cho từng đơn vị
@@ -160,7 +160,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TinhKhoanApp.Api.Models.Dashboard
+namespace KhoanApp.Api.Models.Dashboard
 {
     /// <summary>
     /// Kết quả tính toán chỉ tiêu từ dữ liệu thô
@@ -235,11 +235,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models.Dashboard;
+using KhoanApp.Api.Data;
+using KhoanApp.Api.Models.Dashboard;
 using System.Text.Json;
 
-namespace TinhKhoanApp.Api.Services
+namespace KhoanApp.Api.Services
 {
     public interface IDashboardCalculationService
     {
@@ -591,10 +591,10 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models.Dashboard;
+using KhoanApp.Api.Data;
+using KhoanApp.Api.Models.Dashboard;
 
-namespace TinhKhoanApp.Api.Controllers
+namespace KhoanApp.Api.Controllers
 {
     [Authorize]
     [ApiController]
@@ -909,7 +909,7 @@ namespace TinhKhoanApp.Api.Controllers
 ### 6. **Tạo Frontend - Giao chỉ tiêu kế hoạch**
 
 ```vue
-<!-- filepath: Frontend/tinhkhoan-app-ui-vite/src/views/dashboard/TargetAssignment.vue -->
+<!-- filepath: Frontend/KhoanUI/src/views/dashboard/TargetAssignment.vue -->
 <template>
   <div class="target-assignment">
     <!-- Header với controls -->
@@ -1312,7 +1312,7 @@ onMounted(async () => {
 ### 7. **Tạo Component TargetTable**
 
 ```vue
-<!-- filepath: Frontend/tinhkhoan-app-ui-vite/src/components/dashboard/TargetTable.vue -->
+<!-- filepath: Frontend/KhoanUI/src/components/dashboard/TargetTable.vue -->
 <template>
   <div class="target-table">
     <el-table
@@ -1556,7 +1556,7 @@ const showSummary = computed(() => {
 ### 8. **Tạo trang Dashboard Business Plan**
 
 ```vue
-<!-- filepath: Frontend/tinhkhoan-app-ui-vite/src/views/dashboard/BusinessPlanDashboard.vue -->
+<!-- filepath: Frontend/KhoanUI/src/views/dashboard/BusinessPlanDashboard.vue -->
 <template>
   <div class="business-plan-dashboard">
     <!-- Header với filters -->
@@ -1955,7 +1955,7 @@ watch([selectedDate, selectedUnitId], () => {
 ### 9. **Tạo KpiCard Component**
 
 ```vue
-<!-- filepath: Frontend/tinhkhoan-app-ui-vite/src/components/dashboard/KpiCard.vue -->
+<!-- filepath: Frontend/KhoanUI/src/components/dashboard/KpiCard.vue -->
 <template>
   <div 
     class="kpi-card" 
@@ -2211,7 +2211,7 @@ const formatDate = (date) => {
 ### 10. **Tạo Component Tính toán chỉ tiêu**
 
 ```vue
-<!-- filepath: Frontend/tinhkhoan-app-ui-vite/src/views/dashboard/CalculationDashboard.vue -->
+<!-- filepath: Frontend/KhoanUI/src/views/dashboard/CalculationDashboard.vue -->
 <template>
   <div class="calculation-dashboard">
     <!-- Header -->
@@ -2823,7 +2823,7 @@ export function getCreditOfficers(unitId) {
 ### 13. **Tạo Migration mới**
 
 ```bash
-cd Backend/TinhKhoanApp.Api
+cd Backend/KhoanApp.Api
 dotnet ef migrations add AddDashboardBusinessPlanTables -o Data/Migrations
 dotnet ef database update
 ```

@@ -9,7 +9,7 @@ log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_FILE"
 }
 
-log "🛑 Stopping TinhKhoan Backend API Server..."
+log "🛑 Stopping Khoan Backend API Server..."
 
 # Check if PID file exists and stop the specific process
 if [ -f "$PID_FILE" ]; then
@@ -54,8 +54,8 @@ pkill -f "dotnet.*watch" 2>/dev/null || true
 # Kill dotnet run processes
 pkill -f "dotnet.*run" 2>/dev/null || true
 
-# Kill TinhKhoanApp processes
-pkill -f "TinhKhoanApp" 2>/dev/null || true
+# Kill KhoanApp processes
+pkill -f "KhoanApp" 2>/dev/null || true
 
 # Kill any process using our specific port
 if lsof -ti:$PORT >/dev/null 2>&1; then

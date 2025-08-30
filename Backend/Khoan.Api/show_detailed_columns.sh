@@ -10,7 +10,7 @@ show_table_columns() {
     echo "📊 Bảng: $table_name"
     echo "-------------------"
 
-    sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d TinhKhoanDB -Q "
+    sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d KhoanDB -Q "
     SELECT TOP 10
         COLUMN_NAME,
         ORDINAL_POSITION,

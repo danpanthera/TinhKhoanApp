@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api.Tests/TinhKhoanApp.Api.Tests.csproj": {}
+    "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/Khoan.Api.Tests/Khoan.Api.Tests.csproj": {}
   },
   "projects": {
-    "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api.Tests/TinhKhoanApp.Api.Tests.csproj": {
+    "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/Khoan.Api.Tests/Khoan.Api.Tests.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api.Tests/TinhKhoanApp.Api.Tests.csproj",
-        "projectName": "TinhKhoanApp.Api.Tests",
-        "projectPath": "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api.Tests/TinhKhoanApp.Api.Tests.csproj",
+        "projectUniqueName": "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/Khoan.Api.Tests/Khoan.Api.Tests.csproj",
+        "projectName": "Khoan.Api.Tests",
+        "projectPath": "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/Khoan.Api.Tests/Khoan.Api.Tests.csproj",
         "packagesPath": "/Users/nguyendat/.nuget/packages/",
-        "outputPath": "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api.Tests/obj/",
+        "outputPath": "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/Khoan.Api.Tests/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/nguyendat/.nuget/NuGet/NuGet.Config"
@@ -26,8 +26,8 @@
           "net8.0": {
             "targetAlias": "net8.0",
             "projectReferences": {
-              "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api/TinhKhoanApp.Api.csproj": {
-                "projectPath": "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api/TinhKhoanApp.Api.csproj"
+              "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/Khoan.Api/Khoan.Api.csproj": {
+                "projectPath": "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/Khoan.Api/Khoan.Api.csproj"
               }
             }
           }
@@ -92,14 +92,14 @@
         }
       }
     },
-    "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api/TinhKhoanApp.Api.csproj": {
+    "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/Khoan.Api/Khoan.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api/TinhKhoanApp.Api.csproj",
-        "projectName": "TinhKhoanApp.Api",
-        "projectPath": "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api/TinhKhoanApp.Api.csproj",
+        "projectUniqueName": "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/Khoan.Api/Khoan.Api.csproj",
+        "projectName": "Khoan.Api",
+        "projectPath": "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/Khoan.Api/Khoan.Api.csproj",
         "packagesPath": "/Users/nguyendat/.nuget/packages/",
-        "outputPath": "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api/obj/",
+        "outputPath": "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/Khoan.Api/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/nguyendat/.nuget/NuGet/NuGet.Config"

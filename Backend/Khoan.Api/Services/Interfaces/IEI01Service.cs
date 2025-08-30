@@ -1,6 +1,6 @@
-using TinhKhoanApp.Api.Models.Dtos.EI01;
+using Khoan.Api.Models.Dtos.EI01;
 
-namespace TinhKhoanApp.Api.Services.Interfaces
+namespace Khoan.Api.Services.Interfaces
 {
     /// <summary>
     /// Interface cho EI01 Service - E-Banking Information Service

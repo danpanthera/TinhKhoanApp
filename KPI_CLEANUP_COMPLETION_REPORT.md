@@ -1,7 +1,7 @@
 # KPI Cleanup - Complete Removal Report
 
 ## Executive Summary
-Successfully completed the comprehensive removal of all existing KPI assignment functionality from the TinhKhoanApp system. The old KPI structure has been completely eliminated and replaced with legacy field placeholders to prepare for the new 22 KPI assignment table architecture.
+Successfully completed the comprehensive removal of all existing KPI assignment functionality from the KhoanApp system. The old KPI structure has been completely eliminated and replaced with legacy field placeholders to prepare for the new 22 KPI assignment table architecture.
 
 ## Backend Changes Completed
 

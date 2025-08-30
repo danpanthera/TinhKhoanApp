@@ -1,4 +1,4 @@
-namespace TinhKhoanApp.Api.Models.Dtos.DP01
+namespace Khoan.Api.Models.Dtos.DP01
 {
     /// <summary>
     /// DP01 Preview DTO - chuẩn hóa cho DataTables.DP01 model

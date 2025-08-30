@@ -67,17 +67,17 @@ for i in {1..15}; do
   fi
 done
 
-# Kiểm tra database TinhKhoanDB
-echo "🗄️ [DATABASE] Kiểm tra database TinhKhoanDB..."
-sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -Q "SELECT name FROM sys.databases WHERE name = 'TinhKhoanDB'" -t 10
+# Kiểm tra database KhoanDB
+echo "🗄️ [DATABASE] Kiểm tra database KhoanDB..."
+sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -Q "SELECT name FROM sys.databases WHERE name = 'KhoanDB'" -t 10
 
 # Kiểm tra tables nếu database tồn tại
-echo "📋 [TABLES] Kiểm tra số lượng tables trong TinhKhoanDB..."
-sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d TinhKhoanDB -Q "SELECT COUNT(*) as TotalTables FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'" -t 10
+echo "📋 [TABLES] Kiểm tra số lượng tables trong KhoanDB..."
+sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d KhoanDB -Q "SELECT COUNT(*) as TotalTables FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'" -t 10
 
 # Kiểm tra core tables
 echo "🎯 [CORE TABLES] Kiểm tra 8 bảng core data..."
-sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d TinhKhoanDB -Q "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME IN ('DP01', 'DPDA', 'EI01', 'GL01', 'GL41', 'LN01', 'LN03', 'RR01') ORDER BY TABLE_NAME" -t 10
+sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Password123' -C -d KhoanDB -Q "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME IN ('DP01', 'DPDA', 'EI01', 'GL01', 'GL41', 'LN01', 'LN03', 'RR01') ORDER BY TABLE_NAME" -t 10
 
 echo "🎉 [COMPLETE] Tối ưu container hoàn thành!"
 echo "💡 [INFO] Container mới có:"

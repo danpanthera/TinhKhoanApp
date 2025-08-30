@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TinhKhoanApp.Api.Models.DataTables
+namespace Khoan.Api.Models.DataTables
 {
     /// <summary>
     /// EI01 - Electronic Banking Information Data Model (UNIFIED STRUCTURE)

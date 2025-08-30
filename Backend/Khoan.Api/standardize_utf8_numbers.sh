@@ -12,7 +12,7 @@ echo "🖥️ Step 1: Frontend UTF-8 & Number Formatting..."
 # Create Vue.js global number formatter utility
 cat > /opt/Projects/Khoan/Frontend/KhoanUI/src/utils/numberFormat.js << 'EOF'
 /**
- * 🌍 Global Number Formatting Utilities for TinhKhoan App
+ * 🌍 Global Number Formatting Utilities for Khoan App
  * Chuẩn UTF-8 Tiếng Việt & US Number Format (#,###.00)
  */
 

@@ -8,7 +8,7 @@ Successfully completed the restructuring of KPI assignment tables with category-
 ## ✅ Tasks Completed
 
 ### 1. **Database Schema Updates**
-**File:** `/Backend/TinhKhoanApp.Api/Models/KpiAssignmentTable.cs`
+**File:** `/Backend/Khoan.Api/Models/KpiAssignmentTable.cs`
 - ✅ **Renamed Enum Value**: Changed `HoisoVaChinhanh2 = 24` to `HoiSo = 24`
 - ✅ **Added 8 New Branch Types**: 
   - `CnHTamDuong = 25`
@@ -28,7 +28,7 @@ Successfully completed the restructuring of KPI assignment tables with category-
 - ✅ **Data Preserved**: All existing data maintained during migration
 
 ### 3. **Seeder Updates**
-**File:** `/Backend/TinhKhoanApp.Api/Data/KpiAssignmentTableSeeder.cs`
+**File:** `/Backend/Khoan.Api/Data/KpiAssignmentTableSeeder.cs`
 - ✅ **Renamed Table**: "Hội sở và Các Chi nhánh loại 2" → "Hội sở" 
 - ✅ **Updated Category**: Set "Hội sở" table category to "Dành cho Chi nhánh"
 - ✅ **Created 8 New Tables**: All branch tables with proper Vietnamese names:
@@ -46,7 +46,7 @@ Successfully completed the restructuring of KPI assignment tables with category-
 - ✅ **Category Assignment**: All new tables categorized as "Dành cho Chi nhánh"
 
 ### 4. **API Controller Enhancements**
-**File:** `/Backend/TinhKhoanApp.Api/Controllers/KpiAssignmentController.cs`
+**File:** `/Backend/Khoan.Api/Controllers/KpiAssignmentController.cs`
 - ✅ **Enhanced `/tables` Endpoint**: Added `Category` field to response
 - ✅ **New `/tables/grouped` Endpoint**: Added endpoint for category-based grouping
 - ✅ **Response Format**: Proper handling of .NET JSON serialization with `$values`
@@ -120,9 +120,9 @@ Successfully completed the restructuring of KPI assignment tables with category-
 
 ### Backend Files
 ```
-/Backend/TinhKhoanApp.Api/Models/KpiAssignmentTable.cs
-/Backend/TinhKhoanApp.Api/Data/KpiAssignmentTableSeeder.cs  
-/Backend/TinhKhoanApp.Api/Controllers/KpiAssignmentController.cs
+/Backend/Khoan.Api/Models/KpiAssignmentTable.cs
+/Backend/Khoan.Api/Data/KpiAssignmentTableSeeder.cs  
+/Backend/Khoan.Api/Controllers/KpiAssignmentController.cs
 /Backend/Migrations/20250611101749_AddCategoryAndNewBranchTables.cs
 ```
 

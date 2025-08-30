@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models.Entities;
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Repositories.Interfaces;
-using TinhKhoanApp.Api.Repositories.Base;
+using Khoan.Api.Data;
+using Khoan.Api.Models.Entities;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Repositories.Interfaces;
+using Khoan.Api.Repositories.Base;
 
-namespace TinhKhoanApp.Api.Repositories
+namespace Khoan.Api.Repositories
 {
     /// <summary>
     /// DPDA Repository Implementation - Thẻ nộp đơn gửi tiết kiệm

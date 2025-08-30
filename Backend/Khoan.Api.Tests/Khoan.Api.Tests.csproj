@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TinhKhoanApp.Api\TinhKhoanApp.Api.csproj" />
+    <ProjectReference Include="..\Khoan.Api\Khoan.Api.csproj" />
   </ItemGroup>
 
 </Project>

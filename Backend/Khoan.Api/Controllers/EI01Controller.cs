@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using TinhKhoanApp.Api.Models.Dtos.EI01;
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Services.Interfaces;
+using Khoan.Api.Models.Dtos.EI01;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Services.Interfaces;
 
-namespace TinhKhoanApp.Api.Controllers
+namespace Khoan.Api.Controllers
 {
     /// <summary>
     /// EI01 Controller - E-Banking Information API endpoints

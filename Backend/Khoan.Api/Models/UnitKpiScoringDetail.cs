@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TinhKhoanApp.Api.Models
+namespace Khoan.Api.Models
 {
     /// <summary>
     /// Chi tiết chấm điểm từng chỉ tiêu KPI của Chi nhánh

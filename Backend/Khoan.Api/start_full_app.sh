@@ -1,5 +1,5 @@
 #!/bin/bash
-# Improved TinhKhoanApp Startup - NO HANGING!
+# Improved KhoanApp Startup - NO HANGING!
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -8,7 +8,7 @@ BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
 NC='\033[0m'
 
-echo -e "${PURPLE}🚀 TinhKhoanApp - NO HANG Startup${NC}"
+echo -e "${PURPLE}🚀 KhoanApp - NO HANG Startup${NC}"
 
 # Quick service checks
 check_database() {
@@ -46,7 +46,7 @@ start_database_safe() {
 start_backend_safe() {
     if check_backend; then return 0; fi
     echo -e "${YELLOW}⚙️ Starting backend...${NC}"
-    pkill -f "dotnet.*TinhKhoanApp" 2>/dev/null
+    pkill -f "dotnet.*KhoanApp" 2>/dev/null
     sleep 2
     # Use existing start_backend.sh (previously referenced a non-existent start_backend_improved.sh)
     ./start_backend.sh > /dev/null 2>&1 &

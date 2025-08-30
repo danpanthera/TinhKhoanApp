@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace TinhKhoanApp.Api.Models.Dtos.EI01
+namespace Khoan.Api.Models.Dtos.EI01
 {
     /// <summary>
     /// EI01 Preview DTO - Hiển thị danh sách E-Banking Information

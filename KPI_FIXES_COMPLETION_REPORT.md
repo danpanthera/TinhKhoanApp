@@ -22,8 +22,8 @@
 9. CnNamNhun
 
 **Files đã cập nhật:**
-- ✅ `Frontend/tinhkhoan-app-ui-vite/src/views/UnitKpiScoringView.vue`
-- ✅ `Frontend/tinhkhoan-app-ui-vite/src/views/EmployeeKpiAssignmentView.vue`
+- ✅ `Frontend/KhoanUI/src/views/UnitKpiScoringView.vue`
+- ✅ `Frontend/KhoanUI/src/views/EmployeeKpiAssignmentView.vue`
 
 ### 2. ✅ THÊM NÚT "UPDATE" CHO CHỈ TIÊU ĐỊNH LƯỢNG
 
@@ -55,7 +55,7 @@
 - ✅ Validation input (chỉ chấp nhận số dương)
 
 **Files đã cập nhật:**
-- ✅ `Frontend/tinhkhoan-app-ui-vite/src/views/EmployeeKpiAssignmentView.vue`
+- ✅ `Frontend/KhoanUI/src/views/EmployeeKpiAssignmentView.vue`
 
 ### 3. ✅ SỬA LỖI MAPPING "KTNV" VS "KTNQ"
 
@@ -70,7 +70,7 @@
 
 #### 3.1 Sửa file SQL để thống nhất KTNQ:
 ```sql
--- File: Backend/TinhKhoanApp.Api/verify_roles.sql
+-- File: Backend/Khoan.Api/verify_roles.sql
 -- ĐÃ SỬA: "KTNV" → "KTNQ"
 UNION ALL SELECT 8, 'TruongphongKtnqCnl1', 'Trưởng phòng KTNQ CNL1'
 UNION ALL SELECT 9, 'PhophongKtnqCnl1', 'Phó phòng KTNQ CNL1'  
@@ -103,7 +103,7 @@ UPDATE KpiAssignmentTables SET TableType = 36 WHERE Id = 1065; -- Chi nhánh H. 
 | 32 | PhophongKtnqCnl2 | 1056 | Phó phòng KTNV CNL2 |
 
 **Files đã cập nhật:**
-- ✅ `Backend/TinhKhoanApp.Api/verify_roles.sql`
+- ✅ `Backend/Khoan.Api/verify_roles.sql`
 - ✅ Database: Tables `Roles` và `KpiAssignmentTables`
 
 ### 4. ✅ SỬA LỖI JavaScript TRONG UNITKPIASSIGNMENTVIEW
@@ -118,7 +118,7 @@ UPDATE KpiAssignmentTables SET TableType = 36 WHERE Id = 1065; -- Chi nhánh H. 
 - ✅ Thêm validation cho `branch.type` và `t.category`
 
 **Files đã cập nhật:**
-- ✅ `Frontend/tinhkhoan-app-ui-vite/src/views/UnitKpiAssignmentView.vue`
+- ✅ `Frontend/KhoanUI/src/views/UnitKpiAssignmentView.vue`
 
 ## 🧪 TESTING & VERIFICATION
 

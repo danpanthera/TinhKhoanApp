@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Http;
-using TinhKhoanApp.Api.Models;
+using Khoan.Api.Models;
 
-namespace TinhKhoanApp.Api.Services.Interfaces
+namespace Khoan.Api.Services.Interfaces
 {
     /// <summary>
     /// Interface cho Direct Import Service - CSV upload và processing

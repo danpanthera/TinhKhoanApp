@@ -1,8 +1,8 @@
 using Xunit;
-using TinhKhoanApp.Api.Models.DataTables;
-using TinhKhoanApp.Api.Models.Dtos;
+using Khoan.Api.Models.DataTables;
+using Khoan.Api.Models.Dtos;
 
-namespace TinhKhoanApp.Api.Tests.Dtos
+namespace Khoan.Api.Tests.Dtos
 {
     /// <summary>
     /// DTO Mapping tests cho DPDA - Data Transfer Object validation

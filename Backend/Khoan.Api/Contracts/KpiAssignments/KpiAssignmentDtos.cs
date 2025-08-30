@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace TinhKhoanApp.Api.Contracts.KpiAssignments;
+namespace Khoan.Api.Contracts.KpiAssignments;
 
 [Serializable]
 public class AssignKpiRequest

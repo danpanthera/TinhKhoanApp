@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.DTOs.LN03;
-using TinhKhoanApp.Api.Services.Interfaces;
-using TinhKhoanApp.Api.Repositories;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Models.DTOs.LN03;
+using Khoan.Api.Services.Interfaces;
+using Khoan.Api.Repositories;
 
-namespace TinhKhoanApp.Api.Controllers
+namespace Khoan.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

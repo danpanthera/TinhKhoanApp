@@ -21,7 +21,7 @@
 - **List items**: Font size `0.95rem`, font weight `500`, line height `1.4`
 
 ### 📍 **File đã chỉnh sửa:**
-- `/Frontend/tinhkhoan-app-ui-vite/src/views/DataImportView.vue` (CSS section)
+- `/Frontend/KhoanUI/src/views/DataImportView.vue` (CSS section)
 
 ---
 
@@ -32,7 +32,7 @@
 #### **1. Lỗi Port mismatch:**
 - **Vấn đề**: Frontend kết nối tới port 5056, nhưng backend chạy trên port 5055
 - **Giải pháp**: Sửa `api.js` từ port 5056 về 5055
-- **File**: `/Frontend/tinhkhoan-app-ui-vite/src/services/api.js`
+- **File**: `/Frontend/KhoanUI/src/services/api.js`
 
 #### **2. Lỗi SQLite Database Locked:**
 - **Vấn đề**: "SQLite Error 5: 'database is locked'"
@@ -42,12 +42,12 @@
 #### **3. Lỗi Compilation trong Backend:**
 - **Vấn đề**: `XLCellValue` không thể dùng null-conditional operator (`?.`)
 - **Giải pháp**: Chuyển từ `cellValue?.ToString()` thành `cellValue.ToString()`
-- **File**: `/Backend/TinhKhoanApp.Api/Controllers/RawDataController.cs`
+- **File**: `/Backend/Khoan.Api/Controllers/RawDataController.cs`
 
 #### **4. Tăng Timeout cho Upload:**
 - **Vấn đề**: Timeout 5 phút có thể không đủ cho file lớn
 - **Giải pháp**: Tăng timeout lên 10 phút (600,000ms)
-- **File**: `/Frontend/tinhkhoan-app-ui-vite/src/services/rawDataService.js`
+- **File**: `/Frontend/KhoanUI/src/services/rawDataService.js`
 
 ---
 

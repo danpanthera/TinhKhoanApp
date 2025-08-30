@@ -141,7 +141,7 @@
 ### **Development Environment**
 ```bash
 # Backend
-cd Backend/TinhKhoanApp.Api
+cd Backend/KhoanApp.Api
 dotnet run  # Port 5055
 
 # Frontend  
@@ -165,7 +165,7 @@ npm run dev  # Port 3000
 - **Theme:** `/src/assets/css/agribank-theme.css`
 - **API Controllers:** `/Controllers/KpiAssignmentController.cs`
 - **Vue Components:** `/views/EmployeeKpiAssignmentView.vue`, `/views/UnitKpiAssignmentView.vue`
-- **Database:** `TinhKhoanDB.db`
+- **Database:** `KhoanDB.db`
 
 ### **Testing URLs:**
 - **Frontend:** http://localhost:3000

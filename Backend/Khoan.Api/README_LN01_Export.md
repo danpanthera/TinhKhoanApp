@@ -118,7 +118,7 @@ Sử dụng HTTP GET request đến các endpoint trên.
 ## 🔧 Khởi Động Backend
 
 ```bash
-cd /Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api
+cd /Users/nguyendat/Documents/Projects/KhoanApp/Backend/KhoanApp.Api
 dotnet run --urls=http://localhost:5055
 ```
 

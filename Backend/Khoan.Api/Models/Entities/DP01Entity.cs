@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TinhKhoanApp.Api.Models.Entities
+namespace Khoan.Api.Models.Entities
 {
     /// <summary>
     /// DP01 Entity - Sổ tiết kiệm (63 business columns)

@@ -1,4 +1,4 @@
-namespace TinhKhoanApp.Api.Models.Configuration
+namespace Khoan.Api.Models.Configuration
 {
     /// <summary>
     /// Configuration model cho Direct Import settings

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace TinhKhoanApp.Api.DTOs
+namespace Khoan.Api.DTOs
 {
     public class GL41CreateDto
     {

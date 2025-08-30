@@ -1,8 +1,8 @@
-using TinhKhoanApp.Api.Models.Dtos;
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.Dtos.GL41;
+using Khoan.Api.Models.Dtos;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Models.Dtos.GL41;
 
-namespace TinhKhoanApp.Api.Services.Interfaces
+namespace Khoan.Api.Services.Interfaces
 {
     /// <summary>
     /// GL41 Service Interface - General Ledger Balance table

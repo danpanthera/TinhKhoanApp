@@ -184,7 +184,7 @@ npm run dev -- --port 3002
 
 ### Backend Setup
 ```bash
-cd Backend/TinhKhoanApp.Api
+cd Backend/KhoanApp.Api
 dotnet restore
 dotnet ef database update
 dotnet run --urls "https://localhost:5055"

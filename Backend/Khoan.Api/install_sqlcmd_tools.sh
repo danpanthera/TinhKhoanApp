@@ -22,19 +22,19 @@ echo "✅ SQL Command Tools installed successfully!"
 echo "🧪 Testing sqlcmd connection..."
 docker exec sqlserver2022 /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Dientoan@303" -Q "SELECT @@VERSION AS [SQL_Server_Version]" -C
 
-# Create TinhKhoanDB database
-echo "📊 Creating TinhKhoanDB database..."
+# Create KhoanDB database
+echo "📊 Creating KhoanDB database..."
 docker exec sqlserver2022 /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Dientoan@303" -Q "
-IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'TinhKhoanDB')
+IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'KhoanDB')
 BEGIN
-    CREATE DATABASE [TinhKhoanDB];
-    ALTER DATABASE [TinhKhoanDB] SET RECOVERY SIMPLE;
-    ALTER DATABASE [TinhKhoanDB] SET AUTO_CLOSE OFF;
-    ALTER DATABASE [TinhKhoanDB] SET AUTO_SHRINK OFF;
-    PRINT 'TinhKhoanDB database created successfully';
+    CREATE DATABASE [KhoanDB];
+    ALTER DATABASE [KhoanDB] SET RECOVERY SIMPLE;
+    ALTER DATABASE [KhoanDB] SET AUTO_CLOSE OFF;
+    ALTER DATABASE [KhoanDB] SET AUTO_SHRINK OFF;
+    PRINT 'KhoanDB database created successfully';
 END
 ELSE
-    PRINT 'TinhKhoanDB database already exists';
+    PRINT 'KhoanDB database already exists';
 " -C
 
 echo "🎉 SQL Server 2022 fully ready with tools and database!"

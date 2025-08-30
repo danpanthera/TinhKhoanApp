@@ -1,4 +1,4 @@
-namespace TinhKhoanApp.Api.Models
+namespace Khoan.Api.Models
 {
     /// <summary>
     /// Request để tạo upload session cho chunked upload

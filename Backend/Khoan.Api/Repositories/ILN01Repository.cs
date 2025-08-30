@@ -1,8 +1,8 @@
-using TinhKhoanApp.Api.Models.DataTables;
-using TinhKhoanApp.Api.Data;
+using Khoan.Api.Models.DataTables;
+using Khoan.Api.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace TinhKhoanApp.Api.Repositories
+namespace Khoan.Api.Repositories
 {
     /// <summary>
     /// Repository interface cho LN01 - Thông tin khoản vay

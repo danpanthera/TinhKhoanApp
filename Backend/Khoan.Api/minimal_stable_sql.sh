@@ -129,17 +129,17 @@ if [ "$CONNECTION_SUCCESS" = true ]; then
     SELECT 'Current Time', CONVERT(varchar, GETDATE(), 120)
     " -C -h-1
 
-    # Create TinhKhoanDB
-    echo -e "${PURPLE}🗄️  Creating TinhKhoanDB...${NC}"
+    # Create KhoanDB
+    echo -e "${PURPLE}🗄️  Creating KhoanDB...${NC}"
     sqlcmd -S localhost,1433 -U sa -P "Dientoan@303" -Q "
-    IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'TinhKhoanDB')
+    IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'KhoanDB')
     BEGIN
-        CREATE DATABASE TinhKhoanDB
+        CREATE DATABASE KhoanDB
         COLLATE SQL_Latin1_General_CP1_CI_AS
-        PRINT '✅ TinhKhoanDB created successfully'
+        PRINT '✅ KhoanDB created successfully'
     END
     ELSE
-        PRINT '✅ TinhKhoanDB already exists'
+        PRINT '✅ KhoanDB already exists'
     " -C
 
     echo -e "${GREEN}✅ Database ready${NC}"
@@ -158,7 +158,7 @@ if [ "$CONNECTION_SUCCESS" = true ]; then
     echo "   🌐 Server: localhost,1433"
     echo "   👤 Username: sa"
     echo "   🔐 Password: Dientoan@303"
-    echo "   🗄️  Database: TinhKhoanDB"
+    echo "   🗄️  Database: KhoanDB"
     echo "   📦 Container: sql_edge_minimal"
     echo ""
     echo -e "${YELLOW}Next Steps:${NC}"

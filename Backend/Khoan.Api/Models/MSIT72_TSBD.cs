@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TinhKhoanApp.Api.Models
+namespace Khoan.Api.Models
 {
     /// <summary>
     /// 🏦 Bảng dữ liệu Sao kê TSBD (Tiền gửi tiết kiệm Bảo đảm) - Hỗ trợ Temporal Tables cho audit trail

@@ -1,8 +1,8 @@
-using TinhKhoanApp.Api.Models.Dtos;
-using TinhKhoanApp.Api.Models.Dtos.DP01;
-using TinhKhoanApp.Api.Models.Common;
+using Khoan.Api.Models.Dtos;
+using Khoan.Api.Models.Dtos.DP01;
+using Khoan.Api.Models.Common;
 
-namespace TinhKhoanApp.Api.Services.DataServices
+namespace Khoan.Api.Services.DataServices
 {
     /// <summary>
     /// Interface cho Data Preview Service - xử lý business logic liên quan đến preview dữ liệu

@@ -1,7 +1,7 @@
-using TinhKhoanApp.Api.Models.Dtos.DP01;
-using TinhKhoanApp.Api.Models.Common;
+using Khoan.Api.Models.Dtos.DP01;
+using Khoan.Api.Models.Common;
 
-namespace TinhKhoanApp.Api.Services.Interfaces
+namespace Khoan.Api.Services.Interfaces
 {
     public interface IDP01Service
     {

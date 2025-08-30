@@ -16,7 +16,7 @@
 ### 2. **Suppressions Warning toàn diện**
 
 -   ✅ GlobalSuppressions.cs: Added comprehensive suppressions
--   ✅ TinhKhoanApp.Api.csproj: Extended NoWarn list
+-   ✅ KhoanApp.Api.csproj: Extended NoWarn list
 -   ✅ Suppressed: CS1591, CS0108, CS0114, CS8603, CS8600, CS8602, CS8604, CS8629, EF1002, CS1570
 
 ### 3. **Project Configuration**

@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TinhKhoanApp.Api.Models.DataTables
+namespace Khoan.Api.Models.DataTables
 {
     /// <summary>
     /// LN01 - Loan Data Model with exact CSV column structure

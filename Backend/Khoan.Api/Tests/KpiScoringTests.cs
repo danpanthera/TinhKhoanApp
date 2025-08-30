@@ -1,5 +1,5 @@
 using Xunit;
-using TinhKhoanApp.Api.Services;
+using Khoan.Api.Services;
 
 namespace TinhKhoanApp.Tests;
 

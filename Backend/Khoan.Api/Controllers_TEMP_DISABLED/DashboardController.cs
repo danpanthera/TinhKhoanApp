@@ -1,11 +1,11 @@
-using TinhKhoanApp.Api.Models.Common;
+using Khoan.Api.Models.Common;
 using Microsoft.AspNetCore.Mvc;
-using TinhKhoanApp.Api.Models.Dtos;
-using TinhKhoanApp.Api.Models.ViewModels;
-using TinhKhoanApp.Api.Repositories;
-using TinhKhoanApp.Api.Services.DataServices;
+using Khoan.Api.Models.Dtos;
+using Khoan.Api.Models.ViewModels;
+using Khoan.Api.Repositories;
+using Khoan.Api.Services.DataServices;
 
-namespace TinhKhoanApp.Api.Controllers
+namespace Khoan.Api.Controllers
 {
     /// <summary>
     /// Controller cung cấp API cho Dashboard

@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models;
-using TinhKhoanApp.Api.Models.Common;
+using Khoan.Api.Data;
+using Khoan.Api.Models;
+using Khoan.Api.Models.Common;
 
-namespace TinhKhoanApp.Api.Controllers
+namespace Khoan.Api.Controllers
 {
     /// <summary>
     /// Controller để quản lý các kỳ khoán (KhoanPeriods)

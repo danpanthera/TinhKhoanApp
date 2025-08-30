@@ -1,10 +1,10 @@
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.Entities;
-using TinhKhoanApp.Api.Models.DTOs.GL02;
-using TinhKhoanApp.Api.Repositories;
-using TinhKhoanApp.Api.Services.Interfaces;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Models.Entities;
+using Khoan.Api.Models.DTOs.GL02;
+using Khoan.Api.Repositories;
+using Khoan.Api.Services.Interfaces;
 
-namespace TinhKhoanApp.Api.Services
+namespace Khoan.Api.Services
 {
     public class GL02Service : IGL02Service
     {

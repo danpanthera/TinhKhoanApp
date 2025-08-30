@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace TinhKhoanApp.Api.Models.Entities
+namespace Khoan.Api.Models.Entities
 {
     /// <summary>
     /// DPDA Entity - Debit Card Table

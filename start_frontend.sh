@@ -7,7 +7,7 @@
 
 set -e
 
-echo "🎨 Starting TinhKhoan Frontend..."
+echo "🎨 Starting Khoan Frontend..."
 
 # Detect script directory để tìm project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

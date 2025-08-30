@@ -3,7 +3,7 @@ using System.Collections.Generic; // Sẽ cần cho ICollection sau này
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TinhKhoanApp.Api.Models
+namespace Khoan.Api.Models
 {
     // Định nghĩa Enum cho Loại Kỳ Khoán
     public enum PeriodType

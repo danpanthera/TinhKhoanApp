@@ -223,7 +223,7 @@ ALTER TABLE RR01 ADD SysEndTime datetime2 NOT NULL DEFAULT ('9999-12-31T23:59:59
 
 **✅ 2. Database Layer (20/20)**
 
--   Table exists: ✅ DP01 confirmed in TinhKhoanDB
+-   Table exists: ✅ DP01 confirmed in KhoanDB
 -   Temporal functionality: ✅ SYSTEM_VERSIONED_TEMPORAL_TABLE (Type 2)
 -   History table: ✅ DP01_History automatically created
 -   Columnstore index: ✅ NCCI_DP01_Analytics for performance
@@ -386,7 +386,7 @@ Models/DTOs/DP01/DP01Dtos.cs:
 1. **Start Backend Server** (5 minutes):
 
     ```bash
-    cd /Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api
+    cd /Users/nguyendat/Documents/Projects/KhoanApp/Backend/KhoanApp.Api
     dotnet run
     ```
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 🌱 SEED FULL SYSTEM - TinhKhoan App
+# 🌱 SEED FULL SYSTEM - Khoan App
 # Script to seed all core data: Units, Positions, Roles, Employees
 
 echo "🌱 Starting Full System Seeding..."
@@ -8,7 +8,7 @@ echo "=================================="
 
 # Step 1: Seed Positions using SQL
 echo "📋 Step 1: Seeding Positions..."
-sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -d TinhKhoanDB -Q "
+sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -d KhoanDB -Q "
 DELETE FROM Positions;
 INSERT INTO Positions (Name, Description) VALUES
 ('Giamdoc', 'Giám đốc'),
@@ -23,7 +23,7 @@ SELECT COUNT(*) as PositionsCount FROM Positions;
 
 # Step 2: Seed Roles using SQL
 echo "👥 Step 2: Seeding Roles..."
-sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -d TinhKhoanDB -Q "
+sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -d KhoanDB -Q "
 DELETE FROM Roles;
 INSERT INTO Roles (Name, Description) VALUES
 ('TruongphongKhdn', 'Trưởng phòng KHDN'),
@@ -54,7 +54,7 @@ SELECT COUNT(*) as RolesCount FROM Roles;
 
 # Step 3: Seed Admin Employee using SQL
 echo "👤 Step 3: Seeding Admin Employee..."
-sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -d TinhKhoanDB -Q "
+sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -d KhoanDB -Q "
 DELETE FROM Employees;
 INSERT INTO Employees (EmployeeCode, CBCode, FullName, Username, PasswordHash, Email, IsActive, UnitId, PositionId)
 SELECT 'ADMIN', 'CB001', 'Quản trị viên', 'admin', '\$2a\$11\$N9qo8uLOickgx2ZMRZoMve8YfYqfDzO2zM3JgXSVKnMU8jt/g7i12', 'admin@tinhkhoan.local', 1,
@@ -66,7 +66,7 @@ SELECT COUNT(*) as EmployeesCount FROM Employees;
 # Step 4: Verify all core tables
 echo "✅ Step 4: Verification Summary..."
 echo "================================="
-sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -d TinhKhoanDB -Q "
+sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -d KhoanDB -Q "
 SELECT 'Units' as TableName, COUNT(*) as Count FROM Units
 UNION ALL
 SELECT 'Positions' as TableName, COUNT(*) as Count FROM Positions

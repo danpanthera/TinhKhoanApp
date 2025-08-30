@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TinhKhoanApp.Api.Models.DataTables
+namespace Khoan.Api.Models.DataTables
 {
     /// <summary>
     /// GL02 - General Ledger Transactions Data Model with exact CSV column structure (17 business columns)

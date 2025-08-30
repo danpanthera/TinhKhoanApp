@@ -1,6 +1,6 @@
-using TinhKhoanApp.Api.Models.DataTables;
+using Khoan.Api.Models.DataTables;
 
-namespace TinhKhoanApp.Api.Repositories
+namespace Khoan.Api.Repositories
 {
     /// <summary>
     /// Interface cho DP01 Repository - sử dụng DataTables.DP01 model

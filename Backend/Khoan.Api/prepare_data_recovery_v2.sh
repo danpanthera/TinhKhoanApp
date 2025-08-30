@@ -9,9 +9,9 @@ echo "🚀 BẮT ĐẦU QUY TRÌNH PHỤC HỒI DỮ LIỆU"
 echo "======================================"
 
 # Thông tin database
-SOURCE_BACKUP="/opt/Projects/Khoan/database_backup/backup/TinhKhoanDB_backup_20250706_160954.bak"
-TEMP_DB="TinhKhoanDB_Backup_Temp"
-TARGET_DB="TinhKhoanDB"
+SOURCE_BACKUP="/opt/Projects/Khoan/database_backup/backup/KhoanDB_backup_20250706_160954.bak"
+TEMP_DB="KhoanDB_Backup_Temp"
+TARGET_DB="KhoanDB"
 OUTPUT_DIR="/opt/Projects/Khoan/Backend/KhoanApp.Api/data_export"
 
 echo "📁 Backup file: $SOURCE_BACKUP"
@@ -54,7 +54,7 @@ cat > "$OUTPUT_DIR/extract_data.sql" << 'EOF'
 -- Chạy script này trên SQL Server có restore backup
 -- ==================================================
 
-USE TinhKhoanDB;  -- Hoặc tên database sau khi restore
+USE KhoanDB;  -- Hoặc tên database sau khi restore
 GO
 
 -- Tạo thư mục export (cần quyền admin trên SQL Server)
@@ -77,7 +77,7 @@ FROM Units
 ORDER BY Id;
 
 -- Export to CSV (nếu có quyền)
--- EXEC xp_cmdshell 'bcp "SELECT Id,Code,Name,Type,ParentUnitId,IsActive,CreatedAt,UpdatedAt FROM TinhKhoanDB.dbo.Units ORDER BY Id" queryout "C:\temp\tinhkhoan_export\units.csv" -c -t"," -T -S localhost'
+-- EXEC xp_cmdshell 'bcp "SELECT Id,Code,Name,Type,ParentUnitId,IsActive,CreatedAt,UpdatedAt FROM KhoanDB.dbo.Units ORDER BY Id" queryout "C:\temp\tinhkhoan_export\units.csv" -c -t"," -T -S localhost'
 
 -- ==================================================
 -- 2. EXPORT POSITIONS (Chức vụ)
@@ -221,7 +221,7 @@ cat > "$OUTPUT_DIR/import_template.sql" << 'EOF'
 -- Chạy sau khi đã có dữ liệu từ extract
 -- ==================================================
 
-USE TinhKhoanDB;
+USE KhoanDB;
 GO
 
 -- ==================================================

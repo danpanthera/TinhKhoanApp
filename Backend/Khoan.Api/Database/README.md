@@ -2,7 +2,7 @@
 
 ## Export Details
 - **Date**: 2025-06-19 19:00:00
-- **Source**: TinhKhoanDB (SQL Server)
+- **Source**: KhoanDB (SQL Server)
 - **Container**: sql_server_tinhkhoan
 - **Total Tables**: 27
 

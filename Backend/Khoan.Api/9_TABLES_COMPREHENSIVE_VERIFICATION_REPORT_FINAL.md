@@ -27,7 +27,7 @@
 
 ### 2. DATABASE TABLES (9/9) ✅
 
-All tables exist in `TinhKhoanDB` with proper structure:
+All tables exist in `KhoanDB` with proper structure:
 
 -   **DP01**: 73 columns (63 business + 10 system/temporal) ✅
 -   **DPDA**: BASE TABLE type ✅
@@ -134,5 +134,5 @@ All 9 core data tables have been verified to meet the comprehensive specificatio
 
 _Report generated: 25/08/2025 22:05_
 _Container: azure_sql_edge_tinhkhoan_
-_Database: TinhKhoanDB_
+_Database: KhoanDB_
 _Password: Dientoan@303_

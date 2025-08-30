@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace TinhKhoanApp.Api.Models.Dtos.DP01
+namespace Khoan.Api.Models.Dtos.DP01
 {
     /// <summary>
     /// DP01 Preview DTO - Hiển thị danh sách sổ tiết kiệm với tất cả fields

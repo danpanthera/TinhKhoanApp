@@ -1,8 +1,8 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Data;
+using Khoan.Api.Data;
 
-namespace TinhKhoanApp.Api.Repositories
+namespace Khoan.Api.Repositories
 {
     /// <summary>
     /// Generic Repository - triển khai cơ bản cho IRepository

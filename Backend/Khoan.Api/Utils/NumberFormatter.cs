@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace TinhKhoanApp.Api.Utils
+namespace Khoan.Api.Utils
 {
     /// <summary>
     /// 🔢 Utility class cho định dạng số theo chuẩn US (#,###.00)

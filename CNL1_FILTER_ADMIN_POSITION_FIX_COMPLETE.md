@@ -1,7 +1,7 @@
 # Fix Completion Report: CNL1 Department Filter & Admin Position Cleanup
 
 ## Summary
-This report documents the successful completion of two critical fixes for the TinhKhoanApp:
+This report documents the successful completion of two critical fixes for the KhoanApp:
 
 ### 1. ✅ CNL1 Department Filter Fix
 **Issue**: When selecting CNL1 in employee KPI assignment, department dropdown showed CNL2 departments instead of only showing departments with type "PNVL1".
@@ -11,7 +11,7 @@ This report documents the successful completion of two critical fixes for the Ti
 - **After**: Changed to type-based filtering that only shows departments with `unitType === 'PNVL1'`
 
 **Files Modified**:
-- `/Frontend/tinhkhoan-app-ui-vite/src/views/EmployeeKpiAssignmentView.vue`
+- `/Frontend/KhoanUI/src/views/EmployeeKpiAssignmentView.vue`
 
 **Code Changes**:
 ```javascript
@@ -44,8 +44,8 @@ if (branchType === 'CNL1') {
 3. **Successfully Updated**: Admin user position changed from "Giám đốc" to "Nhân viên"
 
 **Files Modified**:
-- `/Backend/TinhKhoanApp.Api/Program.cs` (lines 190-200)
-- `/Backend/TinhKhoanApp.Api/Controllers/EmployeesController.cs` (new endpoint added)
+- `/Backend/Khoan.Api/Program.cs` (lines 190-200)
+- `/Backend/Khoan.Api/Controllers/EmployeesController.cs` (new endpoint added)
 
 **API Response**:
 ```json
@@ -58,7 +58,7 @@ if (branchType === 'CNL1') {
 ```
 
 **Additional Resources Created**:
-- `/Backend/TinhKhoanApp.Api/update_admin_position.sql` - SQL script for manual database updates
+- `/Backend/Khoan.Api/update_admin_position.sql` - SQL script for manual database updates
 
 ## Testing Status
 - ✅ **Backend API**: Running successfully on http://localhost:5000

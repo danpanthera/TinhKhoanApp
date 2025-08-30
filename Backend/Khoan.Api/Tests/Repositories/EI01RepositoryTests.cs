@@ -5,11 +5,11 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Moq;
 using Xunit;
-using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models.DataTables;
-using TinhKhoanApp.Api.Repositories;
+using Khoan.Api.Data;
+using Khoan.Api.Models.DataTables;
+using Khoan.Api.Repositories;
 
-namespace TinhKhoanApp.Api.Tests.Repositories
+namespace Khoan.Api.Tests.Repositories
 {
     public class EI01RepositoryTests
     {

@@ -16,8 +16,8 @@
 
 **Problem**: System has mixed `DTOs` (uppercase) vs `Dtos` (lowercase) namespaces
 
--   Controllers/Services reference `TinhKhoanApp.Api.Models.DTOs.*` (non-existent)
--   Actual DTOs located in `TinhKhoanApp.Api.Models.Dtos.*`
+-   Controllers/Services reference `KhoanApp.Api.Models.DTOs.*` (non-existent)
+-   Actual DTOs located in `KhoanApp.Api.Models.Dtos.*`
 
 **Solution**: Global find/replace across codebase
 
@@ -52,7 +52,7 @@ find . -name "*.cs" -exec sed -i 's/Models\.DTOs/Models.Dtos/g' {} \;
 
 ```bash
 # Execute global namespace fix
-cd /Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api
+cd /Users/nguyendat/Documents/Projects/KhoanApp/Backend/KhoanApp.Api
 find . -name "*.cs" -exec sed -i 's/Models\.DTOs/Models.Dtos/g' {} \;
 ```
 

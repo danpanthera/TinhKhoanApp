@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TinhKhoanApp.Api.Models
+namespace Khoan.Api.Models
 {
     /// <summary>
     /// 🏦 Bảng chính chứa thông tin các file import - Hỗ trợ Temporal Tables cho audit trail

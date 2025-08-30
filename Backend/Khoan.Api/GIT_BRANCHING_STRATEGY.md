@@ -176,7 +176,7 @@ dotnet ef database update --configuration Release
 
 ```sql
 -- Pre-migration backup (Windows Server)
-BACKUP DATABASE TinhKhoanDB TO DISK = 'C:\Backups\TinhKhoanDB_PreMigration.bak'
+BACKUP DATABASE KhoanDB TO DISK = 'C:\Backups\KhoanDB_PreMigration.bak'
 
 -- Post-migration verification
 SELECT COUNT(*) FROM sys.tables WHERE temporal_type = 2; -- Temporal tables

@@ -1,8 +1,8 @@
 using System.Linq.Expressions;
-using TinhKhoanApp.Api.Models.DataTables;
-using TinhKhoanApp.Api.Services.Caching;
+using Khoan.Api.Models.DataTables;
+using Khoan.Api.Services.Caching;
 
-namespace TinhKhoanApp.Api.Repositories.Cached
+namespace Khoan.Api.Repositories.Cached
 {
     /// <summary>
     /// CachedGL41Repository - Triển khai IGL41Repository với caching

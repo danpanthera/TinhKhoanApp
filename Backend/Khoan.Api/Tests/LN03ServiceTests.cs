@@ -1,13 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Moq;
-using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models.DataTables;
-using TinhKhoanApp.Api.Models.Dtos;
-using TinhKhoanApp.Api.Repositories;
-using TinhKhoanApp.Api.Services;
+using Khoan.Api.Data;
+using Khoan.Api.Models.DataTables;
+using Khoan.Api.Models.Dtos;
+using Khoan.Api.Repositories;
+using Khoan.Api.Services;
 using Xunit;
 
-namespace TinhKhoanApp.Api.Tests
+namespace Khoan.Api.Tests
 {
     /// <summary>
     /// Unit Test cho LN03Service

@@ -8,7 +8,7 @@ echo "📅 $(date)"
 echo ""
 
 # Database connection
-SQLCMD="sqlcmd -S localhost,1433 -U SA -P 'Dientoan@303' -d TinhKhoanDB -C"
+SQLCMD="sqlcmd -S localhost,1433 -U SA -P 'Dientoan@303' -d KhoanDB -C"
 
 echo "1️⃣ KIỂM TRA GL01 - PARTITIONED COLUMNSTORE"
 echo "==========================================="

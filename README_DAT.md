@@ -3,7 +3,7 @@ Hãy suy nghĩ và hành động như một SIÊU lập trình viên Fullstack, 
 Luôn xưng hô là em và gọi tôi là "anh".
 luôn chú thích các dòng code bằng tiếng việt! Luôn dùng TIẾNG VIỆT trong cửa số chat **GitHub Copilot**
 LUÔN commit từng phần nhỏ, không commit cả một lần quá nhiều file.
-databasse là "TinhKhoanDB" và mật khẩu user SA là "Dientoan@303"
+databasse là "KhoanDB" và mật khẩu user SA là "Dientoan@303"
 trên docker có container chứa SQL server với tên là "azure_sql_edge_tinhkhoan"
 Luôn để backend port là 5055, frontend port là 3000.
 
@@ -73,7 +73,7 @@ Luôn để backend port là 5055, frontend port là 3000.
 
 ## 🎯 **AZURE SQL EDGE ARM64 M3 OPTIMIZED - CURRENT STATUS:**
 ✅ **System Status (Current - August 14, 2025):**
-- **Database**: Azure SQL Edge 1.0.7 on localhost:1433 (TinhKhoanDB) ✅ STABLE
+- **Database**: Azure SQL Edge 1.0.7 on localhost:1433 (KhoanDB) ✅ STABLE
 - **Backend**: .NET Core API on localhost:5055 - DirectImport with Heavy File Support ✅ OPERATIONAL
 - **Frontend**: Vue.js + Vite on localhost:3000 ✅ OPTIMIZED
 - **Container**: azure_sql_edge_tinhkhoan (optimized with memory limits) ✅ RUNNING
@@ -110,12 +110,12 @@ Luôn để backend port là 5055, frontend port là 3000.
 - **Backend Stability**: Enhanced exception handling prevents crashes ✅ STABLE
 
 ## 🚨 QUY TẮC KHỞI ĐỘNG DỰ ÁN - NGHIÊM CẤM VI PHẠM (RẤT Quan trọng)
-- **Backend:** `cd Backend/TinhKhoanApp.Api && dotnet run`
+- **Backend:** `cd Backend/KhoanApp.Api && dotnet run`
 - **Frontend:** `cd Frontend/tinhkhoan-app-ui-vite && npm run dev`
 - **Fullstack:** `./start_fullstack.sh` (Tự động khởi động Database -> Backend -> Frontend)
 - **Fast Commit:** `./fast_commit.sh` - nội dung ngắn gọn nhất có thể
 - **NGHIÊM CẤM** sử dụng VS Code tasks để chạy fullstack - CHỈ DÙNG MANUAL COMMANDS
-- **Database:** TinhKhoanDB, username=sa, password=Dientoan@303
+- **Database:** KhoanDB, username=sa, password=Dientoan@303
 
 🎯 **DATABASE STATUS (August 14, 2025):** (Quan trọng)
 - ✅ **GL01/GL02**: Partitioned Columnstore (NO temporal) + Heavy File Optimized (~200MB support) ✅ READY
@@ -166,14 +166,14 @@ Luôn kiểm tra file test cho 08 bảng dữ liệu từ thư mục sau:
 🚨 **CẤM TỰ TẠO CONTAINER MỚI.**
 
 ## 🚨 **QUY TẮC KHỞI ĐỘNG DỰ ÁN - NGHIÊM CẤM VI PHẠM (RẤT Quan trọng)**
-- **Backend:** `cd Backend/TinhKhoanApp.Api && dotnet run`
+- **Backend:** `cd Backend/KhoanApp.Api && dotnet run`
 - **Frontend:** `cd Frontend/tinhkhoan-app-ui-vite && npm run dev`  
 - **Fullstack:** `./start_fullstack.sh` (Tự động khởi động Database → Backend → Frontend)
 - **Fast Commit:** `./fast_commit.sh` - nội dung ngắn gọn nhất có thể
 - **NGHIÊM CẤM** sử dụng VS Code tasks để chạy fullstack - CHỈ DÙNG MANUAL COMMANDS
-- **Database:** TinhKhoanDB, username=sa, password=Dientoan@303
+- **Database:** KhoanDB, username=sa, password=Dientoan@303
 
-## 🆕 **TinhKhoanApp CURRENT STATUS (August 14, 2025) - ALL REQUIREMENTS COMPLETED**
+## 🆕 **KhoanApp CURRENT STATUS (August 14, 2025) - ALL REQUIREMENTS COMPLETED**
 
 ### ✅ **FINAL VERIFICATION STATUS:**
 - **� File Search**: 33 files (6 SQL + 27 SH) containing KPI/indicator keywords ✅ COMPLETED
@@ -184,14 +184,14 @@ Luôn kiểm tra file test cho 08 bảng dữ liệu từ thư mục sau:
 - **💾 Git Operations**: All changes committed and pushed successfully ✅ COMPLETED
 ### ✅ **DOCKER & INFRASTRUCTURE STATUS (Current - August 14, 2025):**
 - **✅ Container**: azure_sql_edge_tinhkhoan optimized with memory limits and auto-restart ✅ STABLE
-- **✅ Database**: TinhKhoanDB stable on localhost:1433 with all 47 tables ✅ OPERATIONAL
+- **✅ Database**: KhoanDB stable on localhost:1433 with all 47 tables ✅ OPERATIONAL
 - **✅ Performance**: RAM usage optimized, container running without crashes ✅ EFFICIENT
 - **✅ Heavy File Support**: GL01/GL02 optimized for 200MB+ CSV files ✅ READY
 
 ### ✅ **CORE SYSTEM COMPONENTS (Current Status)** (Quan trọng)
 
 **Database Infrastructure:**
-- ✅ Azure SQL Edge ARM64 hoàn toàn tương thích với TinhKhoanApp ✅ VERIFIED
+- ✅ Azure SQL Edge ARM64 hoàn toàn tương thích với KhoanApp ✅ VERIFIED
 - ✅ Temporal Tables: Automatic history tracking và audit trail (7 tables) ✅ OPERATIONAL
 - ✅ Columnstore Indexes: Analytics performance optimization cho tất cả 8 tables ✅ ACTIVE
 - ✅ DirectImport Mechanism: Hoạt động hoàn hảo cho tất cả 8 bảng với heavy file support ✅ OPTIMIZED
@@ -390,7 +390,7 @@ which sqlcmd  # /opt/homebrew/bin/sqlcmd
 sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -Q "SELECT @@VERSION"
 
 # Interactive mode
-sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d TinhKhoanDB
+sqlcmd -S localhost,1433 -U sa -P 'Dientoan@303' -C -d KhoanDB
 ```
 
 **Các scripts đã tối ưu:**
@@ -591,7 +591,7 @@ docker run -e "ACCEPT_EULA=Y" \
 ```
 
 **🔄 DỮ LIỆU ĐÃ PHỤC HỒI:**
-- ✅ **Database TinhKhoanDB:** Đã tạo lại
+- ✅ **Database KhoanDB:** Đã tạo lại
 - ✅ **47 Tables:** Đã migrate thành công qua Entity Framework
 - ✅ **6 Units:** Phục hồi cơ bản (CNL1, HoiSo, BinhLu, PhongTho, SinHo, BumTo)
 - ✅ **7 Roles:** Phục hồi cơ bản (TruongphongKhdn, TruongphongKhcn, PhophongKhdn, PhophongKhcn, Cbtd, Gdv, GiamdocCnl2)
@@ -728,7 +728,7 @@ Sửa lại hết database, model, EF, BulkCopy, migration của các bảng d�
 
 #region 9 bảng core data table
 **Chi tiết cấu trúc các bảng dữ liệu:** (RẤT QUAN TRỌNG)
-# sqlcmd -S localhost -d TinhKhoanApp -E -C -Q "SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'DP01' ORDER BY ORDINAL_POSITION"
+# sqlcmd -S localhost -d KhoanApp -E -C -Q "SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'DP01' ORDER BY ORDINAL_POSITION"
 
 
 # 2. Bảng DPDA (Quan trọng)

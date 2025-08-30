@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models;
+using Khoan.Api.Data;
+using Khoan.Api.Models;
 
-namespace TinhKhoanApp.Api.Scripts;
+namespace Khoan.Api.Scripts;
 
 public static class FixVietnameseEncoding
 {

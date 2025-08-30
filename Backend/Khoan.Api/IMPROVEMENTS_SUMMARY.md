@@ -1,4 +1,4 @@
-# TinhKhoanApp - Tổng kết cải tiến hệ thống
+# KhoanApp - Tổng kết cải tiến hệ thống
 
 ## 📋 Danh sách công việc đã hoàn thành
 

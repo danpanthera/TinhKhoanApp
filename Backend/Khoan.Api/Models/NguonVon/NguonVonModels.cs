@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace TinhKhoanApp.Api.Models.NguonVon
+namespace Khoan.Api.Models.NguonVon
 {
     /// <summary>
     /// Request model cho API tính toán nguồn vốn

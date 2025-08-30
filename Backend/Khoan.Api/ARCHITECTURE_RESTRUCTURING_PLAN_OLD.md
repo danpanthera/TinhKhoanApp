@@ -1,6 +1,6 @@
 # 🏗️ COMPREHENSIVE CODE ARCHITECTURE RESTRUCTURING PLAN
 
-## Áp dụng Clean Architecture cho TinhKhoanApp - August 10, 2025
+## Áp dụng Clean Architecture cho KhoanApp - August 10, 2025
 
 ## 📊 **9-TABLE SEQUENTIAL DEVELOPMENT PROGRESS**
 

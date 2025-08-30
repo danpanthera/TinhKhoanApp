@@ -46,20 +46,20 @@ echo "-----------------------------------"
 
 # Check if RR01 table exists with correct structure
 run_check "RR01 table exists in database" \
-    "sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Passw0rd' -d TinhKhoanDB -Q 'SELECT TOP 1 * FROM RR01' -h -1" \
+    "sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Passw0rd' -d KhoanDB -Q 'SELECT TOP 1 * FROM RR01' -h -1" \
     "success"
 
 # Check if RR01 has 25 business columns
 run_check "RR01 has 25 business columns (NGAY_DL + 24 others)" \
-    "sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Passw0rd' -d TinhKhoanDB -Q 'SELECT COUNT(*) as col_count FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '\''RR01'\'' AND COLUMN_NAME NOT IN ('\''Id'\'', '\''CreatedAt'\'', '\''UpdatedAt'\'', '\''SysStartTime'\'', '\''SysEndTime'\'')' -h -1 | grep -q '25'"
+    "sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Passw0rd' -d KhoanDB -Q 'SELECT COUNT(*) as col_count FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = '\''RR01'\'' AND COLUMN_NAME NOT IN ('\''Id'\'', '\''CreatedAt'\'', '\''UpdatedAt'\'', '\''SysStartTime'\'', '\''SysEndTime'\'')' -h -1 | grep -q '25'"
 
 # Check if RR01 has temporal table
 run_check "RR01 has temporal table (SYSTEM_VERSIONING)" \
-    "sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Passw0rd' -d TinhKhoanDB -Q 'SELECT temporal_type_desc FROM sys.tables WHERE name = '\''RR01'\''' -h -1 | grep -q 'SYSTEM_VERSIONED_TEMPORAL_TABLE'"
+    "sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Passw0rd' -d KhoanDB -Q 'SELECT temporal_type_desc FROM sys.tables WHERE name = '\''RR01'\''' -h -1 | grep -q 'SYSTEM_VERSIONED_TEMPORAL_TABLE'"
 
 # Check if RR01 has columnstore index
 run_check "RR01 has columnstore index" \
-    "sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Passw0rd' -d TinhKhoanDB -Q 'SELECT COUNT(*) FROM sys.indexes WHERE object_id = OBJECT_ID('\''RR01'\'') AND type_desc = '\''CLUSTERED COLUMNSTORE'\''' -h -1 | grep -q '1'"
+    "sqlcmd -S localhost,1433 -U sa -P 'YourStrong@Passw0rd' -d KhoanDB -Q 'SELECT COUNT(*) FROM sys.indexes WHERE object_id = OBJECT_ID('\''RR01'\'') AND type_desc = '\''CLUSTERED COLUMNSTORE'\''' -h -1 | grep -q '1'"
 
 echo ""
 echo "2️⃣  MODEL ↔ EF CONSISTENCY"

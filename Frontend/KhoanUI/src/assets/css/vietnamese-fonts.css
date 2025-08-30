@@ -1,5 +1,5 @@
 /* =============================================================
- * FONT TIẾNG VIỆT TỐI ƯU CHO TINHKHOAN APP - ENHANCED VERSION
+ * FONT TIẾNG VIỆT TỐI ƯU CHO KHOAN APP - ENHANCED VERSION
  * Hỗ trợ đầy đủ dấu tiếng Việt và emojis
  * Cấu hình font stack tối ưu cho hiển thị tiếng Việt
  * =============================================================*/
@@ -317,6 +317,7 @@ body {
 
 /* Desktop screens - larger KPI table fonts */
 @media (min-width: 1024px) {
+
   .kpi-table th,
   .kpi-table td,
   .el-table th,
@@ -338,7 +339,8 @@ body {
 }
 
 /* High DPI displays */
-@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+@media (-webkit-min-device-pixel-ratio: 2),
+(min-resolution: 192dpi) {
   * {
     -webkit-font-smoothing: subpixel-antialiased;
   }

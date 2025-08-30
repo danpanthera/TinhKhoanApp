@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models;
+using Khoan.Api.Data;
+using Khoan.Api.Models;
 
-namespace TinhKhoanApp.Api.Data
+namespace Khoan.Api.Data
 {
     public static class EmployeeSeeder
     {
