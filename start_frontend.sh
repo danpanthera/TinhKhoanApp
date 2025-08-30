@@ -12,7 +12,7 @@ echo "🎨 Starting TinhKhoan Frontend..."
 # Detect script directory để tìm project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$SCRIPT_DIR"
-FRONTEND_DIR="$PROJECT_ROOT/Frontend/tinhkhoan-app-ui-vite"
+FRONTEND_DIR="$PROJECT_ROOT/Frontend/KhoanUI"
 
 echo "📁 Project root: $PROJECT_ROOT"
 echo "📁 Frontend directory: $FRONTEND_DIR"

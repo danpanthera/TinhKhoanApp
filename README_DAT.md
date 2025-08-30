@@ -728,21 +728,7 @@ Sửa lại hết database, model, EF, BulkCopy, migration của các bảng d�
 
 #region 9 bảng core data table
 **Chi tiết cấu trúc các bảng dữ liệu:** (RẤT QUAN TRỌNG)
-# 1. Bảng DP01 (Quan trọng)
-+ Thống nhất cấu trúc dữ liệu Bảng DP01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
-+ Theo chuẩn Temporal Table + Columnstore Indexes
-+ Business Column tham chiếu theo file csv *dp01*
-+ Số lượng Cột busiess column = 63
-+ Cho phép các trường, cột có giá trị NULL
-thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
-+ Cột NGAY_DL trong bảng DP01 lấy từ filename, có định dạng datetime2 (dd/mm/yyyy)
-+ Define (Model, Database, EF, BulkCopy) đảm bảo thống nhất: Các cột có chứa "DATE", "NGAY" đưa về format datetime2 (dd/mm/yyyy); các cột có chứa "AMT", "AMOUNT", "BALANCE" ở dạng number #,###.00 (vd: 250,000.89); (có thể phải tạo proper conversion)
-+ Các cột còn lại dạng String/Nvachar: Tất cả có độ dài 200 ký tự, riêng cột "ADDRESS" dài 1000 ký tự
-+ Cấu trúc bảng dữ liệu: NGAY_DL -> Business Column -> Temporal + System column
-+ Chỉ cho phép import các file có filename chứa ký tự "dp01"
-+ Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
-+ Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
-+ Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này
+# sqlcmd -S localhost -d TinhKhoanApp -E -C -Q "SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'DP01' ORDER BY ORDINAL_POSITION"
 
 
 # 2. Bảng DPDA (Quan trọng)
@@ -759,7 +745,7 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Chỉ cho phép import các file có filename chứa ký tự "dpda"
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
-+ Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này
++ Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này, Ngoài các cột Temporal/System Column ra thì Business Column của file CSV là gốc, là tham chiếu của tất cả các layer, component : DTO, Controller, Services, EF, Database, Model...v.v.
 
 # 3. Bảng EI01 (Quan trọng)
 + Thống nhất cấu trúc dữ liệu Bảng EI01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -775,7 +761,7 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Chỉ cho phép import các file có filename chứa ký tự "ei01"
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
-+ Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này.
++ Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này, Ngoài các cột Temporal/System Column ra thì Business Column của file CSV là gốc, là tham chiếu của tất cả các layer, component : DTO, Controller, Services, EF, Database, Model...v.v..
 
 # 4. Bảng GL01 (Quan trọng) - HEAVY FILE OPTIMIZED
 + Thống nhất cấu trúc dữ liệu Bảng GL01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -791,7 +777,7 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Chỉ cho phép import các file có filename chứa ký tự "gl01"
 + **Import trực tiếp vào bảng dữ liệu (Direct Import) với Heavy File Support**. Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
-+ Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này.
++ Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này, Ngoài các cột Temporal/System Column ra thì Business Column của file CSV là gốc, là tham chiếu của tất cả các layer, component : DTO, Controller, Services, EF, Database, Model...v.v..
 
 # 5. Bảng GL02 (Quan trọng) - HEAVY FILE OPTIMIZED  
 + Thống nhất cấu trúc dữ liệu Bảng GL02 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -807,7 +793,7 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Chỉ cho phép import các file có filename chứa ký tự "gl02"
 + **Import trực tiếp vào bảng dữ liệu (Direct Import) với Heavy File Support**. Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
-+ Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này.
++ Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này, Ngoài các cột Temporal/System Column ra thì Business Column của file CSV là gốc, là tham chiếu của tất cả các layer, component : DTO, Controller, Services, EF, Database, Model...v.v..
 
 # 6. Bảng GL41 (Quan trọng)
 + Thống nhất cấu trúc dữ liệu Bảng GL41 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -822,7 +808,7 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Chỉ cho phép import các file có filename chứa ký tự "gl41"
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
-+ Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này.
++ Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này, Ngoài các cột Temporal/System Column ra thì Business Column của file CSV là gốc, là tham chiếu của tất cả các layer, component : DTO, Controller, Services, EF, Database, Model...v.v..
 
 # 7. Bảng LN01 (Quan trọng)
  Thống nhất cấu trúc dữ liệu Bảng LN01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -839,7 +825,7 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Chỉ cho phép import các file có filename chứa ký tự "ln01"
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
-+ Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này.
++ Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này, Ngoài các cột Temporal/System Column ra thì Business Column của file CSV là gốc, là tham chiếu của tất cả các layer, component : DTO, Controller, Services, EF, Database, Model...v.v..
 
 # 8. Bảng LN03 (Quan trọng)
  Thống nhất cấu trúc dữ liệu Bảng LN03 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -856,7 +842,7 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Chỉ cho phép import các file có filename chứa ký tự *ln03*
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
-+ Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này.
++ Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này, Ngoài các cột Temporal/System Column ra thì Business Column của file CSV là gốc, là tham chiếu của tất cả các layer, component : DTO, Controller, Services, EF, Database, Model...v.v..
 
 # 9. Bảng RR01 (Quan trọng)
  Thống nhất cấu trúc dữ liệu Bảng RR01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
@@ -873,7 +859,7 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 + Chỉ cho phép import các file có filename chứa ký tự "rr01"
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
-+ Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này.
++ Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này, Ngoài các cột Temporal/System Column ra thì Business Column của file CSV là gốc, là tham chiếu của tất cả các layer, component : DTO, Controller, Services, EF, Database, Model...v.v..
 
 **CÁCH TỔ CHỨC LẠI CODE CHO 9 BẢNG CORE DATA:** 
 **🚨 QUAN TRỌNG: Hãy làm với từng bảng, xong bảng này mới được làm sang bảng khác!**
@@ -908,7 +894,7 @@ lý business logic, repositories xử lý data access
 - Việc tổ chức lại code theo cách này sẽ giúp cấu trúc dự án rõ ràng, dễ bảo trì và theo đúng các best practices trong phát triển phần mềm
 - Liên tục update trạng thái qua file ARCHITECTURE_RESTRUCTURING_PLAN.md sau khi hoàn thành mỗi bảng
 + Đảm bảo cấu trúc bảng (ngoài các cột NGAY_DL, System Column và Temporal Column) phải đồng nhất business column từ CSV <- Database <- Model <- EF <- BulkCopy <- Direct Import <- DTO <- Services <- Repository <- Entity <- Controller (business Column của CSV là chuẩn là tham chiếu) Cấu trúc cuối cùng là NGAY_DL-> Business Column -> Temporal/System Column
-#endregion
+
 
 **Quy ước cách tính các chỉ tiêu**
 

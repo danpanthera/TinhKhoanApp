@@ -1,14 +1,14 @@
 #!/bin/bash
 
 # ===================================================
-# TinhKhoanApp Git Performance Optimization Script
+# KhoanApp Git Performance Optimization Script
 # Tối ưu hóa Git để commit nhanh nhất có thể
 # ===================================================
 
 echo "🚀 Starting Git Performance Optimization..."
 
 # 1. Navigate to project root
-cd /Users/nguyendat/Documents/Projects/TinhKhoanApp
+cd /opt/Projects/Khoan
 
 # 2. Git Performance Settings
 echo "⚙️ Configuring Git performance settings..."

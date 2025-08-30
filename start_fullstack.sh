@@ -44,7 +44,7 @@ echo -e "${GREEN}✅ Database container is running${NC}"
 # 2. Khởi động Backend API
 echo ""
 echo "2️⃣ Starting Backend API..."
-cd Backend/TinhKhoanApp.Api
+cd Backend/KhoanApp.Api
 
 # Kill existing backend processes
 pkill -f "dotnet run.*5055" 2>/dev/null || true
@@ -61,7 +61,7 @@ check_service "http://localhost:5055/api/Health" "Backend API"
 # 3. Khởi động Frontend
 echo ""
 echo "3️⃣ Starting Frontend..."
-cd ../../Frontend/tinhkhoan-app-ui-vite
+cd ../../Frontend/KhoanUI
 
 # Kill existing frontend processes
 pkill -f "npm run dev" 2>/dev/null || true
@@ -93,8 +93,8 @@ echo -e "${GREEN}🔗 Backend API:${NC} http://localhost:5055"
 echo -e "${GREEN}🗄️ Database:${NC} localhost:1433"
 echo ""
 echo -e "${YELLOW}📝 Logs:${NC}"
-echo "   Backend: Backend/TinhKhoanApp.Api/backend.log"
-echo "   Frontend: Frontend/tinhkhoan-app-ui-vite/frontend.log"
+echo "   Backend: Backend/KhoanApp.Api/backend.log"
+echo "   Frontend: Frontend/KhoanUI/frontend.log"
 echo ""
 echo -e "${YELLOW}🛑 To stop:${NC}"
 echo "   kill $BACKEND_PID $FRONTEND_PID"

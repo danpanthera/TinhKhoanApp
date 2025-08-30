@@ -1,7 +1,7 @@
 #!/bin/bash
 # 🔄 TinhKhoan App - Backend Restart Script
 echo "🔄 Restarting TinhKhoan Backend API..."
-cd Backend/TinhKhoanApp.Api
+cd Backend/KhoanApp.Api
 echo "🔨 Building backend..."
 dotnet build --configuration Debug --verbosity minimal
 if [ $? -eq 0 ]; then

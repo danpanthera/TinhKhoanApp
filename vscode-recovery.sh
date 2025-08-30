@@ -23,7 +23,7 @@ echo "✅ Cache cleaned"
 
 # 3. Backup workspace
 echo "🔧 Step 3: Backup workspace..."
-cd /Users/nguyendat/Documents/Projects/TinhKhoanApp
+cd /opt/Projects/Khoan
 ./fast-commit.sh
 echo "✅ Workspace backed up"
 
@@ -35,7 +35,7 @@ echo "📊 Free memory: $free_mem pages"
 # 5. Restart backend safely
 echo "🔧 Step 5: Restart backend..."
 lsof -ti:5055 | xargs kill -9 2>/dev/null || true
-cd Backend/TinhKhoanApp.Api
+cd Backend/KhoanApp.Api
 nohup dotnet run --urls=http://localhost:5055 > /tmp/backend.log 2>&1 &
 echo "✅ Backend restarted (check /tmp/backend.log)"
 

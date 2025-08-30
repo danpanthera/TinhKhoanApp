@@ -1,5 +1,5 @@
 #!/bin/bash
-# Quick commit script for TinhKhoanApp
+# Quick commit script for KhoanApp
 # Usage: ./quick_commit.sh "Your commit message"
 
 if [ -z "$1" ]; then

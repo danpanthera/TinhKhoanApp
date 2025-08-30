@@ -1,5 +1,5 @@
 #!/bin/bash
-# Script tự động commit nhanh cho TinhKhoanApp
+# Script tự động commit nhanh cho KhoanApp
 # Sử dụng: ./quick-commit.sh "commit message"
 
 # Màu sắc cho output

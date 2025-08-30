@@ -25,7 +25,7 @@ check_port() {
 # Function to start backend
 start_backend() {
     echo -e "${BLUE}🔧 Starting Backend (ASP.NET Core)...${NC}"
-    cd Backend/TinhKhoanApp.Api
+    cd Backend/KhoanApp.Api
     
     if check_port 5055; then
         echo -e "${YELLOW}⚠️  Backend already running on port 5055${NC}"
@@ -42,7 +42,7 @@ start_backend() {
 # Function to start frontend
 start_frontend() {
     echo -e "${BLUE}🎨 Starting Frontend (Vue 3 + Vite)...${NC}"
-    cd Frontend/tinhkhoan-app-ui-vite
+    cd Frontend/KhoanUI
     
     # Try different ports
     FRONTEND_PORT=3000
@@ -137,12 +137,12 @@ trap cleanup INT
 echo -e "${BLUE}🔍 Checking prerequisites...${NC}"
 
 # Check if we're in the right directory
-if [ ! -d "Frontend/tinhkhoan-app-ui-vite" ] || [ ! -d "Backend/TinhKhoanApp.Api" ]; then
+if [ ! -d "Frontend/KhoanUI" ] || [ ! -d "Backend/KhoanApp.Api" ]; then
     echo -e "${RED}❌ Error: Please run this script from the project root directory${NC}"
     echo "Current directory: $(pwd)"
     echo "Expected structure:"
-    echo "  Frontend/tinhkhoan-app-ui-vite/"
-    echo "  Backend/TinhKhoanApp.Api/"
+    echo "  Frontend/KhoanUI/"
+    echo "  Backend/KhoanApp.Api/"
     exit 1
 fi
 
@@ -159,9 +159,9 @@ if ! command -v dotnet &> /dev/null; then
 fi
 
 # Check npm dependencies
-if [ ! -d "Frontend/tinhkhoan-app-ui-vite/node_modules" ]; then
+if [ ! -d "Frontend/KhoanUI/node_modules" ]; then
     echo -e "${YELLOW}📦 Installing npm dependencies...${NC}"
-    cd Frontend/tinhkhoan-app-ui-vite
+    cd Frontend/KhoanUI
     npm install
     cd ../../
 fi

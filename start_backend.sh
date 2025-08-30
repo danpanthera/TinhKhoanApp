@@ -7,7 +7,7 @@ echo "🚀 Starting TinhKhoan Backend API..."
 # Get the absolute path of the script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$SCRIPT_DIR"
-BACKEND_DIR="$PROJECT_ROOT/Backend/TinhKhoanApp.Api"
+BACKEND_DIR="$PROJECT_ROOT/Backend/KhoanApp.Api"
 
 echo "📁 Project root: $PROJECT_ROOT"
 echo "📁 Backend directory: $BACKEND_DIR"
@@ -23,7 +23,7 @@ cd "$BACKEND_DIR"
 
 # Kill any existing dotnet processes on port 5055
 echo "🔄 Stopping any existing backend processes..."
-pkill -f "dotnet.*TinhKhoanApp.Api" || true
+pkill -f "dotnet.*KhoanApp.Api" || true
 sleep 2
 
 # Start the backend

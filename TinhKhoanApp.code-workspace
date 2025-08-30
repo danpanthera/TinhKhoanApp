@@ -2,11 +2,11 @@
   "folders": [
     {
       "name": "Backend API",
-      "path": "./Backend/TinhKhoanApp.Api"
+      "path": "./Backend/KhoanApp.Api"
     },
     {
       "name": "Frontend Vue",
-      "path": "./Frontend/tinhkhoan-app-ui-vite"
+      "path": "./Frontend/KhoanUI"
     }
   ],
   "settings": {
@@ -208,7 +208,7 @@
         "command": "dotnet",
         "args": ["run", "--urls=http://localhost:5055"],
         "options": {
-          "cwd": "${workspaceFolder}/Backend/TinhKhoanApp.Api"
+          "cwd": "${workspaceFolder}/Backend/KhoanApp.Api"
         },
         "group": "build",
         "isBackground": true,
@@ -228,7 +228,7 @@
         "command": "npm",
         "args": ["run", "dev"],
         "options": {
-          "cwd": "${workspaceFolder}/Frontend/tinhkhoan-app-ui-vite"
+          "cwd": "${workspaceFolder}/Frontend/KhoanUI"
         },
         "group": "build",
         "isBackground": true,
@@ -247,7 +247,7 @@
         "command": "dotnet",
         "args": ["build"],
         "options": {
-          "cwd": "${workspaceFolder}/Backend/TinhKhoanApp.Api"
+          "cwd": "${workspaceFolder}/Backend/KhoanApp.Api"
         },
         "group": "build",
         "presentation": {
@@ -264,7 +264,7 @@
         "command": "npm",
         "args": ["run", "build"],
         "options": {
-          "cwd": "${workspaceFolder}/Frontend/tinhkhoan-app-ui-vite"
+          "cwd": "${workspaceFolder}/Frontend/KhoanUI"
         },
         "group": "build",
         "presentation": {
@@ -280,7 +280,7 @@
         "command": "dotnet",
         "args": ["ef", "database", "update"],
         "options": {
-          "cwd": "${workspaceFolder}/Backend/TinhKhoanApp.Api"
+          "cwd": "${workspaceFolder}/Backend/KhoanApp.Api"
         },
         "group": "build",
         "presentation": {
@@ -296,7 +296,7 @@
         "command": "dotnet",
         "args": ["clean"],
         "options": {
-          "cwd": "${workspaceFolder}/Backend/TinhKhoanApp.Api"
+          "cwd": "${workspaceFolder}/Backend/KhoanApp.Api"
         },
         "group": "build",
         "dependsOrder": "sequence",
@@ -314,7 +314,7 @@
         "command": "npm",
         "args": ["run", "clean"],
         "options": {
-          "cwd": "${workspaceFolder}/Frontend/tinhkhoan-app-ui-vite"
+          "cwd": "${workspaceFolder}/Frontend/KhoanUI"
         },
         "group": "build",
         "presentation": {
@@ -388,9 +388,9 @@
         "type": "coreclr",
         "request": "launch",
         "preLaunchTask": "🔨 Build Backend",
-        "program": "${workspaceFolder}/Backend/TinhKhoanApp.Api/bin/Debug/net8.0/TinhKhoanApp.Api.dll",
+        "program": "${workspaceFolder}/Backend/KhoanApp.Api/bin/Debug/net8.0/KhoanApp.Api.dll",
         "args": [],
-        "cwd": "${workspaceFolder}/Backend/TinhKhoanApp.Api",
+        "cwd": "${workspaceFolder}/Backend/KhoanApp.Api",
         "stopAtEntry": false,
         "serverReadyAction": {
           "action": "openExternally",
@@ -408,9 +408,9 @@
         "name": "🎨 Launch Frontend (Chrome)",
         "type": "node",
         "request": "launch",
-        "program": "${workspaceFolder}/Frontend/tinhkhoan-app-ui-vite/node_modules/.bin/vite",
+        "program": "${workspaceFolder}/Frontend/KhoanUI/node_modules/.bin/vite",
         "args": ["--host"],
-        "cwd": "${workspaceFolder}/Frontend/tinhkhoan-app-ui-vite",
+        "cwd": "${workspaceFolder}/Frontend/KhoanUI",
         "env": {
           "NODE_ENV": "development"
         },

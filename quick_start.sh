@@ -4,8 +4,8 @@ echo "🚀 KHỞI ĐỘNG NHANH TINHKHOAN APP"
 echo "================================="
 
 # Set working directories
-BACKEND_DIR="/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api"
-FRONTEND_DIR="/Users/nguyendat/Documents/Projects/TinhKhoanApp/Frontend/tinhkhoan-app-ui-vite"
+BACKEND_DIR="/opt/Projects/Khoan/Backend/KhoanApp.Api"
+FRONTEND_DIR="/opt/Projects/Khoan/Frontend/KhoanUI"
 
 # Function to check if port is in use
 check_port() {

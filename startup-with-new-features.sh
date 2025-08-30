@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 🚀 Startup script for TinhKhoanApp with all new features
+# 🚀 Startup script for KhoanApp with all new features
 # Preview, Delete, Number Formatting
 
 echo "🚀 ===== STARTING TINHKHOANAPP WITH NEW FEATURES ====="
@@ -18,7 +18,7 @@ fi
 
 # Start Backend
 echo "2. 🔧 Starting Backend API..."
-cd /Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api
+cd /opt/Projects/Khoan/Backend/KhoanApp.Api
 
 # Kill existing backend process if running
 BACKEND_PID=$(lsof -ti:5055)
@@ -47,7 +47,7 @@ done
 
 # Start Frontend
 echo "3. 🎨 Starting Frontend..."
-cd /Users/nguyendat/Documents/Projects/TinhKhoanApp/Frontend/tinhkhoan-app-ui-vite
+cd /opt/Projects/Khoan/Frontend/KhoanUI
 
 # Kill existing frontend process if running
 FRONTEND_PID=$(lsof -ti:3000)

@@ -1,4 +1,4 @@
-# Git Aliases cho TinhKhoanApp - Siêu nhanh commit
+# Git Aliases cho KhoanApp - Siêu nhanh commit
 # Thêm vào ~/.zshrc hoặc ~/.bashrc
 
 # Alias cơ bản

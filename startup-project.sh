@@ -26,7 +26,7 @@ sleep 3
 # 3. Khởi động backend
 echo ""
 echo "🚀 3. Khởi động Backend API (Port 5055)..."
-cd /Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api
+cd /opt/Projects/Khoan/Backend/KhoanApp.Api
 nohup dotnet run --urls=http://localhost:5055 > backend.log 2>&1 &
 BACKEND_PID=$!
 
@@ -43,7 +43,7 @@ done
 # 4. Khởi động frontend  
 echo ""
 echo "🌐 4. Khởi động Frontend (Port 3000)..."
-cd /Users/nguyendat/Documents/Projects/TinhKhoanApp/Frontend/tinhkhoan-app-ui-vite
+cd /opt/Projects/Khoan/Frontend/KhoanUI
 nohup npm run dev > frontend.log 2>&1 &
 FRONTEND_PID=$!
 
@@ -86,5 +86,5 @@ echo "   Backend PID: $BACKEND_PID"
 echo "   Frontend PID: $FRONTEND_PID"
 echo ""
 echo "📋 LOG FILES:"
-echo "   Backend: /Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api/backend.log"
-echo "   Frontend: /Users/nguyendat/Documents/Projects/TinhKhoanApp/Frontend/tinhkhoan-app-ui-vite/frontend.log"
+echo "   Backend: /opt/Projects/Khoan/Backend/KhoanApp.Api/backend.log"
+echo "   Frontend: /opt/Projects/Khoan/Frontend/KhoanUI/frontend.log"

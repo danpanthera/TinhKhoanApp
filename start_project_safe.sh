@@ -51,15 +51,15 @@ start_service() {
 }
 
 echo "1️⃣ Starting Backend API..."
-start_service "Backend" 5055 "dotnet run" "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Backend/TinhKhoanApp.Api"
+start_service "Backend" 5055 "dotnet run" "/opt/Projects/Khoan/Backend/KhoanApp.Api"
 
 echo ""
 echo "2️⃣ Starting Frontend UI..."
-start_service "Frontend" 3000 "npm run dev" "/Users/nguyendat/Documents/Projects/TinhKhoanApp/Frontend/tinhkhoan-app-ui-vite"
+start_service "Frontend" 3000 "npm run dev" "/opt/Projects/Khoan/Frontend/KhoanUI"
 
 echo ""
 echo "3️⃣ Final verification..."
 sleep 3
 
 # Run status check
-/Users/nguyendat/Documents/Projects/TinhKhoanApp/check_project_status.sh
+/opt/Projects/Khoan/check_project_status.sh

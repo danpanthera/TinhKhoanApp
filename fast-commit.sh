@@ -10,7 +10,7 @@ cd "$(dirname "$0")"
 
 # Commit backend với các file đã thay đổi
 echo "📦 Commit Backend..."
-cd Backend/TinhKhoanApp.Api
+cd Backend/KhoanApp.Api
 if [ -n "$(git status --porcelain)" ]; then
     git add --all
     git commit -m "🔧 Backend: Optimize and clean up - $(date '+%Y-%m-%d %H:%M')" --no-verify
@@ -21,7 +21,7 @@ fi
 
 # Commit frontend với các file đã thay đổi  
 echo "🎨 Commit Frontend..."
-cd ../../Frontend/tinhkhoan-app-ui-vite
+cd ../../Frontend/KhoanUI
 if [ -n "$(git status --porcelain)" ]; then
     git add --all
     git commit -m "🎨 Frontend: Optimize and clean up - $(date '+%Y-%m-%d %H:%M')" --no-verify

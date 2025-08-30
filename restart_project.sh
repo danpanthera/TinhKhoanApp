@@ -29,7 +29,7 @@ fi
 echo ""
 echo "🔧 KHỞI ĐỘNG BACKEND..."
 echo "========================"
-cd Backend/TinhKhoanApp.Api
+cd Backend/KhoanApp.Api
 ./start_backend.sh &
 BACKEND_PID=$!
 
@@ -48,7 +48,7 @@ fi
 echo ""
 echo "🎨 KHỞI ĐỘNG FRONTEND..."
 echo "========================"
-cd ../../Frontend/tinhkhoan-app-ui-vite
+cd ../../Frontend/KhoanUI
 ./start_frontend.sh &
 FRONTEND_PID=$!
 
@@ -77,7 +77,7 @@ echo "   - Frontend PID: $FRONTEND_PID"
 echo "   - Nhấn Ctrl+C để dừng script này"
 echo ""
 echo "📊 Kiểm tra trạng thái hệ thống..."
-cd ../../Backend/TinhKhoanApp.Api
+cd ../../Backend/KhoanApp.Api
 ./verify_system_ready.sh
 
 # Giữ script chạy

@@ -1,14 +1,14 @@
 #!/bin/bash
-# 🚀 TinhKhoan App - Full Stack Launcher
+# 🚀 KhoanApp - Full Stack Launcher
 # Usage: ./launch_app.sh (from project root)
 
-echo "🚀 TinhKhoan App - Full Stack Startup"
+echo "🚀 KhoanApp - Full Stack Startup"
 echo "======================================"
 
 # Kiểm tra project root
 if [ ! -d "Backend" ] || [ ! -d "Frontend" ]; then
     echo "❌ Error: Not in project root directory!"
-    echo "💡 Please run this script from TinhKhoanApp root directory"
+    echo "💡 Please run this script from KhoanApp root directory"
     exit 1
 fi
 
@@ -23,13 +23,13 @@ read -p "Enter your choice (1-4): " choice
 case $choice in
     1)
         echo "🚀 Starting Backend..."
-        cd Backend/TinhKhoanApp.Api
+        cd Backend/KhoanApp.Api
         chmod +x start_backend.sh
         ./start_backend.sh
         ;;
     2)
         echo "🎨 Starting Frontend..."
-        cd Frontend/tinhkhoan-app-ui-vite
+        cd Frontend/KhoanUI
         chmod +x start_frontend.sh
         ./start_frontend.sh
         ;;
@@ -38,7 +38,7 @@ case $choice in
         
         # Start Backend in background
         echo "🔧 Starting Backend..."
-        cd Backend/TinhKhoanApp.Api
+        cd Backend/KhoanApp.Api
         chmod +x start_backend.sh
         ./start_backend.sh &
         BACKEND_PID=$!
@@ -48,7 +48,7 @@ case $choice in
         
         # Start Frontend
         echo "🎨 Starting Frontend..."
-        cd ../../Frontend/tinhkhoan-app-ui-vite
+        cd ../../Frontend/KhoanUI
         chmod +x start_frontend.sh
         ./start_frontend.sh
         
