@@ -10,6 +10,9 @@
   <GenerateDocumentationFile>false</GenerateDocumentationFile>
   <!-- Đảm bảo include DTO mới - phòng hờ wildcard vấn đề incremental -->
   <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+  <!-- Fix duplicate AssemblyInfo attributes -->
+  <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+  <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <!-- Exclude TEMP_DISABLED folders from compilation -->

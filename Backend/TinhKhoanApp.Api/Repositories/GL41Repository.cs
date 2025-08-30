@@ -27,7 +27,7 @@ namespace TinhKhoanApp.Api.Repositories
         public async Task<IEnumerable<GL41Entity>> GetByDateAsync(DateTime date)
         {
             return await _dbSet
-                .Where(gl41 => gl41.NGAY_DL.Date == date.Date)
+                .Where(gl41 => gl41.NGAY_DL.HasValue && gl41.NGAY_DL.Value.Date == date.Date)
                 .OrderByDescending(gl41 => gl41.CreatedAt)
                 .ToListAsync();
         }
@@ -56,7 +56,7 @@ namespace TinhKhoanApp.Api.Repositories
 
             if (date.HasValue)
             {
-                query = query.Where(gl41 => gl41.NGAY_DL.Date == date.Value.Date);
+                query = query.Where(gl41 => gl41.NGAY_DL.HasValue && gl41.NGAY_DL.Value.Date == date.Value.Date);
             }
 
             // Tính tổng dư đầu kỳ (phân biệt nợ/có)
@@ -73,7 +73,7 @@ namespace TinhKhoanApp.Api.Repositories
 
             if (date.HasValue)
             {
-                query = query.Where(gl41 => gl41.NGAY_DL.Date == date.Value.Date);
+                query = query.Where(gl41 => gl41.NGAY_DL.HasValue && gl41.NGAY_DL.Value.Date == date.Value.Date);
             }
 
             // Tính tổng dư cuối kỳ (phân biệt nợ/có)
@@ -90,7 +90,7 @@ namespace TinhKhoanApp.Api.Repositories
 
             if (date.HasValue)
             {
-                query = query.Where(gl41 => gl41.NGAY_DL.Date == date.Value.Date);
+                query = query.Where(gl41 => gl41.NGAY_DL.HasValue && gl41.NGAY_DL.Value.Date == date.Value.Date);
             }
 
             // Tính tổng phát sinh nợ và có

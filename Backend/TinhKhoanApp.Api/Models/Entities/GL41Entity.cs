@@ -5,155 +5,128 @@ namespace TinhKhoanApp.Api.Models.Entities
 {
     /// <summary>
     /// GL41 Entity - Trial Balance (Bảng cân đối kế toán)
-    /// Partitioned Columnstore structure (NO temporal)
     /// CSV Source: 7800_gl41_yyyymmdd.csv
-    /// Structure: Id + NGAY_DL + 13 business columns + 4 system columns = 19 total columns
+    /// Business Columns: MA_CN,LOAI_TIEN,MA_TK,TEN_TK,LOAI_BT,DN_DAUKY,DC_DAUKY,SBT_NO,ST_GHINO,SBT_CO,ST_GHICO,DN_CUOIKY,DC_CUOIKY
+    /// 100% Business Column Compliance
     /// </summary>
     [Table("GL41")]
-    public class GL41Entity : IEntity
+    public class GL41Entity
     {
-        // === PRIMARY KEY ===
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Id { get; set; }
 
-        // === NGAY_DL - CORE DATA COLUMN ===
-        [Required]
-        [Column(TypeName = "datetime2(0)")]
-        public DateTime NGAY_DL { get; set; }
-
-        // === 13 BUSINESS COLUMNS (theo CSV và README_DAT.md) ===
+        // === CSV BUSINESS COLUMNS - 100% MATCH ===
 
         /// <summary>
-        /// Mã đơn vị cơ sở - BUSINESS COLUMN 1
+        /// Mã chi nhánh - Business Column 1
         /// </summary>
-        [Required]
         [StringLength(20)]
         [Column(TypeName = "nvarchar(20)")]
-        public string MA_DVCS { get; set; } = string.Empty;
+        public string? MA_CN { get; set; }
 
         /// <summary>
-        /// Tên đơn vị cơ sở - BUSINESS COLUMN 2
+        /// Loại tiền - Business Column 2
         /// </summary>
-        [Required]
-        [StringLength(200)]
-        [Column(TypeName = "nvarchar(200)")]
-        public string TEN_DVCS { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Mã tài khoản - BUSINESS COLUMN 3
-        /// </summary>
-        [Required]
-        [StringLength(20)]
-        [Column(TypeName = "nvarchar(20)")]
-        public string MA_TK { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Tên tài khoản - BUSINESS COLUMN 4
-        /// </summary>
-        [Required]
-        [StringLength(200)]
-        [Column(TypeName = "nvarchar(200)")]
-        public string TEN_TK { get; set; } = string.Empty;
-
-        /// <summary>
-        /// Số dư đầu nợ - BUSINESS COLUMN 5
-        /// </summary>
-        [Required]
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal SO_DU_DAU_NO { get; set; }
-
-        /// <summary>
-        /// Số dư đầu có - BUSINESS COLUMN 6
-        /// </summary>
-        [Required]
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal SO_DU_DAU_CO { get; set; }
-
-        /// <summary>
-        /// Phát sinh nợ - BUSINESS COLUMN 7
-        /// </summary>
-        [Required]
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal PHAT_SINH_NO { get; set; }
-
-        /// <summary>
-        /// Phát sinh có - BUSINESS COLUMN 8
-        /// </summary>
-        [Required]
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal PHAT_SINH_CO { get; set; }
-
-        /// <summary>
-        /// Số dư cuối nợ - BUSINESS COLUMN 9
-        /// </summary>
-        [Required]
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal SO_DU_CUOI_NO { get; set; }
-
-        /// <summary>
-        /// Số dư cuối có - BUSINESS COLUMN 10
-        /// </summary>
-        [Required]
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal SO_DU_CUOI_CO { get; set; }
-
-        /// <summary>
-        /// Loại tài khoản - BUSINESS COLUMN 11
-        /// </summary>
-        [Required]
         [StringLength(10)]
         [Column(TypeName = "nvarchar(10)")]
-        public string LOAI_TK { get; set; } = string.Empty;
+        public string? LOAI_TIEN { get; set; }
 
         /// <summary>
-        /// Cấp tài khoản - BUSINESS COLUMN 12
+        /// Mã tài khoản - Business Column 3
         /// </summary>
-        [Required]
-        public int CAP_TK { get; set; }
+        [StringLength(50)]
+        [Column(TypeName = "nvarchar(50)")]
+        public string? MA_TK { get; set; }
 
         /// <summary>
-        /// Trạng thái tài khoản - BUSINESS COLUMN 13
+        /// Tên tài khoản - Business Column 4
         /// </summary>
-        [Required]
+        [StringLength(255)]
+        [Column(TypeName = "nvarchar(255)")]
+        public string? TEN_TK { get; set; }
+
+        /// <summary>
+        /// Loại bút toán - Business Column 5
+        /// </summary>
         [StringLength(10)]
         [Column(TypeName = "nvarchar(10)")]
-        public string TT_TK { get; set; } = string.Empty;
+        public string? LOAI_BT { get; set; }
 
-        // === 4 SYSTEM COLUMNS ===
+        /// <summary>
+        /// Dư nợ đầu kỳ - Business Column 6
+        /// </summary>
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? DN_DAUKY { get; set; }
+
+        /// <summary>
+        /// Dư có đầu kỳ - Business Column 7
+        /// </summary>
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? DC_DAUKY { get; set; }
+
+        /// <summary>
+        /// Số bút toán nợ - Business Column 8
+        /// </summary>
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? SBT_NO { get; set; }
+
+        /// <summary>
+        /// Số tiền ghi nợ - Business Column 9
+        /// </summary>
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? ST_GHINO { get; set; }
+
+        /// <summary>
+        /// Số bút toán có - Business Column 10
+        /// </summary>
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? SBT_CO { get; set; }
+
+        /// <summary>
+        /// Số tiền ghi có - Business Column 11
+        /// </summary>
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? ST_GHICO { get; set; }
+
+        /// <summary>
+        /// Dư nợ cuối kỳ - Business Column 12
+        /// </summary>
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? DN_CUOIKY { get; set; }
+
+        /// <summary>
+        /// Dư có cuối kỳ - Business Column 13
+        /// </summary>
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal? DC_CUOIKY { get; set; }
+
+        // === SYSTEM COLUMNS ===
+
+        /// <summary>
+        /// Ngày dữ liệu
+        /// </summary>
+        [Column(TypeName = "datetime2(0)")]
+        public DateTime? NGAY_DL { get; set; }
+
+        /// <summary>
+        /// Tên file nguồn
+        /// </summary>
+        [StringLength(255)]
+        [Column(TypeName = "nvarchar(255)")]
+        public string? FILE_NAME { get; set; }
+
+        /// <summary>
+        /// Ngày tạo record
+        /// </summary>
         [Required]
         [Column(TypeName = "datetime2(0)")]
-        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [Required]
-        [StringLength(100)]
-        [Column(TypeName = "nvarchar(100)")]
-        public string CreatedBy { get; set; } = "SYSTEM";
-
-        [Required]
+        /// <summary>
+        /// Ngày cập nhật record
+        /// </summary>
         [Column(TypeName = "datetime2(0)")]
-        public DateTime LastModifiedDate { get; set; } = DateTime.UtcNow;
-
-        [Required]
-        [StringLength(100)]
-        [Column(TypeName = "nvarchar(100)")]
-        public string LastModifiedBy { get; set; } = "SYSTEM";
-
-        // === IEntity Implementation ===
-        [NotMapped]
-        public DateTime CreatedAt
-        {
-            get => CreatedDate;
-            set => CreatedDate = value;
-        }
-
-        [NotMapped]
-        public DateTime UpdatedAt
-        {
-            get => LastModifiedDate;
-            set => LastModifiedDate = value;
-        }
-
-        // NO TEMPORAL COLUMNS - GL41 is Partitioned Columnstore only
+        public DateTime? UpdatedAt { get; set; }
     }
 }
