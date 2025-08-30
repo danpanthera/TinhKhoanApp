@@ -22,14 +22,14 @@ Luôn để backend port là 5055, frontend port là 3000.
 - ✅ **UTF-8 Support:** ĐÃ HOÀN THÀNH across backend, frontend, database, scripts
 - ✅ **Backend Stability:** ĐÃ FIX sudden stop issues với comprehensive exception handling
 
-### ✅ **8 CORE DATATABLES - OPERATIONAL WITH OPTIMIZED IMPORT:**
+### ✅ **9 CORE DATATABLES - OPERATIONAL WITH OPTIMIZED IMPORT:**
 
 - ✅ **DP01**: Temporal Table với 63 business columns + History tracking + DirectImport OPTIMIZED
 - ✅ **DPDA**: Temporal Table với 13 business columns + History tracking + DirectImport OPTIMIZED  
+- ✅ **EI01**: Temporal Table với 24 business columns + History tracking + DirectImport OPTIMIZED
 - ✅ **GL01**: **Partitioned Columnstore (27 business columns) - NO temporal** + **HEAVY FILE OPTIMIZED (~200MB)**
 - ✅ **GL02**: **Partitioned Columnstore (17 business columns) - NO temporal** + **HEAVY FILE OPTIMIZED (~200MB)**
-- ✅ **EI01**: Temporal Table với 24 business columns + History tracking + DirectImport OPTIMIZED
-- ✅ **GL41**: Temporal Table với 13 business columns + History tracking + DirectImport OPTIMIZED
+- ✅ **GL41**: **Partitioned Columnstore (13 business columns) - NO temporal** + DirectImport OPTIMIZED
 - ✅ **LN01**: Temporal Table với 79 business columns + History tracking + DirectImport OPTIMIZED
 - ✅ **LN03**: Temporal Table với 20 business columns (17 có header + 3 không header) + DirectImport OPTIMIZED
 - ✅ **RR01**: Temporal Table với 25 business columns + History tracking + DirectImport OPTIMIZED
@@ -78,7 +78,7 @@ Luôn để backend port là 5055, frontend port là 3000.
 - **Frontend**: Vue.js + Vite on localhost:3000 ✅ OPTIMIZED
 - **Container**: azure_sql_edge_tinhkhoan (optimized with memory limits) ✅ RUNNING
 
-## 🗄️ **8 CORE DATATABLES - FULLY OPERATIONAL WITH OPTIMIZED DIRECT IMPORT**
+## 🗄️ **9 CORE DATATABLES - FULLY OPERATIONAL WITH OPTIMIZED DIRECT IMPORT**
 
 ✅ **MAJOR SYSTEM IMPROVEMENTS (August 14, 2025):**
 - **✅ Index Initializer Messages**: Fixed misleading "stopped" messages → "completed successfully"
@@ -633,7 +633,7 @@ docker run -e "ACCEPT_EULA=Y" \
 - **EI01**: 24 business + 5 system + 2 temporal = **31 total columns** ✅ TEMPORAL + COLUMNSTORE
 - **GL01**: 27 business + 4 system + 0 temporal = **31 total columns** ✅ PARTITIONED COLUMNSTORE (HEAVY FILE OPTIMIZED ~200MB)
 - **GL02**: 17 business + 4 system + 0 temporal = **21 total columns** ✅ PARTITIONED COLUMNSTORE (HEAVY FILE OPTIMIZED ~200MB)  
-- **GL41**: 13 business + 5 system + 2 temporal = **20 total columns** ✅ TEMPORAL + COLUMNSTORE
+- **GL41**: 13 business + 4 system + 0 temporal = **17 total columns** ✅ PARTITIONED COLUMNSTORE (ANALYTICS OPTIMIZED)
 - **LN01**: 79 business + 5 system + 2 temporal = **86 total columns** ✅ TEMPORAL + COLUMNSTORE
 - **LN03**: 20 business (17 có header + 3 không header) + 5 system + 2 temporal = **27 total columns** ✅ TEMPORAL + COLUMNSTORE
 - **RR01**: 25 business + 5 system + 2 temporal = **32 total columns** ✅ TEMPORAL + COLUMNSTORE
@@ -811,14 +811,14 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 
 # 6. Bảng GL41 (Quan trọng)
 + Thống nhất cấu trúc dữ liệu Bảng GL41 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
-+ Theo chuẩn Partitioned Columnstore
++ **Theo chuẩn Partitioned Columnstore** (NOT TEMPORAL) - **Optimized for analytics performance**
 + Business Column tham chiếu theo file csv *gl41* (thư mục: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/)
-+ Số lượng Cột busiess column = 13
++ **Số lượng Cột busiess column = 13** + 4 system columns = **17 total columns**
 + Cho phép các trường, cột có giá trị NULL
 + Cột NGAY_DL trong bảng GL41 lấy từ filename của file csv *gl41*, sau đó định dạng datetime2 (dd/mm/yyyy)
 + Define (Model, Database, EF, BulkCopy) đảm bảo thống nhất: Các cột có chứa "DATE", "NGAY" đưa về format datetime2 (dd/mm/yyyy); các cột có chứa "AMT", "AMOUNT", "BALANCE", "SO_TIEN_GD", "SO_DU, "DAUKY", "CUOIKY", "GHINO", "GHICO", "ST", "SBT" ở dạng number #,###.00 (vd: 250,000.89) (có thể phải tạo proper conversion; có thể phải kiểm tra ở ParseGenericCSVAsync; ImportGenericCSVAsync; BulkInsertGenericAsync)
 + Các cột còn lại dạng String/Nvachar: Tất cả có độ dài 200 ký tự, riêng cột "REMARK" (nếu có) dài 1000 ký tự
-+ Cấu trúc bảng dữ liệu: NGAY_DL -> Business Column -> Temporal/system column (nếu có)
++ **Cấu trúc bảng dữ liệu**: NGAY_DL -> 13 Business Columns -> 4 System Columns (NO TEMPORAL)
 + Chỉ cho phép import các file có filename chứa ký tự "gl41"
 + Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
 + Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
@@ -884,7 +884,7 @@ thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
 3. **EI01** (24 business columns) - Temporal Table + Columnstore
 4. **GL01** (27 business columns) - Partitioned Columnstore (NO temporal)
 5. **GL02** (17 business columns) - Partitioned Columnstore (NO temporal)
-6. **GL41** (13 business columns) - Temporal Table + Columnstore
+6. **GL41** (13 business columns) - Partitioned Columnstore (NO temporal)
 7. **LN01** (79 business columns) - Temporal Table + Columnstore
 8. **LN03** (20 business columns) - Temporal Table + Columnstore
 9. **RR01** (25 business columns) - Temporal Table + Columnstore

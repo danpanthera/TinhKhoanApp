@@ -423,21 +423,19 @@ namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ r�
                 entity.Property(e => e.CRAMOUNT).HasPrecision(18, 2);
             });
 
-            // GL41 Partitioned Columnstore - Modern Entity (13 business columns)
+            // GL41 Partitioned Columnstore - Modern Entity (13 business columns theo README_DAT.md)
             modelBuilder.Entity<GL41Entity>(entity =>
             {
-                // Decimal precision for AMOUNT/BALANCE columns
-                entity.Property(e => e.DN_DAUKY).HasPrecision(18, 2);
-                entity.Property(e => e.DC_DAUKY).HasPrecision(18, 2);
-                entity.Property(e => e.SBT_NO).HasPrecision(18, 2);
-                entity.Property(e => e.ST_GHINO).HasPrecision(18, 2);
-                entity.Property(e => e.SBT_CO).HasPrecision(18, 2);
-                entity.Property(e => e.ST_GHICO).HasPrecision(18, 2);
-                entity.Property(e => e.DN_CUOIKY).HasPrecision(18, 2);
-                entity.Property(e => e.DC_CUOIKY).HasPrecision(18, 2);
+                // Decimal precision for AMOUNT/BALANCE columns (5 decimal columns trong GL41)
+                entity.Property(e => e.SO_DU_DAU_NO).HasPrecision(18, 2);
+                entity.Property(e => e.SO_DU_DAU_CO).HasPrecision(18, 2);
+                entity.Property(e => e.PHAT_SINH_NO).HasPrecision(18, 2);
+                entity.Property(e => e.PHAT_SINH_CO).HasPrecision(18, 2);
+                entity.Property(e => e.SO_DU_CUOI_NO).HasPrecision(18, 2);
+                entity.Property(e => e.SO_DU_CUOI_CO).HasPrecision(18, 2);
 
                 // Partitioned Columnstore Index for analytics (NO temporal)
-                entity.HasIndex(e => new { e.NGAY_DL, e.MA_CN, e.MA_TK })
+                entity.HasIndex(e => new { e.NGAY_DL, e.MA_DVCS, e.MA_TK })
                     .HasDatabaseName("NCCI_GL41_Analytics")
                     .IsUnique(false);
             });
