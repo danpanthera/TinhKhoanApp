@@ -118,6 +118,13 @@ const routes = [
     component: () => import(/* webpackChunkName: "datatables" */ '../views/DataTablesView.vue'),
     meta: { requiresAuth: true },
   },
+  // === LN03 LOAN DATA MANAGEMENT ===
+  {
+    path: '/ln03',
+    name: 'ln03-management',
+    component: () => import(/* webpackChunkName: "loan-data" */ '../components/LN03Management.vue'),
+    meta: { requiresAuth: true },
+  },
   {
     path: '/payroll-report',
     name: 'PayrollReport',
