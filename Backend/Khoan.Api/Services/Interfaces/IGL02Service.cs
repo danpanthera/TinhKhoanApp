@@ -1,18 +1,40 @@
 using Khoan.Api.Models.Common;
-using Khoan.Api.Models.DTOs.GL02;
+using Khoan.Api.Models.Dtos.GL02;
 
 namespace Khoan.Api.Services.Interfaces
 {
+    /// <summary>
+    /// Interface for GL02 (General Ledger) service operations
+    /// Heavy File Optimized - Supports up to 2GB CSV files with 17 business columns
+    /// </summary>
     public interface IGL02Service
     {
-        Task<ApiResponse<IEnumerable<GL02PreviewDto>>> PreviewAsync(int take = 20);
-        Task<ApiResponse<GL02DetailsDto>> GetByIdAsync(long id);
-        Task<ApiResponse<IEnumerable<GL02DetailsDto>>> GetByDateAsync(DateTime date, int maxResults = 100);
-        Task<ApiResponse<IEnumerable<GL02DetailsDto>>> GetByUnitAsync(string unit, int maxResults = 100);
-        Task<ApiResponse<IEnumerable<GL02DetailsDto>>> GetByTransactionCodeAsync(string trcd, int maxResults = 100);
-        Task<ApiResponse<GL02DetailsDto>> CreateAsync(GL02CreateDto dto);
-        Task<ApiResponse<GL02DetailsDto>> UpdateAsync(GL02UpdateDto dto);
-        Task<ApiResponse<bool>> DeleteAsync(long id);
-        Task<ApiResponse<GL02SummaryByUnitDto>> SummaryByUnitAsync(string unit);
+        /// <summary>
+        /// Get all GL02 records with pagination
+        /// </summary>
+        Task<ApiResponse<IEnumerable<GL02PreviewDto>>> GetAllAsync(int page = 1, int pageSize = 10);
+
+        /// <summary>
+        /// Get GL02 record by ID with full details
+        /// </summary>
+        Task<ApiResponse<GL02DetailsDto>> GetByIdAsync(int id);
+
+        /// <summary>
+        /// Import CSV file with heavy file support (up to 2GB)
+        /// Batch processing: 10,000 records per batch
+        /// Timeout: 15 minutes
+        /// Only allows filenames containing "gl02"
+        /// </summary>
+        Task<ApiResponse<GL02ImportResultDto>> ImportCsvAsync(IFormFile file);
+
+        /// <summary>
+        /// Delete GL02 records by date range
+        /// </summary>
+        Task<ApiResponse<int>> DeleteByDateRangeAsync(DateTime startDate, DateTime endDate);
+
+        /// <summary>
+        /// Get summary statistics by unit
+        /// </summary>
+        Task<ApiResponse<GL02SummaryByUnitDto>> GetSummaryByUnitAsync(string unitCode, DateTime startDate, DateTime endDate);
     }
 }

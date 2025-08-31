@@ -86,9 +86,9 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Repository Pattern & Service Layer - TEMP DISABLED FOR CLEAN BUILD
-// builder.Services.AddRepositories();
-// builder.Services.AddApplicationServices(); // From DependencyInjectionExtensions
+// Repository Pattern & Service Layer - ENABLED FOR LN03
+builder.Services.AddRepositories();
+builder.Services.AddApplicationServices(); // From DependencyInjectionExtensions
 
 // Configure DirectImport Settings
 builder.Services.Configure<Khoan.Api.Models.Configuration.DirectImportSettings>(
@@ -103,17 +103,18 @@ builder.Services.AddScoped<IDP01Repository, DP01Repository>(); // ✅ DP01 ENABL
 builder.Services.AddScoped<IEI01Repository, EI01Repository>(); // ✅ EI01 ENABLED - Works (COMPLETED 100%)
 // TODO: Fix DPDA Repository - Interface mismatch with BaseRepository
 // builder.Services.AddScoped<Khoan.Api.Repositories.Interfaces.IDPDARepository, Khoan.Api.Repositories.DPDARepository>(); // ✅ DPDA Repository - NEEDS FIX
-// builder.Services.AddScoped<Khoan.Api.Repositories.Interfaces.ILN03Repository, Khoan.Api.Repositories.LN03Repository>(); // ✅ REMOVED - Cleanup focus on DP01+DPDA
+builder.Services.AddScoped<Khoan.Api.Repositories.Interfaces.ILN03Repository, Khoan.Api.Repositories.LN03Repository>(); // ✅ LN03 TEMPORAL TABLE ENABLED
 // TODO: Fix repository interface implementations for the following (have compilation errors):
 builder.Services.AddScoped<Khoan.Api.Repositories.IGL01Repository, Khoan.Api.Repositories.GL01Repository>(); // ✅ GL01 Repository ENABLED
-builder.Services.AddScoped<Khoan.Api.Repositories.IGL02Repository, Khoan.Api.Repositories.GL02Repository>(); // ✅ GL02 Repository ENABLED
+builder.Services.AddScoped<Khoan.Api.Repositories.Interfaces.IGL02Repository, Khoan.Api.Repositories.GL02Repository>(); // ✅ GL02 Repository ENABLED
 builder.Services.AddScoped<Khoan.Api.Repositories.IGL41Repository, Khoan.Api.Repositories.GL41Repository>(); // ✅ GL41 Repository ENABLED
-builder.Services.AddScoped<Khoan.Api.Repositories.ILN01Repository, Khoan.Api.Repositories.LN01Repository>(); // ✅ LN01 Repository ENABLED
+// builder.Services.AddScoped<Khoan.Api.Repositories.Interfaces.ILN01Repository, Khoan.Api.Repositories.LN01Repository>(); // ✅ LN01 Repository DISABLED (using service only)
 // builder.Services.AddScoped<Khoan.Api.Repositories.IRR01Repository, Khoan.Api.Repositories.RR01Repository>(); // TODO: Fix interface implementation - Has 23 missing methods
 
 // Service Layer - Only services with implementations are enabled
 // builder.Services.AddScoped<Khoan.Api.Services.Interfaces.IDP01Service, DP01Service>(); // ❌ DP01Service không tồn tại
 builder.Services.AddScoped<Khoan.Api.Services.Interfaces.IEI01Service, EI01Service>(); // ✅ EI01 ENABLED - Has implementation (COMPLETED 100%)
+builder.Services.AddScoped<Khoan.Api.Interfaces.ILN01Service, Khoan.Api.Services.LN01Service>(); // ✅ LN01 ENABLED - JUST CREATED (79 columns)
 // builder.Services.AddScoped<Khoan.Api.Services.Interfaces.ILN03Service, Khoan.Api.Services.LN03Service>(); // ✅ REMOVED - Cleanup focus on DP01+DPDA
 // TODO: Enable DPDA Service after Repository fix
 // builder.Services.AddScoped<Khoan.Api.Services.Interfaces.IDPDAService, Khoan.Api.Services.DPDAService>(); // ✅ DPDA - NEEDS Repository fix first
@@ -135,9 +136,8 @@ catch (Exception ex)
 }
 builder.Services.AddScoped<Khoan.Api.Services.Interfaces.IGL02Service, Khoan.Api.Services.GL02Service>(); // ✅ GL02 Service ENABLED
 builder.Services.AddScoped<Khoan.Api.Services.Interfaces.IGL41Service, Khoan.Api.Services.GL41Service>(); // ✅ GL41 Service ENABLED
-builder.Services.AddScoped<Khoan.Api.Services.Interfaces.ILN01Service, Khoan.Api.Services.LN01Service>(); // ✅ LN01 Service ENABLED
-// 🆕 LN03 wiring (CSV-first DataTables model)
-builder.Services.AddScoped<Khoan.Api.Repositories.ILN03DataRepository, Khoan.Api.Repositories.LN03Repository>();
+builder.Services.AddScoped<Khoan.Api.Interfaces.ILN01Service, Khoan.Api.Services.LN01Service>(); // ✅ LN01 Service ENABLED
+// ✅ LN03 TEMPORAL TABLE SERVICE ENABLED
 builder.Services.AddScoped<Khoan.Api.Services.Interfaces.ILN03Service, Khoan.Api.Services.LN03Service>();
 builder.Services.AddScoped<Khoan.Api.Services.Interfaces.IRR01Service, Khoan.Api.Services.RR01Service>(); // RR01Service completed
 

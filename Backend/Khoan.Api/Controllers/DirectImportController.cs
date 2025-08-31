@@ -30,7 +30,7 @@ namespace Khoan.Api.Controllers
 
         /// <summary>
         /// Smart Import endpoint - tự động detect dataType từ filename
-        /// DP01/DPDA/EI01/GL01/GL02/GL41/LN03: chỉ cho phép file chứa mã tương ứng trong filename
+        /// DP01/DPDA/EI01/GL01/GL02/GL41/LN03/LN01/RR01: chỉ cho phép file chứa mã tương ứng trong filename
         /// </summary>
         [HttpPost("smart")]
         public async Task<IActionResult> SmartImport(
@@ -49,7 +49,7 @@ namespace Khoan.Api.Controllers
                 if (dataType == null)
                 {
                     return BadRequest(ApiResponse<object>.Error(
-            $"Tên file '{file.FileName}' không hợp lệ. File phải chứa một trong các mã: dp01, dpda, ei01, gl01, gl02, gl41, ln03.",
+            $"Tên file '{file.FileName}' không hợp lệ. File phải chứa một trong các mã: dp01, dpda, ei01, gl01, gl02, gl41, ln03, ln01, rr01.",
                         "INVALID_FILENAME"));
                 }
 
@@ -127,7 +127,7 @@ namespace Khoan.Api.Controllers
                 return "LN01";
             }
 
-            // Add RR01 support
+            // Add RR01 support - đã có sẵn trong code
             if (lowerFileName.Contains("rr01"))
             {
                 return "RR01";

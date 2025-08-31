@@ -1,107 +1,88 @@
+using Khoan.Api.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Khoan.Api.Data;
 using Khoan.Api.Models.Entities;
 
 namespace Khoan.Api.Repositories
 {
-    /// <summary>
-    /// Repository implementation cho GL02Entity - General Ledger Summary (Partitioned Columnstore)
-    /// </summary>
     public class GL02Repository : Repository<GL02Entity>, IGL02Repository
     {
         public GL02Repository(ApplicationDbContext context) : base(context)
         {
         }
 
-        /// <inheritdoc/>
-        public async Task<IEnumerable<GL02Entity>> GetRecentAsync(int count = 10)
+        public async Task<(IEnumerable<GL02Entity> data, int totalCount)> GetAllPagedAsync(int page, int size)
         {
-            return await _dbSet
+            var query = _context.Set<GL02Entity>().AsQueryable();
+            var totalCount = await query.CountAsync();
+            var data = await query
                 .OrderByDescending(x => x.NGAY_DL)
-                .ThenByDescending(x => x.CRTDTM)
-                .Take(count)
+                .Skip((page - 1) * size)
+                .Take(size)
+                .ToListAsync();
+            
+            return (data, totalCount);
+        }
+
+        public async Task<bool> DeleteByDateRangeAsync(DateTime fromDate, DateTime toDate)
+        {
+            var records = _context.Set<GL02Entity>()
+                .Where(x => x.NGAY_DL >= fromDate && x.NGAY_DL <= toDate);
+            
+            _context.Set<GL02Entity>().RemoveRange(records);
+            var result = await _context.SaveChangesAsync();
+            return result > 0;
+        }
+
+        public async Task<IEnumerable<object>> GetSummaryByUnitAsync()
+        {
+            return await _context.Set<GL02Entity>()
+                .GroupBy(x => x.UNIT)
+                .Select(g => new
+                {
+                    Unit = g.Key,
+                    Count = g.Count(),
+                    TotalDrAmount = g.Sum(x => x.DRAMOUNT ?? 0),
+                    TotalCrAmount = g.Sum(x => x.CRAMOUNT ?? 0)
+                })
                 .ToListAsync();
         }
 
-        /// <inheritdoc/>
-        public async Task<IEnumerable<GL02Entity>> GetByDateAsync(DateTime date, int maxResults = 100)
+        public async Task BulkInsertAsync(IEnumerable<GL02Entity> entities)
         {
-            return await _dbSet
-                .Where(x => x.NGAY_DL.Date == date.Date)
-                .OrderByDescending(x => x.CRTDTM)
-                .Take(maxResults)
-                .ToListAsync();
+            await _context.Set<GL02Entity>().AddRangeAsync(entities);
+            await _context.SaveChangesAsync();
         }
 
-        /// <inheritdoc/>
-        public async Task<IEnumerable<GL02Entity>> GetByUnitAsync(string unit, int maxResults = 100)
+        public async Task<GL02Entity?> GetByIdAsync(int id)
         {
-            return await _dbSet
-                .Where(x => x.UNIT == unit)
-                .OrderByDescending(x => x.NGAY_DL)
-                .ThenByDescending(x => x.CRTDTM)
-                .Take(maxResults)
-                .ToListAsync();
+            return await _context.Set<GL02Entity>().FindAsync((long)id);
         }
 
-        /// <inheritdoc/>
-        public async Task<IEnumerable<GL02Entity>> GetByBranchCodeAsync(string branchCode, int maxResults = 100)
+        public async Task<GL02Entity> CreateAsync(GL02Entity entity)
         {
-            return await _dbSet
-                .Where(x => x.TRBRCD == branchCode)
-                .OrderByDescending(x => x.NGAY_DL)
-                .ThenByDescending(x => x.CRTDTM)
-                .Take(maxResults)
-                .ToListAsync();
+            entity.CREATED_DATE = DateTime.UtcNow;
+            entity.UPDATED_DATE = DateTime.UtcNow;
+            await _context.Set<GL02Entity>().AddAsync(entity);
+            await _context.SaveChangesAsync();
+            return entity;
         }
 
-        /// <inheritdoc/>
-        public async Task<IEnumerable<GL02Entity>> GetByLocalAccountAsync(string locac, int maxResults = 100)
+        public async Task<GL02Entity> UpdateAsync(GL02Entity entity)
         {
-            return await _dbSet
-                .Where(x => x.LOCAC == locac)
-                .OrderByDescending(x => x.NGAY_DL)
-                .ThenByDescending(x => x.CRTDTM)
-                .Take(maxResults)
-                .ToListAsync();
+            entity.UPDATED_DATE = DateTime.UtcNow;
+            _context.Set<GL02Entity>().Update(entity);
+            await _context.SaveChangesAsync();
+            return entity;
         }
 
-        /// <inheritdoc/>
-        public async Task<IEnumerable<GL02Entity>> GetByTransactionCodeAsync(string trcd, int maxResults = 100)
+        public async Task DeleteAsync(int id)
         {
-            return await _dbSet
-                .Where(x => x.TRCD == trcd)
-                .OrderByDescending(x => x.NGAY_DL)
-                .ThenByDescending(x => x.CRTDTM)
-                .Take(maxResults)
-                .ToListAsync();
-        }
-
-        /// <inheritdoc/>
-        public async Task<IEnumerable<GL02Entity>> GetByCustomerAsync(string customer, int maxResults = 100)
-        {
-            return await _dbSet
-                .Where(x => x.CUSTOMER == customer)
-                .OrderByDescending(x => x.NGAY_DL)
-                .ThenByDescending(x => x.CRTDTM)
-                .Take(maxResults)
-                .ToListAsync();
-        }
-
-        /// <inheritdoc/>
-        public async Task<decimal> GetTotalTransactionsByUnitAsync(string unit, string type)
-        {
-            if (type.ToUpper() == "DR")
+            var entity = await GetByIdAsync(id);
+            if (entity != null)
             {
-                return await _dbSet
-                    .Where(x => x.UNIT == unit && x.DRAMOUNT.HasValue)
-                    .SumAsync(x => x.DRAMOUNT.Value);
-            }
-            else
-            {
-                return await _dbSet
-                    .Where(x => x.UNIT == unit && x.CRAMOUNT.HasValue)
-                    .SumAsync(x => x.CRAMOUNT.Value);
+                _context.Set<GL02Entity>().Remove(entity);
+                await _context.SaveChangesAsync();
             }
         }
     }

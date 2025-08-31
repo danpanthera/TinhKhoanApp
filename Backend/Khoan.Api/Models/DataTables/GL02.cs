@@ -4,20 +4,22 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Khoan.Api.Models.DataTables
 {
     /// <summary>
-    /// GL02 - General Ledger Transactions Data Model with exact CSV column structure (17 business columns)
-    /// SPECIAL: NGAY_DL comes from TRDATE column in CSV, partitioned columnstore (not temporal)
-    /// Structure: NGAY_DL -> 17 Business Columns (CSV order) -> System Columns
+    /// GL02 - General Ledger Transactions Data Model (Heavy File Optimized)
+    /// PARTITIONED COLUMNSTORE (NOT TEMPORAL) - Optimized for ~200MB CSV files
+    /// Business columns: 17 (from CSV) + NGAY_DL + 4 system columns = 21 total
+    /// Structure: NGAY_DL -> 17 Business Columns (CSV exact order) -> 4 System Columns
     /// Import policy: Only files containing "gl02" in filename
-    /// Format: datetime2 (dd/mm/yyyy), decimal #,###.00, string nvarchar(200), REMARK nvarchar(1000)
+    /// Heavy File Config: MaxFileSize 2GB, BulkInsert BatchSize 10,000, Upload timeout 15 minutes
     /// </summary>
     [Table("GL02")]
     public class GL02
     {
-        // NGAY_DL - DateTime2 from TRDATE column (Order 0) - dd/mm/yyyy format
+        // NGAY_DL - DateTime2 from TRDATE column (Position 0) - dd/mm/yyyy format
         [Column("NGAY_DL", Order = 0, TypeName = "datetime2")]
         public DateTime NGAY_DL { get; set; }
 
-        // 17 Business Columns - Exact CSV order with proper data types
+        // ===== 17 BUSINESS COLUMNS (CSV EXACT ORDER) =====
+
         [Column("TRBRCD", Order = 1)]
         [StringLength(200)]
         public string? TRBRCD { get; set; }
@@ -70,16 +72,19 @@ namespace Khoan.Api.Models.DataTables
         [StringLength(1000)]
         public string? REMARK { get; set; }
 
+        // AMOUNT columns - decimal(18,2) format #,###.00
         [Column("DRAMOUNT", Order = 14, TypeName = "decimal(18,2)")]
         public decimal? DRAMOUNT { get; set; }
 
         [Column("CRAMOUNT", Order = 15, TypeName = "decimal(18,2)")]
         public decimal? CRAMOUNT { get; set; }
 
+        // CRTDTM - datetime2 format dd/mm/yyyy hh:mm:ss
         [Column("CRTDTM", Order = 16, TypeName = "datetime2")]
         public DateTime? CRTDTM { get; set; }
 
-        // System Columns - Primary Key (GL02 is Partitioned Columnstore, NOT Temporal)
+        // ===== 4 SYSTEM COLUMNS (NOT TEMPORAL) =====
+
         [Key]
         [Column("Id", Order = 17)]
         public long Id { get; set; }
@@ -94,18 +99,24 @@ namespace Khoan.Api.Models.DataTables
         [StringLength(500)]
         public string? FILE_NAME { get; set; }
 
-        // CSV Mapping Property - TRDATE from CSV converts to NGAY_DL
+        // ===== CSV MAPPING PROPERTY =====
+        // TRDATE from CSV converts to NGAY_DL - Not mapped to database
         [NotMapped]
         public string? TRDATE
         {
-            get => NGAY_DL.ToString("yyyyMMdd");
+            get => NGAY_DL.ToString("dd/MM/yyyy");
             set
             {
                 if (!string.IsNullOrWhiteSpace(value))
                 {
                     var raw = value.Trim();
-                    var formats = new[] { "dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "d/M/yyyy", "yyyyMMdd" };
-                    if (DateTime.TryParseExact(raw, formats, null, System.Globalization.DateTimeStyles.None, out var dt))
+                    var formats = new[] { 
+                        "dd/MM/yyyy", "dd/MM/yyyy HH:mm:ss", 
+                        "yyyy-MM-dd", "yyyy/MM/dd", 
+                        "d/M/yyyy", "yyyyMMdd" 
+                    };
+                    if (DateTime.TryParseExact(raw, formats, null, 
+                        System.Globalization.DateTimeStyles.None, out var dt))
                     {
                         NGAY_DL = dt.Date;
                     }

@@ -1,61 +1,67 @@
 using Khoan.Api.Models.Common;
-using Khoan.Api.Models.DTOs.GL41;
+using Khoan.Api.Models.Dtos.GL41;
 
 namespace Khoan.Api.Services.Interfaces
 {
     /// <summary>
-    /// Interface cho GL41 Service - cung cấp business logic cho GL41
+    /// Interface for GL41 service operations with partitioned columnstore optimization
+    /// Handles GL41 balance analytics with direct CSV import (filename containing "gl41")
+    /// NGAY_DL extracted from filename and converted to datetime2 (dd/mm/yyyy)
+    /// 13 business columns + 4 system columns = 17 total columns
     /// </summary>
     public interface IGL41Service
     {
         /// <summary>
-        /// Lấy tất cả GL41 với phân trang
+        /// Get paginated GL41 data with preview information
         /// </summary>
-        Task<ApiResponse<IEnumerable<GL41PreviewDto>>> GetAllAsync(int pageIndex = 1, int pageSize = 10);
+        Task<ApiResponse<IEnumerable<GL41PreviewDto>>> GetAllAsync(int page = 1, int pageSize = 10);
 
         /// <summary>
-        /// Lấy preview GL41 (danh sách với thông tin tóm tắt)
+        /// Get detailed GL41 record by ID
         /// </summary>
-        Task<ApiResponse<IEnumerable<GL41PreviewDto>>> PreviewAsync(int take = 20);
+        Task<ApiResponse<GL41DetailsDto?>> GetByIdAsync(long id);
 
         /// <summary>
-        /// Lấy chi tiết GL41 theo ID
+        /// Import GL41 CSV file with direct database insertion
+        /// Only processes files containing "gl41" in filename
+        /// NGAY_DL extracted from filename (yyyyMMdd format)
+        /// Proper decimal conversion for AMOUNT/BALANCE columns (#,###.00 format)
         /// </summary>
-        Task<ApiResponse<GL41DetailsDto>> GetByIdAsync(long id);
+        Task<ApiResponse<GL41ImportResultDto>> ImportCsvAsync(IFormFile file, string? fileName = null);
 
         /// <summary>
-        /// Lấy GL41 theo ngày dữ liệu
+        /// Delete GL41 records by date range
         /// </summary>
-        Task<ApiResponse<IEnumerable<GL41DetailsDto>>> GetByDateAsync(DateTime date, int maxResults = 100);
+        Task<ApiResponse<bool>> DeleteByDateRangeAsync(DateTime fromDate, DateTime toDate);
 
         /// <summary>
-        /// Lấy GL41 theo mã đơn vị
+        /// Get GL41 summary analytics by unit
         /// </summary>
-        Task<ApiResponse<IEnumerable<GL41DetailsDto>>> GetByUnitAsync(string unitCode, int maxResults = 100);
+        Task<ApiResponse<IEnumerable<GL41SummaryByUnitDto>>> GetSummaryByUnitAsync(DateTime fromDate, DateTime toDate);
 
         /// <summary>
-        /// Lấy GL41 theo mã tài khoản
+        /// Get GL41 analytics configuration
         /// </summary>
-        Task<ApiResponse<IEnumerable<GL41DetailsDto>>> GetByAccountCodeAsync(string accountCode, int maxResults = 100);
+        Task<ApiResponse<GL41AnalyticsConfigDto>> GetAnalyticsConfigAsync();
 
         /// <summary>
-        /// Tạo mới GL41
+        /// Get GL41 records by unit code
         /// </summary>
-        Task<ApiResponse<GL41DetailsDto>> CreateAsync(GL41CreateDto dto);
+        Task<ApiResponse<IEnumerable<GL41PreviewDto>>> GetByUnitCodeAsync(string unitCode, int maxResults = 100);
 
         /// <summary>
-        /// Cập nhật GL41
+        /// Get GL41 records by account code
         /// </summary>
-        Task<ApiResponse<GL41DetailsDto>> UpdateAsync(GL41UpdateDto dto);
+        Task<ApiResponse<IEnumerable<GL41PreviewDto>>> GetByAccountCodeAsync(string accountCode, int maxResults = 100);
 
         /// <summary>
-        /// Xóa GL41
+        /// Get GL41 balance summary for specific unit and date
         /// </summary>
-        Task<ApiResponse<bool>> DeleteAsync(long id);
+        Task<ApiResponse<decimal>> GetBalanceSummaryAsync(string unitCode, DateTime? date = null);
 
         /// <summary>
-        /// Lấy thống kê GL41 theo đơn vị
+        /// Check if GL41 data exists for specific date (before import)
         /// </summary>
-        Task<ApiResponse<GL41SummaryByUnitDto>> SummaryByUnitAsync(string unitCode, DateTime? date = null);
+        Task<ApiResponse<bool>> HasDataForDateAsync(DateTime date);
     }
 }

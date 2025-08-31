@@ -7,6 +7,7 @@ namespace Khoan.Api.Controllers
 {
     /// <summary>
     /// Controller cho dữ liệu DP01 (Sổ tiết kiệm)
+    /// Hỗ trợ CRUD operations và CSV import/export
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]

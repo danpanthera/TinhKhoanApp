@@ -1,66 +1,49 @@
-using Khoan.Api.Models.Entities;
-using Khoan.Api.Models.Dtos;
-using Khoan.Api.Models.Common;
-using Khoan.Api.Repositories.Interfaces;
+using Khoan.Api.Entities;
+using Khoan.Api.Dtos.LN03;
 
 namespace Khoan.Api.Repositories.Interfaces
 {
-    /// <summary>
-    /// LN03 Repository Interface - Phase 2B
-    /// Contract for Loan Processing table operations (17 business columns)
-    /// </summary>
-    public interface ILN03Repository : IBaseRepository<LN03Entity>
+    public interface ILN03Repository
     {
-        // === SPECIFIC LN03 OPERATIONS ===
+        // Basic CRUD Operations with Temporal Table support
+        Task<(IEnumerable<LN03PreviewDto> Data, int TotalCount)> GetAllPagedAsync(int page, int pageSize, DateTime? fromDate = null, DateTime? toDate = null);
+        Task<LN03DetailsDto?> GetByIdAsync(int id);
+        Task<LN03Entity> CreateAsync(LN03Entity entity);
+        Task<LN03Entity?> UpdateAsync(int id, LN03Entity entity);
+        Task<bool> DeleteAsync(int id);
+        Task<bool> SoftDeleteAsync(int id);
 
-        /// <summary>
-        /// Get paged LN03 records with optional date filtering
-        /// </summary>
-        Task<PagedResult<LN03Entity>> GetPagedAsync(int pageNumber, int pageSize, DateTime? fromDate = null);
+        // Bulk Operations for CSV Import
+        Task<int> BulkCreateAsync(IEnumerable<LN03Entity> entities);
+        Task<int> BulkDeleteAsync(IEnumerable<int> ids);
+        Task<bool> TruncateAsync();
 
-        /// <summary>
-        /// Get LN03 entity by Id
-        /// </summary>
-        Task<LN03Entity?> GetEntityByIdAsync(long id);
+        // Temporal Table Operations
+        Task<LN03DetailsDto?> GetAsOfDateAsync(int id, DateTime asOfDate);
+        Task<IEnumerable<LN03DetailsDto>> GetHistoryAsync(int id);
+        Task<IEnumerable<LN03DetailsDto>> GetChangedBetweenAsync(DateTime startDate, DateTime endDate);
 
-        /// <summary>
-        /// Get LN03 records by specific date
-        /// </summary>
-        Task<List<LN03Entity>> GetByDateAsync(DateTime date);
+        // Business Logic Queries
+        Task<IEnumerable<LN03DetailsDto>> GetByBranchCodeAsync(string branchCode);
+        Task<IEnumerable<LN03DetailsDto>> GetByCustomerCodeAsync(string customerCode);
+        Task<IEnumerable<LN03DetailsDto>> GetByContractNumberAsync(string contractNumber);
+        Task<IEnumerable<LN03DetailsDto>> GetByDebtGroupAsync(string debtGroup);
+        Task<IEnumerable<LN03DetailsDto>> GetByDateAsync(DateTime date);
+        Task<IEnumerable<LN03DetailsDto>> GetByDateRangeAsync(DateTime startDate, DateTime endDate);
 
-        /// <summary>
-        /// Bulk insert LN03 records
-        /// </summary>
-        Task<BulkOperationResult> BulkInsertAsync(List<LN03Entity> entities);
+        // Analytics and Reporting (optimized for columnstore)
+        Task<LN03SummaryDto> GetSummaryAsync(DateTime? fromDate = null, DateTime? toDate = null);
+        Task<Dictionary<string, decimal>> GetTotalAmountByBranchAsync(DateTime? fromDate = null, DateTime? toDate = null);
+        Task<Dictionary<string, decimal>> GetOutstandingBalanceByDateAsync(DateTime date);
+        Task<Dictionary<string, int>> GetContractCountByDebtGroupAsync(DateTime? fromDate = null, DateTime? toDate = null);
+        Task<IEnumerable<(string CustomerCode, string CustomerName, decimal TotalAmount)>> GetTopCustomersByAmountAsync(int topCount = 10, DateTime? fromDate = null, DateTime? toDate = null);
+        Task<Dictionary<string, decimal>> GetTotalAmountByDateRangeAsync(DateTime startDate, DateTime endDate, string groupBy = "month");
 
-        /// <summary>
-        /// Bulk update LN03 records
-        /// </summary>
-        Task<BulkOperationResult> BulkUpdateAsync(List<LN03Entity> entities);
-
-        /// <summary>
-        /// Bulk delete LN03 records by IDs
-        /// </summary>
-        Task<BulkOperationResult> BulkDeleteAsync(List<long> ids);
-
-        /// <summary>
-        /// Get historical versions of an LN03 record
-        /// </summary>
-        Task<List<LN03Entity>> GetHistoryAsync(long id);
-
-        /// <summary>
-        /// Get LN03 record as of specific date
-        /// </summary>
-        Task<LN03Entity?> GetAsOfDateAsync(long id, DateTime asOfDate);
-
-        /// <summary>
-        /// Count LN03 records with optional date filtering
-        /// </summary>
-        Task<long> CountAsync(DateTime? fromDate = null);
-
-        /// <summary>
-        /// Check repository health
-        /// </summary>
-        Task<bool> IsHealthyAsync();
+        // Data Validation and Integrity
+        Task<int> GetRecordCountAsync(DateTime? fromDate = null, DateTime? toDate = null);
+        Task<bool> ExistsAsync(int id);
+        Task<IEnumerable<string>> ValidateDataIntegrityAsync();
+        Task<DateTime?> GetLatestDataDateAsync();
+        Task<DateTime?> GetOldestDataDateAsync();
     }
 }

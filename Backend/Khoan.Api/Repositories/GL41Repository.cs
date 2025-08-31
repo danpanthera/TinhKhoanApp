@@ -1,11 +1,14 @@
-using Microsoft.EntityFrameworkCore;
 using Khoan.Api.Data;
 using Khoan.Api.Models.Entities;
+using Microsoft.EntityFrameworkCore;
 
 namespace Khoan.Api.Repositories
 {
     /// <summary>
-    /// GL41 Repository - Modern Entity implementation (Partitioned Columnstore)
+    /// Repository implementation for GL41 - Partitioned Columnstore Optimized
+    /// Handles 13 business columns + 4 system columns = 17 total columns
+    /// Direct import from CSV files containing "gl41"
+    /// NGAY_DL extracted from filename and converted to datetime2 (dd/mm/yyyy)
     /// </summary>
     public class GL41Repository : Repository<GL41Entity>, IGL41Repository
     {
@@ -14,110 +17,188 @@ namespace Khoan.Api.Repositories
         }
 
         /// <summary>
-        /// Lấy dữ liệu GL41 với phân trang
+        /// Get paginated GL41 data with total count (partitioned columnstore optimized)
         /// </summary>
-        public async Task<IEnumerable<GL41Entity>> GetAllPagedAsync(int pageIndex = 1, int pageSize = 10)
+        public async Task<(IEnumerable<GL41Entity> Data, int TotalCount)> GetAllPagedAsync(int page = 1, int pageSize = 10)
         {
-            return await _dbSet
-                .OrderByDescending(gl41 => gl41.CreatedAt)
-                .Skip((pageIndex - 1) * pageSize)
+            var query = _context.GL41.OrderByDescending(x => x.NGAY_DL).ThenBy(x => x.MA_CN);
+            
+            var totalCount = await query.CountAsync();
+            var data = await query
+                .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
+
+            return (data, totalCount);
         }
 
         /// <summary>
-        /// Lấy dữ liệu GL41 gần đây nhất, sắp xếp theo CreatedAt
+        /// Get GL41 records by date range (partitioned columnstore optimized)
         /// </summary>
-        public new async Task<IEnumerable<GL41Entity>> GetRecentAsync(int count = 10)
+        public async Task<IEnumerable<GL41Entity>> GetByDateRangeAsync(DateTime fromDate, DateTime toDate)
         {
-            return await _dbSet
-                .OrderByDescending(gl41 => gl41.CreatedAt)
-                .Take(count)
+            return await _context.GL41
+                .Where(x => x.NGAY_DL >= fromDate && x.NGAY_DL <= toDate)
+                .OrderBy(x => x.NGAY_DL)
+                .ThenBy(x => x.MA_CN)
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<GL41Entity>> GetByDateAsync(DateTime date)
-        {
-            return await _dbSet
-                .Where(gl41 => gl41.NGAY_DL.HasValue && gl41.NGAY_DL.Value.Date == date.Date)
-                .OrderByDescending(gl41 => gl41.CreatedAt)
-                .ToListAsync();
-        }
-
+        /// <summary>
+        /// Get GL41 records by unit code
+        /// </summary>
         public async Task<IEnumerable<GL41Entity>> GetByUnitCodeAsync(string unitCode, int maxResults = 100)
         {
-            return await _dbSet
-                .Where(gl41 => gl41.MA_CN == unitCode)
-                .OrderByDescending(gl41 => gl41.CreatedAt)
+            return await _context.GL41
+                .Where(x => x.MA_CN == unitCode)
+                .OrderByDescending(x => x.NGAY_DL)
                 .Take(maxResults)
                 .ToListAsync();
-        }
-
-        public async Task<IEnumerable<GL41Entity>> GetByAccountCodeAsync(string accountCode, int maxResults = 100)
-        {
-            return await _dbSet
-                .Where(gl41 => gl41.MA_TK == accountCode)
-                .OrderByDescending(gl41 => gl41.CreatedAt)
-                .Take(maxResults)
-                .ToListAsync();
-        }
-
-        public async Task<decimal> GetTotalOpeningBalanceByUnitAsync(string unitCode, DateTime? date = null)
-        {
-            var query = _dbSet.Where(gl41 => gl41.MA_CN == unitCode);
-
-            if (date.HasValue)
-            {
-                query = query.Where(gl41 => gl41.NGAY_DL.HasValue && gl41.NGAY_DL.Value.Date == date.Value.Date);
-            }
-
-            // Tính tổng dư đầu kỳ (phân biệt nợ/có)
-            var result = await query.SumAsync(gl41 =>
-                (gl41.DN_DAUKY.HasValue ? gl41.DN_DAUKY.Value : 0) -
-                (gl41.DC_DAUKY.HasValue ? gl41.DC_DAUKY.Value : 0));
-
-            return result;
-        }
-
-        public async Task<decimal> GetTotalClosingBalanceByUnitAsync(string unitCode, DateTime? date = null)
-        {
-            var query = _dbSet.Where(gl41 => gl41.MA_CN == unitCode);
-
-            if (date.HasValue)
-            {
-                query = query.Where(gl41 => gl41.NGAY_DL.HasValue && gl41.NGAY_DL.Value.Date == date.Value.Date);
-            }
-
-            // Tính tổng dư cuối kỳ (phân biệt nợ/có)
-            var result = await query.SumAsync(gl41 =>
-                (gl41.DN_CUOIKY.HasValue ? gl41.DN_CUOIKY.Value : 0) -
-                (gl41.DC_CUOIKY.HasValue ? gl41.DC_CUOIKY.Value : 0));
-
-            return result;
-        }
-
-        public async Task<(decimal Debit, decimal Credit)> GetTotalTransactionsByUnitAsync(string unitCode, DateTime? date = null)
-        {
-            var query = _dbSet.Where(gl41 => gl41.MA_CN == unitCode);
-
-            if (date.HasValue)
-            {
-                query = query.Where(gl41 => gl41.NGAY_DL.HasValue && gl41.NGAY_DL.Value.Date == date.Value.Date);
-            }
-
-            // Tính tổng phát sinh nợ và có
-            var debitSum = await query.SumAsync(gl41 => gl41.ST_GHINO.HasValue ? gl41.ST_GHINO.Value : 0);
-            var creditSum = await query.SumAsync(gl41 => gl41.ST_GHICO.HasValue ? gl41.ST_GHICO.Value : 0);
-
-            return (debitSum, creditSum);
         }
 
         /// <summary>
-        /// Cập nhật nhiều GL41Entity
+        /// Get GL41 records by account code
+        /// </summary>
+        public async Task<IEnumerable<GL41Entity>> GetByAccountCodeAsync(string accountCode, int maxResults = 100)
+        {
+            return await _context.GL41
+                .Where(x => x.MA_TK == accountCode)
+                .OrderByDescending(x => x.NGAY_DL)
+                .Take(maxResults)
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Bulk insert GL41 records (partitioned columnstore optimized)
+        /// </summary>
+        public async Task<int> BulkInsertAsync(IEnumerable<GL41Entity> entities)
+        {
+            var entityList = entities.ToList();
+            if (!entityList.Any()) return 0;
+
+            // Set system columns
+            foreach (var entity in entityList)
+            {
+                entity.CREATED_DATE = DateTime.UtcNow;
+                entity.UPDATED_DATE = DateTime.UtcNow;
+            }
+
+            await _context.GL41.AddRangeAsync(entityList);
+            return await _context.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Delete GL41 records by date range
+        /// </summary>
+        public async Task<int> DeleteByDateRangeAsync(DateTime fromDate, DateTime toDate)
+        {
+            var recordsToDelete = await _context.GL41
+                .Where(x => x.NGAY_DL >= fromDate && x.NGAY_DL <= toDate)
+                .ToListAsync();
+
+            if (recordsToDelete.Any())
+            {
+                _context.GL41.RemoveRange(recordsToDelete);
+                return await _context.SaveChangesAsync();
+            }
+
+            return 0;
+        }
+
+        /// <summary>
+        /// Get summary analytics by unit for GL41 balance data
+        /// </summary>
+        public async Task<IEnumerable<dynamic>> GetSummaryByUnitAsync(DateTime fromDate, DateTime toDate)
+        {
+            return await _context.GL41
+                .Where(x => x.NGAY_DL >= fromDate && x.NGAY_DL <= toDate)
+                .GroupBy(x => x.MA_CN)
+                .Select(g => new
+                {
+                    UnitCode = g.Key,
+                    TotalRecords = g.Count(),
+                    TotalDebitBalance = g.Sum(x => x.DN_DAUKY ?? 0) + g.Sum(x => x.DN_CUOIKY ?? 0),
+                    TotalCreditBalance = g.Sum(x => x.DC_DAUKY ?? 0) + g.Sum(x => x.DC_CUOIKY ?? 0),
+                    TotalDebitTransaction = g.Sum(x => x.SBT_NO ?? 0),
+                    TotalCreditTransaction = g.Sum(x => x.SBT_CO ?? 0),
+                    Currencies = g.Select(x => x.LOAI_TIEN).Distinct().ToList()
+                })
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Get total opening balance by unit
+        /// </summary>
+        public async Task<decimal> GetTotalOpeningBalanceByUnitAsync(string unitCode, DateTime? date = null)
+        {
+            var query = _context.GL41.Where(x => x.MA_CN == unitCode);
+            
+            if (date.HasValue)
+                query = query.Where(x => x.NGAY_DL == date.Value);
+
+            return await query.SumAsync(x => (x.DN_DAUKY ?? 0) - (x.DC_DAUKY ?? 0));
+        }
+
+        /// <summary>
+        /// Get total closing balance by unit
+        /// </summary>
+        public async Task<decimal> GetTotalClosingBalanceByUnitAsync(string unitCode, DateTime? date = null)
+        {
+            var query = _context.GL41.Where(x => x.MA_CN == unitCode);
+            
+            if (date.HasValue)
+                query = query.Where(x => x.NGAY_DL == date.Value);
+
+            return await query.SumAsync(x => (x.DN_CUOIKY ?? 0) - (x.DC_CUOIKY ?? 0));
+        }
+
+        /// <summary>
+        /// Get debit/credit transaction summary by unit
+        /// </summary>
+        public async Task<(decimal DebitTotal, decimal CreditTotal)> GetTransactionSummaryByUnitAsync(string unitCode, DateTime? date = null)
+        {
+            var query = _context.GL41.Where(x => x.MA_CN == unitCode);
+            
+            if (date.HasValue)
+                query = query.Where(x => x.NGAY_DL == date.Value);
+
+            var debitTotal = await query.SumAsync(x => x.SBT_NO ?? 0);
+            var creditTotal = await query.SumAsync(x => x.SBT_CO ?? 0);
+
+            return (debitTotal, creditTotal);
+        }
+
+        /// <summary>
+        /// Check if GL41 data exists for specific date
+        /// </summary>
+        public async Task<bool> HasDataForDateAsync(DateTime date)
+        {
+            return await _context.GL41.AnyAsync(x => x.NGAY_DL == date);
+        }
+
+        /// <summary>
+        /// Get distinct currencies for GL41 analytics
+        /// </summary>
+        public async Task<List<string>> GetDistinctCurrenciesAsync()
+        {
+            return await _context.GL41
+                .Where(x => !string.IsNullOrEmpty(x.LOAI_TIEN))
+                .Select(x => x.LOAI_TIEN)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToListAsync();
+        }
+
+        /// <summary>
+        /// Update range of GL41 entities
         /// </summary>
         public void UpdateRange(IEnumerable<GL41Entity> entities)
         {
-            _dbSet.UpdateRange(entities);
+            foreach (var entity in entities)
+            {
+                entity.UPDATED_DATE = DateTime.UtcNow;
+            }
+            _context.GL41.UpdateRange(entities);
         }
     }
 }

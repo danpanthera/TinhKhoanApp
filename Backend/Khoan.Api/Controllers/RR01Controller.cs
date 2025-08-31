@@ -1,170 +1,199 @@
 using Microsoft.AspNetCore.Mvc;
-using Khoan.Api.Models.DTOs.RR01;
 using Khoan.Api.Services.Interfaces;
+using Khoan.Api.Dtos.RR01;
+using System.ComponentModel.DataAnnotations;
 
-namespace Khoan.Api.Controllers;
-
-/// <summary>
-/// RR01 Controller - Risk Report API endpoints
-/// Hỗ trợ 25 business columns với CSV-first architecture
-/// </summary>
-[ApiController]
-[Route("api/[controller]")]
-public class RR01Controller : ControllerBase
+namespace Khoan.Api.Controllers
 {
-    private readonly IRR01Service _rr01Service;
-    private readonly ILogger<RR01Controller> _logger;
-
-    public RR01Controller(IRR01Service rr01Service, ILogger<RR01Controller> logger)
-    {
-        _rr01Service = rr01Service;
-        _logger = logger;
-    }
-
     /// <summary>
-    /// Lấy danh sách RR01 có phân trang
+    /// RR01 Controller - Risk Report API endpoints
+    /// Tuân thủ hoàn toàn business column names, không transformation tiếng Việt
+    /// Hỗ trợ CSV import với exact header mapping
     /// </summary>
-    [HttpGet]
-    public async Task<IActionResult> GetPaged([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+    [ApiController]
+    [Route("api/[controller]")]
+    [Tags("RR01 - Risk Report Management")]
+    public class RR01Controller : ControllerBase
     {
-        _logger.LogInformation("📊 [RR01] Get paged: page {PageNumber}, size {PageSize}", pageNumber, pageSize);
-        var result = await _rr01Service.GetPagedAsync(pageNumber, pageSize);
-        return Ok(result);
-    }
+        private readonly IRR01Service _rr01Service;
+        private readonly ILogger<RR01Controller> _logger;
 
-    /// <summary>
-    /// Lấy chi tiết RR01 theo ID
-    /// </summary>
-    [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetById(int id)
-    {
-        _logger.LogInformation("🔍 [RR01] Get by ID: {Id}", id);
-        var result = await _rr01Service.GetByIdAsync(id);
-
-        if (!result.Success && result.Message?.Contains("Không tìm thấy") == true)
-            return NotFound(result);
-
-        return Ok(result);
-    }
-
-    /// <summary>
-    /// Tạo RR01 record mới
-    /// </summary>
-    [HttpPost]
-    public async Task<IActionResult> Create([FromBody] RR01CreateDto dto)
-    {
-        _logger.LogInformation("➕ [RR01] Create new record");
-        var result = await _rr01Service.CreateAsync(dto);
-
-        if (result.Success && result.Data != null)
-            return CreatedAtAction(nameof(GetById), new { id = result.Data.Id }, result);
-
-        return BadRequest(result);
-    }
-
-    /// <summary>
-    /// Cập nhật RR01 record
-    /// </summary>
-    [HttpPut("{id:int}")]
-    public async Task<IActionResult> Update(int id, [FromBody] RR01UpdateDto dto)
-    {
-        _logger.LogInformation("✏️ [RR01] Update record: {Id}", id);
-        var result = await _rr01Service.UpdateAsync(id, dto);
-
-        if (!result.Success && result.Message?.Contains("Không tìm thấy") == true)
-            return NotFound(result);
-
-        return Ok(result);
-    }
-
-    /// <summary>
-    /// Xóa RR01 record
-    /// </summary>
-    [HttpDelete("{id:int}")]
-    public async Task<IActionResult> Delete(int id)
-    {
-        _logger.LogInformation("🗑️ [RR01] Delete record: {Id}", id);
-        var result = await _rr01Service.DeleteAsync(id);
-
-        if (!result.Success && result.Message?.Contains("Không tìm thấy") == true)
-            return NotFound(result);
-
-        return Ok(result);
-    }
-
-    /// <summary>
-    /// Lấy RR01 theo ngày
-    /// </summary>
-    [HttpGet("by-date/{date:datetime}")]
-    public async Task<IActionResult> GetByDate(DateTime date)
-    {
-        _logger.LogInformation("📅 [RR01] Get by date: {Date}", date.ToString("yyyy-MM-dd"));
-        var result = await _rr01Service.GetByDateAsync(date);
-        return Ok(result);
-    }
-
-    /// <summary>
-    /// Lấy RR01 theo chi nhánh
-    /// </summary>
-    [HttpGet("by-branch/{branchCode}")]
-    public async Task<IActionResult> GetByBranch(string branchCode)
-    {
-        _logger.LogInformation("🏢 [RR01] Get by branch: {BranchCode}", branchCode);
-        var result = await _rr01Service.GetByBranchAsync(branchCode);
-        return Ok(result);
-    }
-
-    /// <summary>
-    /// Lấy RR01 theo khách hàng
-    /// </summary>
-    [HttpGet("by-customer/{customerCode}")]
-    public async Task<IActionResult> GetByCustomer(string customerCode)
-    {
-        _logger.LogInformation("👤 [RR01] Get by customer: {CustomerCode}", customerCode);
-        var result = await _rr01Service.GetByCustomerAsync(customerCode);
-        return Ok(result);
-    }
-
-    /// <summary>
-    /// Lấy tóm tắt xử lý rủi ro theo ngày
-    /// </summary>
-    [HttpGet("processing-summary/{date:datetime}")]
-    public async Task<IActionResult> GetProcessingSummary(DateTime date)
-    {
-        _logger.LogInformation("📊 [RR01] Get processing summary for date: {Date}", date.ToString("yyyy-MM-dd"));
-        var result = await _rr01Service.GetProcessingSummaryAsync(date);
-        return Ok(result);
-    }
-
-    /// <summary>
-    /// Development endpoint - Self test với in-memory data
-    /// </summary>
-    [HttpGet("dev/self-test")]
-    public async Task<IActionResult> SelfTest()
-    {
-        _logger.LogInformation("🧪 [RR01] Development self-test");
-
-        try
+        public RR01Controller(IRR01Service rr01Service, ILogger<RR01Controller> logger)
         {
-            // Test service với mock data
-            var mockDate = DateTime.Today.AddDays(-1);
-            var summaryResult = await _rr01Service.GetProcessingSummaryAsync(mockDate);
-
-            var testResult = new
-            {
-                ServiceStatus = "OK",
-                TestDate = mockDate.ToString("yyyy-MM-dd"),
-                SummaryResult = summaryResult.Success ? "SUCCESS" : "FAILED",
-                Message = "RR01 Service self-test completed",
-                Details = summaryResult
-            };
-
-            return Ok(testResult);
+            _rr01Service = rr01Service;
+            _logger = logger;
         }
-        catch (Exception ex)
+
+        /// <summary>
+        /// Get RR01 records với filtering và pagination
+        /// </summary>
+        /// <param name="ngayDl">Filter theo ngày dữ liệu (optional)</param>
+        /// <param name="branchCode">Filter theo mã chi nhánh (optional)</param>
+        /// <param name="skip">Records to skip for pagination</param>
+        /// <param name="take">Records to take (max 1000)</param>
+        /// <returns>List RR01 preview records</returns>
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<RR01PreviewDto>>> GetRR01Records(
+            [FromQuery] DateTime? ngayDl = null,
+            [FromQuery] string? branchCode = null,
+            [FromQuery] int skip = 0,
+            [FromQuery] int take = 100)
         {
-            _logger.LogError(ex, "❌ [RR01] Self-test failed");
-            return StatusCode(500, new { Error = "Self-test failed", Details = ex.Message });
+            try
+            {
+                // Validate pagination params
+                if (take > 1000) take = 1000;
+                if (skip < 0) skip = 0;
+
+                var records = await _rr01Service.GetRR01PreviewAsync(ngayDl, branchCode, skip, take);
+                
+                return Ok(records);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting RR01 records");
+                return StatusCode(500, "Lỗi khi lấy dữ liệu RR01");
+            }
+        }
+
+        /// <summary>
+        /// Get RR01 record details by ID
+        /// </summary>
+        /// <param name="id">RR01 record ID</param>
+        /// <returns>Full RR01 record với tất cả 25 business columns</returns>
+        [HttpGet("{id}")]
+        public async Task<ActionResult<RR01DetailsDto>> GetRR01ById([FromRoute] int id)
+        {
+            try
+            {
+                var record = await _rr01Service.GetRR01ByIdAsync(id);
+                if (record == null)
+                {
+                    return NotFound($"Không tìm thấy RR01 record với ID: {id}");
+                }
+
+                return Ok(record);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error getting RR01 record by ID: {id}");
+                return StatusCode(500, "Lỗi khi lấy chi tiết RR01");
+            }
+        }
+
+        /// <summary>
+        /// Get RR01 summary analytics cho một ngày cụ thể
+        /// </summary>
+        /// <param name="ngayDl">Ngày dữ liệu cần phân tích</param>
+        /// <returns>Tổng hợp analytics với recovery rates, amounts, counts</returns>
+        [HttpGet("summary/{ngayDl}")]
+        public async Task<ActionResult<RR01SummaryDto>> GetRR01Summary([FromRoute] DateTime ngayDl)
+        {
+            try
+            {
+                var summary = await _rr01Service.GetRR01SummaryAsync(ngayDl);
+                return Ok(summary);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error getting RR01 summary for date: {ngayDl}");
+                return StatusCode(500, "Lỗi khi lấy tóm tắt RR01");
+            }
+        }
+
+        /// <summary>
+        /// Validate CSV file structure trước khi import
+        /// </summary>
+        /// <param name="file">CSV file để validate</param>
+        /// <returns>Validation result với header info và sample data</returns>
+        [HttpPost("validate-csv")]
+        public async Task<ActionResult> ValidateCsv([Required] IFormFile file)
+        {
+            try
+            {
+                if (file == null || file.Length == 0)
+                {
+                    return BadRequest("File không được để trống");
+                }
+
+                // Basic filename validation
+                if (!_rr01Service.ValidateFileName(file.FileName))
+                {
+                    return BadRequest(new 
+                    { 
+                        IsValid = false, 
+                        Message = "Filename phải chứa 'RR01' và có extension .csv hoặc .txt" 
+                    });
+                }
+
+                // Extract date validation
+                var ngayDl = _rr01Service.ExtractDateFromFilename(file.FileName);
+                if (!ngayDl.HasValue)
+                {
+                    return BadRequest(new 
+                    { 
+                        IsValid = false, 
+                        Message = "Không thể extract NGAY_DL từ filename. Format: xxx_rr01_YYYYMMDD.csv" 
+                    });
+                }
+
+                var tempPath = Path.GetTempFileName();
+                try
+                {
+                    using (var stream = new FileStream(tempPath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+
+                    using (var reader = new StreamReader(tempPath))
+                    {
+                        var firstLine = await reader.ReadLineAsync();
+                        if (string.IsNullOrEmpty(firstLine))
+                        {
+                            return BadRequest(new 
+                            { 
+                                IsValid = false, 
+                                Message = "CSV file trống" 
+                            });
+                        }
+
+                        var headers = firstLine.Split(',').Select(h => h.Trim(' ', '"')).ToArray();
+                        
+                        var requiredColumns = new[] { 
+                            "CN_LOAI_I", "BRCD", "MA_KH", "TEN_KH", "SO_LDS", "CCY",
+                            "DUNO_GOC_HIENTAI", "DUNO_LAI_HIENTAI", "THU_GOC", "THU_LAI"
+                        };
+
+                        var missingColumns = requiredColumns.Where(col => !headers.Contains(col)).ToList();
+
+                        return Ok(new 
+                        {
+                            IsValid = !missingColumns.Any(),
+                            FileName = file.FileName,
+                            ExtractedNGAY_DL = ngayDl,
+                            Headers = headers,
+                            RequiredColumnsFound = requiredColumns.Length - missingColumns.Count,
+                            TotalColumns = headers.Length,
+                            MissingColumns = missingColumns,
+                            ValidationMessage = missingColumns.Any() 
+                                ? $"Thiếu các columns bắt buộc: {string.Join(", ", missingColumns)}"
+                                : "CSV structure hợp lệ với business column names"
+                        });
+                    }
+                }
+                finally
+                {
+                    if (System.IO.File.Exists(tempPath))
+                    {
+                        System.IO.File.Delete(tempPath);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error validating CSV: {file?.FileName}");
+                return StatusCode(500, $"Lỗi validate CSV: {ex.Message}");
+            }
         }
     }
 }

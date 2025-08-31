@@ -1,143 +1,156 @@
 using Microsoft.AspNetCore.Mvc;
 using Khoan.Api.Models.Common;
-using Khoan.Api.Models.DTOs.GL41;
+using Khoan.Api.Models.Dtos.GL41;
 using Khoan.Api.Services.Interfaces;
 
 namespace Khoan.Api.Controllers
 {
     /// <summary>
-    /// GL41 Controller - API endpoints cho bảng GL41 (Trial Balance)
+    /// Controller for GL41 operations - Partitioned Columnstore Optimized
+    /// Handles GL41 balance analytics with direct CSV import
+    /// Only processes files containing "gl41" in filename
+    /// NGAY_DL extracted from filename and converted to datetime2 (dd/mm/yyyy)
+    /// 13 business columns + 4 system columns = 17 total columns
     /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class GL41Controller : ControllerBase
     {
-        private readonly IGL41Service _service;
+        private readonly IGL41Service _gl41Service;
         private readonly ILogger<GL41Controller> _logger;
 
-        public GL41Controller(IGL41Service service, ILogger<GL41Controller> logger)
+        public GL41Controller(IGL41Service gl41Service, ILogger<GL41Controller> logger)
         {
-            _service = service;
+            _gl41Service = gl41Service;
             _logger = logger;
         }
 
         /// <summary>
-        /// Lấy danh sách tất cả GL41 với phân trang
+        /// Get paginated GL41 data
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
+        public async Task<ActionResult<ApiResponse<IEnumerable<GL41PreviewDto>>>> GetAll(
+            [FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 10)
         {
-            try
+            var result = await _gl41Service.GetAllAsync(page, pageSize);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Get GL41 record by ID
+        /// </summary>
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ApiResponse<GL41DetailsDto?>>> GetById(long id)
+        {
+            var result = await _gl41Service.GetByIdAsync(id);
+            
+            if (!result.Success && result.StatusCode == 404)
+                return NotFound(result);
+                
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Import GL41 CSV file with 2GB support and partitioned columnstore optimization
+        /// Only processes files containing "gl41" in filename
+        /// NGAY_DL extracted from filename (yyyyMMdd format)
+        /// Supports #,###.00 format for AMOUNT/BALANCE columns
+        /// </summary>
+        [HttpPost("import")]
+        [DisableRequestSizeLimit] // Support 2GB files
+         // 15 minutes timeout
+        public async Task<ActionResult<ApiResponse<GL41ImportResultDto>>> ImportCsv(
+            IFormFile file, 
+            [FromQuery] string? fileName = null)
+        {
+            if (file == null || file.Length == 0)
             {
-                _logger.LogInformation("Retrieving GL41 data, page: {PageIndex}, pageSize: {PageSize}", pageIndex, pageSize);
-                var response = await _service.GetAllAsync(pageIndex, pageSize);
-                return StatusCode(response.StatusCode ?? 200, response);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving GL41 data");
-                return StatusCode(500, new { message = "Internal server error", error = ex.Message });
-            }
-        }
-
-        /// <summary>
-        /// Lấy preview GL41 (danh sách tóm tắt)
-        /// </summary>
-        [HttpGet("preview")]
-        public async Task<IActionResult> Preview([FromQuery] int take = 20)
-        {
-            var response = await _service.PreviewAsync(take);
-            return StatusCode(response.StatusCode ?? 200, response);
-        }
-
-        /// <summary>
-        /// Lấy chi tiết GL41 theo ID
-        /// </summary>
-        [HttpGet("{id:long}")]
-        public async Task<IActionResult> GetById(long id)
-        {
-            var response = await _service.GetByIdAsync(id);
-            return StatusCode(response.StatusCode ?? 200, response);
-        }
-
-        /// <summary>
-        /// Lấy GL41 theo ngày dữ liệu
-        /// </summary>
-        [HttpGet("by-date/{date}")]
-        public async Task<IActionResult> GetByDate(DateTime date, [FromQuery] int maxResults = 100)
-        {
-            var response = await _service.GetByDateAsync(date, maxResults);
-            return StatusCode(response.StatusCode ?? 200, response);
-        }
-
-        /// <summary>
-        /// Lấy GL41 theo mã đơn vị
-        /// </summary>
-        [HttpGet("by-unit/{unitCode}")]
-        public async Task<IActionResult> GetByUnit(string unitCode, [FromQuery] int maxResults = 100)
-        {
-            var response = await _service.GetByUnitAsync(unitCode, maxResults);
-            return StatusCode(response.StatusCode ?? 200, response);
-        }
-
-        /// <summary>
-        /// Lấy GL41 theo mã tài khoản
-        /// </summary>
-        [HttpGet("by-account/{accountCode}")]
-        public async Task<IActionResult> GetByAccountCode(string accountCode, [FromQuery] int maxResults = 100)
-        {
-            var response = await _service.GetByAccountCodeAsync(accountCode, maxResults);
-            return StatusCode(response.StatusCode ?? 200, response);
-        }
-
-        /// <summary>
-        /// Tạo mới GL41
-        /// </summary>
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] GL41CreateDto dto)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ApiResponse<object>.Error("Dữ liệu đầu vào không hợp lệ"));
+                return BadRequest(ApiResponse<GL41ImportResultDto>.Error("File is required"));
             }
 
-            var response = await _service.CreateAsync(dto);
-            return StatusCode(response.StatusCode ?? 200, response);
+            var result = await _gl41Service.ImportCsvAsync(file, fileName);
+            return Ok(result);
         }
 
         /// <summary>
-        /// Cập nhật GL41
+        /// Delete GL41 records by date range
         /// </summary>
-        [HttpPut]
-        public async Task<IActionResult> Update([FromBody] GL41UpdateDto dto)
+        [HttpDelete("date-range")]
+        public async Task<ActionResult<ApiResponse<bool>>> DeleteByDateRange(
+            [FromQuery] DateTime fromDate,
+            [FromQuery] DateTime toDate)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ApiResponse<object>.Error("Dữ liệu đầu vào không hợp lệ"));
-            }
-
-            var response = await _service.UpdateAsync(dto);
-            return StatusCode(response.StatusCode ?? 200, response);
+            var result = await _gl41Service.DeleteByDateRangeAsync(fromDate, toDate);
+            return Ok(result);
         }
 
         /// <summary>
-        /// Xóa GL41
+        /// Get GL41 summary analytics by unit
         /// </summary>
-        [HttpDelete("{id:long}")]
-        public async Task<IActionResult> Delete(long id)
+        [HttpGet("summary")]
+        public async Task<ActionResult<ApiResponse<IEnumerable<GL41SummaryByUnitDto>>>> GetSummaryByUnit(
+            [FromQuery] DateTime fromDate,
+            [FromQuery] DateTime toDate)
         {
-            var response = await _service.DeleteAsync(id);
-            return StatusCode(response.StatusCode ?? 200, response);
+            var result = await _gl41Service.GetSummaryByUnitAsync(fromDate, toDate);
+            return Ok(result);
         }
 
         /// <summary>
-        /// Thống kê GL41 theo đơn vị
+        /// Get GL41 analytics configuration
         /// </summary>
-        [HttpGet("summary/unit/{unitCode}")]
-        public async Task<IActionResult> SummaryByUnit(string unitCode, [FromQuery] DateTime? date = null)
+        [HttpGet("config")]
+        public async Task<ActionResult<ApiResponse<GL41AnalyticsConfigDto>>> GetAnalyticsConfig()
         {
-            var response = await _service.SummaryByUnitAsync(unitCode, date);
-            return StatusCode(response.StatusCode ?? 200, response);
+            var result = await _gl41Service.GetAnalyticsConfigAsync();
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Get GL41 records by unit code
+        /// </summary>
+        [HttpGet("unit/{unitCode}")]
+        public async Task<ActionResult<ApiResponse<IEnumerable<GL41PreviewDto>>>> GetByUnitCode(
+            string unitCode,
+            [FromQuery] int maxResults = 100)
+        {
+            var result = await _gl41Service.GetByUnitCodeAsync(unitCode, maxResults);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Get GL41 records by account code
+        /// </summary>
+        [HttpGet("account/{accountCode}")]
+        public async Task<ActionResult<ApiResponse<IEnumerable<GL41PreviewDto>>>> GetByAccountCode(
+            string accountCode,
+            [FromQuery] int maxResults = 100)
+        {
+            var result = await _gl41Service.GetByAccountCodeAsync(accountCode, maxResults);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Get GL41 balance summary for specific unit
+        /// </summary>
+        [HttpGet("balance/{unitCode}")]
+        public async Task<ActionResult<ApiResponse<decimal>>> GetBalanceSummary(
+            string unitCode,
+            [FromQuery] DateTime? date = null)
+        {
+            var result = await _gl41Service.GetBalanceSummaryAsync(unitCode, date);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Check if GL41 data exists for specific date
+        /// </summary>
+        [HttpGet("exists")]
+        public async Task<ActionResult<ApiResponse<bool>>> HasDataForDate([FromQuery] DateTime date)
+        {
+            var result = await _gl41Service.HasDataForDateAsync(date);
+            return Ok(result);
         }
     }
 }

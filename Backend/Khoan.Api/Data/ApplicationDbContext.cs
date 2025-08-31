@@ -52,8 +52,8 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
 
         // 🚀 DbSets cho 8 bảng dữ liệu thô chính (DirectImport với Temporal Tables + Columnstore)
         public DbSet<DataTables.DP01> DP01 { get; set; } // ✅ Temporal Table với 63 business columns + system/temporal columns
-        public DbSet<DataTables.LN01> LN01 { get; set; }
-        public DbSet<DataTables.LN03> LN03 { get; set; }
+        public DbSet<Entities.LN01Entity> LN01 { get; set; } // ✅ Temporal Table Entity with 79 business columns + system/temporal columns
+        public DbSet<Entities.LN03Entity> LN03 { get; set; } // ✅ Temporal Table Entity with 20 business columns + system/temporal columns
         public DbSet<DataTables.GL01> GL01 { get; set; }
         public DbSet<DataTables.GL02> GL02 { get; set; }
         public DbSet<GL41Entity> GL41 { get; set; } // ✅ Modern Entity - Partitioned Columnstore (NO temporal)
@@ -64,8 +64,8 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
 
         // 🔄 DbSets with plural names for backward compatibility
         // Note: DP01s removed - using DP01 directly
-        public DbSet<DataTables.LN01> LN01s { get; set; }
-        public DbSet<DataTables.LN03> LN03s { get; set; }
+        public DbSet<Entities.LN01Entity> LN01s { get; set; }
+        public DbSet<Entities.LN03Entity> LN03s { get; set; }
         public DbSet<DataTables.GL01> GL01s { get; set; }
         public DbSet<DataTables.GL02> GL02s { get; set; }
         public DbSet<GL41Entity> GL41s { get; set; } // ✅ Modern Entity compatibility
@@ -585,11 +585,11 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
             // 📊 Cấu hình bảng GL41 - Số dư sổ cái (Partitioned Columnstore - NOT Temporal) - MODERN ENTITY
             // GL41Entity already configured above with Partitioned Columnstore index
 
-            // 🏷️ Cấu hình bảng LN01 - Cho vay
-            ConfigureDataTableWithTemporal<DataTables.LN01>(modelBuilder, "LN01");
+            // 🏷️ Cấu hình bảng LN01 - Cho vay (USING NEW TEMPORAL TABLE ENTITY)
+            ConfigureLN01TemporalTable(modelBuilder);
 
-            // ⚠️ Cấu hình bảng LN03 - Nợ xấu
-            ConfigureDataTableWithTemporal<DataTables.LN03>(modelBuilder, "LN03");
+            // ⚠️ Cấu hình bảng LN03 - Nợ xấu (USING NEW TEMPORAL TABLE ENTITY) - TEMPORARILY DISABLED
+            // ConfigureLN03TemporalTable(modelBuilder);
 
             // 📈 Cấu hình bảng RR01 - Tỷ lệ
             ConfigureDataTableWithTemporal<DataTables.RR01>(modelBuilder, "RR01");
@@ -713,6 +713,92 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
                         }
                     }
                 }
+            });
+        }
+
+        /// <summary>
+        /// <summary>
+        /// Cấu hình Temporal Table cho LN01Entity với 79 business columns + system columns
+        /// </summary>
+        private void ConfigureLN01TemporalTable(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Entities.LN01Entity>(entity =>
+            {
+                // Key configuration
+                entity.HasKey(e => e.Id);
+
+                // Configure temporal table with shadow properties for period columns
+                entity.ToTable("LN01", tb => tb.IsTemporal(ttb =>
+                {
+                    ttb.HasPeriodStart("SysStartTime");
+                    ttb.HasPeriodEnd("SysEndTime");
+                    ttb.UseHistoryTable("LN01_History");
+                }));
+
+                // Indexes for performance using actual property names
+                entity.HasIndex(e => e.NGAY_DL).HasDatabaseName("IX_LN01_NGAY_DL");
+                entity.HasIndex(e => e.BRCD).HasDatabaseName("IX_LN01_BRCD");
+                entity.HasIndex(e => e.CUSTSEQ).HasDatabaseName("IX_LN01_CUSTSEQ");
+                entity.HasIndex(e => e.TAI_KHOAN).HasDatabaseName("IX_LN01_TAI_KHOAN");
+                entity.HasIndex(e => new { e.NGAY_DL, e.BRCD }).HasDatabaseName("IX_LN01_NGAY_DL_BRCD");
+
+                // Configure decimal precision for amount columns (that are actually decimal?)
+                entity.Property(e => e.DU_NO).HasPrecision(18, 2);
+
+                // Configure interest rate precision
+                entity.Property(e => e.INTEREST_RATE).HasMaxLength(30); // This is a string in the entity
+            });
+        }
+
+        /// <summary>
+        /// <summary>
+        /// Cấu hình Temporal Table cho LN03Entity với 20 business columns (17 named + 3 unnamed) + system columns
+        /// </summary>
+        private void ConfigureLN03TemporalTable(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Entities.LN03Entity>(entity =>
+            {
+                // Key configuration
+                entity.HasKey(e => e.Id);
+
+                // Configure temporal table with shadow properties for period columns
+                entity.ToTable("LN03", tb => tb.IsTemporal(ttb =>
+                {
+                    ttb.HasPeriodStart("SysStartTime");
+                    ttb.HasPeriodEnd("SysEndTime");
+                    ttb.UseHistoryTable("LN03_History");
+                }));
+
+                // Indexes for performance using actual property names
+                entity.HasIndex(e => e.NGAY_DL).HasDatabaseName("IX_LN03_NGAY_DL");
+                entity.HasIndex(e => e.MACHINHANH).HasDatabaseName("IX_LN03_MACHINHANH");
+                entity.HasIndex(e => e.MAKH).HasDatabaseName("IX_LN03_MAKH");
+                entity.HasIndex(e => e.SOHOPDONG).HasDatabaseName("IX_LN03_SOHOPDONG");
+                entity.HasIndex(e => e.NHOMNO).HasDatabaseName("IX_LN03_NHOMNO");
+                entity.HasIndex(e => new { e.NGAY_DL, e.MACHINHANH }).HasDatabaseName("IX_LN03_NGAY_DL_MACHINHANH");
+
+                // Configure decimal precision for amount columns
+                entity.Property(e => e.SOTIENXLRR).HasPrecision(18, 2);
+                entity.Property(e => e.THUNOSAUXL).HasPrecision(18, 2);
+                entity.Property(e => e.CONLAINGOAIBANG).HasPrecision(18, 2);
+                entity.Property(e => e.DUNONOIBANG).HasPrecision(18, 2);
+                entity.Property(e => e.COLUMN_20).HasPrecision(18, 2); // Last column is amount field
+
+                // Configure string lengths for named columns
+                entity.Property(e => e.MACHINHANH).HasMaxLength(200);
+                entity.Property(e => e.TENCHINHANH).HasMaxLength(200);
+                entity.Property(e => e.MAKH).HasMaxLength(200);
+                entity.Property(e => e.TENKH).HasMaxLength(200);
+                entity.Property(e => e.SOHOPDONG).HasMaxLength(200);
+                entity.Property(e => e.NHOMNO).HasMaxLength(200);
+                entity.Property(e => e.MACBTD).HasMaxLength(200);
+                entity.Property(e => e.TENCBTD).HasMaxLength(200);
+                entity.Property(e => e.MAPGD).HasMaxLength(200);
+                entity.Property(e => e.TAIKHOANHACHTOAN).HasMaxLength(200);
+                entity.Property(e => e.REFNO).HasMaxLength(200);
+                entity.Property(e => e.LOAINGUONVON).HasMaxLength(200);
+                entity.Property(e => e.COLUMN_18).HasMaxLength(200);
+                entity.Property(e => e.COLUMN_19).HasMaxLength(200);
             });
         }
     }

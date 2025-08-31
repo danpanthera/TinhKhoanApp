@@ -1,39 +1,32 @@
-using System.ComponentModel.DataAnnotations;
-
-namespace Khoan.Api.Models.DTOs.GL41
+namespace Khoan.Api.Models.Dtos.GL41
 {
     /// <summary>
-    /// GL41 DTOs - 13 business columns từ CSV GL41
-    /// </summary>
-
-    /// <summary>
-    /// DTO cho preview/listing GL41
+    /// DTO for GL41 preview (list view)
     /// </summary>
     public class GL41PreviewDto
     {
-        public DateTime? NGAY_DL { get; set; }
-        public string? MA_CN { get; set; }
-        public string? LOAI_TIEN { get; set; }
-        public string? MA_TK { get; set; }
+        public long Id { get; set; }
+        public DateTime NGAY_DL { get; set; }
+        public string MA_CN { get; set; } = string.Empty;
+        public string LOAI_TIEN { get; set; } = string.Empty;
+        public string MA_TK { get; set; } = string.Empty;
         public string? TEN_TK { get; set; }
         public decimal? DN_DAUKY { get; set; }
-        public decimal? DC_DAUKY { get; set; }
-        public decimal? DN_CUOIKY { get; set; }
         public decimal? DC_CUOIKY { get; set; }
     }
 
     /// <summary>
-    /// DTO cho GL41 details
+    /// DTO for GL41 detailed view
     /// </summary>
     public class GL41DetailsDto
     {
-        public long ID { get; set; }
-        public DateTime? NGAY_DL { get; set; }
-
-        // 13 Business Columns theo CSV
-        public string? MA_CN { get; set; }
-        public string? LOAI_TIEN { get; set; }
-        public string? MA_TK { get; set; }
+        public long Id { get; set; }
+        public DateTime NGAY_DL { get; set; }
+        
+        // 13 Business columns (matching GL41Entity exactly)
+        public string MA_CN { get; set; } = string.Empty;
+        public string LOAI_TIEN { get; set; } = string.Empty;
+        public string MA_TK { get; set; } = string.Empty;
         public string? TEN_TK { get; set; }
         public string? LOAI_BT { get; set; }
         public decimal? DN_DAUKY { get; set; }
@@ -45,34 +38,24 @@ namespace Khoan.Api.Models.DTOs.GL41
         public decimal? DN_CUOIKY { get; set; }
         public decimal? DC_CUOIKY { get; set; }
 
-        // System fields
+        // System columns
         public string? FILE_NAME { get; set; }
         public DateTime CREATED_DATE { get; set; }
     }
 
     /// <summary>
-    /// DTO cho tạo mới GL41
+    /// DTO for creating GL41 record
     /// </summary>
     public class GL41CreateDto
     {
-        public DateTime? NGAY_DL { get; set; }
-
-        [Required]
-        [StringLength(200)]
-        public string MA_CN { get; set; } = null!;
-
-        [StringLength(200)]
-        public string? LOAI_TIEN { get; set; }
-
-        [StringLength(200)]
-        public string? MA_TK { get; set; }
-
-        [StringLength(200)]
+        public DateTime NGAY_DL { get; set; }
+        
+        // 13 Business columns
+        public string MA_CN { get; set; } = string.Empty;
+        public string LOAI_TIEN { get; set; } = string.Empty;
+        public string MA_TK { get; set; } = string.Empty;
         public string? TEN_TK { get; set; }
-
-        [StringLength(200)]
         public string? LOAI_BT { get; set; }
-
         public decimal? DN_DAUKY { get; set; }
         public decimal? DC_DAUKY { get; set; }
         public decimal? SBT_NO { get; set; }
@@ -84,32 +67,19 @@ namespace Khoan.Api.Models.DTOs.GL41
     }
 
     /// <summary>
-    /// DTO cho cập nhật GL41
+    /// DTO for updating GL41 record
     /// </summary>
     public class GL41UpdateDto
     {
-        [Required]
-        public long ID { get; set; }
-
-        [Required]
+        public long Id { get; set; }
         public DateTime NGAY_DL { get; set; }
-
-        [Required]
-        [StringLength(200)]
-        public string MA_CN { get; set; } = null!;
-
-        [StringLength(200)]
-        public string? LOAI_TIEN { get; set; }
-
-        [StringLength(200)]
-        public string? MA_TK { get; set; }
-
-        [StringLength(200)]
+        
+        // 13 Business columns
+        public string MA_CN { get; set; } = string.Empty;
+        public string LOAI_TIEN { get; set; } = string.Empty;
+        public string MA_TK { get; set; } = string.Empty;
         public string? TEN_TK { get; set; }
-
-        [StringLength(200)]
         public string? LOAI_BT { get; set; }
-
         public decimal? DN_DAUKY { get; set; }
         public decimal? DC_DAUKY { get; set; }
         public decimal? SBT_NO { get; set; }
@@ -121,26 +91,45 @@ namespace Khoan.Api.Models.DTOs.GL41
     }
 
     /// <summary>
-    /// DTO cho thống kê GL41 theo đơn vị
-    /// </summary>
-    public class GL41SummaryByUnitDto
-    {
-        public string? MA_CN { get; set; }
-        public decimal TotalOpeningBalance { get; set; }
-        public decimal TotalClosingBalance { get; set; }
-        public decimal TotalDebitTransactions { get; set; }
-        public decimal TotalCreditTransactions { get; set; }
-    }
-
-    /// <summary>
-    /// DTO cho kết quả import GL41
+    /// DTO for GL41 CSV import result
     /// </summary>
     public class GL41ImportResultDto
     {
+        public string FileName { get; set; } = string.Empty;
         public int TotalRecords { get; set; }
         public int SuccessfulRecords { get; set; }
         public int FailedRecords { get; set; }
-        public List<string> Errors { get; set; } = new List<string>();
-        public string? ImportSessionId { get; set; }
+        public List<string> ErrorMessages { get; set; } = new();
+        public DateTime ImportDateTime { get; set; }
+        public TimeSpan ProcessingDuration { get; set; }
+        public bool IsSuccess => FailedRecords == 0;
+    }
+
+    /// <summary>
+    /// DTO for GL41 summary by unit
+    /// </summary>
+    public class GL41SummaryByUnitDto
+    {
+        public string UnitCode { get; set; } = string.Empty;
+        public int TotalRecords { get; set; }
+        public decimal TotalDebitBalance { get; set; }
+        public decimal TotalCreditBalance { get; set; }
+        public decimal NetBalance => TotalDebitBalance - TotalCreditBalance;
+        public DateTime ReportDate { get; set; }
+        public List<string> Currencies { get; set; } = new();
+    }
+
+    /// <summary>
+    /// DTO for GL41 analytics configuration
+    /// </summary>
+    public class GL41AnalyticsConfigDto
+    {
+        public long MaxFileSizeBytes { get; set; }
+        public int MaxBatchSize { get; set; }
+        public int TimeoutMinutes { get; set; }
+        public string AllowedFilePattern { get; set; } = string.Empty;
+        public int SupportedColumns { get; set; }
+        public string[] RequiredColumns { get; set; } = Array.Empty<string>();
+        public string MaxFileSizeDisplay => $"{MaxFileSizeBytes / (1024 * 1024 * 1024)}GB";
     }
 }

@@ -5,10 +5,11 @@ using Microsoft.EntityFrameworkCore;
 namespace Khoan.Api.Models.Entities
 {
     /// <summary>
-    /// GL02 Entity - General Ledger Summary Table (Partitioned Columnstore)
-    /// Structure: NGAY_DL -> 17 business columns -> System columns
-    /// CSV Source: 7800_gl02_20241231.csv
-    /// NGAY_DL derived from TRDATE column in CSV
+    /// GL02 Entity - General Ledger Transactions (Heavy File Optimized)
+    /// PARTITIONED COLUMNSTORE (NOT TEMPORAL) - Optimized for ~200MB CSV files
+    /// Structure: NGAY_DL -> 17 Business Columns (CSV exact order) -> 4 System Columns
+    /// Total: 21 columns, Import policy: Only files containing "gl02"
+    /// Heavy File Config: MaxFileSize 2GB, BulkInsert BatchSize 10,000, Upload timeout 15 minutes
     /// </summary>
     [Table("GL02")]
     [Index(nameof(NGAY_DL), Name = "IX_GL02_NGAY_DL")]
@@ -18,154 +19,81 @@ namespace Khoan.Api.Models.Entities
     [Index(nameof(CUSTOMER), Name = "IX_GL02_CUSTOMER")]
     public class GL02Entity
     {
-        // === SYSTEM COLUMNS FIRST ===
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public long Id { get; set; }
-
-        // === NGAY_DL - DERIVED FROM TRDATE ===
-        /// <summary>
-        /// Ngày dữ liệu - derived from TRDATE column in CSV
-        /// Format: dd/mm/yyyy -> datetime2
-        /// </summary>
+        // NGAY_DL - DateTime2 from TRDATE column (Position 0) - dd/mm/yyyy format
         [Required]
-        [Column(TypeName = "datetime2")]
+        [Column("NGAY_DL", Order = 0, TypeName = "datetime2")]
         public DateTime NGAY_DL { get; set; }
 
-        // === BUSINESS COLUMNS (17 columns theo CSV structure) ===
+        // ===== 17 BUSINESS COLUMNS (CSV EXACT ORDER) =====
 
-        /// <summary>
-        /// Transaction date - BUSINESS COLUMN 1
-        /// </summary>
-        [Column(TypeName = "datetime2")]
-        public DateTime? TRDATE { get; set; }
-
-        /// <summary>
-        /// Transaction branch code - BUSINESS COLUMN 2
-        /// </summary>
         [Required]
-        [Column(TypeName = "nvarchar(200)")]
+        [Column("TRBRCD", Order = 1, TypeName = "nvarchar(200)")]
         public string TRBRCD { get; set; } = string.Empty;
 
-        /// <summary>
-        /// User ID - BUSINESS COLUMN 3
-        /// </summary>
-        [Column(TypeName = "nvarchar(200)")]
+        [Column("USERID", Order = 2, TypeName = "nvarchar(200)")]
         public string? USERID { get; set; }
 
-        /// <summary>
-        /// Journal sequence - BUSINESS COLUMN 4
-        /// </summary>
-        [Column(TypeName = "nvarchar(200)")]
+        [Column("JOURSEQ", Order = 3, TypeName = "nvarchar(200)")]
         public string? JOURSEQ { get; set; }
 
-        /// <summary>
-        /// Daily transaction sequence - BUSINESS COLUMN 5
-        /// </summary>
-        [Column(TypeName = "nvarchar(200)")]
+        [Column("DYTRSEQ", Order = 4, TypeName = "nvarchar(200)")]
         public string? DYTRSEQ { get; set; }
 
-        /// <summary>
-        /// Local account - BUSINESS COLUMN 6
-        /// </summary>
         [Required]
-        [Column(TypeName = "nvarchar(200)")]
+        [Column("LOCAC", Order = 5, TypeName = "nvarchar(200)")]
         public string LOCAC { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Currency - BUSINESS COLUMN 7
-        /// </summary>
         [Required]
-        [Column(TypeName = "nvarchar(200)")]
+        [Column("CCY", Order = 6, TypeName = "nvarchar(200)")]
         public string CCY { get; set; } = string.Empty;
 
-        /// <summary>
-        /// Business code - BUSINESS COLUMN 8
-        /// </summary>
-        [Column(TypeName = "nvarchar(200)")]
+        [Column("BUSCD", Order = 7, TypeName = "nvarchar(200)")]
         public string? BUSCD { get; set; }
 
-        /// <summary>
-        /// Unit - BUSINESS COLUMN 9
-        /// </summary>
-        [Column(TypeName = "nvarchar(200)")]
+        [Column("UNIT", Order = 8, TypeName = "nvarchar(200)")]
         public string? UNIT { get; set; }
 
-        /// <summary>
-        /// Transaction code - BUSINESS COLUMN 10
-        /// </summary>
-        [Column(TypeName = "nvarchar(200)")]
+        [Column("TRCD", Order = 9, TypeName = "nvarchar(200)")]
         public string? TRCD { get; set; }
 
-        /// <summary>
-        /// Customer - BUSINESS COLUMN 11
-        /// </summary>
-        [Column(TypeName = "nvarchar(200)")]
+        [Column("CUSTOMER", Order = 10, TypeName = "nvarchar(200)")]
         public string? CUSTOMER { get; set; }
 
-        /// <summary>
-        /// Transaction type - BUSINESS COLUMN 12
-        /// </summary>
-        [Column(TypeName = "nvarchar(200)")]
+        [Column("TRTP", Order = 11, TypeName = "nvarchar(200)")]
         public string? TRTP { get; set; }
 
-        /// <summary>
-        /// Reference - BUSINESS COLUMN 13
-        /// </summary>
-        [Column(TypeName = "nvarchar(200)")]
+        [Column("REFERENCE", Order = 12, TypeName = "nvarchar(200)")]
         public string? REFERENCE { get; set; }
 
-        /// <summary>
-        /// Remark/Note - BUSINESS COLUMN 14 (1000 char)
-        /// </summary>
-        [Column(TypeName = "nvarchar(1000)")]
+        [Column("REMARK", Order = 13, TypeName = "nvarchar(1000)")]
         public string? REMARK { get; set; }
 
-        /// <summary>
-        /// Debit amount - BUSINESS COLUMN 15
-        /// </summary>
-        [Column(TypeName = "decimal(18,2)")]
+        // AMOUNT columns - decimal(18,2) format #,###.00
+        [Column("DRAMOUNT", Order = 14, TypeName = "decimal(18,2)")]
         public decimal? DRAMOUNT { get; set; }
 
-        /// <summary>
-        /// Credit amount - BUSINESS COLUMN 16
-        /// </summary>
-        [Column(TypeName = "decimal(18,2)")]
+        [Column("CRAMOUNT", Order = 15, TypeName = "decimal(18,2)")]
         public decimal? CRAMOUNT { get; set; }
 
-        /// <summary>
-        /// Created datetime - BUSINESS COLUMN 17
-        /// </summary>
-        [Column(TypeName = "datetime2")]
+        // CRTDTM - datetime2 format dd/mm/yyyy hh:mm:ss
+        [Column("CRTDTM", Order = 16, TypeName = "datetime2")]
         public DateTime? CRTDTM { get; set; }
 
-        // === SYSTEM COLUMNS ===
+        // ===== 4 SYSTEM COLUMNS (NOT TEMPORAL) =====
+
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        [Column("Id", Order = 17)]
+        public long Id { get; set; }
 
         [Required]
-        [Column(TypeName = "datetime2")]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        [Column("CREATED_DATE", Order = 18, TypeName = "datetime2")]
+        public DateTime CREATED_DATE { get; set; } = DateTime.UtcNow;
 
-        [Column(TypeName = "datetime2")]
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        [Column("UPDATED_DATE", Order = 19, TypeName = "datetime2")]
+        public DateTime? UPDATED_DATE { get; set; } = DateTime.UtcNow;
 
-        // === METADATA COLUMNS ===
-
-        /// <summary>
-        /// Tên file import (7800_gl02_20241231.csv)
-        /// </summary>
-        [Column(TypeName = "nvarchar(500)")]
-        public string? FileName { get; set; }
-
-        /// <summary>
-        /// Import batch ID để tracking
-        /// </summary>
-        [Column(TypeName = "uniqueidentifier")]
-        public Guid? ImportId { get; set; }
-
-        /// <summary>
-        /// Additional metadata về import process
-        /// </summary>
-        [Column(TypeName = "nvarchar(1000)")]
-        public string? ImportMetadata { get; set; }
+        [Column("FILE_NAME", Order = 20, TypeName = "nvarchar(500)")]
+        public string? FILE_NAME { get; set; }
     }
 }

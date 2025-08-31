@@ -377,8 +377,8 @@ namespace Khoan.Api.Services
                         {
                             record.NGAY_DL = ngayDlDate;
                             record.FILE_NAME = file.FileName;
-                            record.CreatedAt = DateTime.UtcNow;
-                            record.UpdatedAt = DateTime.UtcNow;
+                            // record.CREATED_DATE = DateTime.UtcNow; // Không có CreatedAt trong GL02Entity mới
+                            // record.UpdatedAt = DateTime.UtcNow; // Không có UpdatedAt trong GL02Entity mới
                         }
                     }
 
@@ -465,7 +465,7 @@ namespace Khoan.Api.Services
                     {
                         if (DateTime.TryParse(result.NgayDL, out var ngayToDelete))
                         {
-                            var affected = await _context.LN03s.Where(x => x.NGAY_DL.Date == ngayToDelete.Date).ExecuteDeleteAsync();
+                            var affected = await _context.LN03.Where(x => x.NGAY_DL.HasValue && x.NGAY_DL.Value.Date == ngayToDelete.Date).ExecuteDeleteAsync();
                             _logger.LogInformation("🧹 [LN03] Đã xoá {Count} bản ghi cũ cho ngày {Ngay}", affected, ngayToDelete.ToString("yyyy-MM-dd"));
                         }
 
@@ -850,8 +850,8 @@ namespace Khoan.Api.Services
             await foreach (var record in csv.GetRecordsAsync<DP01>())
             {
                 // Set audit fields
-                record.CreatedAt = DateTime.UtcNow;
-                record.UpdatedAt = DateTime.UtcNow;
+                // record.CREATED_DATE = DateTime.UtcNow; // Không có CreatedAt trong GL02Entity mới
+                // record.UpdatedAt = DateTime.UtcNow; // Không có UpdatedAt trong GL02Entity mới
                 record.ImportDateTime = DateTime.UtcNow;
                 record.FILE_NAME = file.FileName;
 
@@ -1080,7 +1080,7 @@ namespace Khoan.Api.Services
                 // Map 17 business columns từ CSV
                 if (csvRecord.TRDATE != null && DateTime.TryParse(csvRecord.TRDATE.ToString(), out trdate))
                 {
-                    record.TRDATE = trdate;
+                    // record.TRDATE = trdate; // TRDATE không còn trong GL02Entity mới
                     record.NGAY_DL = trdate.Date; // NGAY_DL derived from TRDATE
                 }
 
@@ -1109,9 +1109,10 @@ namespace Khoan.Api.Services
                     record.CRTDTM = crtdtm;
 
                 // System columns
-                record.CreatedAt = DateTime.UtcNow;
-                record.UpdatedAt = DateTime.UtcNow;
-                record.FileName = file.FileName;
+                // record.CREATED_DATE = DateTime.UtcNow; // Không có CreatedAt trong GL02Entity mới
+                // record.UpdatedAt = DateTime.UtcNow; // Không có UpdatedAt trong GL02Entity mới
+                // record.FILE_NAME = file.FileName; // Sử dụng FILE_NAME thay vì FileName
+                record.FILE_NAME = file.FileName;
 
                 records.Add(record);
             }
@@ -1156,8 +1157,9 @@ namespace Khoan.Api.Services
                 }
 
                 // Normalize audit fields
-                record.CreatedAt = DateTime.UtcNow;
-                record.UpdatedAt = DateTime.UtcNow;
+                // record.CREATED_DATE = DateTime.UtcNow; // Không có CreatedAt trong GL02Entity mới
+                // record.UpdatedAt = DateTime.UtcNow; // Không có UpdatedAt trong GL02Entity mới
+                // record.FileName = file.FileName; // Sử dụng FILE_NAME thay vì FileName
                 record.FileName = file.FileName;
 
                 // Normalize numeric from string TR_EX_RT if needed is handled at query level; keep CSV-first mapping
@@ -1210,7 +1212,7 @@ namespace Khoan.Api.Services
                     DN_CUOIKY = ParseDecimalSafely(record.DN_CUOIKY),
                     DC_CUOIKY = ParseDecimalSafely(record.DC_CUOIKY),
                     FILE_NAME = file.FileName,
-                    CreatedAt = DateTime.UtcNow
+                    CREATED_DATE = DateTime.UtcNow
                 };
 
                 records.Add(entity);
