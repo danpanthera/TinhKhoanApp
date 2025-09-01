@@ -1,0 +1,18 @@
+2025-08-31 22:34:42 - 🚀 Starting Khoan Frontend Development Server (rotation: size>5M keep 5)
+2025-08-31 22:34:42 - 📊 Target Port: 3000
+2025-08-31 22:34:42 - 🧹 Stopping all existing frontend services...
+2025-08-31 22:34:42 - 🗑️ Cleaning Vite cache...
+2025-08-31 22:34:42 - ✅ Cleanup completed
+2025-08-31 22:34:42 - 🔨 Testing build configuration...
+2025-08-31 22:34:48 - ✅ Build test successful
+2025-08-31 22:34:48 - ▶️ Starting Frontend Development Server...
+2025-08-31 22:34:48 - 🔗 Dev process detached with nohup (will survive script exit)
+2025-08-31 22:34:48 - 🆔 Frontend PID: 2089
+2025-08-31 22:34:48 - 🔍 Monitoring server startup...
+2025-08-31 22:34:48 - ⏳ Waiting for server to start... (0s/60s)
+2025-08-31 22:34:52 - ✅ Frontend server started successfully!
+2025-08-31 22:34:52 - 🔗 Dev Server: http://localhost:3000
+2025-08-31 22:34:52 - 📝 Logs: frontend.log
+2025-08-31 22:34:52 - 🆔 PID File: frontend.log.pid
+2025-08-31 22:34:52 - 
+2025-08-31 22:34:52 - 🎉 Frontend startup completed successfully!

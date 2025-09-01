@@ -151,7 +151,7 @@ namespace Khoan.Api.Services
                         foreach (var r in records)
                         {
                             r.NGAY_DL = ngayDlDate;
-                            r.FILE_NAME = file.FileName;
+//                             r.FILE_NAME = file.FileName;
                         }
                     }
                     // Bulk insert DP01
@@ -291,7 +291,7 @@ namespace Khoan.Api.Services
                         foreach (var r in records)
                         {
                             r.NGAY_DL = ngayDlDate;
-                            r.FILE_NAME = file.FileName;
+//                             r.FILE_NAME = file.FileName;
                         }
                     }
 
@@ -376,7 +376,7 @@ namespace Khoan.Api.Services
                         foreach (var record in records)
                         {
                             record.NGAY_DL = ngayDlDate;
-                            record.FILE_NAME = file.FileName;
+//                             record.FILE_NAME = file.FileName;
                             // record.CREATED_DATE = DateTime.UtcNow; // Không có CreatedAt trong GL02Entity mới
                             // record.UpdatedAt = DateTime.UtcNow; // Không có UpdatedAt trong GL02Entity mới
                         }
@@ -844,18 +844,102 @@ namespace Khoan.Api.Services
             {
                 HasHeaderRecord = true,
                 MissingFieldFound = null,
-                HeaderValidated = null
+                HeaderValidated = null,
+                TrimOptions = TrimOptions.Trim,
+                BadDataFound = null,
+                IgnoreBlankLines = true
             });
 
-            await foreach (var record in csv.GetRecordsAsync<DP01>())
-            {
-                // Set audit fields
-                // record.CREATED_DATE = DateTime.UtcNow; // Không có CreatedAt trong GL02Entity mới
-                // record.UpdatedAt = DateTime.UtcNow; // Không có UpdatedAt trong GL02Entity mới
-                record.ImportDateTime = DateTime.UtcNow;
-                record.FILE_NAME = file.FileName;
+            var fileName = Path.GetFileName(file.FileName);
+            var ngayDlString = ExtractNgayDLFromFileName(fileName);
+            var ngayDl = DateTime.TryParse(ngayDlString, out var date) ? date : DateTime.Today;
 
-                records.Add(record);
+            try
+            {
+                var csvRecords = csv.GetRecords<dynamic>();
+                foreach (IDictionary<string, object> csvRecord in csvRecords)
+                {
+                    var record = new DP01();
+                    
+                    // Set NGAY_DL from filename (first column requirement)
+                    record.NGAY_DL = ngayDl;
+                    
+                    // Safely map all 63 business columns with proper conversion
+                    record.MA_CN = SafeGetString(csvRecord, "MA_CN");
+                    record.TAI_KHOAN_HACH_TOAN = SafeGetString(csvRecord, "TAI_KHOAN_HACH_TOAN");
+                    record.MA_KH = SafeGetString(csvRecord, "MA_KH");
+                    record.TEN_KH = SafeGetString(csvRecord, "TEN_KH");
+                    record.DP_TYPE_NAME = SafeGetString(csvRecord, "DP_TYPE_NAME");
+                    record.CCY = SafeGetString(csvRecord, "CCY");
+                    record.CURRENT_BALANCE = SafeGetDecimal(csvRecord, "CURRENT_BALANCE");
+                    record.RATE = SafeGetDecimal(csvRecord, "RATE");
+                    record.SO_TAI_KHOAN = SafeGetString(csvRecord, "SO_TAI_KHOAN");
+                    record.OPENING_DATE = SafeGetDateTime(csvRecord, "OPENING_DATE");
+                    record.MATURITY_DATE = SafeGetDateTime(csvRecord, "MATURITY_DATE");
+                    record.ADDRESS = SafeGetString(csvRecord, "ADDRESS");
+                    record.NOTENO = SafeGetString(csvRecord, "NOTENO");
+                    record.MONTH_TERM = SafeGetString(csvRecord, "MONTH_TERM");
+                    record.TERM_DP_NAME = SafeGetString(csvRecord, "TERM_DP_NAME");
+                    record.TIME_DP_NAME = SafeGetString(csvRecord, "TIME_DP_NAME");
+                    record.MA_PGD = SafeGetString(csvRecord, "MA_PGD");
+                    record.TEN_PGD = SafeGetString(csvRecord, "TEN_PGD");
+                    record.DP_TYPE_CODE = SafeGetString(csvRecord, "DP_TYPE_CODE");
+                    record.RENEW_DATE = SafeGetDateTime(csvRecord, "RENEW_DATE");
+                    record.CUST_TYPE = SafeGetString(csvRecord, "CUST_TYPE");
+                    record.CUST_TYPE_NAME = SafeGetString(csvRecord, "CUST_TYPE_NAME");
+                    record.CUST_TYPE_DETAIL = SafeGetString(csvRecord, "CUST_TYPE_DETAIL");
+                    record.CUST_DETAIL_NAME = SafeGetString(csvRecord, "CUST_DETAIL_NAME");
+                    record.PREVIOUS_DP_CAP_DATE = SafeGetDateTime(csvRecord, "PREVIOUS_DP_CAP_DATE");
+                    record.NEXT_DP_CAP_DATE = SafeGetDateTime(csvRecord, "NEXT_DP_CAP_DATE");
+                    record.ID_NUMBER = SafeGetString(csvRecord, "ID_NUMBER");
+                    record.ISSUED_BY = SafeGetString(csvRecord, "ISSUED_BY");
+                    record.ISSUE_DATE = SafeGetDateTime(csvRecord, "ISSUE_DATE");
+                    record.SEX_TYPE = SafeGetString(csvRecord, "SEX_TYPE");
+                    record.BIRTH_DATE = SafeGetDateTime(csvRecord, "BIRTH_DATE");
+                    record.TELEPHONE = SafeGetString(csvRecord, "TELEPHONE");
+                    record.ACRUAL_AMOUNT = SafeGetDecimal(csvRecord, "ACRUAL_AMOUNT");
+                    record.ACRUAL_AMOUNT_END = SafeGetDecimal(csvRecord, "ACRUAL_AMOUNT_END");
+                    record.ACCOUNT_STATUS = SafeGetString(csvRecord, "ACCOUNT_STATUS");
+                    record.DRAMT = SafeGetDecimal(csvRecord, "DRAMT");
+                    record.CRAMT = SafeGetDecimal(csvRecord, "CRAMT");
+                    record.EMPLOYEE_NUMBER = SafeGetString(csvRecord, "EMPLOYEE_NUMBER");
+                    record.EMPLOYEE_NAME = SafeGetString(csvRecord, "EMPLOYEE_NAME");
+                    record.SPECIAL_RATE = SafeGetDecimal(csvRecord, "SPECIAL_RATE");
+                    record.AUTO_RENEWAL = SafeGetString(csvRecord, "AUTO_RENEWAL");
+                    record.CLOSE_DATE = SafeGetDateTime(csvRecord, "CLOSE_DATE");
+                    record.LOCAL_PROVIN_NAME = SafeGetString(csvRecord, "LOCAL_PROVIN_NAME");
+                    record.LOCAL_DISTRICT_NAME = SafeGetString(csvRecord, "LOCAL_DISTRICT_NAME");
+                    record.LOCAL_WARD_NAME = SafeGetString(csvRecord, "LOCAL_WARD_NAME");
+                    record.TERM_DP_TYPE = SafeGetString(csvRecord, "TERM_DP_TYPE");
+                    record.TIME_DP_TYPE = SafeGetString(csvRecord, "TIME_DP_TYPE");
+                    record.STATES_CODE = SafeGetString(csvRecord, "STATES_CODE");
+                    record.ZIP_CODE = SafeGetString(csvRecord, "ZIP_CODE");
+                    record.COUNTRY_CODE = SafeGetString(csvRecord, "COUNTRY_CODE");
+                    record.TAX_CODE_LOCATION = SafeGetString(csvRecord, "TAX_CODE_LOCATION");
+                    record.MA_CAN_BO_PT = SafeGetString(csvRecord, "MA_CAN_BO_PT");
+                    record.TEN_CAN_BO_PT = SafeGetString(csvRecord, "TEN_CAN_BO_PT");
+                    record.PHONG_CAN_BO_PT = SafeGetString(csvRecord, "PHONG_CAN_BO_PT");
+                    record.NGUOI_NUOC_NGOAI = SafeGetString(csvRecord, "NGUOI_NUOC_NGOAI");
+                    record.QUOC_TICH = SafeGetString(csvRecord, "QUOC_TICH");
+                    record.MA_CAN_BO_AGRIBANK = SafeGetString(csvRecord, "MA_CAN_BO_AGRIBANK");
+                    record.NGUOI_GIOI_THIEU = SafeGetString(csvRecord, "NGUOI_GIOI_THIEU");
+                    record.TEN_NGUOI_GIOI_THIEU = SafeGetString(csvRecord, "TEN_NGUOI_GIOI_THIEU");
+                    record.CONTRACT_COUTS_DAY = SafeGetString(csvRecord, "CONTRACT_COUTS_DAY");
+                    record.SO_KY_AD_LSDB = SafeGetString(csvRecord, "SO_KY_AD_LSDB");
+                    record.UNTBUSCD = SafeGetString(csvRecord, "UNTBUSCD");
+                    record.TYGIA = SafeGetDecimal(csvRecord, "TYGIA");
+
+                    // Set audit fields
+                    record.ImportDateTime = DateTime.UtcNow;
+//                     // record.FILE_NAME = file.FileName; // TODO: Add FILE_NAME column to DP01 table
+
+                    records.Add(record);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "❌ [DP01] CSV parsing error: {Error}", ex.Message);
+                throw new Exception($"DP01 CSV parsing failed: {ex.Message}", ex);
             }
 
             return records;
@@ -1111,8 +1195,8 @@ namespace Khoan.Api.Services
                 // System columns
                 // record.CREATED_DATE = DateTime.UtcNow; // Không có CreatedAt trong GL02Entity mới
                 // record.UpdatedAt = DateTime.UtcNow; // Không có UpdatedAt trong GL02Entity mới
-                // record.FILE_NAME = file.FileName; // Sử dụng FILE_NAME thay vì FileName
-                record.FILE_NAME = file.FileName;
+//                 // record.FILE_NAME = file.FileName; // Sử dụng FILE_NAME thay vì FileName
+//                 record.FILE_NAME = file.FileName;
 
                 records.Add(record);
             }
@@ -1211,7 +1295,7 @@ namespace Khoan.Api.Services
                     ST_GHICO = ParseDecimalSafely(record.ST_GHICO),
                     DN_CUOIKY = ParseDecimalSafely(record.DN_CUOIKY),
                     DC_CUOIKY = ParseDecimalSafely(record.DC_CUOIKY),
-                    FILE_NAME = file.FileName,
+                    // FILE_NAME = file.FileName, // TODO: Add FILE_NAME column to database
                     CREATED_DATE = DateTime.UtcNow
                 };
 
@@ -1390,7 +1474,7 @@ namespace Khoan.Api.Services
                     foreach (var record in records)
                     {
                         record.NGAY_DL = ngayDlDate;
-                        record.FILE_NAME = file.FileName;
+//                         record.FILE_NAME = file.FileName;
                         record.CREATED_DATE = DateTime.UtcNow;
                     }
 
@@ -1572,6 +1656,88 @@ namespace Khoan.Api.Services
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "Failed to log import metadata for {File}", result.FileName);
+            }
+        }
+
+        #endregion
+
+        #region Safe Data Conversion Helper Methods
+
+        /// <summary>
+        /// Safely get string value from CSV record dictionary
+        /// </summary>
+        private static string? SafeGetString(IDictionary<string, object> record, string columnName)
+        {
+            try
+            {
+                if (record.TryGetValue(columnName, out var value))
+                {
+                    return value?.ToString()?.Trim()?.Trim('"')?.Trim();
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ SafeGetString error for column {columnName}: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Safely get decimal value from CSV record dictionary
+        /// </summary>
+        private static decimal? SafeGetDecimal(IDictionary<string, object> record, string columnName)
+        {
+            try
+            {
+                if (record.TryGetValue(columnName, out var value))
+                {
+                    var str = value?.ToString()?.Trim()?.Trim('"')?.Trim();
+                    if (string.IsNullOrWhiteSpace(str) || str == "0")
+                        return 0;
+                    
+                    if (decimal.TryParse(str, NumberStyles.Number, CultureInfo.InvariantCulture, out var result))
+                        return result;
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ SafeGetDecimal error for column {columnName}: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Safely get DateTime value from CSV record dictionary
+        /// </summary>
+        private static DateTime? SafeGetDateTime(IDictionary<string, object> record, string columnName)
+        {
+            try
+            {
+                if (record.TryGetValue(columnName, out var value))
+                {
+                    var str = value?.ToString()?.Trim()?.Trim('"')?.Trim();
+                    if (string.IsNullOrWhiteSpace(str))
+                        return null;
+
+                    // Try multiple date formats common in CSV files
+                    string[] dateFormats = { 
+                        "yyyyMMdd", "yyyy-MM-dd", "MM/dd/yyyy", "dd/MM/yyyy",
+                        "yyyy/MM/dd", "yyyy-MM-dd HH:mm:ss", "yyyyMMdd HH:mm:ss"
+                    };
+
+                    if (DateTime.TryParseExact(str, dateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var result))
+                        return result;
+                    
+                    if (DateTime.TryParse(str, out result))
+                        return result;
+                }
+                return null;
+            }
+            catch
+            {
+                return null;
             }
         }
 

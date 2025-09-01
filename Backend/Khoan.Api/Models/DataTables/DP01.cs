@@ -252,9 +252,10 @@ namespace Khoan.Api.Models.DataTables
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        [Column("FILE_NAME")]
-        [StringLength(500)]
-        public string? FILE_NAME { get; set; }
+        // TODO: Add FILE_NAME column to database table
+        // [Column("FILE_NAME")]
+        // [StringLength(500)]
+        // public string? FILE_NAME { get; set; }
 
         [Column("DataSource")]
         [StringLength(500)]

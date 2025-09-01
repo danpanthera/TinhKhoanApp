@@ -727,8 +727,21 @@ Sửa lại hết database, model, EF, BulkCopy, migration của các bảng d�
 + Tên cột trong file CSV là chuẩn, là tham chiếu.
 
 #region 9 bảng core data table
-**Chi tiết cấu trúc các bảng dữ liệu:** (RẤT QUAN TRỌNG)
-# sqlcmd -S localhost -d KhoanApp -E -C -Q "SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH, IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'DP01' ORDER BY ORDINAL_POSITION"
+# 1. Bảng DP01 (Quan trọng)
++ Thống nhất cấu trúc dữ liệu Bảng DP01 phải GIỐNG NHAU (Model - Database - EF - BulkCopy - Direct Import...) như sau:
++ Theo chuẩn Temporal Table + Columnstore Indexes
++ Business Column tham chiếu theo file csv *dp01*
++ Số lượng Cột busiess column = 63
++ Cho phép các trường, cột có giá trị NULL
+thư mục file csv mẫu: /Users/nguyendat/Documents/DuLieuImport/DuLieuMau/
++ Cột NGAY_DL trong bảng DP01 lấy từ filename, có định dạng datetime2 (dd/mm/yyyy)
++ Define (Model, Database, EF, BulkCopy) đảm bảo thống nhất: Các cột có chứa "DATE", "NGAY" đưa về format datetime2 (dd/mm/yyyy); các cột có chứa "AMT", "AMOUNT", "BALANCE", "SO_TIEN", "SO_DU", ở dạng number #,###.00 (vd: 250,000.89); (có thể phải tạo proper conversion)
++ Các cột còn lại dạng String/Nvachar: Tất cả có độ dài 200 ký tự
++ Cấu trúc bảng dữ liệu: NGAY_DL -> Business Column -> Temporal + System column
++ Chỉ cho phép import các file có filename chứa ký tự "dp01"
++ Import trực tiếp vào bảng dữ liệu (Direct Import). Preview cũng trực tiếp từ bảng dữ liệu này
++ Direct Import theo tên business column, không được phép transformation tên cột sang tiếng Việt
++ Model, Database, EF, BulkCopy, DTO, DataService, Repository, DataPreviewServices, ImportService, PreviewService, Controller...  phải đảm bảo thống nhất với cấu trúc bảng dữ liệu này, Ngoài các cột Temporal/System Column ra thì Business Column của file CSV là gốc, là tham chiếu của tất cả các layer, component : DTO, Controller, Services, EF, Database, Model...v.v.
 
 
 # 2. Bảng DPDA (Quan trọng)
