@@ -324,13 +324,6 @@ namespace Khoan.Api.Models.DataTables
         public long Id { get; set; }
 
         /// <summary>
-        /// Tên file nguồn
-        /// </summary>
-        [Column("FILE_NAME", Order = 82)]
-        [StringLength(500)]
-        public string? FILE_NAME { get; set; }
-
-        /// <summary>
         /// Ngày tạo bản ghi
         /// </summary>
         [Column("CREATED_DATE", Order = 83)]

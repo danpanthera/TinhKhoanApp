@@ -151,7 +151,6 @@ namespace Khoan.Api.Services
                         foreach (var r in records)
                         {
                             r.NGAY_DL = ngayDlDate;
-//                             r.FILE_NAME = file.FileName;
                         }
                     }
                     // Bulk insert DP01
@@ -291,7 +290,6 @@ namespace Khoan.Api.Services
                         foreach (var r in records)
                         {
                             r.NGAY_DL = ngayDlDate;
-//                             r.FILE_NAME = file.FileName;
                         }
                     }
 
@@ -376,7 +374,6 @@ namespace Khoan.Api.Services
                         foreach (var record in records)
                         {
                             record.NGAY_DL = ngayDlDate;
-//                             record.FILE_NAME = file.FileName;
                             // record.CREATED_DATE = DateTime.UtcNow; // Không có CreatedAt trong GL02Entity mới
                             // record.UpdatedAt = DateTime.UtcNow; // Không có UpdatedAt trong GL02Entity mới
                         }
@@ -931,7 +928,7 @@ namespace Khoan.Api.Services
 
                     // Set audit fields
                     record.ImportDateTime = DateTime.UtcNow;
-//                     // record.FILE_NAME = file.FileName; // TODO: Add FILE_NAME column to DP01 table
+                    // record.FILE_NAME = file.FileName; // TODO: Add FILE_NAME column to DP01 table
 
                     records.Add(record);
                 }
@@ -1195,8 +1192,7 @@ namespace Khoan.Api.Services
                 // System columns
                 // record.CREATED_DATE = DateTime.UtcNow; // Không có CreatedAt trong GL02Entity mới
                 // record.UpdatedAt = DateTime.UtcNow; // Không có UpdatedAt trong GL02Entity mới
-//                 // record.FILE_NAME = file.FileName; // Sử dụng FILE_NAME thay vì FileName
-//                 record.FILE_NAME = file.FileName;
+                // record.FILE_NAME = file.FileName; // Sử dụng FILE_NAME thay vì FileName
 
                 records.Add(record);
             }
@@ -1295,7 +1291,6 @@ namespace Khoan.Api.Services
                     ST_GHICO = ParseDecimalSafely(record.ST_GHICO),
                     DN_CUOIKY = ParseDecimalSafely(record.DN_CUOIKY),
                     DC_CUOIKY = ParseDecimalSafely(record.DC_CUOIKY),
-                    // FILE_NAME = file.FileName, // TODO: Add FILE_NAME column to database
                     CREATED_DATE = DateTime.UtcNow
                 };
 
@@ -1474,7 +1469,6 @@ namespace Khoan.Api.Services
                     foreach (var record in records)
                     {
                         record.NGAY_DL = ngayDlDate;
-//                         record.FILE_NAME = file.FileName;
                         record.CREATED_DATE = DateTime.UtcNow;
                     }
 

@@ -109,9 +109,6 @@ namespace Khoan.Api.Models.DataTables
         [Column("UPDATED_DATE", TypeName = "datetime2", Order = 27)]
         public DateTime UPDATED_DATE { get; set; } = DateTime.UtcNow;
 
-        [Column("FILE_NAME", TypeName = "nvarchar(500)", Order = 28)]
-        public string FILE_NAME { get; set; } = "";
-
         // Temporal columns - System generated (ITemporalEntity interface)
         [Column("ValidFrom", TypeName = "datetime2", Order = 29)]
         public DateTime ValidFrom { get; set; }

@@ -95,10 +95,6 @@ namespace Khoan.Api.Models.DataTables
         [Column("UPDATED_DATE", Order = 19, TypeName = "datetime2")]
         public DateTime? UPDATED_DATE { get; set; } = DateTime.UtcNow;
 
-        [Column("FILE_NAME", Order = 20)]
-        [StringLength(500)]
-        public string? FILE_NAME { get; set; }
-
         // ===== CSV MAPPING PROPERTY =====
         // TRDATE from CSV converts to NGAY_DL - Not mapped to database
         [NotMapped]

@@ -77,8 +77,17 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    host: true, // Bind to all network interfaces
+    strictPort: true, // Fail if port is already in use
+    cors: true,
     proxy: {
-      '/api': 'http://localhost:5055',
+      '/api': {
+        target: 'http://localhost:5055',
+        changeOrigin: true,
+        secure: false,
+        timeout: 30000,
+        proxyTimeout: 30000,
+      },
     },
   },
 })

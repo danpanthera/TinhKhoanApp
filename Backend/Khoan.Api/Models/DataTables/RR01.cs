@@ -179,12 +179,6 @@ public class RR01
     // === SYSTEM COLUMNS ===
 
     /// <summary>
-    /// Tên file CSV nguồn
-    /// </summary>
-    [Column(TypeName = "nvarchar(255)")]
-    public string? FILE_NAME { get; set; }
-
-    /// <summary>
     /// Ngày tạo record
     /// </summary>
     [Column(TypeName = "datetime2(3)")]

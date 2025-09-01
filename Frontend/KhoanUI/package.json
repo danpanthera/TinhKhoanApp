@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host",
+    "dev": "vite --host --port 3000",
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf node_modules/.vite dist",
@@ -22,7 +22,9 @@
     "prepare-prod": "./prepare-for-production.sh",
     "dev-help": "./dev-assistant.sh",
     "code-report": "./code-quality-report.sh",
-    "component-guide": "./component-guide.sh"
+    "component-guide": "./component-guide.sh",
+    "fullstack": "./start_fullstack.sh",
+    "stop": "./stop_fullstack.sh"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",

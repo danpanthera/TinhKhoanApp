@@ -453,8 +453,8 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
                     tb.IsTemporal(ttb =>
                     {
                         ttb.UseHistoryTable("DP01_History");
-                        ttb.HasPeriodStart("SysStartTime");
-                        ttb.HasPeriodEnd("SysEndTime");
+                        ttb.HasPeriodStart("ValidFrom");
+                        ttb.HasPeriodEnd("ValidTo");
                     });
                 });
 
@@ -517,7 +517,8 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
             ConfigureNewDataTables(modelBuilder);
         }
 
-        // 🔧 Helper method để cấu hình Temporal Table
+        /*
+        // 🔧 DEPRECATED: Helper method dùng SysStartTime/SysEndTime (database dùng ValidFrom/ValidTo)
         private void ConfigureTemporalTable<T>(ModelBuilder modelBuilder, string tableName, string historyTableName) where T : class
         {
             modelBuilder.Entity<T>(entity =>
@@ -555,6 +556,7 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
                 }
             });
         }
+        */
 
         /// <summary>
         /// Cấu hình các bảng chính với tên cột CSV gốc
@@ -574,7 +576,8 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
             // 💰 Cấu hình bảng DPDA - Tiền gửi của dân
             ConfigureDataTableWithTemporal<DataTables.DPDA>(modelBuilder, "DPDA");
 
-            // 📊 Cấu hình bảng EI01 - dùng Modern Entity EI01Entity (configured above)
+            // 📊 Cấu hình bảng EI01 - Internet Banking Registration (Temporal Table)
+            ConfigureDataTableWithTemporal<DataTables.EI01>(modelBuilder, "EI01");
 
             // 📋 Cấu hình bảng GL01 - Sổ cái tổng hợp (Partitioned Columnstore - NOT Temporal)
             ConfigureDataTableBasic<DataTables.GL01>(modelBuilder, "GL01");
@@ -637,11 +640,11 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
         {
             modelBuilder.Entity<T>(entity =>
             {
-                // Cấu hình bảng thành Temporal Table với explicit SysStartTime/SysEndTime columns
+                // Cấu hình bảng thành Temporal Table với ValidFrom/ValidTo columns (matching database)
                 entity.ToTable(tableName, tb => tb.IsTemporal(ttb =>
                 {
-                    ttb.HasPeriodStart("SysStartTime").HasColumnName("SysStartTime");
-                    ttb.HasPeriodEnd("SysEndTime").HasColumnName("SysEndTime");
+                    ttb.HasPeriodStart("ValidFrom").HasColumnName("ValidFrom");
+                    ttb.HasPeriodEnd("ValidTo").HasColumnName("ValidTo");
                     ttb.UseHistoryTable($"{tableName}_History");
                 }));
 
@@ -727,11 +730,11 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
                 // Key configuration
                 entity.HasKey(e => e.Id);
 
-                // Configure temporal table with shadow properties for period columns
+                // Configure temporal table with ValidFrom/ValidTo matching database
                 entity.ToTable("LN01", tb => tb.IsTemporal(ttb =>
                 {
-                    ttb.HasPeriodStart("SysStartTime");
-                    ttb.HasPeriodEnd("SysEndTime");
+                    ttb.HasPeriodStart("ValidFrom");
+                    ttb.HasPeriodEnd("ValidTo");
                     ttb.UseHistoryTable("LN01_History");
                 }));
 
@@ -764,8 +767,8 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
                 // Configure temporal table with shadow properties for period columns
                 entity.ToTable("LN03", tb => tb.IsTemporal(ttb =>
                 {
-                    ttb.HasPeriodStart("SysStartTime");
-                    ttb.HasPeriodEnd("SysEndTime");
+                    ttb.HasPeriodStart("ValidFrom");
+                    ttb.HasPeriodEnd("ValidTo");
                     ttb.UseHistoryTable("LN03_History");
                 }));
 

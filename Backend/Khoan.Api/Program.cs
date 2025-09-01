@@ -230,6 +230,9 @@ Console.WriteLine("🚀 Starting TinhKhoan Backend API (Clean Version)...");
 Console.WriteLine($"🌐 Backend will be available at: http://localhost:5055");
 Console.WriteLine("✅ All seeding code removed for stability");
 
+// Ensure the app runs on port 5055
+builder.WebHost.UseUrls("http://localhost:5055");
+
 app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)

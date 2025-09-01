@@ -76,10 +76,5 @@ namespace Khoan.Api.Models.DataTables
         /// Ngày dữ liệu - System Column
         /// </summary>
         public DateTime? NGAY_DL { get; set; }
-
-        /// <summary>
-        /// Tên file nguồn - System Column
-        /// </summary>
-        public string? FILE_NAME { get; set; }
     }
 }
