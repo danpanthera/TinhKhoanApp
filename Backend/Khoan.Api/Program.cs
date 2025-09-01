@@ -126,8 +126,8 @@ builder.Services.AddHostedService<Khoan.Api.Services.Startup.Gl02IndexInitialize
 // 🛡️ Index Initializers with enhanced error handling to prevent app crashes
 try
 {
-    builder.Services.AddHostedService<Khoan.Api.Services.Startup.Gl41IndexInitializer>(); // ✅ GL41 Index Initializer
-    builder.Services.AddHostedService<Khoan.Api.Services.Startup.Ln03IndexInitializer>(); // ✅ LN03 Index Initializer
+    // builder.Services.AddHostedService<Khoan.Api.Services.Startup.Gl41IndexInitializer>(); // ❌ Temporarily disabled due to error
+    // builder.Services.AddHostedService<Khoan.Api.Services.Startup.Ln03IndexInitializer>(); // ❌ Temporarily disabled - MACBTD column not found
 }
 catch (Exception ex)
 {
