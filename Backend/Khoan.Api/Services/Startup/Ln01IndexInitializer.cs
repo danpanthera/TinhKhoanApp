@@ -49,6 +49,40 @@ namespace Khoan.Api.Services.Startup
                     await db.Database.ExecuteSqlRawAsync(sql, cancellationToken);
                 }
 
+                // Tạo Columnstore Index cho LN01 (Analytics optimization)
+                try
+                {
+                    _logger.LogInformation("🔧 Creating columnstore index for LN01...");
+                    
+                    var columnstoreSql = @"
+                        DECLARE @edition NVARCHAR(128) = CAST(SERVERPROPERTY('Edition') AS NVARCHAR(128));
+                        IF (@edition NOT LIKE '%Azure SQL Edge%')
+                          BEGIN
+                                BEGIN TRY
+                                    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_LN01_Columnstore' AND object_id = OBJECT_ID('dbo.LN01'))
+                                      BEGIN
+                                              CREATE NONCLUSTERED COLUMNSTORE INDEX IX_LN01_Columnstore ON dbo.LN01
+                                              (NGAY_DL, BRCD, CUSTSEQ, TAI_KHOAN, CCY, LOAN_TYPE, APPRDT, APPRMATDT, APPR_AMT, OUTSTANDING);
+                                              PRINT '✅ Created columnstore index IX_LN01_Columnstore';
+                                      END
+                                END TRY
+                                BEGIN CATCH
+                                      PRINT '⚠️ Could not create columnstore index IX_LN01_Columnstore: ' + ERROR_MESSAGE();
+                                END CATCH
+                          END
+                        ELSE
+                          BEGIN
+                                PRINT 'ℹ️ Azure SQL Edge detected – skipping columnstore index creation for LN01.';
+                          END
+                    ";
+
+                    await db.Database.ExecuteSqlRawAsync(columnstoreSql, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "⚠️ Could not create columnstore index for LN01 (possibly unsupported DB edition)");
+                }
+
                 _logger.LogInformation("✅ LN01 analytics indexes ensured (temporal table safe).");
             }
             catch (Exception ex)

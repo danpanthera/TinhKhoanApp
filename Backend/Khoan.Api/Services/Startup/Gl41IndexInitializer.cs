@@ -46,24 +46,45 @@ namespace Khoan.Api.Services.Startup
                           @"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'NCCI_GL41_Amounts' AND object_id = OBJECT_ID('dbo.GL41'))
                               BEGIN CREATE NONCLUSTERED INDEX NCCI_GL41_Amounts ON dbo.GL41 (MA_TK, DN_DAUKY, DC_DAUKY, SBT_NO, SBT_CO); END",
 
-                          // Attempt columnstore index when supported (skips on Azure SQL Edge)
+                          // Attempt partitioned columnstore index when supported (skips on Azure SQL Edge)
                           @"DECLARE @edition NVARCHAR(128) = CAST(SERVERPROPERTY('Edition') AS NVARCHAR(128));
                               IF (@edition NOT LIKE '%Azure SQL Edge%')
                               BEGIN
-                                    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_GL41_Columnstore' AND object_id = OBJECT_ID('dbo.GL41'))
-                                    BEGIN
-                                         BEGIN TRY
-                                              CREATE NONCLUSTERED COLUMNSTORE INDEX IX_GL41_Columnstore ON dbo.GL41
-                                              (
-                                                    NGAY_DL, MA_CN, LOAI_TIEN, MA_TK, TEN_TK,
-                                                    DN_DAUKY, DC_DAUKY, SBT_NO, ST_GHINO, SBT_CO, ST_GHICO, DN_CUOIKY, DC_CUOIKY
-                                              );
-                                              PRINT '✅ Created columnstore index IX_GL41_Columnstore';
-                                         END TRY
-                                         BEGIN CATCH
-                                              PRINT '⚠️ Could not create columnstore index IX_GL41_Columnstore: ' + ERROR_MESSAGE();
-                                         END CATCH
-                                    END
+                                    BEGIN TRY
+                                        -- Create partition function if not exists
+                                        IF NOT EXISTS (SELECT 1 FROM sys.partition_functions WHERE name = 'PF_GL41_Date')
+                                        BEGIN
+                                            CREATE PARTITION FUNCTION PF_GL41_Date (datetime2)
+                                            AS RANGE RIGHT FOR VALUES (
+                                                '2024-01-01', '2024-04-01', '2024-07-01', '2024-10-01', '2025-01-01'
+                                            );
+                                            PRINT 'Created partition function PF_GL41_Date';
+                                        END
+
+                                        -- Create partition scheme if not exists
+                                        IF NOT EXISTS (SELECT 1 FROM sys.partition_schemes WHERE name = 'PS_GL41_Date')
+                                        BEGIN
+                                            CREATE PARTITION SCHEME PS_GL41_Date
+                                            AS PARTITION PF_GL41_Date
+                                            ALL TO ([PRIMARY]);
+                                            PRINT 'Created partition scheme PS_GL41_Date';
+                                        END
+
+                                        -- Create partitioned columnstore index
+                                        IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_GL41_Columnstore' AND object_id = OBJECT_ID('dbo.GL41'))
+                                        BEGIN
+                                             CREATE NONCLUSTERED COLUMNSTORE INDEX IX_GL41_Columnstore ON dbo.GL41
+                                             (
+                                                   NGAY_DL, MA_CN, LOAI_TIEN, MA_TK, TEN_TK,
+                                                   DN_DAUKY, DC_DAUKY, SBT_NO, ST_GHINO, SBT_CO, ST_GHICO, DN_CUOIKY, DC_CUOIKY
+                                             )
+                                             ON PS_GL41_Date(NGAY_DL);
+                                             PRINT '✅ Created partitioned columnstore index IX_GL41_Columnstore';
+                                        END
+                                    END TRY
+                                    BEGIN CATCH
+                                         PRINT '⚠️ Could not create partitioned columnstore index IX_GL41_Columnstore: ' + ERROR_MESSAGE();
+                                    END CATCH
                               END
                               ELSE
                               BEGIN

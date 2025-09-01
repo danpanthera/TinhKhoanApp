@@ -49,13 +49,35 @@ namespace Khoan.Api.Services.Startup
                     _logger.LogInformation("🔧 Creating partitioned columnstore index for GL02...");
                     
                     var columnstoreSql = @"
-                        IF SERVERPROPERTY('edition') NOT LIKE '%Azure SQL Edge%'
+                        DECLARE @edition NVARCHAR(128) = CAST(SERVERPROPERTY('Edition') AS NVARCHAR(128));
+                        IF (@edition NOT LIKE '%Azure SQL Edge%')
                           BEGIN
-                                TRY
+                                BEGIN TRY
+                                    -- Create partition function if not exists
+                                    IF NOT EXISTS (SELECT 1 FROM sys.partition_functions WHERE name = 'PF_GL02_Date')
+                                    BEGIN
+                                        CREATE PARTITION FUNCTION PF_GL02_Date (datetime2)
+                                        AS RANGE RIGHT FOR VALUES (
+                                            '2024-01-01', '2024-04-01', '2024-07-01', '2024-10-01', '2025-01-01'
+                                        );
+                                        PRINT 'Created partition function PF_GL02_Date';
+                                    END
+
+                                    -- Create partition scheme if not exists
+                                    IF NOT EXISTS (SELECT 1 FROM sys.partition_schemes WHERE name = 'PS_GL02_Date')
+                                    BEGIN
+                                        CREATE PARTITION SCHEME PS_GL02_Date
+                                        AS PARTITION PF_GL02_Date
+                                        ALL TO ([PRIMARY]);
+                                        PRINT 'Created partition scheme PS_GL02_Date';
+                                    END
+
+                                    -- Create partitioned columnstore index
                                     IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_GL02_Columnstore' AND object_id = OBJECT_ID('dbo.GL02'))
                                       BEGIN
                                               CREATE NONCLUSTERED COLUMNSTORE INDEX IX_GL02_Columnstore ON dbo.GL02
-                                              (NGAY_DL, UNIT, TRCD, CCY, CUSTOMER, DR_CR, AMOUNT);
+                                              (NGAY_DL, UNIT, TRCD, CCY, CUSTOMER, DR_CR, AMOUNT)
+                                              ON PS_GL02_Date(NGAY_DL);
                                               PRINT '✅ Created partitioned columnstore index IX_GL02_Columnstore';
                                       END
                                 END TRY

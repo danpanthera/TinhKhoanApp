@@ -65,12 +65,13 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
 
         // 🔄 DbSets with plural names for backward compatibility
         // Note: DP01s removed - using DP01 directly
+        // Note: DPDAs removed - causing duplicate mapping conflicts with DPDA
         // public DbSet<Entities.LN01Entity> LN01s { get; set; }  // Temporary disabled - entity mapping conflicts
         // public DbSet<Entities.LN03Entity> LN03s { get; set; }  // Temporary disabled - entity mapping conflicts
         public DbSet<DataTables.GL01> GL01s { get; set; }
         public DbSet<DataTables.GL02> GL02s { get; set; }
         public DbSet<GL41Entity> GL41s { get; set; } // ✅ Modern Entity compatibility
-        public DbSet<DataTables.DPDA> DPDAs { get; set; }
+        // public DbSet<DataTables.DPDA> DPDAs { get; set; }  // 🚫 REMOVED: Duplicate mapping causing EF Core conflicts
         // Removed plural DbSet for DataTables.EI01 to avoid table mapping conflicts
         // public DbSet<DataTables.RR01> RR01s { get; set; } // Temporary disabled - needs entity/DTO alignment
 

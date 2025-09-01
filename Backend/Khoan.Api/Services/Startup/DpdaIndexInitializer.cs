@@ -47,6 +47,40 @@ namespace Khoan.Api.Services.Startup
                     await db.Database.ExecuteSqlRawAsync(sql, cancellationToken);
                 }
 
+                // Tạo Columnstore Index cho DPDA (Analytics optimization)
+                try
+                {
+                    _logger.LogInformation("🔧 Creating columnstore index for DPDA...");
+                    
+                    var columnstoreSql = @"
+                        DECLARE @edition NVARCHAR(128) = CAST(SERVERPROPERTY('Edition') AS NVARCHAR(128));
+                        IF (@edition NOT LIKE '%Azure SQL Edge%')
+                          BEGIN
+                                BEGIN TRY
+                                    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_DPDA_Columnstore' AND object_id = OBJECT_ID('dbo.DPDA'))
+                                      BEGIN
+                                              CREATE NONCLUSTERED COLUMNSTORE INDEX IX_DPDA_Columnstore ON dbo.DPDA
+                                              (NGAY_DL, MA_CHI_NHANH, MA_KHACH_HANG, SO_TAI_KHOAN, LOAI_THE, SO_THE, TRANG_THAI_THE);
+                                              PRINT '✅ Created columnstore index IX_DPDA_Columnstore';
+                                      END
+                                END TRY
+                                BEGIN CATCH
+                                      PRINT '⚠️ Could not create columnstore index IX_DPDA_Columnstore: ' + ERROR_MESSAGE();
+                                END CATCH
+                          END
+                        ELSE
+                          BEGIN
+                                PRINT 'ℹ️ Azure SQL Edge detected – skipping columnstore index creation for DPDA.';
+                          END
+                    ";
+
+                    await db.Database.ExecuteSqlRawAsync(columnstoreSql, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "⚠️ Could not create columnstore index for DPDA (possibly unsupported DB edition)");
+                }
+
                 _logger.LogInformation("✅ DPDA analytics indexes ensured (temporal table safe).");
             }
             catch (Exception ex)

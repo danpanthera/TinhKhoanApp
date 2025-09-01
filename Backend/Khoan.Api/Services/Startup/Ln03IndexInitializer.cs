@@ -49,6 +49,40 @@ namespace Khoan.Api.Services.Startup
                     await db.Database.ExecuteSqlRawAsync(sql, cancellationToken);
                 }
 
+                // Tạo Columnstore Index cho LN03 (Analytics optimization)
+                try
+                {
+                    _logger.LogInformation("🔧 Creating columnstore index for LN03...");
+                    
+                    var columnstoreSql = @"
+                        DECLARE @edition NVARCHAR(128) = CAST(SERVERPROPERTY('Edition') AS NVARCHAR(128));
+                        IF (@edition NOT LIKE '%Azure SQL Edge%')
+                          BEGIN
+                                BEGIN TRY
+                                    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_LN03_Columnstore' AND object_id = OBJECT_ID('dbo.LN03'))
+                                      BEGIN
+                                              CREATE NONCLUSTERED COLUMNSTORE INDEX IX_LN03_Columnstore ON dbo.LN03
+                                              (NGAY_DL, MACHINHANH, MAKH, SOHOPDONG, MACBTD, NGAYPHATSINHXL, NHOMNO, DUNOGOCDAUKY, DUNOGOICUOIKY);
+                                              PRINT '✅ Created columnstore index IX_LN03_Columnstore';
+                                      END
+                                END TRY
+                                BEGIN CATCH
+                                      PRINT '⚠️ Could not create columnstore index IX_LN03_Columnstore: ' + ERROR_MESSAGE();
+                                END CATCH
+                          END
+                        ELSE
+                          BEGIN
+                                PRINT 'ℹ️ Azure SQL Edge detected – skipping columnstore index creation for LN03.';
+                          END
+                    ";
+
+                    await db.Database.ExecuteSqlRawAsync(columnstoreSql, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "⚠️ Could not create columnstore index for LN03 (possibly unsupported DB edition)");
+                }
+
                 _logger.LogInformation("✅ LN03 analytics indexes ensured (temporal table safe).");
             }
             catch (Exception ex)
