@@ -591,8 +591,8 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
             // 🏷️ Cấu hình bảng LN01 - Cho vay (USING NEW TEMPORAL TABLE ENTITY)
             ConfigureLN01TemporalTable(modelBuilder);
 
-            // ⚠️ Cấu hình bảng LN03 - Nợ xấu (USING NEW TEMPORAL TABLE ENTITY) - TEMPORARILY DISABLED
-            // ConfigureLN03TemporalTable(modelBuilder);
+            // ⚠️ Cấu hình bảng LN03 - Nợ xấu (USING DataTables.LN03)
+            ConfigureLN03TemporalTable(modelBuilder);
 
             // 📈 Cấu hình bảng RR01 - Tỷ lệ
             ConfigureDataTableWithTemporal<DataTables.RR01>(modelBuilder, "RR01");
@@ -755,11 +755,11 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
 
         /// <summary>
         /// <summary>
-        /// Cấu hình Temporal Table cho LN03Entity với 20 business columns (17 named + 3 unnamed) + system columns
+        /// Cấu hình Temporal Table cho DataTables.LN03 với 20 business columns (17 named + 3 unnamed) + system columns
         /// </summary>
         private void ConfigureLN03TemporalTable(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Entities.LN03Entity>(entity =>
+            modelBuilder.Entity<DataTables.LN03>(entity =>
             {
                 // Key configuration
                 entity.HasKey(e => e.Id);
@@ -785,7 +785,7 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
                 entity.Property(e => e.THUNOSAUXL).HasPrecision(18, 2);
                 entity.Property(e => e.CONLAINGOAIBANG).HasPrecision(18, 2);
                 entity.Property(e => e.DUNONOIBANG).HasPrecision(18, 2);
-                entity.Property(e => e.COLUMN_20).HasPrecision(18, 2); // Last column is amount field
+                entity.Property(e => e.Column20).HasPrecision(18, 2); // Last column is amount field
 
                 // Configure string lengths for named columns
                 entity.Property(e => e.MACHINHANH).HasMaxLength(200);
@@ -800,8 +800,8 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
                 entity.Property(e => e.TAIKHOANHACHTOAN).HasMaxLength(200);
                 entity.Property(e => e.REFNO).HasMaxLength(200);
                 entity.Property(e => e.LOAINGUONVON).HasMaxLength(200);
-                entity.Property(e => e.COLUMN_18).HasMaxLength(200);
-                entity.Property(e => e.COLUMN_19).HasMaxLength(200);
+                entity.Property(e => e.Column18).HasMaxLength(200);
+                entity.Property(e => e.Column19).HasMaxLength(200);
             });
         }
     }
