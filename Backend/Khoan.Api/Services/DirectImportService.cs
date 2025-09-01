@@ -981,7 +981,7 @@ namespace Khoan.Api.Services
                     LOAI_PHAT_HANH = record.LOAI_PHAT_HANH ?? "",
                     CREATED_DATE = DateTime.Now, // Fixed property name
                     UPDATED_DATE = DateTime.Now, // Fixed property name
-                    DataSource = fileName
+                    FILE_NAME = fileName
                 };
 
                 records.Add(dpda);
