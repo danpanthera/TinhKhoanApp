@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Khoan.Api.Data;
-using Khoan.Api.Entities;
+using Khoan.Api.Models.Entities; // Fixed: Use Models.Entities for consistency with DbContext
 using Khoan.Api.Dtos.LN03;
 using Khoan.Api.Repositories.Interfaces;
 
@@ -36,7 +36,7 @@ namespace Khoan.Api.Repositories
                 .Take(pageSize)
                 .Select(x => new LN03PreviewDto
                 {
-                    Id = x.Id,
+                    Id = (int)x.Id,
                     NGAY_DL = x.NGAY_DL,
                     MACHINHANH = x.MACHINHANH,
                     TENCHINHANH = x.TENCHINHANH,
@@ -60,7 +60,7 @@ namespace Khoan.Api.Repositories
                 .Where(x => x.Id == id && !x.IS_DELETED)
                 .Select(x => new LN03DetailsDto
                 {
-                    Id = x.Id,
+                    Id = (int)x.Id,
                     NGAY_DL = x.NGAY_DL,
                     MACHINHANH = x.MACHINHANH,
                     TENCHINHANH = x.TENCHINHANH,
@@ -81,7 +81,7 @@ namespace Khoan.Api.Repositories
                     LOAINGUONVON = x.LOAINGUONVON,
                     COLUMN_18 = x.COLUMN_18,
                     COLUMN_19 = x.COLUMN_19,
-                    COLUMN_20 = x.COLUMN_20,
+                    COLUMN_20 = string.IsNullOrEmpty(x.COLUMN_20) ? (decimal?)null : decimal.Parse(x.COLUMN_20),
                     CREATED_DATE = x.CREATED_DATE,
                     UPDATED_DATE = x.UPDATED_DATE,
                     IS_DELETED = x.IS_DELETED,
@@ -167,7 +167,8 @@ namespace Khoan.Api.Repositories
 
         public async Task<int> BulkDeleteAsync(IEnumerable<int> ids)
         {
-            var entities = await _context.LN03.Where(x => ids.Contains(x.Id)).ToListAsync();
+            var longIds = ids.Select(x => (long)x);
+            var entities = await _context.LN03.Where(x => longIds.Contains(x.Id)).ToListAsync();
             _context.LN03.RemoveRange(entities);
             return await _context.SaveChangesAsync();
         }
@@ -186,7 +187,7 @@ namespace Khoan.Api.Repositories
                 .Where(x => x.Id == id)
                 .Select(x => new LN03DetailsDto
                 {
-                    Id = x.Id,
+                    Id = (int)x.Id,
                     NGAY_DL = x.NGAY_DL,
                     MACHINHANH = x.MACHINHANH,
                     TENCHINHANH = x.TENCHINHANH,
@@ -207,7 +208,7 @@ namespace Khoan.Api.Repositories
                     LOAINGUONVON = x.LOAINGUONVON,
                     COLUMN_18 = x.COLUMN_18,
                     COLUMN_19 = x.COLUMN_19,
-                    COLUMN_20 = x.COLUMN_20,
+                    COLUMN_20 = string.IsNullOrEmpty(x.COLUMN_20) ? (decimal?)null : decimal.Parse(x.COLUMN_20),
                     CREATED_DATE = x.CREATED_DATE,
                     UPDATED_DATE = x.UPDATED_DATE,
                     IS_DELETED = x.IS_DELETED,
@@ -225,7 +226,7 @@ namespace Khoan.Api.Repositories
                 .OrderBy(x => EF.Property<DateTime>(x, "SysStartTime"))
                 .Select(x => new LN03DetailsDto
                 {
-                    Id = x.Id,
+                    Id = (int)x.Id,
                     NGAY_DL = x.NGAY_DL,
                     MACHINHANH = x.MACHINHANH,
                     TENCHINHANH = x.TENCHINHANH,
@@ -246,7 +247,7 @@ namespace Khoan.Api.Repositories
                     LOAINGUONVON = x.LOAINGUONVON,
                     COLUMN_18 = x.COLUMN_18,
                     COLUMN_19 = x.COLUMN_19,
-                    COLUMN_20 = x.COLUMN_20,
+                    COLUMN_20 = string.IsNullOrEmpty(x.COLUMN_20) ? (decimal?)null : decimal.Parse(x.COLUMN_20),
                     CREATED_DATE = x.CREATED_DATE,
                     UPDATED_DATE = x.UPDATED_DATE,
                     IS_DELETED = x.IS_DELETED,
@@ -262,7 +263,7 @@ namespace Khoan.Api.Repositories
                 .TemporalBetween(startDate, endDate)
                 .Select(x => new LN03DetailsDto
                 {
-                    Id = x.Id,
+                    Id = (int)x.Id,
                     NGAY_DL = x.NGAY_DL,
                     MACHINHANH = x.MACHINHANH,
                     TENCHINHANH = x.TENCHINHANH,
@@ -283,7 +284,7 @@ namespace Khoan.Api.Repositories
                     LOAINGUONVON = x.LOAINGUONVON,
                     COLUMN_18 = x.COLUMN_18,
                     COLUMN_19 = x.COLUMN_19,
-                    COLUMN_20 = x.COLUMN_20,
+                    COLUMN_20 = string.IsNullOrEmpty(x.COLUMN_20) ? (decimal?)null : decimal.Parse(x.COLUMN_20),
                     CREATED_DATE = x.CREATED_DATE,
                     UPDATED_DATE = x.UPDATED_DATE,
                     IS_DELETED = x.IS_DELETED,
@@ -300,7 +301,7 @@ namespace Khoan.Api.Repositories
                 .Where(x => x.MACHINHANH == branchCode && !x.IS_DELETED)
                 .Select(x => new LN03DetailsDto
                 {
-                    Id = x.Id,
+                    Id = (int)x.Id,
                     NGAY_DL = x.NGAY_DL,
                     MACHINHANH = x.MACHINHANH,
                     TENCHINHANH = x.TENCHINHANH,
@@ -321,7 +322,7 @@ namespace Khoan.Api.Repositories
                     LOAINGUONVON = x.LOAINGUONVON,
                     COLUMN_18 = x.COLUMN_18,
                     COLUMN_19 = x.COLUMN_19,
-                    COLUMN_20 = x.COLUMN_20,
+                    COLUMN_20 = string.IsNullOrEmpty(x.COLUMN_20) ? (decimal?)null : decimal.Parse(x.COLUMN_20),
                     CREATED_DATE = x.CREATED_DATE,
                     UPDATED_DATE = x.UPDATED_DATE,
                     IS_DELETED = x.IS_DELETED,
@@ -340,7 +341,7 @@ namespace Khoan.Api.Repositories
                 .Where(x => x.MAKH == customerCode && !x.IS_DELETED)
                 .Select(x => new LN03DetailsDto
                 {
-                    Id = x.Id,
+                    Id = (int)x.Id,
                     NGAY_DL = x.NGAY_DL,
                     MACHINHANH = x.MACHINHANH,
                     TENCHINHANH = x.TENCHINHANH,
@@ -361,7 +362,7 @@ namespace Khoan.Api.Repositories
                     LOAINGUONVON = x.LOAINGUONVON,
                     COLUMN_18 = x.COLUMN_18,
                     COLUMN_19 = x.COLUMN_19,
-                    COLUMN_20 = x.COLUMN_20,
+                    COLUMN_20 = string.IsNullOrEmpty(x.COLUMN_20) ? (decimal?)null : decimal.Parse(x.COLUMN_20),
                     CREATED_DATE = x.CREATED_DATE,
                     UPDATED_DATE = x.UPDATED_DATE,
                     IS_DELETED = x.IS_DELETED,
@@ -435,5 +436,11 @@ namespace Khoan.Api.Repositories
 
         public async Task<DateTime?> GetOldestDataDateAsync() => 
             await _context.LN03.Where(x => !x.IS_DELETED).MinAsync(x => x.NGAY_DL);
+
+        // Helper method để convert string to decimal? cho COLUMN_20
+        private static decimal? ConvertStringToDecimal(string? value)
+        {
+            return !string.IsNullOrEmpty(value) && decimal.TryParse(value, out var result) ? result : null;
+        }
     }
 }

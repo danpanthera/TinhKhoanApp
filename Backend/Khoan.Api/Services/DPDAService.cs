@@ -133,8 +133,8 @@ namespace Khoan.Api.Services
             try
             {
                 var entity = MapFromCreateDto(createDto);
-                entity.CreatedAt = DateTime.UtcNow;
-                entity.UpdatedAt = DateTime.UtcNow;
+                entity.CreatedAt = DateTime.UtcNow; // Fixed property name
+                entity.UpdatedAt = DateTime.UtcNow; // Fixed property name
 
                 var createdEntity = await _dpdaRepository.CreateAsync(entity);
                 var detailsDto = MapToDetailsDto(createdEntity);

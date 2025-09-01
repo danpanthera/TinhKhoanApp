@@ -327,13 +327,13 @@ namespace Khoan.Api.Models.DataTables
         /// Ngày tạo bản ghi
         /// </summary>
         [Column("CREATED_DATE", Order = 83)]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CREATED_DATE { get; set; } = DateTime.UtcNow;
 
         /// <summary>
         /// Ngày cập nhật bản ghi
         /// </summary>
         [Column("UPDATED_DATE", Order = 84)]
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UPDATED_DATE { get; set; } = DateTime.UtcNow;
 
         // Note: SysStartTime and SysEndTime are shadow properties managed by EF Core temporal tables
         // They are automatically at positions 85-86 without explicit Order attributes

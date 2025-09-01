@@ -11,11 +11,6 @@ namespace Khoan.Api.Models.Entities
     /// Business Columns: MA_CHI_NHANH,MA_KHACH_HANG,TEN_KHACH_HANG,SO_TAI_KHOAN,LOAI_THE,SO_THE,NGAY_NOP_DON,NGAY_PHAT_HANH,USER_PHAT_HANH,TRANG_THAI,PHAN_LOAI,GIAO_THE,LOAI_PHAT_HANH
     /// </summary>
     [Table("DPDA")]
-    [Index(nameof(MA_CHI_NHANH), Name = "IX_DPDA_MA_CHI_NHANH")]
-    [Index(nameof(MA_KHACH_HANG), Name = "IX_DPDA_MA_KHACH_HANG")]
-    [Index(nameof(SO_TAI_KHOAN), Name = "IX_DPDA_SO_TAI_KHOAN")]
-    [Index(nameof(SO_THE), Name = "IX_DPDA_SO_THE")]
-    [Index(nameof(NGAY_DL), Name = "IX_DPDA_NGAY_DL")]
     public class DPDAEntity : ITemporalEntity
     {
         // === PRIMARY KEY ===

@@ -462,7 +462,7 @@ namespace Khoan.Api.Services
                     {
                         if (DateTime.TryParse(result.NgayDL, out var ngayToDelete))
                         {
-                            var affected = await _context.LN03.Where(x => x.NGAY_DL.HasValue && x.NGAY_DL.Value.Date == ngayToDelete.Date).ExecuteDeleteAsync();
+                            var affected = await _context.LN03.Where(x => x.NGAY_DL.Date == ngayToDelete.Date).ExecuteDeleteAsync(); // NGAY_DL is DateTime, not DateTime?
                             _logger.LogInformation("🧹 [LN03] Đã xoá {Count} bản ghi cũ cho ngày {Ngay}", affected, ngayToDelete.ToString("yyyy-MM-dd"));
                         }
 
@@ -927,7 +927,7 @@ namespace Khoan.Api.Services
                     record.TYGIA = SafeGetDecimal(csvRecord, "TYGIA");
 
                     // Set audit fields
-                    record.ImportDateTime = DateTime.UtcNow;
+                    record.CREATED_DATE = DateTime.UtcNow; // Use CREATED_DATE instead of ImportDateTime
                     // record.FILE_NAME = file.FileName; // TODO: Add FILE_NAME column to DP01 table
 
                     records.Add(record);
@@ -979,8 +979,8 @@ namespace Khoan.Api.Services
                     PHAN_LOAI = record.PHAN_LOAI ?? "",
                     GIAO_THE = record.GIAO_THE ?? "",
                     LOAI_PHAT_HANH = record.LOAI_PHAT_HANH ?? "",
-                    CreatedAt = DateTime.Now,
-                    UpdatedAt = DateTime.Now,
+                    CREATED_DATE = DateTime.Now, // Fixed property name
+                    UPDATED_DATE = DateTime.Now, // Fixed property name
                     DataSource = fileName
                 };
 
@@ -1239,8 +1239,8 @@ namespace Khoan.Api.Services
                 // Normalize audit fields
                 // record.CREATED_DATE = DateTime.UtcNow; // Không có CreatedAt trong GL02Entity mới
                 // record.UpdatedAt = DateTime.UtcNow; // Không có UpdatedAt trong GL02Entity mới
-                // record.FileName = file.FileName; // Sử dụng FILE_NAME thay vì FileName
-                record.FileName = file.FileName;
+                // record.FileName = file.FileName; // TODO: Add FILE_NAME column to GL01 table
+                // record.FileName = file.FileName; // GL01 doesn't have FileName property yet
 
                 // Normalize numeric from string TR_EX_RT if needed is handled at query level; keep CSV-first mapping
 

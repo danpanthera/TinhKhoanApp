@@ -43,6 +43,39 @@ namespace Khoan.Api.Services.Startup
                     await db.Database.ExecuteSqlRawAsync(sql, cancellationToken);
                 }
 
+                // Tạo Partitioned Columnstore Index cho GL02 (Phân tích tối ưu)
+                try
+                {
+                    _logger.LogInformation("🔧 Creating partitioned columnstore index for GL02...");
+                    
+                    var columnstoreSql = @"
+                        IF SERVERPROPERTY('edition') NOT LIKE '%Azure SQL Edge%'
+                          BEGIN
+                                TRY
+                                    IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_GL02_Columnstore' AND object_id = OBJECT_ID('dbo.GL02'))
+                                      BEGIN
+                                              CREATE NONCLUSTERED COLUMNSTORE INDEX IX_GL02_Columnstore ON dbo.GL02
+                                              (NGAY_DL, UNIT, TRCD, CCY, CUSTOMER, DR_CR, AMOUNT);
+                                              PRINT '✅ Created partitioned columnstore index IX_GL02_Columnstore';
+                                      END
+                                END TRY
+                                BEGIN CATCH
+                                      PRINT '⚠️ Could not create partitioned columnstore index IX_GL02_Columnstore: ' + ERROR_MESSAGE();
+                                END CATCH
+                          END
+                        ELSE
+                          BEGIN
+                                PRINT 'ℹ️ Azure SQL Edge detected – skipping columnstore index creation for GL02.';
+                          END
+                    ";
+
+                    await db.Database.ExecuteSqlRawAsync(columnstoreSql, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "⚠️ Could not create columnstore index for GL02 (possibly unsupported DB edition)");
+                }
+
                 _logger.LogInformation("✅ GL02 analytics indexes ensured.");
             }
             catch (Exception ex)

@@ -1,6 +1,6 @@
 using Khoan.Api.Interfaces;
 using Khoan.Api.Dtos.LN01;
-using Khoan.Api.Entities;
+using Khoan.Api.Models.Entities; // Fixed: Use Models.Entities for consistency
 using Khoan.Api.Data;
 using CsvHelper;
 using CsvHelper.Configuration;
@@ -27,14 +27,14 @@ namespace Khoan.Api.Services
                 .Take(1000)
                 .Select(x => new LN01PreviewDto
                 {
-                    Id = x.Id,
+                    Id = (int)x.Id, // Cast long to int
                     NGAY_DL = x.NGAY_DL,
                     BRCD = x.BRCD,
                     CUSTSEQ = x.CUSTSEQ,
                     CUSTNM = x.CUSTNM,
                     TAI_KHOAN = x.TAI_KHOAN,
                     CCY = x.CCY,
-                    DU_NO = ParseDecimal(x.DU_NO),
+                    DU_NO = x.DU_NO, // Direct assignment - both are decimal?
                     LOAN_TYPE = x.LOAN_TYPE,
                     OFFICER_NAME = x.OFFICER_NAME
                 })
@@ -43,44 +43,44 @@ namespace Khoan.Api.Services
 
         public async Task<LN01DetailsDto> GetByIdAsync(int id)
         {
-            var entity = await _context.LN01.FindAsync(id);
+            var entity = await _context.LN01.FindAsync((long)id);
             if (entity == null) return null;
 
             return new LN01DetailsDto
             {
-                Id = entity.Id,
+                Id = (int)entity.Id,
                 NGAY_DL = entity.NGAY_DL,
                 BRCD = entity.BRCD,
                 CUSTSEQ = entity.CUSTSEQ,
                 CUSTNM = entity.CUSTNM,
                 TAI_KHOAN = entity.TAI_KHOAN,
                 CCY = entity.CCY,
-                DU_NO = ParseDecimal(entity.DU_NO),
+                DU_NO = entity.DU_NO,
                 DSBSSEQ = entity.DSBSSEQ,
-                TRANSACTION_DATE = ParseDateTime(entity.TRANSACTION_DATE),
-                DSBSDT = ParseDateTime(entity.DSBSDT),
+                TRANSACTION_DATE = entity.TRANSACTION_DATE,
+                DSBSDT = entity.DSBSDT,
                 DISBUR_CCY = entity.DISBUR_CCY,
-                DISBURSEMENT_AMOUNT = ParseDecimal(entity.DISBURSEMENT_AMOUNT),
-                DSBSMATDT = ParseDateTime(entity.DSBSMATDT),
+                DISBURSEMENT_AMOUNT = entity.DISBURSEMENT_AMOUNT,
+                DSBSMATDT = entity.DSBSMATDT,
                 BSRTCD = entity.BSRTCD,
-                INTEREST_RATE = ParseDecimal(entity.INTEREST_RATE),
+                INTEREST_RATE = entity.INTEREST_RATE,
                 APPRSEQ = entity.APRSEQ,
-                APPRDT = ParseDateTime(entity.APPRDT),
+                APPRDT = entity.APPRDT,
                 APPR_CCY = entity.APPR_CCY,
-                APPRAMT = ParseDecimal(entity.APPRAMT),
-                APPRMATDT = ParseDateTime(entity.APPRMATDT),
+                APPRAMT = entity.APPRAMT,
+                APPRMATDT = entity.APPRMATDT,
                 LOAN_TYPE = entity.LOAN_TYPE,
                 FUND_RESOURCE_CODE = entity.FUND_RESOURCE_CODE,
                 FUND_PURPOSE_CODE = entity.FUND_PURPOSE_CODE,
-                REPAYMENT_AMOUNT = ParseDecimal(entity.REPAYMENT_AMOUNT),
-                NEXT_REPAY_DATE = ParseDateTime(entity.NEXT_REPAY_DATE),
-                NEXT_REPAY_AMOUNT = ParseDecimal(entity.NEXT_REPAY_AMOUNT),
-                NEXT_INT_REPAY_DATE = ParseDateTime(entity.NEXT_INT_REPAY_DATE),
+                REPAYMENT_AMOUNT = entity.REPAYMENT_AMOUNT,
+                NEXT_REPAY_DATE = entity.NEXT_REPAY_DATE,
+                NEXT_REPAY_AMOUNT = entity.NEXT_REPAY_AMOUNT,
+                NEXT_INT_REPAY_DATE = entity.NEXT_INT_REPAY_DATE,
                 OFFICER_ID = entity.OFFICER_ID,
                 OFFICER_NAME = entity.OFFICER_NAME,
-                INTEREST_AMOUNT = ParseDecimal(entity.INTEREST_AMOUNT),
-                PASTDUE_INTEREST_AMOUNT = ParseDecimal(entity.PASTDUE_INTEREST_AMOUNT),
-                TOTAL_INTEREST_REPAY_AMOUNT = ParseDecimal(entity.TOTAL_INTEREST_REPAY_AMOUNT),
+                INTEREST_AMOUNT = entity.INTEREST_AMOUNT,
+                PASTDUE_INTEREST_AMOUNT = entity.PASTDUE_INTEREST_AMOUNT,
+                TOTAL_INTEREST_REPAY_AMOUNT = entity.TOTAL_INTEREST_REPAY_AMOUNT,
                 CUSTOMER_TYPE_CODE = entity.CUSTOMER_TYPE_CODE,
                 CUSTOMER_TYPE_CODE_DETAIL = entity.CUSTOMER_TYPE_CODE_DETAIL,
                 TRCTCD = entity.TRCTCD,
@@ -88,8 +88,8 @@ namespace Khoan.Api.Services
                 ADDR1 = entity.ADDR1,
                 PROVINCE = entity.PROVINCE,
                 LCLPROVINNM = entity.LCLPROVINNM,
-                CreatedAt = entity.CreatedDate,
-                UpdatedAt = entity.UpdatedDate
+                CreatedAt = entity.CreatedAt,
+                UpdatedAt = entity.UpdatedAt
             };
         }
 
@@ -102,23 +102,23 @@ namespace Khoan.Api.Services
                 CUSTNM = dto.CUSTNM,
                 TAI_KHOAN = dto.TAI_KHOAN,
                 CCY = dto.CCY,
-                DU_NO = dto.DU_NO?.ToString(),
-                DISBURSEMENT_AMOUNT = dto.DISBURSEMENT_AMOUNT?.ToString(),
-                APPRAMT = dto.APPRAMT?.ToString(),
-                INTEREST_RATE = dto.INTEREST_RATE?.ToString(),
+                DU_NO = dto.DU_NO, // Keep as decimal?
+                DISBURSEMENT_AMOUNT = dto.DISBURSEMENT_AMOUNT, // Keep as decimal?
+                APPRAMT = dto.APPRAMT, // Keep as decimal?
+                INTEREST_RATE = dto.INTEREST_RATE, // Keep as decimal?
                 LOAN_TYPE = dto.LOAN_TYPE,
                 OFFICER_ID = dto.OFFICER_ID,
                 OFFICER_NAME = dto.OFFICER_NAME,
-                TRANSACTION_DATE = dto.TRANSACTION_DATE?.ToString("yyyy-MM-dd"),
-                APPRDT = dto.APPRDT?.ToString("yyyy-MM-dd"),
-                CreatedDate = DateTime.Now,
-                UpdatedDate = DateTime.Now
+                TRANSACTION_DATE = dto.TRANSACTION_DATE, // Keep as DateTime?
+                APPRDT = dto.APPRDT, // Keep as DateTime?
+                CreatedAt = DateTime.Now,
+                UpdatedAt = DateTime.Now
             };
 
             _context.LN01.Add(entity);
             await _context.SaveChangesAsync();
 
-            return await GetByIdAsync(entity.Id);
+            return await GetByIdAsync((int)entity.Id); // Cast long to int
         }
 
         public async Task<LN01DetailsDto> UpdateAsync(int id, LN01UpdateDto dto)
@@ -127,10 +127,10 @@ namespace Khoan.Api.Services
             if (entity == null) return null;
 
             entity.CUSTNM = dto.CUSTNM ?? entity.CUSTNM;
-            entity.DU_NO = dto.DU_NO?.ToString() ?? entity.DU_NO;
-            entity.DISBURSEMENT_AMOUNT = dto.DISBURSEMENT_AMOUNT?.ToString() ?? entity.DISBURSEMENT_AMOUNT;
-            entity.APPRAMT = dto.APPRAMT?.ToString() ?? entity.APPRAMT;
-            entity.UpdatedDate = DateTime.Now;
+            entity.DU_NO = dto.DU_NO ?? entity.DU_NO; // Keep as decimal?
+            entity.DISBURSEMENT_AMOUNT = dto.DISBURSEMENT_AMOUNT ?? entity.DISBURSEMENT_AMOUNT; // Keep as decimal?
+            entity.APPRAMT = dto.APPRAMT ?? entity.APPRAMT; // Keep as decimal?
+            entity.UpdatedAt = DateTime.Now; // Fixed property name
 
             await _context.SaveChangesAsync();
             return await GetByIdAsync(id);
@@ -150,8 +150,8 @@ namespace Khoan.Api.Services
         {
             var totalRecords = await _context.LN01.CountAsync();
             var totalAmount = await _context.LN01
-                .Where(x => !string.IsNullOrEmpty(x.DU_NO))
-                .SumAsync(x => ParseDecimal(x.DU_NO) ?? 0);
+                .Where(x => x.DU_NO.HasValue)
+                .SumAsync(x => x.DU_NO ?? 0); // Direct decimal? usage
 
             return new LN01SummaryDto
             {
@@ -174,14 +174,14 @@ namespace Khoan.Api.Services
                 .Take(100)
                 .Select(x => new LN01PreviewDto
                 {
-                    Id = x.Id,
+                    Id = (int)x.Id, // Cast long to int
                     NGAY_DL = x.NGAY_DL,
                     BRCD = x.BRCD,
                     CUSTSEQ = x.CUSTSEQ,
                     CUSTNM = x.CUSTNM,
                     TAI_KHOAN = x.TAI_KHOAN,
                     CCY = x.CCY,
-                    DU_NO = ParseDecimal(x.DU_NO),
+                    DU_NO = x.DU_NO, // Direct use of decimal?
                     LOAN_TYPE = x.LOAN_TYPE,
                     OFFICER_NAME = x.OFFICER_NAME
                 })
@@ -249,14 +249,14 @@ namespace Khoan.Api.Services
                 .Take(count)
                 .Select(x => new LN01PreviewDto
                 {
-                    Id = x.Id,
+                    Id = (int)x.Id, // Cast long to int
                     NGAY_DL = x.NGAY_DL,
                     BRCD = x.BRCD,
                     CUSTSEQ = x.CUSTSEQ,
                     CUSTNM = x.CUSTNM,
                     TAI_KHOAN = x.TAI_KHOAN,
                     CCY = x.CCY,
-                    DU_NO = ParseDecimal(x.DU_NO),
+                    DU_NO = x.DU_NO, // Direct use of decimal?
                     LOAN_TYPE = x.LOAN_TYPE,
                     OFFICER_NAME = x.OFFICER_NAME
                 })

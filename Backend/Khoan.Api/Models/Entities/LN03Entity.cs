@@ -10,10 +10,6 @@ namespace Khoan.Api.Models.Entities
     /// CSV Source: 7800_ln03_20241231.csv
     /// </summary>
     [Table("LN03")]
-    [Index(nameof(NGAY_DL), Name = "IX_LN03_NGAY_DL")]
-    [Index(nameof(MACHINHANH), Name = "IX_LN03_MACHINHANH")]
-    [Index(nameof(MAKH), Name = "IX_LN03_MAKH")]
-    [Index(nameof(SOHOPDONG), Name = "IX_LN03_SOHOPDONG")]
     public class LN03Entity : ITemporalEntity
     {
         // === SYSTEM COLUMNS (từ ITemporalEntity) ===
@@ -187,5 +183,43 @@ namespace Khoan.Api.Models.Entities
         /// </summary>
         [Column(TypeName = "nvarchar(1000)")]
         public string? ImportMetadata { get; set; }
+
+        // === MISSING PROPERTIES NEEDED BY CODE ===
+
+        /// <summary>
+        /// Soft delete flag
+        /// </summary>
+        [Column("IS_DELETED", TypeName = "bit")]
+        public bool IS_DELETED { get; set; } = false;
+
+        /// <summary>
+        /// Columns without headers - Column 18
+        /// </summary>
+        [Column("COLUMN_18", TypeName = "nvarchar(200)")]
+        public string? COLUMN_18 { get; set; }
+
+        /// <summary>
+        /// Columns without headers - Column 19
+        /// </summary>
+        [Column("COLUMN_19", TypeName = "nvarchar(200)")]
+        public string? COLUMN_19 { get; set; }
+
+        /// <summary>
+        /// Columns without headers - Column 20
+        /// </summary>
+        [Column("COLUMN_20", TypeName = "nvarchar(200)")]
+        public string? COLUMN_20 { get; set; }
+
+        /// <summary>
+        /// Created date (matching database schema)
+        /// </summary>
+        [Column("CREATED_DATE", TypeName = "datetime2")]
+        public DateTime CREATED_DATE { get; set; } = DateTime.UtcNow;
+
+        /// <summary>
+        /// Updated date (matching database schema)
+        /// </summary>
+        [Column("UPDATED_DATE", TypeName = "datetime2")]
+        public DateTime UPDATED_DATE { get; set; } = DateTime.UtcNow;
     }
 }

@@ -107,22 +107,15 @@ namespace Khoan.Api.Models.DataTables
         [Column("TRDT_TIME", TypeName = "datetime2", Order = 27)]
         public DateTime? TRDT_TIME { get; set; }
 
-        // === 4 SYSTEM COLUMNS - Always last (Order 28-31) ===
+        // === SYSTEM COLUMNS - Always last (matching database schema) ===
         [Key]
         [Column("Id", Order = 28)]
         public long Id { get; set; }
 
-        [Column("CreatedAt", TypeName = "datetime2", Order = 29)]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        [Column("CREATED_DATE", TypeName = "datetime2", Order = 29)]
+        public DateTime CREATED_DATE { get; set; } = DateTime.UtcNow;
 
-        [Column("UpdatedAt", TypeName = "datetime2", Order = 30)]
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-
-        [Column("FileName", TypeName = "nvarchar(500)", Order = 31)]
-        public string? FileName { get; set; }
-
-        // Heavy file tracking column
-        [Column("ImportBatchId", TypeName = "nvarchar(100)", Order = 32)]
-        public string? ImportBatchId { get; set; }
+        [Column("UPDATED_DATE", TypeName = "datetime2", Order = 30)]
+        public DateTime UPDATED_DATE { get; set; } = DateTime.UtcNow;
     }
 }

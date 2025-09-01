@@ -126,10 +126,17 @@ builder.Services.AddHostedService<Khoan.Api.Services.Startup.Gl02IndexInitialize
 // 🛡️ Index Initializers with enhanced error handling to prevent app crashes
 try
 {
+    // 9 bảng chính - 9 IndexInitializers (HOÀN THÀNH)
     builder.Services.AddHostedService<Khoan.Api.Services.Startup.Gl01IndexInitializer>(); // ✅ GL01 Index Initializer - Working
-    builder.Services.AddHostedService<Khoan.Api.Services.Startup.Gl02IndexInitializer>(); // ✅ GL02 Index Initializer - Working
-    // builder.Services.AddHostedService<Khoan.Api.Services.Startup.Gl41IndexInitializer>(); // ❌ Temporarily disabled due to error
-    // builder.Services.AddHostedService<Khoan.Api.Services.Startup.Ln03IndexInitializer>(); // ❌ Temporarily disabled - MACBTD column not found
+    builder.Services.AddHostedService<Khoan.Api.Services.Startup.Gl02IndexInitializer>(); // ✅ GL02 Index Initializer - Working  
+    builder.Services.AddHostedService<Khoan.Api.Services.Startup.Dp01IndexInitializer>(); // ✅ DP01 Index Initializer - NEW (thứ 9)
+    builder.Services.AddHostedService<Khoan.Api.Services.Startup.DpdaIndexInitializer>(); // ✅ DPDA Index Initializer - New
+    builder.Services.AddHostedService<Khoan.Api.Services.Startup.Ei01IndexInitializer>(); // ✅ EI01 Index Initializer - New
+    builder.Services.AddHostedService<Khoan.Api.Services.Startup.Ln01IndexInitializer>(); // ✅ LN01 Index Initializer - New
+    builder.Services.AddHostedService<Khoan.Api.Services.Startup.Ln03IndexInitializer>(); // ✅ LN03 Index Initializer - Fixed
+    builder.Services.AddHostedService<Khoan.Api.Services.Startup.Rr01IndexInitializer>(); // ✅ RR01 Index Initializer - New
+    builder.Services.AddHostedService<Khoan.Api.Services.Startup.Gl41IndexInitializer>(); // ✅ GL41 Index Initializer - Re-enabled
+    // 🎯 HOÀN THÀNH: 9/9 IndexInitializers cho 9 bảng dữ liệu chính
 }
 catch (Exception ex)
 {

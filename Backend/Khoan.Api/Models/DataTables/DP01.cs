@@ -247,31 +247,16 @@ namespace Khoan.Api.Models.DataTables
         [Column("TYGIA", TypeName = "decimal(18,6)")]
         public decimal? TYGIA { get; set; }
 
-        // System Audit Fields
+        // === SYSTEM COLUMNS (matching database schema) ===
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        [Column("DataSource")]
-        [StringLength(500)]
-        public string? DataSource { get; set; }
+        [Column("CREATED_DATE", TypeName = "datetime2")]
+        public DateTime CREATED_DATE { get; set; } = DateTime.UtcNow;
 
-        [Column("ImportDateTime", TypeName = "datetime2")]
-        public DateTime ImportDateTime { get; set; }
-
-        [Column("CreatedAt", TypeName = "datetime2")]
-        public DateTime CreatedAt { get; set; }
-
-        [Column("UpdatedAt", TypeName = "datetime2")]
-        public DateTime UpdatedAt { get; set; }
-
-        [Column("CreatedBy")]
-        [StringLength(100)]
-        public string? CreatedBy { get; set; }
-
-        [Column("UpdatedBy")]
-        [StringLength(100)]
-        public string? UpdatedBy { get; set; }
+        [Column("UPDATED_DATE", TypeName = "datetime2")]
+        public DateTime UPDATED_DATE { get; set; } = DateTime.UtcNow;
 
         // Note: SysStartTime and SysEndTime are shadow properties managed by EF Core temporal tables
         // They should not be declared as regular properties to avoid conflicts

@@ -1,80 +1,82 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Khoan.Api.Models.DataTables
 {
     /// <summary>
-    /// GL41 DataTable model - 100% CSV Business Columns Compliance
-    /// CSV Source: 7800_gl41_yyyymmdd.csv
-    /// Business Columns: MA_CN,LOAI_TIEN,MA_TK,TEN_TK,LOAI_BT,DN_DAUKY,DC_DAUKY,SBT_NO,ST_GHINO,SBT_CO,ST_GHICO,DN_CUOIKY,DC_CUOIKY
+    /// GL41 - General Ledger Balance Analytics (DataTables Pattern - Standardized)
+    /// PARTITIONED COLUMNSTORE (NOT TEMPORAL) - Optimized for analytics performance
+    /// Structure: NGAY_DL -> 13 Business Columns (CSV exact order) -> 6 System Columns
+    /// Total: 19 columns matching database exactly
+    /// Import policy: Only files containing "gl41" in filename
+    /// Heavy File Config: MaxFileSize 2GB, BulkInsert BatchSize 10,000, Upload timeout 15 minutes
     /// </summary>
+    [Table("GL41")]
     public class GL41
     {
-        /// <summary>
-        /// Mã chi nhánh - Business Column 1
-        /// </summary>
+        // === NGAY_DL - DateTime2 from filename gl41_YYYYMMDD (Order 0) ===
+        [Required]
+        [Column("NGAY_DL", Order = 0, TypeName = "datetime2")]
+        public DateTime NGAY_DL { get; set; }
+
+        // === 13 BUSINESS COLUMNS (CSV EXACT ORDER) ===
+
+        [Column("MA_CN", Order = 1, TypeName = "nvarchar(200)")]
         public string? MA_CN { get; set; }
 
-        /// <summary>
-        /// Loại tiền - Business Column 2
-        /// </summary>
+        [Column("LOAI_TIEN", Order = 2, TypeName = "nvarchar(200)")]
         public string? LOAI_TIEN { get; set; }
 
-        /// <summary>
-        /// Mã tài khoản - Business Column 3
-        /// </summary>
+        [Column("MA_TK", Order = 3, TypeName = "nvarchar(200)")]
         public string? MA_TK { get; set; }
 
-        /// <summary>
-        /// Tên tài khoản - Business Column 4
-        /// </summary>
+        [Column("TEN_TK", Order = 4, TypeName = "nvarchar(200)")]
         public string? TEN_TK { get; set; }
 
-        /// <summary>
-        /// Loại bút toán - Business Column 5
-        /// </summary>
+        [Column("LOAI_BT", Order = 5, TypeName = "nvarchar(200)")]
         public string? LOAI_BT { get; set; }
 
-        /// <summary>
-        /// Dư nợ đầu kỳ - Business Column 6
-        /// </summary>
+        // BALANCE/AMOUNT columns - decimal(18,2) format
+        [Column("DN_DAUKY", Order = 6, TypeName = "decimal(18,2)")]
         public decimal? DN_DAUKY { get; set; }
 
-        /// <summary>
-        /// Dư có đầu kỳ - Business Column 7
-        /// </summary>
+        [Column("DC_DAUKY", Order = 7, TypeName = "decimal(18,2)")]
         public decimal? DC_DAUKY { get; set; }
 
-        /// <summary>
-        /// Số bút toán nợ - Business Column 8
-        /// </summary>
+        [Column("SBT_NO", Order = 8, TypeName = "decimal(18,2)")]
         public decimal? SBT_NO { get; set; }
 
-        /// <summary>
-        /// Số tiền ghi nợ - Business Column 9
-        /// </summary>
+        [Column("ST_GHINO", Order = 9, TypeName = "decimal(18,2)")]
         public decimal? ST_GHINO { get; set; }
 
-        /// <summary>
-        /// Số bút toán có - Business Column 10
-        /// </summary>
+        [Column("SBT_CO", Order = 10, TypeName = "decimal(18,2)")]
         public decimal? SBT_CO { get; set; }
 
-        /// <summary>
-        /// Số tiền ghi có - Business Column 11
-        /// </summary>
+        [Column("ST_GHICO", Order = 11, TypeName = "decimal(18,2)")]
         public decimal? ST_GHICO { get; set; }
 
-        /// <summary>
-        /// Dư nợ cuối kỳ - Business Column 12
-        /// </summary>
+        [Column("DN_CUOIKY", Order = 12, TypeName = "decimal(18,2)")]
         public decimal? DN_CUOIKY { get; set; }
 
-        /// <summary>
-        /// Dư có cuối kỳ - Business Column 13
-        /// </summary>
+        [Column("DC_CUOIKY", Order = 13, TypeName = "decimal(18,2)")]
         public decimal? DC_CUOIKY { get; set; }
 
-        /// <summary>
-        /// Ngày dữ liệu - System Column
-        /// </summary>
-        public DateTime? NGAY_DL { get; set; }
+        // === 6 SYSTEM COLUMNS (matching database exactly) ===
+
+        [Column("FILE_NAME", Order = 14, TypeName = "nvarchar(500)")]
+        public string? FILE_NAME { get; set; }
+
+        [Key]
+        [Column("ID", Order = 15)]  // Note: Database uses "ID" not "Id"
+        public long ID { get; set; }
+
+        [Column("BATCH_ID", Order = 16, TypeName = "nvarchar(200)")]
+        public string? BATCH_ID { get; set; }
+
+        [Column("CREATED_DATE", Order = 17, TypeName = "datetime2")]
+        public DateTime CREATED_DATE { get; set; } = DateTime.UtcNow;
+
+        [Column("IMPORT_SESSION_ID", Order = 18, TypeName = "nvarchar(200)")]
+        public string? IMPORT_SESSION_ID { get; set; }
     }
 }

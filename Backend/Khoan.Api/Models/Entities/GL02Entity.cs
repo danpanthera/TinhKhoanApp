@@ -12,11 +12,6 @@ namespace Khoan.Api.Models.Entities
     /// Heavy File Config: MaxFileSize 2GB, BulkInsert BatchSize 10,000, Upload timeout 15 minutes
     /// </summary>
     [Table("GL02")]
-    [Index(nameof(NGAY_DL), Name = "IX_GL02_NGAY_DL")]
-    [Index(nameof(TRBRCD), Name = "IX_GL02_TRBRCD")]
-    [Index(nameof(LOCAC), Name = "IX_GL02_LOCAC")]
-    [Index(nameof(CCY), Name = "IX_GL02_CCY")]
-    [Index(nameof(CUSTOMER), Name = "IX_GL02_CUSTOMER")]
     public class GL02Entity
     {
         // NGAY_DL - DateTime2 from TRDATE column (Position 0) - dd/mm/yyyy format

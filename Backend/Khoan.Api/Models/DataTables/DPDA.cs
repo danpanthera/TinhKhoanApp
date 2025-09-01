@@ -78,22 +78,12 @@ namespace Khoan.Api.Models.DataTables
         [StringLength(500)]
         public string? DataSource { get; set; }
 
-        [Column("ImportDateTime", TypeName = "datetime2")]
-        public DateTime ImportDateTime { get; set; } = DateTime.Now;
+        // === SYSTEM COLUMNS (matching database schema) ===
+        [Column("CREATED_DATE", TypeName = "datetime2")]
+        public DateTime CREATED_DATE { get; set; } = DateTime.UtcNow;
 
-        [Column("CreatedAt", TypeName = "datetime2")]
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
-
-        [Column("UpdatedAt", TypeName = "datetime2")]
-        public DateTime UpdatedAt { get; set; } = DateTime.Now;
-
-        [Column("CreatedBy")]
-        [StringLength(100)]
-        public string? CreatedBy { get; set; }
-
-        [Column("UpdatedBy")]
-        [StringLength(100)]
-        public string? UpdatedBy { get; set; }
+        [Column("UPDATED_DATE", TypeName = "datetime2")]
+        public DateTime UPDATED_DATE { get; set; } = DateTime.UtcNow;
 
         // Temporal columns (managed by EF Core - shadow properties)
         // ValidFrom and ValidTo are handled automatically

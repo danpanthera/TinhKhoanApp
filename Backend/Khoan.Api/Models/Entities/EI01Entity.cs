@@ -14,10 +14,6 @@ namespace Khoan.Api.Models.Entities
     /// All Business Columns: nvarchar(200) with NULL support
     /// </summary>
     [Table("EI01")]
-    [Index(nameof(MA_CN), Name = "IX_EI01_MA_CN")]
-    [Index(nameof(MA_KH), Name = "IX_EI01_MA_KH")]
-    [Index(nameof(TEN_KH), Name = "IX_EI01_TEN_KH")]
-    [Index(nameof(NGAY_DL), Name = "IX_EI01_NGAY_DL")]
     public class EI01Entity : ITemporalEntity
     {
         // === PRIMARY KEY ===

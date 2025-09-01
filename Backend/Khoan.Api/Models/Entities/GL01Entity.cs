@@ -15,12 +15,6 @@ namespace Khoan.Api.Models.Entities
     /// String Columns: nvarchar(200), REMARK as nvarchar(1000)
     /// </summary>
     [Table("GL01")]
-    [Index(nameof(NGAY_GD), Name = "IX_GL01_NGAY_GD")]
-    [Index(nameof(TAI_KHOAN), Name = "IX_GL01_TAI_KHOAN")]
-    [Index(nameof(MA_KH), Name = "IX_GL01_MA_KH")]
-    [Index(nameof(DYSEQ), Name = "IX_GL01_DYSEQ")]
-    [Index(nameof(DR_CR), Name = "IX_GL01_DR_CR")]
-    [Index(nameof(NGAY_DL), Name = "IX_GL01_NGAY_DL")]
     public class GL01Entity
     {
         // === PRIMARY KEY ===

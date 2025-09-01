@@ -21,6 +21,18 @@
     <EmbeddedResource Remove="**/*TEMP_DISABLED/**" />
     <None Remove="**/*TEMP_DISABLED/**" />
   </ItemGroup>
+
+  <!-- Exclude utility files with Main() methods to avoid CS7022 warnings -->
+  <ItemGroup>
+    <Compile Remove="TestIndexInitializers.cs" />
+    <Compile Remove="MigrationTool/MigrationRunner/CheckGL41.cs" />
+    <Compile Remove="MigrationTool/MigrationRunner/Program.cs" />
+    <Compile Remove="RunMigration.cs" />
+    <None Include="TestIndexInitializers.cs" />
+    <None Include="MigrationTool/MigrationRunner/CheckGL41.cs" />
+    <None Include="MigrationTool/MigrationRunner/Program.cs" />
+    <None Include="RunMigration.cs" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="ClosedXML" Version="0.105.0" />

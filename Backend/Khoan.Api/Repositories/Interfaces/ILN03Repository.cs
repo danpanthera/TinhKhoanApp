@@ -1,4 +1,4 @@
-using Khoan.Api.Entities;
+using Khoan.Api.Models.Entities; // Fixed: Use Models.Entities for consistency with DbContext
 using Khoan.Api.Dtos.LN03;
 
 namespace Khoan.Api.Repositories.Interfaces

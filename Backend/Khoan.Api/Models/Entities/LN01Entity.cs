@@ -10,11 +10,6 @@ namespace Khoan.Api.Models.Entities
     /// CSV Source: 7800_ln01_20241231.csv
     /// </summary>
     [Table("LN01")]
-    [Index(nameof(BRCD), Name = "IX_LN01_BRCD")]
-    [Index(nameof(CUSTSEQ), Name = "IX_LN01_CUSTSEQ")]
-    [Index(nameof(TAI_KHOAN), Name = "IX_LN01_TAI_KHOAN")]
-    [Index(nameof(TRANSACTION_DATE), Name = "IX_LN01_TRANSACTION_DATE")]
-    [Index(nameof(BRCD), nameof(CUSTSEQ), Name = "IX_LN01_BRCD_CUSTSEQ")]
     public class LN01Entity : ITemporalEntity
     {
         // === SYSTEM COLUMNS (từ ITemporalEntity) ===
@@ -35,6 +30,11 @@ namespace Khoan.Api.Models.Entities
 
         [Column(TypeName = "datetime2(3)")]
         public DateTime SysEndTime { get; set; }
+
+        // === NGAY_DL - Date from filename (required for IndexInitializers) ===
+        [Required]
+        [Column("NGAY_DL", TypeName = "datetime2")]
+        public DateTime NGAY_DL { get; set; }
 
         // === BUSINESS COLUMNS (79 columns theo CSV structure) ===
 
@@ -112,6 +112,12 @@ namespace Khoan.Api.Models.Entities
         /// </summary>
         [Column(TypeName = "date")]
         public DateTime? DSBSMATDT { get; set; }
+
+        /// <summary>
+        /// Approval Sequence
+        /// </summary>
+        [Column("APRSEQ", TypeName = "nvarchar(50)")]
+        public string? APRSEQ { get; set; }
 
         /// <summary>
         /// Base rate code

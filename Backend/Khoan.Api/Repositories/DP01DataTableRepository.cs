@@ -18,7 +18,7 @@ namespace Khoan.Api.Repositories
         {
             return await _context.Set<DP01>()
                 .OrderByDescending(x => x.NGAY_DL)
-                .ThenByDescending(x => x.CreatedAt)
+                .ThenByDescending(x => x.CREATED_DATE) // Fixed property name
                 .Take(count)
                 .ToListAsync();
         }

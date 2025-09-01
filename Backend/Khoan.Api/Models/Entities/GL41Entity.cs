@@ -12,10 +12,6 @@ namespace Khoan.Api.Models.Entities
     /// Heavy File Config: MaxFileSize 2GB, BulkInsert BatchSize 10,000, Upload timeout 15 minutes
     /// </summary>
     [Table("GL41")]
-    [Index(nameof(NGAY_DL), Name = "IX_GL41_NGAY_DL")]
-    [Index(nameof(MA_CN), Name = "IX_GL41_MA_CN")]
-    [Index(nameof(LOAI_TIEN), Name = "IX_GL41_LOAI_TIEN")]
-    [Index(nameof(MA_TK), Name = "IX_GL41_MA_TK")]
     public class GL41Entity
     {
         // NGAY_DL - DateTime2 from filename gl41_YYYYMMDD (Position 0) - dd/mm/yyyy format

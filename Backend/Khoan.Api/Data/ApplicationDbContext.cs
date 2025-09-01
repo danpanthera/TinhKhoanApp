@@ -51,9 +51,10 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
         // ✅ CLEANED: Removed legacy ImportedDataItem - Using DirectImportService workflow only
 
         // 🚀 DbSets cho 8 bảng dữ liệu thô chính (DirectImport với Temporal Tables + Columnstore)
+        // THỐNG NHẤT: Tất cả sử dụng DataTables để match với CSV structure
         public DbSet<DataTables.DP01> DP01 { get; set; } // ✅ Temporal Table với 63 business columns + system/temporal columns
-        public DbSet<Entities.LN01Entity> LN01 { get; set; } // ✅ Temporal Table Entity with 79 business columns + system/temporal columns
-        public DbSet<Entities.LN03Entity> LN03 { get; set; } // ✅ Temporal Table Entity with 20 business columns + system/temporal columns
+        public DbSet<LN01Entity> LN01 { get; set; } // ✅ Temporal Table with 79 business columns (CSV structure)
+        public DbSet<LN03Entity> LN03 { get; set; } // ✅ Temporal Table with 20 business columns (CSV structure) 
         public DbSet<DataTables.GL01> GL01 { get; set; }
         public DbSet<DataTables.GL02> GL02 { get; set; }
         public DbSet<GL41Entity> GL41 { get; set; } // ✅ Modern Entity - Partitioned Columnstore (NO temporal)
@@ -64,8 +65,8 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
 
         // 🔄 DbSets with plural names for backward compatibility
         // Note: DP01s removed - using DP01 directly
-        public DbSet<Entities.LN01Entity> LN01s { get; set; }
-        public DbSet<Entities.LN03Entity> LN03s { get; set; }
+        // public DbSet<Entities.LN01Entity> LN01s { get; set; }  // Temporary disabled - entity mapping conflicts
+        // public DbSet<Entities.LN03Entity> LN03s { get; set; }  // Temporary disabled - entity mapping conflicts
         public DbSet<DataTables.GL01> GL01s { get; set; }
         public DbSet<DataTables.GL02> GL02s { get; set; }
         public DbSet<GL41Entity> GL41s { get; set; } // ✅ Modern Entity compatibility
@@ -592,7 +593,7 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
             ConfigureLN01TemporalTable(modelBuilder);
 
             // ⚠️ Cấu hình bảng LN03 - Nợ xấu (USING DataTables.LN03)
-            ConfigureLN03TemporalTable(modelBuilder);
+            ConfigureLN03TemporalTable(modelBuilder); // ✅ Re-enabled with DataTables.LN03
 
             // 📈 Cấu hình bảng RR01 - Tỷ lệ
             ConfigureDataTableWithTemporal<DataTables.RR01>(modelBuilder, "RR01");
@@ -725,7 +726,7 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
         /// </summary>
         private void ConfigureLN01TemporalTable(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Entities.LN01Entity>(entity =>
+            modelBuilder.Entity<LN01Entity>(entity =>
             {
                 // Key configuration
                 entity.HasKey(e => e.Id);
@@ -738,14 +739,14 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
                     ttb.UseHistoryTable("LN01_History");
                 }));
 
-                // Indexes for performance using actual property names
+                // Indexes for performance using actual property names from LN01Entity
                 entity.HasIndex(e => e.NGAY_DL).HasDatabaseName("IX_LN01_NGAY_DL");
                 entity.HasIndex(e => e.BRCD).HasDatabaseName("IX_LN01_BRCD");
                 entity.HasIndex(e => e.CUSTSEQ).HasDatabaseName("IX_LN01_CUSTSEQ");
                 entity.HasIndex(e => e.TAI_KHOAN).HasDatabaseName("IX_LN01_TAI_KHOAN");
                 entity.HasIndex(e => new { e.NGAY_DL, e.BRCD }).HasDatabaseName("IX_LN01_NGAY_DL_BRCD");
 
-                // Configure decimal precision for amount columns (that are actually decimal?)
+                // Configure decimal precision for amount columns
                 entity.Property(e => e.DU_NO).HasPrecision(18, 2);
 
                 // Configure interest rate precision
@@ -759,7 +760,7 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
         /// </summary>
         private void ConfigureLN03TemporalTable(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<DataTables.LN03>(entity =>
+            modelBuilder.Entity<LN03Entity>(entity =>
             {
                 // Key configuration
                 entity.HasKey(e => e.Id);

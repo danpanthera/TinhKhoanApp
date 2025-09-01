@@ -2,7 +2,7 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using System.Globalization;
 using System.Text.RegularExpressions;
-using Khoan.Api.Entities;
+using Khoan.Api.Models.Entities; // Revert: Use Models.Entities (matches DTOs and interface contracts)
 using Khoan.Api.Dtos.LN03;
 using Khoan.Api.Services.Interfaces;
 using Khoan.Api.Repositories.Interfaces;
@@ -63,7 +63,7 @@ namespace Khoan.Api.Services
             {
                 var entity = MapToEntity(dto);
                 var created = await _repository.CreateAsync(entity);
-                var result = await _repository.GetByIdAsync(created.Id);
+                var result = await _repository.GetByIdAsync((int)created.Id);
                 
                 return ApiResponse<LN03DetailsDto>.Ok(result, "Record created successfully");
             }
@@ -482,7 +482,7 @@ namespace Khoan.Api.Services
         {
             return new LN03Entity
             {
-                NGAY_DL = dto.NGAY_DL,
+                NGAY_DL = dto.NGAY_DL ?? DateTime.Now, // Handle nullable DateTime
                 MACHINHANH = dto.MACHINHANH,
                 TENCHINHANH = dto.TENCHINHANH,
                 MAKH = dto.MAKH,
@@ -502,7 +502,7 @@ namespace Khoan.Api.Services
                 LOAINGUONVON = dto.LOAINGUONVON,
                 COLUMN_18 = dto.COLUMN_18,
                 COLUMN_19 = dto.COLUMN_19,
-                COLUMN_20 = dto.COLUMN_20
+                COLUMN_20 = dto.COLUMN_20?.ToString() // Convert decimal? to string?
             };
         }
 
@@ -529,7 +529,7 @@ namespace Khoan.Api.Services
                 LOAINGUONVON = dto.LOAINGUONVON,
                 COLUMN_18 = dto.COLUMN_18,
                 COLUMN_19 = dto.COLUMN_19,
-                COLUMN_20 = dto.COLUMN_20
+                COLUMN_20 = dto.COLUMN_20?.ToString() // Convert decimal? to string?
             };
         }
 
@@ -557,7 +557,7 @@ namespace Khoan.Api.Services
                 LOAINGUONVON = record.LOAINGUONVON,
                 COLUMN_18 = record.COLUMN_18,
                 COLUMN_19 = record.COLUMN_19,
-                COLUMN_20 = ParseDecimal(record.COLUMN_20)
+                COLUMN_20 = record.COLUMN_20 // Keep as string since Entity expects string?
             };
         }
 
