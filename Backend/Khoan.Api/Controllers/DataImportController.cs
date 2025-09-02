@@ -273,6 +273,140 @@ namespace Khoan.Api.Controllers
             return Ok(new { message = $"Deleted data for {dataType} on {date:yyyy-MM-dd}", recordsDeleted = affected });
         }
 
+        /// <summary>
+        /// Clear all data from a specific table type
+        /// </summary>
+        [HttpDelete("clear-table/{dataType}")]
+        public async Task<IActionResult> ClearTable(string dataType)
+        {
+            dataType = (dataType ?? string.Empty).ToUpperInvariant();
+            int affected = 0;
+            
+            try
+            {
+                switch (dataType)
+                {
+                    case "DP01":
+                        affected = await _context.DP01.ExecuteDeleteAsync();
+                        break;
+                    case "DPDA":
+                        affected = await _context.DPDA.ExecuteDeleteAsync();
+                        break;
+                    case "EI01":
+                        affected = await _context.EI01.ExecuteDeleteAsync();
+                        break;
+                    case "GL01":
+                        affected = await _context.GL01.ExecuteDeleteAsync();
+                        break;
+                    case "GL02":
+                        affected = await _context.GL02.ExecuteDeleteAsync();
+                        break;
+                    case "GL41":
+                        affected = await _context.GL41.ExecuteDeleteAsync();
+                        break;
+                    case "LN01":
+                        affected = await _context.LN01.ExecuteDeleteAsync();
+                        break;
+                    case "LN03":
+                        affected = await _context.LN03.ExecuteDeleteAsync();
+                        break;
+                    case "RR01":
+                        affected = await _context.RR01.ExecuteDeleteAsync();
+                        break;
+                    default:
+                        return BadRequest(new { message = $"Unsupported data type: {dataType}" });
+                }
+
+                // Clean metadata records for this table type
+                var metas = _context.ImportedDataRecords.Where(x => (x.Category ?? x.FileType) == dataType);
+                _context.ImportedDataRecords.RemoveRange(metas);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error clearing all data for {DataType}", dataType);
+                return StatusCode(500, new { message = "Error clearing table data", error = ex.Message });
+            }
+
+            return Ok(new { 
+                success = true,
+                message = $"Successfully cleared all data from {dataType} table", 
+                recordsDeleted = affected 
+            });
+        }
+
+        /// <summary>
+        /// Clear all data from all tables
+        /// </summary>
+        [HttpDelete("clear-all")]
+        public async Task<IActionResult> ClearAllData()
+        {
+            int totalAffected = 0;
+            var results = new Dictionary<string, int>();
+            
+            try
+            {
+                // Clear all data tables
+                var tableTypes = new[] { "DP01", "DPDA", "EI01", "GL01", "GL02", "GL41", "LN01", "LN03", "RR01" };
+                
+                foreach (var table in tableTypes)
+                {
+                    int affected = 0;
+                    switch (table)
+                    {
+                        case "DP01":
+                            affected = await _context.DP01.ExecuteDeleteAsync();
+                            break;
+                        case "DPDA":
+                            affected = await _context.DPDA.ExecuteDeleteAsync();
+                            break;
+                        case "EI01":
+                            affected = await _context.EI01.ExecuteDeleteAsync();
+                            break;
+                        case "GL01":
+                            affected = await _context.GL01.ExecuteDeleteAsync();
+                            break;
+                        case "GL02":
+                            affected = await _context.GL02.ExecuteDeleteAsync();
+                            break;
+                        case "GL41":
+                            affected = await _context.GL41.ExecuteDeleteAsync();
+                            break;
+                        case "LN01":
+                            affected = await _context.LN01.ExecuteDeleteAsync();
+                            break;
+                        case "LN03":
+                            affected = await _context.LN03.ExecuteDeleteAsync();
+                            break;
+                        case "RR01":
+                            affected = await _context.RR01.ExecuteDeleteAsync();
+                            break;
+                    }
+                    results[table] = affected;
+                    totalAffected += affected;
+                }
+
+                // Clear all metadata records
+                var allMetas = _context.ImportedDataRecords.ToList();
+                _context.ImportedDataRecords.RemoveRange(allMetas);
+                await _context.SaveChangesAsync();
+                
+                _logger.LogInformation("Successfully cleared all data from all tables. Total records deleted: {Total}", totalAffected);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error clearing all data from all tables");
+                return StatusCode(500, new { message = "Error clearing all data", error = ex.Message });
+            }
+
+            return Ok(new { 
+                success = true,
+                message = "Successfully cleared all data from all tables", 
+                recordsDeleted = totalAffected,
+                tableResults = results
+            });
+        }
+
         private static bool TryParseDate(string input, out DateTime date)
         {
             if (DateTime.TryParse(input, out date)) return true;
