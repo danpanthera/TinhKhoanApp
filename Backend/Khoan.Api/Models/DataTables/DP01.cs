@@ -252,13 +252,11 @@ namespace Khoan.Api.Models.DataTables
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        [Column("CREATED_DATE", TypeName = "datetime2")]
-        public DateTime CREATED_DATE { get; set; } = DateTime.UtcNow;
-
-        [Column("UPDATED_DATE", TypeName = "datetime2")]
-        public DateTime UPDATED_DATE { get; set; } = DateTime.UtcNow;
+        [Column("ImportDateTime", TypeName = "datetime2")]
+        public DateTime ImportDateTime { get; set; }
 
         // Note: SysStartTime and SysEndTime are shadow properties managed by EF Core temporal tables
         // They should not be declared as regular properties to avoid conflicts
+        // CREATED_DATE and UPDATED_DATE are not needed for temporal tables
     }
 }

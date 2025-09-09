@@ -926,8 +926,10 @@ namespace Khoan.Api.Services
                     record.UNTBUSCD = SafeGetString(csvRecord, "UNTBUSCD");
                     record.TYGIA = SafeGetDecimal(csvRecord, "TYGIA");
 
-                    // Set audit fields
-                    record.CREATED_DATE = DateTime.UtcNow; // Use CREATED_DATE instead of ImportDateTime
+                    // Set ImportDateTime for this import batch
+                    record.ImportDateTime = DateTime.Now;
+
+                    // No need to set audit fields for temporal tables - managed automatically
                     // record.FILE_NAME = file.FileName; // TODO: Add FILE_NAME column to DP01 table
 
                     records.Add(record);

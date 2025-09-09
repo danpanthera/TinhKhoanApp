@@ -18,7 +18,7 @@ namespace Khoan.Api.Repositories
         {
             return await _context.Set<DP01>()
                 .OrderByDescending(x => x.NGAY_DL)
-                .ThenByDescending(x => x.CREATED_DATE) // Fixed property name
+                .ThenByDescending(x => x.Id) // Use Id instead of CREATED_DATE for temporal table
                 .Take(count)
                 .ToListAsync();
         }
