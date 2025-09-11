@@ -125,8 +125,9 @@ class SmartImportService {
    */
   async uploadSmartFiles(files, statementDate = null, progressCallback = null) {
     try {
-      const totalFiles = files.length
-      const MAX_CONCURRENT_UPLOADS = 5 // 🚀 Tăng lên 5 file cùng lúc để tăng tốc
+  const totalFiles = files.length
+  // Hạn chế song song để tránh quá tải DB và lỗi kết nối khi login (TCP Provider)
+  const MAX_CONCURRENT_UPLOADS = 2
 
       console.log(
         `🚀 Starting PARALLEL Smart Import with ${totalFiles} files (max ${MAX_CONCURRENT_UPLOADS} concurrent)`,
@@ -199,14 +200,33 @@ class SmartImportService {
         }
       }
 
-      // 🚀 TRUE PARALLEL PROCESSING - All files at once for maximum speed
-      console.log('🏎️ Using TRUE parallel processing (all files at once)')
+      // � LIMITED CONCURRENCY: process with a small pool and jitter to protect backend
+      console.log(`🚦 Using limited concurrency processing (max ${MAX_CONCURRENT_UPLOADS})`)
 
-      // Create all upload promises at once
-      const allPromises = Array.from(files).map((file, index) => uploadFile(file, index))
+      const queue = Array.from(files)
+      const resultsTemp = []
 
-      // Use Promise.allSettled to handle individual failures gracefully
-      const settledResults = await Promise.allSettled(allPromises)
+      const next = async () => {
+        if (queue.length === 0) return
+        const file = queue.shift()
+        const index = totalFiles - queue.length - 1
+        try {
+          const res = await uploadFile(file, index)
+          resultsTemp.push({ status: 'fulfilled', value: res, index })
+        } catch (err) {
+          resultsTemp.push({ status: 'rejected', reason: err, index })
+        } finally {
+          // small jitter between tasks to avoid thundering herd
+          await new Promise(r => setTimeout(r, 300))
+          if (queue.length > 0) await next()
+        }
+      }
+
+      const workers = Array.from({ length: Math.min(MAX_CONCURRENT_UPLOADS, totalFiles) }, () => next())
+      await Promise.all(workers)
+
+      // Map results to settled format
+      const settledResults = resultsTemp
 
       // Extract results from settled promises
       settledResults.forEach((settled, index) => {
@@ -214,11 +234,11 @@ class SmartImportService {
           results.push(settled.value)
         } else {
           results.push({
-            fileName: files[index].name,
+            fileName: files[index]?.name || 'unknown',
             success: false,
             error: settled.reason?.message || 'Unknown error',
             index: index + 1,
-            fileSize: files[index].size,
+            fileSize: files[index]?.size || 0,
           })
         }
       })

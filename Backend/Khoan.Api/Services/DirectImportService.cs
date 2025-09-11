@@ -5,6 +5,7 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 using Khoan.Api.Data;
 using Khoan.Api.Models;
@@ -25,6 +26,9 @@ namespace Khoan.Api.Services
         private readonly ApplicationDbContext _context;
         private readonly ILogger<DirectImportService> _logger;
         private readonly DirectImportSettings _settings;
+
+        // Limit concurrent heavy import operations to protect SQL Server
+        private static readonly SemaphoreSlim ImportSemaphore = new(2, 2); // allow up to 2 concurrent imports
 
         public DirectImportService(
             ApplicationDbContext context,
@@ -98,19 +102,28 @@ namespace Khoan.Api.Services
         /// </summary>
         public async Task<DirectImportResult> ImportGenericAsync(IFormFile file, string dataType, string? statementDate = null)
         {
-            return dataType.ToUpper() switch
+            // Throttle server-wide import concurrency to avoid DB overload and connection resets
+            await ImportSemaphore.WaitAsync();
+            try
             {
-                "DP01" => await ImportDP01Async(file, statementDate),
-                "DPDA" => await ImportDPDAAsync(file, statementDate),
-                "EI01" => await ImportEI01Async(file, statementDate),
-                "LN01" => await ImportLN01Async(file, statementDate),
-                "LN03" => await ImportLN03EnhancedAsync(file, statementDate),
-                "GL01" => await ImportGL01Async(file, statementDate),
-                "GL02" => await ImportGL02Async(file, statementDate),
-                "GL41" => await ImportGL41Async(file, statementDate),
-                "RR01" => await ImportRR01Async(file, statementDate),
-                _ => throw new NotSupportedException($"DataType '{dataType}' chưa được hỗ trợ")
-            };
+                return dataType.ToUpper() switch
+                {
+                    "DP01" => await ImportDP01Async(file, statementDate),
+                    "DPDA" => await ImportDPDAAsync(file, statementDate),
+                    "EI01" => await ImportEI01Async(file, statementDate),
+                    "LN01" => await ImportLN01Async(file, statementDate),
+                    "LN03" => await ImportLN03EnhancedAsync(file, statementDate),
+                    "GL01" => await ImportGL01Async(file, statementDate),
+                    "GL02" => await ImportGL02Async(file, statementDate),
+                    "GL41" => await ImportGL41Async(file, statementDate),
+                    "RR01" => await ImportRR01Async(file, statementDate),
+                    _ => throw new NotSupportedException($"DataType '{dataType}' chưa được hỗ trợ")
+                };
+            }
+            finally
+            {
+                ImportSemaphore.Release();
+            }
         }
 
         #endregion
@@ -1559,7 +1572,25 @@ namespace Khoan.Api.Services
                 {
                     _context.Set<T>().AddRange(records);
                 }
-                var insertedCount = await _context.SaveChangesAsync();
+                // Transient retry for connection/login/transport errors
+                var insertedCount = 0;
+                const int maxAttempts = 3;
+                for (var attempt = 1; attempt <= maxAttempts; attempt++)
+                {
+                    try
+                    {
+                        insertedCount = await _context.SaveChangesAsync();
+                        break;
+                    }
+                    catch (DbUpdateException ex) when (IsTransient(ex) && attempt < maxAttempts)
+                    {
+                        var delay = TimeSpan.FromSeconds(2 * attempt);
+                        _logger.LogWarning(ex, "⏳ [BULK_INSERT] Transient DbUpdateException on {Table}, retrying in {Delay}s (attempt {Attempt}/{Max})",
+                            tableName, delay.TotalSeconds, attempt + 1, maxAttempts);
+                        await Task.Delay(delay);
+                        continue;
+                    }
+                }
 
                 _logger.LogInformation("✅ [BULK_INSERT] Inserted {Count} records vào {Table}", insertedCount, tableName);
                 return insertedCount;
@@ -1591,6 +1622,18 @@ namespace Khoan.Api.Services
                 _logger.LogError(ex, "❌ [BULK_INSERT] Error inserting vào {Table}: {Error}", tableName, ex.Message);
                 throw;
             }
+        }
+
+        private static bool IsTransient(Exception ex)
+        {
+            // Consider common SQL transport/login issues as transient
+            if (ex is SqlException)
+                return true;
+            if (ex is DbUpdateException dbu && dbu.InnerException != null)
+                return IsTransient(dbu.InnerException);
+            if (ex.InnerException != null)
+                return IsTransient(ex.InnerException);
+            return false;
         }
 
         /// <summary>
