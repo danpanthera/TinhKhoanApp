@@ -33,6 +33,13 @@
     <None Include="MigrationTool/MigrationRunner/Program.cs" />
     <None Include="RunMigration.cs" />
   </ItemGroup>
+  
+  <!-- Exclude legacy Entities folder to avoid conflicting table mappings (APRSEQ, audit cols) -->
+  <ItemGroup>
+    <Compile Remove="Entities/**" />
+    <EmbeddedResource Remove="Entities/**" />
+    <None Remove="Entities/**" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="ClosedXML" Version="0.105.0" />

@@ -75,8 +75,8 @@ namespace Khoan.Api.Models.Entities
         [Column("CREATED_DATE", Order = 15, TypeName = "datetime2")]
         public DateTime CREATED_DATE { get; set; } = DateTime.UtcNow;
 
-        [Column("UPDATED_DATE", Order = 16, TypeName = "datetime2")]
-        public DateTime? UPDATED_DATE { get; set; } = DateTime.UtcNow;
+    [NotMapped]
+    public DateTime? UPDATED_DATE { get; set; } = DateTime.UtcNow;
 
         [Column("FILE_NAME", Order = 17, TypeName = "nvarchar(500)")]
         public string? FILE_NAME { get; set; }

@@ -1,4 +1,4 @@
-using Khoan.Api.Entities;
+using Khoan.Api.Models.Entities;
 using Khoan.Api.Dtos.LN01;
 
 namespace Khoan.Api.Repositories.Interfaces

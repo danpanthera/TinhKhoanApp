@@ -64,7 +64,7 @@ namespace Khoan.Api.Services
                 DSBSMATDT = entity.DSBSMATDT,
                 BSRTCD = entity.BSRTCD,
                 INTEREST_RATE = entity.INTEREST_RATE,
-                APPRSEQ = entity.APRSEQ,
+                APPRSEQ = entity.APPRSEQ,
                 APPRDT = entity.APPRDT,
                 APPR_CCY = entity.APPR_CCY,
                 APPRAMT = entity.APPRAMT,

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Globalization;
 using Khoan.Api.Models; // Đảm bảo namespace này đúng với nơi Sếp đặt các Model
 using Khoan.Api.Models.RawData; // Thêm namespace cho Raw Data models
 using Khoan.Api.Models.Temporal; // Thêm namespace cho Temporal models
@@ -118,6 +119,17 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            // === GL41 CONFIGURATION FIX ===
+            // Align NGAY_DL with database nvarchar(10) schema by converting DateTime <-> string (yyyy-MM-dd)
+            modelBuilder.Entity<GL41Entity>(entity =>
+            {
+                entity.Property(e => e.NGAY_DL)
+                      .HasConversion(
+                          v => v.ToString("yyyy-MM-dd"),
+                          v => DateTime.ParseExact(v, "yyyy-MM-dd", CultureInfo.InvariantCulture)
+                      )
+                      .HasColumnType("nvarchar(10)");
+            });
 
             // Cấu hình explicit cho Employee model
             modelBuilder.Entity<Employee>(entity =>
@@ -455,8 +467,9 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
                     tb.IsTemporal(ttb =>
                     {
                         ttb.UseHistoryTable("DP01_History");
-                        ttb.HasPeriodStart("ValidFrom");
-                        ttb.HasPeriodEnd("ValidTo");
+                        // Align with existing database temporal period column names
+                        ttb.HasPeriodStart("SysStartTime").HasColumnName("SysStartTime");
+                        ttb.HasPeriodEnd("SysEndTime").HasColumnName("SysEndTime");
                     });
                 });
 
@@ -475,6 +488,12 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
                 entity.Property(e => e.CRAMT).HasPrecision(18, 2);
                 entity.Property(e => e.SPECIAL_RATE).HasPrecision(18, 6);
                 entity.Property(e => e.TYGIA).HasPrecision(18, 6);
+
+                // Explicitly ignore legacy shadow audit columns not present in the database
+                entity.Ignore("DataSource");
+                entity.Ignore("CreatedBy");
+                entity.Ignore("UpdatedBy");
+                entity.Ignore("FILE_NAME");
             });
 
             // 📊 Cấu hình Temporal Tables cho ImportedDataRecords với history tracking
@@ -577,6 +596,15 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
         {
             // 💰 Cấu hình bảng DPDA - Tiền gửi của dân
             ConfigureDataTableWithTemporal<DataTables.DPDA>(modelBuilder, "DPDA");
+
+            // DPDA: Explicitly ignore legacy shadow audit columns not present in the database
+            modelBuilder.Entity<DataTables.DPDA>(entity =>
+            {
+                entity.Ignore("DataSource");
+                entity.Ignore("CreatedBy");
+                entity.Ignore("UpdatedBy");
+                entity.Ignore("FILE_NAME");
+            });
 
             // 📊 Cấu hình bảng EI01 - Internet Banking Registration (Temporal Table)
             ConfigureDataTableWithTemporal<DataTables.EI01>(modelBuilder, "EI01");
@@ -751,7 +779,18 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
                 entity.Property(e => e.DU_NO).HasPrecision(18, 2);
 
                 // Configure interest rate precision
-                entity.Property(e => e.INTEREST_RATE).HasMaxLength(30); // This is a string in the entity
+                entity.Property(e => e.INTEREST_RATE).HasPrecision(10, 6);
+
+                // Explicitly ignore optional metadata/audit properties not present in DB schema
+                entity.Ignore(nameof(LN01Entity.CreatedAt));
+                entity.Ignore(nameof(LN01Entity.UpdatedAt));
+                entity.Ignore(nameof(LN01Entity.SysStartTime));
+                entity.Ignore(nameof(LN01Entity.SysEndTime));
+                // These properties were previously present but not stored in DB
+                // Keep ignores in case they reappear in the entity in the future
+                // entity.Ignore("FileName");
+                // entity.Ignore("ImportId");
+                // entity.Ignore("ImportMetadata");
             });
         }
 

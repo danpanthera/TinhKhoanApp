@@ -147,19 +147,20 @@ rm -f build_test.log
 
 # Step 4: Start the development server
 log "▶️ Starting Frontend Development Server..."
-# Use nohup so the dev server is not killed by SIGHUP when this startup script exits.
-# (Without nohup the background child receives SIGHUP at script end on some systems, causing the
-# Vite process to terminate immediately – leading to curl connection refused / WebSocket failures.)
-nohup npm run dev -- --port $PORT >> "$LOG_FILE" 2>&1 &
+# Start in background (no nohup) and keep this script alive to avoid VS Code task manager
+# terminating the orphaned process when the script exits instantly.
+npm run dev -- --port $PORT >> "$LOG_FILE" 2>&1 &
 DEV_PID=$!
 echo $DEV_PID > "frontend.log.pid"
-log "🔗 Dev process detached with nohup (will survive script exit)"
+log "🔗 Dev process started (PID will be supervised by this script)"
 
 log "🆔 Frontend PID: $DEV_PID"
 
 # Step 5: Monitor startup with detailed feedback
 log "🔍 Monitoring server startup..."
 start_time=$(date +%s)
+
+trap 'log "🛑 Termination signal received. Stopping frontend (PID $DEV_PID)..."; kill $DEV_PID 2>/dev/null || true; wait $DEV_PID 2>/dev/null || true; log "✅ Frontend stopped."; rm -f frontend.log.pid; exit 0' INT TERM
 
 while true; do
     current_time=$(date +%s)
@@ -175,21 +176,19 @@ while true; do
 
     # Consider server ready when either port is listening or HTTP responds
     if lsof -nP -iTCP:$PORT -sTCP:LISTEN >/dev/null 2>&1; then
-        log "✅ Frontend server started successfully!"
-        log "🔗 Dev Server: http://localhost:$PORT"
-        log "📝 Logs: $LOG_FILE"
-        log "🆔 PID File: frontend.log.pid"
-        log ""
-        log "🎉 Frontend startup completed successfully!"
-        exit 0
+    log "✅ Frontend server started successfully!"
+    log "🔗 Dev Server: http://localhost:$PORT"
+    log "📝 Logs: $LOG_FILE"
+    log "🆔 PID File: frontend.log.pid"
+    log "🎉 Entering monitor mode (script will keep running to keep process alive)."
+    break
     fi
     if curl -s -I http://localhost:$PORT/ >/dev/null 2>&1; then
-        log "✅ Frontend server responded on http://localhost:$PORT"
-        log "📝 Logs: $LOG_FILE"
-        log "🆔 PID File: frontend.log.pid"
-        log ""
-        log "🎉 Frontend startup completed successfully!"
-        exit 0
+    log "✅ Frontend server responded on http://localhost:$PORT"
+    log "📝 Logs: $LOG_FILE"
+    log "🆔 PID File: frontend.log.pid"
+    log "🎉 Entering monitor mode (script will keep running to keep process alive)."
+    break
     fi
 
     # Check for errors
@@ -222,3 +221,11 @@ while true; do
     log "⏳ Waiting for server to start... (${elapsed}s/${MAX_STARTUP_TIME}s)"
     sleep 3
 done
+
+# Passive monitor: wait on the dev process and report exit.
+log "🩺 Monitoring frontend process (PID $DEV_PID). Press Ctrl+C to stop."
+wait $DEV_PID
+EXIT_CODE=$?
+log "⚠️ Frontend process exited with code $EXIT_CODE"
+rm -f frontend.log.pid
+exit $EXIT_CODE

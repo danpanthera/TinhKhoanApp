@@ -368,19 +368,24 @@ namespace Khoan.Api.Services
 
                 if (records.Any())
                 {
-                    // Set NGAY_DL for all records from filename (CSV-first rule)
+                    // Set NGAY_DL cho tất cả record từ filename (CSV-first rule)
                     if (DateTime.TryParse(result.NgayDL, out var ngayDlDate))
                     {
                         foreach (var record in records)
                         {
                             record.NGAY_DL = ngayDlDate;
-                            // record.CREATED_DATE = DateTime.UtcNow; // Không có CreatedAt trong GL02Entity mới
-                            // record.UpdatedAt = DateTime.UtcNow; // Không có UpdatedAt trong GL02Entity mới
                         }
                     }
 
-                    // Bulk insert LN01
-                    var insertedCount = await BulkInsertGenericAsync(records, "LN01");
+                    // Chuyển đổi DataTables.LN01 -> Entities.LN01Entity để phù hợp DbContext mapping
+                    var entities = new List<Models.Entities.LN01Entity>(records.Count);
+                    foreach (var r in records)
+                    {
+                        entities.Add(MapLN01ToEntity(r));
+                    }
+
+                    // Bulk insert LN01Entity
+                    var insertedCount = await BulkInsertGenericAsync(entities, "LN01");
                     result.ProcessedRecords = insertedCount;
                     result.Success = true;
                     _logger.LogInformation("✅ [LN01] Import thành công {Count} records", insertedCount);
@@ -457,27 +462,31 @@ namespace Khoan.Api.Services
                     }
 
                     // Upsert đơn giản: xóa dữ liệu cùng NGAY_DL trước khi insert (replace-by-date)
-                    using var tx = await _context.Database.BeginTransactionAsync();
-                    try
+                    var strategy = _context.Database.CreateExecutionStrategy();
+                    await strategy.ExecuteAsync(async () =>
                     {
-                        if (DateTime.TryParse(result.NgayDL, out var ngayToDelete))
+                        await using var tx = await _context.Database.BeginTransactionAsync();
+                        try
                         {
-                            var affected = await _context.LN03.Where(x => x.NGAY_DL.Date == ngayToDelete.Date).ExecuteDeleteAsync(); // NGAY_DL is DateTime, not DateTime?
-                            _logger.LogInformation("🧹 [LN03] Đã xoá {Count} bản ghi cũ cho ngày {Ngay}", affected, ngayToDelete.ToString("yyyy-MM-dd"));
-                        }
+                            if (DateTime.TryParse(result.NgayDL, out var ngayToDelete))
+                            {
+                                var affected = await _context.LN03.Where(x => x.NGAY_DL.Date == ngayToDelete.Date).ExecuteDeleteAsync();
+                                _logger.LogInformation("🧹 [LN03] Đã xoá {Count} bản ghi cũ cho ngày {Ngay}", affected, ngayToDelete.ToString("yyyy-MM-dd"));
+                            }
 
-                        var insertedCount = await BulkInsertGenericAsync(records, "LN03");
-                        await tx.CommitAsync();
-                        result.ProcessedRecords = insertedCount;
-                        result.Success = true;
-                        _logger.LogInformation("✅ [LN03_ENHANCED] Import thành công {Count} records", insertedCount);
-                        await LogImportMetadataAsync(result);
-                    }
-                    catch
-                    {
-                        await tx.RollbackAsync();
-                        throw;
-                    }
+                            var insertedCount = await BulkInsertGenericAsync(records, "LN03");
+                            await tx.CommitAsync();
+                            result.ProcessedRecords = insertedCount;
+                            result.Success = true;
+                            _logger.LogInformation("✅ [LN03_ENHANCED] Import thành công {Count} records", insertedCount);
+                            await LogImportMetadataAsync(result);
+                        }
+                        catch
+                        {
+                            await tx.RollbackAsync();
+                            throw;
+                        }
+                    });
                 }
                 else
                 {
@@ -613,9 +622,11 @@ namespace Khoan.Api.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "❌ [GL41] Import error: {Error}", ex.Message);
+                var root = ex.GetBaseException();
+                var details = $"{ex.Message}" + (root != null && root != ex ? $" | Root: {root.Message}" : string.Empty);
+                _logger.LogError(ex, "❌ [GL41] Import error: {Error}", details);
                 result.Success = false;
-                result.Errors.Add($"GL41 import error: {ex.Message}");
+                result.Errors.Add($"GL41 import error: {details}");
             }
             finally
             {
@@ -818,7 +829,9 @@ namespace Khoan.Api.Services
             {
                 HasHeaderRecord = true,
                 MissingFieldFound = null,
-                HeaderValidated = null
+                HeaderValidated = null,
+                TrimOptions = TrimOptions.Trim,
+                PrepareHeaderForMatch = args => args.Header?.Trim()
             });
 
             await foreach (var record in csv.GetRecordsAsync<T>())
@@ -843,13 +856,22 @@ namespace Khoan.Api.Services
                 MissingFieldFound = null,
                 HeaderValidated = null,
                 TrimOptions = TrimOptions.Trim,
-                BadDataFound = null,
-                IgnoreBlankLines = true
+                IgnoreBlankLines = true,
+                BadDataFound = null
             });
 
+            // Thiết lập định dạng thời gian
+            var dtOptions = csv.Context.TypeConverterOptionsCache.GetOptions<DateTime>();
+            dtOptions.Formats = new[] { "dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "d/M/yyyy", "yyyyMMdd", "yyyyMMdd HH:mm:ss" };
+            var ndtOptions = csv.Context.TypeConverterOptionsCache.GetOptions<DateTime?>();
+            ndtOptions.Formats = dtOptions.Formats;
+            ndtOptions.NullValues.AddRange(new[] { string.Empty, " ", "  ", "\t", "\r", "\n", "\r\n" });
+
+            // Lấy ngày DL từ tên file
             var fileName = Path.GetFileName(file.FileName);
             var ngayDlString = ExtractNgayDLFromFileName(fileName);
             var ngayDl = DateTime.TryParse(ngayDlString, out var date) ? date : DateTime.Today;
+            var nowUtc = DateTime.UtcNow;
 
             try
             {
@@ -857,10 +879,10 @@ namespace Khoan.Api.Services
                 foreach (IDictionary<string, object> csvRecord in csvRecords)
                 {
                     var record = new DP01();
-                    
+
                     // Set NGAY_DL from filename (first column requirement)
                     record.NGAY_DL = ngayDl;
-                    
+
                     // Safely map all 63 business columns with proper conversion
                     record.MA_CN = SafeGetString(csvRecord, "MA_CN");
                     record.TAI_KHOAN_HACH_TOAN = SafeGetString(csvRecord, "TAI_KHOAN_HACH_TOAN");
@@ -927,7 +949,10 @@ namespace Khoan.Api.Services
                     record.TYGIA = SafeGetDecimal(csvRecord, "TYGIA");
 
                     // Set ImportDateTime for this import batch
-                    record.ImportDateTime = DateTime.Now;
+                    record.ImportDateTime = nowUtc;
+                    // Ensure CreatedAt/UpdatedAt populated to satisfy NOT NULL constraints if present
+                    record.CreatedAt = nowUtc;
+                    record.UpdatedAt = nowUtc;
 
                     // No need to set audit fields for temporal tables - managed automatically
                     // record.FILE_NAME = file.FileName; // TODO: Add FILE_NAME column to DP01 table
@@ -981,9 +1006,8 @@ namespace Khoan.Api.Services
                     PHAN_LOAI = record.PHAN_LOAI ?? "",
                     GIAO_THE = record.GIAO_THE ?? "",
                     LOAI_PHAT_HANH = record.LOAI_PHAT_HANH ?? "",
-                    CREATED_DATE = DateTime.Now, // Fixed property name
-                    UPDATED_DATE = DateTime.Now, // Fixed property name
-                    FILE_NAME = fileName
+                    CREATED_DATE = DateTime.UtcNow, // đảm bảo UTC
+                    UPDATED_DATE = DateTime.UtcNow // đảm bảo UTC
                 };
 
                 records.Add(dpda);
@@ -1043,15 +1067,147 @@ namespace Khoan.Api.Services
                 HeaderValidated = null
             });
 
-            // Ensure DateTime parsing uses dd/MM/yyyy as primary format
+            // Read and validate header so that GetField("COLUMN_NAME") works reliably
+            csv.Read();
+            csv.ReadHeader();
+            var ln01HeaderCount = csv.HeaderRecord?.Length ?? 0;
+            _logger.LogInformation("🔍 [LN01] CSV has {HeaderCount} headers", ln01HeaderCount);
+
+            // Ensure DateTime parsing supports multiple formats including compact yyyyMMdd
             var dtOptions = csv.Context.TypeConverterOptionsCache.GetOptions<DateTime>();
-            dtOptions.Formats = new[] { "dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "d/M/yyyy" };
+            dtOptions.Formats = new[] { "dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "d/M/yyyy", "yyyyMMdd", "ddMMyyyy", "dd/MM/yyyy HH:mm:ss", "yyyy-MM-ddTHH:mm:ss" };
+            dtOptions.NullValues.AddRange(new[] { string.Empty, " ", "\t" });
             var ndtOptions = csv.Context.TypeConverterOptionsCache.GetOptions<DateTime?>();
             ndtOptions.Formats = dtOptions.Formats;
+            ndtOptions.NullValues.AddRange(dtOptions.NullValues);
 
-            await foreach (var record in csv.GetRecordsAsync<LN01>())
+            // Tolerant decimal parsing: treat blanks and quotes as null
+            var decOptions = csv.Context.TypeConverterOptionsCache.GetOptions<decimal?>();
+            decOptions.NumberStyles = NumberStyles.AllowDecimalPoint | NumberStyles.AllowThousands | NumberStyles.AllowLeadingSign;
+            decOptions.NullValues.AddRange(new[] { string.Empty, " ", "\t", "'", "                       " });
+
+            // Manually map rows to normalize numeric/string values
+            while (await csv.ReadAsync())
             {
-                records.Add(record);
+                try
+                {
+                    var r = new LN01();
+                    string Clean(string? s)
+                    {
+                        if (string.IsNullOrWhiteSpace(s)) return string.Empty;
+                        var t = s.Trim();
+                        // Remove leading single quotes and collapse spaces
+                        if (t.StartsWith("'")) t = t.TrimStart('\'');
+                        // Replace repeated spaces
+                        t = System.Text.RegularExpressions.Regex.Replace(t, @"\s+", " ").Trim();
+                        return t;
+                    }
+                    decimal? Dec(string? s)
+                    {
+                        if (string.IsNullOrWhiteSpace(s)) return null;
+                        var t = s.Replace(",", "").Trim();
+                        t = t.Trim('\'');
+                        // Treat zero padded like "0                       " as 0
+                        if (System.Text.RegularExpressions.Regex.IsMatch(t, @"^0+\s*$")) return 0m;
+                        if (decimal.TryParse(t, NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var d)) return d;
+                        return null;
+                    }
+                    DateTime? Dt(string? s)
+                    {
+                        if (string.IsNullOrWhiteSpace(s)) return null;
+                        var t = s.Trim('\'', ' ');
+                        var fmts = new[]{"yyyyMMdd","ddMMyyyy","dd/MM/yyyy","yyyy-MM-dd","yyyy/MM/dd"};
+                        if (DateTime.TryParseExact(t, fmts, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt)) return dt;
+                        if (DateTime.TryParse(t, out dt)) return dt;
+                        return null;
+                    }
+
+                    r.BRCD = Clean(csv.GetField("BRCD"));
+                    r.CUSTSEQ = Clean(csv.GetField("CUSTSEQ"));
+                    r.CUSTNM = Clean(csv.GetField("CUSTNM"));
+                    r.TAI_KHOAN = Clean(csv.GetField("TAI_KHOAN"));
+                    r.CCY = Clean(csv.GetField("CCY"));
+                    r.DU_NO = Dec(csv.GetField("DU_NO"));
+                    r.DSBSSEQ = Clean(csv.GetField("DSBSSEQ"));
+                    r.TRANSACTION_DATE = Dt(csv.GetField("TRANSACTION_DATE"));
+                    r.DSBSDT = Dt(csv.GetField("DSBSDT"));
+                    r.DISBUR_CCY = Clean(csv.GetField("DISBUR_CCY"));
+                    r.DISBURSEMENT_AMOUNT = Dec(csv.GetField("DISBURSEMENT_AMOUNT"));
+                    r.DSBSMATDT = Dt(csv.GetField("DSBSMATDT"));
+                    r.BSRTCD = Clean(csv.GetField("BSRTCD"));
+                    r.INTEREST_RATE = Dec(csv.GetField("INTEREST_RATE"));
+                    r.APPRSEQ = Clean(csv.GetField("APPRSEQ"));
+                    r.APPRDT = Dt(csv.GetField("APPRDT"));
+                    r.APPR_CCY = Clean(csv.GetField("APPR_CCY"));
+                    r.APPRAMT = Dec(csv.GetField("APPRAMT"));
+                    r.APPRMATDT = Dt(csv.GetField("APPRMATDT"));
+                    r.LOAN_TYPE = Clean(csv.GetField("LOAN_TYPE"));
+                    r.FUND_RESOURCE_CODE = Clean(csv.GetField("FUND_RESOURCE_CODE"));
+                    r.FUND_PURPOSE_CODE = Clean(csv.GetField("FUND_PURPOSE_CODE"));
+                    r.REPAYMENT_AMOUNT = Dec(csv.GetField("REPAYMENT_AMOUNT"));
+                    r.NEXT_REPAY_DATE = Dt(csv.GetField("NEXT_REPAY_DATE"));
+                    r.NEXT_REPAY_AMOUNT = Dec(csv.GetField("NEXT_REPAY_AMOUNT"));
+                    r.NEXT_INT_REPAY_DATE = Dt(csv.GetField("NEXT_INT_REPAY_DATE"));
+                    r.OFFICER_ID = Clean(csv.GetField("OFFICER_ID"));
+                    r.OFFICER_NAME = Clean(csv.GetField("OFFICER_NAME"));
+                    r.INTEREST_AMOUNT = Dec(csv.GetField("INTEREST_AMOUNT"));
+                    r.PASTDUE_INTEREST_AMOUNT = Dec(csv.GetField("PASTDUE_INTEREST_AMOUNT"));
+                    r.TOTAL_INTEREST_REPAY_AMOUNT = Dec(csv.GetField("TOTAL_INTEREST_REPAY_AMOUNT"));
+                    r.CUSTOMER_TYPE_CODE = Clean(csv.GetField("CUSTOMER_TYPE_CODE"));
+                    r.CUSTOMER_TYPE_CODE_DETAIL = Clean(csv.GetField("CUSTOMER_TYPE_CODE_DETAIL"));
+                    r.TRCTCD = Clean(csv.GetField("TRCTCD"));
+                    r.TRCTNM = Clean(csv.GetField("TRCTNM"));
+                    r.ADDR1 = Clean(csv.GetField("ADDR1"));
+                    r.PROVINCE = Clean(csv.GetField("PROVINCE"));
+                    r.LCLPROVINNM = Clean(csv.GetField("LCLPROVINNM"));
+                    r.DISTRICT = Clean(csv.GetField("DISTRICT"));
+                    r.LCLDISTNM = Clean(csv.GetField("LCLDISTNM"));
+                    r.COMMCD = Clean(csv.GetField("COMMCD"));
+                    r.LCLWARDNM = Clean(csv.GetField("LCLWARDNM"));
+                    r.LAST_REPAY_DATE = Dt(csv.GetField("LAST_REPAY_DATE"));
+                    r.SECURED_PERCENT = Clean(csv.GetField("SECURED_PERCENT"));
+                    r.NHOM_NO = Clean(csv.GetField("NHOM_NO"));
+                    r.LAST_INT_CHARGE_DATE = Dt(csv.GetField("LAST_INT_CHARGE_DATE"));
+                    r.EXEMPTINT = Clean(csv.GetField("EXEMPTINT"));
+                    r.EXEMPTINTTYPE = Clean(csv.GetField("EXEMPTINTTYPE"));
+                    r.EXEMPTINTAMT = Dec(csv.GetField("EXEMPTINTAMT"));
+                    r.GRPNO = Clean(csv.GetField("GRPNO"));
+                    r.BUSCD = Clean(csv.GetField("BUSCD"));
+                    r.BSNSSCLTPCD = Clean(csv.GetField("BSNSSCLTPCD"));
+                    r.USRIDOP = Clean(csv.GetField("USRIDOP"));
+                    r.ACCRUAL_AMOUNT = Dec(csv.GetField("ACCRUAL_AMOUNT"));
+                    r.ACCRUAL_AMOUNT_END_OF_MONTH = Dec(csv.GetField("ACCRUAL_AMOUNT_END_OF_MONTH"));
+                    r.INTCMTH = Clean(csv.GetField("INTCMTH"));
+                    r.INTRPYMTH = Clean(csv.GetField("INTRPYMTH"));
+                    r.INTTRMMTH = Clean(csv.GetField("INTTRMMTH"));
+                    r.YRDAYS = Clean(csv.GetField("YRDAYS"));
+                    r.REMARK = Clean(csv.GetField("REMARK"));
+                    r.CHITIEU = Clean(csv.GetField("CHITIEU"));
+                    r.CTCV = Clean(csv.GetField("CTCV"));
+                    r.CREDIT_LINE_YPE = Clean(csv.GetField("CREDIT_LINE_YPE"));
+                    r.INT_LUMPSUM_PARTIAL_TYPE = Clean(csv.GetField("INT_LUMPSUM_PARTIAL_TYPE"));
+                    r.INT_PARTIAL_PAYMENT_TYPE = Clean(csv.GetField("INT_PARTIAL_PAYMENT_TYPE"));
+                    r.INT_PAYMENT_INTERVAL = Clean(csv.GetField("INT_PAYMENT_INTERVAL"));
+                    r.AN_HAN_LAI = Clean(csv.GetField("AN_HAN_LAI"));
+                    r.PHUONG_THUC_GIAI_NGAN_1 = Clean(csv.GetField("PHUONG_THUC_GIAI_NGAN_1"));
+                    r.TAI_KHOAN_GIAI_NGAN_1 = Clean(csv.GetField("TAI_KHOAN_GIAI_NGAN_1"));
+                    r.SO_TIEN_GIAI_NGAN_1 = Dec(csv.GetField("SO_TIEN_GIAI_NGAN_1"));
+                    r.PHUONG_THUC_GIAI_NGAN_2 = Clean(csv.GetField("PHUONG_THUC_GIAI_NGAN_2"));
+                    r.TAI_KHOAN_GIAI_NGAN_2 = Clean(csv.GetField("TAI_KHOAN_GIAI_NGAN_2"));
+                    r.SO_TIEN_GIAI_NGAN_2 = Dec(csv.GetField("SO_TIEN_GIAI_NGAN_2"));
+                    r.CMT_HC = Clean(csv.GetField("CMT_HC"));
+                    r.NGAY_SINH = Dt(csv.GetField("NGAY_SINH"));
+                    r.MA_CB_AGRI = Clean(csv.GetField("MA_CB_AGRI"));
+                    r.MA_NGANH_KT = Clean(csv.GetField("MA_NGANH_KT"));
+                    r.TY_GIA = Dec(csv.GetField("TY_GIA"));
+                    r.OFFICER_IPCAS = Clean(csv.GetField("OFFICER_IPCAS"));
+
+                    records.Add(r);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning("⚠️ [LN01] Row parsing error: {Error}", ex.Message);
+                }
             }
 
             return records;
@@ -1132,9 +1288,9 @@ namespace Khoan.Api.Services
         /// <summary>
         /// Parse GL02 CSV với 17 business columns, set NGAY_DL từ TRDATE
         /// </summary>
-        private async Task<List<GL02Entity>> ParseGL02CsvAsync(IFormFile file)
+        private async Task<List<Models.DataTables.GL02>> ParseGL02CsvAsync(IFormFile file)
         {
-            var records = new List<GL02Entity>();
+            var records = new List<Models.DataTables.GL02>();
 
             using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
             using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
@@ -1152,49 +1308,77 @@ namespace Khoan.Api.Services
 
             await foreach (var csvRecord in csv.GetRecordsAsync<dynamic>())
             {
-                var record = new GL02Entity();
+                var record = new Models.DataTables.GL02();
 
-                // Declare variables first to avoid scope issues
-                DateTime trdate = DateTime.MinValue;
-                DateTime crtdtm = DateTime.MinValue;
-                decimal dramount = 0;
-                decimal cramount = 0;
+                // Access dynamic row safely via dictionary
+                var dict = csvRecord as IDictionary<string, object>;
 
-                // Map 17 business columns từ CSV
-                if (csvRecord.TRDATE != null && DateTime.TryParse(csvRecord.TRDATE.ToString(), out trdate))
+                // TRDATE -> NGAY_DL (ngày sao kê)
+                if (dict != null && dict.TryGetValue("TRDATE", out var trdateObj))
                 {
-                    // record.TRDATE = trdate; // TRDATE không còn trong GL02Entity mới
-                    record.NGAY_DL = trdate.Date; // NGAY_DL derived from TRDATE
+                    var trStr = trdateObj?.ToString();
+                    if (!string.IsNullOrWhiteSpace(trStr))
+                    {
+                        var dateFormats = new[] { "dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "d/M/yyyy", "yyyyMMdd" };
+                        if (DateTime.TryParseExact(trStr.Trim('\'', '"', ' '), dateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var trdate))
+                        {
+                            record.NGAY_DL = trdate.Date;
+                        }
+                    }
+                }
+                if (record.NGAY_DL == default)
+                {
+                    // Fallback để không lỗi constraint
+                    record.NGAY_DL = DateTime.Today;
+                    _logger.LogWarning("⚠️ [GL02] Không đọc được TRDATE, set NGAY_DL=Today");
                 }
 
-                record.TRBRCD = csvRecord.TRBRCD?.ToString() ?? string.Empty;
-                record.USERID = csvRecord.USERID?.ToString();
-                record.JOURSEQ = csvRecord.JOURSEQ?.ToString();
-                record.DYTRSEQ = csvRecord.DYTRSEQ?.ToString();
-                record.LOCAC = csvRecord.LOCAC?.ToString() ?? string.Empty;
-                record.CCY = csvRecord.CCY?.ToString() ?? string.Empty;
-                record.BUSCD = csvRecord.BUSCD?.ToString();
-                record.UNIT = csvRecord.UNIT?.ToString();
-                record.TRCD = csvRecord.TRCD?.ToString();
-                record.CUSTOMER = csvRecord.CUSTOMER?.ToString();
-                record.TRTP = csvRecord.TRTP?.ToString();
-                record.REFERENCE = csvRecord.REFERENCE?.ToString();
-                record.REMARK = csvRecord.REMARK?.ToString();
+                // Map chuỗi an toàn
+                string GetS(string key)
+                {
+                    if (dict != null && dict.TryGetValue(key, out var v) && v != null)
+                        return v.ToString();
+                    return string.Empty;
+                }
 
-                // Parse amounts
-                if (decimal.TryParse(csvRecord.DRAMOUNT?.ToString(), out dramount))
-                    record.DRAMOUNT = dramount;
-                if (decimal.TryParse(csvRecord.CRAMOUNT?.ToString(), out cramount))
-                    record.CRAMOUNT = cramount;
+                record.TRBRCD = GetS("TRBRCD");
+                record.USERID = string.IsNullOrEmpty(GetS("USERID")) ? null : GetS("USERID");
+                record.JOURSEQ = string.IsNullOrEmpty(GetS("JOURSEQ")) ? null : GetS("JOURSEQ");
+                record.DYTRSEQ = string.IsNullOrEmpty(GetS("DYTRSEQ")) ? null : GetS("DYTRSEQ");
+                record.LOCAC = GetS("LOCAC");
+                record.CCY = GetS("CCY");
+                record.BUSCD = string.IsNullOrEmpty(GetS("BUSCD")) ? null : GetS("BUSCD");
+                record.UNIT = string.IsNullOrEmpty(GetS("UNIT")) ? null : GetS("UNIT");
+                record.TRCD = string.IsNullOrEmpty(GetS("TRCD")) ? null : GetS("TRCD");
+                record.CUSTOMER = string.IsNullOrEmpty(GetS("CUSTOMER")) ? null : GetS("CUSTOMER");
+                record.TRTP = string.IsNullOrEmpty(GetS("TRTP")) ? null : GetS("TRTP");
+                record.REFERENCE = string.IsNullOrEmpty(GetS("REFERENCE")) ? null : GetS("REFERENCE");
+                record.REMARK = string.IsNullOrEmpty(GetS("REMARK")) ? null : GetS("REMARK");
 
-                // Parse CRTDTM
-                if (csvRecord.CRTDTM != null && DateTime.TryParse(csvRecord.CRTDTM.ToString(), out crtdtm))
-                    record.CRTDTM = crtdtm;
+                // Amounts
+                decimal tmpDec;
+                var drRaw = GetS("DRAMOUNT");
+                if (!string.IsNullOrWhiteSpace(drRaw) && decimal.TryParse(drRaw, NumberStyles.Number, CultureInfo.InvariantCulture, out tmpDec))
+                    record.DRAMOUNT = tmpDec;
+                var crRaw = GetS("CRAMOUNT");
+                if (!string.IsNullOrWhiteSpace(crRaw) && decimal.TryParse(crRaw, NumberStyles.Number, CultureInfo.InvariantCulture, out tmpDec))
+                    record.CRAMOUNT = tmpDec;
 
-                // System columns
-                // record.CREATED_DATE = DateTime.UtcNow; // Không có CreatedAt trong GL02Entity mới
-                // record.UpdatedAt = DateTime.UtcNow; // Không có UpdatedAt trong GL02Entity mới
-                // record.FILE_NAME = file.FileName; // Sử dụng FILE_NAME thay vì FileName
+                // CRTDTM (có thể không có cột này trong một số file)
+                var crtStr = GetS("CRTDTM");
+                if (!string.IsNullOrWhiteSpace(crtStr))
+                {
+                    var dtFormats = new[] { "dd/MM/yyyy HH:mm:ss", "yyyy-MM-dd HH:mm:ss", "yyyyMMdd HH:mm:ss", "yyyyMMddHH:mm:ss", "yyyy-MM-ddTHH:mm:ss" };
+                    if (DateTime.TryParseExact(crtStr.Trim('\'', '"', ' '), dtFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var crtdtm))
+                        record.CRTDTM = crtdtm;
+                    else if (DateTime.TryParse(crtStr, out var general))
+                        record.CRTDTM = general;
+                }
+
+                // Audit/system columns
+                record.CREATED_DATE = DateTime.UtcNow;
+                record.UPDATED_DATE = DateTime.UtcNow;
+                // DataTables.GL02 không có cột FILE_NAME trong DB model
 
                 records.Add(record);
             }
@@ -1219,9 +1403,20 @@ namespace Khoan.Api.Services
 
             // Date parsing preferences (dd/MM/yyyy common), and allow timestamp for TR_TIME
             var dtOptions = csv.Context.TypeConverterOptionsCache.GetOptions<DateTime>();
-            dtOptions.Formats = new[] { "dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "d/M/yyyy", "yyyyMMdd" };
+            dtOptions.Formats = new[] {
+                // common numeric formats
+                "dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "d/M/yyyy", "yyyyMMdd",
+                // alpha month formats seen in GL01 exports
+                "dd-MMM-yy", "d-MMM-yy", "dd-MMM-yyyy", "d-MMM-yyyy",
+                // with time components
+                "dd/MM/yyyy HH:mm:ss", "yyyy-MM-dd HH:mm:ss", "dd-MMM-yy HH:mm:ss", "dd-MMM-yyyy HH:mm:ss",
+                // compact with time (observed in TRDT_TIME): 20241201 06:13:46
+                "yyyyMMdd HH:mm:ss", "yyyyMMddHH:mm:ss", "yyyy-MM-ddTHH:mm:ss"
+            };
             var ndtOptions = csv.Context.TypeConverterOptionsCache.GetOptions<DateTime?>();
             ndtOptions.Formats = dtOptions.Formats;
+            // Treat blanks and whitespace as nulls to avoid conversion errors on empty cells
+            ndtOptions.NullValues.AddRange(new[] { string.Empty, " ", "  ", "\t", "\r", "\n", "\r\n" });
 
             await foreach (var record in csv.GetRecordsAsync<GL01>())
             {
@@ -1293,7 +1488,8 @@ namespace Khoan.Api.Services
                     ST_GHICO = ParseDecimalSafely(record.ST_GHICO),
                     DN_CUOIKY = ParseDecimalSafely(record.DN_CUOIKY),
                     DC_CUOIKY = ParseDecimalSafely(record.DC_CUOIKY),
-                    CREATED_DATE = DateTime.UtcNow
+                    CREATED_DATE = DateTime.UtcNow,
+                    FILE_NAME = file.FileName
                 };
 
                 records.Add(entity);
@@ -1305,15 +1501,90 @@ namespace Khoan.Api.Services
         /// <summary>
         /// Bulk insert generic cho bất kỳ entity type nào
         /// </summary>
-        private async Task<int> BulkInsertGenericAsync<T>(List<T> records, string tableName) where T : class
+    private async Task<int> BulkInsertGenericAsync<T>(List<T> records, string tableName) where T : class
         {
             try
             {
-                _context.Set<T>().AddRange(records);
+                // Ensure common audit columns are populated if present (defensive)
+                var type = typeof(T);
+                var now = DateTime.UtcNow;
+                var createdAtProp = type.GetProperty("CreatedAt");
+                var updatedAtProp = type.GetProperty("UpdatedAt");
+                var createdDateProp = type.GetProperty("CREATED_DATE");
+                var updatedDateProp = type.GetProperty("UPDATED_DATE");
+
+                if (createdAtProp != null || updatedAtProp != null || createdDateProp != null || updatedDateProp != null)
+                {
+                    foreach (var r in records)
+                    {
+                        if (createdAtProp != null)
+                        {
+                            var v = createdAtProp.GetValue(r);
+                            if (v == null || (v is DateTime dt && dt == default))
+                                createdAtProp.SetValue(r, now);
+                        }
+                        if (updatedAtProp != null)
+                        {
+                            var v = updatedAtProp.GetValue(r);
+                            if (v == null || (v is DateTime dt && dt == default))
+                                updatedAtProp.SetValue(r, now);
+                        }
+                        if (createdDateProp != null)
+                        {
+                            var v = createdDateProp.GetValue(r);
+                            if (v == null || (v is DateTime dt && dt == default))
+                                createdDateProp.SetValue(r, now);
+                        }
+                        if (updatedDateProp != null)
+                        {
+                            var v = updatedDateProp.GetValue(r);
+                            if (v == null || (v is DateTime dt && dt == default))
+                                updatedDateProp.SetValue(r, now);
+                        }
+                    }
+                }
+
+                // Nếu kiểu không map trực tiếp trong DbContext, thực hiện chuyển đổi phù hợp
+                if (typeof(T) == typeof(Models.DataTables.LN01))
+                {
+                    var list = records.Cast<Models.DataTables.LN01>().Select(MapLN01ToEntity).ToList();
+                    _context.Set<Models.Entities.LN01Entity>().AddRange(list);
+                }
+                else if (typeof(T) == typeof(Models.DataTables.LN03))
+                {
+                    var list = records.Cast<Models.DataTables.LN03>().Select(MapLN03ToEntity).ToList();
+                    _context.Set<Models.Entities.LN03Entity>().AddRange(list);
+                }
+                else
+                {
+                    _context.Set<T>().AddRange(records);
+                }
                 var insertedCount = await _context.SaveChangesAsync();
 
                 _logger.LogInformation("✅ [BULK_INSERT] Inserted {Count} records vào {Table}", insertedCount, tableName);
                 return insertedCount;
+            }
+            catch (DbUpdateException dbEx)
+            {
+                var root = dbEx.GetBaseException();
+                _logger.LogError(dbEx, "❌ [BULK_INSERT] DbUpdateException on {Table}: {Message}", tableName, dbEx.Message);
+                if (root != null && root != dbEx)
+                {
+                    _logger.LogError("🔎 [BULK_INSERT] Root cause: {RootType}: {RootMessage}", root.GetType().Name, root.Message);
+                }
+#if DEBUG
+                // Log detailed entries causing failure when available
+                foreach (var entry in dbEx.Entries)
+                {
+                    try
+                    {
+                        var props = entry.CurrentValues.Properties.Select(p => $"{p.Name}={(entry.CurrentValues[p] ?? "<null>")}");
+                        _logger.LogError("⚙️ [BULK_INSERT] Failed entity {EntityType}: {Values}", entry.Entity.GetType().Name, string.Join(", ", props));
+                    }
+                    catch { /* best-effort */ }
+                }
+#endif
+                throw;
             }
             catch (Exception ex)
             {
@@ -1391,6 +1662,151 @@ namespace Khoan.Api.Services
             // Log warning but don't throw
             _logger.LogWarning("⚠️ Cannot parse decimal value: '{Value}'", value);
             return null;
+        }
+
+        /// <summary>
+        /// Map từ DataTables.LN01 (model CSV) sang Entities.LN01Entity (model DB)
+        /// </summary>
+        private static Models.Entities.LN01Entity MapLN01ToEntity(Models.DataTables.LN01 r)
+        {
+            var e = new Models.Entities.LN01Entity
+            {
+                // NGAY_DL bắt buộc
+                NGAY_DL = r.NGAY_DL ?? DateTime.Today,
+
+                // Map các cột chính; các cột còn lại giữ nguyên tên, chuyển kiểu nếu cần
+                BRCD = r.BRCD ?? string.Empty,
+                CUSTSEQ = r.CUSTSEQ ?? string.Empty,
+                CUSTNM = r.CUSTNM,
+                TAI_KHOAN = r.TAI_KHOAN ?? string.Empty,
+                CCY = r.CCY,
+                DU_NO = r.DU_NO,
+                DSBSSEQ = r.DSBSSEQ,
+                TRANSACTION_DATE = r.TRANSACTION_DATE,
+                DSBSDT = r.DSBSDT,
+                DISBUR_CCY = r.DISBUR_CCY,
+                DISBURSEMENT_AMOUNT = r.DISBURSEMENT_AMOUNT,
+                DSBSMATDT = r.DSBSMATDT,
+                BSRTCD = r.BSRTCD,
+                INTEREST_RATE = r.INTEREST_RATE,
+                // APRSEQ column not present in DB; keep APPRSEQ only
+                APPRSEQ = r.APPRSEQ,
+                APPRDT = r.APPRDT,
+                APPR_CCY = r.APPR_CCY,
+                APPRAMT = r.APPRAMT,
+                APPRMATDT = r.APPRMATDT,
+                LOAN_TYPE = r.LOAN_TYPE,
+                FUND_RESOURCE_CODE = r.FUND_RESOURCE_CODE,
+                FUND_PURPOSE_CODE = r.FUND_PURPOSE_CODE,
+                REPAYMENT_AMOUNT = r.REPAYMENT_AMOUNT,
+                NEXT_REPAY_DATE = r.NEXT_REPAY_DATE,
+                NEXT_REPAY_AMOUNT = r.NEXT_REPAY_AMOUNT,
+                NEXT_INT_REPAY_DATE = r.NEXT_INT_REPAY_DATE,
+                OFFICER_ID = r.OFFICER_ID,
+                OFFICER_NAME = r.OFFICER_NAME,
+                INTEREST_AMOUNT = r.INTEREST_AMOUNT,
+                PASTDUE_INTEREST_AMOUNT = r.PASTDUE_INTEREST_AMOUNT,
+                TOTAL_INTEREST_REPAY_AMOUNT = r.TOTAL_INTEREST_REPAY_AMOUNT,
+                CUSTOMER_TYPE_CODE = r.CUSTOMER_TYPE_CODE,
+                CUSTOMER_TYPE_CODE_DETAIL = r.CUSTOMER_TYPE_CODE_DETAIL,
+                TRCTCD = r.TRCTCD,
+                TRCTNM = r.TRCTNM,
+                ADDR1 = r.ADDR1,
+                PROVINCE = r.PROVINCE,
+                LCLPROVINNM = r.LCLPROVINNM,
+                DISTRICT = r.DISTRICT,
+                LCLDISTNM = r.LCLDISTNM,
+                COMMCD = r.COMMCD,
+                LCLWARDNM = r.LCLWARDNM,
+                LAST_REPAY_DATE = r.LAST_REPAY_DATE,
+                // SECURED_PERCENT: DataTables là string?, Entities yêu cầu decimal? -> cố gắng parse nếu có
+                SECURED_PERCENT = TryParseDecimal(r.SECURED_PERCENT),
+                // NHOM_NO: DataTables là string?, Entities là int? -> parse nếu có
+                NHOM_NO = TryParseInt(r.NHOM_NO),
+                LAST_INT_CHARGE_DATE = r.LAST_INT_CHARGE_DATE,
+                EXEMPTINT = TryParseDecimal(r.EXEMPTINT),
+                EXEMPTINTTYPE = r.EXEMPTINTTYPE,
+                EXEMPTINTAMT = r.EXEMPTINTAMT,
+                GRPNO = TryParseInt(r.GRPNO),
+                BUSCD = r.BUSCD,
+                BSNSSCLTPCD = r.BSNSSCLTPCD,
+                USRIDOP = r.USRIDOP,
+                ACCRUAL_AMOUNT = r.ACCRUAL_AMOUNT,
+                ACCRUAL_AMOUNT_END_OF_MONTH = r.ACCRUAL_AMOUNT_END_OF_MONTH,
+                INTCMTH = r.INTCMTH,
+                INTRPYMTH = r.INTRPYMTH,
+                INTTRMMTH = TryParseInt(r.INTTRMMTH),
+                YRDAYS = TryParseInt(r.YRDAYS),
+                REMARK = r.REMARK,
+                CHITIEU = r.CHITIEU,
+                CTCV = r.CTCV,
+                CREDIT_LINE_YPE = r.CREDIT_LINE_YPE,
+                INT_LUMPSUM_PARTIAL_TYPE = r.INT_LUMPSUM_PARTIAL_TYPE,
+                INT_PARTIAL_PAYMENT_TYPE = r.INT_PARTIAL_PAYMENT_TYPE,
+                INT_PAYMENT_INTERVAL = TryParseInt(r.INT_PAYMENT_INTERVAL),
+                AN_HAN_LAI = TryParseInt(r.AN_HAN_LAI),
+                PHUONG_THUC_GIAI_NGAN_1 = r.PHUONG_THUC_GIAI_NGAN_1,
+                TAI_KHOAN_GIAI_NGAN_1 = r.TAI_KHOAN_GIAI_NGAN_1,
+                SO_TIEN_GIAI_NGAN_1 = r.SO_TIEN_GIAI_NGAN_1,
+                PHUONG_THUC_GIAI_NGAN_2 = r.PHUONG_THUC_GIAI_NGAN_2,
+                TAI_KHOAN_GIAI_NGAN_2 = r.TAI_KHOAN_GIAI_NGAN_2,
+                SO_TIEN_GIAI_NGAN_2 = r.SO_TIEN_GIAI_NGAN_2,
+                CMT_HC = r.CMT_HC,
+                NGAY_SINH = r.NGAY_SINH,
+                MA_CB_AGRI = r.MA_CB_AGRI,
+                MA_NGANH_KT = r.MA_NGANH_KT,
+                TY_GIA = r.TY_GIA,
+                OFFICER_IPCAS = r.OFFICER_IPCAS
+            };
+
+            return e;
+        }
+
+        private static decimal? TryParseDecimal(string? s)
+        {
+            if (string.IsNullOrWhiteSpace(s)) return null;
+            var t = s.Trim().Trim('\'').Replace(",", "");
+            if (decimal.TryParse(t, NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var d)) return d;
+            return null;
+        }
+
+        private static int? TryParseInt(string? s)
+        {
+            if (string.IsNullOrWhiteSpace(s)) return null;
+            var t = s.Trim().Trim('\'');
+            if (int.TryParse(t, NumberStyles.Integer, CultureInfo.InvariantCulture, out var v)) return v;
+            return null;
+        }
+
+        /// <summary>
+        /// Map từ DataTables.LN03 sang Entities.LN03Entity
+        /// </summary>
+        private static Models.Entities.LN03Entity MapLN03ToEntity(Models.DataTables.LN03 r)
+        {
+            return new Models.Entities.LN03Entity
+            {
+                NGAY_DL = r.NGAY_DL,
+                MACHINHANH = r.MACHINHANH,
+                TENCHINHANH = r.TENCHINHANH,
+                MAKH = r.MAKH,
+                TENKH = r.TENKH,
+                SOHOPDONG = r.SOHOPDONG,
+                SOTIENXLRR = r.SOTIENXLRR,
+                NGAYPHATSINHXL = r.NGAYPHATSINHXL,
+                THUNOSAUXL = r.THUNOSAUXL,
+                CONLAINGOAIBANG = r.CONLAINGOAIBANG,
+                DUNONOIBANG = r.DUNONOIBANG,
+                NHOMNO = r.NHOMNO,
+                MACBTD = r.MACBTD,
+                TENCBTD = r.TENCBTD,
+                MAPGD = r.MAPGD,
+                TAIKHOANHACHTOAN = r.TAIKHOANHACHTOAN,
+                REFNO = r.REFNO,
+                LOAINGUONVON = r.LOAINGUONVON,
+                Column18 = r.Column18,
+                Column19 = r.Column19,
+                Column20 = r.Column20
+            };
         }
 
         /// <summary>
@@ -1475,29 +1891,33 @@ namespace Khoan.Api.Services
                     }
 
                     // Replace-by-date upsert pattern: delete existing data for this date, then insert new
-                    using var transaction = await _context.Database.BeginTransactionAsync();
-                    try
+                    var strategy = _context.Database.CreateExecutionStrategy();
+                    await strategy.ExecuteAsync(async () =>
                     {
-                        // Delete existing records cho ngày này
-                        var existingRecords = _context.RR01.Where(r => r.NGAY_DL.Date == ngayDlDate.Date);
-                        _context.RR01.RemoveRange(existingRecords);
-                        await _context.SaveChangesAsync();
+                        await using var transaction = await _context.Database.BeginTransactionAsync();
+                        try
+                        {
+                            // Delete existing records cho ngày này
+                            var existingRecords = _context.RR01.Where(r => r.NGAY_DL.Date == ngayDlDate.Date);
+                            _context.RR01.RemoveRange(existingRecords);
+                            await _context.SaveChangesAsync();
 
-                        // Bulk insert new records
-                        var insertedCount = await BulkInsertGenericAsync(records, "RR01");
+                            // Bulk insert new records
+                            var insertedCount = await BulkInsertGenericAsync(records, "RR01");
 
-                        await transaction.CommitAsync();
+                            await transaction.CommitAsync();
 
-                        result.ProcessedRecords = insertedCount;
-                        result.Success = true;
-                        _logger.LogInformation("✅ [RR01] Import thành công {Count} records for date {Date}", insertedCount, ngayDlDate.ToString("yyyy-MM-dd"));
-                        await LogImportMetadataAsync(result);
-                    }
-                    catch
-                    {
-                        await transaction.RollbackAsync();
-                        throw;
-                    }
+                            result.ProcessedRecords = insertedCount;
+                            result.Success = true;
+                            _logger.LogInformation("✅ [RR01] Import thành công {Count} records for date {Date}", insertedCount, ngayDlDate.ToString("yyyy-MM-dd"));
+                            await LogImportMetadataAsync(result);
+                        }
+                        catch
+                        {
+                            await transaction.RollbackAsync();
+                            throw;
+                        }
+                    });
                 }
                 else
                 {

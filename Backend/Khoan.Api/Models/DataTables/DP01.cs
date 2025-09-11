@@ -255,6 +255,15 @@ namespace Khoan.Api.Models.DataTables
         [Column("ImportDateTime", TypeName = "datetime2")]
         public DateTime ImportDateTime { get; set; }
 
+    // Some environments require an explicit CreatedAt audit column
+    // Map it if present in the database to avoid NOT NULL insert errors
+    [Column("CreatedAt", TypeName = "datetime2")]
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    // UpdatedAt audit column - align with DB schema
+    [Column("UpdatedAt", TypeName = "datetime2")]
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
         // Note: SysStartTime and SysEndTime are shadow properties managed by EF Core temporal tables
         // They should not be declared as regular properties to avoid conflicts
         // CREATED_DATE and UPDATED_DATE are not needed for temporal tables

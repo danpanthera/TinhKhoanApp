@@ -1,7 +1,9 @@
 import axios from 'axios'
 
+const baseURL = import.meta.env.DEV ? '/api' : (import.meta.env.VITE_API_BASE_URL || '/api')
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5055/api', // ✅ Thêm /api vào baseURL
+  // In development, always go through Vite proxy to avoid CORS; prod can override via VITE_API_BASE_URL
+  baseURL,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -103,9 +105,9 @@ export const kpiDefinitionsApi = {
       ],
     }),
 
-  getKPIsByCBType: cbType => Promise.reject(new Error('API tạm thời không khả dụng - đang cập nhật dữ liệu mới')),
+  getKPIsByCBType: _cbType => Promise.reject(new Error('API tạm thời không khả dụng - đang cập nhật dữ liệu mới')),
 
-  resetKPIsByCBType: cbType => Promise.reject(new Error('API tạm thời không khả dụng - đang cập nhật dữ liệu mới')),
+  resetKPIsByCBType: _cbType => Promise.reject(new Error('API tạm thời không khả dụng - đang cập nhật dữ liệu mới')),
 
   // 🚀 Export APIs
   export: {

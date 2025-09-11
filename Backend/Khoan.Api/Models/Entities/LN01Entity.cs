@@ -12,24 +12,26 @@ namespace Khoan.Api.Models.Entities
     [Table("LN01")]
     public class LN01Entity : ITemporalEntity
     {
-        // === SYSTEM COLUMNS (từ ITemporalEntity) ===
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public long Id { get; set; }
+    // === SYSTEM COLUMNS (từ ITemporalEntity) ===
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public long Id { get; set; }
 
-        [Required]
-        [Column(TypeName = "datetime2(3)")]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    // These audit fields are required by the shared interface but do not exist in LN01 DB schema
+    // Mark as NotMapped to prevent EF from including them in INSERT/MERGE
+    [NotMapped]
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [Column(TypeName = "datetime2(3)")]
-        public DateTime UpdatedAt { get; set; }
+    [NotMapped]
+    public DateTime UpdatedAt { get; set; }
 
-        // Temporal table support
-        [Column(TypeName = "datetime2(3)")]
-        public DateTime SysStartTime { get; set; }
+    // Interface requires SysStartTime/SysEndTime but LN01 uses ValidFrom/ValidTo period columns in DB
+    // Prevent EF from mapping these by marking NotMapped
+    [NotMapped]
+    public DateTime SysStartTime { get; set; }
 
-        [Column(TypeName = "datetime2(3)")]
-        public DateTime SysEndTime { get; set; }
+    [NotMapped]
+    public DateTime SysEndTime { get; set; }
 
         // === NGAY_DL - Date from filename (required for IndexInitializers) ===
         [Required]
@@ -113,11 +115,7 @@ namespace Khoan.Api.Models.Entities
         [Column(TypeName = "date")]
         public DateTime? DSBSMATDT { get; set; }
 
-        /// <summary>
-        /// Approval Sequence
-        /// </summary>
-        [Column("APRSEQ", TypeName = "nvarchar(50)")]
-        public string? APRSEQ { get; set; }
+    // NOTE: Column "APRSEQ" does not exist in database; keep only APPRSEQ below
 
         /// <summary>
         /// Base rate code
@@ -520,25 +518,5 @@ namespace Khoan.Api.Models.Entities
         /// </summary>
         [Column(TypeName = "nvarchar(50)")]
         public string? OFFICER_IPCAS { get; set; }
-
-        // === METADATA COLUMNS ===
-
-        /// <summary>
-        /// Tên file import (7800_ln01_20241231.csv)
-        /// </summary>
-        [Column(TypeName = "nvarchar(500)")]
-        public string? FileName { get; set; }
-
-        /// <summary>
-        /// Import batch ID để tracking
-        /// </summary>
-        [Column(TypeName = "uniqueidentifier")]
-        public Guid? ImportId { get; set; }
-
-        /// <summary>
-        /// Additional metadata về import process
-        /// </summary>
-        [Column(TypeName = "nvarchar(1000)")]
-        public string? ImportMetadata { get; set; }
     }
 }

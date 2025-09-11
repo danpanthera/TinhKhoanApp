@@ -1,6 +1,10 @@
 #!/bin/bash
 # Enhanced Backend Startup Script - Full Process Management
 
+# Ensure we run from this script's directory (Khoan.Api)
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR"
+
 # UTF-8 Configuration
 export LANG=vi_VN.UTF-8
 export LC_ALL=vi_VN.UTF-8
@@ -40,7 +44,8 @@ rotate_log_if_needed() {
         echo "$(date '+%Y-%m-%d %H:%M:%S') - 🔄 Rotated $file (size=${current_size} bytes, max=${max_bytes})" >> "$file"
     fi
 }
-PORT=5055
+# Allow overriding port; default 5055
+PORT=${PORT:-5055}
 
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" | tee -a "$LOG_FILE"
@@ -73,10 +78,10 @@ rm -f "$LOG_FILE.pid" backend_startup.log backend_new.log
 
 log "✅ Cleanup completed"
 
-# Step 2: Test build before starting
-log "🔨 Testing build process..."
-dotnet clean --verbosity quiet > /dev/null 2>&1
-if ! dotnet build --verbosity quiet > build_test.log 2>&1; then
+# Step 2: Test build before starting (explicit csproj to avoid MSB1011)
+log "🔨 Testing build process (Khoan.Api.csproj)..."
+dotnet clean Khoan.Api.csproj --verbosity quiet > /dev/null 2>&1
+if ! dotnet build Khoan.Api.csproj --verbosity quiet > build_test.log 2>&1; then
     log "❌ BUILD FAILED! Check build_test.log for errors:"
     cat build_test.log | tail -20
     exit 1
@@ -85,9 +90,9 @@ fi
 log "✅ Build test successful"
 rm -f build_test.log
 
-# Step 3: Start the API service
-log "▶️ Starting Backend API..."
-nohup dotnet run --urls="http://localhost:$PORT" >> "$LOG_FILE" 2>&1 &
+# Step 3: Start the API service (explicit project)
+log "▶️ Starting Backend API (Khoan.Api.csproj)..."
+nohup dotnet run --project Khoan.Api.csproj --urls="http://localhost:$PORT" >> "$LOG_FILE" 2>&1 &
 API_PID=$!
 echo $API_PID > "$LOG_FILE.pid"
 
@@ -96,10 +101,13 @@ log "🆔 Backend PID: $API_PID"
 # Step 4: Health check with detailed feedback
 log "🔍 Testing API health..."
 for i in {1..20}; do
-    if curl -s --connect-timeout 3 --max-time 5 http://localhost:$PORT/api/health >/dev/null 2>&1; then
+    # Try several common health endpoints
+    if curl -s --connect-timeout 3 --max-time 5 http://localhost:$PORT/api/health >/dev/null 2>&1 || \
+       curl -s --connect-timeout 3 --max-time 5 http://localhost:$PORT/api/Health >/dev/null 2>&1 || \
+       curl -s --connect-timeout 3 --max-time 5 http://localhost:$PORT/health >/dev/null 2>&1; then
         log "✅ Backend API is healthy and responding!"
         log "🔗 API Base URL: http://localhost:$PORT"
-        log "🔗 Health Check: http://localhost:$PORT/api/health"
+        log "🔗 Health Check: http://localhost:$PORT/(api/health|api/Health|health)"
         log "📝 Logs: $LOG_FILE"
         log "🆔 PID File: $LOG_FILE.pid"
         log ""

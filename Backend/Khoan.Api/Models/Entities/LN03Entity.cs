@@ -17,18 +17,18 @@ namespace Khoan.Api.Models.Entities
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Id { get; set; }
 
-        [Required]
-        [Column(TypeName = "datetime2(3)")]
+        // Not stored in DB for LN03 -> prevent EF from including these
+        [NotMapped]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        [Column(TypeName = "datetime2(3)")]
+        [NotMapped]
         public DateTime UpdatedAt { get; set; }
 
         // Temporal table support
-        [Column(TypeName = "datetime2(3)")]
+        [NotMapped]
         public DateTime SysStartTime { get; set; }
 
-        [Column(TypeName = "datetime2(3)")]
+        [NotMapped]
         public DateTime SysEndTime { get; set; }
 
         // === BUSINESS COLUMNS (20 columns theo CSV structure) ===
@@ -147,79 +147,75 @@ namespace Khoan.Api.Models.Entities
         // === BUSINESS COLUMNS WITHOUT HEADERS (3 columns - positions 18, 19, 20) ===
 
         /// <summary>
-        /// Column 18 - No header (position 18)
-        /// </summary>
-        [Column(TypeName = "nvarchar(200)")]
-        public string? Column18 { get; set; }
+    /// Column 18 mapped to MALOAI in DB
+    /// </summary>
+    [Column("MALOAI", TypeName = "nvarchar(200)")]
+    public string? Column18 { get; set; }
 
         /// <summary>
-        /// Column 19 - No header (position 19)
-        /// </summary>
-        [Column(TypeName = "nvarchar(200)")]
-        public string? Column19 { get; set; }
+    /// Column 19 mapped to LOAIKHACHHANG in DB
+    /// </summary>
+    [Column("LOAIKHACHHANG", TypeName = "nvarchar(200)")]
+    public string? Column19 { get; set; }
 
         /// <summary>
-        /// Column 20 - No header (position 20) - numeric
-        /// </summary>
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal? Column20 { get; set; }
+    /// Column 20 mapped to SOTIEN in DB
+    /// </summary>
+    [Column("SOTIEN", TypeName = "decimal(18,2)")]
+    public decimal? Column20 { get; set; }
 
         // === METADATA COLUMNS ===
 
         /// <summary>
-        /// Tên file import (7800_ln03_20241231.csv)
-        /// </summary>
-        [Column(TypeName = "nvarchar(500)")]
-        public string? FileName { get; set; }
+    // Metadata columns below are not present in DB -> remove mapping
+    [NotMapped]
+    public string? FileName { get; set; }
 
         /// <summary>
-        /// Import batch ID để tracking
-        /// </summary>
-        [Column(TypeName = "uniqueidentifier")]
-        public Guid? ImportId { get; set; }
+    [NotMapped]
+    public Guid? ImportId { get; set; }
 
         /// <summary>
-        /// Additional metadata về import process
-        /// </summary>
-        [Column(TypeName = "nvarchar(1000)")]
-        public string? ImportMetadata { get; set; }
+    [NotMapped]
+    public string? ImportMetadata { get; set; }
 
         // === MISSING PROPERTIES NEEDED BY CODE ===
 
         /// <summary>
         /// Soft delete flag
         /// </summary>
-        [Column("IS_DELETED", TypeName = "bit")]
-        public bool IS_DELETED { get; set; } = false;
+    // Not in DB
+    [NotMapped]
+    public bool IS_DELETED { get; set; } = false;
 
         /// <summary>
         /// Columns without headers - Column 18
         /// </summary>
-        [Column("COLUMN_18", TypeName = "nvarchar(200)")]
-        public string? COLUMN_18 { get; set; }
+    [NotMapped]
+    public string? COLUMN_18 { get; set; }
 
         /// <summary>
         /// Columns without headers - Column 19
         /// </summary>
-        [Column("COLUMN_19", TypeName = "nvarchar(200)")]
-        public string? COLUMN_19 { get; set; }
+    [NotMapped]
+    public string? COLUMN_19 { get; set; }
 
         /// <summary>
         /// Columns without headers - Column 20
         /// </summary>
-        [Column("COLUMN_20", TypeName = "nvarchar(200)")]
-        public string? COLUMN_20 { get; set; }
+    [NotMapped]
+    public string? COLUMN_20 { get; set; }
 
         /// <summary>
         /// Created date (matching database schema)
         /// </summary>
-        [Column("CREATED_DATE", TypeName = "datetime2")]
-        public DateTime CREATED_DATE { get; set; } = DateTime.UtcNow;
+    [NotMapped]
+    public DateTime CREATED_DATE { get; set; } = DateTime.UtcNow;
 
         /// <summary>
         /// Updated date (matching database schema)
         /// </summary>
-        [Column("UPDATED_DATE", TypeName = "datetime2")]
-        public DateTime UPDATED_DATE { get; set; } = DateTime.UtcNow;
+    [NotMapped]
+    public DateTime UPDATED_DATE { get; set; } = DateTime.UtcNow;
     }
 }
