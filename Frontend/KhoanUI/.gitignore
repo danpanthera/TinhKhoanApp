@@ -77,3 +77,9 @@ workbox-*.js.map
 # Database temp files
 *.sqlite-wal
 *.sqlite-shm
+
+# Runtime PIDs and logs
+*.pid
+frontend.log
+frontend.log.*
+*.out

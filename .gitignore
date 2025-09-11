@@ -1,3 +1,42 @@
-# Ignore large backup files
+# Monorepo-level ignores
+
+# OS
+.DS_Store
+
+# Editor/workspace
+.vscode/
+*.code-workspace
+
+# Node/Vite
+node_modules/
+dist/
+dist-ssr/
+.cache/
+.vite/
+
+# Logs & PIDs
+*.log
+*.log.*
+*.pid
+*.out
+
+# Build artifacts
+obj/
+bin/Debug/
+bin/Release/
+
+# Temporary files
+*.tmp
+*.bak
+*.backup
+*_backup.*
+*.corrupted
+
+# SQLite temp
+*.sqlite-wal
+*.sqlite-shm
+
+# Large CSV by default (opt-in allowlists in subfolders)
+*.csv# Ignore large backup files
 *.bak
 database_backup/

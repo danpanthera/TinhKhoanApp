@@ -12,12 +12,22 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
-
-# Visual Studio 2015/2017 cache/options directory
+# Logs and runtime pids
+*.log
+*.log.*
+*.pid
+backend.log
+backend.log.*
+api_server.pid
+backend.pid
+frontend.log
+frontend.log.*
+*.out
+reload.touch
 .vs/
 
-# User-specific files
-*.rsuser
+# Large files that slow down commits (leave specific test data explicitly tracked if needed)
+*.csv
 *.suo
 *.user
 *.userosscache
