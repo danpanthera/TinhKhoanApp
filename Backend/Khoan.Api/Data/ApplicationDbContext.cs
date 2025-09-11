@@ -460,6 +460,7 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
 
             // === DP01 TEMPORAL TABLE CONFIGURATION ===
             // Cấu hình Temporal Table cho DP01 - Tiền gửi có kỳ hạn (63 business columns)
+            // NOTE: Database is using ValidFrom/ValidTo for temporal period columns
             modelBuilder.Entity<DataTables.DP01>(entity =>
             {
                 entity.ToTable("DP01", tb =>
@@ -467,9 +468,8 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
                     tb.IsTemporal(ttb =>
                     {
                         ttb.UseHistoryTable("DP01_History");
-                        // Align with existing database temporal period column names
-                        ttb.HasPeriodStart("SysStartTime").HasColumnName("SysStartTime");
-                        ttb.HasPeriodEnd("SysEndTime").HasColumnName("SysEndTime");
+                        ttb.HasPeriodStart("ValidFrom").HasColumnName("ValidFrom");
+                        ttb.HasPeriodEnd("ValidTo").HasColumnName("ValidTo");
                     });
                 });
 
