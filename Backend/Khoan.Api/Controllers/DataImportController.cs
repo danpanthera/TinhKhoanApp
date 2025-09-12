@@ -24,6 +24,117 @@ namespace Khoan.Api.Controllers
         }
 
         /// <summary>
+        /// Direct-preview: return available data types with record counts.
+        /// Frontend calls: GET /api/DataImport/direct-preview/data-types
+        /// </summary>
+        [HttpGet("direct-preview/data-types")]
+        public async Task<IActionResult> GetDataTypesWithCounts()
+        {
+            var results = new List<object>();
+            async Task AddAsync(string type, IQueryable<object> q)
+            {
+                try { results.Add(new { DataType = type, RecordCount = await q.CountAsync() }); }
+                catch { results.Add(new { DataType = type, RecordCount = 0 }); }
+            }
+
+            await AddAsync("DP01", _context.DP01.AsNoTracking().Select(x => (object)x));
+            await AddAsync("DPDA", _context.DPDA.AsNoTracking().Select(x => (object)x));
+            await AddAsync("EI01", _context.EI01.AsNoTracking().Select(x => (object)x));
+            await AddAsync("GL01", _context.GL01.AsNoTracking().Select(x => (object)x));
+            await AddAsync("GL02", _context.GL02.AsNoTracking().Select(x => (object)x));
+            await AddAsync("GL41", _context.GL41.AsNoTracking().Select(x => (object)x));
+            await AddAsync("LN01", _context.LN01.AsNoTracking().Select(x => (object)x));
+            await AddAsync("LN03", _context.LN03.AsNoTracking().Select(x => (object)x));
+            await AddAsync("RR01", _context.RR01.AsNoTracking().Select(x => (object)x));
+
+            return Ok(results);
+        }
+
+        /// <summary>
+        /// Direct-preview: return paginated rows for a given data type
+        /// Frontend calls: GET /api/DataImport/direct-preview/{dataType}?page=1&pageSize=50
+        /// </summary>
+        [HttpGet("direct-preview/{dataType}")]
+        public async Task<IActionResult> DirectPreview(string dataType, [FromQuery] int page = 1, [FromQuery] int pageSize = 50)
+        {
+            dataType = (dataType ?? string.Empty).ToUpperInvariant();
+            page = page <= 0 ? 1 : page;
+            pageSize = Math.Clamp(pageSize, 1, 200);
+
+            try
+            {
+                IQueryable<object> q = null!;
+                switch (dataType)
+                {
+                    case "DP01": q = _context.DP01.AsNoTracking().Select(x => (object)x); break;
+                    case "DPDA": q = _context.DPDA.AsNoTracking().Select(x => (object)x); break;
+                    case "EI01": q = _context.EI01.AsNoTracking().Select(x => (object)x); break;
+                    case "GL01": q = _context.GL01.AsNoTracking().Select(x => (object)x); break;
+                    case "GL02": q = _context.GL02.AsNoTracking().Select(x => (object)x); break;
+                    case "GL41": q = _context.GL41.AsNoTracking().Select(x => (object)x); break;
+                    case "LN01": q = _context.LN01.AsNoTracking().Select(x => (object)x); break;
+                    case "LN03": q = _context.LN03.AsNoTracking().Select(x => (object)x); break;
+                    case "RR01": q = _context.RR01.AsNoTracking().Select(x => (object)x); break;
+                    default: return BadRequest(new { message = $"Unsupported data type: {dataType}" });
+                }
+
+                var total = await q.CountAsync();
+                var items = await q.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+
+                // Convert to safe dictionaries for JSON (normalize DateTimes)
+                var rows = items.Select(ToDict).Select(r => r.ToDictionary(kv => kv.Key, kv => NormalizeForJson(kv.Value))).ToList();
+                var columns = rows.Count > 0 ? rows[0].Keys.ToList() : new List<string>();
+
+                var payload = new
+                {
+                    DataType = dataType,
+                    Data = rows,
+                    TotalRecords = total,
+                    Page = page,
+                    PageSize = pageSize,
+                    TotalPages = Math.Max(1, (int)Math.Ceiling(total / (double)pageSize)),
+                    Columns = columns,
+                    Message = total > 0 ? $"Loaded {rows.Count} rows" : $"No data for {dataType}"
+                };
+
+                return Ok(payload);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Direct preview failed for {DataType}", dataType);
+                return StatusCode(500, new { message = "Direct preview failed", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Direct-preview: overall statistics for all tables.
+        /// Frontend calls: GET /api/DataImport/direct-preview/statistics
+        /// </summary>
+        [HttpGet("direct-preview/statistics")]
+        public async Task<IActionResult> GetStatistics()
+        {
+            var tables = new Dictionary<string, int>();
+            async Task addAsync(string key, IQueryable<object> q)
+            {
+                try { tables[key] = await q.CountAsync(); } catch { tables[key] = 0; }
+            }
+
+            await addAsync("DP01", _context.DP01.AsNoTracking().Select(x => (object)x));
+            await addAsync("DPDA", _context.DPDA.AsNoTracking().Select(x => (object)x));
+            await addAsync("EI01", _context.EI01.AsNoTracking().Select(x => (object)x));
+            await addAsync("GL01", _context.GL01.AsNoTracking().Select(x => (object)x));
+            await addAsync("GL02", _context.GL02.AsNoTracking().Select(x => (object)x));
+            await addAsync("GL41", _context.GL41.AsNoTracking().Select(x => (object)x));
+            await addAsync("LN01", _context.LN01.AsNoTracking().Select(x => (object)x));
+            await addAsync("LN03", _context.LN03.AsNoTracking().Select(x => (object)x));
+            await addAsync("RR01", _context.RR01.AsNoTracking().Select(x => (object)x));
+
+            var total = tables.Values.Sum();
+            var summary = new { TotalRecords = total, NonEmptyTables = tables.Where(kv => kv.Value > 0).Select(kv => kv.Key).ToArray() };
+            return Ok(new { Tables = tables, Summary = summary });
+        }
+
+        /// <summary>
         /// Returns recent import records. The frontend expects a plain array.
         /// </summary>
         [HttpGet("records")]

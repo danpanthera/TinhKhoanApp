@@ -2,6 +2,8 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Khoan.Api.Data;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Data.SqlClient;
 
 namespace Khoan.Api.HealthChecks
 {
@@ -9,11 +11,13 @@ namespace Khoan.Api.HealthChecks
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<DatabaseHealthCheck> _logger;
+        private readonly IConfiguration _configuration;
 
-        public DatabaseHealthCheck(ApplicationDbContext context, ILogger<DatabaseHealthCheck> logger)
+        public DatabaseHealthCheck(ApplicationDbContext context, ILogger<DatabaseHealthCheck> logger, IConfiguration configuration)
         {
             _context = context;
             _logger = logger;
+            _configuration = configuration;
         }
 
         public async Task<HealthCheckResult> CheckHealthAsync(
@@ -22,23 +26,69 @@ namespace Khoan.Api.HealthChecks
         {
             try
             {
-                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+                var data = new Dictionary<string, object>();
 
-                // Test database connection only
-                await _context.Database.CanConnectAsync(cancellationToken);
-
-                stopwatch.Stop();
-
-                var data = new Dictionary<string, object>
+                // Step 1: Fast server-level check against master to rule out TCP/DNS issues
+                var masterConnMs = -1L;
+                Exception? masterEx = null;
+                try
                 {
-                    ["ConnectionTime"] = $"{stopwatch.ElapsedMilliseconds}ms",
-                    ["DatabaseProvider"] = _context.Database.ProviderName ?? "Unknown",
-                    ["LastChecked"] = DateTime.UtcNow
-                };
-
-                if (stopwatch.ElapsedMilliseconds > 5000) // 5 seconds threshold
+                    var cs = _configuration.GetConnectionString("DefaultConnection");
+                    var csb = new SqlConnectionStringBuilder(cs)
+                    {
+                        InitialCatalog = "master",
+                        ConnectTimeout = 5,
+                        ConnectRetryCount = 0,
+                        ConnectRetryInterval = 1
+                    };
+                    var sw = System.Diagnostics.Stopwatch.StartNew();
+                    await using var conn = new SqlConnection(csb.ConnectionString);
+                    await conn.OpenAsync(cancellationToken);
+                    sw.Stop();
+                    masterConnMs = sw.ElapsedMilliseconds;
+                }
+                catch (Exception ex)
                 {
-                    return HealthCheckResult.Degraded("Database connection is slow", null, data);
+                    masterEx = ex;
+                    _logger.LogError(ex, "Master connectivity check failed");
+                }
+
+                // Step 2: Default DB check via EF DbContext (TinhKhoanDB)
+                var dbConnMs = -1L;
+                Exception? dbEx = null;
+                try
+                {
+                    var sw = System.Diagnostics.Stopwatch.StartNew();
+                    await _context.Database.CanConnectAsync(cancellationToken);
+                    sw.Stop();
+                    dbConnMs = sw.ElapsedMilliseconds;
+                }
+                catch (Exception ex)
+                {
+                    dbEx = ex;
+                    _logger.LogError(ex, "Default DB connectivity check failed");
+                }
+
+                data["MasterConnectMs"] = masterConnMs;
+                data["DbConnectMs"] = dbConnMs;
+                data["DatabaseProvider"] = _context.Database.ProviderName ?? "Unknown";
+                data["LastChecked"] = DateTime.UtcNow;
+                if (masterEx != null) data["MasterError"] = masterEx.Message;
+                if (dbEx != null) data["DbError"] = dbEx.Message;
+
+                if (masterEx != null)
+                {
+                    return HealthCheckResult.Unhealthy("Cannot reach SQL Server (master)", masterEx, data);
+                }
+
+                if (dbEx != null)
+                {
+                    return HealthCheckResult.Unhealthy("Default database is unreachable", dbEx, data);
+                }
+
+                if (dbConnMs > 5000)
+                {
+                    return HealthCheckResult.Degraded("Default database connection is slow", null, data);
                 }
 
                 return HealthCheckResult.Healthy("Database is healthy", data);

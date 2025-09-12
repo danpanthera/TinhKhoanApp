@@ -1,5 +1,12 @@
 #!/bin/bash
 # Enhanced Frontend Startup Script - Full Process Management
+# Patch: auto-switch to script directory so invoking via absolute path from elsewhere works.
+
+# Ensure we are in the directory containing this script (handles calls like: bash /path/to/start_frontend.sh)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [ "$PWD" != "$SCRIPT_DIR" ]; then
+    cd "$SCRIPT_DIR" || { echo "[FATAL] Cannot cd to $SCRIPT_DIR"; exit 1; }
+fi
 
 # UTF-8 Configuration
 export LANG=vi_VN.UTF-8
