@@ -474,6 +474,22 @@ app.MapGet("/metrics/import", (Khoan.Api.Services.InMemoryImportMetrics metrics)
     .WithDescription("Direct import in-memory metrics (total rows, last duration)")
     .Produces<object>(StatusCodes.Status200OK);
 
+// Import metrics raw batches endpoint (JSON detailed recent batches)
+app.MapGet("/metrics/import/raw", (Khoan.Api.Services.InMemoryImportMetrics metrics) => Results.Ok(metrics.Raw()))
+    .WithName("ImportMetricsRaw")
+    .WithDescription("Raw recent batch metrics for imports (ring buffer)")
+    .Produces<object>(StatusCodes.Status200OK);
+
+// Prometheus metrics endpoint (text/plain) for scraping
+app.MapGet("/metrics", (Khoan.Api.Services.InMemoryImportMetrics metrics) =>
+{
+    var text = metrics.ToPrometheus();
+    return Results.Text(text, "text/plain; version=0.0.4; charset=utf-8");
+})
+.WithName("ImportMetricsPrometheus")
+.WithDescription("Prometheus exposition format for direct import metrics")
+.Produces(StatusCodes.Status200OK);
+
 // Health Check Endpoint with detailed JSON
 app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
 {
