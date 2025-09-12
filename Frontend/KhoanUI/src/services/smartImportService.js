@@ -22,26 +22,61 @@ class SmartImportService {
    * @returns {Promise} Kết quả upload và xử lý
    */
   async uploadSmartFile(file, statementDate = null, progressCallback = null) {
-    try {
-      // Validation file size
-      if (file.size > this.MAX_FILE_SIZE) {
-        throw new Error(
-          `File ${file.name} quá lớn (${formatFileSize(file.size)}). Giới hạn tối đa: ${formatFileSize(this.MAX_FILE_SIZE)}`,
-        )
-      }
+    const MAX_RETRIES = 2
+    let lastError = null
+    
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        // Validation file size
+        if (file.size > this.MAX_FILE_SIZE) {
+          throw new Error(
+            `File ${file.name} quá lớn (${formatFileSize(file.size)}). Giới hạn tối đa: ${formatFileSize(this.MAX_FILE_SIZE)}`,
+          )
+        }
 
-      // Quyết định dùng chunked upload hay normal upload
-      if (file.size > this.LARGE_FILE_THRESHOLD) {
-        console.log(`📦 Using chunked upload for large file: ${file.name} (${formatFileSize(file.size)})`)
-        return await this.uploadLargeFile(file, statementDate, progressCallback)
-      } else {
-        console.log(`📤 Using normal upload for file: ${file.name} (${formatFileSize(file.size)})`)
-        return await this.uploadNormalFile(file, statementDate, progressCallback)
+        if (attempt > 1) {
+          // Add exponential backoff for retries
+          const delay = Math.pow(2, attempt - 1) * 1000 + Math.random() * 1000 // 1-2s, 2-3s, 4-5s
+          console.log(`🔄 Retry attempt ${attempt}/${MAX_RETRIES} for ${file.name} after ${Math.round(delay)}ms`)
+          await new Promise(r => setTimeout(r, delay))
+        }
+
+        // Quyết định dùng chunked upload hay normal upload
+        if (file.size > this.LARGE_FILE_THRESHOLD) {
+          console.log(`📦 Using chunked upload for large file: ${file.name} (${formatFileSize(file.size)})`)
+          return await this.uploadLargeFile(file, statementDate, progressCallback)
+        } else {
+          console.log(`📤 Using normal upload for file: ${file.name} (${formatFileSize(file.size)})`)
+          return await this.uploadNormalFile(file, statementDate, progressCallback)
+        }
+      } catch (error) {
+        lastError = error
+        const isRetryable = this.isRetryableError(error)
+        
+        console.error(`🔥 Smart Import upload error (attempt ${attempt}/${MAX_RETRIES}):`, error.message)
+        
+        if (attempt === MAX_RETRIES || !isRetryable) {
+          break
+        }
+        
+        console.log(`⚠️ Retryable error, will retry (${attempt}/${MAX_RETRIES})...`)
       }
-    } catch (error) {
-      console.error('🔥 Smart Import upload error:', error)
-      throw new Error(`Smart Import failed: ${error.response?.data?.message || error.message}`)
     }
+    
+    throw new Error(`Smart Import failed after ${MAX_RETRIES} attempts: ${lastError?.response?.data?.message || lastError?.message}`)
+  }
+
+  /**
+   * Check if an error is retryable
+   */
+  isRetryableError(error) {
+    // Retry on network errors, timeout errors, and some 5xx server errors
+    const retryableStatuses = [408, 429, 500, 502, 503, 504]
+    const isNetworkError = error.code === 'ERR_NETWORK' || error.message?.includes('Network Error')
+    const isTimeoutError = error.code === 'ECONNABORTED' || error.message?.includes('timeout')
+    const isRetryableStatus = error.response?.status && retryableStatuses.includes(error.response.status)
+    
+    return isNetworkError || isTimeoutError || isRetryableStatus
   }
 
   /**
@@ -61,7 +96,7 @@ class SmartImportService {
         'Content-Type': 'multipart/form-data',
         // 🚀 Removed Accept-Encoding - Browser handles this automatically
       },
-      timeout: 1200000, // 🚀 Tăng lên 20 phút cho GL01 large files (was 5 minutes)
+      timeout: 1800000, // 🚀 Increased to 30 minutes for concurrent heavy files (was 20 minutes)
       onUploadProgress: progressEvent => {
         if (progressCallback && progressEvent.total) {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
@@ -96,7 +131,7 @@ class SmartImportService {
         'Content-Type': 'multipart/form-data',
         // 🚀 Removed Accept-Encoding - Browser handles this automatically
       },
-      timeout: 1800000, // 🚀 Tăng lên 30 phút cho file siêu lớn (GL01 162MB) - was 10 minutes
+      timeout: 2400000, // 🚀 Increased to 40 minutes for sequential processing of heavy files (was 30 minutes)
       onUploadProgress: progressEvent => {
         if (progressCallback && progressEvent.total) {
           const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
@@ -126,11 +161,11 @@ class SmartImportService {
   async uploadSmartFiles(files, statementDate = null, progressCallback = null) {
     try {
   const totalFiles = files.length
-  // Hạn chế song song để tránh quá tải DB và lỗi kết nối khi login (TCP Provider)
-  const MAX_CONCURRENT_UPLOADS = 2
+  // Giảm concurrency để tránh quá tải backend semaphore và database connections
+  const MAX_CONCURRENT_UPLOADS = 1 // Reduced from 2 to avoid backend semaphore contention
 
       console.log(
-        `🚀 Starting PARALLEL Smart Import with ${totalFiles} files (max ${MAX_CONCURRENT_UPLOADS} concurrent)`,
+        `🚀 Starting SEQUENTIAL Smart Import with ${totalFiles} files (max ${MAX_CONCURRENT_UPLOADS} concurrent)`,
       )
 
       // 📊 Tracking variables
@@ -216,8 +251,8 @@ class SmartImportService {
         } catch (err) {
           resultsTemp.push({ status: 'rejected', reason: err, index })
         } finally {
-          // small jitter between tasks to avoid thundering herd
-          await new Promise(r => setTimeout(r, 300))
+          // Increased jitter between tasks to avoid backend semaphore contention and DB overload
+          await new Promise(r => setTimeout(r, 1000 + Math.random() * 1000)) // 1-2 seconds
           if (queue.length > 0) await next()
         }
       }
@@ -258,7 +293,7 @@ class SmartImportService {
       const successCount = results.filter(r => r.success).length
       const failureCount = results.filter(r => !r.success).length
 
-      console.log(`🏁 TRUE PARALLEL Smart Import completed: ${successCount}/${totalFiles} successful`)
+      console.log(`🏁 SEQUENTIAL Smart Import completed: ${successCount}/${totalFiles} successful`)
 
       return {
         totalFiles: totalFiles,
@@ -266,8 +301,8 @@ class SmartImportService {
         failureCount: failureCount,
         results: results,
         totalSize: Array.from(files).reduce((sum, file) => sum + file.size, 0),
-        uploadMethod: 'true-parallel',
-        maxConcurrency: 'unlimited',
+        uploadMethod: 'sequential-safe',
+        maxConcurrency: MAX_CONCURRENT_UPLOADS,
       }
     } catch (error) {
       console.error('🔥 Smart Import batch upload error:', error)

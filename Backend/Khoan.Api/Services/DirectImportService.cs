@@ -163,7 +163,15 @@ namespace Khoan.Api.Services
         public async Task<DirectImportResult> ImportGenericAsync(IFormFile file, string dataType, string? statementDate = null)
         {
             // Throttle server-wide import concurrency to avoid DB overload and connection resets
-            await ImportSemaphore.WaitAsync();
+            // Add timeout to prevent indefinite hanging if an import gets stuck
+            var semaphoreTimeout = TimeSpan.FromMinutes(45); // 45 minutes max wait for semaphore
+            bool semaphoreAcquired = await ImportSemaphore.WaitAsync(semaphoreTimeout);
+            
+            if (!semaphoreAcquired)
+            {
+                throw new TimeoutException("Import service is overloaded. Too many concurrent import operations. Please try again later.");
+            }
+            
             try
             {
                 return dataType.ToUpper() switch
