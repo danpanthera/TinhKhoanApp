@@ -164,58 +164,52 @@ namespace Khoan.Api.Models.Entities
     [Column("SOTIEN", TypeName = "decimal(18,2)")]
     public decimal? Column20 { get; set; }
 
-        // === METADATA COLUMNS ===
+        // === METADATA COLUMNS (present in DB) ===
 
         /// <summary>
-    // Metadata columns below are not present in DB -> remove mapping
-    [NotMapped]
-    public string? FileName { get; set; }
-
-        /// <summary>
-    [NotMapped]
-    public Guid? ImportId { get; set; }
-
-        /// <summary>
-    [NotMapped]
-    public string? ImportMetadata { get; set; }
-
-        // === MISSING PROPERTIES NEEDED BY CODE ===
-
-        /// <summary>
-        /// Soft delete flag
+        /// File gốc từ import (nullable)
         /// </summary>
-    // Not in DB
-    [NotMapped]
-    public bool IS_DELETED { get; set; } = false;
+        [Column(TypeName = "nvarchar(500)")]
+        public string? FILE_ORIGIN { get; set; }
 
         /// <summary>
-        /// Columns without headers - Column 18
+        /// Người tạo (nullable)
         /// </summary>
-    [NotMapped]
-    public string? COLUMN_18 { get; set; }
+        [Column(TypeName = "nvarchar(200)")]
+        public string? CREATED_BY { get; set; }
 
         /// <summary>
-        /// Columns without headers - Column 19
+        /// Ngày tạo bản ghi (NOT NULL)
         /// </summary>
-    [NotMapped]
-    public string? COLUMN_19 { get; set; }
+        [Column(TypeName = "datetime2")]
+        public DateTime CREATED_DATE { get; set; } = DateTime.UtcNow;
 
-        /// <summary>
-        /// Columns without headers - Column 20
-        /// </summary>
-    [NotMapped]
-    public string? COLUMN_20 { get; set; }
+        // === APP-ONLY METADATA (not stored in DB) ===
 
-        /// <summary>
-        /// Created date (matching database schema)
-        /// </summary>
-    [NotMapped]
-    public DateTime CREATED_DATE { get; set; } = DateTime.UtcNow;
+        [NotMapped]
+        public string? FileName { get; set; }
 
-        /// <summary>
-        /// Updated date (matching database schema)
-        /// </summary>
-    [NotMapped]
-    public DateTime UPDATED_DATE { get; set; } = DateTime.UtcNow;
+        [NotMapped]
+        public Guid? ImportId { get; set; }
+
+        [NotMapped]
+        public string? ImportMetadata { get; set; }
+
+        // === MISSING PROPERTIES NEEDED BY CODE (not in DB) ===
+
+        [NotMapped]
+        public bool IS_DELETED { get; set; } = false;
+
+        [NotMapped]
+        public string? COLUMN_18 { get; set; }
+
+        [NotMapped]
+        public string? COLUMN_19 { get; set; }
+
+        [NotMapped]
+        public string? COLUMN_20 { get; set; }
+
+        [NotMapped]
+        public DateTime UPDATED_DATE { get; set; } = DateTime.UtcNow;
     }
 }

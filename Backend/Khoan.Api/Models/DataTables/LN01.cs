@@ -308,8 +308,8 @@ namespace Khoan.Api.Models.DataTables
         [StringLength(200)]
         public string? MA_NGANH_KT { get; set; }
 
-        [Column("TY_GIA", Order = 79, TypeName = "decimal(18,2)")]
-        public decimal? TY_GIA { get; set; }
+    [Column("TY_GIA", Order = 79, TypeName = "decimal(18,6)")]
+    public decimal? TY_GIA { get; set; }
 
         [Column("OFFICER_IPCAS", Order = 80)]
         [StringLength(200)]

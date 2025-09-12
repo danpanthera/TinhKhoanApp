@@ -38,6 +38,9 @@ namespace Khoan.Api.Services.Startup
                        BEGIN CREATE NONCLUSTERED INDEX IX_GL01_TR_CODE ON dbo.GL01 (TR_CODE); END",
                     @"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_GL01_MA_KH' AND object_id = OBJECT_ID('dbo.GL01'))
                        BEGIN CREATE NONCLUSTERED INDEX IX_GL01_MA_KH ON dbo.GL01 (MA_KH); END",
+                          // Composite index theo yêu cầu phân tích: (NGAY_DL, MA_TK, LOAI_TIEN)
+                          @"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_GL01_NgayDl_MaTk_LoaiTien' AND object_id = OBJECT_ID('dbo.GL01'))
+                              BEGIN CREATE NONCLUSTERED INDEX IX_GL01_NgayDl_MaTk_LoaiTien ON dbo.GL01 (NGAY_DL, MA_TK, LOAI_TIEN); END",
                     @"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'NCCI_GL01_Analytics' AND object_id = OBJECT_ID('dbo.GL01'))
                        BEGIN CREATE NONCLUSTERED INDEX NCCI_GL01_Analytics ON dbo.GL01 (NGAY_DL, DEPT_CODE, TAI_KHOAN, DR_CR, LOAI_TIEN); END"
                 };

@@ -34,6 +34,9 @@ namespace Khoan.Api.Services.Startup
                        BEGIN CREATE NONCLUSTERED INDEX IX_GL02_TRCD ON dbo.GL02 (TRCD); END",
                     @"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_GL02_CUSTOMER' AND object_id = OBJECT_ID('dbo.GL02'))
                        BEGIN CREATE NONCLUSTERED INDEX IX_GL02_CUSTOMER ON dbo.GL02 (CUSTOMER); END",
+                          // Composite index phân tích thường dùng: (NGAY_DL, TRBRCD, LOCAC, CCY)
+                          @"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'IX_GL02_NgayDl_Trbrcd_Locac_Ccy' AND object_id = OBJECT_ID('dbo.GL02'))
+                              BEGIN CREATE NONCLUSTERED INDEX IX_GL02_NgayDl_Trbrcd_Locac_Ccy ON dbo.GL02 (NGAY_DL, TRBRCD, LOCAC, CCY); END",
                     @"IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'NCCI_GL02_Analytics' AND object_id = OBJECT_ID('dbo.GL02'))
                        BEGIN CREATE NONCLUSTERED INDEX NCCI_GL02_Analytics ON dbo.GL02 (NGAY_DL, UNIT, TRCD, CCY); END"
                 };

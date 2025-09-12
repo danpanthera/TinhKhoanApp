@@ -3,8 +3,16 @@ using System.Text;
 using System.Text.RegularExpressions;
 using CsvHelper;
 using CsvHelper.Configuration;
+using System.Data;
+using System.Data.Common;
+using System.Reflection;
+using System.Diagnostics;
+using System.Collections.Concurrent;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Options;
 using Khoan.Api.Data;
@@ -26,6 +34,9 @@ namespace Khoan.Api.Services
         private readonly ApplicationDbContext _context;
         private readonly ILogger<DirectImportService> _logger;
         private readonly DirectImportSettings _settings;
+        // Cache property reflection để giảm overhead per-batch
+        private static readonly ConcurrentDictionary<Type, List<PropertyInfo>> _propertyCache = new();
+    private readonly IImportMetrics? _metrics; // optional metrics provider
 
         // Limit concurrent heavy import operations to protect SQL Server
         private static readonly SemaphoreSlim ImportSemaphore = new(2, 2); // allow up to 2 concurrent imports
@@ -33,11 +44,60 @@ namespace Khoan.Api.Services
         public DirectImportService(
             ApplicationDbContext context,
             ILogger<DirectImportService> logger,
-            IOptions<DirectImportSettings> settings)
+            IOptions<DirectImportSettings> settings,
+            IImportMetrics? metrics = null)
         {
             _context = context;
             _logger = logger;
             _settings = settings.Value;
+            _metrics = metrics;
+        }
+
+        private int ResolveBatchSize(string table, int defaultValue)
+        {
+            try
+            {
+                // Cho phép override qua ENV: DirectImport__BatchSize__{TABLE}
+                var envKey = $"DirectImport__BatchSize__{table.ToUpper()}";
+                var envVal = Environment.GetEnvironmentVariable(envKey);
+                if (!string.IsNullOrWhiteSpace(envVal) && int.TryParse(envVal, out var parsed) && parsed > 0) return parsed;
+                // Cho phép override chung: DirectImport__BatchSize__Default
+                var envDefault = Environment.GetEnvironmentVariable("DirectImport__BatchSize__Default");
+                if (!string.IsNullOrWhiteSpace(envDefault) && int.TryParse(envDefault, out var parsedDefault) && parsedDefault > 0) return parsedDefault;
+            }
+            catch { /* ignore */ }
+            return defaultValue;
+        }
+
+        private int ResolveProgressInterval()
+        {
+            try
+            {
+                var env = Environment.GetEnvironmentVariable("DirectImport__ProgressInterval");
+                if (!string.IsNullOrWhiteSpace(env) && int.TryParse(env, out var parsed) && parsed > 0) return parsed;
+            }
+            catch { }
+            return 50_000; // mặc định 50k dòng
+        }
+
+        private int ResolveAbortThreshold(string table, int defaultValue)
+        {
+            try
+            {
+                var envKey = $"DirectImport__AbortErrors__{table.ToUpper()}";
+                var envVal = Environment.GetEnvironmentVariable(envKey);
+                if (!string.IsNullOrWhiteSpace(envVal) && int.TryParse(envVal, out var parsed) && parsed > 0) return parsed;
+                var envCommon = Environment.GetEnvironmentVariable("DirectImport__AbortErrors__Default");
+                if (!string.IsNullOrWhiteSpace(envCommon) && int.TryParse(envCommon, out var parsedCommon) && parsedCommon > 0) return parsedCommon;
+            }
+            catch { }
+            return defaultValue;
+        }
+
+        public interface IImportMetrics
+        {
+            void AddImported(string table, int count);
+            void ObserveDuration(string table, double seconds);
         }
 
         #region Generic Import Methods
@@ -152,32 +212,71 @@ namespace Khoan.Api.Services
                 var ngayDL = ExtractNgayDLFromFileName(file.FileName);
                 result.NgayDL = ngayDL;
 
-                // Parse DP01 CSV
-                var records = await ParseDP01CsvAsync(file);
-                _logger.LogInformation("📊 [DP01] Đã parse {Count} records từ CSV", records.Count);
+                // STREAMING PARSE + BATCH BULK INSERT (giảm memory cho file rất lớn)
+                var BATCH_SIZE = ResolveBatchSize("DP01", 5000);
+                var progressInterval = ResolveProgressInterval();
+                var totalInserted = 0;
+                var totalRead = 0;
+                var batch = new List<DP01>(BATCH_SIZE);
+                var sw = Stopwatch.StartNew();
+                var ngayDlDate = DateTime.TryParse(result.NgayDL, out var _ng) ? _ng : DateTime.Today;
 
-                if (records.Any())
+                var consecutiveErrors = 0;
+                var maxConsecutiveErrors = 1000; // EARLY ABORT NGƯỠNG
+                await foreach (var rec in StreamParseDP01Async(file))
                 {
-                    // Ensure NGAY_DL for all records from filename
-                    if (DateTime.TryParse(result.NgayDL, out var ngayDlDate))
+                    rec.NGAY_DL = ngayDlDate; // enforce từ filename
+                    try
                     {
-                        foreach (var r in records)
+                        batch.Add(rec);
+                        consecutiveErrors = 0; // reset on success add
+                    }
+                    catch
+                    {
+                        consecutiveErrors++;
+                        if (consecutiveErrors >= maxConsecutiveErrors)
                         {
-                            r.NGAY_DL = ngayDlDate;
+                            _logger.LogError("❌ [DP01] Early abort: {Errors} lỗi liên tiếp khi xử lý batch", consecutiveErrors);
+                            break;
+                        }
+                        continue;
+                    }
+                    totalRead++;
+                    if (totalRead % progressInterval == 0)
+                    {
+                        _logger.LogInformation("⏱️ [DP01] Đã đọc {Total} dòng (inserted {Inserted})", totalRead, totalInserted);
+                    }
+                    if (batch.Count >= BATCH_SIZE)
+                    {
+                        totalInserted += await BulkInsertGenericAsync(batch, "DP01");
+                        batch.Clear();
+                        if (totalInserted % progressInterval == 0)
+                        {
+                            _logger.LogInformation("💾 [DP01] Đã chèn {Inserted} dòng", totalInserted);
                         }
                     }
-                    // Bulk insert DP01
-                    var insertedCount = await BulkInsertGenericAsync(records, "DP01");
-                    result.ProcessedRecords = insertedCount;
-                    result.Success = true;
-                    _logger.LogInformation("✅ [DP01] Import thành công {Count} records", insertedCount);
-                    // Log metadata for history
+                }
+                if (batch.Count > 0)
+                {
+                    totalInserted += await BulkInsertGenericAsync(batch, "DP01");
+                    batch.Clear();
+                }
+
+                sw.Stop();
+                var elapsedSec = Math.Max(0.001, sw.Elapsed.TotalSeconds);
+                var rps = (int)(totalInserted / elapsedSec);
+                _metrics?.ObserveDuration("DP01", elapsedSec);
+                result.ProcessedRecords = totalInserted;
+                result.Success = totalInserted > 0;
+                if (result.Success)
+                {
+                    _logger.LogInformation("✅ [DP01] Streaming import thành công {Count} records trong {Seconds:F2}s (~{Rps}/sec)", totalInserted, sw.Elapsed.TotalSeconds, rps);
                     await LogImportMetadataAsync(result);
+                    await PersistHistoryAsync("DP01", file.FileName, result.NgayDL, file.Length, totalInserted, elapsedSec, "SUCCESS", null, BATCH_SIZE, progressInterval, maxConsecutiveErrors);
                 }
                 else
                 {
-                    result.Success = false;
-                    result.Errors.Add("Không tìm thấy DP01 records hợp lệ trong CSV");
+                    result.Errors.Add("Không tìm thấy DP01 records hợp lệ trong CSV (stream)");
                 }
             }
             catch (Exception ex)
@@ -375,39 +474,69 @@ namespace Khoan.Api.Services
                 var ngayDL = ExtractNgayDLFromFileName(file.FileName);
                 result.NgayDL = ngayDL;
 
-                // Parse LN01 CSV
-                var records = await ParseLN01CsvAsync(file);
-                _logger.LogInformation("📊 [LN01] Đã parse {Count} records từ CSV", records.Count);
+                // STREAMING LN01 (tối ưu bộ nhớ cho file lớn)
+                var batchSize = ResolveBatchSize("LN01", 6000); // mặc định 6k
+                var progressInterval = ResolveProgressInterval();
+                var batch = new List<LN01>(batchSize);
+                var totalInserted = 0;
+                var totalRead = 0;
+                var sw = Stopwatch.StartNew();
+                var consecutiveErrors = 0;
+                var maxConsecutiveErrors = ResolveAbortThreshold("LN01", 1500);
+                var ngayDlDate = DateTime.TryParse(result.NgayDL, out var _ng) ? _ng : DateTime.Today;
 
-                if (records.Any())
+                await foreach (var rec in StreamParseLN01Async(file))
                 {
-                    // Set NGAY_DL cho tất cả record từ filename (CSV-first rule)
-                    if (DateTime.TryParse(result.NgayDL, out var ngayDlDate))
+                    rec.NGAY_DL = ngayDlDate;
+                    try
                     {
-                        foreach (var record in records)
+                        batch.Add(rec);
+                        consecutiveErrors = 0;
+                    }
+                    catch
+                    {
+                        consecutiveErrors++;
+                        if (consecutiveErrors >= maxConsecutiveErrors)
                         {
-                            record.NGAY_DL = ngayDlDate;
+                            _logger.LogError("❌ [LN01] Early abort: {Errors} lỗi liên tiếp", consecutiveErrors);
+                            break;
                         }
+                        continue;
                     }
-
-                    // Chuyển đổi DataTables.LN01 -> Entities.LN01Entity để phù hợp DbContext mapping
-                    var entities = new List<Models.Entities.LN01Entity>(records.Count);
-                    foreach (var r in records)
+                    totalRead++;
+                    if (totalRead % progressInterval == 0)
+                        _logger.LogInformation("⏱️ [LN01] Đã đọc {Read} dòng (inserted {Ins})", totalRead, totalInserted);
+                    if (batch.Count >= batchSize)
                     {
-                        entities.Add(MapLN01ToEntity(r));
+                        var inserted = await BulkInsertGenericAsync(batch, "LN01");
+                        totalInserted += inserted;
+                        _metrics?.AddImported("LN01", inserted); // metrics hook
+                        batch.Clear();
+                        if (totalInserted % progressInterval == 0)
+                            _logger.LogInformation("💾 [LN01] Đã chèn {Ins} dòng", totalInserted);
                     }
-
-                    // Bulk insert LN01Entity
-                    var insertedCount = await BulkInsertGenericAsync(entities, "LN01");
-                    result.ProcessedRecords = insertedCount;
-                    result.Success = true;
-                    _logger.LogInformation("✅ [LN01] Import thành công {Count} records", insertedCount);
+                }
+                if (batch.Count > 0)
+                {
+                    var inserted = await BulkInsertGenericAsync(batch, "LN01");
+                    totalInserted += inserted;
+                    _metrics?.AddImported("LN01", inserted);
+                    batch.Clear();
+                }
+                sw.Stop();
+                var elapsedSec = Math.Max(0.001, sw.Elapsed.TotalSeconds);
+                var rps = (int)(totalInserted / elapsedSec);
+                result.ProcessedRecords = totalInserted;
+                result.Success = totalInserted > 0;
+                if (result.Success)
+                {
+                    _logger.LogInformation("✅ [LN01] Streaming import thành công {Count} records trong {Sec:F2}s (~{Rps}/sec)", totalInserted, sw.Elapsed.TotalSeconds, rps);
                     await LogImportMetadataAsync(result);
+                    await PersistHistoryAsync("LN01", file.FileName, result.NgayDL, file.Length, totalInserted, elapsedSec, "SUCCESS", null, batchSize, progressInterval, maxConsecutiveErrors);
                 }
                 else
                 {
-                    result.Success = false;
-                    result.Errors.Add("Không tìm thấy records hợp lệ trong LN01 CSV file");
+                    result.Errors.Add("Không tìm thấy LN01 records hợp lệ (stream)");
                 }
             }
             catch (Exception ex)
@@ -432,7 +561,7 @@ namespace Khoan.Api.Services
         /// <summary>
         /// Import LN03 Enhanced - từ disabled extension
         /// </summary>
-        public async Task<DirectImportResult> ImportLN03EnhancedAsync(IFormFile file, string? statementDate = null)
+    public async Task<DirectImportResult> ImportLN03EnhancedAsync(IFormFile file, string? statementDate = null)
         {
             _logger.LogInformation("🚀 [LN03_ENHANCED] Import LN03 with enhanced processing");
 
@@ -458,53 +587,54 @@ namespace Khoan.Api.Services
                 result.NgayDL = ngayDL;
 
                 // Parse LN03 CSV với enhanced processing
-                var records = await ParseLN03EnhancedAsync(file, statementDate);
-                _logger.LogInformation("📊 [LN03_ENHANCED] Đã parse {Count} records", records.Count);
+                // Streaming import theo batch, không xóa dữ liệu cũ (theo yêu cầu)
+                var insertedTotal = 0;
+                const int BATCH_SIZE = 5000;
+                var batch = new List<LN03>(BATCH_SIZE);
 
-                if (records.Any())
-                {
-                    // Set NGAY_DL cho tất cả records từ filename + audit fields
-                    if (DateTime.TryParse(result.NgayDL, out var ngayDlDate))
-                    {
-                        foreach (var r in records)
-                        {
-                            r.NGAY_DL = ngayDlDate;
-                            r.CREATED_DATE = DateTime.UtcNow;
-                            r.FILE_ORIGIN = file.FileName;
-                        }
-                    }
-
-                    // Upsert đơn giản: xóa dữ liệu cùng NGAY_DL trước khi insert (replace-by-date)
-                    var strategy = _context.Database.CreateExecutionStrategy();
-                    await strategy.ExecuteAsync(async () =>
-                    {
-                        await using var tx = await _context.Database.BeginTransactionAsync();
-                        try
-                        {
-                            if (DateTime.TryParse(result.NgayDL, out var ngayToDelete))
-                            {
-                                var affected = await _context.LN03.Where(x => x.NGAY_DL.Date == ngayToDelete.Date).ExecuteDeleteAsync();
-                                _logger.LogInformation("🧹 [LN03] Đã xoá {Count} bản ghi cũ cho ngày {Ngay}", affected, ngayToDelete.ToString("yyyy-MM-dd"));
-                            }
-
-                            var insertedCount = await BulkInsertGenericAsync(records, "LN03");
-                            await tx.CommitAsync();
-                            result.ProcessedRecords = insertedCount;
-                            result.Success = true;
-                            _logger.LogInformation("✅ [LN03_ENHANCED] Import thành công {Count} records", insertedCount);
-                            await LogImportMetadataAsync(result);
-                        }
-                        catch
-                        {
-                            await tx.RollbackAsync();
-                            throw;
-                        }
-                    });
-                }
-                else
+                // Parse stream
+                var parsed = await ParseLN03EnhancedAsync(file, statementDate);
+                if (parsed.Count == 0)
                 {
                     result.Success = false;
                     result.Errors.Add("Không tìm thấy LN03 records hợp lệ trong CSV");
+                    return result;
+                }
+
+                if (!DateTime.TryParse(result.NgayDL, out var ngayDlDate))
+                    ngayDlDate = DateTime.Today;
+
+                // Nạp theo batch
+                foreach (var r in parsed)
+                {
+                    r.NGAY_DL = ngayDlDate;
+                    r.CREATED_DATE = DateTime.UtcNow;
+                    r.FILE_ORIGIN = file.FileName;
+                    batch.Add(r);
+
+                    if (batch.Count >= BATCH_SIZE)
+                    {
+                        // Bulk insert bằng SqlBulkCopy (qua BulkInsertGenericAsync)
+                        insertedTotal += await BulkInsertGenericAsync(batch, "LN03");
+                        batch.Clear();
+                    }
+                }
+                if (batch.Count > 0)
+                {
+                    insertedTotal += await BulkInsertGenericAsync(batch, "LN03");
+                    batch.Clear();
+                }
+
+                result.ProcessedRecords = insertedTotal;
+                result.Success = insertedTotal > 0;
+                if (insertedTotal > 0)
+                {
+                    _logger.LogInformation("✅ [LN03_ENHANCED] Import thành công {Count} records", insertedTotal);
+                    await LogImportMetadataAsync(result);
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ [LN03_ENHANCED] Không chèn được bản ghi nào");
                 }
             }
             catch (Exception ex)
@@ -550,23 +680,63 @@ namespace Khoan.Api.Services
                     throw new InvalidOperationException($"Filename '{file.FileName}' is not allowed. Only files containing 'gl02' are accepted.");
                 }
 
-                // Parse GL02 CSV
-                var records = await ParseGL02CsvAsync(file);
-                _logger.LogInformation("📊 [GL02] Đã parse {Count} records từ CSV", records.Count);
-
-                if (records.Any())
+                // Streaming + batch (tương tự GL01/LN03) – giảm memory cho file > vài trăm MB
+                var BATCH_SIZE = ResolveBatchSize("GL02", 5000);
+                var progressInterval = ResolveProgressInterval();
+                var batch = new List<Models.DataTables.GL02>(BATCH_SIZE);
+                var totalInserted = 0;
+                var totalRead = 0;
+                var sw = Stopwatch.StartNew();
+                var consecutiveErrors = 0;
+                var maxConsecutiveErrors = 800; // GL02 nhỏ hơn
+                await foreach (var rec in StreamParseGL02Async(file))
                 {
-                    // Bulk insert GL02
-                    var insertedCount = await BulkInsertGenericAsync(records, "GL02");
-                    result.ProcessedRecords = insertedCount;
-                    result.Success = true;
-                    _logger.LogInformation("✅ [GL02] Import thành công {Count} records", insertedCount);
+                    try
+                    {
+                        batch.Add(rec);
+                        consecutiveErrors = 0;
+                    }
+                    catch
+                    {
+                        consecutiveErrors++;
+                        if (consecutiveErrors >= maxConsecutiveErrors)
+                        {
+                            _logger.LogError("❌ [GL02] Early abort: {Errors} lỗi liên tiếp khi xử lý batch", consecutiveErrors);
+                            break;
+                        }
+                        continue;
+                    }
+                    totalRead++;
+                    if (totalRead % progressInterval == 0)
+                        _logger.LogInformation("⏱️ [GL02] Đã đọc {Total} dòng (inserted {Inserted})", totalRead, totalInserted);
+                    if (batch.Count >= BATCH_SIZE)
+                    {
+                        totalInserted += await BulkInsertGenericAsync(batch, "GL02");
+                        batch.Clear();
+                        if (totalInserted % progressInterval == 0)
+                            _logger.LogInformation("💾 [GL02] Đã chèn {Inserted} dòng", totalInserted);
+                    }
+                }
+                if (batch.Count > 0)
+                {
+                    totalInserted += await BulkInsertGenericAsync(batch, "GL02");
+                    batch.Clear();
+                }
+                sw.Stop();
+                var elapsedSec = Math.Max(0.001, sw.Elapsed.TotalSeconds);
+                var rps = (int)(totalInserted / elapsedSec);
+                _metrics?.ObserveDuration("GL02", elapsedSec);
+                result.ProcessedRecords = totalInserted;
+                result.Success = totalInserted > 0;
+                if (result.Success)
+                {
+                    _logger.LogInformation("✅ [GL02] Streaming import thành công {Count} records trong {Seconds:F2}s (~{Rps}/sec)", totalInserted, sw.Elapsed.TotalSeconds, rps);
                     await LogImportMetadataAsync(result);
+                    await PersistHistoryAsync("GL02", file.FileName, result.NgayDL, file.Length, totalInserted, elapsedSec, "SUCCESS", null, BATCH_SIZE, progressInterval, maxConsecutiveErrors);
                 }
                 else
                 {
-                    result.Success = false;
-                    result.Errors.Add("Không tìm thấy GL02 records hợp lệ trong CSV");
+                    result.Errors.Add("Không tìm thấy GL02 records hợp lệ trong CSV (stream)");
                 }
             }
             catch (Exception ex)
@@ -688,23 +858,63 @@ namespace Khoan.Api.Services
 
                 _logger.LogInformation("📊 [GL01] Heavy file processing - Size: {Size}MB", file.Length / (1024 * 1024));
 
-                // Parse GL01 CSV
-                var records = await ParseGL01CsvAsync(file);
-                _logger.LogInformation("📊 [GL01] Đã parse {Count} records từ CSV", records.Count);
-
-                if (records.Any())
+                // Full STREAMING thay vì load toàn bộ list vào RAM
+                var BATCH_SIZE = ResolveBatchSize("GL01", 10000);
+                var progressInterval = ResolveProgressInterval();
+                var batch = new List<GL01>(BATCH_SIZE);
+                var totalInserted = 0;
+                var totalRead = 0;
+                var sw = Stopwatch.StartNew();
+                var consecutiveErrors = 0;
+                var maxConsecutiveErrors = 1500; // GL01 có thể rất lớn
+                await foreach (var rec in StreamParseGL01Async(file))
                 {
-                    // Heavy file bulk insert GL01 (BatchSize 10,000)
-                    var insertedCount = await BulkInsertGL01HeavyAsync(records);
-                    result.ProcessedRecords = insertedCount;
-                    result.Success = true;
-                    _logger.LogInformation("✅ [GL01] Heavy file import thành công {Count} records", insertedCount);
+                    try
+                    {
+                        batch.Add(rec);
+                        consecutiveErrors = 0;
+                    }
+                    catch
+                    {
+                        consecutiveErrors++;
+                        if (consecutiveErrors >= maxConsecutiveErrors)
+                        {
+                            _logger.LogError("❌ [GL01] Early abort: {Errors} lỗi liên tiếp khi xử lý batch", consecutiveErrors);
+                            break;
+                        }
+                        continue;
+                    }
+                    totalRead++;
+                    if (totalRead % progressInterval == 0)
+                        _logger.LogInformation("⏱️ [GL01] Đã đọc {Total} dòng (inserted {Inserted})", totalRead, totalInserted);
+                    if (batch.Count >= BATCH_SIZE)
+                    {
+                        totalInserted += await BulkInsertGenericAsync(batch, "GL01");
+                        batch.Clear();
+                        if (totalInserted % progressInterval == 0)
+                            _logger.LogInformation("💾 [GL01] Đã chèn {Inserted} dòng", totalInserted);
+                    }
+                }
+                if (batch.Count > 0)
+                {
+                    totalInserted += await BulkInsertGenericAsync(batch, "GL01");
+                    batch.Clear();
+                }
+                sw.Stop();
+                var elapsedSec = Math.Max(0.001, sw.Elapsed.TotalSeconds);
+                var rps = (int)(totalInserted / elapsedSec);
+                _metrics?.ObserveDuration("GL01", elapsedSec);
+                result.ProcessedRecords = totalInserted;
+                result.Success = totalInserted > 0;
+                if (result.Success)
+                {
+                    _logger.LogInformation("✅ [GL01] Streaming import thành công {Count} records trong {Seconds:F2}s (~{Rps}/sec)", totalInserted, sw.Elapsed.TotalSeconds, rps);
                     await LogImportMetadataAsync(result);
+                    await PersistHistoryAsync("GL01", file.FileName, result.NgayDL, file.Length, totalInserted, elapsedSec, "SUCCESS", null, BATCH_SIZE, progressInterval, maxConsecutiveErrors);
                 }
                 else
                 {
-                    result.Success = false;
-                    result.Errors.Add("Không tìm thấy GL01 records hợp lệ trong CSV");
+                    result.Errors.Add("Không tìm thấy GL01 records hợp lệ trong CSV (stream)");
                 }
             }
             catch (Exception ex)
@@ -753,6 +963,35 @@ namespace Khoan.Api.Services
             {
                 _logger.LogError(ex, "❌ Error extracting NgayDL from filename: {FileName}", fileName);
                 return DateTime.Today.ToString("yyyy-MM-dd");
+            }
+        }
+
+        private async Task PersistHistoryAsync(string dataType, string fileName, string? ngayDl, long fileSize, int inserted, double durationSec, string status, string? error, int batchSize, int progressInterval, int? abortThreshold)
+        {
+            try
+            {
+                var entity = new Khoan.Api.Models.Importing.ImportHistory
+                {
+                    DataType = dataType,
+                    FileName = fileName,
+                    NgayDL = ngayDl,
+                    FileSizeBytes = fileSize,
+                    RecordsInserted = inserted,
+                    DurationSeconds = durationSec,
+                    StartedUtc = DateTime.UtcNow.AddSeconds(-durationSec),
+                    CompletedUtc = DateTime.UtcNow,
+                    Status = status,
+                    ErrorMessage = error,
+                    BatchSizeUsed = batchSize,
+                    ProgressIntervalUsed = progressInterval,
+                    AbortErrorThreshold = abortThreshold
+                };
+                _context.Add(entity);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "⚠️ PersistHistoryAsync thất bại cho {DataType}: {Msg}", dataType, ex.Message);
             }
         }
 
@@ -982,6 +1221,165 @@ namespace Khoan.Api.Services
             return records;
         }
 
+        // STREAMING PARSERS (yield return) =====================================
+        private async IAsyncEnumerable<DP01> StreamParseDP01Async(IFormFile file)
+        {
+            using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
+            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true,
+                MissingFieldFound = null,
+                HeaderValidated = null,
+                TrimOptions = TrimOptions.Trim,
+                IgnoreBlankLines = true,
+                BadDataFound = null
+            });
+            var nowUtc = DateTime.UtcNow;
+            var csvRecords = csv.GetRecords<dynamic>();
+            foreach (IDictionary<string, object> csvRecord in csvRecords)
+            {
+                var record = new DP01
+                {
+                    MA_CN = SafeGetString(csvRecord, "MA_CN"),
+                    TAI_KHOAN_HACH_TOAN = SafeGetString(csvRecord, "TAI_KHOAN_HACH_TOAN"),
+                    MA_KH = SafeGetString(csvRecord, "MA_KH"),
+                    TEN_KH = SafeGetString(csvRecord, "TEN_KH"),
+                    DP_TYPE_NAME = SafeGetString(csvRecord, "DP_TYPE_NAME"),
+                    CCY = SafeGetString(csvRecord, "CCY"),
+                    CURRENT_BALANCE = SafeGetDecimal(csvRecord, "CURRENT_BALANCE"),
+                    RATE = SafeGetDecimal(csvRecord, "RATE"),
+                    SO_TAI_KHOAN = SafeGetString(csvRecord, "SO_TAI_KHOAN"),
+                    OPENING_DATE = SafeGetDateTime(csvRecord, "OPENING_DATE"),
+                    MATURITY_DATE = SafeGetDateTime(csvRecord, "MATURITY_DATE"),
+                    ADDRESS = SafeGetString(csvRecord, "ADDRESS"),
+                    NOTENO = SafeGetString(csvRecord, "NOTENO"),
+                    MONTH_TERM = SafeGetString(csvRecord, "MONTH_TERM"),
+                    TERM_DP_NAME = SafeGetString(csvRecord, "TERM_DP_NAME"),
+                    TIME_DP_NAME = SafeGetString(csvRecord, "TIME_DP_NAME"),
+                    MA_PGD = SafeGetString(csvRecord, "MA_PGD"),
+                    TEN_PGD = SafeGetString(csvRecord, "TEN_PGD"),
+                    DP_TYPE_CODE = SafeGetString(csvRecord, "DP_TYPE_CODE"),
+                    RENEW_DATE = SafeGetDateTime(csvRecord, "RENEW_DATE"),
+                    CUST_TYPE = SafeGetString(csvRecord, "CUST_TYPE"),
+                    CUST_TYPE_NAME = SafeGetString(csvRecord, "CUST_TYPE_NAME"),
+                    CUST_TYPE_DETAIL = SafeGetString(csvRecord, "CUST_TYPE_DETAIL"),
+                    CUST_DETAIL_NAME = SafeGetString(csvRecord, "CUST_DETAIL_NAME"),
+                    PREVIOUS_DP_CAP_DATE = SafeGetDateTime(csvRecord, "PREVIOUS_DP_CAP_DATE"),
+                    NEXT_DP_CAP_DATE = SafeGetDateTime(csvRecord, "NEXT_DP_CAP_DATE"),
+                    ID_NUMBER = SafeGetString(csvRecord, "ID_NUMBER"),
+                    ISSUED_BY = SafeGetString(csvRecord, "ISSUED_BY"),
+                    ISSUE_DATE = SafeGetDateTime(csvRecord, "ISSUE_DATE"),
+                    SEX_TYPE = SafeGetString(csvRecord, "SEX_TYPE"),
+                    BIRTH_DATE = SafeGetDateTime(csvRecord, "BIRTH_DATE"),
+                    TELEPHONE = SafeGetString(csvRecord, "TELEPHONE"),
+                    ACRUAL_AMOUNT = SafeGetDecimal(csvRecord, "ACRUAL_AMOUNT"),
+                    ACRUAL_AMOUNT_END = SafeGetDecimal(csvRecord, "ACRUAL_AMOUNT_END"),
+                    ACCOUNT_STATUS = SafeGetString(csvRecord, "ACCOUNT_STATUS"),
+                    DRAMT = SafeGetDecimal(csvRecord, "DRAMT"),
+                    CRAMT = SafeGetDecimal(csvRecord, "CRAMT"),
+                    EMPLOYEE_NUMBER = SafeGetString(csvRecord, "EMPLOYEE_NUMBER"),
+                    EMPLOYEE_NAME = SafeGetString(csvRecord, "EMPLOYEE_NAME"),
+                    SPECIAL_RATE = SafeGetDecimal(csvRecord, "SPECIAL_RATE"),
+                    AUTO_RENEWAL = SafeGetString(csvRecord, "AUTO_RENEWAL"),
+                    CLOSE_DATE = SafeGetDateTime(csvRecord, "CLOSE_DATE"),
+                    LOCAL_PROVIN_NAME = SafeGetString(csvRecord, "LOCAL_PROVIN_NAME"),
+                    LOCAL_DISTRICT_NAME = SafeGetString(csvRecord, "LOCAL_DISTRICT_NAME"),
+                    LOCAL_WARD_NAME = SafeGetString(csvRecord, "LOCAL_WARD_NAME"),
+                    TERM_DP_TYPE = SafeGetString(csvRecord, "TERM_DP_TYPE"),
+                    TIME_DP_TYPE = SafeGetString(csvRecord, "TIME_DP_TYPE"),
+                    STATES_CODE = SafeGetString(csvRecord, "STATES_CODE"),
+                    ZIP_CODE = SafeGetString(csvRecord, "ZIP_CODE"),
+                    COUNTRY_CODE = SafeGetString(csvRecord, "COUNTRY_CODE"),
+                    TAX_CODE_LOCATION = SafeGetString(csvRecord, "TAX_CODE_LOCATION"),
+                    MA_CAN_BO_PT = SafeGetString(csvRecord, "MA_CAN_BO_PT"),
+                    TEN_CAN_BO_PT = SafeGetString(csvRecord, "TEN_CAN_BO_PT"),
+                    PHONG_CAN_BO_PT = SafeGetString(csvRecord, "PHONG_CAN_BO_PT"),
+                    NGUOI_NUOC_NGOAI = SafeGetString(csvRecord, "NGUOI_NUOC_NGOAI"),
+                    QUOC_TICH = SafeGetString(csvRecord, "QUOC_TICH"),
+                    MA_CAN_BO_AGRIBANK = SafeGetString(csvRecord, "MA_CAN_BO_AGRIBANK"),
+                    NGUOI_GIOI_THIEU = SafeGetString(csvRecord, "NGUOI_GIOI_THIEU"),
+                    TEN_NGUOI_GIOI_THIEU = SafeGetString(csvRecord, "TEN_NGUOI_GIOI_THIEU"),
+                    CONTRACT_COUTS_DAY = SafeGetString(csvRecord, "CONTRACT_COUTS_DAY"),
+                    SO_KY_AD_LSDB = SafeGetString(csvRecord, "SO_KY_AD_LSDB"),
+                    UNTBUSCD = SafeGetString(csvRecord, "UNTBUSCD"),
+                    TYGIA = SafeGetDecimal(csvRecord, "TYGIA"),
+                    ImportDateTime = nowUtc,
+                    CreatedAt = nowUtc,
+                    UpdatedAt = nowUtc
+                };
+                yield return record;
+            }
+        }
+
+        private async IAsyncEnumerable<Models.DataTables.GL02> StreamParseGL02Async(IFormFile file)
+        {
+            using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
+            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true,
+                MissingFieldFound = null,
+                HeaderValidated = null
+            });
+            await foreach (var csvRecord in csv.GetRecordsAsync<dynamic>())
+            {
+                var rec = new Models.DataTables.GL02();
+                var dict = csvRecord as IDictionary<string, object>;
+                string GetS(string key)
+                {
+                    if (dict != null && dict.TryGetValue(key, out var v) && v != null)
+                        return v.ToString();
+                    return string.Empty;
+                }
+                // TRDATE -> NGAY_DL
+                if (dict != null && dict.TryGetValue("TRDATE", out var trdateObj))
+                {
+                    var trStr = trdateObj?.ToString();
+                    var dateFormats = new[] { "dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "d/M/yyyy", "yyyyMMdd" };
+                    if (!string.IsNullOrWhiteSpace(trStr))
+                    {
+                        var trimmed = trStr.Trim('\'', '"', ' ');
+                        if (DateTime.TryParseExact(trimmed, dateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var trdate))
+                            rec.NGAY_DL = trdate.Date;
+                    }
+                }
+                if (rec.NGAY_DL == default) rec.NGAY_DL = DateTime.Today;
+                rec.TRBRCD = GetS("TRBRCD");
+                rec.USERID = string.IsNullOrEmpty(GetS("USERID")) ? null : GetS("USERID");
+                rec.JOURSEQ = string.IsNullOrEmpty(GetS("JOURSEQ")) ? null : GetS("JOURSEQ");
+                rec.DYTRSEQ = string.IsNullOrEmpty(GetS("DYTRSEQ")) ? null : GetS("DYTRSEQ");
+                rec.LOCAC = GetS("LOCAC");
+                rec.CCY = GetS("CCY");
+                rec.BUSCD = string.IsNullOrEmpty(GetS("BUSCD")) ? null : GetS("BUSCD");
+                rec.UNIT = string.IsNullOrEmpty(GetS("UNIT")) ? null : GetS("UNIT");
+                rec.TRCD = string.IsNullOrEmpty(GetS("TRCD")) ? null : GetS("TRCD");
+                rec.CUSTOMER = string.IsNullOrEmpty(GetS("CUSTOMER")) ? null : GetS("CUSTOMER");
+                rec.TRTP = string.IsNullOrEmpty(GetS("TRTP")) ? null : GetS("TRTP");
+                rec.REFERENCE = string.IsNullOrEmpty(GetS("REFERENCE")) ? null : GetS("REFERENCE");
+                rec.REMARK = string.IsNullOrEmpty(GetS("REMARK")) ? null : GetS("REMARK");
+                if (decimal.TryParse(GetS("DRAMOUNT"), NumberStyles.Number, CultureInfo.InvariantCulture, out var d1)) rec.DRAMOUNT = d1;
+                if (decimal.TryParse(GetS("CRAMOUNT"), NumberStyles.Number, CultureInfo.InvariantCulture, out var d2)) rec.CRAMOUNT = d2;
+                rec.CREATED_DATE = DateTime.UtcNow;
+                rec.UPDATED_DATE = DateTime.UtcNow;
+                yield return rec;
+            }
+        }
+
+        private async IAsyncEnumerable<GL01> StreamParseGL01Async(IFormFile file)
+        {
+            using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
+            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            {
+                HasHeaderRecord = true,
+                MissingFieldFound = null,
+                HeaderValidated = null
+            });
+            await foreach (var rec in csv.GetRecordsAsync<GL01>())
+            {
+                if (rec.TR_TIME.HasValue) rec.NGAY_DL = rec.TR_TIME.Value.Date; else rec.NGAY_DL = DateTime.Today;
+                yield return rec;
+            }
+        }
+
         /// <summary>
         /// Parse DPDA CSV với 13 business columns
         /// </summary>
@@ -1068,10 +1466,10 @@ namespace Khoan.Api.Services
         /// <summary>
         /// Parse LN01 CSV với 79 business columns
         /// </summary>
-        private async Task<List<LN01>> ParseLN01CsvAsync(IFormFile file)
-        {
-            var records = new List<LN01>();
 
+        // STREAM PARSER LN01 mới (yield) – tái sử dụng logic mapping cũ
+        private async IAsyncEnumerable<LN01> StreamParseLN01Async(IFormFile file)
+        {
             using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
             using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
             {
@@ -1079,39 +1477,27 @@ namespace Khoan.Api.Services
                 MissingFieldFound = null,
                 HeaderValidated = null
             });
-
-            // Read and validate header so that GetField("COLUMN_NAME") works reliably
             csv.Read();
             csv.ReadHeader();
-            var ln01HeaderCount = csv.HeaderRecord?.Length ?? 0;
-            _logger.LogInformation("🔍 [LN01] CSV has {HeaderCount} headers", ln01HeaderCount);
 
-            // Ensure DateTime parsing supports multiple formats including compact yyyyMMdd
+            // Thiết lập format dùng lại
             var dtOptions = csv.Context.TypeConverterOptionsCache.GetOptions<DateTime>();
             dtOptions.Formats = new[] { "dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "d/M/yyyy", "yyyyMMdd", "ddMMyyyy", "dd/MM/yyyy HH:mm:ss", "yyyy-MM-ddTHH:mm:ss" };
             dtOptions.NullValues.AddRange(new[] { string.Empty, " ", "\t" });
             var ndtOptions = csv.Context.TypeConverterOptionsCache.GetOptions<DateTime?>();
-            ndtOptions.Formats = dtOptions.Formats;
-            ndtOptions.NullValues.AddRange(dtOptions.NullValues);
+            ndtOptions.Formats = dtOptions.Formats; ndtOptions.NullValues.AddRange(dtOptions.NullValues);
 
-            // Tolerant decimal parsing: treat blanks and quotes as null
-            var decOptions = csv.Context.TypeConverterOptionsCache.GetOptions<decimal?>();
-            decOptions.NumberStyles = NumberStyles.AllowDecimalPoint | NumberStyles.AllowThousands | NumberStyles.AllowLeadingSign;
-            decOptions.NullValues.AddRange(new[] { string.Empty, " ", "\t", "'", "                       " });
-
-            // Manually map rows to normalize numeric/string values
             while (await csv.ReadAsync())
             {
+                LN01? r = null;
                 try
                 {
-                    var r = new LN01();
+                    r = new LN01();
                     string Clean(string? s)
                     {
                         if (string.IsNullOrWhiteSpace(s)) return string.Empty;
                         var t = s.Trim();
-                        // Remove leading single quotes and collapse spaces
                         if (t.StartsWith("'")) t = t.TrimStart('\'');
-                        // Replace repeated spaces
                         t = System.Text.RegularExpressions.Regex.Replace(t, @"\s+", " ").Trim();
                         return t;
                     }
@@ -1119,9 +1505,8 @@ namespace Khoan.Api.Services
                     {
                         if (string.IsNullOrWhiteSpace(s)) return null;
                         var t = s.Replace(",", "").Trim();
-                        t = t.Trim('\'');
-                        // Treat zero padded like "0                       " as 0
-                        if (System.Text.RegularExpressions.Regex.IsMatch(t, @"^0+\s*$")) return 0m;
+                        t = t.Replace(" ", "").Trim('\'');
+                        if (System.Text.RegularExpressions.Regex.IsMatch(t, @"^0+$")) return 0m;
                         if (decimal.TryParse(t, NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var d)) return d;
                         return null;
                     }
@@ -1135,6 +1520,7 @@ namespace Khoan.Api.Services
                         return null;
                     }
 
+                    // Map subset theo pattern (giống parser legacy)
                     r.BRCD = Clean(csv.GetField("BRCD"));
                     r.CUSTSEQ = Clean(csv.GetField("CUSTSEQ"));
                     r.CUSTNM = Clean(csv.GetField("CUSTNM"));
@@ -1214,16 +1600,13 @@ namespace Khoan.Api.Services
                     r.MA_NGANH_KT = Clean(csv.GetField("MA_NGANH_KT"));
                     r.TY_GIA = Dec(csv.GetField("TY_GIA"));
                     r.OFFICER_IPCAS = Clean(csv.GetField("OFFICER_IPCAS"));
-
-                    records.Add(r);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning("⚠️ [LN01] Row parsing error: {Error}", ex.Message);
+                    _logger.LogWarning("⚠️ [LN01] Row streaming parse error: {Err}", ex.Message);
                 }
+                if (r != null) yield return r;
             }
-
-            return records;
         }
 
         /// <summary>
@@ -1513,8 +1896,9 @@ namespace Khoan.Api.Services
 
         /// <summary>
         /// Bulk insert generic cho bất kỳ entity type nào
+        /// Chọn engine tự động: SqlBulkCopy cho khối lượng lớn, EF AddRange cho khối lượng nhỏ hoặc khi không tương thích
         /// </summary>
-    private async Task<int> BulkInsertGenericAsync<T>(List<T> records, string tableName) where T : class
+        private async Task<int> BulkInsertGenericAsync<T>(List<T> records, string tableName) where T : class
         {
             try
             {
@@ -1557,43 +1941,21 @@ namespace Khoan.Api.Services
                     }
                 }
 
-                // Nếu kiểu không map trực tiếp trong DbContext, thực hiện chuyển đổi phù hợp
+                // LN01: Trực tiếp insert theo DataTables.LN01 để khớp schema vật lý trong DB
+                // (tránh sai khác precision/column naming khi qua lớp Entities)
                 if (typeof(T) == typeof(Models.DataTables.LN01))
                 {
-                    var list = records.Cast<Models.DataTables.LN01>().Select(MapLN01ToEntity).ToList();
-                    _context.Set<Models.Entities.LN01Entity>().AddRange(list);
+                    return await BulkInsertSqlBulkCopyAsync(records, tableName);
                 }
-                else if (typeof(T) == typeof(Models.DataTables.LN03))
+                // Với LN03 CSV model -> map sang Entity trước khi insert
+                if (typeof(T) == typeof(Models.DataTables.LN03))
                 {
                     var list = records.Cast<Models.DataTables.LN03>().Select(MapLN03ToEntity).ToList();
-                    _context.Set<Models.Entities.LN03Entity>().AddRange(list);
-                }
-                else
-                {
-                    _context.Set<T>().AddRange(records);
-                }
-                // Transient retry for connection/login/transport errors
-                var insertedCount = 0;
-                const int maxAttempts = 3;
-                for (var attempt = 1; attempt <= maxAttempts; attempt++)
-                {
-                    try
-                    {
-                        insertedCount = await _context.SaveChangesAsync();
-                        break;
-                    }
-                    catch (DbUpdateException ex) when (IsTransient(ex) && attempt < maxAttempts)
-                    {
-                        var delay = TimeSpan.FromSeconds(2 * attempt);
-                        _logger.LogWarning(ex, "⏳ [BULK_INSERT] Transient DbUpdateException on {Table}, retrying in {Delay}s (attempt {Attempt}/{Max})",
-                            tableName, delay.TotalSeconds, attempt + 1, maxAttempts);
-                        await Task.Delay(delay);
-                        continue;
-                    }
+                    return await BulkInsertSqlBulkCopyAsync(list, tableName);
                 }
 
-                _logger.LogInformation("✅ [BULK_INSERT] Inserted {Count} records vào {Table}", insertedCount, tableName);
-                return insertedCount;
+                // Mặc định dùng SqlBulkCopy cho tất cả các bảng dữ liệu trực tiếp
+                return await BulkInsertSqlBulkCopyAsync(records, tableName);
             }
             catch (DbUpdateException dbEx)
             {
@@ -1626,9 +1988,19 @@ namespace Khoan.Api.Services
 
         private static bool IsTransient(Exception ex)
         {
-            // Consider common SQL transport/login issues as transient
+            // Consider common SQL/network transport/login issues as transient
             if (ex is SqlException)
                 return true;
+            if (ex is TimeoutException)
+                return true;
+            if (ex is System.Net.Sockets.SocketException)
+                return true;
+            if (ex is System.IO.IOException)
+                return true;
+            if (ex is System.ComponentModel.Win32Exception)
+                return true;
+
+            // Unwrap common wrapper exceptions
             if (ex is DbUpdateException dbu && dbu.InnerException != null)
                 return IsTransient(dbu.InnerException);
             if (ex.InnerException != null)
@@ -1637,7 +2009,7 @@ namespace Khoan.Api.Services
         }
 
         /// <summary>
-        /// Heavy file bulk insert for GL01 - BatchSize 10,000 records
+        /// Heavy file bulk insert for GL01 - BatchSize 10,000 records using SqlBulkCopy
         /// Optimized for large CSV files up to 2GB
         /// </summary>
         private async Task<int> BulkInsertGL01HeavyAsync(List<GL01> records)
@@ -1657,12 +2029,8 @@ namespace Khoan.Api.Services
                     _logger.LogInformation("📦 [GL01_HEAVY] Processing batch {BatchNumber}/{TotalBatches} ({BatchSize} records)",
                         (i / BATCH_SIZE) + 1, (int)Math.Ceiling((double)records.Count / BATCH_SIZE), batch.Count);
 
-                    _context.Set<GL01>().AddRange(batch);
-                    var batchInserted = await _context.SaveChangesAsync();
+                    var batchInserted = await BulkInsertSqlBulkCopyAsync(batch, "GL01", BATCH_SIZE, timeoutSec: 900);
                     totalInserted += batchInserted;
-
-                    // Clear the context to free up memory for heavy files
-                    _context.ChangeTracker.Clear();
 
                     _logger.LogInformation("✅ [GL01_HEAVY] Batch completed - {BatchInserted} records inserted (Total: {Total})",
                         batchInserted, totalInserted);
@@ -1678,6 +2046,219 @@ namespace Khoan.Api.Services
             }
         }
 
+        /// <summary>
+        /// Engine: SqlBulkCopy for ultra-fast inserts. Tự động map cột bằng tên property hoặc [Column(Name)]
+        /// - Tôn trọng transaction hiện tại của EF nếu có
+        /// - Bỏ qua các property [NotMapped] và Identity (Id)
+        /// </summary>
+        private async Task<int> BulkInsertSqlBulkCopyAsync<T>(List<T> records, string tableName, int batchSize = 10000, int timeoutSec = 600) where T : class
+        {
+            if (records == null || records.Count == 0)
+                return 0;
+
+            // Chuẩn bị schema và dữ liệu DataTable
+            var props = GetScaffoldableProperties(typeof(T));
+            var (dataTable, mappings) = BuildDataTableAndMappings(records, props, tableName);
+
+            // Dùng connection/transaction của EF nếu có để đảm bảo tính atomic với các thao tác khác
+            var dbConn = _context.Database.GetDbConnection();
+            var currentTx = (_context.Database.CurrentTransaction as IInfrastructure<DbTransaction>)?.Instance as SqlTransaction;
+
+            // Helper tạo SqlBulkCopy phù hợp
+            async Task<int> ExecuteWith(SqlConnection sqlConn, SqlTransaction? sqlTx)
+            {
+                using var bulk = sqlTx != null
+                    ? new SqlBulkCopy(sqlConn, SqlBulkCopyOptions.TableLock | SqlBulkCopyOptions.KeepNulls | SqlBulkCopyOptions.CheckConstraints, sqlTx)
+                    : new SqlBulkCopy(sqlConn, SqlBulkCopyOptions.TableLock | SqlBulkCopyOptions.KeepNulls | SqlBulkCopyOptions.CheckConstraints, null);
+
+                bulk.DestinationTableName = $"[dbo].[{tableName}]";
+                bulk.BatchSize = Math.Max(1000, batchSize);
+                bulk.BulkCopyTimeout = Math.Max(60, timeoutSec);
+
+                // Thiết lập column mappings
+                foreach (var map in mappings)
+                {
+                    bulk.ColumnMappings.Add(map.Source, map.Destination);
+                }
+
+                _logger.LogInformation("⚡ [SqlBulkCopy] Inserting {Count} rows into {Table} (BatchSize={BatchSize}, Timeout={Timeout}s)",
+                    dataTable.Rows.Count, tableName, bulk.BatchSize, bulk.BulkCopyTimeout);
+
+                // Diagnostic: log column types for LN01 to verify TY_GIA handling
+                if (string.Equals(tableName, "LN01", StringComparison.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        var cols = string.Join(", ", dataTable.Columns.Cast<DataColumn>().Select(c => $"{c.ColumnName}:{c.DataType.Name}"));
+                        _logger.LogInformation("🧪 [LN01] DataTable columns: {Cols}", cols);
+                    }
+                    catch { }
+                }
+
+                var needOpen = sqlConn.State != ConnectionState.Open;
+                if (needOpen) await sqlConn.OpenAsync();
+                try
+                {
+                    await bulk.WriteToServerAsync(dataTable);
+                }
+                finally
+                {
+                    if (needOpen) await sqlConn.CloseAsync();
+                }
+
+                return records.Count;
+            }
+
+            // Nếu EF đang dùng SqlConnection, ưu tiên dùng nó để tận dụng transaction hiện tại
+            if (dbConn is SqlConnection efSqlConn)
+            {
+                return await ExecuteWith(efSqlConn, currentTx);
+            }
+            else
+            {
+                // Fallback: Tạo connection mới bằng connection string từ DbContext
+                var cs = _context.Database.GetConnectionString();
+                using var sqlConn = new SqlConnection(cs);
+                return await ExecuteWith(sqlConn, null);
+            }
+        }
+
+        private static IEnumerable<PropertyInfo> GetScaffoldableProperties(Type t)
+        {
+            if (_propertyCache.TryGetValue(t, out var cached)) return cached;
+            var list = new List<PropertyInfo>();
+            foreach (var p in t.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                if (!p.CanRead) continue;
+                if (p.GetCustomAttribute<NotMappedAttribute>() != null) continue;
+                if (string.Equals(p.Name, "Id", StringComparison.OrdinalIgnoreCase))
+                {
+                    var dbGen = p.GetCustomAttribute<DatabaseGeneratedAttribute>();
+                    if (dbGen?.DatabaseGeneratedOption == DatabaseGeneratedOption.Identity) continue;
+                }
+                var pt = Nullable.GetUnderlyingType(p.PropertyType) ?? p.PropertyType;
+                if (!IsScalarType(pt)) continue;
+                list.Add(p);
+            }
+            _propertyCache[t] = list;
+            return list;
+        }
+
+        private static bool IsScalarType(Type t)
+        {
+            return t.IsPrimitive
+                   || t.IsEnum
+                   || t == typeof(string)
+                   || t == typeof(decimal)
+                   || t == typeof(DateTime)
+                   || t == typeof(Guid)
+                   || t == typeof(byte[])
+                   || t == typeof(TimeSpan)
+                   || t == typeof(DateTimeOffset)
+                   || t == typeof(bool)
+                   || t == typeof(short)
+                   || t == typeof(int)
+                   || t == typeof(long)
+                   || t == typeof(float)
+                   || t == typeof(double);
+        }
+
+        private record ColumnMap(string Source, string Destination);
+
+        private sealed class ColumnDescriptor
+        {
+            public PropertyInfo Property { get; init; } = default!;
+            public string ColumnName { get; init; } = string.Empty;
+            public Type ColumnType { get; init; } = typeof(object);
+            public bool DateToNVarChar { get; init; } = false; // use yyyy-MM-dd
+        }
+
+    private static (DataTable Table, List<ColumnMap> Mappings) BuildDataTableAndMappings<T>(IEnumerable<T> records, IEnumerable<PropertyInfo> props, string tableName)
+        {
+            var dt = new DataTable();
+            var mappings = new List<ColumnMap>();
+
+            // Describe columns and conversions
+            var propList = props.ToList();
+            var descriptors = new List<ColumnDescriptor>(propList.Count);
+            foreach (var p in propList)
+            {
+                var colAttr = p.GetCustomAttribute<ColumnAttribute>();
+                var colName = string.IsNullOrWhiteSpace(colAttr?.Name) ? p.Name : colAttr!.Name;
+                var pType = Nullable.GetUnderlyingType(p.PropertyType) ?? p.PropertyType;
+                var dateToString = false;
+                var forceString = false;
+                // Special-cases:
+                // 1) EF conversion DateTime <-> nvarchar(10) (e.g., GL41.NGAY_DL configured in OnModelCreating)
+                if ((pType == typeof(DateTime) || pType == typeof(DateTime?)))
+                {
+                    // If ColumnAttribute explicitly says nvarchar, convert to string
+                    if (!string.IsNullOrWhiteSpace(colAttr?.TypeName) && colAttr!.TypeName!.StartsWith("nvarchar", StringComparison.OrdinalIgnoreCase))
+                    {
+                        dateToString = true;
+                    }
+                    // If table is GL41 and property is NGAY_DL, DbContext maps it to nvarchar(10)
+                    if (!dateToString && string.Equals(tableName, "GL41", StringComparison.OrdinalIgnoreCase) && string.Equals(p.Name, "NGAY_DL", StringComparison.OrdinalIgnoreCase))
+                    {
+                        dateToString = true;
+                    }
+                }
+
+                // TY_GIA: đã chuẩn hóa decimal(18,6) => không ép kiểu string
+
+                descriptors.Add(new ColumnDescriptor
+                {
+                    Property = p,
+                    ColumnName = colName,
+                    ColumnType = (dateToString || forceString) ? typeof(string) : pType,
+                    DateToNVarChar = dateToString
+                });
+
+                dt.Columns.Add(colName, (dateToString || forceString) ? typeof(string) : pType);
+                // IMPORTANT: SqlBulkCopy maps source columns by DataTable column names, not property names.
+                // When [Column(Name=...)] is present, DataTable column is "colName" while property name may differ.
+                // Therefore, set both Source and Destination to the actual column name in the DataTable/DB.
+                mappings.Add(new ColumnMap(colName, colName));
+            }
+
+            // Đổ dữ liệu
+            foreach (var item in records)
+            {
+                var row = dt.NewRow();
+                foreach (var d in descriptors)
+                {
+                    var val = d.Property.GetValue(item);
+                    if (val == null)
+                    {
+                        row[d.ColumnName] = DBNull.Value;
+                    }
+                    else if (d.DateToNVarChar)
+                    {
+                        var dtVal = (val is DateTimeOffset dto) ? dto.DateTime : (DateTime)val;
+                        row[d.ColumnName] = dtVal.ToString("yyyy-MM-dd");
+                    }
+                    // TY_GIA: xử lý bình thường không heuristic
+                    else if (d.ColumnType == typeof(string) && (val is decimal || val is decimal? || val is IFormattable))
+                    {
+                        // Normalize numeric/string values to invariant format without spaces/commas
+                        var s = (val is IFormattable f) ? f.ToString(null, CultureInfo.InvariantCulture) : val.ToString();
+                        if (s != null)
+                        {
+                            s = s.Trim().Replace(",", "").Replace(" ", "");
+                        }
+                        row[d.ColumnName] = s ?? string.Empty;
+                    }
+                    else
+                    {
+                        row[d.ColumnName] = val;
+                    }
+                }
+                dt.Rows.Add(row);
+            }
+
+            return (dt, mappings);
+        }
+
         #region Helper Methods for Parsing
 
         /// <summary>
@@ -1690,6 +2271,8 @@ namespace Khoan.Api.Services
 
             // Remove quotes and trim whitespace
             value = value.Trim('"', ' ');
+            // Remove internal padding spaces often present in fixed-width exports
+            value = value.Replace(" ", "");
 
             if (string.IsNullOrWhiteSpace(value))
                 return null;
@@ -1798,7 +2381,8 @@ namespace Khoan.Api.Services
                 NGAY_SINH = r.NGAY_SINH,
                 MA_CB_AGRI = r.MA_CB_AGRI,
                 MA_NGANH_KT = r.MA_NGANH_KT,
-                TY_GIA = r.TY_GIA,
+                // TY_GIA now string in DataTables; Entities mapping not used for insert
+                // If needed in future, parse to decimal here.
                 OFFICER_IPCAS = r.OFFICER_IPCAS
             };
 
@@ -1848,7 +2432,9 @@ namespace Khoan.Api.Services
                 LOAINGUONVON = r.LOAINGUONVON,
                 Column18 = r.Column18,
                 Column19 = r.Column19,
-                Column20 = r.Column20
+                Column20 = r.Column20,
+                CREATED_DATE = r.CREATED_DATE == default ? DateTime.UtcNow : r.CREATED_DATE,
+                FILE_ORIGIN = string.IsNullOrWhiteSpace(r.FILE_ORIGIN) ? null : r.FILE_ORIGIN
             };
         }
 
@@ -1892,7 +2478,7 @@ namespace Khoan.Api.Services
         /// Import RR01 từ CSV - 25 business columns (Risk Report)
         /// NGAY_DL từ filename, strict filename validation containing "rr01"
         /// </summary>
-        public async Task<DirectImportResult> ImportRR01Async(IFormFile file, string? statementDate = null)
+    public async Task<DirectImportResult> ImportRR01Async(IFormFile file, string? statementDate = null)
         {
             _logger.LogInformation("🚀 [RR01] Import RR01 Risk Report from CSV: {FileName}", file.FileName);
 
@@ -1921,46 +2507,82 @@ namespace Khoan.Api.Services
                 result.NgayDL = ngayDlString;
 
                 // Parse RR01 CSV
-                var records = await ParseRR01CsvAsync(file, ngayDlDate);
-                _logger.LogInformation("📊 [RR01] Đã parse {Count} records từ CSV", records.Count);
+                // Streaming theo batch, không xóa dữ liệu cũ
+                const int BATCH_SIZE = 5000;
+                var batch = new List<RR01>(BATCH_SIZE);
+                var totalInserted = 0;
 
-                if (records.Any())
+                using (var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8))
+                using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
                 {
-                    // Set NGAY_DL và audit fields cho tất cả records trước khi insert
-                    foreach (var record in records)
-                    {
-                        record.NGAY_DL = ngayDlDate;
-                        record.CREATED_DATE = DateTime.UtcNow;
-                    }
+                    HasHeaderRecord = true,
+                    MissingFieldFound = null,
+                    HeaderValidated = null
+                }))
+                {
+                    csv.Read();
+                    csv.ReadHeader();
 
-                    // Replace-by-date upsert pattern: delete existing data for this date, then insert new
-                    var strategy = _context.Database.CreateExecutionStrategy();
-                    await strategy.ExecuteAsync(async () =>
+                    while (csv.Read())
                     {
-                        await using var transaction = await _context.Database.BeginTransactionAsync();
                         try
                         {
-                            // Delete existing records cho ngày này
-                            var existingRecords = _context.RR01.Where(r => r.NGAY_DL.Date == ngayDlDate.Date);
-                            _context.RR01.RemoveRange(existingRecords);
-                            await _context.SaveChangesAsync();
+                            var rec = new RR01
+                            {
+                                NGAY_DL = ngayDlDate,
+                                CN_LOAI_I = csv.GetField("CN_LOAI_I"),
+                                BRCD = csv.GetField("BRCD"),
+                                MA_KH = csv.GetField("MA_KH"),
+                                TEN_KH = csv.GetField("TEN_KH"),
+                                SO_LDS = csv.GetField("SO_LDS"),
+                                CCY = csv.GetField("CCY"),
+                                SO_LAV = csv.GetField("SO_LAV"),
+                                LOAI_KH = csv.GetField("LOAI_KH"),
+                                NGAY_GIAI_NGAN = ParseRR01DateSafely(csv.GetField("NGAY_GIAI_NGAN")),
+                                NGAY_DEN_HAN = ParseRR01DateSafely(csv.GetField("NGAY_DEN_HAN")),
+                                VAMC_FLG = csv.GetField("VAMC_FLG"),
+                                NGAY_XLRR = ParseRR01DateSafely(csv.GetField("NGAY_XLRR")),
+                                DUNO_GOC_BAN_DAU = ParseDecimalSafely(csv.GetField("DUNO_GOC_BAN_DAU")),
+                                DUNO_LAI_TICHLUY_BD = ParseDecimalSafely(csv.GetField("DUNO_LAI_TICHLUY_BD")),
+                                DOC_DAUKY_DA_THU_HT = ParseDecimalSafely(csv.GetField("DOC_DAUKY_DA_THU_HT")),
+                                DUNO_GOC_HIENTAI = ParseDecimalSafely(csv.GetField("DUNO_GOC_HIENTAI")),
+                                DUNO_LAI_HIENTAI = ParseDecimalSafely(csv.GetField("DUNO_LAI_HIENTAI")),
+                                DUNO_NGAN_HAN = ParseDecimalSafely(csv.GetField("DUNO_NGAN_HAN")),
+                                DUNO_TRUNG_HAN = ParseDecimalSafely(csv.GetField("DUNO_TRUNG_HAN")),
+                                DUNO_DAI_HAN = ParseDecimalSafely(csv.GetField("DUNO_DAI_HAN")),
+                                THU_GOC = ParseDecimalSafely(csv.GetField("THU_GOC")),
+                                THU_LAI = ParseDecimalSafely(csv.GetField("THU_LAI")),
+                                BDS = ParseDecimalSafely(csv.GetField("BDS")),
+                                DS = ParseDecimalSafely(csv.GetField("DS")),
+                                TSK = ParseDecimalSafely(csv.GetField("TSK"))
+                            };
 
-                            // Bulk insert new records
-                            var insertedCount = await BulkInsertGenericAsync(records, "RR01");
-
-                            await transaction.CommitAsync();
-
-                            result.ProcessedRecords = insertedCount;
-                            result.Success = true;
-                            _logger.LogInformation("✅ [RR01] Import thành công {Count} records for date {Date}", insertedCount, ngayDlDate.ToString("yyyy-MM-dd"));
-                            await LogImportMetadataAsync(result);
+                            batch.Add(rec);
+                            if (batch.Count >= BATCH_SIZE)
+                            {
+                                totalInserted += await BulkInsertGenericAsync(batch, "RR01");
+                                batch.Clear();
+                            }
                         }
-                        catch
+                        catch (Exception exRow)
                         {
-                            await transaction.RollbackAsync();
-                            throw;
+                            _logger.LogWarning("⚠️ [RR01] Row parsing error: {Error}", exRow.Message);
                         }
-                    });
+                    }
+                }
+
+                if (batch.Count > 0)
+                {
+                    totalInserted += await BulkInsertGenericAsync(batch, "RR01");
+                    batch.Clear();
+                }
+
+                result.ProcessedRecords = totalInserted;
+                result.Success = totalInserted > 0;
+                if (totalInserted > 0)
+                {
+                    _logger.LogInformation("✅ [RR01] Import thành công {Count} records for date {Date}", totalInserted, ngayDlDate.ToString("yyyy-MM-dd"));
+                    await LogImportMetadataAsync(result);
                 }
                 else
                 {
