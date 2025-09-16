@@ -81,6 +81,11 @@ Frontend/KhoanUI/dev-dist/registerSW.js
 # Backend/Khoan.Api/*_debug.csv
 
 # =============================
+# Script backup archives (exclude)
+# =============================
+**/script_backup_*/
+
+# =============================
 # Temp / Scratch
 # =============================
 tmp/

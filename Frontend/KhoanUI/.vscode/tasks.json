@@ -1,0 +1,99 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "🎨 Start Frontend Dev Server",
+            "type": "shell",
+            "command": "./start_frontend.sh",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "isBackground": true,
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "runOptions": {
+                "instanceLimit": 1
+            }
+        },
+        {
+            "label": "📦 Build Frontend",
+            "type": "shell",
+            "command": "npm",
+            "args": [
+                "run",
+                "build"
+            ],
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "👀 Preview Build",
+            "type": "shell",
+            "command": "npm",
+            "args": [
+                "run",
+                "preview"
+            ],
+            "group": "build",
+            "dependsOn": "📦 Build Frontend",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "🧹 Clean Frontend",
+            "type": "shell",
+            "command": "npm",
+            "args": [
+                "run",
+                "clean"
+            ],
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "🔄 Clean & Reinstall",
+            "type": "shell",
+            "command": "npm",
+            "args": [
+                "run",
+                "clean-all"
+            ],
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "📦 Install Dependencies",
+            "type": "shell",
+            "command": "npm",
+            "args": [
+                "install"
+            ],
+            "group": "build",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        },
+        {
+            "label": "🔍 Type Check",
+            "type": "shell",
+            "command": "npx",
+            "args": [
+                "vue-tsc",
+                "--noEmit"
+            ],
+            "group": "test",
+            "options": {
+                "cwd": "${workspaceFolder}"
+            }
+        }
+    ]
+}

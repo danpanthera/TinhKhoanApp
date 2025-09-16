@@ -1,0 +1,94 @@
+{
+    "dotnet.completion.showCompletionItemsFromUnimportedNamespaces": true,
+    "omnisharp.enableRoslynAnalyzers": true,
+    "csharp.semanticHighlighting.enabled": true,
+    "csharp.format.enable": true,
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit",
+        "source.organizeImports": "explicit"
+    },
+    "files.exclude": {
+        "**/bin": true,
+        "**/obj": true,
+        "**/.vs": true,
+        "**/logs": true,
+        "**/*.log": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true
+    },
+    "search.exclude": {
+        "**/bin": true,
+        "**/obj": true,
+        "**/logs": true
+    },
+    "editor.rulers": [
+        80,
+        120
+    ],
+    "editor.wordWrap": "on",
+    "editor.wordWrapColumn": 120,
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "git.autofetch": true,
+    "git.enableSmartCommit": true,
+
+    // Spell checker configuration to ignore Vietnamese words and domain-specific terms
+    "cSpell.enabled": true,
+    "cSpell.language": "en,vi",
+    "cSpell.words": [
+        // Vietnamese words and terms
+        "bảng", "báo", "cáo", "chính", "chỉ", "cho", "của", "đã", "đang", "được", "đây",
+        "định", "dòng", "dữ", "ghi", "hàng", "không", "liệu", "loại", "mã", "nhân",
+        "phần", "qua", "quá", "số", "tại", "theo", "thì", "tiền", "từ", "và", "với",
+        "xem", "xử", "để", "cập", "nhật", "đưa", "về", "sau", "nào", "còn", "có",
+        "từng", "nữa", "lại", "cũng", "như", "nhờ", "thêm", "ra", "lên", "xuống",
+        "trong", "ngoài", "trên", "dưới", "giữa", "đầu", "cuối", "trước", "khác",
+        "ngoặc", "kép", "phẩy", "trống", "hoàn", "toàn", "chính", "xác", "đảm",
+        "bảo", "siêu", "thực", "hiện", "xử", "lý", "phân", "tích", "kiểm", "tra",
+        "thành", "công", "lỗi", "cảnh", "báo", "thông", "tin", "nhận", "lưu",
+        "trữ", "xuất", "nhập", "tải", "xóa", "sửa", "thêm", "bớt", "tìm", "kiếm",
+        "lọc", "sắp", "xếp", "nhóm", "phân", "loại", "gộp", "tách", "chia",
+
+        // Domain-specific terms
+        "api", "csv", "json", "utf", "bom", "rfc", "linq", "guid", "datetime",
+        "async", "await", "nullable", "enum", "bool", "int", "string", "var",
+        "readonly", "const", "static", "public", "private", "protected", "internal",
+        "virtual", "override", "abstract", "sealed", "partial", "namespace",
+        "using", "class", "interface", "struct", "record", "delegate", "event",
+        "get", "set", "init", "value", "field", "property", "method", "constructor",
+        "destructor", "operator", "indexer", "generic", "constraint", "where",
+        "typeof", "sizeof", "nameof", "default", "null", "true", "false",
+        "if", "else", "switch", "case", "default", "for", "foreach", "while",
+        "do", "break", "continue", "return", "throw", "try", "catch", "finally",
+        "checked", "unchecked", "unsafe", "fixed", "lock", "yield", "params",
+        "ref", "out", "in", "this", "base", "new", "is", "as", "typeof",
+
+        // Application-specific terms
+        "tinhkhoan", "khoan", "kpi", "agribank", "api", "backend", "frontend",
+        "dashboard", "employee", "payout", "scoring", "assignment", "period",
+        "target", "business", "plan", "import", "export", "cleanup", "maintenance",
+        "optimized", "raw", "data", "general", "final", "extended", "definitions",
+        "rules", "assignments", "periods", "employees", "payouts", "targets",
+        "plans", "imports", "exports", "cleanups", "maintenances", "dashboards",
+
+        // File and technical terms
+        "formfile", "streamreader", "stringbuilder", "jsonserializer", "utf8",
+        "trimstart", "trilingwhitespace", "removeemptyentries", "isnullorwhitespace",
+        "stringsplitoptions", "mathmin", "substring", "tolist", "takewhile",
+        "selectmany", "groupby", "orderby", "firstname", "lastname", "whereclause",
+        "distinctby", "anyof", "allof", "noneof", "startswith", "endswith",
+        "contains", "indexof", "lastindexof", "tostring", "tointeger", "todouble",
+        "toboolean", "todatetime", "tojson", "fromjson", "serialize", "deserialize"
+    ],
+    "cSpell.ignorePaths": [
+        "**/node_modules/**",
+        "**/bin/**",
+        "**/obj/**",
+        "**/logs/**",
+        "**/*.log",
+        "**/migrations/**",
+        "**/wwwroot/**"
+    ]
+}

@@ -1,0 +1,62 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "🎨 Launch Frontend Dev Server",
+			"type": "node",
+			"request": "launch",
+			"cwd": "${workspaceFolder}",
+			"runtimeExecutable": "npm",
+			"runtimeArgs": ["run", "dev"],
+			"serverReadyAction": {
+				"pattern": "Local:\\s+(https?://\\S+)",
+				"uriFormat": "%s",
+				"action": "openExternally"
+			},
+			"console": "integratedTerminal",
+			"internalConsoleOptions": "openOnSessionStart",
+			"env": {
+				"NODE_ENV": "development"
+			}
+		},
+		{
+			"name": "📦 Build Frontend",
+			"type": "node",
+			"request": "launch",
+			"cwd": "${workspaceFolder}",
+			"runtimeExecutable": "npm",
+			"runtimeArgs": ["run", "build"],
+			"console": "integratedTerminal"
+		},
+		{
+			"name": "👀 Preview Build",
+			"type": "node",
+			"request": "launch",
+			"cwd": "${workspaceFolder}",
+			"runtimeExecutable": "npm",
+			"runtimeArgs": ["run", "preview"],
+			"serverReadyAction": {
+				"pattern": "Local:\\s+(https?://\\S+)",
+				"uriFormat": "%s",
+				"action": "openExternally"
+			},
+			"console": "integratedTerminal"
+		},
+		{
+			"name": "🔍 Type Check",
+			"type": "node",
+			"request": "launch",
+			"cwd": "${workspaceFolder}",
+			"runtimeExecutable": "npx",
+			"runtimeArgs": ["vue-tsc", "--noEmit"],
+			"console": "integratedTerminal"
+		}
+	],
+	"compounds": [
+		{
+			"name": "🎯 Build & Preview Frontend",
+			"configurations": ["📦 Build Frontend", "👀 Preview Build"],
+			"stopAll": true
+		}
+	]
+}

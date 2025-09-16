@@ -1,0 +1,176 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "🚀 Start Backend API",
+			"type": "shell",
+			"command": "./start_backend.sh",
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"isBackground": true,
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"runOptions": {
+				"instanceLimit": 1
+			}
+		},
+		{
+			"label": "🐳 Start Database",
+			"type": "shell",
+			"command": "./start_database.sh",
+			"group": "build",
+			"isBackground": true,
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"runOptions": {
+				"instanceLimit": 1
+			}
+		},
+		{
+			"label": "🚀 Start Full App (Database + Backend + Frontend)",
+			"type": "shell",
+			"command": "./start_full_app.sh",
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"isBackground": true,
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"runOptions": {
+				"instanceLimit": 1
+			}
+		},
+		{
+			"label": "🔨 Build Backend",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"--configuration",
+				"Debug",
+				"--verbosity",
+				"minimal"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"runOptions": {
+				"instanceLimit": 1
+			}
+		},
+		{
+			"label": "🧪 Test Backend",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"test",
+				"--verbosity",
+				"normal"
+			],
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			},
+			"options": {
+				"cwd": "${workspaceFolder}"
+			}
+		},
+		{
+			"label": "🗄️ Database Update",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"ef",
+				"database",
+				"update"
+			],
+			"group": "build",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			}
+		},
+		{
+			"label": "📄 Add Migration",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"ef",
+				"migrations",
+				"add",
+				"${input:migrationName}"
+			],
+			"group": "build",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			}
+		},
+		{
+			"label": "🧹 Clean Backend",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"clean"
+			],
+			"group": "build",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			}
+		},
+		{
+			"label": "📦 Restore Packages",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"restore"
+			],
+			"group": "build",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			}
+		},
+		{
+			"label": "🔨 Build Backend (verify NGAY_DL datetime2 updates)",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"--configuration",
+				"Debug",
+				"--verbosity",
+				"minimal"
+			],
+			"group": "build"
+		},
+		{
+			"label": "🔨 Build Backend (verify NGAY_DL datetime2 updates)",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"--configuration",
+				"Debug",
+				"--verbosity",
+				"minimal"
+			],
+			"group": "build"
+		}
+	],
+	"inputs": [
+		{
+			"id": "migrationName",
+			"description": "Enter migration name",
+			"default": "NewMigration",
+			"type": "promptString"
+		}
+	]
+}
