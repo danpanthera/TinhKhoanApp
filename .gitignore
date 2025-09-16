@@ -1,3 +1,110 @@
+# =============================
+# Core Existing Rules
+# =============================
 # Ignore large backup files
 *.bak
 database_backup/
+
+# =============================
+# OS / Editor
+# =============================
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.orig
+
+# =============================
+# Logs & Runtime PIDs
+# =============================
+*.log
+*.pid
+logs/
+
+# =============================
+# Archives / Backups / Dumps
+# =============================
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+*.7z
+*.gz
+*.old
+
+# =============================
+# Node / Frontend Build Artifacts
+# =============================
+Frontend/KhoanUI/node_modules/
+Frontend/KhoanUI/dist/
+Frontend/KhoanUI/dev-dist/
+Frontend/KhoanUI/.vite/
+Frontend/KhoanUI/.cache/
+Frontend/KhoanUI/*.tsbuildinfo
+
+# =============================
+# .NET Build Artifacts
+# =============================
+**/bin/
+**/obj/
+**/TestResults/
+**/*.user
+**/*.rsuser
+
+# NuGet local packages
+*.nupkg
+*.snupkg
+packages/
+
+# =============================
+# Tooling / Analysis / IDE
+# =============================
+.sonarqube/
+.scannerwork/
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# =============================
+# Generated Service Workers / PWA
+# =============================
+Frontend/KhoanUI/dev-dist/workbox-*.js
+Frontend/KhoanUI/dev-dist/sw.js
+Frontend/KhoanUI/dev-dist/registerSW.js
+
+# =============================
+# CSV / Data Samples (optional)
+# Backend/Khoan.Api/*_test.csv
+# Backend/Khoan.Api/*_debug.csv
+
+# =============================
+# Temp / Scratch
+# =============================
+tmp/
+temp/
+*.tmp
+*.cache
+
+# =============================
+# Merge / Patch Artifacts
+# =============================
+*.rej
+*.merge
+*.BACKUP.*
+*.BASE.*
+*.LOCAL.*
+*.REMOTE.*
+
+# =============================
+# Env Overrides
+# =============================
+*.env.local
+*.env.development.local
+*.env.test.local
+*.env.production.local
+.envrc
+
+# End of file
