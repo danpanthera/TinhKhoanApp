@@ -481,7 +481,7 @@ app.MapGet("/metrics/import/raw", (Khoan.Api.Services.InMemoryImportMetrics metr
     .Produces<object>(StatusCodes.Status200OK);
 
 // Recent parse error samples (runtime diagnostics captured during streaming parsers)
-app.MapGet("/metrics/import/errors", (Khoan.Api.Services.DirectImportService svc, string? table, int? limit) =>
+app.MapGet("/metrics/import/errors", (Khoan.Api.Services.Interfaces.IDirectImportService svc, string? table, int? limit) =>
 {
     var errors = svc.GetRecentParseErrors(table);
     if (limit.HasValue && limit.Value > 0) errors = errors.Take(limit.Value).ToList();
@@ -494,6 +494,7 @@ app.MapGet("/metrics/import/errors", (Khoan.Api.Services.DirectImportService svc
 // Clear runtime parse error samples
 app.MapPost("/metrics/import/errors/clear", () =>
 {
+    // Use concrete static helper to clear (cannot inject into static). Retain call.
     Khoan.Api.Services.DirectImportService.ClearRuntimeParseErrors();
     return Results.Ok(new { cleared = true });
 })
