@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Linq;
 using CsvHelper;
 using CsvHelper.Configuration;
 using System.Data;
@@ -29,7 +30,7 @@ namespace Khoan.Api.Services
     /// DirectImportService - Handles CSV direct import cho DP01, DPDA, LN03
     /// CSV-First: Import trực tiếp từ CSV vào database với validation
     /// </summary>
-    public class DirectImportService : IDirectImportService
+    public partial class DirectImportService : IDirectImportService
     {
         private readonly ApplicationDbContext _context;
         private readonly ILogger<DirectImportService> _logger;
@@ -152,6 +153,8 @@ namespace Khoan.Api.Services
             {
                 result.EndTime = DateTime.UtcNow;
                 result.ProcessingTimeMs = (int)(result.EndTime - result.StartTime).TotalMilliseconds;
+                // Persist parse error samples (best-effort, không ảnh hưởng kết quả chính)
+                await PersistParseErrorsAsync("DP01", file.FileName, batchId: result.StartTime.Ticks.ToString());
             }
 
             return result;
@@ -292,11 +295,14 @@ namespace Khoan.Api.Services
                 _logger.LogError(ex, "❌ [DP01] Import error: {Error}", ex.Message);
                 result.Success = false;
                 result.Errors.Add($"DP01 import error: {ex.Message}");
+                var first = RuntimeImportDiagnostics.GetRecent("DP01").FirstOrDefault();
+                if (first != null) result.Errors.Add($"FirstParseError: {first.Error}");
             }
             finally
             {
                 result.EndTime = DateTime.UtcNow;
                 result.ProcessingTimeMs = (int)(result.EndTime - result.StartTime).TotalMilliseconds;
+                await PersistParseErrorsAsync("GL02", file.FileName, batchId: result.StartTime.Ticks.ToString());
             }
 
             return result;
@@ -357,6 +363,7 @@ namespace Khoan.Api.Services
             {
                 result.EndTime = DateTime.UtcNow;
                 result.ProcessingTimeMs = (int)(result.EndTime - result.StartTime).TotalMilliseconds;
+                await PersistParseErrorsAsync("GL01", file.FileName, batchId: result.StartTime.Ticks.ToString());
             }
 
             return result;
@@ -443,6 +450,7 @@ namespace Khoan.Api.Services
             {
                 result.EndTime = DateTime.UtcNow;
                 result.ProcessingTimeMs = (int)(result.EndTime - result.StartTime).TotalMilliseconds;
+                await PersistParseErrorsAsync("LN01", file.FileName, batchId: result.StartTime.Ticks.ToString());
             }
 
             return result;
@@ -552,11 +560,14 @@ namespace Khoan.Api.Services
                 _logger.LogError(ex, "❌ [LN01] Import error: {Error}", ex.Message);
                 result.Success = false;
                 result.Errors.Add($"LN01 import error: {ex.Message}");
+                var first = RuntimeImportDiagnostics.GetRecent("LN01").FirstOrDefault();
+                if (first != null) result.Errors.Add($"FirstParseError: {first.Error}");
             }
             finally
             {
                 result.EndTime = DateTime.UtcNow;
                 result.ProcessingTimeMs = (int)(result.EndTime - result.StartTime).TotalMilliseconds;
+                await PersistParseErrorsAsync("LN03", file.FileName, batchId: result.StartTime.Ticks.ToString());
             }
 
             return result;
@@ -650,6 +661,8 @@ namespace Khoan.Api.Services
                 _logger.LogError(ex, "❌ [LN03_ENHANCED] Import error: {Error}", ex.Message);
                 result.Success = false;
                 result.Errors.Add($"LN03 enhanced import error: {ex.Message}");
+                var first = RuntimeImportDiagnostics.GetRecent("LN03").FirstOrDefault();
+                if (first != null) result.Errors.Add($"FirstParseError: {first.Error}");
             }
             finally
             {
@@ -752,6 +765,8 @@ namespace Khoan.Api.Services
                 _logger.LogError(ex, "❌ [GL02] Import error: {Error}", ex.Message);
                 result.Success = false;
                 result.Errors.Add($"GL02 import error: {ex.Message}");
+                var first = RuntimeImportDiagnostics.GetRecent("GL02").FirstOrDefault();
+                if (first != null) result.Errors.Add($"FirstParseError: {first.Error}");
             }
             finally
             {
@@ -930,6 +945,8 @@ namespace Khoan.Api.Services
                 _logger.LogError(ex, "❌ [GL01] Import error: {Error}", ex.Message);
                 result.Success = false;
                 result.Errors.Add($"GL01 import error: {ex.Message}");
+                var first = RuntimeImportDiagnostics.GetRecent("GL01").FirstOrDefault();
+                if (first != null) result.Errors.Add($"FirstParseError: {first.Error}");
             }
             finally
             {
@@ -1242,80 +1259,108 @@ namespace Khoan.Api.Services
                 IgnoreBlankLines = true,
                 BadDataFound = null
             });
+
+            string? headerLine = null;
+            try { csv.Read(); csv.ReadHeader(); headerLine = string.Join(',', csv.Context.Reader.HeaderRecord ?? Array.Empty<string>()); }
+            catch { /* ignore */ }
+
             var nowUtc = DateTime.UtcNow;
-            var csvRecords = csv.GetRecords<dynamic>();
-            foreach (IDictionary<string, object> csvRecord in csvRecords)
+            int errorCaptured = 0;
+            const int maxErrorSamples = 5;
+
+            while (await csv.ReadAsync())
             {
-                var record = new DP01
+                IDictionary<string, object> dict = csv.GetRecord<dynamic>();
+                DP01? record = null;
+                try
                 {
-                    MA_CN = SafeGetString(csvRecord, "MA_CN"),
-                    TAI_KHOAN_HACH_TOAN = SafeGetString(csvRecord, "TAI_KHOAN_HACH_TOAN"),
-                    MA_KH = SafeGetString(csvRecord, "MA_KH"),
-                    TEN_KH = SafeGetString(csvRecord, "TEN_KH"),
-                    DP_TYPE_NAME = SafeGetString(csvRecord, "DP_TYPE_NAME"),
-                    CCY = SafeGetString(csvRecord, "CCY"),
-                    CURRENT_BALANCE = SafeGetDecimal(csvRecord, "CURRENT_BALANCE"),
-                    RATE = SafeGetDecimal(csvRecord, "RATE"),
-                    SO_TAI_KHOAN = SafeGetString(csvRecord, "SO_TAI_KHOAN"),
-                    OPENING_DATE = SafeGetDateTime(csvRecord, "OPENING_DATE"),
-                    MATURITY_DATE = SafeGetDateTime(csvRecord, "MATURITY_DATE"),
-                    ADDRESS = SafeGetString(csvRecord, "ADDRESS"),
-                    NOTENO = SafeGetString(csvRecord, "NOTENO"),
-                    MONTH_TERM = SafeGetString(csvRecord, "MONTH_TERM"),
-                    TERM_DP_NAME = SafeGetString(csvRecord, "TERM_DP_NAME"),
-                    TIME_DP_NAME = SafeGetString(csvRecord, "TIME_DP_NAME"),
-                    MA_PGD = SafeGetString(csvRecord, "MA_PGD"),
-                    TEN_PGD = SafeGetString(csvRecord, "TEN_PGD"),
-                    DP_TYPE_CODE = SafeGetString(csvRecord, "DP_TYPE_CODE"),
-                    RENEW_DATE = SafeGetDateTime(csvRecord, "RENEW_DATE"),
-                    CUST_TYPE = SafeGetString(csvRecord, "CUST_TYPE"),
-                    CUST_TYPE_NAME = SafeGetString(csvRecord, "CUST_TYPE_NAME"),
-                    CUST_TYPE_DETAIL = SafeGetString(csvRecord, "CUST_TYPE_DETAIL"),
-                    CUST_DETAIL_NAME = SafeGetString(csvRecord, "CUST_DETAIL_NAME"),
-                    PREVIOUS_DP_CAP_DATE = SafeGetDateTime(csvRecord, "PREVIOUS_DP_CAP_DATE"),
-                    NEXT_DP_CAP_DATE = SafeGetDateTime(csvRecord, "NEXT_DP_CAP_DATE"),
-                    ID_NUMBER = SafeGetString(csvRecord, "ID_NUMBER"),
-                    ISSUED_BY = SafeGetString(csvRecord, "ISSUED_BY"),
-                    ISSUE_DATE = SafeGetDateTime(csvRecord, "ISSUE_DATE"),
-                    SEX_TYPE = SafeGetString(csvRecord, "SEX_TYPE"),
-                    BIRTH_DATE = SafeGetDateTime(csvRecord, "BIRTH_DATE"),
-                    TELEPHONE = SafeGetString(csvRecord, "TELEPHONE"),
-                    ACRUAL_AMOUNT = SafeGetDecimal(csvRecord, "ACRUAL_AMOUNT"),
-                    ACRUAL_AMOUNT_END = SafeGetDecimal(csvRecord, "ACRUAL_AMOUNT_END"),
-                    ACCOUNT_STATUS = SafeGetString(csvRecord, "ACCOUNT_STATUS"),
-                    DRAMT = SafeGetDecimal(csvRecord, "DRAMT"),
-                    CRAMT = SafeGetDecimal(csvRecord, "CRAMT"),
-                    EMPLOYEE_NUMBER = SafeGetString(csvRecord, "EMPLOYEE_NUMBER"),
-                    EMPLOYEE_NAME = SafeGetString(csvRecord, "EMPLOYEE_NAME"),
-                    SPECIAL_RATE = SafeGetDecimal(csvRecord, "SPECIAL_RATE"),
-                    AUTO_RENEWAL = SafeGetString(csvRecord, "AUTO_RENEWAL"),
-                    CLOSE_DATE = SafeGetDateTime(csvRecord, "CLOSE_DATE"),
-                    LOCAL_PROVIN_NAME = SafeGetString(csvRecord, "LOCAL_PROVIN_NAME"),
-                    LOCAL_DISTRICT_NAME = SafeGetString(csvRecord, "LOCAL_DISTRICT_NAME"),
-                    LOCAL_WARD_NAME = SafeGetString(csvRecord, "LOCAL_WARD_NAME"),
-                    TERM_DP_TYPE = SafeGetString(csvRecord, "TERM_DP_TYPE"),
-                    TIME_DP_TYPE = SafeGetString(csvRecord, "TIME_DP_TYPE"),
-                    STATES_CODE = SafeGetString(csvRecord, "STATES_CODE"),
-                    ZIP_CODE = SafeGetString(csvRecord, "ZIP_CODE"),
-                    COUNTRY_CODE = SafeGetString(csvRecord, "COUNTRY_CODE"),
-                    TAX_CODE_LOCATION = SafeGetString(csvRecord, "TAX_CODE_LOCATION"),
-                    MA_CAN_BO_PT = SafeGetString(csvRecord, "MA_CAN_BO_PT"),
-                    TEN_CAN_BO_PT = SafeGetString(csvRecord, "TEN_CAN_BO_PT"),
-                    PHONG_CAN_BO_PT = SafeGetString(csvRecord, "PHONG_CAN_BO_PT"),
-                    NGUOI_NUOC_NGOAI = SafeGetString(csvRecord, "NGUOI_NUOC_NGOAI"),
-                    QUOC_TICH = SafeGetString(csvRecord, "QUOC_TICH"),
-                    MA_CAN_BO_AGRIBANK = SafeGetString(csvRecord, "MA_CAN_BO_AGRIBANK"),
-                    NGUOI_GIOI_THIEU = SafeGetString(csvRecord, "NGUOI_GIOI_THIEU"),
-                    TEN_NGUOI_GIOI_THIEU = SafeGetString(csvRecord, "TEN_NGUOI_GIOI_THIEU"),
-                    CONTRACT_COUTS_DAY = SafeGetString(csvRecord, "CONTRACT_COUTS_DAY"),
-                    SO_KY_AD_LSDB = SafeGetString(csvRecord, "SO_KY_AD_LSDB"),
-                    UNTBUSCD = SafeGetString(csvRecord, "UNTBUSCD"),
-                    TYGIA = SafeGetDecimal(csvRecord, "TYGIA"),
-                    ImportDateTime = nowUtc,
-                    CreatedAt = nowUtc,
-                    UpdatedAt = nowUtc
-                };
-                yield return record;
+                    record = new DP01
+                    {
+                        MA_CN = SafeGetString(dict, "MA_CN"),
+                        TAI_KHOAN_HACH_TOAN = SafeGetString(dict, "TAI_KHOAN_HACH_TOAN"),
+                        MA_KH = SafeGetString(dict, "MA_KH"),
+                        TEN_KH = SafeGetString(dict, "TEN_KH"),
+                        DP_TYPE_NAME = SafeGetString(dict, "DP_TYPE_NAME"),
+                        CCY = SafeGetString(dict, "CCY"),
+                        CURRENT_BALANCE = SafeGetDecimal(dict, "CURRENT_BALANCE"),
+                        RATE = SafeGetDecimal(dict, "RATE"),
+                        SO_TAI_KHOAN = SafeGetString(dict, "SO_TAI_KHOAN"),
+                        OPENING_DATE = SafeGetDateTime(dict, "OPENING_DATE"),
+                        MATURITY_DATE = SafeGetDateTime(dict, "MATURITY_DATE"),
+                        ADDRESS = SafeGetString(dict, "ADDRESS"),
+                        NOTENO = SafeGetString(dict, "NOTENO"),
+                        MONTH_TERM = SafeGetString(dict, "MONTH_TERM"),
+                        TERM_DP_NAME = SafeGetString(dict, "TERM_DP_NAME"),
+                        TIME_DP_NAME = SafeGetString(dict, "TIME_DP_NAME"),
+                        MA_PGD = SafeGetString(dict, "MA_PGD"),
+                        TEN_PGD = SafeGetString(dict, "TEN_PGD"),
+                        DP_TYPE_CODE = SafeGetString(dict, "DP_TYPE_CODE"),
+                        RENEW_DATE = SafeGetDateTime(dict, "RENEW_DATE"),
+                        CUST_TYPE = SafeGetString(dict, "CUST_TYPE"),
+                        CUST_TYPE_NAME = SafeGetString(dict, "CUST_TYPE_NAME"),
+                        CUST_TYPE_DETAIL = SafeGetString(dict, "CUST_TYPE_DETAIL"),
+                        CUST_DETAIL_NAME = SafeGetString(dict, "CUST_DETAIL_NAME"),
+                        PREVIOUS_DP_CAP_DATE = SafeGetDateTime(dict, "PREVIOUS_DP_CAP_DATE"),
+                        NEXT_DP_CAP_DATE = SafeGetDateTime(dict, "NEXT_DP_CAP_DATE"),
+                        ID_NUMBER = SafeGetString(dict, "ID_NUMBER"),
+                        ISSUED_BY = SafeGetString(dict, "ISSUED_BY"),
+                        ISSUE_DATE = SafeGetDateTime(dict, "ISSUE_DATE"),
+                        SEX_TYPE = SafeGetString(dict, "SEX_TYPE"),
+                        BIRTH_DATE = SafeGetDateTime(dict, "BIRTH_DATE"),
+                        TELEPHONE = SafeGetString(dict, "TELEPHONE"),
+                        ACRUAL_AMOUNT = SafeGetDecimal(dict, "ACRUAL_AMOUNT"),
+                        ACRUAL_AMOUNT_END = SafeGetDecimal(dict, "ACRUAL_AMOUNT_END"),
+                        ACCOUNT_STATUS = SafeGetString(dict, "ACCOUNT_STATUS"),
+                        DRAMT = SafeGetDecimal(dict, "DRAMT"),
+                        CRAMT = SafeGetDecimal(dict, "CRAMT"),
+                        EMPLOYEE_NUMBER = SafeGetString(dict, "EMPLOYEE_NUMBER"),
+                        EMPLOYEE_NAME = SafeGetString(dict, "EMPLOYEE_NAME"),
+                        SPECIAL_RATE = SafeGetDecimal(dict, "SPECIAL_RATE"),
+                        AUTO_RENEWAL = SafeGetString(dict, "AUTO_RENEWAL"),
+                        CLOSE_DATE = SafeGetDateTime(dict, "CLOSE_DATE"),
+                        LOCAL_PROVIN_NAME = SafeGetString(dict, "LOCAL_PROVIN_NAME"),
+                        LOCAL_DISTRICT_NAME = SafeGetString(dict, "LOCAL_DISTRICT_NAME"),
+                        LOCAL_WARD_NAME = SafeGetString(dict, "LOCAL_WARD_NAME"),
+                        TERM_DP_TYPE = SafeGetString(dict, "TERM_DP_TYPE"),
+                        TIME_DP_TYPE = SafeGetString(dict, "TIME_DP_TYPE"),
+                        STATES_CODE = SafeGetString(dict, "STATES_CODE"),
+                        ZIP_CODE = SafeGetString(dict, "ZIP_CODE"),
+                        COUNTRY_CODE = SafeGetString(dict, "COUNTRY_CODE"),
+                        TAX_CODE_LOCATION = SafeGetString(dict, "TAX_CODE_LOCATION"),
+                        MA_CAN_BO_PT = SafeGetString(dict, "MA_CAN_BO_PT"),
+                        TEN_CAN_BO_PT = SafeGetString(dict, "TEN_CAN_BO_PT"),
+                        PHONG_CAN_BO_PT = SafeGetString(dict, "PHONG_CAN_BO_PT"),
+                        NGUOI_NUOC_NGOAI = SafeGetString(dict, "NGUOI_NUOC_NGOAI"),
+                        QUOC_TICH = SafeGetString(dict, "QUOC_TICH"),
+                        MA_CAN_BO_AGRIBANK = SafeGetString(dict, "MA_CAN_BO_AGRIBANK"),
+                        NGUOI_GIOI_THIEU = SafeGetString(dict, "NGUOI_GIOI_THIEU"),
+                        TEN_NGUOI_GIOI_THIEU = SafeGetString(dict, "TEN_NGUOI_GIOI_THIEU"),
+                        CONTRACT_COUTS_DAY = SafeGetString(dict, "CONTRACT_COUTS_DAY"),
+                        SO_KY_AD_LSDB = SafeGetString(dict, "SO_KY_AD_LSDB"),
+                        UNTBUSCD = SafeGetString(dict, "UNTBUSCD"),
+                        TYGIA = SafeGetDecimal(dict, "TYGIA"),
+                        ImportDateTime = nowUtc,
+                        CreatedAt = nowUtc,
+                        UpdatedAt = nowUtc
+                    };
+                }
+                catch (Exception ex)
+                {
+                    if (errorCaptured < maxErrorSamples)
+                    {
+                        errorCaptured++;
+                        // Build line sample (joined values)
+                        string? lineSample = null;
+                        try { lineSample = string.Join(';', dict.Values.Select(v => v?.ToString())); } catch { }
+                        _logger.LogWarning("[DP01][PARSE_ERR] Sample#{Idx} {Msg} LineSample={Sample}", errorCaptured, ex.Message, lineSample);
+                        RuntimeImportDiagnostics.AddErrorSample("DP01", ex.Message, lineSample, headerLine);
+                        if (_metrics is InMemoryImportMetrics m) m.AddParseError("DP01");
+                    }
+                    continue; // skip row
+                }
+
+                if (record != null)
+                    yield return record;
             }
         }
 
@@ -1326,49 +1371,79 @@ namespace Khoan.Api.Services
             {
                 HasHeaderRecord = true,
                 MissingFieldFound = null,
-                HeaderValidated = null
+                HeaderValidated = null,
+                TrimOptions = TrimOptions.Trim,
+                IgnoreBlankLines = true
             });
-            await foreach (var csvRecord in csv.GetRecordsAsync<dynamic>())
+
+            string? headerLine = null;
+            try { csv.Read(); csv.ReadHeader(); headerLine = string.Join(',', csv.Context.Reader.HeaderRecord ?? Array.Empty<string>()); } catch { }
+
+            int errorCaptured = 0; const int maxErrorSamples = 5;
+            while (await csv.ReadAsync())
             {
-                var rec = new Models.DataTables.GL02();
-                var dict = csvRecord as IDictionary<string, object>;
-                string GetS(string key)
+                Models.DataTables.GL02? rec = null;
+                try
                 {
-                    if (dict != null && dict.TryGetValue(key, out var v) && v != null)
-                        return v.ToString();
-                    return string.Empty;
-                }
-                // TRDATE -> NGAY_DL
-                if (dict != null && dict.TryGetValue("TRDATE", out var trdateObj))
-                {
-                    var trStr = trdateObj?.ToString();
-                    var dateFormats = new[] { "dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "d/M/yyyy", "yyyyMMdd" };
-                    if (!string.IsNullOrWhiteSpace(trStr))
+                    rec = new Models.DataTables.GL02();
+                    string GetS(string key) { try { return csv.GetField(key); } catch { return string.Empty; } }
+                    // TRDATE -> NGAY_DL
+                    try
                     {
-                        var trimmed = trStr.Trim('\'', '"', ' ');
-                        if (DateTime.TryParseExact(trimmed, dateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var trdate))
-                            rec.NGAY_DL = trdate.Date;
+                        var trStr = GetS("TRDATE");
+                        var dateFormats = new[] { "dd/MM/yyyy", "yyyy-MM-dd", "yyyy/MM/dd", "d/M/yyyy", "yyyyMMdd" };
+                        if (!string.IsNullOrWhiteSpace(trStr))
+                        {
+                            var trimmed = trStr.Trim('\'', '"', ' ');
+                            if (DateTime.TryParseExact(trimmed, dateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var trdate))
+                                rec.NGAY_DL = trdate.Date;
+                        }
+                        if (rec.NGAY_DL == default) rec.NGAY_DL = DateTime.Today;
                     }
+                    catch { rec.NGAY_DL = DateTime.Today; }
+
+                    rec.TRBRCD = GetS("TRBRCD");
+                    rec.USERID = string.IsNullOrEmpty(GetS("USERID")) ? null : GetS("USERID");
+                    rec.JOURSEQ = string.IsNullOrEmpty(GetS("JOURSEQ")) ? null : GetS("JOURSEQ");
+                    rec.DYTRSEQ = string.IsNullOrEmpty(GetS("DYTRSEQ")) ? null : GetS("DYTRSEQ");
+                    rec.LOCAC = GetS("LOCAC");
+                    rec.CCY = GetS("CCY");
+                    rec.BUSCD = string.IsNullOrEmpty(GetS("BUSCD")) ? null : GetS("BUSCD");
+                    rec.UNIT = string.IsNullOrEmpty(GetS("UNIT")) ? null : GetS("UNIT");
+                    rec.TRCD = string.IsNullOrEmpty(GetS("TRCD")) ? null : GetS("TRCD");
+                    rec.CUSTOMER = string.IsNullOrEmpty(GetS("CUSTOMER")) ? null : GetS("CUSTOMER");
+                    rec.TRTP = string.IsNullOrEmpty(GetS("TRTP")) ? null : GetS("TRTP");
+                    rec.REFERENCE = string.IsNullOrEmpty(GetS("REFERENCE")) ? null : GetS("REFERENCE");
+                    rec.REMARK = string.IsNullOrEmpty(GetS("REMARK")) ? null : GetS("REMARK");
+                    if (decimal.TryParse(GetS("DRAMOUNT"), NumberStyles.Number, CultureInfo.InvariantCulture, out var d1)) rec.DRAMOUNT = d1;
+                    if (decimal.TryParse(GetS("CRAMOUNT"), NumberStyles.Number, CultureInfo.InvariantCulture, out var d2)) rec.CRAMOUNT = d2;
+                    try
+                    {
+                        var crtStr = GetS("CRTDTM");
+                        var dtFormats = new[] { "dd/MM/yyyy HH:mm:ss", "yyyy-MM-dd HH:mm:ss", "yyyyMMdd HH:mm:ss", "yyyyMMddHH:mm:ss", "yyyy-MM-ddTHH:mm:ss" };
+                        if (!string.IsNullOrWhiteSpace(crtStr))
+                        {
+                            var trimmed = crtStr.Trim('\'', '"', ' ');
+                            if (DateTime.TryParseExact(trimmed, dtFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var crtdtm)) rec.CRTDTM = crtdtm; else if (DateTime.TryParse(trimmed, out var general)) rec.CRTDTM = general;
+                        }
+                    }
+                    catch { }
+                    rec.CREATED_DATE = DateTime.UtcNow;
+                    rec.UPDATED_DATE = DateTime.UtcNow;
                 }
-                if (rec.NGAY_DL == default) rec.NGAY_DL = DateTime.Today;
-                rec.TRBRCD = GetS("TRBRCD");
-                rec.USERID = string.IsNullOrEmpty(GetS("USERID")) ? null : GetS("USERID");
-                rec.JOURSEQ = string.IsNullOrEmpty(GetS("JOURSEQ")) ? null : GetS("JOURSEQ");
-                rec.DYTRSEQ = string.IsNullOrEmpty(GetS("DYTRSEQ")) ? null : GetS("DYTRSEQ");
-                rec.LOCAC = GetS("LOCAC");
-                rec.CCY = GetS("CCY");
-                rec.BUSCD = string.IsNullOrEmpty(GetS("BUSCD")) ? null : GetS("BUSCD");
-                rec.UNIT = string.IsNullOrEmpty(GetS("UNIT")) ? null : GetS("UNIT");
-                rec.TRCD = string.IsNullOrEmpty(GetS("TRCD")) ? null : GetS("TRCD");
-                rec.CUSTOMER = string.IsNullOrEmpty(GetS("CUSTOMER")) ? null : GetS("CUSTOMER");
-                rec.TRTP = string.IsNullOrEmpty(GetS("TRTP")) ? null : GetS("TRTP");
-                rec.REFERENCE = string.IsNullOrEmpty(GetS("REFERENCE")) ? null : GetS("REFERENCE");
-                rec.REMARK = string.IsNullOrEmpty(GetS("REMARK")) ? null : GetS("REMARK");
-                if (decimal.TryParse(GetS("DRAMOUNT"), NumberStyles.Number, CultureInfo.InvariantCulture, out var d1)) rec.DRAMOUNT = d1;
-                if (decimal.TryParse(GetS("CRAMOUNT"), NumberStyles.Number, CultureInfo.InvariantCulture, out var d2)) rec.CRAMOUNT = d2;
-                rec.CREATED_DATE = DateTime.UtcNow;
-                rec.UPDATED_DATE = DateTime.UtcNow;
-                yield return rec;
+                catch (Exception ex)
+                {
+                    if (errorCaptured < maxErrorSamples)
+                    {
+                        errorCaptured++;
+                        string? sample = null; try { sample = string.Join(';', Enumerable.Range(0, Math.Min(csv.Parser.Count, 30)).Select(i => csv.GetField(i))); } catch { }
+                        _logger.LogWarning("[GL02][PARSE_ERR] Sample#{Idx} {Msg} LineSample={Sample}", errorCaptured, ex.Message, sample);
+                        RuntimeImportDiagnostics.AddErrorSample("GL02", ex.Message, sample, headerLine);
+                        if (_metrics is InMemoryImportMetrics m) m.AddParseError("GL02");
+                    }
+                    continue;
+                }
+                if (rec != null) yield return rec;
             }
         }
 
@@ -1381,10 +1456,29 @@ namespace Khoan.Api.Services
                 MissingFieldFound = null,
                 HeaderValidated = null
             });
-            await foreach (var rec in csv.GetRecordsAsync<GL01>())
+            string? headerLine = null; try { csv.Read(); csv.ReadHeader(); headerLine = string.Join(',', csv.Context.Reader.HeaderRecord ?? Array.Empty<string>()); } catch { }
+            int err = 0; const int maxErr = 5;
+            while (await csv.ReadAsync())
             {
-                if (rec.TR_TIME.HasValue) rec.NGAY_DL = rec.TR_TIME.Value.Date; else rec.NGAY_DL = DateTime.Today;
-                yield return rec;
+                GL01? rec = null;
+                try
+                {
+                    rec = csv.GetRecord<GL01>();
+                    if (rec.TR_TIME.HasValue) rec.NGAY_DL = rec.TR_TIME.Value.Date; else rec.NGAY_DL = DateTime.Today;
+                }
+                catch (Exception ex)
+                {
+                    if (err < maxErr)
+                    {
+                        err++;
+                        string? sample = null; try { sample = string.Join(';', Enumerable.Range(0, Math.Min(csv.Parser.Count, 25)).Select(i => csv.GetField(i))); } catch { }
+                        _logger.LogWarning("[GL01][PARSE_ERR] Sample#{Idx} {Msg}", err, ex.Message);
+                        RuntimeImportDiagnostics.AddErrorSample("GL01", ex.Message, sample, headerLine);
+                        if (_metrics is InMemoryImportMetrics m) m.AddParseError("GL01");
+                    }
+                    continue;
+                }
+                if (rec != null) yield return rec;
             }
         }
 
@@ -1400,36 +1494,46 @@ namespace Khoan.Api.Services
             {
                 HasHeaderRecord = true,
                 MissingFieldFound = null,
-                HeaderValidated = null
+                HeaderValidated = null,
+                TrimOptions = TrimOptions.Trim,
+                IgnoreBlankLines = true
             });
 
-            var fileName = Path.GetFileName(file.FileName);
-            var ngayDlString = ExtractNgayDLFromFileName(fileName);
-            var ngayDl = DateTime.TryParse(ngayDlString, out var date) ? date : DateTime.Today;
+            string? ngayDlString = ExtractNgayDLFromFileName(file.FileName);
+            DateTime? ngayDl = DateTime.TryParse(ngayDlString, out var d) ? d : DateTime.Today;
 
-            await foreach (var record in csv.GetRecordsAsync<dynamic>())
+            // Read header (for potential future diagnostics)
+            try { csv.Read(); csv.ReadHeader(); } catch { }
+
+            while (await csv.ReadAsync())
             {
-                var dpda = new DPDA
+                try
                 {
-                    NGAY_DL = ngayDl,
-                    MA_CHI_NHANH = record.MA_CHI_NHANH ?? "",
-                    MA_KHACH_HANG = record.MA_KHACH_HANG ?? "",
-                    TEN_KHACH_HANG = record.TEN_KHACH_HANG ?? "",
-                    SO_TAI_KHOAN = record.SO_TAI_KHOAN ?? "",
-                    LOAI_THE = record.LOAI_THE ?? "",
-                    SO_THE = record.SO_THE ?? "",
-                    NGAY_NOP_DON = ParseDateTimeSafely(record.NGAY_NOP_DON),
-                    NGAY_PHAT_HANH = ParseDateTimeSafely(record.NGAY_PHAT_HANH),
-                    USER_PHAT_HANH = record.USER_PHAT_HANH ?? "",
-                    TRANG_THAI = record.TRANG_THAI ?? "",
-                    PHAN_LOAI = record.PHAN_LOAI ?? "",
-                    GIAO_THE = record.GIAO_THE ?? "",
-                    LOAI_PHAT_HANH = record.LOAI_PHAT_HANH ?? "",
-                    CREATED_DATE = DateTime.UtcNow, // đảm bảo UTC
-                    UPDATED_DATE = DateTime.UtcNow // đảm bảo UTC
-                };
-
-                records.Add(dpda);
+                    var rec = new DPDA
+                    {
+                        NGAY_DL = ngayDl,
+                        MA_CHI_NHANH = csv.GetField("MA_CHI_NHANH"),
+                        MA_KHACH_HANG = csv.GetField("MA_KHACH_HANG"),
+                        TEN_KHACH_HANG = csv.GetField("TEN_KHACH_HANG"),
+                        SO_TAI_KHOAN = csv.GetField("SO_TAI_KHOAN"),
+                        LOAI_THE = csv.GetField("LOAI_THE"),
+                        SO_THE = csv.GetField("SO_THE"),
+                        NGAY_NOP_DON = ParseDateTimeSafely(csv.GetField("NGAY_NOP_DON")),
+                        NGAY_PHAT_HANH = ParseDateTimeSafely(csv.GetField("NGAY_PHAT_HANH")),
+                        USER_PHAT_HANH = csv.GetField("USER_PHAT_HANH"),
+                        TRANG_THAI = csv.GetField("TRANG_THAI"),
+                        PHAN_LOAI = csv.GetField("PHAN_LOAI"),
+                        GIAO_THE = csv.GetField("GIAO_THE"),
+                        LOAI_PHAT_HANH = csv.GetField("LOAI_PHAT_HANH"),
+                        CREATED_DATE = DateTime.UtcNow,
+                        UPDATED_DATE = DateTime.UtcNow
+                    };
+                    records.Add(rec);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning("[DPDA] Row parse error: {Msg}", ex.Message);
+                }
             }
 
             return records;
@@ -1474,7 +1578,6 @@ namespace Khoan.Api.Services
         /// <summary>
         /// Parse LN01 CSV với 79 business columns
         /// </summary>
-
         // STREAM PARSER LN01 mới (yield) – tái sử dụng logic mapping cũ
         private async IAsyncEnumerable<LN01> StreamParseLN01Async(IFormFile file)
         {
@@ -1487,6 +1590,8 @@ namespace Khoan.Api.Services
             });
             csv.Read();
             csv.ReadHeader();
+            var headerLine = string.Join(',', csv.Context.Reader.HeaderRecord ?? Array.Empty<string>());
+            int errorCaptured = 0; const int maxErrorSamples = 5;
 
             // Thiết lập format dùng lại
             var dtOptions = csv.Context.TypeConverterOptionsCache.GetOptions<DateTime>();
@@ -1611,9 +1716,99 @@ namespace Khoan.Api.Services
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning("⚠️ [LN01] Row streaming parse error: {Err}", ex.Message);
+                    if (errorCaptured < maxErrorSamples)
+                    {
+                        errorCaptured++;
+                        _logger.LogWarning("[LN01][PARSE_ERR] Sample#{Idx} {Msg}", errorCaptured, ex.Message);
+                        RuntimeImportDiagnostics.AddErrorSample("LN01", ex.Message, null, headerLine);
+                        if (_metrics is InMemoryImportMetrics m) m.AddParseError("LN01");
+                    }
                 }
                 if (r != null) yield return r;
+            }
+        }
+
+        // ================== RUNTIME PARSE ERROR DIAGNOSTICS ==================
+        internal static class RuntimeImportDiagnostics
+        {
+            private static readonly object _lock = new();
+            private static readonly Queue<ErrorSample> _recent = new();
+            private const int MaxSamples = 50;
+            public static void AddErrorSample(string table, string error, string? line, string? header)
+            {
+                lock (_lock)
+                {
+                    _recent.Enqueue(new ErrorSample
+                    {
+                        Table = table,
+                        Error = error,
+                        Line = line,
+                        Header = header,
+                        TimestampUtc = DateTime.UtcNow
+                    });
+                    while (_recent.Count > MaxSamples) _recent.Dequeue();
+                }
+            }
+            public static List<ErrorSample> GetRecent(string? table = null)
+            {
+                lock (_lock)
+                {
+                    return _recent.Where(r => table == null || r.Table.Equals(table, StringComparison.OrdinalIgnoreCase))
+                                   .OrderByDescending(r => r.TimestampUtc)
+                                   .Take(50)
+                                   .ToList();
+                }
+            }
+            public static void Clear()
+            {
+                lock (_lock)
+                {
+                    _recent.Clear();
+                }
+            }
+        }
+        public static void ClearRuntimeParseErrors() => RuntimeImportDiagnostics.Clear();
+        internal class ErrorSample
+        {
+            public string Table { get; set; } = string.Empty;
+            public string Error { get; set; } = string.Empty;
+            public string? Line { get; set; }
+            public string? Header { get; set; }
+            public DateTime TimestampUtc { get; set; }
+        }
+
+        public List<object> GetRecentParseErrors(string? table = null)
+            => RuntimeImportDiagnostics.GetRecent(table)
+                .Select(e => (object)new { e.Table, e.Error, e.Line, e.Header, e.TimestampUtc })
+                .ToList();
+
+        private async Task PersistParseErrorsAsync(string table, string fileName, string? batchId = null, int max = 5)
+        {
+            try
+            {
+                var recent = RuntimeImportDiagnostics.GetRecent(table)
+                    .OrderByDescending(r => r.TimestampUtc)
+                    .Take(max)
+                    .ToList();
+                if (!recent.Any()) return;
+                foreach (var r in recent)
+                {
+                    _context.ParseErrorLogs.Add(new Khoan.Api.Models.Importing.ParseErrorLog
+                    {
+                        Table = r.Table,
+                        Error = r.Error.Length > 500 ? r.Error.Substring(0,500) : r.Error,
+                        LineSample = r.Line,
+                        Header = r.Header,
+                        FileName = fileName,
+                        TimestampUtc = r.TimestampUtc,
+                        BatchId = batchId
+                    });
+                }
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "⚠️ PersistParseErrorsAsync failed: {Msg}", ex.Message);
             }
         }
 
@@ -1639,6 +1834,8 @@ namespace Khoan.Api.Services
             var headerCount = csv.HeaderRecord?.Length ?? 0;
             _logger.LogInformation("🔍 [LN03] CSV has {HeaderCount} headers", headerCount);
 
+            var headerLine = csv.HeaderRecord != null ? string.Join(',', csv.HeaderRecord) : null;
+            int errorCaptured = 0; const int maxErrorSamples = 5;
             while (csv.Read())
             {
                 try
@@ -1678,8 +1875,14 @@ namespace Khoan.Api.Services
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogWarning("⚠️ [LN03] Row parsing error: {Error}", ex.Message);
-                    // Continue processing other rows
+                    if (errorCaptured < maxErrorSamples)
+                    {
+                        errorCaptured++;
+                        string? sample = null; try { sample = string.Join(';', Enumerable.Range(0, Math.Min(csv.Parser.Count, 25)).Select(i => csv.GetField(i))); } catch { }
+                        _logger.LogWarning("[LN03][PARSE_ERR] Sample#{Idx} {Msg}", errorCaptured, ex.Message);
+                        RuntimeImportDiagnostics.AddErrorSample("LN03", ex.Message, sample, headerLine);
+                        if (_metrics is InMemoryImportMetrics m) m.AddParseError("LN03");
+                    }
                 }
             }
 
@@ -2171,9 +2374,11 @@ namespace Khoan.Api.Services
                    || t == typeof(double);
         }
 
-        private record ColumnMap(string Source, string Destination);
+    // Helper internal records/classes cannot be private at namespace level; keep internal
+    // ---- Helper Types (remain in first part of partial class) ----
+    internal record ColumnMap(string Source, string Destination);
 
-        private sealed class ColumnDescriptor
+    internal sealed class ColumnDescriptor
         {
             public PropertyInfo Property { get; init; } = default!;
             public string ColumnName { get; init; } = string.Empty;

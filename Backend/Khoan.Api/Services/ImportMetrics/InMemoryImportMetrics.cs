@@ -14,6 +14,7 @@ namespace Khoan.Api.Services
             public double LastDurationSeconds; // last import duration
             public DateTime LastUpdatedUtc;
             public readonly Queue<(DateTime ts, int batchSize)> RecentBatches = new();
+            public long ParseErrors; // total parse errors captured
         }
 
         private readonly ConcurrentDictionary<string, Stat> _stats = new(StringComparer.OrdinalIgnoreCase);
@@ -31,6 +32,15 @@ namespace Khoan.Api.Services
             }
         }
 
+        // Ghi nhận lỗi parse (row-level) để theo dõi chất lượng dữ liệu đầu vào
+        public void AddParseError(string table, int count = 1)
+        {
+            if (count <= 0) return;
+            var st = _stats.GetOrAdd(table, _ => new Stat());
+            Interlocked.Add(ref st.ParseErrors, count);
+            st.LastUpdatedUtc = DateTime.UtcNow;
+        }
+
         public void ObserveDuration(string table, double seconds)
         {
             var st = _stats.GetOrAdd(table, _ => new Stat());
@@ -43,6 +53,7 @@ namespace Khoan.Api.Services
             return _stats.ToDictionary(kvp => kvp.Key, kvp => new
             {
                 totalImported = kvp.Value.Imported,
+                parseErrors = kvp.Value.ParseErrors,
                 lastDurationSeconds = kvp.Value.LastDurationSeconds,
                 lastUpdatedUtc = kvp.Value.LastUpdatedUtc
             });
@@ -52,7 +63,8 @@ namespace Khoan.Api.Services
         {
             return _stats.ToDictionary(kvp => kvp.Key, kvp => new
             {
-                batches = kvp.Value.RecentBatches.Select(b => new { timestamp = b.ts, rows = b.batchSize }).ToList()
+                batches = kvp.Value.RecentBatches.Select(b => new { timestamp = b.ts, rows = b.batchSize }).ToList(),
+                parseErrors = kvp.Value.ParseErrors
             });
         }
 
@@ -67,6 +79,14 @@ namespace Khoan.Api.Services
                   .Append(kv.Key)
                   .AppendLine("\"} " + kv.Value.Imported);
             }
+                        sb.AppendLine("# HELP direct_import_parse_errors_total Tổng số lỗi parse (row) theo bảng");
+                        sb.AppendLine("# TYPE direct_import_parse_errors_total counter");
+                        foreach (var kv in _stats)
+                        {
+                                sb.Append("direct_import_parse_errors_total{table=\"")
+                                    .Append(kv.Key)
+                                    .AppendLine("\"} " + kv.Value.ParseErrors);
+                        }
             sb.AppendLine("# HELP direct_import_last_duration_seconds Thời gian lần import cuối (giây)");
             sb.AppendLine("# TYPE direct_import_last_duration_seconds gauge");
             foreach (var kv in _stats)

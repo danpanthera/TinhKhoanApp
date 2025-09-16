@@ -90,6 +90,7 @@ namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
         public DbSet<RawDataImportArchive> RawDataImportArchives { get; set; }
         public DbSet<Models.Temporal.ImportLog> ImportLogs { get; set; }
     public DbSet<Khoan.Api.Models.Importing.ImportHistory> ImportHistory { get; set; }
+        public DbSet<Khoan.Api.Models.Importing.ParseErrorLog> ParseErrorLogs { get; set; }
 
         // 📊 DbSets cho hệ thống SCD Type 2 History Tables
         public DbSet<LN01History> LN01History { get; set; }

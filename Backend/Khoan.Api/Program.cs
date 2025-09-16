@@ -480,6 +480,27 @@ app.MapGet("/metrics/import/raw", (Khoan.Api.Services.InMemoryImportMetrics metr
     .WithDescription("Raw recent batch metrics for imports (ring buffer)")
     .Produces<object>(StatusCodes.Status200OK);
 
+// Recent parse error samples (runtime diagnostics captured during streaming parsers)
+app.MapGet("/metrics/import/errors", (Khoan.Api.Services.DirectImportService svc, string? table, int? limit) =>
+{
+    var errors = svc.GetRecentParseErrors(table);
+    if (limit.HasValue && limit.Value > 0) errors = errors.Take(limit.Value).ToList();
+    return Results.Ok(new { table, count = errors.Count, errors });
+})
+.WithName("ImportParseErrors")
+.WithDescription("Recent parse error samples (first 5 per file, up to 50 total) filtered optionally by table (e.g., DP01)")
+.Produces<object>(StatusCodes.Status200OK);
+
+// Clear runtime parse error samples
+app.MapPost("/metrics/import/errors/clear", () =>
+{
+    Khoan.Api.Services.DirectImportService.ClearRuntimeParseErrors();
+    return Results.Ok(new { cleared = true });
+})
+.WithName("ImportParseErrorsClear")
+.WithDescription("Clear the in-memory queue of parse error samples")
+.Produces<object>(StatusCodes.Status200OK);
+
 // Prometheus metrics endpoint (text/plain) for scraping
 app.MapGet("/metrics", (Khoan.Api.Services.InMemoryImportMetrics metrics) =>
 {
