@@ -40,7 +40,6 @@ namespace Khoan.Api.Services.Interfaces
         string ExtractNgayDLFromFileName(string fileName);
         Task<bool> ValidateFileFormatAsync(IFormFile file, string expectedDataType);
         Task<DirectImportResult> GetImportStatusAsync(Guid importId);
-        Task<Dictionary<string, long>> GetTableRecordCountsAsync();
 
         // Diagnostics
         List<object> GetRecentParseErrors(string? table = null);

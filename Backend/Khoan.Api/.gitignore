@@ -1,0 +1,117 @@
+bin/
+obj/
+*.user
+*.swp
+*.suo
+.DS_Store
+*.log
+Properties/launchSettings.json
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+# Logs and runtime pids
+*.log
+*.log.*
+*.pid
+backend.log
+backend.log.*
+api_server.pid
+backend.pid
+frontend.log
+frontend.log.*
+*.out
+reload.touch
+.vs/
+
+# Large files that slow down commits (leave specific test data explicitly tracked if needed)
+*.csv
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Mono auto generated files
+mono_crash.*
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+
+# Entity Framework
+Migrations/
+
+# Test files
+*.http
+test-*.cs
+*-test.cs
+
+# Backup files
+*.backup
+*.bak
+*_backup.*
+*.corrupted
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Performance optimization for faster commits
+.cache/
+*.tsbuildinfo
+*.map
+*.pdb
+*.exe
+*.dll
+packages/
+.nuget/
+.dotnet/
+
+# SQL files that are auto-generated
+*.sql.bak
+*_backup.sql
+*.sqlproj.user
+*.dbmdl
+*.jfm
+
+# Large files that slow down commits
+*.csv
+*.xlsx
+*.json.backup
+export_*.html
+*_AllDetails.csv
+*_Summary.csv
+*_Comparison.csv
+
+# Temporary optimization files
+COMPLETE_*.sql
+DATABASE_OPTIMIZATION_*.md
+FINAL_OPTIMIZATION_*.md
+IMPORT_FIXES_*.md
+ISSUE_FIXES_*.md
+*_IMPLEMENTATION.md
+COMPLETION_*.md
+*.tar.gz
+*.bak  
+*.csv
+*.log
+.DS_Store

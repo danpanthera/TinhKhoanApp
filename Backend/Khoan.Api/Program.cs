@@ -2,9 +2,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
+// Legacy namespaces (linked temporarily from Khoan.Api)
 using Khoan.Api.Data;
 using Khoan.Api.Services;
-// using Khoan.Api.Services.Interfaces; // Disabled for DP01+DPDA focus
 using Khoan.Api.Filters;
 using Khoan.Api.Middleware;
 using Khoan.Api.HealthChecks;
@@ -16,6 +16,8 @@ using System.Text.Json.Serialization;
 using BCrypt.Net;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Data.SqlClient; // For server-level attach without sqlcmd
+using System.Diagnostics; // Stopwatch for startup timing
+using Khoan.Api.Models.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +26,7 @@ Console.OutputEncoding = System.Text.Encoding.UTF8;
 Console.InputEncoding = System.Text.Encoding.UTF8;
 System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
 
-// Vietnam Timezone Configuration
+// Vietnam Timezone Configuration (always set regardless of DB attach logic)
 TimeZoneInfo vietnamTimeZone;
 try
 {
@@ -45,23 +47,42 @@ catch (TimeZoneNotFoundException)
     }
 }
 
-// Database Configuration
+// Common DB connection string (always needed for DbContext)
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrEmpty(connectionString))
 {
     throw new InvalidOperationException("Azure SQL Edge connection string is not configured.");
 }
 
-// Ensure the target database exists and is accessible without relying on sqlcmd or EF migrations
-// Normalize connection string to avoid very long retry delays that cause 50s healthcheck latency
 var csbNormalized = new SqlConnectionStringBuilder(connectionString)
 {
-    // Keep catalog as provided
-    ConnectRetryCount = 1, // minimize retry stalls
+    ConnectRetryCount = 1,
     ConnectRetryInterval = 2,
     ConnectTimeout = Math.Min(30, new SqlConnectionStringBuilder(connectionString).ConnectTimeout > 0 ? new SqlConnectionStringBuilder(connectionString).ConnectTimeout : 30)
 };
 
+// Allow skipping heavy attach/repair logic via env var (export SKIP_DB_ATTACH=true)
+// In Development, default to skipping heavy DB attach/repair unless explicitly forced.
+var isDevelopment = builder.Environment.IsDevelopment();
+var forceAttach = Environment.GetEnvironmentVariable("FORCE_DB_ATTACH")?.Equals("true", StringComparison.OrdinalIgnoreCase) == true;
+bool? skipAttachEnv = Environment.GetEnvironmentVariable("SKIP_DB_ATTACH")?.Equals("true", StringComparison.OrdinalIgnoreCase);
+// Priority: FORCE_DB_ATTACH=true overrides everything; then explicit SKIP_DB_ATTACH; otherwise default skip in Development
+var skipAttach = forceAttach ? false : (skipAttachEnv ?? (isDevelopment ? true : false));
+var startupSw = Stopwatch.StartNew();
+Console.WriteLine(skipAttach
+    ? "⏭️  SKIP_DB_ATTACH=true => Bỏ qua logic ATTACH/REPAIR nặng, dùng connection string trực tiếp."
+    : "🧪 Bắt đầu kiểm tra/attach database (có thể mất vài giây nếu cần sửa file)...");
+
+// If skipping attach, further reduce connection retries/timeouts so startup never hangs
+if (skipAttach)
+{
+    csbNormalized.ConnectRetryCount = 0;
+    // Fail fast when DB isn't ready in dev
+    csbNormalized.ConnectTimeout = Math.Min(5, csbNormalized.ConnectTimeout);
+}
+
+if (!skipAttach)
+{
 try
 {
     var masterCsb = new SqlConnectionStringBuilder(csbNormalized.ConnectionString)
@@ -296,6 +317,12 @@ catch (Exception ex)
 {
     Console.WriteLine($"⚠️ Không thể kiểm tra/attach database qua master: {ex.Message}");
 }
+}
+else
+{
+    Console.WriteLine("ℹ️  Đã bỏ qua toàn bộ bước attach/repair (dùng cho dev nhanh). Nếu DB chưa tồn tại có thể lỗi kết nối ở bước tiếp theo.");
+}
+Console.WriteLine($"⏱️  Thời gian xử lý khối ATTACH/REPAIR: {startupSw.ElapsedMilliseconds} ms");
 
 // Use the normalized connection string for DbContext to avoid long retries
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -337,35 +364,31 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Repository Pattern & Service Layer - ENABLED FOR LN03
-builder.Services.AddRepositories();
-builder.Services.AddApplicationServices(); // From DependencyInjectionExtensions
+// NOTE: Legacy extension methods AddRepositories/AddApplicationServices not present after migration cleanup – temporarily omitted.
 
 // Configure DirectImport Settings
 builder.Services.Configure<Khoan.Api.Models.Configuration.DirectImportSettings>(
     builder.Configuration.GetSection("DirectImport"));
 
+// Temporal mapping options (optional; defaults inside class)
+builder.Services.Configure<TemporalMappingOptions>(builder.Configuration.GetSection("TemporalMapping"));
+
 // Cache Services (DISABLED for now)
 // builder.Services.AddCachingServices(builder.Configuration);
 
-// 🎯 PHASE 3A: DEPENDENCY INJECTION CONFIGURATION - WORKING REPOSITORIES ONLY
-// Repository Layer - Only enable repositories that compile successfully
-builder.Services.AddScoped<IDP01Repository, DP01Repository>(); // ✅ DP01 ENABLED - Works
-builder.Services.AddScoped<IEI01Repository, EI01Repository>(); // ✅ EI01 ENABLED - Works (COMPLETED 100%)
-// TODO: Fix DPDA Repository - Interface mismatch with BaseRepository
-// builder.Services.AddScoped<Khoan.Api.Repositories.Interfaces.IDPDARepository, Khoan.Api.Repositories.DPDARepository>(); // ✅ DPDA Repository - NEEDS FIX
-builder.Services.AddScoped<Khoan.Api.Repositories.Interfaces.ILN03Repository, Khoan.Api.Repositories.LN03Repository>(); // ✅ LN03 TEMPORAL TABLE ENABLED
-// TODO: Fix repository interface implementations for the following (have compilation errors):
-builder.Services.AddScoped<Khoan.Api.Repositories.IGL01Repository, Khoan.Api.Repositories.GL01Repository>(); // ✅ GL01 Repository ENABLED
-builder.Services.AddScoped<Khoan.Api.Repositories.Interfaces.IGL02Repository, Khoan.Api.Repositories.GL02Repository>(); // ✅ GL02 Repository ENABLED
-builder.Services.AddScoped<Khoan.Api.Repositories.IGL41Repository, Khoan.Api.Repositories.GL41Repository>(); // ✅ GL41 Repository ENABLED
-// builder.Services.AddScoped<Khoan.Api.Repositories.Interfaces.ILN01Repository, Khoan.Api.Repositories.LN01Repository>(); // ✅ LN01 Repository DISABLED (using service only)
-// builder.Services.AddScoped<Khoan.Api.Repositories.IRR01Repository, Khoan.Api.Repositories.RR01Repository>(); // TODO: Fix interface implementation - Has 23 missing methods
+// 🎯 Repository Layer - đăng ký các Repository khả dụng (từng cặp Interface/Implementation)
+builder.Services.AddScoped<Khoan.Api.Repositories.IGL01Repository, Khoan.Api.Repositories.GL01Repository>();
+builder.Services.AddScoped<Khoan.Api.Repositories.IGL02Repository, Khoan.Api.Repositories.GL02Repository>();
+builder.Services.AddScoped<Khoan.Api.Repositories.IGL41Repository, Khoan.Api.Repositories.GL41Repository>();
+builder.Services.AddScoped<Khoan.Api.Repositories.IEI01Repository, Khoan.Api.Repositories.EI01Repository>();
+builder.Services.AddScoped<Khoan.Api.Repositories.ILN01Repository, Khoan.Api.Repositories.LN01Repository>();
+builder.Services.AddScoped<Khoan.Api.Repositories.ILN03Repository, Khoan.Api.Repositories.LN03Repository>();
+builder.Services.AddScoped<Khoan.Api.Repositories.IRR01Repository, Khoan.Api.Repositories.RR01Repository>();
 
 // Service Layer - Only services with implementations are enabled
 // builder.Services.AddScoped<Khoan.Api.Services.Interfaces.IDP01Service, DP01Service>(); // ❌ DP01Service không tồn tại
-builder.Services.AddScoped<Khoan.Api.Services.Interfaces.IEI01Service, EI01Service>(); // ✅ EI01 ENABLED - Has implementation (COMPLETED 100%)
-builder.Services.AddScoped<Khoan.Api.Interfaces.ILN01Service, Khoan.Api.Services.LN01Service>(); // ✅ LN01 ENABLED - JUST CREATED (79 columns)
+builder.Services.AddScoped<Khoan.Api.Services.Interfaces.IEI01Service, EI01Service>();
+// builder.Services.AddScoped<Khoan.Api.Interfaces.ILN01Service, Khoan.Api.Services.LN01Service>(); // Disabled pending interface presence
 // builder.Services.AddScoped<Khoan.Api.Services.Interfaces.ILN03Service, Khoan.Api.Services.LN03Service>(); // ✅ REMOVED - Cleanup focus on DP01+DPDA
 // TODO: Enable DPDA Service after Repository fix
 // builder.Services.AddScoped<Khoan.Api.Services.Interfaces.IDPDAService, Khoan.Api.Services.DPDAService>(); // ✅ DPDA - NEEDS Repository fix first
@@ -375,33 +398,11 @@ builder.Services.AddScoped<Khoan.Api.Services.Interfaces.IGL01Service, Khoan.Api
 
 // 🛡️ Index Initializers are heavy and can spike DB connections; disable by default
 // Enable by setting configuration IndexInitializers:Enabled = true (e.g., in appsettings.json or environment)
-var enableIndexInitializers = builder.Configuration.GetValue<bool>("IndexInitializers:Enabled", false);
-if (enableIndexInitializers)
-{
-    try
-    {
-        builder.Services.AddHostedService<Khoan.Api.Services.Startup.Gl01IndexInitializer>();
-        builder.Services.AddHostedService<Khoan.Api.Services.Startup.Gl02IndexInitializer>();
-        builder.Services.AddHostedService<Khoan.Api.Services.Startup.Dp01IndexInitializer>();
-        builder.Services.AddHostedService<Khoan.Api.Services.Startup.DpdaIndexInitializer>();
-        builder.Services.AddHostedService<Khoan.Api.Services.Startup.Ei01IndexInitializer>();
-        builder.Services.AddHostedService<Khoan.Api.Services.Startup.Ln01IndexInitializer>();
-        builder.Services.AddHostedService<Khoan.Api.Services.Startup.Ln03IndexInitializer>();
-        builder.Services.AddHostedService<Khoan.Api.Services.Startup.Rr01IndexInitializer>();
-        builder.Services.AddHostedService<Khoan.Api.Services.Startup.Gl41IndexInitializer>();
-        Console.WriteLine("✅ IndexInitializers enabled via configuration");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"⚠️ Warning: Could not register Index Initializers - {ex.Message}");
-    }
-}
-builder.Services.AddScoped<Khoan.Api.Services.Interfaces.IGL02Service, Khoan.Api.Services.GL02Service>(); // ✅ GL02 Service ENABLED
-builder.Services.AddScoped<Khoan.Api.Services.Interfaces.IGL41Service, Khoan.Api.Services.GL41Service>(); // ✅ GL41 Service ENABLED
-builder.Services.AddScoped<Khoan.Api.Interfaces.ILN01Service, Khoan.Api.Services.LN01Service>(); // ✅ LN01 Service ENABLED
-// ✅ LN03 TEMPORAL TABLE SERVICE ENABLED
+// Index initializers disabled (code not present yet after migration)
+builder.Services.AddScoped<Khoan.Api.Services.Interfaces.IGL02Service, Khoan.Api.Services.GL02Service>();
+builder.Services.AddScoped<Khoan.Api.Services.Interfaces.IGL41Service, Khoan.Api.Services.GL41Service>();
 builder.Services.AddScoped<Khoan.Api.Services.Interfaces.ILN03Service, Khoan.Api.Services.LN03Service>();
-builder.Services.AddScoped<Khoan.Api.Services.Interfaces.IRR01Service, Khoan.Api.Services.RR01Service>(); // RR01Service completed
+builder.Services.AddScoped<Khoan.Api.Services.Interfaces.IRR01Service, Khoan.Api.Services.RR01Service>();
 
 // Data Services Layer - TODO: Fix implementations
 // builder.Services.AddScoped<Khoan.Api.Services.DataServices.IDataPreviewService, Khoan.Api.Services.DataServices.DataPreviewService>(); // TODO
@@ -450,6 +451,9 @@ builder.Services.AddScoped<DatabaseHealthCheck>();
 builder.Services.AddHealthChecks()
     .AddCheck<DatabaseHealthCheck>("database");
 
+// Ensure the app runs on port 5055 (set before Build for clarity)
+builder.WebHost.UseUrls("http://localhost:5055");
+
 var app = builder.Build();
 
 // Development Configuration
@@ -494,7 +498,6 @@ app.MapGet("/metrics/import/errors", (Khoan.Api.Services.Interfaces.IDirectImpor
 // Clear runtime parse error samples
 app.MapPost("/metrics/import/errors/clear", () =>
 {
-    // Use concrete static helper to clear (cannot inject into static). Retain call.
     Khoan.Api.Services.DirectImportService.ClearRuntimeParseErrors();
     return Results.Ok(new { cleared = true });
 })
@@ -502,14 +505,14 @@ app.MapPost("/metrics/import/errors/clear", () =>
 .WithDescription("Clear the in-memory queue of parse error samples")
 .Produces<object>(StatusCodes.Status200OK);
 
-// Prometheus metrics endpoint (text/plain) for scraping
+// Prometheus metrics endpoint (text/plain) cho scraping
 app.MapGet("/metrics", (Khoan.Api.Services.InMemoryImportMetrics metrics) =>
 {
     var text = metrics.ToPrometheus();
     return Results.Text(text, "text/plain; version=0.0.4; charset=utf-8");
 })
 .WithName("ImportMetricsPrometheus")
-.WithDescription("Prometheus exposition format for direct import metrics")
+.WithDescription("In-memory import metrics theo định dạng Prometheus (text/plain)")
 .Produces(StatusCodes.Status200OK);
 
 // Health Check Endpoint with detailed JSON
@@ -518,6 +521,12 @@ app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks
     ResponseWriter = Khoan.Api.HealthChecks.HealthCheckExtensions.WriteResponse
 });
 app.MapGet("/api/Health", () => new { status = "healthy", timestamp = DateTime.UtcNow });
+
+// Lightweight readiness endpoint (no EF access)
+app.MapGet("/ready", () => Results.Ok(new { ready = true, ts = DateTimeOffset.UtcNow }))
+   .WithName("Ready")
+   .WithDescription("Readiness probe that does not touch EF/DB")
+   .Produces<object>(StatusCodes.Status200OK);
 
 // WeatherForecast endpoint (if needed)
 app.MapGet("/weatherforecast", () =>
@@ -539,34 +548,39 @@ Console.WriteLine("🚀 Starting TinhKhoan Backend API (Clean Version)...");
 Console.WriteLine($"🌐 Backend will be available at: http://localhost:5055");
 Console.WriteLine("✅ All seeding code removed for stability");
 
-// Ensure database exists
-try
+// Ensure database exists (skip when SKIP_DB_ATTACH=true to avoid blocking dev startup)
+if (!skipAttach)
 {
-    using var scope = app.Services.CreateScope();
-    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    
-    Console.WriteLine("🔍 Checking database connection...");
-    var canConnect = await context.Database.CanConnectAsync();
-    
-    if (!canConnect)
+    try
     {
-        Console.WriteLine("⚠️ Cannot connect to database, attempting to create...");
-        await context.Database.EnsureCreatedAsync();
-        Console.WriteLine("✅ Database created successfully");
+        using var scope = app.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+        Console.WriteLine("🔍 Checking database connection...");
+        var canConnect = await context.Database.CanConnectAsync();
+
+        if (!canConnect)
+        {
+            Console.WriteLine("⚠️ Cannot connect to database, attempting to create...");
+            await context.Database.EnsureCreatedAsync();
+            Console.WriteLine("✅ Database created successfully");
+        }
+        else
+        {
+            Console.WriteLine("✅ Database connection established");
+        }
     }
-    else
+    catch (Exception ex)
     {
-        Console.WriteLine("✅ Database connection established");
+        Console.WriteLine($"❌ Database initialization error: {ex.Message}");
     }
 }
-catch (Exception ex)
+else
 {
-    Console.WriteLine($"❌ Database initialization error: {ex.Message}");
+    Console.WriteLine("⏭️  SKIP_DB_ATTACH=true => Bỏ qua EF CanConnect/EnsureCreated để app khởi động nhanh.");
 }
 
-// Ensure the app runs on port 5055
-builder.WebHost.UseUrls("http://localhost:5055");
-
+Console.WriteLine("⏱️  Tổng thời gian trước khi Run(): " + startupSw.Elapsed);
 app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)

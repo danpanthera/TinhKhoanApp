@@ -1,0 +1,1 @@
+// Duplicate file stub intentionally left empty to avoid type conflicts.
