@@ -73,7 +73,7 @@ Luôn để backend port là 5055, frontend port là 3000.
 - **Migration System**: Clean and stable, no unused tables found
 
 ## 🚨 QUY TẮC KHỞI ĐỘNG DỰ ÁN - NGHIÊM CẤM VI PHẠM (RẤT Quan trọng)
-- **Backend:** `cd Backend/TinhKhoanApp.Api && dotnet run`
+- **Backend:** `cd Backend/Khoan.Api && dotnet run`
 - **Frontend:** `cd Frontend/tinhkhoan-app-ui-vite && npm run dev`
 - **Fullstack:** `./start_fullstack.sh` (Tự động khởi động Database -> Backend -> Frontend)
 - **Fast Commit:** `./fast_commit.sh` - nội dung ngắn gọn nhất có thể
