@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.DataTables;
-using TinhKhoanApp.Api.Models.DTOs.RR01;
-using TinhKhoanApp.Api.Services.Interfaces;
+using Khoan.Api.Data;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Models.DataTables;
+using Khoan.Api.Models.DTOs.RR01;
+using Khoan.Api.Services.Interfaces;
 
-namespace TinhKhoanApp.Api.Services;
+namespace Khoan.Api.Services;
 
 /// <summary>
 /// RR01 Service Implementation - Business logic cho Risk Report operations

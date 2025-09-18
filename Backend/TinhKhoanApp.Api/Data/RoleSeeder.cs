@@ -1,6 +1,6 @@
-using TinhKhoanApp.Api.Models;
+using Khoan.Api.Models;
 
-namespace TinhKhoanApp.Api.Data
+namespace Khoan.Api.Data
 {
     public static class RoleSeeder
     {

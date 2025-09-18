@@ -1,7 +1,7 @@
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.DTOs.RR01;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Models.DTOs.RR01;
 
-namespace TinhKhoanApp.Api.Services.Interfaces;
+namespace Khoan.Api.Services.Interfaces;
 
 /// <summary>
 /// Interface cho RR01 Service - Risk Report Business Logic

@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TinhKhoanApp.Api.Models.Dashboard
+namespace Khoan.Api.Models.Dashboard
 {
     /// <summary>
     /// Kế hoạch giao chỉ tiêu cho từng đơn vị

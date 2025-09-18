@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Models;
+using Khoan.Api.Models;
 
-namespace TinhKhoanApp.Api.Data
+namespace Khoan.Api.Data
 {
     /// <summary>
     /// Cập nhật và chuẩn hóa terminology trong database

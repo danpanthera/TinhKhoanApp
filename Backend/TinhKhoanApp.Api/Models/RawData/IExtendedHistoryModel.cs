@@ -1,4 +1,4 @@
-namespace TinhKhoanApp.Api.Models.RawData
+namespace Khoan.Api.Models.RawData
 {
     /// <summary>
     /// Interface cho các Extended History Models với SCD Type 2

@@ -1,4 +1,4 @@
-namespace TinhKhoanApp.Api.Models.ViewModels
+namespace Khoan.Api.Models.ViewModels
 {
     /// <summary>
     /// ViewModel hiển thị tóm tắt dữ liệu GL41 trên Dashboard

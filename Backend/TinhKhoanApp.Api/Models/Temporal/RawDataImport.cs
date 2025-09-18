@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TinhKhoanApp.Api.Models.Temporal
+namespace Khoan.Api.Models.Temporal
 {
     /// <summary>
     /// Represents a raw data import record with temporal table support.

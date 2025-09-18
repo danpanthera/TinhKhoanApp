@@ -1,7 +1,7 @@
 using Microsoft.Net.Http.Headers;
 using System.Text;
 
-namespace TinhKhoanApp.Api.Helpers
+namespace Khoan.Api.Helpers
 {
     /// <summary>
     /// Helper class để xử lý multipart requests cho streaming upload

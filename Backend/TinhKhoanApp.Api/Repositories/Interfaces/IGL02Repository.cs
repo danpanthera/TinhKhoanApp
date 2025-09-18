@@ -1,7 +1,7 @@
-using TinhKhoanApp.Api.Models.Entities;
-using TinhKhoanApp.Api.Repositories.Interfaces;
+using Khoan.Api.Models.Entities;
+using Khoan.Api.Repositories.Interfaces;
 
-namespace TinhKhoanApp.Api.Repositories
+namespace Khoan.Api.Repositories
 {
     /// <summary>
     /// Interface for GL02Repository - General Ledger Summary operations

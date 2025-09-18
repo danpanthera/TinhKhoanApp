@@ -3,12 +3,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models.DataTables;
-using TinhKhoanApp.Api.Repositories;
+using Khoan.Api.Data;
+using Khoan.Api.Models.DataTables;
+using Khoan.Api.Repositories;
 using Xunit;
 
-namespace TinhKhoanApp.Api.Tests.Repositories
+namespace Khoan.Api.Tests.Repositories
 {
     public class DP01RepositoryTests
     {

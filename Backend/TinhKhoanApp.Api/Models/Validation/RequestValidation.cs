@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace TinhKhoanApp.Api.Models.Validation
+namespace Khoan.Api.Models.Validation
 {
     // Request validation attributes
     public class PaginationValidationAttribute : ValidationAttribute

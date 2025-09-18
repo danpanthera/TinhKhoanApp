@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 
-namespace TinhKhoanApp.Api.Repositories
+namespace Khoan.Api.Repositories
 {
     /// <summary>
     /// Generic Repository Interface - định nghĩa các phương thức cơ bản để truy cập dữ liệu

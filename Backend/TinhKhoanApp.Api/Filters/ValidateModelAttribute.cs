@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using TinhKhoanApp.Api.Models.Dtos;
-using TinhKhoanApp.Api.Models.Common;
+using Khoan.Api.Models.Dtos;
+using Khoan.Api.Models.Common;
 
-namespace TinhKhoanApp.Api.Filters
+namespace Khoan.Api.Filters
 {
     /// <summary>
     /// Filter để validate model state tự động và trả về ApiResponse chuẩn

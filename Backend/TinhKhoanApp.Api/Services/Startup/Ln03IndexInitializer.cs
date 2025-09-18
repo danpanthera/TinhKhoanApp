@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Data;
+using Khoan.Api.Data;
 
-namespace TinhKhoanApp.Api.Services.Startup
+namespace Khoan.Api.Services.Startup
 {
     /// <summary>
     /// Ensure LN03 analytics indexes exist (nonclustered indexes as columnstore approximation)

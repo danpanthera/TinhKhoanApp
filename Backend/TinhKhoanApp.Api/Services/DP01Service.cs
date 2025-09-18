@@ -1,9 +1,9 @@
-using TinhKhoanApp.Api.Models.Entities;
-using TinhKhoanApp.Api.Models.Dtos.DP01;
-using TinhKhoanApp.Api.Repositories;
-using TinhKhoanApp.Api.Services.Interfaces;
+using Khoan.Api.Models.Entities;
+using Khoan.Api.Models.Dtos.DP01;
+using Khoan.Api.Repositories;
+using Khoan.Api.Services.Interfaces;
 
-namespace TinhKhoanApp.Api.Services
+namespace Khoan.Api.Services
 {
     /// <summary>
     /// DP01 Service - xử lý business logic cho bảng DP01 (Tiền gửi có kỳ hạn)

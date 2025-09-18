@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TinhKhoanApp.Api.Models
+namespace Khoan.Api.Models
 {
     /// <summary>
     /// Bảng định nghĩa quy tắc tính điểm cộng/trừ cho các chỉ tiêu KPI chi nhánh

@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 // Không cần [Key] ở đây vì khóa chính là cặp (EmployeeId, RoleId)
 // và sẽ được cấu hình bằng Fluent API trong DbContext.
 
-namespace TinhKhoanApp.Api.Models
+namespace Khoan.Api.Models
 {
     [Table("EmployeeRoles")] // Tên bảng trong database
     public class EmployeeRole

@@ -1,11 +1,11 @@
 using Xunit;
 using Moq;
-using TinhKhoanApp.Api.Services;
-using TinhKhoanApp.Api.Repositories;
-using TinhKhoanApp.Api.Models.DataTables;
-using TinhKhoanApp.Api.Models.Dtos.DP01;
+using Khoan.Api.Services;
+using Khoan.Api.Repositories;
+using Khoan.Api.Models.DataTables;
+using Khoan.Api.Models.Dtos.DP01;
 
-namespace TinhKhoanApp.Api.Tests.Services
+namespace Khoan.Api.Tests.Services
 {
     /// <summary>
     /// Unit tests cho DP01Service - đảm bảo business logic đúng với CSV structure

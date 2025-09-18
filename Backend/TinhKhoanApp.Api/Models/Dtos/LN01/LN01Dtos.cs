@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace TinhKhoanApp.Api.Models.DTOs.LN01
+namespace Khoan.Api.Models.DTOs.LN01
 {
     /// <summary>
     /// LN01 DTOs - 79 business columns từ CSV LN01

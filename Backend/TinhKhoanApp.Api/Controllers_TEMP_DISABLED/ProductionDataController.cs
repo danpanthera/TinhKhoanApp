@@ -1,17 +1,17 @@
 using Microsoft.AspNetCore.Mvc;
-using TinhKhoanApp.Api.Models.Dtos.DP01;
-using TinhKhoanApp.Api.Models.Dtos.RR01;
-using TinhKhoanApp.Api.Models.Dtos.LN01;
-using TinhKhoanApp.Api.Models.Dtos;
-using TinhKhoanApp.Api.Models.Dtos.DPDA;
-using TinhKhoanApp.Api.Models.Dtos.GL01;
-using TinhKhoanApp.Api.Models.Dtos.GL02;
-using TinhKhoanApp.Api.Models.Dtos.GL41;
-using TinhKhoanApp.Api.Models.Dtos.EI01;
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Services.Interfaces;
+using Khoan.Api.Models.Dtos.DP01;
+using Khoan.Api.Models.Dtos.RR01;
+using Khoan.Api.Models.Dtos.LN01;
+using Khoan.Api.Models.Dtos;
+using Khoan.Api.Models.Dtos.DPDA;
+using Khoan.Api.Models.Dtos.GL01;
+using Khoan.Api.Models.Dtos.GL02;
+using Khoan.Api.Models.Dtos.GL41;
+using Khoan.Api.Models.Dtos.EI01;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Services.Interfaces;
 
-namespace TinhKhoanApp.Api.Controllers
+namespace Khoan.Api.Controllers
 {
     /// <summary>
     /// Production Data Controller - Clean architecture implementation
@@ -430,7 +430,7 @@ namespace TinhKhoanApp.Api.Controllers
     }
 }
 
-namespace TinhKhoanApp.Api.Models.Common
+namespace Khoan.Api.Models.Common
 {
     /// <summary>
     /// System Health DTO - All 9 core tables

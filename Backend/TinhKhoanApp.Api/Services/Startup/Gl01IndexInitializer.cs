@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Data;
+using Khoan.Api.Data;
 
-namespace TinhKhoanApp.Api.Services.Startup
+namespace Khoan.Api.Services.Startup
 {
     /// <summary>
     /// Đảm bảo các chỉ mục phân tích cho GL01 tồn tại (xấp xỉ columnstore) – chạy một lần khi khởi động.

@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models.Entities;
+using Khoan.Api.Data;
+using Khoan.Api.Models.Entities;
 
-namespace TinhKhoanApp.Api.Repositories
+namespace Khoan.Api.Repositories
 {
     /// <summary>
     /// Repository implementation cho GL02Entity - General Ledger Summary (Partitioned Columnstore)

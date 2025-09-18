@@ -1,7 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace TinhKhoanApp.Api.Models.Dashboard
+namespace Khoan.Api.Models.Dashboard
 {
     /// <summary>
     /// Định nghĩa các chỉ tiêu Dashboard - 6 chỉ tiêu chính của ngân hàng

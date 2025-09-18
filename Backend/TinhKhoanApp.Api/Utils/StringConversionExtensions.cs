@@ -1,7 +1,7 @@
 using System;
 using System.Globalization;
 
-namespace TinhKhoanApp.Api.Utils
+namespace Khoan.Api.Utils
 {
     public static class StringConversionExtensions
     {

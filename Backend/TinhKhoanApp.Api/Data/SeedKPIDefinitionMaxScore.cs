@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Models;
+using Khoan.Api.Models;
 
-namespace TinhKhoanApp.Api.Data
+namespace Khoan.Api.Data
 {
     /// <summary>
     /// Seed các chỉ tiêu KPI cho 23 vai trò cán bộ chuẩn - ĐẦY ĐỦ TẤT CẢ VAI TRÒ

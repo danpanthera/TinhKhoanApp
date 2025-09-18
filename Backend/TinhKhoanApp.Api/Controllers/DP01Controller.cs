@@ -1,9 +1,9 @@
-using TinhKhoanApp.Api.Models.Common;
+using Khoan.Api.Models.Common;
 using Microsoft.AspNetCore.Mvc;
-using TinhKhoanApp.Api.Models.Dtos.DP01;
-using TinhKhoanApp.Api.Services.Interfaces;
+using Khoan.Api.Models.Dtos.DP01;
+using Khoan.Api.Services.Interfaces;
 
-namespace TinhKhoanApp.Api.Controllers
+namespace Khoan.Api.Controllers
 {
     /// <summary>
     /// Controller cho dữ liệu DP01 (Sổ tiết kiệm)

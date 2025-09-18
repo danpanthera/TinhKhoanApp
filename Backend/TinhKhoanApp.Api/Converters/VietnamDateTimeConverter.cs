@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace TinhKhoanApp.Api.Converters
+namespace Khoan.Api.Converters
 {
     /// <summary>
     /// Custom DateTime converter để hiển thị thời gian theo timezone Vietnam (UTC+7)

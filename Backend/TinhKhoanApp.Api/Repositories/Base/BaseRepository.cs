@@ -1,10 +1,10 @@
-using TinhKhoanApp.Api.Models.Dtos;
+using Khoan.Api.Models.Dtos;
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Models.Entities;
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Data;
+using Khoan.Api.Models.Entities;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Data;
 
-namespace TinhKhoanApp.Api.Repositories.Base
+namespace Khoan.Api.Repositories.Base
 {
     /// <summary>
     /// Base Repository - Generic implementation cho common CRUD operations

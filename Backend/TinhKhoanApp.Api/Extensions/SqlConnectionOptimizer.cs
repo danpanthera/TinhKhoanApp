@@ -1,6 +1,6 @@
 using Microsoft.Data.SqlClient;
 
-namespace TinhKhoanApp.Api.Extensions
+namespace Khoan.Api.Extensions
 {
     /// <summary>
     /// Tối ưu hóa kết nối SQL Server và pre-warm connection pool

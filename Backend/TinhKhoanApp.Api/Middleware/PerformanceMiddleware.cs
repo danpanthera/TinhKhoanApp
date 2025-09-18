@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.ResponseCompression;
 using System.IO.Compression;
 
-namespace TinhKhoanApp.Api.Middleware
+namespace Khoan.Api.Middleware
 {
     public class PerformanceMiddleware
     {

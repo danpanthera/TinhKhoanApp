@@ -1,6 +1,6 @@
 using System;
 
-namespace TinhKhoanApp.Api.Models
+namespace Khoan.Api.Models
 {
     /// <summary>
     /// Kết quả của quá trình Direct Import

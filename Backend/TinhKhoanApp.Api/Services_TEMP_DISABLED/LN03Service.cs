@@ -1,11 +1,11 @@
-using TinhKhoanApp.Api.Models.Dtos;
-using TinhKhoanApp.Api.Models.Dtos;
-using TinhKhoanApp.Api.Models.Entities;
-using TinhKhoanApp.Api.Repositories.Interfaces;
-using TinhKhoanApp.Api.Services.Interfaces;
-using TinhKhoanApp.Api.Models.Common;
+using Khoan.Api.Models.Dtos;
+using Khoan.Api.Models.Dtos;
+using Khoan.Api.Models.Entities;
+using Khoan.Api.Repositories.Interfaces;
+using Khoan.Api.Services.Interfaces;
+using Khoan.Api.Models.Common;
 
-namespace TinhKhoanApp.Api.Services
+namespace Khoan.Api.Services
 {
     /// <summary>
     /// LN03 Service Implementation - Phase 2B

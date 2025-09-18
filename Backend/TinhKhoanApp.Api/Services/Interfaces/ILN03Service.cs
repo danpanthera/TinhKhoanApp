@@ -1,7 +1,7 @@
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.DTOs.LN03;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Models.DTOs.LN03;
 
-namespace TinhKhoanApp.Api.Services.Interfaces
+namespace Khoan.Api.Services.Interfaces
 {
     public interface ILN03Service
     {

@@ -1,8 +1,8 @@
-using TinhKhoanApp.Api.Models.Dtos.DP01;
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.Dtos;
+using Khoan.Api.Models.Dtos.DP01;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Models.Dtos;
 
-namespace TinhKhoanApp.Api.Services.DataServices
+namespace Khoan.Api.Services.DataServices
 {
     /// <summary>
     /// Interface cho DP01 Data Service - xử lý business logic liên quan đến dữ liệu DP01 (Tài khoản tiền gửi)

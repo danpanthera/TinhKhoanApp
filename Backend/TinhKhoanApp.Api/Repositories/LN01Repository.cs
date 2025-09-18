@@ -1,8 +1,8 @@
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models.DataTables;
+using Khoan.Api.Data;
+using Khoan.Api.Models.DataTables;
 
-namespace TinhKhoanApp.Api.Repositories
+namespace Khoan.Api.Repositories
 {
     /// <summary>
     /// Repository cho dữ liệu LN01 (Thông tin khoản vay)

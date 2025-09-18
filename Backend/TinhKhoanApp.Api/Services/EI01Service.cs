@@ -1,10 +1,10 @@
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Models.Dtos.EI01;
-using TinhKhoanApp.Api.Models.Entities;
-using TinhKhoanApp.Api.Repositories;
-using TinhKhoanApp.Api.Services.Interfaces;
+using Khoan.Api.Models.Dtos.EI01;
+using Khoan.Api.Models.Entities;
+using Khoan.Api.Repositories;
+using Khoan.Api.Services.Interfaces;
 
-namespace TinhKhoanApp.Api.Services
+namespace Khoan.Api.Services
 {
     /// <summary>
     /// EI01 Service Implementation - E-Banking Information Service

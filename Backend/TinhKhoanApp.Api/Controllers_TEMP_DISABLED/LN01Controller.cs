@@ -1,16 +1,16 @@
-using TinhKhoanApp.Api.Models.Common;
+using Khoan.Api.Models.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models.RawData;
-using TinhKhoanApp.Api.Models.DataTables;
-using TinhKhoanApp.Api.Models.Dtos;
-using TinhKhoanApp.Api.Services;
+using Khoan.Api.Data;
+using Khoan.Api.Models.RawData;
+using Khoan.Api.Models.DataTables;
+using Khoan.Api.Models.Dtos;
+using Khoan.Api.Services;
 using System.Text;
 using System.Text.Json;
 
-namespace TinhKhoanApp.Api.Controllers
+namespace Khoan.Api.Controllers
 {
     /// <summary>
     /// Controller xử lý dữ liệu bảng LN01 - Khoản vay cá nhân

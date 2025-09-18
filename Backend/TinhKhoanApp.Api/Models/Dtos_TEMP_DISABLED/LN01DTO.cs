@@ -1,8 +1,8 @@
 using System;
 using System.ComponentModel.DataAnnotations;
-using TinhKhoanApp.Api.Models.DataTables;
+using Khoan.Api.Models.DataTables;
 
-namespace TinhKhoanApp.Api.Models.Dtos
+namespace Khoan.Api.Models.Dtos
 {
     /// <summary>
     /// DTO cho dữ liệu LN01 (Thông tin khoản vay)

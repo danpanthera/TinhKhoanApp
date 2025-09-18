@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TinhKhoanApp.Api.Models.DataTables;
+namespace Khoan.Api.Models.DataTables;
 
 /// <summary>
 /// LN03 - Loan data với 20 cột (17 có header + 3 không header)

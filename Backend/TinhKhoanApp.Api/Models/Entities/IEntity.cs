@@ -1,4 +1,4 @@
-namespace TinhKhoanApp.Api.Models.Entities
+namespace Khoan.Api.Models.Entities
 {
     /// <summary>
     /// Base interface cho tất cả entities

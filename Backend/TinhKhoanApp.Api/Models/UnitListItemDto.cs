@@ -1,4 +1,4 @@
-namespace TinhKhoanApp.Api.Models // Hoặc TinhKhoanApp.Api.Models.Dtos nếu Sếp tạo thư mục Dtos
+namespace Khoan.Api.Models // Hoặc Khoan.Api.Models.Dtos nếu Sếp tạo thư mục Dtos
 {
     public class UnitListItemDto
     {

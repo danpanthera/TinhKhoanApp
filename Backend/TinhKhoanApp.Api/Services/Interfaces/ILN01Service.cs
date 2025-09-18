@@ -1,7 +1,7 @@
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.DTOs.LN01;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Models.DTOs.LN01;
 
-namespace TinhKhoanApp.Api.Services.Interfaces
+namespace Khoan.Api.Services.Interfaces
 {
     /// <summary>
     /// Interface cho LN01 Service - cung cấp business logic cho LN01 (Loan Data)

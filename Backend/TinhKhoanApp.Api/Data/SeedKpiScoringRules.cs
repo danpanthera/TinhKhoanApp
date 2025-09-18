@@ -1,6 +1,6 @@
-using TinhKhoanApp.Api.Models;
+using Khoan.Api.Models;
 
-namespace TinhKhoanApp.Api.Data
+namespace Khoan.Api.Data
 {
     /// <summary>
     /// Seed data cho bảng KpiScoringRules với định nghĩa chuẩn theo database thực tế

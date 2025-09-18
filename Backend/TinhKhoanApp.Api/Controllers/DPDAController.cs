@@ -1,10 +1,10 @@
-using TinhKhoanApp.Api.Models.Common;
+using Khoan.Api.Models.Common;
 using Microsoft.AspNetCore.Mvc;
-using TinhKhoanApp.Api.Models.Dtos;
-using TinhKhoanApp.Api.Models.Dtos.DPDA;
-using TinhKhoanApp.Api.Services.Interfaces;
+using Khoan.Api.Models.Dtos;
+using Khoan.Api.Models.Dtos.DPDA;
+using Khoan.Api.Services.Interfaces;
 
-namespace TinhKhoanApp.Api.Controllers
+namespace Khoan.Api.Controllers
 {
     /// <summary>
     /// DPDA Controller - cung cấp API cho dữ liệu thẻ tiền gửi

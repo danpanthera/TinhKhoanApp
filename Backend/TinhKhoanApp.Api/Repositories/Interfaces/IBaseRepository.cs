@@ -1,10 +1,10 @@
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.Dtos;
-using TinhKhoanApp.Api.Models.Entities;
-using TinhKhoanApp.Api.Models.DataTables;
-using TinhKhoanApp.Api.Models.Common;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Models.Dtos;
+using Khoan.Api.Models.Entities;
+using Khoan.Api.Models.DataTables;
+using Khoan.Api.Models.Common;
 
-namespace TinhKhoanApp.Api.Repositories.Interfaces
+namespace Khoan.Api.Repositories.Interfaces
 {
     /// <summary>
     /// Base Repository Interface - Common operations for all tables

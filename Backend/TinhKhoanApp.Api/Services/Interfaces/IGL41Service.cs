@@ -1,7 +1,7 @@
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.DTOs.GL41;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Models.DTOs.GL41;
 
-namespace TinhKhoanApp.Api.Services.Interfaces
+namespace Khoan.Api.Services.Interfaces
 {
     /// <summary>
     /// Interface cho GL41 Service - cung cấp business logic cho GL41

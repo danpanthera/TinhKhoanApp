@@ -1,10 +1,10 @@
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.DataTables;
-using TinhKhoanApp.Api.Models.DTOs.LN01;
-using TinhKhoanApp.Api.Repositories;
-using TinhKhoanApp.Api.Services.Interfaces;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Models.DataTables;
+using Khoan.Api.Models.DTOs.LN01;
+using Khoan.Api.Repositories;
+using Khoan.Api.Services.Interfaces;
 
-namespace TinhKhoanApp.Api.Services
+namespace Khoan.Api.Services
 {
     /// <summary>
     /// LN01 Service - xử lý business logic cho LN01 với manual mapping

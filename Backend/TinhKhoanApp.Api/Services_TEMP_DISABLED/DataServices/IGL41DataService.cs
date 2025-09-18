@@ -1,8 +1,8 @@
-using TinhKhoanApp.Api.Models.Dtos;
-using TinhKhoanApp.Api.Models.Dtos.GL41;
-using TinhKhoanApp.Api.Models.Common;
+using Khoan.Api.Models.Dtos;
+using Khoan.Api.Models.Dtos.GL41;
+using Khoan.Api.Models.Common;
 
-namespace TinhKhoanApp.Api.Services.DataServices
+namespace Khoan.Api.Services.DataServices
 {
     /// <summary>
     /// Interface cho GL41 Data Service - xử lý business logic liên quan đến dữ liệu GL41

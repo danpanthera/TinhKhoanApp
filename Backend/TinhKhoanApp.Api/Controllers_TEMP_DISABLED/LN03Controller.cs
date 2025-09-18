@@ -1,11 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TinhKhoanApp.Api.Models.Dtos;
-using TinhKhoanApp.Api.Services.Interfaces;
-using TinhKhoanApp.Api.Models.Dtos;
-using TinhKhoanApp.Api.Models.Common;
+using Khoan.Api.Models.Dtos;
+using Khoan.Api.Services.Interfaces;
+using Khoan.Api.Models.Dtos;
+using Khoan.Api.Models.Common;
 
-namespace TinhKhoanApp.Api.Controllers
+namespace Khoan.Api.Controllers
 {
     /// <summary>
     /// API Controller for LN03 (Loan Recovery Data) - Phase 2B

@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.DTOs.GL41;
-using TinhKhoanApp.Api.Services.Interfaces;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Models.DTOs.GL41;
+using Khoan.Api.Services.Interfaces;
 
-namespace TinhKhoanApp.Api.Controllers
+namespace Khoan.Api.Controllers
 {
     /// <summary>
     /// GL41 Controller - API endpoints cho bảng GL41 (Trial Balance)

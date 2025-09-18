@@ -1,8 +1,8 @@
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.Dtos;
-using TinhKhoanApp.Api.Models.Dtos.EI01;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Models.Dtos;
+using Khoan.Api.Models.Dtos.EI01;
 
-namespace TinhKhoanApp.Api.Repositories.Interfaces
+namespace Khoan.Api.Repositories.Interfaces
 {
     /// <summary>
     /// Repository interface for EI01 table operations

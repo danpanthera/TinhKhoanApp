@@ -1,11 +1,11 @@
 using Xunit;
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Models.DataTables;
-using TinhKhoanApp.Api.Repositories;
-using TinhKhoanApp.Api.Repositories.Interfaces;
+using Khoan.Api.Data;
+using Khoan.Api.Models.DataTables;
+using Khoan.Api.Repositories;
+using Khoan.Api.Repositories.Interfaces;
 
-namespace TinhKhoanApp.Api.Tests.Repositories
+namespace Khoan.Api.Tests.Repositories
 {
     /// <summary>
     /// Repository tests cho DPDA - Data Access Layer validation

@@ -1,12 +1,12 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Models.DataTables;
-using TinhKhoanApp.Api.Models.Dtos;
-using TinhKhoanApp.Api.Models.Dtos.DP01;
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Repositories;
+using Khoan.Api.Models.DataTables;
+using Khoan.Api.Models.Dtos;
+using Khoan.Api.Models.Dtos.DP01;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Repositories;
 
-namespace TinhKhoanApp.Api.Services.DataServices
+namespace Khoan.Api.Services.DataServices
 {
     /// <summary>
     /// Data Preview Service - triển khai IDataPreviewService

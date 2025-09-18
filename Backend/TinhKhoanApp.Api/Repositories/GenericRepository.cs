@@ -1,11 +1,11 @@
-using TinhKhoanApp.Api.Models.Dtos;
+using Khoan.Api.Models.Dtos;
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Models.Entities;
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Data;
-using TinhKhoanApp.Api.Repositories.Interfaces;
+using Khoan.Api.Models.Entities;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Data;
+using Khoan.Api.Repositories.Interfaces;
 
-namespace TinhKhoanApp.Api.Repositories
+namespace Khoan.Api.Repositories
 {
     /// <summary>
     /// Generic Repository Implementation - Concrete implementation of IBaseRepository

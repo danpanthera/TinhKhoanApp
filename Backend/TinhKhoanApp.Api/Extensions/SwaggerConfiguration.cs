@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
 using System.Reflection;
 
-namespace TinhKhoanApp.Api.Extensions
+namespace Khoan.Api.Extensions
 {
     /// <summary>
     /// Cấu hình Swagger cho API Documentation

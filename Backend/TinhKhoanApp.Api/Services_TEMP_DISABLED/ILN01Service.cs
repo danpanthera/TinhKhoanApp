@@ -1,7 +1,7 @@
-using TinhKhoanApp.Api.Models.DataTables;
-using TinhKhoanApp.Api.Models.Dtos;
+using Khoan.Api.Models.DataTables;
+using Khoan.Api.Models.Dtos;
 
-namespace TinhKhoanApp.Api.Services
+namespace Khoan.Api.Services
 {
     /// <summary>
     /// Interface dịch vụ cho dữ liệu LN01 (Thông tin khoản vay)

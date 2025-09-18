@@ -1,12 +1,12 @@
 using Microsoft.EntityFrameworkCore;
-using TinhKhoanApp.Api.Models; // Đảm bảo namespace này đúng với nơi Sếp đặt các Model
-using TinhKhoanApp.Api.Models.RawData; // Thêm namespace cho Raw Data models
-using TinhKhoanApp.Api.Models.Temporal; // Thêm namespace cho Temporal models
-using TinhKhoanApp.Api.Models.Dashboard; // Thêm namespace cho Dashboard models
-using TinhKhoanApp.Api.Models.Entities; // Thêm namespace cho Modern Entity models
-using DataTables = TinhKhoanApp.Api.Models.DataTables; // Alias để tránh conflict
+using Khoan.Api.Models; // Đảm bảo namespace này đúng với nơi Sếp đặt các Model
+using Khoan.Api.Models.RawData; // Thêm namespace cho Raw Data models
+using Khoan.Api.Models.Temporal; // Thêm namespace cho Temporal models
+using Khoan.Api.Models.Dashboard; // Thêm namespace cho Dashboard models
+using Khoan.Api.Models.Entities; // Thêm namespace cho Modern Entity models
+using DataTables = Khoan.Api.Models.DataTables; // Alias để tránh conflict
 
-namespace TinhKhoanApp.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
+namespace Khoan.Api.Data // Sử dụng block-scoped namespace cho rõ ràng
 {
     public class ApplicationDbContext : DbContext
     {

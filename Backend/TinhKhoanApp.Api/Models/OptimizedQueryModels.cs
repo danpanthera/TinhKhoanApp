@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace TinhKhoanApp.Api.Models
+namespace Khoan.Api.Models
 {
     // =====================================================
     // OPTIMIZED QUERY REQUEST MODELS

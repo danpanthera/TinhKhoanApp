@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.DTOs.LN01;
-using TinhKhoanApp.Api.Services.Interfaces;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Models.DTOs.LN01;
+using Khoan.Api.Services.Interfaces;
 
-namespace TinhKhoanApp.Api.Controllers
+namespace Khoan.Api.Controllers
 {
     /// <summary>
     /// LN01 Controller - API endpoints cho bảng LN01 (Loan Data)

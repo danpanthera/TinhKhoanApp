@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using System.Data;
 using Microsoft.Data.SqlClient;
 
-namespace TinhKhoanApp.Api.Extensions
+namespace Khoan.Api.Extensions
 {
     /// <summary>
     /// Extension methods for safe database operations in migrations

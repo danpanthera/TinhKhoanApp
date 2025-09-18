@@ -1,10 +1,10 @@
-using TinhKhoanApp.Api.Models.Dtos.DPDA;
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.Dtos;
-using TinhKhoanApp.Api.Models.Dtos.DPDA;
-using TinhKhoanApp.Api.Models.Common;
+using Khoan.Api.Models.Dtos.DPDA;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Models.Dtos;
+using Khoan.Api.Models.Dtos.DPDA;
+using Khoan.Api.Models.Common;
 
-namespace TinhKhoanApp.Api.Services.DataServices
+namespace Khoan.Api.Services.DataServices
 {
     /// <summary>
     /// Interface cho DPDA Data Service - xử lý business logic liên quan đến dữ liệu DPDA (Dữ liệu thẻ tiền gửi)

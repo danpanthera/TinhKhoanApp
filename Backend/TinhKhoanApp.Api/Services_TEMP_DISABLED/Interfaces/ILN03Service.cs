@@ -1,8 +1,8 @@
-using TinhKhoanApp.Api.Models.Dtos;
-using TinhKhoanApp.Api.Models.Common;
-using TinhKhoanApp.Api.Models.Dtos;
+using Khoan.Api.Models.Dtos;
+using Khoan.Api.Models.Common;
+using Khoan.Api.Models.Dtos;
 
-namespace TinhKhoanApp.Api.Services.Interfaces
+namespace Khoan.Api.Services.Interfaces
 {
     /// <summary>
     /// LN03 Service Interface - Loan Summary table
