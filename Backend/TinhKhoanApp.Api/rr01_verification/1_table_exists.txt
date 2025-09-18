@@ -1,5 +1,0 @@
-Result                                
---------------------------------------
-B?ng RR01 t?n t?i trong co s? d? li?u.
-
-(1 rows affected)
