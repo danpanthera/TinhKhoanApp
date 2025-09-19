@@ -27,6 +27,16 @@
       <pre id="upload-result" style="background:#f7f7f7; padding:8px; border-radius:6px; max-height:240px; overflow:auto;"></pre>
 
       <hr />
+      <h2>Danh sách Units (Đơn vị)</h2>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap: wrap; margin-bottom:8px;">
+        <button id="btn-load-units">Tải tất cả Units</button>
+        <button id="btn-load-root-units">Units gốc</button>
+        <button id="btn-load-units-tree">Cây phân cấp</button>
+        <span id="units-status"></span>
+      </div>
+      <div id="units-result" style="background:#f9f9f9; padding:8px; border-radius:4px; max-height:300px; overflow:auto; font-family:monospace; font-size:13px;"></div>
+
+      <hr />
       <h2>Danh sách Positions (nhanh)</h2>
       <div style="margin-bottom:8px;">
         <button id="btn-load-positions">Tải Positions</button>
@@ -114,6 +124,74 @@
           var s=document.getElementById('status');
           if(s) s.textContent = 'lỗi kết nối';
         });
+
+        // Units loader
+        var btnUnits = document.getElementById('btn-load-units');
+        var btnRootUnits = document.getElementById('btn-load-root-units');
+        var btnUnitsTree = document.getElementById('btn-load-units-tree');
+        var unitsStatus = document.getElementById('units-status');
+        var unitsResult = document.getElementById('units-result');
+
+        if (btnUnits) {
+          btnUnits.addEventListener('click', async function() {
+            unitsStatus.textContent = 'Đang tải tất cả units...';
+            unitsResult.innerHTML = '';
+            try {
+              var res = await fetch(apiBase + '/Units');
+              var data = await res.json();
+              unitsStatus.textContent = res.ok ? `✅ ${data.Data?.length || 0} units` : ('❌ Lỗi ' + res.status);
+              if (data.Success && data.Data) {
+                unitsResult.innerHTML = data.Data.map(u => 
+                  `<div>${u.Id} | ${u.Name} | ${u.Code} | ${u.Type} | Parent: ${u.ParentId || 'null'}</div>`
+                ).join('');
+              }
+            } catch (e) {
+              unitsStatus.textContent = '❌ Lỗi: ' + e.message;
+            }
+          });
+        }
+
+        if (btnRootUnits) {
+          btnRootUnits.addEventListener('click', async function() {
+            unitsStatus.textContent = 'Đang tải units gốc...';
+            unitsResult.innerHTML = '';
+            try {
+              var res = await fetch(apiBase + '/Units/by-parent/root');
+              var data = await res.json();
+              unitsStatus.textContent = res.ok ? `✅ ${data.Data?.length || 0} root units` : ('❌ Lỗi ' + res.status);
+              if (data.Success && data.Data) {
+                unitsResult.innerHTML = data.Data.map(u => 
+                  `<div><strong>${u.Id} | ${u.Name}</strong> (${u.Code}, ${u.Type})</div>`
+                ).join('');
+              }
+            } catch (e) {
+              unitsStatus.textContent = '❌ Lỗi: ' + e.message;
+            }
+          });
+        }
+
+        if (btnUnitsTree) {
+          btnUnitsTree.addEventListener('click', async function() {
+            unitsStatus.textContent = 'Đang tải cây phân cấp...';
+            unitsResult.innerHTML = '';
+            try {
+              var res = await fetch(apiBase + '/Units/tree');
+              var data = await res.json();
+              unitsStatus.textContent = res.ok ? `✅ Cây với ${data.Data?.length || 0} root nodes` : ('❌ Lỗi ' + res.status);
+              if (data.Success && data.Data) {
+                var renderTree = (nodes, indent = 0) => {
+                  return nodes.map(n => 
+                    `<div style="margin-left: ${indent * 20}px">${'└'.repeat(Math.min(indent, 1))} ${n.Id} | ${n.Name} (${n.Type})</div>` + 
+                    (n.Children?.length ? renderTree(n.Children, indent + 1) : '')
+                  ).join('');
+                };
+                unitsResult.innerHTML = renderTree(data.Data);
+              }
+            } catch (e) {
+              unitsStatus.textContent = '❌ Lỗi: ' + e.message;
+            }
+          });
+        }
 
         // Positions loader
         var btnPos = document.getElementById('btn-load-positions');
