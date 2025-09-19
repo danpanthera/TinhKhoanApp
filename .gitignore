@@ -24,6 +24,17 @@ dist-ssr/
 obj/
 bin/Debug/
 bin/Release/
+**/bin/
+**/obj/
+
+# Test & coverage outputs
+TestResults/
+coverage/
+*.trx
+*.coverage*
+
+# Frontend Vite/PWA dev cache
+dev-dist/
 
 # Temporary files
 *.tmp
@@ -31,12 +42,16 @@ bin/Release/
 *.backup
 *_backup.*
 *.corrupted
+*.user
+*.suo
 
 # SQLite temp
 *.sqlite-wal
 *.sqlite-shm
 
 # Large CSV by default (opt-in allowlists in subfolders)
-*.csv# Ignore large backup files
+*.csv
+
+# Ignore large backup files
 *.bak
 database_backup/
