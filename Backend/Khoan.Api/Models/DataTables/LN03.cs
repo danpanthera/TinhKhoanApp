@@ -79,63 +79,64 @@ public class LN03
     public decimal? THUNOSAUXL { get; set; }
 
     /// <summary>
+    /// <summary>
     /// Còn lại ngoài bảng
     /// </summary>
-    [Column(Order = 9, TypeName = "decimal(18,2)")]
+    [Column(Order = 10, TypeName = "decimal(18,2)")]
     public decimal? CONLAINGOAIBANG { get; set; }
 
     /// <summary>
     /// Dư nợ nội bảng
     /// </summary>
-    [Column(Order = 10, TypeName = "decimal(18,2)")]
+    [Column(Order = 11, TypeName = "decimal(18,2)")]
     public decimal? DUNONOIBANG { get; set; }
 
     /// <summary>
     /// Nhóm nợ
     /// </summary>
-    [Column(Order = 11)]
+    [Column(Order = 12)]
     [StringLength(200)]
     public string? NHOMNO { get; set; }
 
     /// <summary>
     /// Mã cán bộ tín dụng
     /// </summary>
-    [Column(Order = 12)]
+    [Column(Order = 13)]
     [StringLength(200)]
     public string? MACBTD { get; set; }
 
     /// <summary>
     /// Tên cán bộ tín dụng
     /// </summary>
-    [Column(Order = 13)]
+    [Column(Order = 14)]
     [StringLength(200)]
     public string? TENCBTD { get; set; }
 
     /// <summary>
     /// Mã phòng giao dịch
     /// </summary>
-    [Column(Order = 14)]
+    [Column(Order = 15)]
     [StringLength(200)]
     public string? MAPGD { get; set; }
 
     /// <summary>
     /// Tài khoản hạch toán
     /// </summary>
-    [Column(Order = 15)]
+    [Column(Order = 16)]
     [StringLength(200)]
     public string? TAIKHOANHACHTOAN { get; set; }
 
     /// <summary>
     /// Reference number
     /// </summary>
-    [Column(Order = 16)]
+    [Column(Order = 17)]
     [StringLength(200)]
     public string? REFNO { get; set; }
 
     /// <summary>
     /// Loại nguồn vốn
     /// </summary>
-    [Column(Order = 17)]
+    [Column(Order = 18)]
     [StringLength(200)]
     public string? LOAINGUONVON { get; set; }
 
@@ -144,21 +145,21 @@ public class LN03
     /// <summary>
     /// Cột 18 (không có header) - giá trị như "100"
     /// </summary>
-    [Column(Order = 18)]
+    [Column(Order = 19)]
     [StringLength(200)]
     public string? Column18 { get; set; }
 
     /// <summary>
     /// Cột 19 (không có header) - giá trị như "Cá nhân"
     /// </summary>
-    [Column(Order = 19)]
+    [Column(Order = 20)]
     [StringLength(200)]
     public string? Column19 { get; set; }
 
     /// <summary>
     /// Cột 20 (không có header) - giá trị số lớn như "6000000000"
     /// </summary>
-    [Column(Order = 20, TypeName = "decimal(18,2)")]
+    [Column(Order = 21, TypeName = "decimal(18,2)")]
     public decimal? Column20 { get; set; }    // System fields
 
     /// <summary>

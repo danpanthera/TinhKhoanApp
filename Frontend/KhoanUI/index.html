@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Khoan UI Dev Shell</title>
+    <meta name="description" content="Temporary dev shell for Khoan UI" />
+  </head>
+  <body>
+    <div id="app" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji'; padding: 16px;">
+      <h1>Khoan UI Dev Shell</h1>
+      <p>Backend readiness: <strong id="status">checking…</strong></p>
+      <p>API base: <code id="api-base">http://localhost:5055/api</code></p>
+      <ul>
+        <li><a href="/test-vietnamese-font.html" target="_blank">Test Vietnamese Font</a></li>
+        <li><a href="/dp01-data-comparison-report.html" target="_blank">DP01 Report (nếu có)</a></li>
+      </ul>
+
+      <hr />
+      <h2>Thử Smart Import (DP01/GL01/LN03…)</h2>
+      <div style="display:flex; gap:12px; align-items: center; flex-wrap: wrap;">
+        <input type="file" id="smart-file" />
+        <input type="date" id="statement-date" />
+        <button id="btn-upload">Upload</button>
+        <span id="upload-status"></span>
+      </div>
+      <pre id="upload-result" style="background:#f7f7f7; padding:8px; border-radius:6px; max-height:240px; overflow:auto;"></pre>
+
+      <hr />
+      <h2>Danh sách Positions (nhanh)</h2>
+      <div style="margin-bottom:8px;">
+        <button id="btn-load-positions">Tải Positions</button>
+        <span id="positions-status"></span>
+      </div>
+      <ul id="positions-list" style="padding-left:18px;"></ul>
+
+      <hr />
+      <h2>Nhập gần đây (ImportedDataRecords)</h2>
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap: wrap; margin-bottom:8px;">
+        <input type="text" id="records-search" placeholder="Tìm theo tên/ghi chú" style="padding:4px 6px;" />
+        <select id="records-category">
+          <option value="">Tất cả</option>
+          <option>DP01</option>
+          <option>LN01</option>
+          <option>LN03</option>
+          <option>GL01</option>
+          <option>GL02</option>
+          <option>GL41</option>
+          <option>DPDA</option>
+          <option>EI01</option>
+          <option>RR01</option>
+        </select>
+        <button id="btn-load-records">Tải danh sách</button>
+        <span id="records-status"></span>
+      </div>
+      <table id="records-table" border="1" cellspacing="0" cellpadding="6" style="border-collapse: collapse; width: 100%; max-width: 100%;">
+        <thead style="background:#fafafa;">
+          <tr>
+            <th>ID</th>
+            <th>Tệp</th>
+            <th>Loại</th>
+            <th>Danh mục</th>
+            <th>Trạng thái</th>
+            <th>Ngày import</th>
+            <th>Ngày sao kê</th>
+            <th>Số dòng</th>
+            <th>Người import</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <script>
+      (function() {
+        var apiBase = 'http://localhost:5055/api';
+        window.__API_BASE_URL__ = apiBase;
+        var el = document.getElementById('api-base');
+        if (el) el.textContent = apiBase;
+
+        // Simple Smart Import handler
+        var btn = document.getElementById('btn-upload');
+        var fileInput = document.getElementById('smart-file');
+        var dateInput = document.getElementById('statement-date');
+        var statusEl = document.getElementById('upload-status');
+        var resultEl = document.getElementById('upload-result');
+        if (btn && fileInput) {
+          btn.addEventListener('click', async function() {
+            var f = fileInput.files && fileInput.files[0];
+            if (!f) { alert('Chọn 1 file CSV'); return; }
+            statusEl.textContent = 'Đang upload…';
+            resultEl.textContent = '';
+            try {
+              var fd = new FormData();
+              fd.append('file', f);
+              if (dateInput && dateInput.value) {
+                var iso = new Date(dateInput.value).toISOString();
+                fd.append('statementDate', iso);
+              }
+              var res = await fetch(apiBase + '/DirectImport/smart', { method: 'POST', body: fd });
+              var txt = await res.text();
+              statusEl.textContent = res.ok ? '✅ Thành công' : ('❌ Lỗi ' + res.status);
+              resultEl.textContent = txt;
+            } catch (e) {
+              statusEl.textContent = '❌ Lỗi: ' + e.message;
+            }
+          });
+        }
+
+        // Load readiness
+        fetch('http://localhost:5055/ready').then(r=>r.json()).then(j=>{
+          var s=document.getElementById('status');
+          if(s) s.textContent = j && j.ready ? 'sẵn sàng' : 'chưa sẵn sàng';
+        }).catch(()=>{
+          var s=document.getElementById('status');
+          if(s) s.textContent = 'lỗi kết nối';
+        });
+
+        // Positions loader
+        var btnPos = document.getElementById('btn-load-positions');
+        var posStatus = document.getElementById('positions-status');
+        var posList = document.getElementById('positions-list');
+        if (btnPos) {
+          btnPos.addEventListener('click', async function() {
+            posStatus.textContent = 'Đang tải…';
+            posList.innerHTML = '';
+            try {
+              var res = await fetch(apiBase + '/Positions');
+              var data = await res.json();
+              posStatus.textContent = res.ok ? 'xong' : ('lỗi ' + res.status);
+              if (Array.isArray(data)) {
+                data.forEach(it => {
+                  var li = document.createElement('li');
+                  li.textContent = `${it.Name}${it.Description ? ' — ' + it.Description : ''}`;
+                  posList.appendChild(li);
+                });
+              }
+            } catch (e) {
+              posStatus.textContent = 'lỗi: ' + e.message;
+            }
+          });
+        }
+
+        // Records loader
+        var btnRec = document.getElementById('btn-load-records');
+        var recStatus = document.getElementById('records-status');
+        var recTable = document.getElementById('records-table');
+        var recSearch = document.getElementById('records-search');
+        var recCat = document.getElementById('records-category');
+        if (btnRec && recTable) {
+          var loadRecords = async function(page) {
+            recStatus.textContent = 'Đang tải…';
+            var qs = new URLSearchParams();
+            qs.set('page', page || '1');
+            qs.set('pageSize', '20');
+            if (recSearch && recSearch.value) qs.set('search', recSearch.value);
+            if (recCat && recCat.value) qs.set('category', recCat.value);
+            try {
+              var res = await fetch(apiBase + '/DataImport/records?' + qs.toString());
+              var data = await res.json();
+              recStatus.textContent = res.ok ? `xong (tổng ${data.total || 0})` : ('lỗi ' + res.status);
+              var tbody = recTable.querySelector('tbody');
+              tbody.innerHTML = '';
+              (data.items || []).forEach(it => {
+                var tr = document.createElement('tr');
+                var td = (t)=>{ var e=document.createElement('td'); e.textContent=t||''; return e; };
+                tr.appendChild(td(it.Id));
+                tr.appendChild(td(it.FileName));
+                tr.appendChild(td(it.FileType));
+                tr.appendChild(td(it.Category));
+                tr.appendChild(td(it.Status));
+                tr.appendChild(td(it.ImportDate));
+                tr.appendChild(td(it.StatementDate || ''));
+                tr.appendChild(td(it.RecordsCount));
+                tr.appendChild(td(it.ImportedBy));
+                tbody.appendChild(tr);
+              });
+            } catch (e) {
+              recStatus.textContent = 'lỗi: ' + e.message;
+            }
+          };
+
+          btnRec.addEventListener('click', function(){ loadRecords(1); });
+        }
+      })();
+    </script>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+  </html>

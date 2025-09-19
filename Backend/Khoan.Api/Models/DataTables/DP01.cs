@@ -278,11 +278,8 @@ namespace Khoan.Api.Models.DataTables
         [StringLength(100)]
         public string? UpdatedBy { get; set; }
 
-        // Temporal Table Columns
-        [Column("SysStartTime", TypeName = "datetime2")]
-        public DateTime SysStartTime { get; set; }
-
-        [Column("SysEndTime", TypeName = "datetime2")]
-        public DateTime SysEndTime { get; set; }
+        // Note: Temporal period columns SysStartTime/SysEndTime are managed as EF Core shadow properties.
+        // Do NOT declare them here to avoid model validation error:
+        // "Period property 'DP01.SysStartTime' must be a shadow property."
     }
 }

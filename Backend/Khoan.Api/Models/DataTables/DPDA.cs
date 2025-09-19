@@ -82,11 +82,7 @@ namespace Khoan.Api.Models.DataTables
         [StringLength(255)]
         public string FILE_NAME { get; set; } = "";
 
-        // Temporal Columns - GENERATED ALWAYS (Order 18-19)
-        [Column("SysStartTime", Order = 18)]
-        public DateTime SysStartTime { get; set; }
-
-        [Column("SysEndTime", Order = 19)]
-        public DateTime SysEndTime { get; set; }
+        // Lưu ý: Các cột temporal SysStartTime/SysEndTime sẽ do EF quản lý dưới dạng shadow property.
+        // Không khai báo tại đây để tránh lỗi: "Period property 'DPDA.SysStartTime' must be a shadow property."
     }
 }
