@@ -428,6 +428,9 @@ ALTER DATABASE [TinhKhoanDB] SET ONLINE;
 
         // Essential Services
         builder.Services.AddScoped<Khoan.Api.Services.Interfaces.IDirectImportService, Khoan.Api.Services.DirectImportService>();
+
+        // Units Repository
+        builder.Services.AddScoped<Khoan.Api.Repositories.IUnitsRepository, Khoan.Api.Repositories.UnitsRepository>();
         // builder.Services.AddScoped<IEmployeeService, EmployeeService>();
         // builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 
@@ -586,6 +589,11 @@ ALTER DATABASE [TinhKhoanDB] SET ONLINE;
                 {
                     Console.WriteLine("✅ Database connection established");
                 }
+
+                // Seed Units data if none exists
+                Console.WriteLine("🌱 Seeding Units data...");
+                Khoan.Api.Data.UnitSeeder.SeedUnitsAsync(context).Wait();
+                Console.WriteLine("✅ Units seeding completed");
             }
             catch (Exception ex)
             {
