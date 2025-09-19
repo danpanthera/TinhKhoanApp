@@ -1,0 +1,85 @@
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace TinhKhoanApp.Api.Models.DataTables
+{
+    /// <summary>
+    /// Bảng LN03 - Generated from database structure
+    /// Business columns first, system/temporal columns last
+    /// Synchronized with database schema
+    /// </summary>
+    [Table("LN03")]
+    public class LN03
+    {
+        [Column("MACHINHANH nvarchar 50 1 1")]
+        public string MACHINHANH nvarchar 50 1 1 { get; set; }
+
+        [Column("TENCHINHANH nvarchar 255 1 2")]
+        public string TENCHINHANH nvarchar 255 1 2 { get; set; }
+
+        [Column("MAKH nvarchar 50 1 3")]
+        public string MAKH nvarchar 50 1 3 { get; set; }
+
+        [Column("TENKH nvarchar 255 1 4")]
+        public string TENKH nvarchar 255 1 4 { get; set; }
+
+        [Column("SOHOPDONG nvarchar 50 1 5")]
+        public string SOHOPDONG nvarchar 50 1 5 { get; set; }
+
+        [Column("SOTIENXLRR decimal 18 1 6")]
+        public string SOTIENXLRR decimal 18 1 6 { get; set; }
+
+        [Column("NGAYPHATSINHXL datetime 0 1 7")]
+        public string NGAYPHATSINHXL datetime 0 1 7 { get; set; }
+
+        [Column("THUNOSAUXL decimal 18 1 8")]
+        public string THUNOSAUXL decimal 18 1 8 { get; set; }
+
+        [Column("CONLAINGOAIBANG decimal 18 1 9")]
+        public string CONLAINGOAIBANG decimal 18 1 9 { get; set; }
+
+        [Column("DUNONOIBANG decimal 18 1 10")]
+        public string DUNONOIBANG decimal 18 1 10 { get; set; }
+
+        [Column("NHOMNO nvarchar 10 1 11")]
+        public string NHOMNO nvarchar 10 1 11 { get; set; }
+
+        [Column("MACBTD nvarchar 50 1 12")]
+        public string MACBTD nvarchar 50 1 12 { get; set; }
+
+        [Column("TENCBTD nvarchar 255 1 13")]
+        public string TENCBTD nvarchar 255 1 13 { get; set; }
+
+        [Column("MAPGD nvarchar 50 1 14")]
+        public string MAPGD nvarchar 50 1 14 { get; set; }
+
+        [Column("TAIKHOANHACHTOAN nvarchar 50 1 15")]
+        public string TAIKHOANHACHTOAN nvarchar 50 1 15 { get; set; }
+
+        [Column("REFNO nvarchar 50 1 16")]
+        public string REFNO nvarchar 50 1 16 { get; set; }
+
+        [Column("LOAINGUONVON nvarchar 50 1 17")]
+        public string LOAINGUONVON nvarchar 50 1 17 { get; set; }
+
+        [Column("Id bigint 19 0 18")]
+        public string Id bigint 19 0 18 { get; set; }
+
+        [Column("NGAY_DL datetime 0 0 19")]
+        public string NGAY_DL datetime 0 0 19 { get; set; }
+
+        [Column("CREATED_DATE datetime2 0 0 20")]
+        public string CREATED_DATE datetime2 0 0 20 { get; set; }
+
+        [Column("UPDATED_DATE datetime2 0 0 21")]
+        public string UPDATED_DATE datetime2 0 0 21 { get; set; }
+
+        [Column("FILE_NAME nvarchar 255 1 22")]
+        public string FILE_NAME nvarchar 255 1 22 { get; set; }
+
+        [Column("(22 rows affected)")]
+        public string (22 rows affected) { get; set; }
+
+    }
+}

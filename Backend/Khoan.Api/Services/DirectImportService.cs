@@ -824,6 +824,19 @@ namespace Khoan.Api.Services
 
         #region GL01 Import
 
+        // CsvHelper ClassMap cho GL01 để chỉ định định dạng ngày cho các cột Date/DateTime
+        private sealed class GL01CsvMap : ClassMap<GL01>
+        {
+            public GL01CsvMap()
+            {
+                // Auto-map all columns by header name.
+                // IMPORTANT: Do NOT set per-column TypeConverterOption here, because it overrides
+                // the global multi-format options configured in StreamParseGL01Async below.
+                // We keep this ClassMap minimal so global date parsing applies uniformly.
+                AutoMap(CultureInfo.InvariantCulture);
+            }
+        }
+
         /// <summary>
         /// Import GL01 từ CSV - 27 business columns - HEAVY FILE OPTIMIZED
         /// MaxFileSize 2GB, BulkInsert BatchSize 10,000, Upload timeout 15 minutes
@@ -1367,17 +1380,132 @@ namespace Khoan.Api.Services
         private async IAsyncEnumerable<GL01> StreamParseGL01Async(IFormFile file)
         {
             using var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8);
-            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+            var config = new CsvConfiguration(CultureInfo.InvariantCulture)
             {
                 HasHeaderRecord = true,
                 MissingFieldFound = null,
-                HeaderValidated = null
-            });
-            await foreach (var rec in csv.GetRecordsAsync<GL01>())
+                HeaderValidated = null,
+                TrimOptions = TrimOptions.Trim
+            };
+
+            using var csv = new CsvReader(reader, config);
+            // Đăng ký ClassMap để ép định dạng ngày theo yêu cầu
+            csv.Context.RegisterClassMap<GL01CsvMap>();
+
+            // Chấp nhận nhiều định dạng ngày giờ thường gặp trong GL01
+            var dateFormats = new[]
             {
-                if (rec.TR_TIME.HasValue) rec.NGAY_DL = rec.TR_TIME.Value.Date; else rec.NGAY_DL = DateTime.Today;
-                yield return rec;
+                // numeric dates
+                "yyyyMMdd", "yyyy-MM-dd", "yyyy/MM/dd", "dd/MM/yyyy", "d/M/yyyy",
+                // alpha month (both 1- or 2-digit day)
+                "dd-MMM-yy", "d-MMM-yy", "dd-MMM-yyyy", "d-MMM-yyyy",
+                // with time components
+                "yyyyMMdd HH:mm:ss", "yyyyMMddHH:mm:ss", "yyyy-MM-dd HH:mm:ss", "dd/MM/yyyy HH:mm:ss", "yyyy-MM-ddTHH:mm:ss"
+            };
+
+            // Đăng ký định dạng ngày cho DateTime/DateTime? bằng AddOptions để CsvHelper áp dụng chắc chắn
+            var dtOptions = new CsvHelper.TypeConversion.TypeConverterOptions
+            {
+                Formats = dateFormats,
+                CultureInfo = CultureInfo.InvariantCulture
+            };
+            // Accept blanks/whitespace as null for nullable DateTime columns
+            var ndtOptions = new CsvHelper.TypeConversion.TypeConverterOptions
+            {
+                Formats = dateFormats,
+                CultureInfo = CultureInfo.InvariantCulture
+            };
+            ndtOptions.NullValues.AddRange(new[] { string.Empty, " ", "  ", "\t", "\r", "\n", "\r\n" });
+
+            csv.Context.TypeConverterOptionsCache.AddOptions<DateTime>(dtOptions);
+            csv.Context.TypeConverterOptionsCache.AddOptions<DateTime?>(ndtOptions);
+
+            // Đăng ký converter "khoan dung sai" cho DateTime? để xử lý trường hợp có nhiều khoảng trắng bên trong dấu nháy
+            csv.Context.TypeConverterCache.AddConverter<DateTime?>(new LenientNullableDateTimeConverter(dateFormats));
+
+            // Đọc header trước để biết index của các cột ngày giờ cần chuẩn hóa
+            if (!await csv.ReadAsync()) yield break;
+            csv.ReadHeader();
+            var header = csv.HeaderRecord ?? Array.Empty<string>();
+            var idx = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            for (int i = 0; i < header.Length; i++) idx[header[i]] = i;
+            int ngIdx = idx.TryGetValue("NGAY_GD", out var t1) ? t1 : -1;
+            int vdIdx = idx.TryGetValue("VALUE_DATE", out var t2) ? t2 : -1;
+            int trIdx = idx.TryGetValue("TR_TIME", out var t3) ? t3 : -1;
+            int tdIdx = idx.TryGetValue("TRDT_TIME", out var t4) ? t4 : -1;
+
+            while (await csv.ReadAsync())
+            {
+                bool ok = false;
+                GL01? rec = null;
+                try
+                {
+                    // Chuẩn hóa thô các trường ngày ngay trên mảng record trước khi map
+                    var recArr = csv.Parser.Record;
+                    void FixAt(int index)
+                    {
+                        if (index >= 0 && index < recArr.Length && recArr[index] != null)
+                        {
+                            recArr[index] = NormalizeDateToken(recArr[index]!);
+                        }
+                    }
+                    FixAt(ngIdx);
+                    FixAt(vdIdx);
+                    FixAt(trIdx);
+                    FixAt(tdIdx);
+
+                    rec = csv.GetRecord<GL01>();
+                    rec.NGAY_DL = rec.TR_TIME.HasValue ? rec.TR_TIME.Value.Date : DateTime.Today;
+                    ok = true;
+                }
+                catch (CsvHelper.TypeConversion.TypeConverterException ex)
+                {
+                    _logger.LogWarning(ex, "⚠️ [GL01] Bỏ qua dòng do lỗi chuyển đổi tại Row={Row}. RawRecord: {Raw}", csv.Context.Parser.Row, csv.Context.Parser.RawRecord);
+                    ok = false; // skip row lỗi, tránh fail toàn bộ import
+                }
+                if (ok && rec != null) yield return rec;
             }
+        }
+
+        // Converter cho DateTime? nhằm trim và chuẩn hóa khoảng trắng trước khi parse với nhiều định dạng
+        private sealed class LenientNullableDateTimeConverter : CsvHelper.TypeConversion.DefaultTypeConverter
+        {
+            private readonly string[] _formats;
+            public LenientNullableDateTimeConverter(string[] formats)
+            {
+                _formats = formats;
+            }
+
+            public override object? ConvertFromString(string? text, CsvHelper.IReaderRow row, CsvHelper.Configuration.MemberMapData memberMapData)
+            {
+                if (string.IsNullOrWhiteSpace(text)) return null;
+                // Loại bỏ dấu nháy và chuẩn hóa khoảng trắng bên trong
+                var s = text.Trim('\'', '"', ' ', '\t', '\r', '\n');
+                if (s.Length == 0) return null;
+                // Thu gọn nhiều khoảng trắng liên tiếp thành một
+                s = System.Text.RegularExpressions.Regex.Replace(s, "\\s+", " ");
+
+                if (DateTime.TryParseExact(s, _formats, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out var dt))
+                    return (DateTime?)dt;
+                if (DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out dt))
+                    return (DateTime?)dt;
+
+                // Trường hợp không parse được, trả về base (sẽ tạo lỗi chuyển đổi tiêu chuẩn)
+                return base.ConvertFromString(text, row, memberMapData);
+            }
+        }
+
+        // Chuẩn hóa token ngày giờ: bỏ nháy, thay thế NBSP/Thin space, nén khoảng trắng, trim hai đầu
+        private static string NormalizeDateToken(string value)
+        {
+            if (string.IsNullOrEmpty(value)) return value;
+            var s = value.Trim('\'', '"', ' ', '\t', '\r', '\n');
+            s = s
+                .Replace('\u00A0', ' ')  // NBSP
+                .Replace('\u2007', ' ')  // Figure space
+                .Replace('\u202F', ' '); // Narrow no-break space
+            s = System.Text.RegularExpressions.Regex.Replace(s, "\\s+", " ");
+            return s.Trim();
         }
 
         /// <summary>

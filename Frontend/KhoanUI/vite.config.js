@@ -70,6 +70,10 @@ export default defineConfig({
       },
     }),
   ],
+  optimizeDeps: {
+    // Đảm bảo Vite pre-bundle gói xlsx để tránh lỗi import-analysis
+    include: ['xlsx'],
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

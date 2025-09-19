@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using Khoan.Api.Services.Interfaces;
 using Khoan.Api.Models.Common;
 
@@ -33,6 +34,9 @@ namespace Khoan.Api.Controllers
         /// DP01/DPDA/EI01/GL01/GL02/GL41/LN03/LN01/RR01: chỉ cho phép file chứa mã tương ứng trong filename
         /// </summary>
         [HttpPost("smart")]
+        [DisableRequestSizeLimit] // allow large multipart uploads
+        [RequestSizeLimit(2L * 1024 * 1024 * 1024)] // 2GB cap
+        [RequestFormLimits(MultipartBodyLengthLimit = 2L * 1024 * 1024 * 1024, ValueCountLimit = int.MaxValue, ValueLengthLimit = int.MaxValue)]
         public async Task<IActionResult> SmartImport(
             IFormFile file,
             [FromForm] string? statementDate = null)

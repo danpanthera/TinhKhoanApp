@@ -1,0 +1,223 @@
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace TinhKhoanApp.Api.Models.DataTables
+{
+    /// <summary>
+    /// Bảng DP01 - Generated from database structure
+    /// Business columns first, system/temporal columns last
+    /// Synchronized with database schema
+    /// </summary>
+    [Table("DP01")]
+    public class DP01
+    {
+        [Column("MA_CN nvarchar 50 1 1")]
+        public string MA_CN nvarchar 50 1 1 { get; set; }
+
+        [Column("TAI_KHOAN_HACH_TOAN nvarchar 50 1 2")]
+        public string TAI_KHOAN_HACH_TOAN nvarchar 50 1 2 { get; set; }
+
+        [Column("MA_KH nvarchar 50 1 3")]
+        public string MA_KH nvarchar 50 1 3 { get; set; }
+
+        [Column("TEN_KH nvarchar 255 1 4")]
+        public string TEN_KH nvarchar 255 1 4 { get; set; }
+
+        [Column("DP_TYPE_NAME nvarchar 100 1 5")]
+        public string DP_TYPE_NAME nvarchar 100 1 5 { get; set; }
+
+        [Column("CCY nvarchar 10 1 6")]
+        public string CCY nvarchar 10 1 6 { get; set; }
+
+        [Column("CURRENT_BALANCE decimal 18 1 7")]
+        public string CURRENT_BALANCE decimal 18 1 7 { get; set; }
+
+        [Column("RATE decimal 10 1 8")]
+        public string RATE decimal 10 1 8 { get; set; }
+
+        [Column("SO_TAI_KHOAN nvarchar 50 1 9")]
+        public string SO_TAI_KHOAN nvarchar 50 1 9 { get; set; }
+
+        [Column("OPENING_DATE datetime 0 1 10")]
+        public string OPENING_DATE datetime 0 1 10 { get; set; }
+
+        [Column("MATURITY_DATE datetime 0 1 11")]
+        public string MATURITY_DATE datetime 0 1 11 { get; set; }
+
+        [Column("ADDRESS nvarchar 500 1 12")]
+        public string ADDRESS nvarchar 500 1 12 { get; set; }
+
+        [Column("NOTENO nvarchar 50 1 13")]
+        public string NOTENO nvarchar 50 1 13 { get; set; }
+
+        [Column("MONTH_TERM int 10 1 14")]
+        public string MONTH_TERM int 10 1 14 { get; set; }
+
+        [Column("TERM_DP_NAME nvarchar 100 1 15")]
+        public string TERM_DP_NAME nvarchar 100 1 15 { get; set; }
+
+        [Column("TIME_DP_NAME nvarchar 100 1 16")]
+        public string TIME_DP_NAME nvarchar 100 1 16 { get; set; }
+
+        [Column("MA_PGD nvarchar 50 1 17")]
+        public string MA_PGD nvarchar 50 1 17 { get; set; }
+
+        [Column("TEN_PGD nvarchar 255 1 18")]
+        public string TEN_PGD nvarchar 255 1 18 { get; set; }
+
+        [Column("DP_TYPE_CODE nvarchar 50 1 19")]
+        public string DP_TYPE_CODE nvarchar 50 1 19 { get; set; }
+
+        [Column("RENEW_DATE datetime 0 1 20")]
+        public string RENEW_DATE datetime 0 1 20 { get; set; }
+
+        [Column("CUST_TYPE nvarchar 50 1 21")]
+        public string CUST_TYPE nvarchar 50 1 21 { get; set; }
+
+        [Column("CUST_TYPE_NAME nvarchar 100 1 22")]
+        public string CUST_TYPE_NAME nvarchar 100 1 22 { get; set; }
+
+        [Column("CUST_TYPE_DETAIL nvarchar 50 1 23")]
+        public string CUST_TYPE_DETAIL nvarchar 50 1 23 { get; set; }
+
+        [Column("CUST_DETAIL_NAME nvarchar 100 1 24")]
+        public string CUST_DETAIL_NAME nvarchar 100 1 24 { get; set; }
+
+        [Column("PREVIOUS_DP_CAP_DATE datetime 0 1 25")]
+        public string PREVIOUS_DP_CAP_DATE datetime 0 1 25 { get; set; }
+
+        [Column("NEXT_DP_CAP_DATE datetime 0 1 26")]
+        public string NEXT_DP_CAP_DATE datetime 0 1 26 { get; set; }
+
+        [Column("ID_NUMBER nvarchar 50 1 27")]
+        public string ID_NUMBER nvarchar 50 1 27 { get; set; }
+
+        [Column("ISSUED_BY nvarchar 255 1 28")]
+        public string ISSUED_BY nvarchar 255 1 28 { get; set; }
+
+        [Column("ISSUE_DATE datetime 0 1 29")]
+        public string ISSUE_DATE datetime 0 1 29 { get; set; }
+
+        [Column("SEX_TYPE nvarchar 10 1 30")]
+        public string SEX_TYPE nvarchar 10 1 30 { get; set; }
+
+        [Column("BIRTH_DATE datetime 0 1 31")]
+        public string BIRTH_DATE datetime 0 1 31 { get; set; }
+
+        [Column("TELEPHONE nvarchar 50 1 32")]
+        public string TELEPHONE nvarchar 50 1 32 { get; set; }
+
+        [Column("ACRUAL_AMOUNT decimal 18 1 33")]
+        public string ACRUAL_AMOUNT decimal 18 1 33 { get; set; }
+
+        [Column("ACRUAL_AMOUNT_END decimal 18 1 34")]
+        public string ACRUAL_AMOUNT_END decimal 18 1 34 { get; set; }
+
+        [Column("ACCOUNT_STATUS nvarchar 50 1 35")]
+        public string ACCOUNT_STATUS nvarchar 50 1 35 { get; set; }
+
+        [Column("DRAMT decimal 18 1 36")]
+        public string DRAMT decimal 18 1 36 { get; set; }
+
+        [Column("CRAMT decimal 18 1 37")]
+        public string CRAMT decimal 18 1 37 { get; set; }
+
+        [Column("EMPLOYEE_NUMBER nvarchar 50 1 38")]
+        public string EMPLOYEE_NUMBER nvarchar 50 1 38 { get; set; }
+
+        [Column("EMPLOYEE_NAME nvarchar 255 1 39")]
+        public string EMPLOYEE_NAME nvarchar 255 1 39 { get; set; }
+
+        [Column("SPECIAL_RATE decimal 10 1 40")]
+        public string SPECIAL_RATE decimal 10 1 40 { get; set; }
+
+        [Column("AUTO_RENEWAL nvarchar 10 1 41")]
+        public string AUTO_RENEWAL nvarchar 10 1 41 { get; set; }
+
+        [Column("CLOSE_DATE datetime 0 1 42")]
+        public string CLOSE_DATE datetime 0 1 42 { get; set; }
+
+        [Column("LOCAL_PROVIN_NAME nvarchar 100 1 43")]
+        public string LOCAL_PROVIN_NAME nvarchar 100 1 43 { get; set; }
+
+        [Column("LOCAL_DISTRICT_NAME nvarchar 100 1 44")]
+        public string LOCAL_DISTRICT_NAME nvarchar 100 1 44 { get; set; }
+
+        [Column("LOCAL_WARD_NAME nvarchar 100 1 45")]
+        public string LOCAL_WARD_NAME nvarchar 100 1 45 { get; set; }
+
+        [Column("TERM_DP_TYPE nvarchar 50 1 46")]
+        public string TERM_DP_TYPE nvarchar 50 1 46 { get; set; }
+
+        [Column("TIME_DP_TYPE nvarchar 50 1 47")]
+        public string TIME_DP_TYPE nvarchar 50 1 47 { get; set; }
+
+        [Column("STATES_CODE nvarchar 50 1 48")]
+        public string STATES_CODE nvarchar 50 1 48 { get; set; }
+
+        [Column("ZIP_CODE nvarchar 20 1 49")]
+        public string ZIP_CODE nvarchar 20 1 49 { get; set; }
+
+        [Column("COUNTRY_CODE nvarchar 10 1 50")]
+        public string COUNTRY_CODE nvarchar 10 1 50 { get; set; }
+
+        [Column("TAX_CODE_LOCATION nvarchar 50 1 51")]
+        public string TAX_CODE_LOCATION nvarchar 50 1 51 { get; set; }
+
+        [Column("MA_CAN_BO_PT nvarchar 50 1 52")]
+        public string MA_CAN_BO_PT nvarchar 50 1 52 { get; set; }
+
+        [Column("TEN_CAN_BO_PT nvarchar 255 1 53")]
+        public string TEN_CAN_BO_PT nvarchar 255 1 53 { get; set; }
+
+        [Column("PHONG_CAN_BO_PT nvarchar 100 1 54")]
+        public string PHONG_CAN_BO_PT nvarchar 100 1 54 { get; set; }
+
+        [Column("NGUOI_NUOC_NGOAI nvarchar 10 1 55")]
+        public string NGUOI_NUOC_NGOAI nvarchar 10 1 55 { get; set; }
+
+        [Column("QUOC_TICH nvarchar 50 1 56")]
+        public string QUOC_TICH nvarchar 50 1 56 { get; set; }
+
+        [Column("MA_CAN_BO_AGRIBANK nvarchar 50 1 57")]
+        public string MA_CAN_BO_AGRIBANK nvarchar 50 1 57 { get; set; }
+
+        [Column("NGUOI_GIOI_THIEU nvarchar 50 1 58")]
+        public string NGUOI_GIOI_THIEU nvarchar 50 1 58 { get; set; }
+
+        [Column("TEN_NGUOI_GIOI_THIEU nvarchar 255 1 59")]
+        public string TEN_NGUOI_GIOI_THIEU nvarchar 255 1 59 { get; set; }
+
+        [Column("CONTRACT_COUTS_DAY int 10 1 60")]
+        public string CONTRACT_COUTS_DAY int 10 1 60 { get; set; }
+
+        [Column("SO_KY_AD_LSDB nvarchar 50 1 61")]
+        public string SO_KY_AD_LSDB nvarchar 50 1 61 { get; set; }
+
+        [Column("UNTBUSCD nvarchar 50 1 62")]
+        public string UNTBUSCD nvarchar 50 1 62 { get; set; }
+
+        [Column("TYGIA decimal 10 1 63")]
+        public string TYGIA decimal 10 1 63 { get; set; }
+
+        [Column("Id bigint 19 0 64")]
+        public string Id bigint 19 0 64 { get; set; }
+
+        [Column("NGAY_DL datetime 0 0 65")]
+        public string NGAY_DL datetime 0 0 65 { get; set; }
+
+        [Column("CREATED_DATE datetime2 0 0 66")]
+        public string CREATED_DATE datetime2 0 0 66 { get; set; }
+
+        [Column("UPDATED_DATE datetime2 0 0 67")]
+        public string UPDATED_DATE datetime2 0 0 67 { get; set; }
+
+        [Column("FILE_NAME nvarchar 255 1 68")]
+        public string FILE_NAME nvarchar 255 1 68 { get; set; }
+
+        [Column("(68 rows affected)")]
+        public string (68 rows affected) { get; set; }
+
+    }
+}

@@ -1,0 +1,73 @@
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace TinhKhoanApp.Api.Models.DataTables
+{
+    /// <summary>
+    /// Bảng GL41 - Generated from database structure
+    /// Business columns first, system/temporal columns last
+    /// Synchronized with database schema
+    /// </summary>
+    [Table("GL41")]
+    public class GL41
+    {
+        [Column("MA_CN nvarchar 50 1 1")]
+        public string MA_CN nvarchar 50 1 1 { get; set; }
+
+        [Column("LOAI_TIEN nvarchar 10 1 2")]
+        public string LOAI_TIEN nvarchar 10 1 2 { get; set; }
+
+        [Column("MA_TK nvarchar 50 1 3")]
+        public string MA_TK nvarchar 50 1 3 { get; set; }
+
+        [Column("TEN_TK nvarchar 255 1 4")]
+        public string TEN_TK nvarchar 255 1 4 { get; set; }
+
+        [Column("LOAI_BT nvarchar 50 1 5")]
+        public string LOAI_BT nvarchar 50 1 5 { get; set; }
+
+        [Column("DN_DAUKY decimal 18 1 6")]
+        public string DN_DAUKY decimal 18 1 6 { get; set; }
+
+        [Column("DC_DAUKY decimal 18 1 7")]
+        public string DC_DAUKY decimal 18 1 7 { get; set; }
+
+        [Column("SBT_NO int 10 1 8")]
+        public string SBT_NO int 10 1 8 { get; set; }
+
+        [Column("ST_GHINO decimal 18 1 9")]
+        public string ST_GHINO decimal 18 1 9 { get; set; }
+
+        [Column("SBT_CO int 10 1 10")]
+        public string SBT_CO int 10 1 10 { get; set; }
+
+        [Column("ST_GHICO decimal 18 1 11")]
+        public string ST_GHICO decimal 18 1 11 { get; set; }
+
+        [Column("DN_CUOIKY decimal 18 1 12")]
+        public string DN_CUOIKY decimal 18 1 12 { get; set; }
+
+        [Column("DC_CUOIKY decimal 18 1 13")]
+        public string DC_CUOIKY decimal 18 1 13 { get; set; }
+
+        [Column("Id bigint 19 0 14")]
+        public string Id bigint 19 0 14 { get; set; }
+
+        [Column("NGAY_DL datetime 0 0 15")]
+        public string NGAY_DL datetime 0 0 15 { get; set; }
+
+        [Column("CREATED_DATE datetime2 0 0 16")]
+        public string CREATED_DATE datetime2 0 0 16 { get; set; }
+
+        [Column("UPDATED_DATE datetime2 0 0 17")]
+        public string UPDATED_DATE datetime2 0 0 17 { get; set; }
+
+        [Column("FILE_NAME nvarchar 255 1 18")]
+        public string FILE_NAME nvarchar 255 1 18 { get; set; }
+
+        [Column("(18 rows affected)")]
+        public string (18 rows affected) { get; set; }
+
+    }
+}

@@ -39,7 +39,19 @@ class SmartImportService {
         return await this.uploadNormalFile(file, statementDate, progressCallback)
       }
     } catch (error) {
-      console.error('🔥 Smart Import upload error:', error)
+      // Log chi tiết lỗi 400 từ backend để dễ debug
+      if (error.response) {
+        const { status, data } = error.response
+        console.error('🔥 Smart Import upload error (response):', status, data)
+        if (status === 400 && data && (data.errors || data.title)) {
+          const detail = data.errors ? JSON.stringify(data.errors) : data.title
+          throw new Error(`Smart Import failed (400): ${detail}`)
+        }
+      } else if (error.request) {
+        console.error('🔥 Smart Import upload error (no response): server không phản hồi')
+      } else {
+        console.error('🔥 Smart Import upload error (setup):', error.message)
+      }
       throw new Error(`Smart Import failed: ${error.response?.data?.message || error.message}`)
     }
   }
@@ -57,10 +69,7 @@ class SmartImportService {
     }
 
     const response = await apiClient.post('/DirectImport/smart', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        // 🚀 Removed Accept-Encoding - Browser handles this automatically
-      },
+      // Không set 'Content-Type' để axios/browser tự thêm boundary cho FormData
       timeout: 1200000, // 🚀 Tăng lên 20 phút cho GL01 large files (was 5 minutes)
       onUploadProgress: progressEvent => {
         if (progressCallback && progressEvent.total) {
@@ -92,10 +101,7 @@ class SmartImportService {
     }
 
     const response = await apiClient.post('/DirectImport/smart', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-        // 🚀 Removed Accept-Encoding - Browser handles this automatically
-      },
+      // Không set 'Content-Type' để axios/browser tự thêm boundary cho FormData
       timeout: 1800000, // 🚀 Tăng lên 30 phút cho file siêu lớn (GL01 162MB) - was 10 minutes
       onUploadProgress: progressEvent => {
         if (progressCallback && progressEvent.total) {

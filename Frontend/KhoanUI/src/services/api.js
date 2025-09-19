@@ -5,7 +5,6 @@ const apiClient = axios.create({
   // In development, always go through Vite proxy to avoid CORS; prod can override via VITE_API_BASE_URL
   baseURL,
   headers: {
-    'Content-Type': 'application/json',
     Accept: 'application/json',
   },
   timeout: 60000, // Increased timeout to 60 seconds for large Excel imports
@@ -21,6 +20,18 @@ apiClient.interceptors.request.use(
     const token = localStorage.getItem('token')
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`
+    }
+
+    // Nếu payload là FormData, để trình duyệt tự set Content-Type với boundary
+    if (config.data instanceof FormData) {
+      if (config.headers && 'Content-Type' in config.headers) {
+        delete config.headers['Content-Type']
+      }
+    } else {
+      // Với JSON thông thường, đảm bảo Content-Type là application/json
+      if (config.headers && !('Content-Type' in config.headers)) {
+        config.headers['Content-Type'] = 'application/json'
+      }
     }
     return config
   },

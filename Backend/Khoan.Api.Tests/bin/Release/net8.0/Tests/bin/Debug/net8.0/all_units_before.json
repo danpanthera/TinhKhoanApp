@@ -1,0 +1,386 @@
+[
+  {
+    "Id": 1,
+    "Code": "HoiSo",
+    "Name": "Hội Sở",
+    "Type": "CNL1",
+    "ParentUnitId": 1,
+    "ParentUnitName": "Hội Sở"
+  },
+  {
+    "Id": 2,
+    "Code": "HoiSoBgd",
+    "Name": "Ban Giám đốc",
+    "Type": "PNVL1",
+    "ParentUnitId": 2,
+    "ParentUnitName": "Ban Giám đốc"
+  },
+  {
+    "Id": 10,
+    "Code": "CnBinhLuBgd",
+    "Name": "Ban Giám đốc",
+    "Type": "PNVL2",
+    "ParentUnitId": 10,
+    "ParentUnitName": "Ban Giám đốc"
+  },
+  {
+    "Id": 14,
+    "Code": "CnPhongThoBgd",
+    "Name": "Ban Giám đốc",
+    "Type": "PNVL2",
+    "ParentUnitId": 14,
+    "ParentUnitName": "Ban Giám đốc"
+  },
+  {
+    "Id": 19,
+    "Code": "CnSinHoBgd",
+    "Name": "Ban Giám đốc",
+    "Type": "PNVL2",
+    "ParentUnitId": 19,
+    "ParentUnitName": "Ban Giám đốc"
+  },
+  {
+    "Id": 23,
+    "Code": "CnBumToBgd",
+    "Name": "Ban Giám đốc",
+    "Type": "PNVL2",
+    "ParentUnitId": 23,
+    "ParentUnitName": "Ban Giám đốc"
+  },
+  {
+    "Id": 27,
+    "Code": "CnThanUyenBgd",
+    "Name": "Ban Giám đốc",
+    "Type": "PNVL2",
+    "ParentUnitId": 27,
+    "ParentUnitName": "Ban Giám đốc"
+  },
+  {
+    "Id": 32,
+    "Code": "CnDoanKetBgd",
+    "Name": "Ban Giám đốc",
+    "Type": "PNVL2",
+    "ParentUnitId": 32,
+    "ParentUnitName": "Ban Giám đốc"
+  },
+  {
+    "Id": 38,
+    "Code": "CnTanUyenBgd",
+    "Name": "Ban Giám đốc",
+    "Type": "PNVL2",
+    "ParentUnitId": 38,
+    "ParentUnitName": "Ban Giám đốc"
+  },
+  {
+    "Id": 43,
+    "Code": "CnNamHangBgd",
+    "Name": "Ban Giám đốc",
+    "Type": "PNVL2",
+    "ParentUnitId": 43,
+    "ParentUnitName": "Ban Giám đốc"
+  },
+  {
+    "Id": 46,
+    "Code": "CNL1_LaiChau",
+    "Name": "Chi nhánh Lai Châu",
+    "Type": "CNL1",
+    "ParentUnitId": null,
+    "ParentUnitName": null
+  },
+  {
+    "Id": 47,
+    "Code": "CNL2_HoiSo",
+    "Name": "Hội sở",
+    "Type": "CNL2",
+    "ParentUnitId": 46,
+    "ParentUnitName": "Chi nhánh Lai Châu"
+  },
+  {
+    "Id": 48,
+    "Code": "CNL2_BinhLu",
+    "Name": "Chi nhánh Bình Lư",
+    "Type": "CNL2",
+    "ParentUnitId": 46,
+    "ParentUnitName": "Chi nhánh Lai Châu"
+  },
+  {
+    "Id": 49,
+    "Code": "CNL2_PhongTho",
+    "Name": "Chi nhánh Phong Thổ",
+    "Type": "CNL2",
+    "ParentUnitId": 46,
+    "ParentUnitName": "Chi nhánh Lai Châu"
+  },
+  {
+    "Id": 50,
+    "Code": "CNL2_SinHo",
+    "Name": "Chi nhánh Sìn Hồ",
+    "Type": "CNL2",
+    "ParentUnitId": 46,
+    "ParentUnitName": "Chi nhánh Lai Châu"
+  },
+  {
+    "Id": 51,
+    "Code": "CNL2_BumTo",
+    "Name": "Chi nhánh Bum Tở",
+    "Type": "CNL2",
+    "ParentUnitId": 46,
+    "ParentUnitName": "Chi nhánh Lai Châu"
+  },
+  {
+    "Id": 52,
+    "Code": "CNL2_ThanUyen",
+    "Name": "Chi nhánh Than Uyên",
+    "Type": "CNL2",
+    "ParentUnitId": 46,
+    "ParentUnitName": "Chi nhánh Lai Châu"
+  },
+  {
+    "Id": 53,
+    "Code": "CNL2_DoanKet",
+    "Name": "Chi nhánh Đoàn Kết",
+    "Type": "CNL2",
+    "ParentUnitId": 46,
+    "ParentUnitName": "Chi nhánh Lai Châu"
+  },
+  {
+    "Id": 54,
+    "Code": "CNL2_TanUyen",
+    "Name": "Chi nhánh Tân Uyên",
+    "Type": "CNL2",
+    "ParentUnitId": 46,
+    "ParentUnitName": "Chi nhánh Lai Châu"
+  },
+  {
+    "Id": 55,
+    "Code": "CNL2_NamHang",
+    "Name": "Chi nhánh Nậm Hàng",
+    "Type": "CNL2",
+    "ParentUnitId": 46,
+    "ParentUnitName": "Chi nhánh Lai Châu"
+  },
+  {
+    "Id": 56,
+    "Code": "PNVL1_KinhDoanh",
+    "Name": "Phòng Kinh doanh",
+    "Type": "PNVL1",
+    "ParentUnitId": 47,
+    "ParentUnitName": "Hội sở"
+  },
+  {
+    "Id": 57,
+    "Code": "PNVL1_TinDung",
+    "Name": "Phòng Tín dụng",
+    "Type": "PNVL1",
+    "ParentUnitId": 47,
+    "ParentUnitName": "Hội sở"
+  },
+  {
+    "Id": 58,
+    "Code": "PNVL1_KeToan",
+    "Name": "Phòng Kế toán",
+    "Type": "PNVL1",
+    "ParentUnitId": 47,
+    "ParentUnitName": "Hội sở"
+  },
+  {
+    "Id": 59,
+    "Code": "PNVL1_NhanSu",
+    "Name": "Phòng Nhân sự",
+    "Type": "PNVL1",
+    "ParentUnitId": 47,
+    "ParentUnitName": "Hội sở"
+  },
+  {
+    "Id": 60,
+    "Code": "PNVL1_CongNghe",
+    "Name": "Phòng Công nghệ thông tin",
+    "Type": "PNVL1",
+    "ParentUnitId": 47,
+    "ParentUnitName": "Hội sở"
+  },
+  {
+    "Id": 61,
+    "Code": "PNVL1_KiemSoat",
+    "Name": "Phòng Kiểm soát rủi ro",
+    "Type": "PNVL1",
+    "ParentUnitId": 47,
+    "ParentUnitName": "Hội sở"
+  },
+  {
+    "Id": 62,
+    "Code": "PNVL1_HanhChinh",
+    "Name": "Phòng Hành chính",
+    "Type": "PNVL1",
+    "ParentUnitId": 47,
+    "ParentUnitName": "Hội sở"
+  },
+  {
+    "Id": 63,
+    "Code": "PNVL2_BinhLu_KinhDoanh",
+    "Name": "Phòng Kinh doanh Bình Lư",
+    "Type": "PNVL2",
+    "ParentUnitId": 48,
+    "ParentUnitName": "Chi nhánh Bình Lư"
+  },
+  {
+    "Id": 64,
+    "Code": "PNVL2_BinhLu_TinDung",
+    "Name": "Phòng Tín dụng Bình Lư",
+    "Type": "PNVL2",
+    "ParentUnitId": 48,
+    "ParentUnitName": "Chi nhánh Bình Lư"
+  },
+  {
+    "Id": 65,
+    "Code": "PNVL2_BinhLu_HanhChinh",
+    "Name": "Phòng Hành chính Bình Lư",
+    "Type": "PNVL2",
+    "ParentUnitId": 48,
+    "ParentUnitName": "Chi nhánh Bình Lư"
+  },
+  {
+    "Id": 66,
+    "Code": "PNVL2_PhongTho_KinhDoanh",
+    "Name": "Phòng Kinh doanh Phong Thổ",
+    "Type": "PNVL2",
+    "ParentUnitId": 49,
+    "ParentUnitName": "Chi nhánh Phong Thổ"
+  },
+  {
+    "Id": 67,
+    "Code": "PNVL2_PhongTho_TinDung",
+    "Name": "Phòng Tín dụng Phong Thổ",
+    "Type": "PNVL2",
+    "ParentUnitId": 49,
+    "ParentUnitName": "Chi nhánh Phong Thổ"
+  },
+  {
+    "Id": 68,
+    "Code": "PNVL2_PhongTho_KeToan",
+    "Name": "Phòng Kế toán Phong Thổ",
+    "Type": "PNVL2",
+    "ParentUnitId": 49,
+    "ParentUnitName": "Chi nhánh Phong Thổ"
+  },
+  {
+    "Id": 69,
+    "Code": "PNVL2_PhongTho_HanhChinh",
+    "Name": "Phòng Hành chính Phong Thổ",
+    "Type": "PNVL2",
+    "ParentUnitId": 49,
+    "ParentUnitName": "Chi nhánh Phong Thổ"
+  },
+  {
+    "Id": 70,
+    "Code": "PNVL2_SinHo_KinhDoanh",
+    "Name": "Phòng Kinh doanh Sìn Hồ",
+    "Type": "PNVL2",
+    "ParentUnitId": 50,
+    "ParentUnitName": "Chi nhánh Sìn Hồ"
+  },
+  {
+    "Id": 71,
+    "Code": "PNVL2_SinHo_HanhChinh",
+    "Name": "Phòng Hành chính Sìn Hồ",
+    "Type": "PNVL2",
+    "ParentUnitId": 50,
+    "ParentUnitName": "Chi nhánh Sìn Hồ"
+  },
+  {
+    "Id": 72,
+    "Code": "PNVL2_BumTo_KinhDoanh",
+    "Name": "Phòng Kinh doanh Bum Tở",
+    "Type": "PNVL2",
+    "ParentUnitId": 51,
+    "ParentUnitName": "Chi nhánh Bum Tở"
+  },
+  {
+    "Id": 73,
+    "Code": "PNVL2_BumTo_HanhChinh",
+    "Name": "Phòng Hành chính Bum Tở",
+    "Type": "PNVL2",
+    "ParentUnitId": 51,
+    "ParentUnitName": "Chi nhánh Bum Tở"
+  },
+  {
+    "Id": 74,
+    "Code": "PNVL2_ThanUyen_KinhDoanh",
+    "Name": "Phòng Kinh doanh Than Uyên",
+    "Type": "PNVL2",
+    "ParentUnitId": 52,
+    "ParentUnitName": "Chi nhánh Than Uyên"
+  },
+  {
+    "Id": 75,
+    "Code": "PNVL2_ThanUyen_HanhChinh",
+    "Name": "Phòng Hành chính Than Uyên",
+    "Type": "PNVL2",
+    "ParentUnitId": 52,
+    "ParentUnitName": "Chi nhánh Than Uyên"
+  },
+  {
+    "Id": 76,
+    "Code": "PNVL2_DoanKet_KinhDoanh",
+    "Name": "Phòng Kinh doanh Đoàn Kết",
+    "Type": "PNVL2",
+    "ParentUnitId": 53,
+    "ParentUnitName": "Chi nhánh Đoàn Kết"
+  },
+  {
+    "Id": 77,
+    "Code": "PNVL2_DoanKet_HanhChinh",
+    "Name": "Phòng Hành chính Đoàn Kết",
+    "Type": "PNVL2",
+    "ParentUnitId": 53,
+    "ParentUnitName": "Chi nhánh Đoàn Kết"
+  },
+  {
+    "Id": 78,
+    "Code": "PNVL2_TanUyen_KinhDoanh",
+    "Name": "Phòng Kinh doanh Tân Uyên",
+    "Type": "PNVL2",
+    "ParentUnitId": 54,
+    "ParentUnitName": "Chi nhánh Tân Uyên"
+  },
+  {
+    "Id": 79,
+    "Code": "PNVL2_TanUyen_HanhChinh",
+    "Name": "Phòng Hành chính Tân Uyên",
+    "Type": "PNVL2",
+    "ParentUnitId": 54,
+    "ParentUnitName": "Chi nhánh Tân Uyên"
+  },
+  {
+    "Id": 80,
+    "Code": "PNVL2_NamHang_KinhDoanh",
+    "Name": "Phòng Kinh doanh Nậm Hàng",
+    "Type": "PNVL2",
+    "ParentUnitId": 55,
+    "ParentUnitName": "Chi nhánh Nậm Hàng"
+  },
+  {
+    "Id": 81,
+    "Code": "PNVL2_NamHang_HanhChinh",
+    "Name": "Phòng Hành chính Nậm Hàng",
+    "Type": "PNVL2",
+    "ParentUnitId": 55,
+    "ParentUnitName": "Chi nhánh Nậm Hàng"
+  },
+  {
+    "Id": 82,
+    "Code": "CNLV1_LaiChau",
+    "Name": "Chi nhánh Lai Châu",
+    "Type": "CNL1",
+    "ParentUnitId": null,
+    "ParentUnitName": null
+  },
+  {
+    "Id": 83,
+    "Code": "CNLV1_LC",
+    "Name": "Chi nhánh Lai Châu",
+    "Type": "CNL1",
+    "ParentUnitId": null,
+    "ParentUnitName": null
+  }
+]

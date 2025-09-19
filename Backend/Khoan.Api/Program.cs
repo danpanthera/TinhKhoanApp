@@ -416,9 +416,16 @@ builder.Services.AddScoped<Khoan.Api.Services.Interfaces.IDirectImportService, K
 // File Upload Configuration
 builder.Services.Configure<FormOptions>(options =>
 {
-    options.MultipartBodyLengthLimit = 524288000; // 500MB
+    // Allow very large multipart uploads (up to ~2GB)
+    options.MultipartBodyLengthLimit = 2L * 1024 * 1024 * 1024; // 2GB
     options.ValueLengthLimit = int.MaxValue;
     options.ValueCountLimit = int.MaxValue;
+});
+
+// Also configure Kestrel server limits
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.Limits.MaxRequestBodySize = 2L * 1024 * 1024 * 1024; // 2GB
 });
 
 // JWT Authentication (Optional)
